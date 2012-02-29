@@ -3,6 +3,7 @@
 	<name>second</name>
 	<comment></comment>
 	<projects>
+		<project>first</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
