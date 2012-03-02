@@ -5,6 +5,7 @@
 	<projects>
 		<project>ibvpy</project>
 		<project>mathkit</project>
+		<project>matresdev</project>
 		<project>stats</project>
 		<project>util</project>
 	</projects>

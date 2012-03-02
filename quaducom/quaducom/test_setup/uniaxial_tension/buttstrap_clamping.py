@@ -1,8 +1,5 @@
 '''
-MUSHROOF - For double symmetric loading cases, one Roof is sufficient 
-
-TODO: @ Andreas
-     - split dead load cases, include additional dead load case
+Optimization of tensile test clamping
 '''
 
 from enthought.traits.api import \
@@ -49,7 +46,7 @@ from math import \
 from matplotlib.pyplot import \
     bar, show, axhline, ion, ioff, xlabel, ylabel, title, figure, savefig
 
-from simiter.sim_pstudy import\
+from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
 from mathkit.geo.transform.square2circle import GeoSquare2Circle
