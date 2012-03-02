@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>stats</name>
+	<name>second</name>
 	<comment></comment>
 	<projects>
 		<project>first</project>
+		<project>ibvpy</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>
