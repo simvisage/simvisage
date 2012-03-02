@@ -3,6 +3,8 @@
 	<name>ibvpy</name>
 	<comment></comment>
 	<projects>
+		<project>mathkit</project>
+		<project>util</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
