@@ -17,7 +17,6 @@ from stats.spirrid.rf import \
 from math import pi
 from scipy import ndimage
 from mathkit.mfn import MFnLineArray
-#import scitools.numpytools as st
 import types
 
 
