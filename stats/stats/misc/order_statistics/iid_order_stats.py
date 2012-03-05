@@ -47,6 +47,7 @@ class IIDOrderStats(HasTraits):
         sf = self.distr.sf
         cdf = self.distr.cdf
         CDF = np.zeros(len(x))
+        CDF2 = np.zeros(len(x))
         for l in range(n - k + 1):
             i = l + k
             CDF += sp.misc.common.comb(n, i) * cdf(x) ** i * sf(x) ** (n - i)
@@ -56,20 +57,20 @@ class IIDOrderStats(HasTraits):
 if __name__ == '__main__':
 
     from matplotlib import pyplot as plt
-    from scipy.stats import norm
+    from scipy.stats import norm, weibull_min
 
     n2_list = []
     n7_list = []
     n12_list = []
-    for i in range(50000):
-        n = norm(6, 2).ppf(np.random.rand(12))
+    for i in range(5000):
+        n = weibull_min(5, scale = 0.0179).ppf(np.random.rand(12))
         n.sort()
         n2_list.append(n[1])
         n7_list.append(n[6])
         n12_list.append(n[11])
 
 
-    iid = IIDOrderStats(distr = norm(6, 2), n = 12, k = 2)
+    iid = IIDOrderStats(distr = weibull_min(5, scale = 0.0179), n = 12, k = 2, x_arr = np.linspace(0, 0.03, 300))
     pdf1 = iid.kth_cdf()
     iid.k = 7
     pdf2 = iid.kth_cdf()
