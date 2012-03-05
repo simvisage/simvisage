@@ -1,0 +1,14 @@
+eps
+xi = 0.017857, theta = 0.01, lambd = 0.2, A = 5.30929e-10, E_mod = 7e+10
+w
+tau = 2.5, l = 0, D_f = 0.026, E_f = 72000, theta = 0.01, xi = 0.0179, phi = 1, Ll = 1, Lr = 0.5
+w
+tau = 2.5, l = 0.5, D_f = 0.026, E_f = 72000, theta = 0.01, xi = 0.0179, phi = 1
+w
+tau = 1.76, L_f = 17, D_f = 0.3, E_f = 200000, le = 8.5, phi = 0, f = 0.03, l = 0, theta = 0, xi = 0.1
+u
+tau = 2.5, l = 0, D_f = 0.026, E_f = 72000, theta = 0.01, xi = 0.0179, phi = 1, L = 1
+u
+tau = 2.5, l = 0, D_f = 0.026, E_f = 72000, theta = 0.01, xi = 0.0179, phi = 1
+u
+tau = 1.76, L_f = 17, D_f = 0.3, E_f = 200000, le = 8.5, phi = 0, f = 0.03, l = 0, theta = 0.01, xi = 0.0179

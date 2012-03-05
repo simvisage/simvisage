@@ -32,6 +32,7 @@ class SCMModelView (ModelView):
     screen4 = Enum('random_matrix_strenght', 'strain_profile', 'simulated_sigma_eps',
                    'analytical', modified = True)
 
+
     launch = Button('launch')
     max_stress = Float(5000.)
     points = Int(20)
@@ -39,6 +40,7 @@ class SCMModelView (ModelView):
     clear_2 = Bool(True)
     clear_3 = Bool(True)
     clear_4 = Bool(True)
+
 
     figure1 = Instance(Figure)
     def _figure1_default(self):
@@ -149,7 +151,7 @@ class SCMModelView (ModelView):
             axes.plot(scm.x_arr, scm.random_field, color = 'black', label = 'matrix strength')
             axes.plot(scm.x_arr, scm.sigma_m_x, color = 'red', label = 'matrix stress')
             axes.set_ylim(0, max(scm.random_field) * 1.2)
-            #axes.legend( loc = 'upper right' )
+            axes.legend( loc = 'upper right' )
 
 
         # ----------------------------------------------

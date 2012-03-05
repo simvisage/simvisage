@@ -8,12 +8,9 @@ from enthought.traits.api import HasTraits, Property, cached_property, \
     implements, Instance, Float, Array, List, Int
 from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
-from quaducom.resp_func.cb_clamped_fiber import \
-    CBClampedFiberSP
-from quaducom.resp_func.cb_emtrx_clamped_fiber import \
+from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
     CBEMClampedFiberSP
 from enthought.traits.ui.api import View, Item, VGroup
-from quaducom.ctt.homogenized_crack_bridges.i_homogenized_cb import ICB
 import numpy as np
 from stats.spirrid.rf import \
     RF
@@ -144,19 +141,18 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     # filaments
-    tau = .2
+    tau = 2.0
     Af = 5.31e-4
     Ef = 72e3
     Am = 50.
     Em = 30e3
-    l = 10.#RV('uniform', 5.0, 20.0)
+    l = RV('uniform', 5.0, 20.0)
     theta = 0.0
-    xi = 0.0179
     phi = 1.
-    Ll = np.linspace(0.01, 70., 5)
-    Lr = np.linspace(0.01, 70., 5)
+    Ll = np.linspace(0.01, 100., 5)
+    Lr = np.linspace(0.01, 100., 5)
     Nf = 1700.
-    xi = 50.5#RV( 'weibull_min', scale = 0.017, shape = 5 )
+    xi = 50.#RV( 'weibull_min', scale = 0.017, shape = 5 )
 
     rf = CBEMClampedFiberSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
@@ -193,8 +189,8 @@ if __name__ == '__main__':
 
     P = np.linspace(0, 250, 500)
     x = np.linspace(-200., 200., 500)
-    Ll = 4.
-    Lr = 0.
+    Ll = 6.67779632721
+    Lr = 5.00834724541
 
     ni = NDIdxInterp(data = data, axes_values = axes_values)
 

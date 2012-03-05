@@ -22,8 +22,7 @@ from scipy.stats import weibull_min
 from scipy.special import gamma
 from scipy.interpolate import InterpolatedUnivariateSpline, RectBivariateSpline
 
-from quaducom.meso.ctt.scm_cuypers.reinf_cross_section import \
-    SimplyRatio, GridReinforcement
+from quaducom.ctt.scm_cuypers.reinf_cross_section import SimplyRatio, GridReinforcement
 from util.traits.either_type import EitherType
 from quaducom.ctt.scm_cuypers.analyt_scm_model import SCM
 
