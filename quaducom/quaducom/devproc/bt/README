@@ -1,0 +1,7 @@
+
+== Bending test ==
+
+defines the classes for simulation and experimental execution of the
+bending tests. The experimental class summarizes the parameters
+of the experimental setup. The simulation class defines the 
+numerical idealization of the setup.

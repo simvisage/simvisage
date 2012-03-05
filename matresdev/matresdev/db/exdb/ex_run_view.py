@@ -55,7 +55,7 @@ from math import \
 from ex_run import \
     ExRun
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 import os

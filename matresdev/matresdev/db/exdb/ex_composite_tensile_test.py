@@ -86,7 +86,7 @@ from enthought.traits.ui.api \
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 import os

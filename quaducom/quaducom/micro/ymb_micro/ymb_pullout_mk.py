@@ -186,7 +186,7 @@ class MKYarnPDistrib( HasTraits ):
                                 width = 600, height = 400
                         )
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 class MKPullOutParamDistribs( SimDBClass ):

@@ -22,7 +22,7 @@ from util.traits.ui.item import \
 from numpy import \
     log
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 class ConcreteMixture( SimDBClass ):

@@ -46,7 +46,7 @@ from matplotlib.figure import Figure
 import pickle
 from copy import copy
 
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
 

@@ -55,7 +55,7 @@ from fabric_layout \
 from fabric_layup \
     import FabricLayUp
     
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 class DamageFunctionEntry( HasTraits ):

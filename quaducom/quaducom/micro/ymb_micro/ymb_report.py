@@ -38,7 +38,7 @@ from ymb_pullout import YMBPullOut
 from ymb_pdistrib import YMBDistrib
 from ymb_micro import YMBMicro
 
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 from os.path import join
 
 simdb = SimDB()

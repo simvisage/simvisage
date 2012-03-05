@@ -11,7 +11,7 @@ from enthought.traits.ui.api import Item, View, HGroup, RangeEditor, EnumEditor
 import unittest
 from numpy import min, array, all, sum, round
 from os.path import join
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 from StringIO import StringIO
 from ymb_data import YMBCutData, YMBSource, yarn_list
 from ymb_micro import YMBMicro

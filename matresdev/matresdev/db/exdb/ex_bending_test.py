@@ -100,7 +100,7 @@ from promod.matdb.trc.composite_cross_section import \
 
 from loadtxt_bending import loadtxt_bending
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 # Access to the toplevel directory of the database

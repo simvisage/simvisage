@@ -1,5 +1,5 @@
 '''
-Optimization of tensile test clamping
+Optimization of tensile test buttstrap clamping
 '''
 
 from enthought.traits.api import \

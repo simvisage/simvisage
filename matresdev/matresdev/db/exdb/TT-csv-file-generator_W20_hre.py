@@ -14,7 +14,7 @@ from numpy import \
 from os.path import \
     join
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 

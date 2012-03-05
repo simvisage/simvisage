@@ -12,7 +12,7 @@ from numpy import loadtxt, min, array, arange, ones_like, cumsum, vstack, \
     hstack, sum, zeros_like, zeros, ones, where, unique, pi, invert, \
     prod
 from os.path import join
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 from scipy.sparse import csr_matrix
 import numpy.ma as ma
 import os

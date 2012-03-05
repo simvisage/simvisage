@@ -28,7 +28,7 @@ from enthought.traits.ui.api import \
 from util.traits.ui.item import \
     Item
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 from math import \

@@ -128,7 +128,7 @@ from ex_type import ExType
 from i_ex_type import IExType
 
 from os.path import join
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 simdb = SimDB()

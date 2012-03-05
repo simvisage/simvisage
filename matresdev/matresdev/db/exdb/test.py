@@ -49,7 +49,7 @@ from ex_run import \
 from ex_run_view import \
     ExRunView
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 import os

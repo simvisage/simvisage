@@ -8,7 +8,7 @@ Created on Dec 13, 2010
 '''
 
 from os.path import join
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 from string import replace
 import os
 

@@ -32,7 +32,7 @@ from enthought.traits.ui.table_column import \
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter, AnITabularAdapter
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 import os

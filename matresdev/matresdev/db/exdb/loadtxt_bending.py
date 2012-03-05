@@ -40,7 +40,7 @@ from promod.exdb.ex_run import ExRun
 from promod.exdb.ex_run_view import ExRunView
 data_file_editor = FileEditor( filter = ['*.DAT'] )
 
-from promod.simdb import SimDB
+from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
 def dot2comma( value ):

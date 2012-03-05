@@ -222,7 +222,7 @@ class YMBMicro( HasTraits ):
 
 if __name__ == '__main__':
     from os.path import join
-    from promod.simdb import SimDB
+    from matresdev.db.simdb import SimDB
     simdb = SimDB()
     yarn_type = 'MAG'
     data = YMBCutData( source = YMBSource( yarn_type = yarn_type ), cf_limit = 0.5 )

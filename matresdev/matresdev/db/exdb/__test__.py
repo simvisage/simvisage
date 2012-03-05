@@ -45,7 +45,7 @@ from promod.matdb.trc.fabric_layup \
 from promod.matdb.trc.composite_cross_section \
     import CompositeCrossSection, plain_concrete
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
 # Access to the toplevel directory of the database

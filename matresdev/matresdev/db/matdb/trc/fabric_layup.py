@@ -32,7 +32,7 @@ from numpy import \
 from fabric_layout import \
     FabricLayOut
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 from math import \

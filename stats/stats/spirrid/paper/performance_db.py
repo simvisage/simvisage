@@ -26,7 +26,7 @@ from matplotlib.figure import Figure
 from enthought.traits.ui.api import \
     View, Item, HGroup
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 from stats.spirrid import RF, IRF, SPIRRID

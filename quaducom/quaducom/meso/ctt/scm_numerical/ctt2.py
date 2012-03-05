@@ -21,7 +21,8 @@ from enthought.traits.api import \
 
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
 from stats.spirrid.rv import RV
-from quaducom.ctt.scm_numerical.interpolated_spirrid import InterpolatedSPIRRID
+from quaducom.meso.ctt.scm_numerical.interpolated_spirrid import \
+    InterpolatedSPIRRID
 from stats.misc.random_field.gauss_1D import GaussRandomField
 from operator import attrgetter
 import pickle
