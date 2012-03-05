@@ -24,9 +24,6 @@ from stats.spirrid.rv import RV
 from interpolated_spirrid import InterpolatedSPIRRID
 from stats.misc.random_field.gauss_1D import GaussRandomField
 from operator import attrgetter
-import pickle
-
-
 
 import numpy as np
 
