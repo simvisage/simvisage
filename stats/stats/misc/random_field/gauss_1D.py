@@ -5,14 +5,14 @@ Created on 24.06.2011
 '''
 
 from enthought.traits.api import HasTraits, Float, Array, Int, Property, \
-    cached_property, Bool
+    cached_property, Bool, Event
 from math import e
 from numpy import dot, transpose, ones, array, eye, real, linspace, reshape
 from numpy.linalg import eig
 from numpy.random import shuffle
 from scipy.linalg import toeplitz
-from scipy.stats import norm
-
+from scipy.stats import norm, weibull_min
+import numpy as np
 
 class GaussRandomField(HasTraits):
     '''Generating Gaussian distributed random field by scaling a standardized normal distribution random
@@ -31,13 +31,13 @@ class GaussRandomField(HasTraits):
     xgrid = Array
 
     non_negative_check = False
-    reevaluate = Bool(False)
+    reevaluate = Event
 
     def acor(self, dx, lcorr):
         '''autocorrelation function'''
         return e ** (-(dx / lcorr) ** 2)
 
-    eigenvalues = Property(depends_on = '+modified')
+    eigenvalues = Property(depends_on = 'lacor')
     @cached_property
     def _get_eigenvalues(self):
         '''evaluates the eigenvalues and eigenvectors of the autocorrelation matrix'''
@@ -54,6 +54,7 @@ class GaussRandomField(HasTraits):
     random_field = Property(Array , depends_on = '+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
+        np.random.seed(1)
         '''simulates the Gaussian random field'''
         #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
@@ -64,6 +65,8 @@ class GaussRandomField(HasTraits):
         shuffle(randsim)
         #matrix containing standard Gauss distributed random numbers
         xi = transpose(ones((self.nsim, len(self.xgrid))) * array([ norm().ppf(randsim) ]))
+        #matrix containing Weibull distributed random numbers
+        #xi = transpose(ones((self.nsim, len(self.xgrid))) * array([ weibull_min().ppf(randsim) ]))
         #eigenvalue matrix 
         LAMBDA = eye(len(self.xgrid)) * _lambda
         #cutting out the real part
@@ -82,7 +85,7 @@ class GaussRandomField(HasTraits):
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = GaussRandomField(lacor = 6. , xgrid = linspace(0, 100., 100), mean = 0., stdev = 1.)
+    rf = GaussRandomField(lacor = 6. , xgrid = linspace(0, 100., 100), mean = 4., stdev = 1.5)
     x = rf.xgrid
     for sim in range(3):
         p.plot(x, rf.random_field, lw = 2)
