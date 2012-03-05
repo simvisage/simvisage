@@ -26,6 +26,8 @@ from stats.misc.random_field.gauss_1D import GaussRandomField
 from operator import attrgetter
 import pickle
 
+
+
 import numpy as np
 
 class CBRandomSample(HasTraits):
