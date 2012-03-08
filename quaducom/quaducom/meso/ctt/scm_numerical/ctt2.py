@@ -21,8 +21,8 @@ from enthought.traits.api import \
 
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
 from stats.spirrid.rv import RV
-from interpolated_spirrid import InterpolatedSPIRRID
-from stats.misc.random_field.gauss_1D import GaussRandomField
+from interpolated_spirrid import InterpolatedSPIRRID, NonInterpolatedSPIRRID
+from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 
 import numpy as np
@@ -145,6 +145,7 @@ class CBMeanFactory(CBMFactory):
     @cached_property
     def _get_interpolated_spirrid(self):
         return InterpolatedSPIRRID(spirrid = self.spirrid)
+        #return NonInterpolatedSPIRRID(spirrid = self.spirrid)
 
     #===========================================================================
     # Construct new crack bridge (the mean response is shared by all instances)
@@ -163,6 +164,8 @@ class CBRandomFactory(CBMFactory):
         sample = CBRandomSample(randomization = self.randomization)
         return CB(get_force_x_reinf = sample,
                   randomization = self.randomization)
+
+from scipy.interpolate import RectBivariateSpline
 
 class CTT(HasTraits):
 
@@ -208,15 +211,20 @@ class CTT(HasTraits):
         sig_ff = self.applied_force[:, np.newaxis] * Em / (Em * Am + Er * Ar * Nf)
         return np.ones(len(self.x_arr)) * sig_ff
 
-    gauss_rf = Instance(GaussRandomField)
-    matrix_strength = Property(depends_on = 'gauss_rf.+modified')
+    random_field = Instance(RandomField)
+    matrix_strength = Property(depends_on = 'random_field.+modified')
     @cached_property
     def _get_matrix_strength(self):
-        rf = self.gauss_rf.random_field
+        rf = self.random_field.random_field
         #rf[-self.nx / 5:] *= 3.
         #rf[:self.nx / 5] *= 3.
-        return np.ones_like(self.applied_force[:, np.newaxis]) * rf
+        field_2D = np.ones_like(self.applied_force[:, np.newaxis]) * rf
+        rf_spline = RectBivariateSpline(self.applied_force, self.random_field.xgrid, field_2D)
+        return rf_spline(self.applied_force, self.x_arr)
 
+#    matrix_strength = Array
+#    def _matrix_strength_default(self):
+#        return self.matrix_strength_spline()
 
     def sort_cbs(self, P):
         '''sorts the CBs by position and adjusts the boundary conditions'''
@@ -298,7 +306,7 @@ class CTT(HasTraits):
     def _get_eps_r(self):
         return self.sigma_r / self.cb_randomization.q.E_r
 
-    eps_sigma = Property(depends_on = '+force, length, nx, gauss_rf.+modified')
+    eps_sigma = Property(depends_on = '+force, length, nx, random_field.+modified')
     def _get_eps_sigma(self):
 
         eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
@@ -307,20 +315,22 @@ class CTT(HasTraits):
 
 if __name__ == '__main__':
 
-    from quaducom.resp_func.cb_emtrx_clamped_fiber import \
+    from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
         CBEMClampedFiberSP
     #import enthought.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
 
     length = 1000.
-    nx = 1000
-    gauss_rf = GaussRandomField(lacor = 5.,
-                                    xgrid = np.linspace(0., length, nx),
-                                    nsim = 1,
-                                    mean = 4.,
-                                    stdev = .7,
-                                    non_negative_check = True
+    nx = 2000
+    random_field = RandomField(lacor = 5.,
+                                xgrid = np.linspace(0., length, 400),
+                                nsim = 1,
+                                loc = 0.3,
+                                shape = 10.,
+                                scale = 5.,
+                                non_negative_check = True,
+                                distribution = 'Weibull'
                                )
 
     rf = CBEMClampedFiberSP()
@@ -361,7 +371,7 @@ if __name__ == '__main__':
 
     ctt = CTT(length = length,
               nx = nx,
-              gauss_rf = gauss_rf,
+              random_field = random_field,
               cb_randomization = rand,
               cb_type = 'mean',
               force_min = 0.1,

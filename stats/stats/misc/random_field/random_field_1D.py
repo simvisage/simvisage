@@ -90,17 +90,16 @@ class RandomField(HasTraits):
                 raise ValueError, 'negative value(s) in random field'
         return rf
 
-
-
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = RandomField(lacor = 6. , xgrid = linspace(0, 100., 100), mean = 4., stdev = 1.5)
+    rf = RandomField(lacor = 6. , xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
     x = rf.xgrid
     rf.distribution = 'Weibull'
     rf.loc = 1.
-    rf.shape = 0.5
-    p.plot(x, rf.random_field, lw = 2, label = 'Weibull')
+    rf.shape = 1000
+    rf.scale = 5.
+    p.plot(x, rf.random_field, lw = 2, color = 'black', label = 'Weibull')
     rf.distribution = 'Gauss'
     p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
     p.legend(loc = 'best')

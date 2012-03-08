@@ -32,7 +32,7 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 def H(x):
-    return sign(sign(x) + 1.)
+    return 0.5*(sign(x) + 1.)
 
 class CBEMClampedFiber(RF):
     '''
@@ -215,14 +215,14 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
 if __name__ == '__main__':
 
-    t = .1
+    t = 7.1
     Af = 5.31e-4
     Ef = 72e3
     Am = 50. / 1700
     Em = 30e3
-    l = 10.
+    l = 0.
     theta = 0.01
-    xi = 0.0179
+    xi = 10.0179
     phi = 1.
     Ll = 0.
     Lr = 0.1
@@ -239,15 +239,30 @@ if __name__ == '__main__':
         plt.show()
 
     def SP():
+        plt.figure()
         cbcsp = CBEMClampedFiberSP()
         x = linspace(-100, 40, 300)
-        q = cbcsp(.3, x, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
+        q = cbcsp(.1, x, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
         plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
         plt.xticks(fontsize = 14)
         plt.yticks(fontsize = 14)
         plt.legend(loc = 'best')
-        plt.show()
+        plt.ylim(0,60)
 
+    def SP2():
+        plt.figure()
+        cbcsp = CBEMClampedFiberSP()
+        x = linspace(-100, 40, 7)
+        print x
+        q = cbcsp(.1, x, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
+        print q
+        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
+        plt.xticks(fontsize = 14)
+        plt.yticks(fontsize = 14)
+        plt.legend(loc = 'best')
+        plt.ylim(0,60)
+        plt.show()
     #Pw()
     SP()
+    SP2()
 
