@@ -77,11 +77,9 @@ class RandomField(HasTraits):
         #cutting out the real part
         ydata = dot(dot(phi, (LAMBDA) ** 0.5), xi).real
         if self.distribution == 'Gauss':
-            print 'Gauss'
             # scaling the std. distribution
             scaled_ydata = ydata * self.stdev + self.mean
         elif self.distribution == 'Weibull':
-            print 'Weibull'
             # setting Weibull params
             Pf = norm().cdf(ydata)
             scaled_ydata = weibull_min(self.shape, scale = self.scale, loc = self.loc).ppf(Pf)
