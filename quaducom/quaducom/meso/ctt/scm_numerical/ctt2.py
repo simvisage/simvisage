@@ -102,7 +102,7 @@ class CB(HasTraits):
 
     def get_eps_x_matrix(self):
         '''
-        evaluation of stress profile in the vicinity of a crack bridge
+        evaluation of strain profile in the vicinity of a crack bridge
         '''
         P = self.P
         Pff = np.ones(len(self.x))[:, np.newaxis] * P[np.newaxis, :]
@@ -116,7 +116,7 @@ class CB(HasTraits):
 
     def get_crack_width(self):
         '''
-        evaluation of stress profile in the vicinity of a crack bridge
+        evaluation of crack widths
         '''
         return self.get_force_x_reinf(self.P, self.x, self.Ll, self.Lr)[1]
 
