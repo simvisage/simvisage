@@ -17,9 +17,8 @@ from stats.spirrid.rf import \
 from math import pi
 from scipy import ndimage
 from mathkit.mfn import MFnLineArray
-#import scitools.numpytools as st
 import types
-
+from matplotlib import pyplot as plt
 
 def orthogonalize_filled(args):
     '''
@@ -79,7 +78,7 @@ class NDIdxInterp(HasTraits):
         # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
         # icoords = [a, b, c]
 
-        val = ndimage.map_coordinates(data, icoords, order = order, mode = 'nearest')
+        val = ndimage.map_coordinates(data, icoords, order = 1, mode = 'nearest')
         return val
 
     def get_icoords(self, gcoords):
@@ -91,6 +90,7 @@ class NDIdxInterp(HasTraits):
                    for gcoord, axis_values in zip(gcoords, self.axes_values) ]
         return icoords
 
+import copy
 
 class InterpolatedSPIRRID(HasTraits):
 
@@ -99,7 +99,7 @@ class InterpolatedSPIRRID(HasTraits):
         return self.spirrid.evars['w']
 
     spirrid = Instance(SPIRRID)
-
+    
     def P2w(self, *args):
 
         # set the x position to 0.0
@@ -107,9 +107,10 @@ class InterpolatedSPIRRID(HasTraits):
         args[0] = self.ctrl_arr
         args[1] = 0.0
         P = self.interp_grid(*args)
-
         id_max = np.argmax(P)
         Pw_line = MFnLineArray(xdata = P[:id_max], ydata = self.ctrl_arr[:id_max])
+#        plt.plot(Pw_line.ydata, Pw_line.xdata)
+#        plt.show()       
         return Pw_line
 
     interp_grid = Property()
@@ -133,32 +134,77 @@ class InterpolatedSPIRRID(HasTraits):
         w = P2w_line.get_values(P)
         return self.interp_grid(w, *args[1:]), w
 
+
+class NonInterpolatedSPIRRID(HasTraits):
+
+    ctrl_arr = Property(Array)
+    def _get_ctrl_arr(self):
+        return self.spirrid.evars['w']
+
+    spirrid = Instance(SPIRRID)
+
+    def mu_P_w(self, Ll, Lr):
+        sp = copy.copy(self.spirrid)
+        sp.evars.pop('x')
+        sp.evars.pop('Ll')
+        sp.evars.pop('Lr')
+        sp.tvars['x'] = 0.0
+        sp.tvars['Ll'] = Ll
+        sp.tvars['Lr'] = Lr
+        return sp.mu_q_arr
+    
+    def P2w(self, *args):
+        P = self.mu_P_w(args[2], args[3])
+        id_max = np.argmax(P)
+        Pw_line = MFnLineArray(xdata = P[:id_max], ydata = self.ctrl_arr[:id_max])
+#        plt.plot(Pw_line.ydata, Pw_line.xdata)
+#        plt.show()
+        return Pw_line
+
+    def spirrid_response(self,w,*args):
+        sp = copy.copy(self.spirrid)
+        sp.evars = {'w':w, 'x':args[0]}
+        sp.tvars['Ll'] = args[1]
+        sp.tvars['Lr'] = args[2]
+        return sp.mu_q_arr.T
+
+    def __call__(self, *args):
+        '''
+        evaluation of force profile in the vicinity of a crack bridge
+        '''
+        P = args[0]
+        P2w_line = self.P2w(*args)
+        if np.max(P) > np.max(P2w_line.xdata):
+            raise ValueError, 'maximum force %.1f reached' % np.max(P2w_line.xdata)
+        w = P2w_line.get_values(P)
+        return self.spirrid_response(w, *args[1:]), w
+
+
 if __name__ == '__main__':
 
 
     import enthought.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize
-    from matplotlib import pyplot as plt
 
     # filaments
-    tau = 2.0
+    tau = 2.01
     Af = 5.31e-4
     Ef = 72e3
     Am = 50.
     Em = 30e3
-    l = RV('uniform', 5.0, 20.0)
+    l = 0.0#RV('uniform', 5.0, 20.0)
     theta = 0.0
     phi = 1.
-    Ll = np.linspace(0.01, 100., 5)
-    Lr = np.linspace(0.01, 100., 5)
+    Ll = np.linspace(0.01, 100., 3)
+    Lr = np.linspace(0.01, 100., 3)
     Nf = 1700.
     xi = 50.#RV( 'weibull_min', scale = 0.017, shape = 5 )
 
     rf = CBEMClampedFiberSP()
-    isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
+    nisp = NonInterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
                                           sampling_type = 'LHS',
-                                       evars = dict(w = np.linspace(0.0, .25, 40),
-                                                   x = np.linspace(-100., 100., 100),
+                                       evars = dict(w = np.linspace(0.0, .1, 100),
+                                                   x = np.linspace(-10., 10., 100),
                                                    Ll = Ll,
                                                    Lr = Lr,
                                                     ),
@@ -176,35 +222,40 @@ if __name__ == '__main__':
                                         n_int = 20),
                                     )
 
-#    e = isp.spirrid.evars['x']
-#    print isp.spirrid.mu_q_arr.shape
-#    q = isp.spirrid.mu_q_arr[25, :, 4, 4]
-#    print q
-#    print 'qm =', np.max(q) / rf.Kc * rf.Kr
-#    plt.plot(e, q)
-#    plt.show()
+    isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
+                                          sampling_type = 'LHS',
+                                       evars = dict(w = np.linspace(0.0, .1, 100),
+                                                   x = np.linspace(-10., 10., 61),
+                                                   Ll = Ll,
+                                                   Lr = Lr,
+                                                    ),
+                                     tvars = dict(tau = tau,
+                                                   l = l,
+                                                   A_r = Af,
+                                                   E_r = Ef,
+                                                   theta = theta,
+                                                   xi = xi,
+                                                   phi = phi,
+                                                   E_m = Em,
+                                                   A_m = Am,
+                                                   Nf = Nf,
+                                                        ),
+                                        n_int = 20),
+                                    )
 
-    data = isp.spirrid.mu_q_arr
-    axes_values = isp.spirrid.evar_lst
-
-    P = np.linspace(0, 250, 500)
-    x = np.linspace(-200., 200., 500)
-    Ll = 6.67779632721
-    Lr = 5.00834724541
-
-    ni = NDIdxInterp(data = data, axes_values = axes_values)
-
-    pr = (P / rf.Kc * rf.Kr)[np.newaxis, :] * np.ones_like(x)[:, np.newaxis]
-
-
-    e_arr = orthogonalize([P, x])
-    n_e_arr = [ e / np.max(np.fabs(e)) for e in e_arr ]
-
-    mu_q_arr = isp(P, x, Ll, Lr)[0]
-    #pr = isp(P, x, 10., Lr)
-    n_mu_q_arr = mu_q_arr / np.max(np.fabs(mu_q_arr))
-    #n_pr = pr / np.max(np.fabs(mu_q_arr))
-    m.surf(n_e_arr[0], n_e_arr[1], n_mu_q_arr)
-    #m.surf(n_e_arr[0], n_e_arr[1], n_pr)
-
-    m.show()
+    def plot():
+        
+        P = np.linspace(0, 500, 100)
+        x = np.linspace(-10., 10., 61)
+        Ll = 100.
+        Lr = 100.
+    
+        e_arr = orthogonalize([P, x])
+        mu_q_nisp = nisp(P, x, Ll, Lr)[0]
+        mu_q_isp = isp(P, x, Ll, Lr)[0]
+        #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
+        m.surf(e_arr[0], e_arr[1], mu_q_nisp)
+        m.surf(e_arr[0], e_arr[1], mu_q_isp)
+        m.show()
+        
+    plot()

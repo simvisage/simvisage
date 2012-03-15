@@ -5,7 +5,7 @@ Created on 24.06.2011
 '''
 
 from enthought.traits.api import HasTraits, Float, Array, Int, Property, \
-    cached_property, Bool, Event
+    cached_property, Bool, Event, Enum
 from math import e
 from numpy import dot, transpose, ones, array, eye, real, linspace, reshape
 from numpy.linalg import eig
@@ -14,8 +14,8 @@ from scipy.linalg import toeplitz
 from scipy.stats import norm, weibull_min
 import numpy as np
 
-class GaussRandomField(HasTraits):
-    '''Generating Gaussian distributed random field by scaling a standardized normal distribution random
+class RandomField(HasTraits):
+    '''Generating a random field by scaling a standardized normal distribution random
      field. The random field array is stored in the property random_field'''
 
     #Parameters to be set
@@ -27,8 +27,15 @@ class GaussRandomField(HasTraits):
                   desc = 'mean value', modified = True)
     stdev = Float(1., auto_set = False, enter_set = True,
                    desc = 'standard deviation', modified = True)
+    shape = Float(10., auto_set = False, enter_set = True,
+                  desc = 'shape for 3 params weibull', modified = True)
+    scale = Float(5., auto_set = False, enter_set = True,
+                   desc = 'scale for 3 params weibull', modified = True)
+    loc = Float(1., auto_set = False, enter_set = True,
+                   desc = 'location for 3 params weibull', modified = True)
 
     xgrid = Array
+    distribution = Enum('Gauss', 'Weibull', modified = True)
 
     non_negative_check = False
     reevaluate = Event
@@ -65,14 +72,17 @@ class GaussRandomField(HasTraits):
         shuffle(randsim)
         #matrix containing standard Gauss distributed random numbers
         xi = transpose(ones((self.nsim, len(self.xgrid))) * array([ norm().ppf(randsim) ]))
-        #matrix containing Weibull distributed random numbers
-        #xi = transpose(ones((self.nsim, len(self.xgrid))) * array([ weibull_min().ppf(randsim) ]))
         #eigenvalue matrix 
         LAMBDA = eye(len(self.xgrid)) * _lambda
         #cutting out the real part
         ydata = dot(dot(phi, (LAMBDA) ** 0.5), xi).real
-        # scaling the std. distribution
-        scaled_ydata = ydata * self.stdev + self.mean
+        if self.distribution == 'Gauss':
+            # scaling the std. distribution
+            scaled_ydata = ydata * self.stdev + self.mean
+        elif self.distribution == 'Weibull':
+            # setting Weibull params
+            Pf = norm().cdf(ydata)
+            scaled_ydata = weibull_min(self.shape, scale = self.scale, loc = self.loc).ppf(Pf)
         self.reevaluate = False
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
@@ -80,14 +90,17 @@ class GaussRandomField(HasTraits):
                 raise ValueError, 'negative value(s) in random field'
         return rf
 
-
-
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = GaussRandomField(lacor = 6. , xgrid = linspace(0, 100., 100), mean = 4., stdev = 1.5)
+    rf = RandomField(lacor = 6. , xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
     x = rf.xgrid
-    for sim in range(3):
-        p.plot(x, rf.random_field, lw = 2)
-        rf.reevaluate = True
+    rf.distribution = 'Weibull'
+    rf.loc = 1.
+    rf.shape = 1000
+    rf.scale = 5.
+    p.plot(x, rf.random_field, lw = 2, color = 'black', label = 'Weibull')
+    rf.distribution = 'Gauss'
+    p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
+    p.legend(loc = 'best')
     p.show()
