@@ -55,18 +55,12 @@ from math import \
 from ex_run import \
     ExRun
 
-from matresdev.db.simdb import \
-    SimDB
-
 import os
-import pickle
-import string
 
 # Access to the toplevel directory of the database
 #
+from matresdev.db.simdb import SimDB
 simdb = SimDB()
-
-#data_file_editor = FileEditor(filter = ['first | *.DAT', 'second | *.raw'])
 
 class ExRunView(ModelView):
 

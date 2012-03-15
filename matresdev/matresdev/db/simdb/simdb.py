@@ -21,30 +21,30 @@ from os.path import \
 from enthought.util.home_directory import \
     get_home_directory
 
-class SimDB( HasTraits ):
+class SimDB(HasTraits):
     '''
     Basic structure of the database directory.
     
-    Imlements the relative paths for the three different
+    Implements the relative paths for the three different
     categories of data
-    - experimenta data
+    - experimental data
     - simulation data
     - material data
     
     '''
     home_dir = Property
-    def _get_home_dir( self ):
+    def _get_home_dir(self):
         return get_home_directory()
     
     simdb_dir = Property
     def _get_simdb_dir(self):
-        return join( self.home_dir, 'simdb' )
+        return join(self.home_dir, 'simdb')
     
     exdata_dir = Property
     def _get_exdata_dir(self):
-        return join( self.simdb_dir, 'exdata' )
+        return join(self.simdb_dir, 'exdata')
     
     matdata_dir = Property
     def _get_matdata_dir(self): 
-        return join( self.simdb_dir, 'matdata' )
+        return join(self.simdb_dir, 'matdata')
 
