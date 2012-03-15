@@ -4,8 +4,6 @@ Created on Mar 6, 2012
 @author: rch
 '''
 
-#import sys
-#sys.path += ['/home/rch/workspace/simvisage/src']
 import fnmatch
 import os.path
 
@@ -34,22 +32,32 @@ def replace_string_in_files(path,
         fid.write(text)
         fid.close()
         print 'finished'
-                
+
+def migrate_classes(migration_table):
+    '''Walk through all files within the simdb storage'
+    and perform the replacement of strings specifified in `replace_dict\
+    in all files ending with pickle'
+    '''
+    from matresdev.db.simdb import SimDB
+    simdb = SimDB()    
+
+    replace_string_in_files(simdb.exdata_dir,
+                            migration_table, '.pickle')
+    replace_string_in_files(simdb.exdata_dir,
+                            migration_table, 'ex_type.cls')
+                    
 if __name__ == '__main__':
 
     from matresdev.db.simdb import SimDB
     simdb = SimDB()
 
-    def migrate_promod_to_quaducom():
-        migration_table = {'promod.matdb.trc' : 'matresdev.db.matdb.trc',
-                           'promod.exdb.ex_composite_tensile_test' : 'quaducom.devproc.tt.dbtt.exp_dbtt',
-                           'ExCompositeTensileTest' : 'ExpDogBoneTensileTest',
-                           'promod.exdb.ex_bending_test' : 'quaducom.devproc.bt.p3.exp_bt_3pt',
-                           'ExBendingTest' : 'ExpBendingTest3Pt',
-                           'promod.exdb.ex_plate_test' : 'quaducom.devproc.st.exp_st',
-                           'ExPlateTest' : 'ExpSlabTest'} 
+    migration_table = {'promod.matdb.trc' : 'matresdev.db.matdb.trc',
+                       'promod.exdb.ex_composite_tensile_test' : 'quaducom.devproc.tt.dbtt.exp_dbtt',
+                       'ExCompositeTensileTest' : 'ExpDogBoneTensileTest',
+                       'promod.exdb.ex_bending_test' : 'quaducom.devproc.bt.p3.exp_bt_3pt',
+                       'ExBendingTest' : 'ExpBendingTest3Pt',
+                       'promod.exdb.ex_plate_test' : 'quaducom.devproc.st.exp_st',
+                       'ExPlateTest' : 'ExpSlabTest'} 
 
-        replace_string_in_files(simdb.exdata_dir, migration_table, '.pickle')
-        replace_string_in_files(simdb.exdata_dir, migration_table, 'ex_type.cls')
 
-    migrate_promod_to_quaducom()
+    # migrate_classes(migration_table)
