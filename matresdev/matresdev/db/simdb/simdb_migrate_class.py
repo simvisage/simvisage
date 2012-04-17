@@ -60,4 +60,4 @@ if __name__ == '__main__':
                        'ExPlateTest' : 'ExpSlabTest'} 
 
 
-    migrate_classes(migration_table)
+    #migrate_classes(migration_table)
