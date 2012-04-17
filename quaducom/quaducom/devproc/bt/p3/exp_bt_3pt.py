@@ -348,5 +348,5 @@ class ExpBendingTest3Pt(ExType):
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpBendingTest3Pt())
+    ex = ExRunClassExt(klass = ExpBendingTest3Pt)
     ex.configure_traits()

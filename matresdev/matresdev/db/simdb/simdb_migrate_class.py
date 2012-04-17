@@ -43,6 +43,8 @@ def migrate_classes(migration_table):
 
     replace_string_in_files(simdb.exdata_dir,
                             migration_table, '.pickle')
+    replace_string_in_files(simdb.matdata_dir,
+                            migration_table, '.pickle')
     replace_string_in_files(simdb.exdata_dir,
                             migration_table, 'ex_type.cls')
                     
@@ -60,4 +62,4 @@ if __name__ == '__main__':
                        'ExPlateTest' : 'ExpSlabTest'} 
 
 
-    # migrate_classes(migration_table)
+    migrate_classes(migration_table)

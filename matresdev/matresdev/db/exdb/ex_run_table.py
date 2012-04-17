@@ -223,6 +223,13 @@ class ExRunClassExt(HasTraits):
         else:
             return None
 
+    def export_instances(self):
+        ex_table = []
+        for inst in self.instances:
+            row = [ getattr(inst, tcol) for tcol in self.table_columns ]
+            ex_table.append(row)
+        print ex_table
+
     def keys(self):
         return self.instances.keys()
 
@@ -352,15 +359,3 @@ class ExRunClassExt(HasTraits):
                     resizable = True,
                     height = 0.8, width = 0.8,
                     )
-
-if __name__ == '__main__':
-    from promod.exdb.ex_composite_tensile_test import \
-        ExCompositeTensileTest
-    from promod.exdb.ex_plate_test import \
-        ExPlateTest
-    from promod.exdb.ex_bending_test import \
-        ExBendingTest
-    ex = ExRunClassExt(klass = ExCompositeTensileTest)
-#    ex = ExRunClassExt( klass = ExPlateTest )
-#    ex = ExRunClassExt( klass = ExBendingTest )
-    ex.configure_traits()

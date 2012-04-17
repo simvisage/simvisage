@@ -373,6 +373,7 @@ class TLoop(IBVResource):
                 except np.linalg.LinAlgError:
                     # abort computation due to ultimate failure
                     # might be caused by material instability
+                    print 'Exception of equation solver, aborting'
                     abort_tloop = True
                     break
 
@@ -472,6 +473,7 @@ class TLoop(IBVResource):
 
             if abort_tloop:
                 # ultimate failure exit the calculation
+                print 'ABORT tloop TRUE'
                 break
 
             if adap.ehandler_needed(): # explicit adaptations 
@@ -479,7 +481,12 @@ class TLoop(IBVResource):
                     self.accept_time_step() # register the state and response
                 adap.ehandler_invoke()
             else:
-                self.accept_time_step()
+
+                try:
+                    self.accept_time_step()
+                except np.linalg.LinAlgError:
+                    print 'Something wrong aborting agoin'
+                    pass
                 self.adap.end_time_step(self.t_n1)
 
                 # Set new target time

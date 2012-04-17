@@ -12,14 +12,14 @@
 #
 # Created on Feb 15, 2010 by: rch, ascholzen
 
-# @todo - construct the class for fabric layout returning calculating the 
+# @todo - construct the class for fabric layout calculating the 
 #         cs-area of the reinforcement.
 #       - instead of processed array - construct the array traits accessible
 #         with the name of the measured channels
 #       - reread the pickle file without processing the data (take care to reestablish
 #         the link from the ex_type to the ex_run
 #       - define the exdb_browser showing the inputs and outputs in a survey
-#       - define the ExTreatment class with cummulative evaluation of the response values.
+#       - define the ExTreatment class with cumulative evaluation of the response values.
 #       
 #
 
@@ -71,17 +71,6 @@ from enthought.traits.ui.api \
 
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter
-
-from matresdev.db.simdb import \
-    SimDB
-
-import os
-import pickle
-import string
-
-# Access to the toplevel directory of the database
-#
-simdb = SimDB()
 
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
@@ -545,20 +534,5 @@ class ExpDogBoneTensileTest(ExType):
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    from matresdev.db.exdb.ex_run_view import ExRunView
-
-    ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'ZiE_2011-06-08_TT-12c-6cm-90-TU',
-                            'TT-12c-6cm-90-TU-V1.DAT')
-
-#    ex_path = os.path.join( simdb.exdata_dir, 'plate_tests', 'PT-6a-ibac',
-#                            'PTi-6a-woSF', 'PTi-6a-woSF-V1.DAT' )
-
-#    ex_path = os.path.join( simdb.exdata_dir, 'plate_tests', 'PT-10a',
-#                            'PT10-10a.DAT' )
-
-    doe_reader = ExRunView(data_file = ex_path)
-    doe_reader.configure_traits()
-
-
     ex = ExRunClassExt(klass = ExpDogBoneTensileTest)
     ex.configure_traits()

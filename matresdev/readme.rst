@@ -21,7 +21,7 @@ matresdev.db.exdb
 -----------------
 Persistent data storage for experimental results within a directory
 tree. The subdirectories can be defined as class extensions
-of python classes. Measured data can be inserted in form
+of Python classes. Measured data can be inserted in form
 of files produced by the measuring equipment. They are
 automatically incorporated into the class extension defined
 in the subdirectory. A class extension can be distributed
