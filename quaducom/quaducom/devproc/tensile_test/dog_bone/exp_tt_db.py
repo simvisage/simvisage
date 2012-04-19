@@ -90,9 +90,10 @@ from matresdev.db.matdb.trc.composite_cross_section \
     import CompositeCrossSection, plain_concrete
 
 
-class ExpDogBoneTensileTest(ExType):
-    '''Read the data from the directory
+class ExpTTDB(ExType):
+    '''Experiment: Tensile Test Dog Bone
     '''
+#    label = Str('dog bone tensile test')
 
     implements(IExType)
 
@@ -208,7 +209,7 @@ class ExpDogBoneTensileTest(ExType):
         If necessary modify the assigned data, e.i. change
         the sign or specify an offset for the specific test setup.
         '''
-        super(ExpDogBoneTensileTest, self).process_source_data()
+        super(ExpTTDB, self).process_source_data()
 
         # NOTE: the small tensile tests (INSTRON) with width = 0.10 m have only 3 displacement gauges
         #
@@ -534,5 +535,5 @@ class ExpDogBoneTensileTest(ExType):
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpDogBoneTensileTest)
+    ex = ExRunClassExt(klass = ExpTTDB)
     ex.configure_traits()

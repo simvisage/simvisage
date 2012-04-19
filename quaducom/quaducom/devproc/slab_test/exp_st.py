@@ -91,10 +91,10 @@ from matresdev.db.matdb.trc.concrete_mixture \
 from matresdev.db.matdb.trc.composite_cross_section import \
     CompositeCrossSection, plain_concrete
 
-class ExpSlabTest(ExType):
-    '''Read the data from the directory
+class ExpST(ExType):
+    '''Experiment: Slab Test
     '''
-
+#    label = Str('slab test')
     implements(IExType)
 
     #--------------------------------------------------------------------
@@ -379,6 +379,6 @@ class ExpSlabTest(ExType):
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpSlabTest)
+    ex = ExRunClassExt(klass = ExpST)
     ex.configure_traits()
 

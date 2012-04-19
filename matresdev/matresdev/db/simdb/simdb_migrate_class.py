@@ -59,7 +59,37 @@ if __name__ == '__main__':
                        'promod.exdb.ex_bending_test' : 'quaducom.devproc.bt.p3.exp_bt_3pt',
                        'ExBendingTest' : 'ExpBendingTest3Pt',
                        'promod.exdb.ex_plate_test' : 'quaducom.devproc.st.exp_st',
-                       'ExPlateTest' : 'ExpSlabTest'} 
+                       'ExPlateTest' : 'ExpSlabTest',
+ 
+                       'exp_dbtt':'exp_tt_db',
+                       'quaducom.devproc.tt.dbtt' : 'quaducom.devproc.tensile_test.dog_bone',
+                       'ExpDogBoneTensileTest' : 'ExpTTDB',
+                       # also replace class name in the file "exp_tt_db.py" 
+
+                       'quaducom.devproc.bt.p4' : 'quaducom.devproc.bending_test.four_point',
+                       'quaducom.devproc.bt.p3' : 'quaducom.devproc.bending_test.three_point',
+                       'ExpBendingTest3Pt' : 'ExpBendingTestThreePoint',
+                       'ExpBendingTest4Pt' : 'ExpBendingTestFourPoint',
+                       # also replace class name in the file "exp_bt_3pt.py" 
+                       # also replace class name in the file "exp_bt_4pt.py" 
+
+                       'quaducom.devproc.st' : 'quaducom.devproc.slab_test',
+                       'quaducom.devproc.dt' : 'quaducom.devproc.disk_test',
+
+                        'DiskTestSetup':'SimDT',
+                        'ExpSlabTest':'ExpST',
+#                        'SimSlabTest':'SimpST',
+
+                        'quaducom.devproc.dt' : 'quaducom.devproc.disk_test',
+
+                        'quaducom.devproc.tt.bctt' : 'quaducom.devproc.tensile_test.buttstrap_clamping',
+                        'ButtstrapClamping': 'ExpTTBC',
+                        'ExpTensileTestButtstrapClamping':'ExpTTBC'
+
+#                        'SimTreePointBending' : 'SimBT3PT'
+#                        'SimTreePointBendingDB':'SimBT3PTDB'
+
+    } 
 
 
     migrate_classes(migration_table)

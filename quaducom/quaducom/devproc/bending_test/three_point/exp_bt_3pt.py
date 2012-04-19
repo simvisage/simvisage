@@ -103,9 +103,11 @@ from matresdev.db.simdb import \
 #
 simdb = SimDB()
 
-class ExpBendingTest3Pt(ExType):
-    '''Read the data from the directory
+#class ExpBendingTestThreePoint(ExType):
+class ExpBT3PT(ExType):
+    '''Experiment: Bending Test Three Point 
     '''
+#    label = Str('three point bending test')
 
     implements(IExType)
 
@@ -237,7 +239,7 @@ class ExpBendingTest3Pt(ExType):
         '''read in the measured data from file and assign
         attributes after array processing.        
         '''
-        super(ExpBendingTest3Pt, self).process_source_data()
+        super(ExpBT3PT, self).process_source_data()
 
         elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'elastomer_f-w.raw')
         _data_array_elastomer = loadtxt_bending(elastomer_path)
@@ -348,5 +350,5 @@ class ExpBendingTest3Pt(ExType):
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpBendingTest3Pt)
+    ex = ExRunClassExt(klass = ExpBT3PT)
     ex.configure_traits()

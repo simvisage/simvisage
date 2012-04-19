@@ -51,8 +51,9 @@ from matresdev.simiter.sim_pstudy import\
 
 from mathkit.geo.transform.square2circle import GeoSquare2Circle
 
-class ButtstrapClamping(IBVModel):
-
+class SimTTBC(IBVModel):
+    '''Simulation: Tensile Test Buttsrap Clamping
+    '''
     implements(ISimModel)
 
     #===========================================================================
@@ -542,7 +543,7 @@ class ButtstrapClamping(IBVModel):
 
 if __name__ == '__main__':
 
-    sim_model = ButtstrapClamping()
+    sim_model = SimTTBC()
 
     do = 'ui'
 

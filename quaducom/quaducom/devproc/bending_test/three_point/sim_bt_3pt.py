@@ -77,8 +77,9 @@ simdb = SimDB()
 from pickle import dump, load
 
 
-class SimTreePointBending(IBVModel):
-    '''Plate test prepared for parametric study.
+class SimBT3PT(IBVModel):
+    '''Simulation: Bending Test Three Point 
+    (prepared for parametric study)
     '''
 
     input_change = Event
@@ -480,8 +481,9 @@ class SimTreePointBending(IBVModel):
                  SimOut(name = 'F_max', unit = 'kN') ]
 
 
-class SimTreePointBendingDB(SimTreePointBending):
-
+class SimBT3PTDB(SimBT3PT):
+    '''Simulation: Bending Test Three Point Data Base
+    '''
     # vary the failure strain in PhiFnGeneralExtended:
     factor_eps_fail = Float(1.0, input = True,
                              ps_levels = (1.0, 1.2, 3))
@@ -567,7 +569,7 @@ if __name__ == '__main__':
 #                                calibration_test = 'TT11-10a-V2',
 #                                age = 28 )
 
-    sim_model = SimTreePointBendingDB(ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+    sim_model = SimBT3PTDB(ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
                                 calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
 #                                age = 27 )
                                 age = 9)
