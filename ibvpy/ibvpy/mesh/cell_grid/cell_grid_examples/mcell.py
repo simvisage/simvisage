@@ -1,12 +1,12 @@
  
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float, String
 
-from enthought.traits.api import Enum
+from etsproxy.traits.api import Enum
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from ibvpy.core.i_sdomain import \

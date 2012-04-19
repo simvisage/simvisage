@@ -12,18 +12,18 @@
 #
 # Created on May 26, 2009 by: rchx
 
-from enthought.traits.api import Array, Bool, Enum, Float, HasTraits, \
+from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
                                  Instance, Int, Trait, Str, Enum, \
                                  Callable, List, TraitDict, Any, Range, \
                                  Delegate, Event, on_trait_change, Button, \
                                  Interface, implements, Property, cached_property
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
      Action
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, VSplit, TableEditor, ListEditor
-from enthought.traits.ui.table_column \
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 from numpy import \
     ix_, array, int_, dot, newaxis, float_, copy, repeat, apply_along_axis, zeros, \

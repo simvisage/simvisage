@@ -3,8 +3,8 @@ Created on Nov 12, 2009
 
 @author: rch
 '''
-from enthought.traits.api import HasTraits, Float, Property, cached_property
-from enthought.traits.ui.api import View, Item, HGroup, VGroup, Group
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property
+from etsproxy.traits.ui.api import View, Item, HGroup, VGroup, Group
 from math import pi
 
 class SimplyRatio( HasTraits ):

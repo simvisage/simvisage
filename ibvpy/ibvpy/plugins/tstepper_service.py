@@ -1,21 +1,21 @@
 
 
-from enthought.traits.api import HasTraits, Instance, Button
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.api import HasTraits, Instance, Button
+from etsproxy.traits.ui.api import View, Item
 from ibvpy.core.tstepper import TStepper
 
 ######### 
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
     List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
     Callable, Class
 
-import enthought.traits.has_traits
-enthought.traits.has_traits.CHECK_INTERFACES = 2
+import etsproxy.traits.has_traits
+etsproxy.traits.has_traits.CHECK_INTERFACES = 2
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, HSplit, Group, TabularEditor, \
     TreeEditor, TreeNode, Handler
 
@@ -37,9 +37,9 @@ from ibvpy.mesh.xfe_subdomain import XFESubDomain
 from ibvpy.mesh.fe_ls_domain import FELSDomain
 from ibvpy.core.tstepper import TStepper
 
-from enthought.traits.ui.menu \
+from etsproxy.traits.ui.menu \
     import Menu, Action, Separator
-from enthought.traits.ui.wx.tree_editor \
+from etsproxy.traits.ui.wx.tree_editor \
     import NewAction, CopyAction, CutAction, \
            PasteAction, DeleteAction, RenameAction
 
@@ -63,11 +63,11 @@ plot_stiffness_action = Action(
 
 
 from ibvpy.plugins.mayavi_engine import get_engine
-from enthought.mayavi.sources.vtk_data_source import VTKDataSource
-from enthought.mayavi.filters.warp_scalar import WarpScalar
-from enthought.mayavi.filters.poly_data_normals import PolyDataNormals
-from enthought.mayavi.modules.surface import Surface
-from enthought.tvtk.api import tvtk
+from etsproxy.mayavi.sources.vtk_data_source import VTKDataSource
+from etsproxy.mayavi.filters.warp_scalar import WarpScalar
+from etsproxy.mayavi.filters.poly_data_normals import PolyDataNormals
+from etsproxy.mayavi.modules.surface import Surface
+from etsproxy.tvtk.api import tvtk
 
 class TreeHandler ( Handler ):
 
@@ -210,7 +210,7 @@ fe_domain_tree_editor = TreeEditor(
 class TStepperService( HasTraits ):
 
     # Set by envisage when this is offered as a service offer.
-    window = Instance( 'enthought.pyface.workbench.api.WorkbenchWindow' )
+    window = Instance( 'etsproxy.pyface.workbench.api.WorkbenchWindow' )
 
 
     tstepper = Instance( TStepper )

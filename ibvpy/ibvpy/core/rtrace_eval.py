@@ -1,13 +1,13 @@
 
-from enthought.traits.api import Array, Bool, Callable, Enum, Float, HasTraits, \
+from etsproxy.traits.api import Array, Bool, Callable, Enum, Float, HasTraits, \
                                  Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
                                  Dict, Property, cached_property, WeakRef, Delegate
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
 
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
                                      MenuBar, Separator
 import wx
-#from enthought.pyface.tvtk.actor_editor import ActorEditor
+#from etsproxy.pyface.tvtk.actor_editor import ActorEditor
 from i_tstepper_eval import ITStepperEval
 
 class RTraceEval( HasTraits ):

@@ -1,5 +1,5 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasStrictTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate, Button, \
@@ -7,12 +7,12 @@ from enthought.traits.api import \
      Any
 
 # Traits UI imports
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, HGroup, Group, Spring, TabularEditor, \
      Include, Spring
-from enthought.traits.ui.menu \
+from etsproxy.traits.ui.menu \
     import OKButton, CancelButton
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from numpy import \

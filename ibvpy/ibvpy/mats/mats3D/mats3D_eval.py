@@ -4,7 +4,7 @@ Created on Sep 3, 2009
 @author: jakub
 '''
 
-from enthought.traits.api import Callable, Constant
+from etsproxy.traits.api import Callable, Constant
 
 from ibvpy.mats.mats_eval import MATSEval
 

@@ -4,23 +4,23 @@ Created on Mar 29, 2009
 @author: jakub
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring
 
 # Chaco imports
-from enthought.chaco.chaco_plot_editor import \
+from etsproxy.chaco.chaco_plot_editor import \
      ChacoPlotEditor, \
      ChacoPlotItem
-from enthought.enable.component_editor import \
+from etsproxy.enable.component_editor import \
      ComponentEditor
-from enthought.chaco.tools.api import \
+from etsproxy.chaco.tools.api import \
      PanTool, SimpleZoom
-from enthought.chaco.api import \
+from etsproxy.chaco.api import \
      Plot, AbstractPlotData, ArrayPlotData
 
 #from dacwt import DAC

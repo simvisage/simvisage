@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-#from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.mayavi.plugins.app import setup_logger
-from enthought.traits.api import List, Instance
-from enthought.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+#from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.mayavi.plugins.app import setup_logger
+from etsproxy.traits.api import List, Instance
+from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 
 ###############################################################################
 # `TStepperPlugin` class.
@@ -19,7 +19,7 @@ from enthought.pyface.workbench.api import Perspective, PerspectiveItem
 class TStepperUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    VIEWS             = 'enthought.envisage.ui.workbench.views'
+    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'tstepper_service.tstepper_service'
@@ -38,7 +38,7 @@ class TStepperUIPlugin(Plugin):
 
     def _tstepper_service_view_factory(self, window, **traits):
         """ Factory method for tstepper_service views. """
-        from enthought.pyface.workbench.traits_ui_view import \
+        from etsproxy.pyface.workbench.traits_ui_view import \
                 TraitsUIView
 
         tstepper_service = self._get_tstepper_service(window)

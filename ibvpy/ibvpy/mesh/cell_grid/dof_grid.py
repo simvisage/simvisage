@@ -1,10 +1,10 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float, DelegatesTo, implements, Interface, WeakRef, Bool
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Group
 
 from ibvpy.core.i_sdomain import \
@@ -318,9 +318,9 @@ class DofGridSlice( CellGridSlice ):
 #-----------------------------------------------------------------------
 
 #-- Tabular Adapter Definition -------------------------------------------------
-from enthought.traits.ui.tabular_adapter import \
+from etsproxy.traits.ui.tabular_adapter import \
     TabularAdapter
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     TabularEditor
 
 class DofTabularAdapter ( TabularAdapter ):

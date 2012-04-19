@@ -4,7 +4,7 @@ Created on Aug 17, 2011
 @author: rostar
 '''
 
-from enthought.traits.api import HasTraits, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, \
     implements, Instance, Float, Array, List, Int
 from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
@@ -12,7 +12,7 @@ from quaducom.resp_func.cb_clamped_fiber import \
     CBClampedFiberSP
 from quaducom.resp_func.cb_emtrx_clamped_fiber import \
     CBEMClampedFiberSP
-from enthought.traits.ui.api import View, Item, VGroup
+from etsproxy.traits.ui.api import View, Item, VGroup
 from quaducom.ctt.homogenized_crack_bridges.i_homogenized_cb import ICB
 import numpy as np
 from stats.spirrid.rf import \
@@ -286,7 +286,7 @@ class MultifilamentYarnRM(MultifilamentYarn):
 
 if __name__ == '__main__':
 
-    import enthought.mayavi.mlab as m
+    import etsproxy.mayavi.mlab as m
     from stats.spirrid import orthogonalize
     from matplotlib import pyplot as plt
 

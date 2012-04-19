@@ -2,7 +2,7 @@
 Optimization of tensile test buttstrap clamping
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits, Enum, Dict, Str
 

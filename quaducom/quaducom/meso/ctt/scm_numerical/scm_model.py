@@ -17,14 +17,14 @@ For the evaluation the CSMModel class requires an instance of a crack bridge mod
 @author: rrypl
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, on_trait_change, Int, Array, Tuple, List
 
-from enthought.traits.api import HasTraits, Float, Property, \
+from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Range, Button
-from enthought.traits.ui.api import View, Item, Tabbed, VGroup, \
+from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
-from enthought.traits.ui.menu import OKButton
+from etsproxy.traits.ui.menu import OKButton
 
 import numpy as np
 import scipy as sp
@@ -276,7 +276,7 @@ class SCMModel(HasTraits):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    import enthought.mayavi.mlab as m
+    import etsproxy.mayavi.mlab as m
     from stats.spirrid import orthogonalize
 
     P = np.linspace(1, 8000, 500)

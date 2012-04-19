@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-#from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.mayavi.plugins.app import setup_logger
-from enthought.traits.api import List, Instance
-from enthought.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+#from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.mayavi.plugins.app import setup_logger
+from etsproxy.traits.api import List, Instance
+from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 
 logger = logging.getLogger()
 
@@ -21,7 +21,7 @@ logger = logging.getLogger()
 class RTracePlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'rtrace_service.rtrace_service'

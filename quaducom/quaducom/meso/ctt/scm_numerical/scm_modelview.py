@@ -2,12 +2,12 @@
 
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, VGroup, HGroup, ModelView, HSplit, VSplit
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Enum, Bool, on_trait_change, Int, Event, Array, Tuple, List, \
     Float, HasTraits, Float, Property, Button
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 from numpy import array, insert, mean, sort
 
 from scm_model import SCMModel

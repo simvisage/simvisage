@@ -23,34 +23,34 @@
 #       
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton, CancelButton
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from numpy import \
     array, where, argmax
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
 
@@ -63,13 +63,13 @@ from os.path import exists
 #-----------------------------------------------------------------------------------
 # ExDesignReader
 #-----------------------------------------------------------------------------------
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from matresdev.db.simdb import \

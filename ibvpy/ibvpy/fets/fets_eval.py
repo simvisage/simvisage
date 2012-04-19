@@ -1,11 +1,11 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
+     Instance, Int, Trait, Str, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
      Class
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      View, Item, Group
 
 from numpy import \
@@ -35,9 +35,11 @@ from ibvpy.core.rtrace_eval import \
 
 from i_fets_eval import IFETSEval
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
+
 from tvtk_classes import tvtk_helper
-#from enthought.tvtk.tvtk_classes import tvtk_helper
+
+
 
 import types
 
@@ -153,7 +155,7 @@ class FETSEval( TStepperEval ):
 
         n_ip_pnts = self.ip_coords.shape[0]
 
-        from enthought.tvtk.api import tvtk
+        from etsproxy.tvtk.api import tvtk
         from tvtk_classes import tvtk_helper
         cell_types = array( [( tvtk_helper.get_class( 'PolyVertex' )() ).cell_type ] )
 

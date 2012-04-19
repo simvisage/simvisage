@@ -12,7 +12,7 @@
 #
 # Created on Oct 21, 2011 by: rch
 
-from enthought.traits.api import Interface, Float
+from etsproxy.traits.api import Interface, Float
 
 class ICBM(Interface):
     '''

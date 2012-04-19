@@ -3,7 +3,7 @@ Created on May 20, 2009
 
 @author: jakub
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
@@ -18,9 +18,9 @@ from ibvpy.mats.mats3D.mats3D_tensor import map3d_eps_eng_to_mtx
 from numpy import ix_, frompyfunc, array, abs, vstack, linalg, dot, ones, hstack, \
     arange, zeros_like, zeros, repeat, meshgrid, isinf, where, copy
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 from tvtk_classes import tvtk_helper
-#from enthought.tvtk.tvtk_classes import tvtk_helper
+
 
 class XDOTSEval( DOTSEval ):
     '''

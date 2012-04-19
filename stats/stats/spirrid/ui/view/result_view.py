@@ -4,8 +4,8 @@ Created on 13.05.2011
 @author: rrypl
 '''
 
-from enthought.traits.api import HasTraits, Str, Instance, Event, Button, on_trait_change, Int
-from enthought.traits.ui.api import View, Item, ModelView, HGroup, VGroup
+from etsproxy.traits.api import HasTraits, Str, Instance, Event, Button, on_trait_change, Int
+from etsproxy.traits.ui.api import View, Item, ModelView, HGroup, VGroup
 from matplotlib.figure import Figure
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from spirrid_view import SPIRRIDModelView

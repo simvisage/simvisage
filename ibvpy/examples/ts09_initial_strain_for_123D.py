@@ -15,7 +15,7 @@
 # This script shows how to impose initial strain for 1-2-3 D domains
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Int, Property
 
 from numpy import \

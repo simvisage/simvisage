@@ -10,18 +10,18 @@ import os.path
 import logging
 
 # Enthought library imports.
-from enthought.logger.api import LogFileHandler, FORMATTER
-from enthought.etsconfig.api import ETSConfig
-from enthought.traits.api import \
+from etsproxy.logger.api import LogFileHandler, FORMATTER
+from etsproxy.etsconfig.api import ETSConfig
+from etsproxy.traits.api import \
     HasTraits, Instance, Int, \
     on_trait_change, Any
 
 # Local imports.
 from ibvpy_workbench_application import IBVPyWorkbenchApplication
-from enthought.mayavi.preferences.api import preference_manager
-from enthought.mayavi.core.customize import get_custom_plugins
+from etsproxy.mayavi.preferences.api import preference_manager
+from etsproxy.mayavi.core.customize import get_custom_plugins
 
-import enthought.mayavi.plugins.app as mayavi_app
+import etsproxy.mayavi.plugins.app as mayavi_app
 
 # GLOBALS
 logger = logging.getLogger()
@@ -77,10 +77,10 @@ class IBVPyApp(HasTraits):
     """
 
     # The main envisage application.
-    application = Instance('enthought.envisage.ui.workbench.api.WorkbenchApplication')
+    application = Instance('etsproxy.envisage.ui.workbench.api.WorkbenchApplication')
 
     # The IBVPy Script instance.
-    script = Instance('enthought.mayavi.plugins.script.Script')
+    script = Instance('etsproxy.mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
     # @todo: make a base class for the IBVModel components that should be here 
@@ -165,7 +165,7 @@ class IBVPyApp(HasTraits):
         app = self.application
         if self.ibv_resource:
             window = app.workbench.active_window
-            e = window.get_service('enthought.mayavi.core.engine.Engine')
+            e = window.get_service('etsproxy.mayavi.core.engine.Engine')
             set_engine( e )            
             self.ibv_resource.bind_services( window )
             self.ibv_resource.register_mv_pipelines(e)
@@ -181,7 +181,7 @@ class IBVPyApp(HasTraits):
         if trait_name != 'started' or not new:
             return
         app = self.application
-        from enthought.mayavi.plugins.script import Script
+        from etsproxy.mayavi.plugins.script import Script
         window = app.workbench.active_window
         # Set our script instance.
         self.script = window.get_service(Script)

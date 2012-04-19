@@ -1,5 +1,5 @@
-from enthought.traits.api import HasTraits, Float, Array
-from enthought.traits.ui.api import \
+from etsproxy.traits.api import HasTraits, Float, Array
+from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring
 
 from numpy import zeros, dot, diag, array

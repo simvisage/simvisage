@@ -3,17 +3,17 @@ Created on 10.03.2011
 
 @author: rrypl
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Enum, Bool, on_trait_change, Int, Event, Array, Tuple, List
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, VGroup, HGroup, ModelView, HSplit, VSplit
-from enthought.traits.ui.menu import OKButton
+from etsproxy.traits.ui.menu import OKButton
 
-from enthought.traits.api import HasTraits, Float, Property, \
+from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Range, Button
-from enthought.traits.ui.api import View, Item, Tabbed, VGroup, \
+from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 
 from numpy import linspace, frompyfunc, max, abs, array, hstack, sign, argmax, mean, ones
 from numpy.random import rand

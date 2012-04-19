@@ -19,31 +19,31 @@ import os
 #os.environ['ETS_TOOLKIT'] = 'qt4'
 
 #
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, \
     implements, File
     
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
 
-from enthought.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
+from etsproxy.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
                                      MenuBar, NoButtons, Separator, ToolBar
                                          
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
-from enthought.pyface.api import ImageResource
+from etsproxy.pyface.api import ImageResource
 from sim_todo import ToDo
 
-from enthought.traits.ui.menu import OKButton
+from etsproxy.traits.ui.menu import OKButton
 from i_sim_model import ISimModel
 from i_sim_array import ISimArray
 from sim_array_view import SimArrayView
 
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, save_file, FileInfo, TextInfo
 
 import pickle
@@ -65,7 +65,7 @@ from scipy.optimize import brentq, newton
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
 import string
-from enthought.pyface.api import confirm, error, information, warning, YES, NO, CANCEL
+from etsproxy.pyface.api import confirm, error, information, warning, YES, NO, CANCEL
 
 TITLESTRING = 'simvisage.sim_array'
 

@@ -17,25 +17,25 @@ Created on Sep 22, 2009
 
 @author: rch
 '''
-from enthought.traits.api import HasTraits, Float, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
                                 Instance, List, on_trait_change, Int, Tuple, Bool, \
                                 DelegatesTo, Event, WeakRef, String, Constant, Trait, \
                                 Button, Str, Enum
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, Group, ModelView, HSplit, VSplit, Spring, TabularEditor, \
     TableEditor, Label
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn, TableColumn
 
-from enthought.traits.ui.extras.checkbox_column \
+from etsproxy.traits.ui.extras.checkbox_column \
     import CheckboxColumn
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
-from enthought.traits.ui.menu import OKButton
+from etsproxy.traits.ui.menu import OKButton
 
 from util.traits.either_type import EitherType
 

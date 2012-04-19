@@ -12,7 +12,7 @@
 #
 # Created on Jan 17, 2011 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Int, Float, Str, implements, \
     Bool, Dict, Property, cached_property, \
     Instance, Array, WeakRef, List, Tuple, Event, Button, \
@@ -23,7 +23,7 @@ from stats.spirrid.rf_filament import Filament as RFFilament
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, HGroup
 
 from matresdev.db.simdb.simdb_class import \

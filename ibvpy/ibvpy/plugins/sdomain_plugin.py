@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.traits.api import List
-from enthought.envisage.api import Plugin, ServiceOffer
-from enthought.envisage.ui.workbench.api import WorkbenchApplication
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.traits.api import List
+from etsproxy.envisage.api import Plugin, ServiceOffer
+from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 
 ###############################################################################
 # `IBVPYPlugin` class.
@@ -19,7 +19,7 @@ from enthought.pyface.workbench.api import Perspective, PerspectiveItem
 class SDomainPlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'SDomain.SDomain'

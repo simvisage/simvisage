@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-#from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.mayavi.plugins.app import setup_logger
-from enthought.traits.api import List, Instance
-from enthought.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+#from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.mayavi.plugins.app import setup_logger
+from etsproxy.traits.api import List, Instance
+from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 from ibvpy.api import RTraceMngr, RTraceGraph
 
 logger = logging.getLogger()
@@ -45,8 +45,8 @@ class RTracePerspective(Perspective):
 class RTraceUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    PERSPECTIVES = 'enthought.envisage.ui.workbench.perspectives'
-    VIEWS             = 'enthought.envisage.ui.workbench.views'
+    PERSPECTIVES = 'etsproxy.envisage.ui.workbench.perspectives'
+    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'rtrace_service.rtrace_service'
@@ -72,7 +72,7 @@ class RTraceUIPlugin(Plugin):
 
     def _rtrace_service_view_factory(self, window, **traits):
         """ Factory method for rtrace_service views. """
-        from enthought.pyface.workbench.traits_ui_view import \
+        from etsproxy.pyface.workbench.traits_ui_view import \
                 TraitsUIView
 
         rtrace_service = self._get_rtrace_service(window)
@@ -91,16 +91,16 @@ class RTraceUIPlugin(Plugin):
 
 def get_plugins():
     """Get list of default plugins to use for Mayavi."""
-    from enthought.envisage.core_plugin import CorePlugin
-    from enthought.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
-    from enthought.plugins.python_shell.python_shell_plugin import PythonShellPlugin
-    from enthought.plugins.text_editor.text_editor_plugin import TextEditorPlugin
-    from enthought.tvtk.plugins.scene.scene_plugin import ScenePlugin
-    from enthought.tvtk.plugins.scene.ui.scene_ui_plugin import SceneUIPlugin
-    from enthought.mayavi.plugins.mayavi_plugin import MayaviPlugin
-    from enthought.mayavi.plugins.mayavi_ui_plugin import MayaviUIPlugin
-    from enthought.envisage.developer.developer_plugin import DeveloperPlugin
-    from enthought.envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
+    from etsproxy.envisage.core_plugin import CorePlugin
+    from etsproxy.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
+    from etsproxy.plugins.python_shell.python_shell_plugin import PythonShellPlugin
+    from etsproxy.plugins.text_editor.text_editor_plugin import TextEditorPlugin
+    from etsproxy.tvtk.plugins.scene.scene_plugin import ScenePlugin
+    from etsproxy.tvtk.plugins.scene.ui.scene_ui_plugin import SceneUIPlugin
+    from etsproxy.mayavi.plugins.mayavi_plugin import MayaviPlugin
+    from etsproxy.mayavi.plugins.mayavi_ui_plugin import MayaviUIPlugin
+    from etsproxy.envisage.developer.developer_plugin import DeveloperPlugin
+    from etsproxy.envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
     
     plugins = [CorePlugin(),
                WorkbenchPlugin(),

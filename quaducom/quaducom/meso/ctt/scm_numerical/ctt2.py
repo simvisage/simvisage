@@ -12,7 +12,7 @@
 #
 # Created on Oct 21, 2011 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, List, Range, \
     Callable, Instance, Trait, Int, \
     cached_property, Property, \
@@ -317,7 +317,7 @@ if __name__ == '__main__':
 
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
         CBEMClampedFiberSP
-    #import enthought.mayavi.mlab as m
+    #import etsproxy.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
 

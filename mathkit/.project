@@ -3,6 +3,7 @@
 	<name>mathkit</name>
 	<comment></comment>
 	<projects>
+		<project>etsproxy</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>

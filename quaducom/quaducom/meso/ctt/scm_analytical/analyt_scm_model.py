@@ -12,11 +12,11 @@
 #
 # Created on Sep 21, 2009 by: rch
 
-from enthought.traits.api import HasTraits, Float, Property, \
+from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Range
-from enthought.traits.ui.api import View, Item, Tabbed, VGroup, \
+from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 
 from numpy import linspace, frompyfunc, zeros, column_stack, argwhere, \
                  abs, array, hstack, transpose

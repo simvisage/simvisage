@@ -1,5 +1,5 @@
 
-from enthought.traits.api import HasTraits, Instance, Delegate, HasStrictTraits, Str
+from etsproxy.traits.api import HasTraits, Instance, Delegate, HasStrictTraits, Str
 
 class IBVResource( HasTraits ):
     '''Base class for components of the boundary value problem.

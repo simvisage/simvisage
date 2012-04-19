@@ -12,15 +12,15 @@
 #
 # Created on Mar 2, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Instance, Property, Int, Event, Callable, Button, on_trait_change, \
     cached_property, Array, HasTraits
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, ToolBar, Action, \
     HSplit, VGroup, VSplit, OKButton, Group
 
-from enthought.pyface.api import \
+from etsproxy.pyface.api import \
     ImageResource
 
 from ibvpy.mats.mats1D.mats1D_damage.mats1D_damage import \
