@@ -48,7 +48,9 @@ from matresdev.simiter.sim_pstudy import\
 
 from mathkit.geo.transform.square2circle import GeoSquare2Circle
 
-class DiskTestSetup(IBVModel):
+class SimDT(IBVModel):
+    '''Simulation: Disk Test
+    '''
 
     implements(ISimModel)
 
@@ -251,7 +253,7 @@ class DiskTestSetup(IBVModel):
 
 if __name__ == '__main__':
 
-    sim_model = DiskTestSetup(n_elems = 40)
+    sim_model = SimDT(n_elems = 40)
 
     do = 'ui'
 

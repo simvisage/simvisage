@@ -111,6 +111,7 @@ from i_ex_run import \
     IExRun
 
 import pickle
+import enthought.persistence.state_pickler as spickle 
 
 #-----------------------------------------------------------------------------------
 # ExDesignReader
@@ -133,8 +134,16 @@ from matresdev.db.simdb import \
 
 simdb = SimDB()
 
-
 data_file_editor = FileEditor(filter = ['*.DAT'])
+
+# which pickle format to use
+#
+pickle_modes = {'pickle' : dict(load = pickle.load,
+                                dump = pickle.dump,
+                                  ext = '.pickle'),
+                'spickle' : dict(load = spickle.load_state,
+                                 dump = spickle.dump,
+                                  ext = '.spickle')}
 
 class ExRun(HasTraits):
     '''Read the data from the DAT file containing the measured data.
@@ -152,6 +161,10 @@ class ExRun(HasTraits):
     #--------------------------------------------------------------------
     data_file = File
 
+    # pickler as a property in order to be able to switch between
+    # 
+    pickle = Trait('pickle', pickle_modes)    
+     
     # Derive the path to the file specifying the type of the experiment
     # The ex_type.cls file is stored in the same directory
     #
@@ -171,7 +184,8 @@ class ExRun(HasTraits):
         dir_path = os.path.dirname(self.data_file)
         file_name = os.path.basename(self.data_file)
         file_split = file_name.split('.')
-        file_name = os.path.join(dir_path, file_split[0] + '.pickle')
+        file_name = os.path.join(dir_path,
+                                 file_split[0] + self.pickle_['ext'])
         return file_name
 
     # Instance of the specialized experiment type with the particular
@@ -192,10 +206,10 @@ class ExRun(HasTraits):
         read_ok = False
 
         if os.path.exists(self.pickle_file_name):
-            print 'PICKLE FILE EXISTS'
+            print 'PICKLE FILE EXISTS %s' % self.pickle_file_name
             file = open(self.pickle_file_name, 'r')
             try:
-                self.ex_type = pickle.load(file)
+                self.ex_type = self.pickle_['load'](file)
                 self.unsaved = False
                 read_ok = True
             except EOFError:
@@ -239,7 +253,7 @@ class ExRun(HasTraits):
         '''Store the current state of the ex_run.
         '''
         file = open(self.pickle_file_name, 'w')
-        pickle.dump(self.ex_type, file)
+        self.pickle_['dump'](self.ex_type, file)
         file.close()
         self.unsaved = False
 
