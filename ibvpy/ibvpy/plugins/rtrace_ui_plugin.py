@@ -36,7 +36,7 @@ class RTracePerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id=RTRACEMNGR_VIEW, position='left'),
+        PerspectiveItem(id = RTRACEMNGR_VIEW, position = 'left'),
     ]
 
 ###############################################################################
@@ -45,8 +45,8 @@ class RTracePerspective(Perspective):
 class RTraceUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    PERSPECTIVES = 'etsproxy.envisage.ui.workbench.perspectives'
-    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
+    PERSPECTIVES = 'enthought.envisage.ui.workbench.perspectives'
+    VIEWS = 'enthought.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'rtrace_service.rtrace_service'
@@ -55,10 +55,10 @@ class RTraceUIPlugin(Plugin):
     name = 'RTraces'
 
     # Perspectives.
-    perspectives = List(contributes_to=PERSPECTIVES)
+    perspectives = List(contributes_to = PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to=VIEWS)
+    views = List(contributes_to = VIEWS)
 
     ######################################################################
     # Private methods.
@@ -76,18 +76,18 @@ class RTraceUIPlugin(Plugin):
                 TraitsUIView
 
         rtrace_service = self._get_rtrace_service(window)
-        tui_engine_view = TraitsUIView(obj=rtrace_service,
-                                       id='ibvpy.plugins.rtrace_service.rtrace_service',
-                                       name='Response traces',
-                                       window=window,
-                                       position='left',
+        tui_engine_view = TraitsUIView(obj = rtrace_service,
+                                       id = 'ibvpy.plugins.rtrace_service.rtrace_service',
+                                       name = 'Response traces',
+                                       window = window,
+                                       position = 'left',
                                        **traits
                                        )
         return tui_engine_view
 
-    def _get_rtrace_service(self,window):
+    def _get_rtrace_service(self, window):
         """Return the rtrace_service service."""
-        return window.get_service('ibvpy.plugins.rtrace_service.RTraceService' )
+        return window.get_service('ibvpy.plugins.rtrace_service.RTraceService')
 
 def get_plugins():
     """Get list of default plugins to use for Mayavi."""
@@ -110,7 +110,7 @@ def get_plugins():
                SceneUIPlugin(),
                PythonShellPlugin(),
                DeveloperPlugin(),
-               DeveloperUIPlugin(),          
+               DeveloperUIPlugin(),
 #              TextEditorPlugin()
             ]
 
@@ -130,24 +130,24 @@ def main():
     from ibvpy_workbench_application import IBVPyWorkbenchApplication
     # Create an Envisage application.
     id = 'rtrace_service.rtrace_service'
-    application = IBVPyWorkbenchApplication(id=id, plugins = plugins  )
+    application = IBVPyWorkbenchApplication(id = id, plugins = plugins)
 
-    rtrace_mgr = RTraceService( rtrace_list = [
-        RTraceGraph( name = 'rte 1' ),
-        RTraceGraph( name = 'rte 2' ),
-        RTraceGraph( name = 'rte 3' ),
-        RTraceGraph( name = 'rte 4' ),
-        RTraceGraph( name = 'rte 5' ),
-        RTraceGraph( name = 'rte 6' ),
-        RTraceGraph( name = 'rte 7' ),
-        RTraceGraph( name = 'rte 8' ),
-        RTraceGraph( name = 'rte 8' ),
-        RTraceGraph( name = 'rte 10' ),
-        RTraceGraph( name = 'rte 11' ),
-        ] )
-    application.register_service( 'rtrace_service.RTraceService', rtrace_mgr)
+    rtrace_mgr = RTraceService(rtrace_list = [
+        RTraceGraph(name = 'rte 1'),
+        RTraceGraph(name = 'rte 2'),
+        RTraceGraph(name = 'rte 3'),
+        RTraceGraph(name = 'rte 4'),
+        RTraceGraph(name = 'rte 5'),
+        RTraceGraph(name = 'rte 6'),
+        RTraceGraph(name = 'rte 7'),
+        RTraceGraph(name = 'rte 8'),
+        RTraceGraph(name = 'rte 8'),
+        RTraceGraph(name = 'rte 10'),
+        RTraceGraph(name = 'rte 11'),
+        ])
+    application.register_service('rtrace_service.RTraceService', rtrace_mgr)
 
-    setup_logger(logger, 'rtrace.log', mode=logging.ERROR)
+    setup_logger(logger, 'rtrace.log', mode = logging.ERROR)
 
     # Start the application.
     application.run()

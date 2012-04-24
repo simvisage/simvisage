@@ -35,7 +35,7 @@ class TLoopPerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id=TLOOPMNGR_VIEW, position='left'),
+        PerspectiveItem(id = TLOOPMNGR_VIEW, position = 'left'),
     ]
 
 ###############################################################################
@@ -44,8 +44,8 @@ class TLoopPerspective(Perspective):
 class TLoopUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    PERSPECTIVES = 'etsproxy.envisage.ui.workbench.perspectives'
-    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
+    PERSPECTIVES = 'enthought.envisage.ui.workbench.perspectives'
+    VIEWS = 'enthought.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'tloop_service.tloop_service'
@@ -54,10 +54,10 @@ class TLoopUIPlugin(Plugin):
     name = 'Time loop'
 
     # Perspectives.
-    perspectives = List(contributes_to=PERSPECTIVES)
+    perspectives = List(contributes_to = PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to=VIEWS)
+    views = List(contributes_to = VIEWS)
 
     ######################################################################
     # Private methods.
@@ -75,15 +75,15 @@ class TLoopUIPlugin(Plugin):
                 TraitsUIView
 
         tloop_service = self._get_tloop_service(window)
-        tui_engine_view = TraitsUIView(obj=tloop_service,
-                                       id='ibvpy.plugins.tloop_service.tloop_service',
-                                       name='Time loop',
-                                       window=window,
-                                       position='left',
+        tui_engine_view = TraitsUIView(obj = tloop_service,
+                                       id = 'ibvpy.plugins.tloop_service.tloop_service',
+                                       name = 'Time loop',
+                                       window = window,
+                                       position = 'left',
                                        **traits
                                        )
         return tui_engine_view
 
-    def _get_tloop_service(self,window):
+    def _get_tloop_service(self, window):
         """Return the tloop_service service."""
-        return window.get_service('ibvpy.plugins.tloop_service.TLoopService' )
+        return window.get_service('ibvpy.plugins.tloop_service.TLoopService')

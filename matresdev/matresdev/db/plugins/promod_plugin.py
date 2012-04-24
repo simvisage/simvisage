@@ -19,7 +19,7 @@ from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 class ProModPlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'ProMod.ProMod'
@@ -28,7 +28,7 @@ class ProModPlugin(Plugin):
     name = 'ProMod'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
     
     ######################################################################
     # Private methods.
@@ -36,7 +36,7 @@ class ProModPlugin(Plugin):
         """ Trait initializer. """
         promod_service_offer = ServiceOffer(
             protocol = 'promod.plugins.promod_service.ProModService',
-            factory  = 'promod.plugins.promod_service.ProModService'
+            factory = 'promod.plugins.promod_service.ProModService'
         )
 
         return [promod_service_offer]

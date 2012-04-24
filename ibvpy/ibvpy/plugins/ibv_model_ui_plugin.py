@@ -18,8 +18,8 @@ logger = logging.getLogger()
 # View IDs.
 IBVMODEL_VIEW = 'ibvpy.plugins.ibv_model_service.ibv_model_service'
 TSTEPPER_VIEW = 'ibvpy.plugins.tstepper_service.tstepper_service' 
-TLOOP_VIEW    = 'ibvpy.plugins.tloop_service.tloop_service' 
-RTRACEMNGR_VIEW    = 'ibvpy.plugins.rtrace_service.rtrace_service' 
+TLOOP_VIEW = 'ibvpy.plugins.tloop_service.tloop_service' 
+RTRACEMNGR_VIEW = 'ibvpy.plugins.rtrace_service.rtrace_service' 
 
 ###############################################################################
 # `IBVPPerspective` class.
@@ -38,8 +38,8 @@ class IBVModelSpecifyPerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id=IBVMODEL_VIEW, position='top'),
-        PerspectiveItem(id=TSTEPPER_VIEW, position='bottom'),
+        PerspectiveItem(id = IBVMODEL_VIEW, position = 'top'),
+        PerspectiveItem(id = TSTEPPER_VIEW, position = 'bottom'),
         ]
 
 ###############################################################################
@@ -59,13 +59,13 @@ class IBVModelAnalyzePerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id=IBVMODEL_VIEW, position='top'),
-        PerspectiveItem(id=RTRACEMNGR_VIEW, 
-                        relative_to=IBVMODEL_VIEW, 
-                        position='bottom'),
-        PerspectiveItem(id=TLOOP_VIEW,
-                        relative_to=RTRACEMNGR_VIEW,
-                        position='bottom'),
+        PerspectiveItem(id = IBVMODEL_VIEW, position = 'top'),
+        PerspectiveItem(id = RTRACEMNGR_VIEW,
+                        relative_to = IBVMODEL_VIEW,
+                        position = 'bottom'),
+        PerspectiveItem(id = TLOOP_VIEW,
+                        relative_to = RTRACEMNGR_VIEW,
+                        position = 'bottom'),
         ]
 
 
@@ -75,8 +75,8 @@ class IBVModelAnalyzePerspective(Perspective):
 class IBVModelUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    PERSPECTIVES = 'etsproxy.envisage.ui.workbench.perspectives'
-    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
+    PERSPECTIVES = 'enthought.envisage.ui.workbench.perspectives'
+    VIEWS = 'enthought.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'ibv_model_service.ibv_model_service'
@@ -85,16 +85,16 @@ class IBVModelUIPlugin(Plugin):
     name = 'IBV Model'
 
     # Perspectives.
-    perspectives = List(contributes_to=PERSPECTIVES)
+    perspectives = List(contributes_to = PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to=VIEWS)
+    views = List(contributes_to = VIEWS)
 
     ######################################################################
     # Private methods.
     def _perspectives_default(self):
         """ Trait initializer. """
-        return [IBVModelSpecifyPerspective,IBVModelAnalyzePerspective]
+        return [IBVModelSpecifyPerspective, IBVModelAnalyzePerspective]
 
     def _views_default(self):
         """ Trait initializer. """
@@ -106,15 +106,15 @@ class IBVModelUIPlugin(Plugin):
                 TraitsUIView
 
         ibv_model_service = self._get_ibv_model_service(window)
-        tui_engine_view = TraitsUIView(obj=ibv_model_service,
-                                       id='ibvpy.plugins.ibv_model_service.ibv_model_service',
-                                       name='IBV Model',
-                                       window=window,
-                                       position='left',
+        tui_engine_view = TraitsUIView(obj = ibv_model_service,
+                                       id = 'ibvpy.plugins.ibv_model_service.ibv_model_service',
+                                       name = 'IBV Model',
+                                       window = window,
+                                       position = 'left',
                                        **traits
                                        )
         return tui_engine_view
 
-    def _get_ibv_model_service(self,window):
+    def _get_ibv_model_service(self, window):
         """Return the ibv_model_service service."""
-        return window.get_service('ibvpy.plugins.ibv_model_service.IBVModelService' )
+        return window.get_service('ibvpy.plugins.ibv_model_service.IBVModelService')

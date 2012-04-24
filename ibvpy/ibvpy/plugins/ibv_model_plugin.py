@@ -19,7 +19,7 @@ from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 class IBVModelPlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'IBVModel.IBVModel'
@@ -28,7 +28,7 @@ class IBVModelPlugin(Plugin):
     name = 'IBVModel'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
     
     ######################################################################
     # Private methods.
@@ -36,7 +36,7 @@ class IBVModelPlugin(Plugin):
         """ Trait initializer. """
         ibvpy_service_offer = ServiceOffer(
             protocol = 'ibvpy.plugins.ibv_model_service.IBVModelService',
-            factory  = 'ibvpy.plugins.ibv_model_service.IBVModelService'
+            factory = 'ibvpy.plugins.ibv_model_service.IBVModelService'
         )
 
         return [ibvpy_service_offer]

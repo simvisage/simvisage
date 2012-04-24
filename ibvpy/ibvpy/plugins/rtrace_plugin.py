@@ -21,7 +21,7 @@ logger = logging.getLogger()
 class RTracePlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'rtrace_service.rtrace_service'
@@ -30,7 +30,7 @@ class RTracePlugin(Plugin):
     name = 'RTrace Manager'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
         
     ######################################################################
     # Private methods.
@@ -38,13 +38,13 @@ class RTracePlugin(Plugin):
         """ Trait initializer. """
         rtrace_service_service_offer = ServiceOffer(
             protocol = 'ibvpy.plugins.rtrace_service.RTraceService',
-            factory  = self._create_rtrace_service
+            factory = self._create_rtrace_service
         )
         return [rtrace_service_service_offer]
 
-    def _create_rtrace_service(self,**properties):
+    def _create_rtrace_service(self, **properties):
         app = self.application
-        rtrace_service =  app.get_service('ibvpy.plugins.rtrace_service.RTraceService' )
+        rtrace_service = app.get_service('ibvpy.plugins.rtrace_service.RTraceService')
         if rtrace_service == None:
             from rtrace_service import RTraceService
             rtrace_service = RTraceService()
@@ -52,6 +52,6 @@ class RTracePlugin(Plugin):
         rtrace_service.window = properties['window']
         return rtrace_service
             
-    def _get_rtrace_service(self,window):
+    def _get_rtrace_service(self, window):
         """Return the rtrace_service service."""
-        return window.get_service('rtrace_service.RTraceService' )
+        return window.get_service('rtrace_service.RTraceService')

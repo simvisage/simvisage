@@ -19,7 +19,7 @@ from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 class SDomainPlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'SDomain.SDomain'
@@ -28,7 +28,7 @@ class SDomainPlugin(Plugin):
     name = 'Spatial Domain'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
     
     ######################################################################
     # Private methods.
@@ -36,7 +36,7 @@ class SDomainPlugin(Plugin):
         """ Trait initializer. """
         sdomain_service_offer = ServiceOffer(
             protocol = 'ibvpy.plugins.sdomain_service.SDomainService',
-            factory  = 'ibvpy.plugins.sdomain_service.SDomainService'
+            factory = 'ibvpy.plugins.sdomain_service.SDomainService'
         )
 
         return [sdomain_service_offer]

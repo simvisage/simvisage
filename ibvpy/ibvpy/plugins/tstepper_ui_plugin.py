@@ -19,7 +19,7 @@ from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 class TStepperUIPlugin(Plugin):
 
     # Extension points we contribute to.
-    VIEWS             = 'etsproxy.envisage.ui.workbench.views'
+    VIEWS = 'enthought.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'tstepper_service.tstepper_service'
@@ -28,7 +28,7 @@ class TStepperUIPlugin(Plugin):
     name = 'TStepper Manager'
 
     # Views.
-    views = List(contributes_to=VIEWS)
+    views = List(contributes_to = VIEWS)
 
     ######################################################################
     # Private methods.
@@ -42,15 +42,15 @@ class TStepperUIPlugin(Plugin):
                 TraitsUIView
 
         tstepper_service = self._get_tstepper_service(window)
-        tui_engine_view = TraitsUIView(obj=tstepper_service,
-                                       id='ibvpy.plugins.tstepper_service.tstepper_service',
-                                       name='Time stepper',
-                                       window=window,
-                                       position='left',
+        tui_engine_view = TraitsUIView(obj = tstepper_service,
+                                       id = 'ibvpy.plugins.tstepper_service.tstepper_service',
+                                       name = 'Time stepper',
+                                       window = window,
+                                       position = 'left',
                                        **traits
                                        )
         return tui_engine_view
 
-    def _get_tstepper_service(self,window):
+    def _get_tstepper_service(self, window):
         """Return the tstepper_service service."""
-        return window.get_service('ibvpy.plugins.tstepper_service.TStepperService' )
+        return window.get_service('ibvpy.plugins.tstepper_service.TStepperService')

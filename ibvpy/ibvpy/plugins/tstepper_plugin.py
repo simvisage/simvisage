@@ -19,7 +19,7 @@ from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 class TStepperPlugin(Plugin):
 
     # Extension points we contribute to.
-    SERVICE_OFFERS = 'etsproxy.envisage.ui.workbench.service_offers'
+    SERVICE_OFFERS = 'enthought.envisage.ui.workbench.service_offers'
 
     # The plugin's unique identifier.
     id = 'TStepper.TStepper'
@@ -28,7 +28,7 @@ class TStepperPlugin(Plugin):
     name = 'IBVPY'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
     
     ######################################################################
     # Private methods.
@@ -36,7 +36,7 @@ class TStepperPlugin(Plugin):
         """ Trait initializer. """
         tstepper_service_offer = ServiceOffer(
             protocol = 'ibvpy.plugins.tstepper_service.TStepperService',
-            factory  = 'ibvpy.plugins.tstepper_service.TStepperService'
+            factory = 'ibvpy.plugins.tstepper_service.TStepperService'
         )
 
         return [tstepper_service_offer]
