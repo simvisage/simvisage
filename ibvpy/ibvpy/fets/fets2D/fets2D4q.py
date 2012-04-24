@@ -227,7 +227,7 @@ def example_with_new_domain():
     # individual pieces of definition into the user interface.
     #
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    app = IBVPyApp(ibv_resource = tloop)
+    app = IBVPyApp(ibv_resource = tstepper)
     app.main()
 
 if __name__ == '__main__':
