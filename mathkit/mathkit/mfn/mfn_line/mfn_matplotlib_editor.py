@@ -26,10 +26,12 @@ from matplotlib.figure import Figure
 import wx
 
 from enthought.traits.api import \
-    Any, Instance, on_trait_change
+    Any, Instance, on_trait_change, Int
 from enthought.traits.ui.api import \
-    View, Item, Editor, BasicEditorFactory
+    View, Item, BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter
+
+from enthought.traits.ui.wx.editor import Editor
 
 class _MFnMatplotlibEditor(Editor):
     
@@ -43,6 +45,7 @@ class _MFnMatplotlibEditor(Editor):
     # adjustable parameters
     adapter = Instance(MFnPlotAdapter)
 
+    border_size = Int(0)
     # @todo faezeh please make the mapping from the human readable color
     #
     def init(self, parent):
