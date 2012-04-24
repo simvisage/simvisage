@@ -26,7 +26,7 @@ from enthought.traits.api import Array, Bool, Enum, Float, HasTraits, \
 from enthought.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, RangeEditor, spring
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from enthought.traits.ui.api import NoButtons, OKButton, CancelButton, \
      Action
 
 from weakref import ref

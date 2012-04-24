@@ -25,10 +25,10 @@ from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 import wx
 
-from enthought.traits.ui.api import View, Item
-from enthought.traits.api import Any, Instance, on_trait_change
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
+from enthought.traits.api import \
+    Any, Instance, on_trait_change
+from enthought.traits.ui.api import \
+    View, Item, Editor, BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter
 
 class _MFnMatplotlibEditor(Editor):
@@ -41,7 +41,7 @@ class _MFnMatplotlibEditor(Editor):
     figure = Instance(Figure(facecolor = MFnPlotAdapter().padding_bg_color), ())
 
     # adjustable parameters
-    adapter = Instance( MFnPlotAdapter )
+    adapter = Instance(MFnPlotAdapter)
 
     # @todo faezeh please make the mapping from the human readable color
     #
@@ -51,7 +51,7 @@ class _MFnMatplotlibEditor(Editor):
         self.adapter = factory.adapter
         
         self.control = self._create_canvas(parent)
-        self.value.on_trait_change( self.update_editor, 'data_changed' )
+        self.value.on_trait_change(self.update_editor, 'data_changed')
 
     def update_editor(self):
         figure = self.figure
@@ -60,7 +60,7 @@ class _MFnMatplotlibEditor(Editor):
         if canvas is None:
             pass
         else:
-            figure.delaxes( axes )
+            figure.delaxes(axes)
             self._refresh_plot()
             figure.canvas.draw()
 
@@ -70,29 +70,29 @@ class _MFnMatplotlibEditor(Editor):
         a = self.adapter
         fig = self.figure
     
-        panel = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
+        panel = wx.Panel(parent, -1, style = wx.CLIP_CHILDREN)
         sizer = wx.BoxSizer(wx.VERTICAL)
         panel.SetSizer(sizer)
 
         # matplotlib commands to create a canvas
-        mpl_control = FigureCanvas( panel, -1, fig )
+        mpl_control = FigureCanvas(panel, -1, fig)
         toolbar = NavigationToolbar2Wx(mpl_control)
 
         sizer.Add(toolbar, 0, wx.EXPAND)
-        sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW )
+        sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW)
         
         if a.max_size:
-            self.figure.canvas.SetMaxSize( a.max_size )
+            self.figure.canvas.SetMaxSize(a.max_size)
         if a.min_size:
             self.figure.canvas.SetMinSize((a.min_size))
 
         if a.padding:
             for side, pad in a.padding.items():
-                setattr( self.figure.subplotpars, side, pad )
+                setattr(self.figure.subplotpars, side, pad)
         
         return panel
 
-    def _refresh_plot( self ):
+    def _refresh_plot(self):
 
         figure = self.figure
 
@@ -103,30 +103,30 @@ class _MFnMatplotlibEditor(Editor):
         
         a = self.adapter
         if a.var_x != '':
-            label_x = getattr( self.object, a.var_x )
+            label_x = getattr(self.object, a.var_x)
         else:
             label_x = a.label_x
             
-        if a.var_y  != '':
-            label_y = getattr( self.object, a.var_y )
+        if a.var_y != '':
+            label_y = getattr(self.object, a.var_y)
         else:
             label_y = a.label_y
          
-        styles_m =  a.line_style.values()
+        styles_m = a.line_style.values()
       #  line_color = self.line_color_matplotlib[ a.line_color ]
         line_color = a.line_color[0]
         line_style = styles_m[0]  
         #line_style = self.line_style_matplotlib[ a.line_style  ]
         
-        axes.plot(x, y, color = line_color, linewidth=2.,
+        axes.plot(x, y, color = line_color, linewidth = 2.,
                   linestyle = line_style)
-        axes.set_xlabel( label_x, weight = 'semibold')
-        axes.set_ylabel( label_y, weight = 'semibold')
-        axes.set_title( a.title, size = 'large', color = a.title_color,\
-                        weight = 'bold', position = (.5,1.03))
+        axes.set_xlabel(label_x, weight = 'semibold')
+        axes.set_ylabel(label_y, weight = 'semibold')
+        axes.set_title(a.title, size = 'large', color = a.title_color, \
+                        weight = 'bold', position = (.5, 1.03))
         axes.set_axis_bgcolor(color = a.bgcolor)
         axes.ticklabel_format(scilimits = a.scilimits)
-        axes.grid(color='gray', linestyle='--', linewidth=0.1, alpha = 0.4)
+        axes.grid(color = 'gray', linestyle = '--', linewidth = 0.1, alpha = 0.4)
         axes.set_xscale(a.xscale)
         axes.set_yscale(a.yscale)
 
@@ -142,7 +142,7 @@ class MFnMatplotlibEditor(BasicEditorFactory):
 
     klass = _MFnMatplotlibEditor
     
-    adapter = Instance( MFnPlotAdapter )
+    adapter = Instance(MFnPlotAdapter)
     def _adapter_default(self):
         return MFnPlotAdapter()
     
