@@ -165,7 +165,7 @@ class IBVPyApp(HasTraits):
         app = self.application
         if self.ibv_resource:
             window = app.workbench.active_window
-            e = window.get_service('etsproxy.mayavi.api.Engine')
+            e = window.get_service('enthought.mayavi.core.engine.Engine')
             set_engine(e)            
             self.ibv_resource.bind_services(window)
             self.ibv_resource.register_mv_pipelines(e)
