@@ -61,7 +61,7 @@ class RandomField(HasTraits):
     random_field = Property(Array , depends_on = '+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
-        np.random.seed(1)
+        np.random.seed(4)
         '''simulates the Gaussian random field'''
         #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
@@ -96,8 +96,8 @@ if __name__ == '__main__':
     rf = RandomField(lacor = 6. , xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
     x = rf.xgrid
     rf.distribution = 'Weibull'
-    rf.loc = 1.
-    rf.shape = 1000
+    rf.loc = .0
+    rf.shape = 10.
     rf.scale = 5.
     p.plot(x, rf.random_field, lw = 2, color = 'black', label = 'Weibull')
     rf.distribution = 'Gauss'
