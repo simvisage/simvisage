@@ -23,10 +23,7 @@ from enthought.traits.ui.api import \
 from enthought.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
                                      MenuBar, NoButtons, Separator, ToolBar
 
-from enthought.traits.ui.tabular_adapter \
-    import TabularAdapter
-
-from enthought.traits.ui.table_column import \
+from enthought.traits.ui.api import \
     ObjectColumn
 
 from enthought.traits.ui.tabular_adapter \
@@ -234,7 +231,7 @@ class SimDBClassExt(HasTraits):
         for x in string.whitespace:
             key = key.replace(x, "_")
         # write to the database
-        value.key = key
+        #value.key = key
         obj_file_name = os.path.join(self.dir, key + '.pickle')
         obj_file = open(obj_file_name, 'w')
         

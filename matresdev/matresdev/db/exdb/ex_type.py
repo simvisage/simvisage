@@ -36,19 +36,12 @@ from enthought.traits.ui.menu import \
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter
 
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from matplotlib.figure import Figure
+from matresdev.db import SimDBClass
 
 import os
 
-import csv
-
 from numpy import \
-    array, fabs, where, copy, ones, hstack, zeros, cumsum, histogram, \
-    interp
-
-from numpy import \
-    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, max
+    loadtxt
 
 from enthought.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
@@ -56,7 +49,6 @@ from enthought.traits.ui.table_filter \
 
 #-- Tabular Adapter Definition -------------------------------------------------
 
-from string import replace
 from os.path import exists
 
 from loadtxt_novalue import loadtxt_novalue
@@ -78,17 +70,17 @@ from string import split
 from i_ex_type import \
     IExType
 
-class ExType( HasTraits ):
+class ExType(SimDBClass):
     '''Read the data from the_ directory
     '''
 
-    implements( IExType )
+    implements(IExType)
 
     data_file = File
 
-    file_ext = Str( 'DAT' )
+    file_ext = Str('DAT')
 
-    def validate( self ):
+    def validate(self):
         '''Validate the input data return the info whether or not 
          the input is valid. This is the condition for processing
          of the derived data.
@@ -97,18 +89,18 @@ class ExType( HasTraits ):
 
     # set a flag for the view to check whether derived data is available
     #
-    derived_data_available = Bool( False )
+    derived_data_available = Bool(False)
 
     # specify inputs
     #
-    key = Property( Str, depends_on = 'data_file' )
-    def _get_key( self ):
-        return split( os.path.basename( self.data_file ), '.' )[0]
+    key = Property(Str, depends_on = 'data_file')
+    def _get_key(self):
+        return split(os.path.basename(self.data_file), '.')[0]
 
     # indicate whether the test is suitable and prepared for
     # calibration.
-    ready_for_calibration = Property( Bool )
-    def _get_ready_for_calibration( self ):
+    ready_for_calibration = Property(Bool)
+    def _get_ready_for_calibration(self):
         # return False by default
         # the subclasses shall overload this 
         # and define the rules
@@ -116,13 +108,13 @@ class ExType( HasTraits ):
 
     # specify plot templates that can be chosen for viewing
     #
-    plot_templates = Dict( transient = True )
+    plot_templates = Dict(transient = True)
 
     # define processing
     #
-    processed_data_array = Array( 'float_', transient = True )
+    processed_data_array = Array('float_', transient = True)
 
-    def process_source_data( self ):
+    def process_source_data(self):
         '''process the source data and assign
         attributes to the DAT-file channel names.
         '''
@@ -131,72 +123,72 @@ class ExType( HasTraits ):
         self.processed_data_array = self.data_array
         self._set_array_attribs()
 
-    data_array = Array( float, transient = True )
+    data_array = Array(float, transient = True)
 
-    unit_list = Property( depends_on = 'data_file' )
-    def _get_unit_list( self ):
+    unit_list = Property(depends_on = 'data_file')
+    def _get_unit_list(self):
         return self.names_and_units[1]
 
-    factor_list = Property( depends_on = 'data_file' )
-    def _get_factor_list( self ):
+    factor_list = Property(depends_on = 'data_file')
+    def _get_factor_list(self):
         return self.names_and_units[0]
 
-    names_and_units = Property( depends_on = 'data_file' )
+    names_and_units = Property(depends_on = 'data_file')
     @cached_property
-    def _get_names_and_units( self ):
+    def _get_names_and_units(self):
         ''' Extract the names and units of the measured data.
         The order of the names in the .DAT-file corresponds 
         to the order of the .ASC-file.   
         '''
-        file = open( self.data_file, 'r' )
+        file = open(self.data_file, 'r')
         lines = file.read().split()
         names = []
         units = []
-        for i in range( len( lines ) ):
+        for i in range(len(lines)):
             if lines[i] == '#BEGINCHANNELHEADER':
-                name = lines[i + 1].split( ',' )[1]
-                unit = lines[i + 3].split( ',' )[1]
-                names.append( name )
-                units.append( unit )
+                name = lines[i + 1].split(',')[1]
+                unit = lines[i + 3].split(',')[1]
+                names.append(name)
+                units.append(unit)
         return names, units
 
-    def _set_array_attribs( self ):
+    def _set_array_attribs(self):
         '''Set the measured data as named attributes defining slices into 
         the processed data array.
         '''
-        for i, factor in enumerate( self.factor_list ):
-            self.add_trait( factor, Array( value = self.processed_data_array[:, i], transient = True ) )
+        for i, factor in enumerate(self.factor_list):
+            self.add_trait(factor, Array(value = self.processed_data_array[:, i], transient = True))
 
     #------------------
 
-    def _read_data_array( self ):
+    def _read_data_array(self):
         ''' Read the experiment data. 
         '''
-        if exists( self.data_file ):
+        if exists(self.data_file):
 
             print 'READ FILE'
             # change the file name dat with asc  
-            file_split = self.data_file.split( '.' )
+            file_split = self.data_file.split('.')
 
             file_name = file_split[0] + '.csv'
-            if not os.path.exists( file_name ):
+            if not os.path.exists(file_name):
 
                 file_name = file_split[0] + '.ASC'
-                if not os.path.exists( file_name ):
+                if not os.path.exists(file_name):
                     raise IOError, 'file %s does not exist' % file_name
 
             print 'file_name', file_name
 
             # try to use loadtxt to read data file
             try:
-                _data_array = loadtxt( file_name,
-                                       delimiter = ';' )
+                _data_array = loadtxt(file_name,
+                                       delimiter = ';')
 
             # loadtxt returns an error if the data file contains
             # 'NOVALUE' entries. In this case use the special 
             # method 'loadtxt_novalue'
             except ValueError:
-                _data_array = loadtxt_novalue( file_name )
+                _data_array = loadtxt_novalue(file_name)
 
             self.data_array = _data_array
 

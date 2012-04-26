@@ -14,20 +14,16 @@ from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
 from enthought.traits.ui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from enthought.traits.ui.table_column \
+from enthought.traits.ui.api \
     import ObjectColumn, ExpressionColumn
 
-from enthought.traits.ui.table_filter \
-    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+from enthought.traits.ui.api \
+    import TableFilter, RuleTableFilter, EvalTableFilter
 
 from numpy import linspace, ix_, mgrid, ogrid, array, hstack, vstack, zeros, arange, c_, newaxis
 
 # tvtk related imports
 #
-from enthought.tvtk.pyface.actor_model import ITVTKActorModel
-from enthought.tvtk.pyface.actor_editor import ActorEditor
-from enthought.tvtk.pyface import actors
 from enthought.tvtk.api import tvtk
 
 class SContext: # (HasTraits):
