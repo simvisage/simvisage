@@ -4,7 +4,7 @@ Created on Apr 18, 2012
 @author: rostar
 '''
 from enthought.traits.api import HasTraits, Float, Property, \
-                                cached_property, Range
+                                cached_property, Array
 from enthought.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
 from enthought.traits.ui.menu import OKButton, CancelButton
@@ -52,6 +52,10 @@ class Material( HasTraits ):
     
     Lc = Float(1000., auto_set = False, enter_set = True, # [-]
                    desc = 'specimen length [mm]',
+                   modified = True )
+
+    sigma = Float(auto_set = False, enter_set = True, # [-]
+                   desc = 'load [MPa]',
                    modified = True )
 
     Vm = Property( Float, depends_on = 'Vf' )
