@@ -37,7 +37,7 @@ from i_fets_eval import IFETSEval
 
 from etsproxy.tvtk.api import tvtk
 
-from tvtk_classes import tvtk_helper
+from tvtk.tvtk_classes import tvtk_helper
 
 
 
