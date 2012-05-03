@@ -45,19 +45,19 @@ if __name__ == '__main__':
             return MyDB.db[ self.my_key ]
 
     MyDB2.db = SimDBClassExt(klass = MyDB2, verbose = 'io')
-    
+
+    print 'MyDB2.db.instances', MyDB2.db.instances
+
     print 'MyDB2.db.delete_instances()'
     
     MyDB2.db.delete_instances()
-    
-    print 'MyDB2.db.instances', MyDB2.db.instances
     
     # Insert some instances into MyDB2 extension
     # assignment to the .db extension stores the
     # object within as a pickle file.
     #
     MyDB2.db['DB2_1'] = MyDB2(my_key = 'DB_2')
-    
+
     # Another way how to store an object is to 
     # use the *save* method of the SimDB base class
     # Note that if DB2_2 already exists in the database
@@ -68,27 +68,58 @@ if __name__ == '__main__':
     print MyDB2.db['DB2_2'].my_ref.key
     print MyDB2.db.instances
 
+    MyDB2.db.configure_traits()
+    
     # now the two instances are stored
     # add a new trait to all instances of MyDB2 with the
     
+    print 'MyDB2 traits', MyDB2.__dict__['__class_traits__']
+    
     MyDB2.add_class_trait('humidity', Float)
     
-    for inst in MyDB2.db.inst_list:
+    for num, inst in enumerate(MyDB2.db.inst_list):
         #inst.add_trait('humidity', Float())
+        inst.humidity = num * 10.0
         inst.save() 
 
     print 'humidity'
     print MyDB2.db['DB2_2'].humidity
-
-#    print 'v2'
-#    print MyDB2.db['MDBO1'].my_ref.v2
-#    
-#    print MyDB2.db['MDBO1'].my_ref.key
-#    
-#    MyDB2.db['MDBO1'].my_key = 'object_2'
-#    
-#    print MyDB2.db['MDBO1'].my_ref.key
-#    
-#    MyDB2.db['MDBO1'].save()
-#    
+#        
     MyDB2.db.configure_traits()
+
+    #===========================================================================
+    # Redefine the class with the added trait
+    #===========================================================================
+    class MyDB2(SimDBClass):
+        humidity = Float(0.0)
+        my_key = Str(simdb = True)
+        my_ref = Property
+        def _get_my_ref(self):
+            return MyDB.db[ self.my_key ]
+
+    MyDB2.db = SimDBClassExt(klass = MyDB2, verbose = 'io')
+    
+    MyDB2.db.configure_traits()
+
+    #===========================================================================
+    # Remove the trait from the instances
+    #===========================================================================
+
+    print 'removing the trait'
+    for num, inst in enumerate(MyDB2.db.inst_list):
+        inst.remove_trait('humidity')
+        inst.save() 
+    
+    #===========================================================================
+    # Redefine the class - now without the trait
+    #===========================================================================
+
+    class MyDB2(SimDBClass):
+        my_key = Str(simdb = True)
+        my_ref = Property
+        def _get_my_ref(self):
+            return MyDB.db[ self.my_key ]
+        
+    MyDB2.db = SimDBClassExt(klass = MyDB2, verbose = 'io')
+    
+    MyDB2.db.configure_traits()            

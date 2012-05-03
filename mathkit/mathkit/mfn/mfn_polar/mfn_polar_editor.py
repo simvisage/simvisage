@@ -6,19 +6,19 @@ traits.ui.wx.plot_editor.
 # Enthought library imports
 from enthought.enable.api import black_color_trait, LineStyle, ColorTrait, \
                                  white_color_trait
-from enthought.enable.wx_backend.api import Window
+from enthought.enable.api import Window
 
 from enthought.traits.api import false, Str, Range, Float, Bool, Int, Any, \
                                  List, HasPrivateTraits, Instance
 from enthought.traits.ui.api import Item, UI
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.wx.editor_factory import EditorFactory
+from enthought.traits.ui.api import Editor
+from enthought.traits.ui.api import EditorFactory
 from enthought.traits.ui.menu import Action, ToolBar, Menu
 #from enthought.traits.ui.wx.helper import traits_ui_panel
 
 # Local relative imports
-from enthought.chaco.plot_containers import OverlayPlotContainer
-from enthought.chaco.plot_label import PlotLabel
+from enthought.chaco.api import OverlayPlotContainer
+from enthought.chaco.api import PlotLabel
 
 # Somewhat unorthodox...
 from enthought.chaco.tools.api import SimpleZoom, DataLabelTool
@@ -35,8 +35,7 @@ from numpy import frompyfunc, add, ndarray, arange, array, compress, \
 
 import wx
 
-from enthought.pyface.image_resource import ImageResource
-from enthought.pyface.api import FileDialog, OK
+from enthought.pyface.api import FileDialog, OK, ImageResource
 
 
 
@@ -48,7 +47,7 @@ WILDCARD = "Saved plots (*.eps)|*.eps|"\
            "All files (*.*)|*.*"
 
 # Range for the height and width for the plot widget.
-PlotSize = Range( 50, 1000, 180 )
+PlotSize = Range(50, 1000, 180)
 
 
 def coord_trans_plt(r_value, frac_noplot, plotrange_min, plotrange_max):
@@ -65,22 +64,22 @@ def coord_trans_plt(r_value, frac_noplot, plotrange_min, plotrange_max):
 
 
 def _get_radius_arr_plt(radius_arr, frac_noplot, plotrange_min, plotrange_max):
-    vcoord_trans_plt = frompyfunc( coord_trans_plt, 4, 1 )
+    vcoord_trans_plt = frompyfunc(coord_trans_plt, 4, 1)
     radius_arr_plt = array(vcoord_trans_plt(radius_arr, frac_noplot, \
                                             plotrange_min, plotrange_max), \
-                                            dtype='float_' )
+                                            dtype = 'float_')
     return radius_arr_plt
 
 
-def unitcircle_fn( theta_value, frac_noplot, plotrange_min, plotrange_max):
+def unitcircle_fn(theta_value, frac_noplot, plotrange_min, plotrange_max):
     r_a = coord_trans_plt(0.0, frac_noplot, plotrange_min, plotrange_max)
     unitcircle_plt = r_a 
     return unitcircle_plt
         
 def _get_unitcircle_arr(theta_arr, frac_noplot, plotrange_min, plotrange_max):
-    vunitcircle_fn = frompyfunc( unitcircle_fn, 4, 1 )    
-    return array( vunitcircle_fn( theta_arr, frac_noplot, plotrange_min, \
-                                  plotrange_max), dtype='float_' )
+    vunitcircle_fn = frompyfunc(unitcircle_fn, 4, 1)    
+    return array(vunitcircle_fn(theta_arr, frac_noplot, plotrange_min, \
+                                  plotrange_max), dtype = 'float_')
 
 
 class MFnPolarPlotItem(Item):
@@ -92,7 +91,7 @@ class MFnPolarPlotItem(Item):
     # Name of the trait that references the index data source.
     index = Str
     # Name of the trait that references the value data source.
-    value_list = List( Str )
+    value_list = List(Str)
 
     # Foreground olor of the plot.
     color = ColorTrait("green")
@@ -110,7 +109,7 @@ class MFnPolarPlotItem(Item):
     type_trait = Str
 
 
-    def __init__(self, index, value_list, type="line", **traits):
+    def __init__(self, index, value_list, type = "line", **traits):
         self.index = index
         self.value_list = value_list
 #        self.type = type
@@ -130,25 +129,25 @@ class MFnPolarPlotItem(Item):
 #        return self.bgcolor
 
 
-class MFnPolarEditorFactory ( EditorFactory ):
+class MFnPolarEditorFactory (EditorFactory):
 
     # Width of the plot editor.
-    width    = PlotSize
+    width = PlotSize
     # Height of the plot editor.
-    height   = PlotSize
+    height = PlotSize
     # The ChacoPlotItem associated with this factory.
     plotitem = Any
 
-    def simple_editor ( self, ui, object, name, description, parent ):
-        return MFnPolarPlotEditor( parent,
-                                 factory     = self,
-                                 ui          = ui,
-                                 object      = object,
-                                 name        = name,
-                                 description = description )
+    def simple_editor (self, ui, object, name, description, parent):
+        return MFnPolarPlotEditor(parent,
+                                 factory = self,
+                                 ui = ui,
+                                 object = object,
+                                 name = name,
+                                 description = description)
         
 
-class MFnPolarPlotEditor ( Editor ):
+class MFnPolarPlotEditor (Editor):
     """ Traits UI editor for displaying trait values in a Chaco plot.
     """
 
@@ -156,7 +155,7 @@ class MFnPolarPlotEditor ( Editor ):
     toolbar = Any
 
     # The Traits UI associated with the table editor toolbar:
-    toolbar_ui = Instance( UI )
+    toolbar_ui = Instance(UI)
 
     # flag that indicates whether the unitcircle is to be plotted
     # (i.e. if zero is in the plotrange)
@@ -170,7 +169,7 @@ class MFnPolarPlotEditor ( Editor ):
         else:
             return True    
 
-    def init ( self, parent ):
+    def init (self, parent):
         """ Finishes initializing the editor by creating the underlying toolkit
             widget.
         """
@@ -178,7 +177,7 @@ class MFnPolarPlotEditor ( Editor ):
         plotitem = factory.plotitem
 
 
-        container = OverlayPlotContainer(use_backbuffer=True)
+        container = OverlayPlotContainer(use_backbuffer = True)
         self._container = container
 
         
@@ -215,7 +214,7 @@ class MFnPolarPlotEditor ( Editor ):
         # list.
         for name in [plotitem.index] + plotitem.value_list:
             print "setting on trait change for ", name
-            object.on_trait_change( self._update_data, name)
+            object.on_trait_change(self._update_data, name)
         object.on_trait_change(self.update_editor, plotitem.type_trait)
         
         return
@@ -226,45 +225,45 @@ class MFnPolarPlotEditor ( Editor ):
     #  Creates the table editing tool bar:
     #---------------------------------------------------------------------------
 
-    def _create_toolbar ( self, parent, sizer ):
+    def _create_toolbar (self, parent, sizer):
         """ Creates the table editing toolbar.
         """
         factory = self.factory
             
-        toolbar = MFnPolarPlotEditorToolbar( parent = parent, editor = self )
-        tb_sizer = wx.BoxSizer( wx.HORIZONTAL )
+        toolbar = MFnPolarPlotEditorToolbar(parent = parent, editor = self)
+        tb_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.toolbar = toolbar
-        tb_sizer.Add( toolbar.control, 0 )
-        tb_sizer.Add( ( 1, 1 ), 1, wx.EXPAND )
+        tb_sizer.Add(toolbar.control, 0)
+        tb_sizer.Add((1, 1), 1, wx.EXPAND)
 
-        sizer.Add( wx.StaticLine( parent, -1, style = wx.LI_HORIZONTAL ), 0,
-                   wx.EXPAND | wx.BOTTOM, 5 )
-        sizer.Add( tb_sizer, 0, wx.ALIGN_RIGHT | wx.EXPAND )
-        sizer.Add( wx.StaticLine( parent, -1, style = wx.LI_HORIZONTAL ), 0,
-                   wx.EXPAND | wx.BOTTOM, 5 )
+        sizer.Add(wx.StaticLine(parent, -1, style = wx.LI_HORIZONTAL), 0,
+                   wx.EXPAND | wx.BOTTOM, 5)
+        sizer.Add(tb_sizer, 0, wx.ALIGN_RIGHT | wx.EXPAND)
+        sizer.Add(wx.StaticLine(parent, -1, style = wx.LI_HORIZONTAL), 0,
+                   wx.EXPAND | wx.BOTTOM, 5)
 
     #---------------------------------------------------------------------------
     #  Handles the user requesting that columns not be sorted:
     #---------------------------------------------------------------------------
 
-    def on_savedata ( self ):
+    def on_savedata (self):
         """ Handles the user requesting that the data of the function \
             is to be saved.
         """
         import os
-        dlg = FileDialog(parent = self.control, 
+        dlg = FileDialog(parent = self.control,
                          title = 'Export function data',
-                         default_directory=os.getcwd(),
-                         default_filename="", wildcard='*.csv',
-                         action='save as')
+                         default_directory = os.getcwd(),
+                         default_filename = "", wildcard = '*.csv',
+                         action = 'save as')
         if dlg.open() == OK:
             path = dlg.path
 
             print "Saving data to", path, "..."
             try:
 
-                factory  = self.factory
+                factory = self.factory
                 plotitem = factory.plotitem
                 x_values = getattr(self.object, plotitem.index)
                 y_values = getattr(self.object, plotitem.value_list)
@@ -276,16 +275,16 @@ class MFnPolarPlotEditor ( Editor ):
             print "Plot saved."
         return
 
-    def on_savefig ( self ):
+    def on_savefig (self):
         """ Handles the user requesting that the image of the function \
             is to be saved.
         """
         import os
-        dlg = FileDialog(parent = self.control, 
+        dlg = FileDialog(parent = self.control,
                          title = 'Save as image',
-                         default_directory=os.getcwd(),
-                         default_filename="", wildcard=WILDCARD,
-                         action='save as')
+                         default_directory = os.getcwd(),
+                         default_filename = "", wildcard = WILDCARD,
+                         action = 'save as')
         if dlg.open() == OK:
             path = dlg.path
 
@@ -297,7 +296,7 @@ class MFnPolarPlotEditor ( Editor ):
                 # (If we wanted to display this plot in a window, we
                 # would not need to create the graphics context ourselves; 
                 # it would be created for us by the window.)
-                self._plot.bounds = [500,300]
+                self._plot.bounds = [500, 300]
                 self._plot.padding = 50
                 plot_gc = PlotGraphicsContext(self._plot.outer_bounds)
                 print self._plot.outer_bounds
@@ -352,7 +351,7 @@ class MFnPolarPlotEditor ( Editor ):
             editor.
         """
 
-        factory  = self.factory
+        factory = self.factory
         plotitem = factory.plotitem
 
         # Remove the old plot
@@ -360,19 +359,19 @@ class MFnPolarPlotEditor ( Editor ):
             self._destroy_plot()
 
         try:
-            theta_arr     = getattr(self.object, plotitem.index)
-            radius_arr    = getattr(self.object, plotitem.value_list[0])
+            theta_arr = getattr(self.object, plotitem.index)
+            radius_arr = getattr(self.object, plotitem.value_list[0])
             plotrange_min = getattr(self.object, plotitem.value_list[1])
             plotrange_max = getattr(self.object, plotitem.value_list[2])
-            frac_noplot   = getattr(self.object, plotitem.value_list[3])
+            frac_noplot = getattr(self.object, plotitem.value_list[3])
             
         except:
             self._container.request_redraw()
             return
 
         # check plausibility
-        if not ( (array([plotrange_min]) <= radius_arr).all() and \
-                 (radius_arr <= array([plotrange_max])).all() ):
+        if not ((array([plotrange_min]) <= radius_arr).all() and \
+                 (radius_arr <= array([plotrange_max])).all()):
             print "Note: some value out of range! Compare plotranges with \
                    indicated values for Radius_min and Radius_max "
 
@@ -384,17 +383,17 @@ class MFnPolarPlotEditor ( Editor ):
                                                  plotrange_min, plotrange_max)
     
             bool_arr_frac_noplot = (unitcircle_arr == array([frac_noplot]))
-            bool_arr_1           = (unitcircle_arr == array([1.]))
+            bool_arr_1 = (unitcircle_arr == array([1.]))
             
-            if ( plotrange_min == 0. or plotrange_max == 0.) or  \
-                ( bool_arr_frac_noplot.all() == False and \
-                  bool_arr_1.all() == False ):
+            if (plotrange_min == 0. or plotrange_max == 0.) or  \
+                (bool_arr_frac_noplot.all() == False and \
+                  bool_arr_1.all() == False):
                 self.plot_unitcircle_flag = True
-                plot_unitcircle = self._create_polar_plot( plotitem, \
+                plot_unitcircle = self._create_polar_plot(plotitem, \
                                             (unitcircle_arr, theta_arr),
-                                             color='red', 
+                                             color = 'red',
                                              frac_noplot = frac_noplot,
-                                             width=5.0 )
+                                             width = 5.0)
 
                 self._plot_unitcircle = plot_unitcircle
 
@@ -409,19 +408,19 @@ class MFnPolarPlotEditor ( Editor ):
                 self._container.add(plot_unitcircle)
                 self._container.request_redraw()
                 
-                print 'container',self._container.get_preferred_size()
+                print 'container', self._container.get_preferred_size()
                 
                 print 'width for Unitcircle', plot_unitcircle.width
                 
                
             # plot a single point at the position of 'plotrange_min'
             radius_axeslabels = array([ frac_noplot ])
-            theta_axeslabels  = array([      0     ])
-            plot_axeslabels = self._create_polar_plot( plotitem, \
+            theta_axeslabels = array([      0     ])
+            plot_axeslabels = self._create_polar_plot(plotitem, \
                                         (radius_axeslabels, theta_axeslabels),
-                                         color='red', 
+                                         color = 'red',
                                          frac_noplot = frac_noplot,
-                                         width=5.0 )
+                                         width = 5.0)
 
 
 
@@ -455,37 +454,37 @@ class MFnPolarPlotEditor ( Editor ):
 
             
 
-            x_center = factory.width/2.0  
-            y_center = factory.height/2.0  
+            x_center = factory.width / 2.0  
+            y_center = factory.height / 2.0  
             
-            print('factory.width',factory.width)
-            print('factory.height',factory.height)  
+            print('factory.width', factory.width)
+            print('factory.height', factory.height)  
 
 
-            x_frac_min = frac_noplot * factory.height/2
-            x_frac_max = factory.height/2
+            x_frac_min = frac_noplot * factory.height / 2
+            x_frac_max = factory.height / 2
 
             x_pnt_min = x_center + x_frac_min
             x_pnt_max = x_center + x_frac_max            
-            y_pnt     = y_center
+            y_pnt = y_center
             
-            print('x_center=',x_center)
-            print('y_center=',y_center)
+            print('x_center=', x_center)
+            print('y_center=', y_center)
 
-            print('x_frac_min=',x_frac_min)
-            print('x_frac_max=',x_frac_max)
+            print('x_frac_min=', x_frac_min)
+            print('x_frac_max=', x_frac_max)
 
-            print('x_pnt_min=',x_pnt_min)
-            print('x_pnt_max=',x_pnt_max)
+            print('x_pnt_min=', x_pnt_min)
+            print('x_pnt_max=', x_pnt_max)
             
 #            txt_plotrange_min = TextBoxOverlay(text = plotrange_min.__str__(), \
 #                                alternate_position = (x_pnt_min,y_pnt) )
             txt_plotrange_min = TextBoxOverlay(text = plotrange_min.__str__(), \
-                                              alternate_position = (285,189) )
+                                              alternate_position = (285, 189))
             plot_axeslabels.overlays.append(txt_plotrange_min)
 
             txt_plotrange_max = TextBoxOverlay(text = plotrange_max.__str__(), \
-                                            alternate_position = (285*2,189) )
+                                            alternate_position = (285 * 2, 189))
             plot_axeslabels.overlays.append(txt_plotrange_max)
 
            
@@ -498,11 +497,11 @@ class MFnPolarPlotEditor ( Editor ):
             radius_arr_plt = _get_radius_arr_plt(radius_arr, frac_noplot, \
                                                  plotrange_min, plotrange_max)
     
-            plot_radiusfn = self._create_polar_plot( plotitem, \
+            plot_radiusfn = self._create_polar_plot(plotitem, \
                                             (radius_arr_plt, theta_arr),
                                             frac_noplot = frac_noplot,
-                                            width=5.0, 
-                                            index_sort="ascending" )
+                                            width = 5.0,
+                                            index_sort = "ascending")
     
             self._set_basic_properties(plot_radiusfn, plotitem)       
     
@@ -545,11 +544,11 @@ class MFnPolarPlotEditor ( Editor ):
     #  Creates the table editing tool bar:
     #---------------------------------------------------------------------------
 
-    def _create_polar_plot(self, plotitem, data, 
-                           color='black', 
-                           width=1.0,
-                           dash="solid", 
-                           grid="dot", 
+    def _create_polar_plot(self, plotitem, data,
+                           color = 'black',
+                           width = 1.0,
+                           dash = "solid",
+                           grid = "dot",
                            value_mapper_class = PolarMapper,
                            frac_noplot = 0.3,
                            **kwargs):
@@ -557,31 +556,31 @@ class MFnPolarPlotEditor ( Editor ):
             data = transpose(array(data))
         
         r_data, t_data = transpose(data)
-        index_data= r_data*cos(t_data)
-        value_data= r_data*sin(t_data)
+        index_data = r_data * cos(t_data)
+        value_data = r_data * sin(t_data)
         
-        index = ArrayDataSource(index_data, sort_order='ascending')
+        index = ArrayDataSource(index_data, sort_order = 'ascending')
         # Typically the value data is unsorted
         value = ArrayDataSource(value_data)
         
     
         index_range = DataRange1D()
         index_range.add(index)
-        index_mapper = PolarMapper(range=index_range)
+        index_mapper = PolarMapper(range = index_range)
         
         value_range = DataRange1D()
         value_range.add(value)
-        value_mapper = value_mapper_class(range=value_range)
+        value_mapper = value_mapper_class(range = value_range)
         
-        plot = MFnPolarLineRenderer(index=index, value=value,
+        plot = MFnPolarLineRenderer(index = index, value = value,
                                  index_mapper = index_mapper,
                                  value_mapper = value_mapper,
                                  color = color,
                                  line_width = width,
                                  line_style = dash,
                                  grid_style = grid,
-                                 frac_noplot = frac_noplot, 
-                                 origin_axis_visible=True)
+                                 frac_noplot = frac_noplot,
+                                 origin_axis_visible = True)
         return plot          
 
     def _set_basic_properties(self, plot, plotitem):
@@ -591,7 +590,7 @@ class MFnPolarPlotEditor ( Editor ):
             setattr(plot, attr, getattr(plotitem, attr))
         return
 
-class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
+class MFnPolarPlotEditorToolbar (HasPrivateTraits):
     """ Toolbar displayed in table editors.
     """
     
@@ -600,23 +599,23 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #---------------------------------------------------------------------------
 
     # Do not sort columns:
-    save_data = Instance( Action,
+    save_data = Instance(Action,
                         { 'name':    'Save as data',
                          'tooltip': 'Save the function values',
                          'action':  'on_savedata',
                          'enabled': True,
-                         'image':   ImageResource( 'table_no_sort.png' ) } )
+                         'image':   ImageResource('table_no_sort.png') })
 
      # Move current object up one row:
-    save_fig = Instance( Action,
+    save_fig = Instance(Action,
                         { 'name':    'Save as fig',
                          'tooltip': 'Save as figure',
                          'action':  'on_savefig',
                          'enabled': True,
-                         'image':   ImageResource( 'table_move_down.png' ) } )
+                         'image':   ImageResource('table_move_down.png') })
 
     # The table editor that this is the toolbar for:
-    editor = Instance( MFnPolarPlotEditor )
+    editor = Instance(MFnPolarPlotEditor)
 
     # The toolbar control:
     control = Any
@@ -626,22 +625,22 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  Initializes the toolbar for a specified window:
     #---------------------------------------------------------------------------
 
-    def __init__ ( self, parent = None, **traits ):
-        super( MFnPolarPlotEditorToolbar, self ).__init__( **traits )
+    def __init__ (self, parent = None, **traits):
+        super(MFnPolarPlotEditorToolbar, self).__init__(**traits)
         factory = self.editor.factory
 
         actions = [ self.save_data, self.save_fig ]
-        toolbar = ToolBar( image_size      = ( 16, 16 ),
+        toolbar = ToolBar(image_size = (16, 16),
                            show_tool_names = False,
-                           show_divider    = False,
-                           *actions )
-        self.control = toolbar.create_tool_bar( parent, self )
-        self.control.SetBackgroundColour( parent.GetBackgroundColour() )
+                           show_divider = False,
+                           *actions)
+        self.control = toolbar.create_tool_bar(parent, self)
+        self.control.SetBackgroundColour(parent.GetBackgroundColour())
 
         # fixme: Why do we have to explictly set the size of the toolbar?
         #        Is there some method that needs to be called to do the
         #        layout?
-        self.control.SetSize( wx.Size( 23 * len( actions ), 16 ) )
+        self.control.SetSize(wx.Size(23 * len(actions), 16))
 
     #---------------------------------------------------------------------------
     #  PyFace/Traits menu/toolbar controller interface:
@@ -651,7 +650,7 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  Adds a menu item to the menu bar being constructed:
     #---------------------------------------------------------------------------
 
-    def add_to_menu ( self, menu_item ):
+    def add_to_menu (self, menu_item):
         """ Adds a menu item to the menu bar being constructed.
         """
         pass
@@ -660,7 +659,7 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  Adds a tool bar item to the tool bar being constructed:
     #---------------------------------------------------------------------------
 
-    def add_to_toolbar ( self, toolbar_item ):
+    def add_to_toolbar (self, toolbar_item):
         """ Adds a toolbar item to the too bar being constructed.
         """
         pass
@@ -669,7 +668,7 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  Returns whether the menu action should be defined in the user interface:
     #---------------------------------------------------------------------------
 
-    def can_add_to_menu ( self, action ):
+    def can_add_to_menu (self, action):
         """ Returns whether the action should be defined in the user interface.
         """
         return True
@@ -679,7 +678,7 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  interface:
     #---------------------------------------------------------------------------
 
-    def can_add_to_toolbar ( self, action ):
+    def can_add_to_toolbar (self, action):
         """ Returns whether the toolbar action should be defined in the user
             interface.
         """
@@ -689,10 +688,10 @@ class MFnPolarPlotEditorToolbar ( HasPrivateTraits ):
     #  Performs the action described by a specified Action object:
     #---------------------------------------------------------------------------
 
-    def perform ( self, action, action_event = None ):
+    def perform (self, action, action_event = None):
         """ Performs the action described by a specified Action object.
         """
-        getattr( self.editor, action.action )()
+        getattr(self.editor, action.action)()
 
 
 #from enthought.chaco.polar_line_renderer import PolarLineRenderer
@@ -706,13 +705,13 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
     #------------------------------------------------------------------------
 
     # The color of the origin axis.
-    origin_axis_color_ = (0,0,0,1)
+    origin_axis_color_ = (0, 0, 0, 1)
     # The width of the origin axis.
     origin_axis_width = 1.0
     # The origin axis is visible.
-    origin_axis_visible=True
+    origin_axis_visible = True
     # The grid is visible.
-    grid_visible= True
+    grid_visible = True
     # The color of the line.
     color = black_color_trait
     # The width of the line.
@@ -720,7 +719,7 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
     # The style of the line.
     line_style = LineStyle("solid")
     # The style of the grid lines.
-    grid_style= LineStyle("dot")
+    grid_style = LineStyle("dot")
     
     frac_noplot = Float(0.3)
 
@@ -733,11 +732,11 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
 
         x = self.index.get_data()
         y = self.value.get_data()
-        rad= min(self.width/2.0,self.height/2.0)
-        sx = x*rad+ self.x + self.width/2.0
-        sy = y*rad+ self.y + self.height/2.0
+        rad = min(self.width / 2.0, self.height / 2.0)
+        sx = x * rad + self.x + self.width / 2.0
+        sy = y * rad + self.y + self.height / 2.0
 
-        points = transpose(array((sx,sy)))
+        points = transpose(array((sx, sy)))
         self._cached_data_pts = points
         self._cache_valid = True
         return
@@ -751,7 +750,7 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
         gc.set_antialias(True)
         self._draw_default_axes(gc)
         self._draw_default_grid(gc)
-        if len(points)>0:
+        if len(points) > 0:
             gc.clip_to_rect(self.x, self.y, self.width, self.height)
             gc.set_stroke_color(self.color_)
             gc.set_line_width(self.line_width)
@@ -773,7 +772,7 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
         return self._draw_component(*args, **kw)
 
 
-    def _draw_component(self, gc, view_bounds=None, mode='normal'):
+    def _draw_component(self, gc, view_bounds = None, mode = 'normal'):
         """ Renders the component. 
         """
         self._gather_points()
@@ -787,19 +786,19 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
         gc.set_stroke_color(self.origin_axis_color_)
         gc.set_line_width(self.origin_axis_width)
         gc.set_line_dash(self.grid_style_)
-        x_data,y_data= transpose(self._cached_data_pts)
-        x_center=self.x + self.width/2.0
-        y_center=self.y + self.height/2.0
+        x_data, y_data = transpose(self._cached_data_pts)
+        x_center = self.x + self.width / 2.0
+        y_center = self.y + self.height / 2.0
         
         # number of divisions used to divide the cirlce radially
         # (equals the number of axes to be plotted)
         n_axes = 2
-        for theta in range(n_axes*2):
-                r= min(self.width/2.0,self.height/2.0)
-                x= r*cos(theta*pi/n_axes) + x_center
-                y= r*sin(theta*pi/n_axes) + y_center
-                data_pts= array([[x_center,y_center],[x,y]])
-                start,end = data_pts
+        for theta in range(n_axes * 2):
+                r = min(self.width / 2.0, self.height / 2.0)
+                x = r * cos(theta * pi / n_axes) + x_center
+                y = r * sin(theta * pi / n_axes) + y_center
+                data_pts = array([[x_center, y_center], [x, y]])
+                start, end = data_pts
                 gc.move_to(int(start[0]), int(start[1]))
                 gc.line_to(int(end[0]), int(end[1]))
                 gc.stroke_path()
@@ -807,41 +806,41 @@ class MFnPolarLineRenderer(AbstractPlotRenderer):
         gc.restore_state()
         return
 
-    def _draw_default_grid(self,gc):
+    def _draw_default_grid(self, gc):
         if not self.grid_visible:
             return
         gc.save_state()
         gc.set_stroke_color(self.origin_axis_color_)
         gc.set_line_width(self.origin_axis_width)
         gc.set_line_dash(self.grid_style_)
-        x_data,y_data= transpose(self._cached_data_pts)
-        x_center=self.x + self.width/2.0
-        y_center=self.y + self.height/2.0
+        x_data, y_data = transpose(self._cached_data_pts)
+        x_center = self.x + self.width / 2.0
+        y_center = self.y + self.height / 2.0
 
-        print('self.x',self.x)
-        print('self.y',self.y)
+        print('self.x', self.x)
+        print('self.y', self.y)
         
-        print('2*****self.width/2.0',self.width/2.0)
-        print('2****self.height/2.0',self.height/2.0)
+        print('2*****self.width/2.0', self.width / 2.0)
+        print('2****self.height/2.0', self.height / 2.0)
         
-        print('x_center',x_center)
-        print('y_center',y_center)
+        print('x_center', x_center)
+        print('y_center', y_center)
         
 
-        rad_one = min(self.width/2.0,self.height/2.0)
+        rad_one = min(self.width / 2.0, self.height / 2.0)
         rad_unitcircle_plt = 0.3   
 
         # number of divisions used to divide the cirlce tangentially
         ndivs_grid = 4
-        for i in range(ndivs_grid+1):
+        for i in range(ndivs_grid + 1):
             plotrange_max = 1.0
             plotrange_min = 0.0
             rad_i = plotrange_min + \
-            (plotrange_max-plotrange_min) / ndivs_grid * i
-            rad_i_plt =  coord_trans_plt(rad_i, self.frac_noplot, \
+            (plotrange_max - plotrange_min) / ndivs_grid * i
+            rad_i_plt = coord_trans_plt(rad_i, self.frac_noplot, \
                                          plotrange_min, plotrange_max) * rad_one
-            gc.move_to(self.x,self.y)
-            gc.arc(x_center, y_center, rad_i_plt, 0, 2*pi)
+            gc.move_to(self.x, self.y)
+            gc.arc(x_center, y_center, rad_i_plt, 0, 2 * pi)
             gc.stroke_path()
 
         gc.restore_state()

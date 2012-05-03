@@ -48,15 +48,12 @@ from util.traits.editors.mpl_figure_editor import \
 from matplotlib.figure import \
     Figure
 
-from matplotlib.pyplot import \
-     plot
-
 from ex_run import ExRun
 
 from ex_type import ExType
 
 from matresdev.db.simdb import \
-    SimDB
+    SimDB, SimDBClassExt
 
 import os, fnmatch
 import pickle
@@ -97,18 +94,18 @@ class ExRunTableAdapter (TabularAdapter):
     key_text = Property
     def _get_key_text(self):
         factor_idx = self.column - 1
-        value = self.object.instances[ self.row, factor_idx ]
+        value = self.object.inst_list[ self.row, factor_idx ]
         return str(value)
 
 exdb_tabular_editor = TabularEditor(adapter = ExRunTableAdapter(),
                                    multi_select = True,
-                                   selected = 'selected_instances',
+                                   selected = 'selected_inst_list',
                                  )
 
 exdb_table_editor = TableEditor(
                         columns_name = 'table_columns',
                         selection_mode = 'rows',
-                        selected = 'object.selected_instances',
+                        selected = 'object.selected_inst_list',
                         # selected_indices  = 'object.selected_exruns',
                         show_toolbar = True,
                         auto_add = False,
@@ -125,15 +122,15 @@ exdb_table_editor = TableEditor(
             )
 
 #------------------------------------------------------------------------------------------
-# Class Extension - global persistent container of class instances
+# Class Extension - global persistent container of class inst_list
 #------------------------------------------------------------------------------------------
-class ExRunClassExt(HasTraits):
+class ExRunClassExt(SimDBClassExt):
 
     category = Str('exdata')
 
     path = List([])
 
-    # dictionary of predefined instances - used for 
+    # dictionary of predefined inst_list - used for 
     # debugging and early stages of class developmemnt.
     #
     klass = Type
@@ -176,7 +173,7 @@ class ExRunClassExt(HasTraits):
         return path
 
     def _get_file_list(self):
-        '''Populate the instances with the values
+        '''Populate the inst_list with the values
         '''
         # walk through the directories and read the 
         # values
@@ -207,34 +204,34 @@ class ExRunClassExt(HasTraits):
     def _ex_run_list_default(self):
         return [ ExRun(ex_run_file) for ex_run_file in self._get_file_list() ]
 
-    instances = List
-    def _instances_default(self):
+    inst_list = List
+    def _inst_list_default(self):
         return [ ex_run.ex_type for ex_run in self.ex_run_list ]
 
-    selected_instances = List
-    def _selected_instances_default(self):
+    selected_inst_list = List
+    def _selected_inst_list_default(self):
         return []
 
     selected_instance = Property(Instance(ExType),
-                                  depends_on = 'selected_instances[]')
+                                  depends_on = 'selected_inst_list[]')
     def _get_selected_instance(self):
-        if len(self.selected_instances) > 0:
-            return self.selected_instances[0]
+        if len(self.selected_inst_list) > 0:
+            return self.selected_inst_list[0]
         else:
             return None
 
-    def export_instances(self):
+    def export_inst_list(self):
         ex_table = []
-        for inst in self.instances:
+        for inst in self.inst_list:
             row = [ getattr(inst, tcol) for tcol in self.table_columns ]
             ex_table.append(row)
         print ex_table
 
     def keys(self):
-        return self.instances.keys()
+        return self.inst_list.keys()
 
     def get(self, name, Missing):
-        it = self.instances.get(name, Missing)
+        it = self.inst_list.get(name, Missing)
         return it
 
     #-------------------------------------------------------------------
@@ -267,9 +264,9 @@ class ExRunClassExt(HasTraits):
         This method is called upon every change of the model. This makes the viewing of
         different experiment types possible.
         '''
-        return self.instances[0].plot_templates.keys()
+        return self.inst_list[0].plot_templates.keys()
 
-    @on_trait_change('selected_instances,plot_template')
+    @on_trait_change('selected_inst_list,plot_template')
     def redraw(self, ui_info = None):
         ''' Use the currently selected plot template to plot it in the Figure.
         '''
@@ -281,20 +278,20 @@ class ExRunClassExt(HasTraits):
         axes = figure.gca()
         axes.clear()
 
-        # get the labels (keys) of the selected instances for 
+        # get the labels (keys) of the selected inst_list for 
         # attibution of the legends in matplotlib:
         #
 
-        for run in self.selected_instances:
+        for run in self.selected_inst_list:
             proc_name = run.plot_templates[ self.plot_template ]
             plot_processor = getattr(run, proc_name)
             plot_processor(axes)
 
         legend_names = []
-        for run in self.selected_instances:
+        for run in self.selected_inst_list:
             legend_names = legend_names + [run.key]
-        axes.legend(legend_names, loc = 7)
-
+        if len(legend_names) > 0:
+            axes.legend(legend_names, loc = 7)
 
         self.data_changed = True
 
@@ -311,14 +308,14 @@ class ExRunClassExt(HasTraits):
                                                  style = 'readonly',
                                                  label = 'database extension class')
                                             ),
-                                     Item('instances',
+                                     Item('inst_list',
                                            editor = exdb_table_editor,
                                            show_label = False,
                                            style = 'custom' ,
                                            resizable = True),
                                      ),
                                 label = 'experiment table',
-                                id = 'exdb.table.instances',
+                                id = 'exdb.table.inst_list',
                                 dock = 'tab',
                                scrollable = True,
                              ),

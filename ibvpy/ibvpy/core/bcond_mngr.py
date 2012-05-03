@@ -12,56 +12,51 @@ from enthought.traits.ui.api import \
 from enthought.traits.ui.api \
     import View, Item, VSplit, TableEditor, ListEditor
 
-from enthought.traits.ui.table_filter \
-    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+from enthought.traits.ui.api \
+    import TableFilter, RuleTableFilter, EvalTableFilter
 
-from enthought.traits.ui.table_column \
+from enthought.traits.ui.api \
     import ObjectColumn, ExpressionColumn
-
-from enthought.traits.ui.table_filter \
-    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
 from numpy import ix_, array, int_, dot, newaxis, float_, copy
 from i_bcond import IBCond
 
 # The definition of the demo TableEditor:
-bcond_list_editor = TableEditor( 
-    columns = [ ObjectColumn( label = 'Type', name = 'var' ),
-                ObjectColumn( label = 'Value', name = 'value' ),
-                ObjectColumn( label = 'DOF', name = 'dof' )
+bcond_list_editor = TableEditor(
+    columns = [ ObjectColumn(label = 'Type', name = 'var'),
+                ObjectColumn(label = 'Value', name = 'value'),
+                ObjectColumn(label = 'DOF', name = 'dof')
                 ],
     editable = False,
     selected = 'object.selected_bcond',
     )
 
-class BCondMngr( HasTraits ):
+class BCondMngr(HasTraits):
 
-    bcond_list = List( IBCond )
+    bcond_list = List(IBCond)
 
-    selected_bcond = Instance( IBCond )
+    selected_bcond = Instance(IBCond)
 
-    def setup( self, sctx ):
+    def setup(self, sctx):
         '''
         '''
         for bc in self.bcond_list:
-            bc.setup( sctx )
+            bc.setup(sctx)
 
-    def apply_essential( self, K ):
+    def apply_essential(self, K):
         '''Register the boundary condition in the equation system.
         '''
         for bcond in self.bcond_list:
-            bcond.apply_essential( K )
+            bcond.apply_essential(K)
 
-    def apply( self, step_flag, sctx, K, R, t_n, t_n1 ):
+    def apply(self, step_flag, sctx, K, R, t_n, t_n1):
 
         for bcond in self.bcond_list:
-            bcond.apply( step_flag, sctx, K, R, t_n, t_n1 )
+            bcond.apply(step_flag, sctx, K, R, t_n, t_n1)
 
-    traits_view = View( VSplit( Item( 'bcond_list', style = 'custom', editor = bcond_list_editor,
-                                     show_label = False ),
-                                Item( 'selected_bcond@', show_label = False ) ),
+    traits_view = View(VSplit(Item('bcond_list', style = 'custom', editor = bcond_list_editor,
+                                     show_label = False),
+                                Item('selected_bcond@', show_label = False)),
                         resizable = True,
                         kind = 'subpanel',
                         )

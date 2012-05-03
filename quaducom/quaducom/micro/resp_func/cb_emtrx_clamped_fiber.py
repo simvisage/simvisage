@@ -205,6 +205,9 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
         T = tau * phi * o
         Km = A_m * E_m
         Kr = A_r * Nf * E_r
+#        Kc = Km + Kr
+#        print 'sila', 5.0 * Kc / E_m
+#        print 'delta',(Kc)/E_m/T * 6.0
 
         q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_r, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
         q_x = q * H(l / 2. - abs(x)) + (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
@@ -215,21 +218,21 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
 if __name__ == '__main__':
 
-    t = 7.1
+    t = 0.05
     Af = 5.31e-4
     Ef = 72e3
     Am = 50. / 1700
     Em = 30e3
     l = 0.
-    theta = 0.01
-    xi = 10.0179
+    theta = 0.0
+    xi = 50000
     phi = 1.
-    Ll = 0.
-    Lr = 0.1
+    Ll = 10.
+    Lr = 10.
     Nf = 1.
 
     def Pw():
-        w = linspace(0, 1.5, 300)
+        w = linspace(0, .25, 300)
         P = CBEMClampedFiber()
         q = P(w, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
         plt.plot(w, q, lw = 2, ls = '-', color = 'black', label = 'CB_emtrx')
@@ -242,27 +245,28 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberSP()
         x = linspace(-100, 40, 300)
-        q = cbcsp(.1, x, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
+        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
         plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
         plt.xticks(fontsize = 14)
         plt.yticks(fontsize = 14)
         plt.legend(loc = 'best')
-        plt.ylim(0,60)
+        plt.ylim(0,1)
 
     def SP2():
         plt.figure()
         cbcsp = CBEMClampedFiberSP()
         x = linspace(-100, 40, 7)
         print x
-        q = cbcsp(.1, x, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
+        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
         print q
         plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
         plt.xticks(fontsize = 14)
         plt.yticks(fontsize = 14)
         plt.legend(loc = 'best')
         plt.ylim(0,60)
-        plt.show()
+        
     #Pw()
     SP()
-    SP2()
+    #SP2()
+    #plt.show()
 

@@ -28,7 +28,7 @@ from enthought.traits.api import \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
-    DelegatesTo
+    DelegatesTo, Date, Time
 
 from enthought.util.home_directory import \
     get_home_directory
@@ -89,6 +89,7 @@ from matresdev.db.matdb.trc.concrete_mixture \
 from matresdev.db.matdb.trc.composite_cross_section \
     import CompositeCrossSection, plain_concrete
 
+from matresdev.db.exdb.ex_run_table import ExRunClassExt
 
 class ExpTTDB(ExType):
     '''Experiment: Tensile Test Dog Bone
@@ -534,10 +535,17 @@ class ExpTTDB(ExType):
                          width = 0.5,
                          )
 
+ExpTTDB.db = ExRunClassExt(klass = ExpTTDB)
+
 #--------------------------------------------------------------    
 
 if __name__ == '__main__':
-
-    from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpTTDB)
-    ex.configure_traits()
+    
+    ExpTTDB.add_class_trait('production_date', Date(input = True, table_field = True,))
+    for inst in ExpTTDB.db.inst_list:
+        print inst.key
+        print inst.add_trait('production_date', Date('14/9/2011', input = True, table_field = True,))
+        print inst.production_date
+        inst.save()
+        
+    ExpTTDB.db.configure_traits()
