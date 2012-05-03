@@ -241,7 +241,8 @@ class ExpBT3PT(ExType):
         '''
         super(ExpBT3PT, self).process_source_data()
 
-        elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'elastomer_f-w.raw')
+
+        elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE', 'elastomer_f-w.raw')
         _data_array_elastomer = loadtxt_bending(elastomer_path)
 
         # force [kN]:

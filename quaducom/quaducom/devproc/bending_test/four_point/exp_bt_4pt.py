@@ -198,6 +198,9 @@ class ExpBT4PT(ExType):
 
     data_array_ironed = Property(Array(float),
                                   depends_on = 'data_array, +ironing_param, +axis_selection')
+
+
+    
     @cached_property
     def _get_data_array_ironed(self):
         '''remove the jumps in the displacement curves 
@@ -214,6 +217,8 @@ class ExpBT4PT(ExType):
 
             # use ironing method only for columns of the displacement gauges.
             #
+            print 'self.names_and_units[0]',self.names_and_units[0]
+            print 'self.names_and_units',self.names_and_units
             if self.names_and_units[0][ idx ] != 'Kraft' and \
                 self.names_and_units[0][ idx ] != 'Bezugskanal' and \
                 self.names_and_units[0][ idx ] != 'DMS_o':
@@ -252,10 +257,12 @@ class ExpBT4PT(ExType):
     def process_source_data(self):
         '''read in the measured data from file and assign
         attributes after array processing.        
-        If necessary modify the assigned data, e.i. change
+        If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
         print '*** process source data ***'
+
+        super(ExpBT4PT, self).process_source_data()
 
         self._read_data_array()
 
