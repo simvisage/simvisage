@@ -13,9 +13,6 @@ from enthought.traits.ui.api \
     import View, Item, VSplit, TableEditor, ListEditor
 
 from enthought.traits.ui.api \
-    import TableFilter, RuleTableFilter, EvalTableFilter
-
-from enthought.traits.ui.api \
     import ObjectColumn, ExpressionColumn
 
 from numpy import ix_, array, int_, dot, newaxis, float_, copy

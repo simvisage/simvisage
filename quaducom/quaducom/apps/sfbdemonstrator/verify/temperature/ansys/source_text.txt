@@ -1,0 +1,84 @@
+finish
+/clear,start
+
+/Title, quad t one side
+
+/prep7
+
+n_elems_x = 10                 ![-]
+n_elems_y = n_elems_x          ![-]
+
+L = 1.0                  ![m]
+H = 1.0                  ![m]
+B = 1.0                   ![m]
+
+
+k, 1, 0., 0.
+k, 2, 0., H
+k, 3, L/2., H
+k, 4, L/2., 0.
+k, 5, L, 0.
+k, 6, L, H
+
+
+L,1,2
+L,2,3
+L,3,4
+L,4,1
+L,4,5
+L,5,6
+L,6,3
+
+LESIZE,1,,,n_elems_y
+LESIZE,3,,,n_elems_y
+LESIZE,6,,,n_elems_y
+LESIZE,2,,,n_elems_x/2
+LESIZE,4,,,n_elems_x/2
+LESIZE,5,,,n_elems_x/2
+LESIZE,7,,,n_elems_x/2
+
+
+
+A,1,2,3,4
+A,3,4,5,6
+
+
+Et,1,PLANE183                 !define element type
+Et,2,PLANE183                 !define element type
+
+
+MP,EX,1,30000.
+MP,EY,1,30000.
+MP,EZ,1,30000.
+MP,NUXY,1,0.2                   !'material properties': Poissons ratio 
+MP,NUyz,1,0.2                   !'material properties': Poissons ratio 
+MP,NUXz,1,0.2                   !'material properties': Poissons ratio 
+MP,ALPX,1,1E-3
+MP,ALPY,1,1E-3
+MP,ALPZ,1,1E-3
+
+type,1
+mat,1
+
+ASEL,all                        !select areas  
+AATT,1,,1                 !assign von MP, R, ET
+AMESH,all
+
+BFA, 2 , TEMP , 50
+          
+
+finish
+
+!------------------------------------------------------------
+!solution phase
+
+/solu
+
+!antype,static,new
+
+dk,1,UX,0.
+dk,1,UY,0.
+dk,2,UX,0.
+
+
+SOLVE
