@@ -14,12 +14,6 @@ from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
 from enthought.traits.ui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from enthought.traits.ui.api \
-    import ObjectColumn, ExpressionColumn
-
-from enthought.traits.ui.api \
-    import TableFilter, RuleTableFilter, EvalTableFilter
-
 from numpy import linspace, ix_, mgrid, ogrid, array, hstack, vstack, zeros, arange, c_, newaxis
 
 # tvtk related imports

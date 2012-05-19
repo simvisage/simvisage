@@ -64,7 +64,7 @@ class FabricLayOut( SimDBClass ):
                       resizable = True,
                       scrollable = True
                       )
-
+    
 # Setup the database class extension 
 #
 FabricLayOut.db = SimDBClassExt( 
@@ -80,7 +80,8 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_90 = 1.,
                                            ),
 
-               # AR-glas textile (2400 tex):                            
+               # AR-glas textile (2400 tex) compact binding (Franse):                            
+               # new textile tag "2D-03-08" corresponds to "MAG-07-03"
                #
                'MAG-07-03' : FabricLayOut( 
                                            a_tex_0 = 107.89,
@@ -90,6 +91,18 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_0 = 8.3,
                                            s_tex_90 = 8.4,
                                            ),
+
+               # AR-glas textile (2400 tex) tricot binding:                            
+               #
+               '2D-15-10' : FabricLayOut( 
+                                           a_tex_0 = 107.89,
+                                           a_tex_90 = 106.61,
+                                           E_tex_0 = 70000,
+                                           E_tex_90 = 70000,
+                                           s_tex_0 = 8.3,
+                                           s_tex_90 = 8.4,
+                                           ),
+
 
                # AR-glas textile (2 x 800 tex in 0-direction):                            
                #
@@ -127,6 +140,21 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_0 = 8.3,
                                            s_tex_90 = 7.6, # input for manufacturing machine was 8.4 mm!
                                            ),
+
+               # carbon textile / tricot binding ("Trikot") with defect 
+               # due to the manifacturing process (rovings are separated by the binding thread) 
+               # 1 x 800 tex in 0-direction (1v1l): 8.3 mm                            
+               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
+               #
+               '2D-04-11_defect' : FabricLayOut( 
+                                           a_tex_0 = 55.4,
+                                           a_tex_90 = 60., #55.0 * 8.4mm / 7.7mm
+                                           E_tex_0 = 165000,
+                                           E_tex_90 = 165000,
+                                           s_tex_0 = 8.3,
+                                           s_tex_90 = 7.6, # input for manufacturing machine was 8.4 mm!
+                                           ),
+               
                # demonstrator textile
                # carbon textile / tissue binding ("Tuch") 
                # 1 x 800 tex in 0-direction (1v1l): 8.3 mm                            

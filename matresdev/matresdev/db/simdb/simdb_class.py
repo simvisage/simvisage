@@ -23,8 +23,8 @@ from enthought.traits.ui.api import \
 from enthought.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
                                      MenuBar, NoButtons, Separator, ToolBar
 
-from enthought.traits.ui.api import \
-    ObjectColumn
+#from enthought.traits.ui.api import \
+#    ObjectColumn
 
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter, AnITabularAdapter

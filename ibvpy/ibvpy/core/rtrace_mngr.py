@@ -7,8 +7,11 @@ from enthought.traits.api import \
 
 from enthought.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit, \
-    TabularEditor, NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
+    TabularEditor
+    
+from enthought.traits.ui.menu import Action, CloseAction, Menu, \
+    MenuBar, Separator, NoButtons, OKButton, CancelButton
+    
 
 from enthought.traits.ui.tabular_adapter \
     import TabularAdapter

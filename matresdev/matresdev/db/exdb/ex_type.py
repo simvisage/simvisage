@@ -152,7 +152,26 @@ class ExType(SimDBClass):
                 units.append(unit)
         return names, units
 
-    def _set_array_attribs(self):
+    def _names_and_units_default(self):
+        ''' Extract the names and units of the measured data.
+        The order of the names in the .DAT-file corresponds 
+        to the order of the .ASC-file.   
+        '''
+        file = open( self.data_file, 'r' )
+        lines = file.read().split()
+        names = []
+        units = []
+        for i in range( len( lines ) ):
+            if lines[i] == '#BEGINCHANNELHEADER':
+                name = lines[i + 1].split( ',' )[1]
+                unit = lines[i + 3].split( ',' )[1]
+                names.append( name )
+                units.append( unit )
+        print 'names, units', names, units
+        return names, units
+
+
+    def _set_array_attribs( self ):
         '''Set the measured data as named attributes defining slices into 
         the processed data array.
         '''
