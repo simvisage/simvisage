@@ -54,7 +54,7 @@ class CrackTracer(HasTraits):
     data_dir = Directory
     def _data_dir_default(self):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
-                            'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+                            'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
                             'ARAMIS', 'V1_kurz')
     
     input_list = Property(Array(float), depends_on = 'data_dir')
