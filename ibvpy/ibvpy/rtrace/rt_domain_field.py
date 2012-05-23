@@ -28,7 +28,7 @@ from numpy \
     import array, zeros, \
     float_
 
-from ibvpy.plugins.mayavi.pipelines \
+from ibvpy.plugins.mayavi_util.pipelines \
     import MVUnstructuredGrid
 
 

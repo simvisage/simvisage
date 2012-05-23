@@ -28,7 +28,7 @@ from numpy \
     import ix_, mgrid, array, arange, c_, newaxis, setdiff1d, zeros, \
     float_, repeat, hstack, ndarray, append
 
-from ibvpy.plugins.mayavi.pipelines \
+from ibvpy.plugins.mayavi_util.pipelines \
     import MVUnstructuredGrid, MVPolyData
 
 from ibvpy.core.rtrace \

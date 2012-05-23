@@ -26,7 +26,7 @@ bcond_list_editor = TableEditor(
     editable = False,
     )
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 class BCDofGroup( HasTraits ):

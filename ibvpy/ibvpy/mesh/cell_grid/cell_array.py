@@ -27,7 +27,7 @@ from etsproxy.traits.ui.tabular_adapter \
 from etsproxy.pyface.image_resource \
     import ImageResource
     
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
     
 #-- Constants ------------------------------------------------------------------

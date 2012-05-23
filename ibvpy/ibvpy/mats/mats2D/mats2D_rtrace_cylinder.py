@@ -11,7 +11,7 @@ from numpy import \
     dot
 
 from mats2D_tensor import map2d_eps_eng_to_mtx
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels
 
 

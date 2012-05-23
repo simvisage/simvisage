@@ -23,7 +23,7 @@ from mathkit.level_set.level_set import ILevelSetFn, SinLSF
 
 from fe_grid import FEGrid, MElem
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 
