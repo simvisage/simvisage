@@ -19,7 +19,7 @@ from numpy import \
     arange, ones, zeros, multiply, sort, index_exp, indices, add, hstack, \
     frompyfunc, where
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 from ibvpy.mesh.cell_grid.cell_spec import CellSpec, GridCell

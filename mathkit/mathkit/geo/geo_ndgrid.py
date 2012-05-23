@@ -19,7 +19,7 @@ from etsproxy.tvtk.api import tvtk
 from etsproxy.tvtk.pyface.scene_editor import SceneEditor
 from etsproxy.mayavi.core.source import Source
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels
 
 #---------------------------------------------------------------------
