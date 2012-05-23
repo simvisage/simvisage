@@ -37,7 +37,7 @@ from i_fets_eval import IFETSEval
 
 from etsproxy.tvtk.api import tvtk
 
-from tvtk_classes import tvtk_helper
+from tvtk.tvtk_classes import tvtk_helper
 
 import types
 
@@ -153,8 +153,6 @@ class FETSEval(TStepperEval):
 
         n_ip_pnts = self.ip_coords.shape[0]
 
-        from etsproxy.tvtk.api import tvtk
-        from tvtk_classes import tvtk_helper
         cell_types = array([(tvtk_helper.get_class('PolyVertex')()).cell_type ])
 
         return (array([0, ], dtype = int),

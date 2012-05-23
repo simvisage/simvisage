@@ -19,7 +19,7 @@ from numpy import ix_, frompyfunc, array, abs, vstack, linalg, dot, ones, hstack
     arange, zeros_like, zeros, repeat, meshgrid, isinf, where, copy
 
 from etsproxy.tvtk.api import tvtk
-from tvtk_classes import tvtk_helper
+from tvtk.tvtk_classes import tvtk_helper
 
 
 class XDOTSEval( DOTSEval ):
