@@ -34,10 +34,8 @@ from ibvpy.core.rtrace_eval import \
     RTraceEval
 
 from i_fets_eval import IFETSEval
-
-from etsproxy.tvtk.api import tvtk
-
-from tvtk.tvtk_classes import tvtk_helper
+ 
+from etsproxy.tvtk.helper import tvtk_helper
 
 import types
 

@@ -23,6 +23,8 @@ from etsproxy.mayavi.core.customize import get_custom_plugins
 
 import etsproxy.mayavi.plugins.app as mayavi_app
 
+from etsproxy import ETS_BASENAME
+
 # GLOBALS
 logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler())
@@ -77,10 +79,12 @@ class IBVPyApp(HasTraits):
     """
 
     # The main envisage application.
-    application = Instance('etsproxy.envisage.ui.workbench.api.WorkbenchApplication')
+    application = Instance(ETS_BASENAME + 
+                           'envisage.ui.workbench.api.WorkbenchApplication')
 
     # The IBVPy Script instance.
-    script = Instance('etsproxy.mayavi.plugins.script.Script')
+    script = Instance(ETS_BASENAME + 
+                      'mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
     # @todo: make a base class for the IBVModel components that should be here 
@@ -165,8 +169,9 @@ class IBVPyApp(HasTraits):
         app = self.application
         if self.ibv_resource:
             window = app.workbench.active_window
-            e = window.get_service('etsproxy.mayavi.core.engine.Engine')
-            print 'e',e
+            e = window.get_service(ETS_BASENAME + 
+                                   'mayavi.core.engine.Engine')
+            print 'e', e
             set_engine(e)            
             self.ibv_resource.bind_services(window)
             self.ibv_resource.register_mv_pipelines(e)
