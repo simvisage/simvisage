@@ -31,7 +31,7 @@ from etsproxy.traits.ui.wx.editor import Editor
 from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter
 
-from enthought.traits.ui.wx.editor import Editor
+from etsproxy.traits.ui.wx.editor import Editor
 
 class _MFnMatplotlibEditor(Editor):
     

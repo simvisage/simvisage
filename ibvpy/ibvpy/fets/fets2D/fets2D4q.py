@@ -187,7 +187,8 @@ def example_with_new_domain():
                          record_on = 'update'),
 #                     RTraceDomainListField(name = 'Damage' ,
 #                                    var = 'omega', idx = 0,
-#                                    record_on = 'update',
+#                
+                    record_on = 'update',
 #                                    warp = True),
                      RTraceDomainListField(name = 'Displacement' ,
                                     var = 'u', idx = 0,
