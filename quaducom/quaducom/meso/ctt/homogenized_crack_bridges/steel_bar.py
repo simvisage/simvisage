@@ -4,9 +4,9 @@ Created on Aug 17, 2011
 @author: rostar
 '''
 
-from enthought.traits.api import HasTraits, implements, Float, Property, \
+from etsproxy.traits.api import HasTraits, implements, Float, Property, \
     on_trait_change, cached_property
-from enthought.traits.ui.api import View, Item, VGroup
+from etsproxy.traits.ui.api import View, Item, VGroup
 from math import pi
 from quaducom.ctt.homogenized_crack_bridges.i_homogenized_cb import ICB
 import numpy as np

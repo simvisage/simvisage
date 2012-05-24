@@ -1,5 +1,5 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, DelegatesTo, HasStrictTraits, Directory, \
     on_trait_change
 

@@ -1,6 +1,6 @@
-from enthought.traits.api import HasTraits, Str, List, Instance, Property
-from enthought.traits.ui.ui_traits import Image
-from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, Group
+from etsproxy.traits.api import HasTraits, Str, List, Instance, Property
+from etsproxy.traits.ui.ui_traits import Image
+from etsproxy.traits.ui.api import TreeEditor, TreeNode, View, Item, Group
 
 #from stats.spirrid.spirrid_tree_structure.model.spirrid import SPIRRID
 from stats.spirrid.old.spirrid import SPIRRID

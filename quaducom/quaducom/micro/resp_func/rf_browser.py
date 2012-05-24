@@ -17,11 +17,11 @@ Created on 06.05.2011
 #
 # Created on Jan 11, 2011 by: rch
 
-from enthought.traits.api import HasTraits, Float, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
                                 Instance, List, on_trait_change, Int, Tuple, Bool, \
                                 Event, Button, Str
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, Group, ModelView, HSplit, VSplit, Spring, OKButton
 
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor

@@ -12,7 +12,7 @@
 #
 # Created on Jun 15, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Int, Property, cached_property
 
 from ibvpy.api import \

@@ -1,15 +1,15 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-import enthought.traits.has_traits
-enthought.traits.has_traits.CHECK_INTERFACES = 2
+import etsproxy.traits.has_traits
+etsproxy.traits.has_traits.CHECK_INTERFACES = 2
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HGroup, ListEditor, VGroup, Group
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
      MenuBar, Separator
 

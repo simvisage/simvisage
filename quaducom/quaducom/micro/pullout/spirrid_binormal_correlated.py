@@ -4,11 +4,11 @@ Created on Aug 6, 2010
 @author: rostislav
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float #@UnresolvedImport
 from numpy import sqrt, exp, sum
 from math import pi
-#from enthought.mayavi import mlab
+#from etsproxy.mayavi import mlab
 
 from stats.spirrid import SPIRRID
 from matplotlib import pyplot as plt

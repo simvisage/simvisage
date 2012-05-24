@@ -9,7 +9,7 @@ taken from 10 different distributions
 @author: Q
 '''
 
-from enthought.traits.api import HasTraits, Instance, Int, Array, List, \
+from etsproxy.traits.api import HasTraits, Instance, Int, Array, List, \
     cached_property, Property
 import numpy as np
 import scipy as sp

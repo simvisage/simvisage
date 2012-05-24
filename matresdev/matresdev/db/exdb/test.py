@@ -3,30 +3,30 @@ Created on Apr 28, 2010
 
 @author: alexander
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, File, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, Enum, Callable
     
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
     Group, CancelButton, FileEditor
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     Action, CloseAction, HelpAction, Menu, \
     MenuBar, NoButtons, Separator, ToolBar                    
 
-from enthought.traits.ui.key_bindings import \
+from etsproxy.traits.ui.key_bindings import \
     KeyBinding, KeyBindings
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
     
-from enthought.pyface.api import \
+from etsproxy.pyface.api import \
     ImageResource, confirm, error, information, warning, YES, NO, CANCEL
     
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton
 
 from numpy import \

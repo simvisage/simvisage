@@ -1,29 +1,29 @@
 
 # Traits imports
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate, WeakRef, String, \
      Constant, List
 
 # Traits UI imports
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring, TabularEditor
-from enthought.traits.ui.menu \
+from etsproxy.traits.ui.menu \
     import OKButton, CancelButton
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 
 # Chaco imports
-from enthought.chaco.chaco_plot_editor import \
+from etsproxy.chaco.chaco_plot_editor import \
      ChacoPlotEditor, \
      ChacoPlotItem
-from enthought.enable.component_editor import \
+from etsproxy.enable.component_editor import \
      ComponentEditor
-from enthought.chaco.tools.api import \
+from etsproxy.chaco.tools.api import \
      PanTool, SimpleZoom
-from enthought.chaco.api import \
+from etsproxy.chaco.api import \
      Plot, AbstractPlotData, ArrayPlotData
 
 # Numpy imports

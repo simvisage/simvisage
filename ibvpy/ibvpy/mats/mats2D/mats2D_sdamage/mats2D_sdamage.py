@@ -1,10 +1,10 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Enum, Float, HasTraits, Enum, \
      Instance, Trait, Range, HasTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Array
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, VSplit, Group, Spring
 
 from numpy import \

@@ -14,7 +14,7 @@ Thanks for using Simvisage open source!
 @author: rostar
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Interface, Str, Float
 
 class ICB( Interface ):

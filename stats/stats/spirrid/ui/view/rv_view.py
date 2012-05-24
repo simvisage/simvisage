@@ -1,9 +1,9 @@
-from enthought.traits.api import HasTraits, Str, List, Instance, Float, \
+from etsproxy.traits.api import HasTraits, Str, List, Instance, Float, \
     WeakRef, Int, Bool, String, Trait, Property, cached_property, on_trait_change
-from enthought.traits.ui.api import View, Item, VSplit, \
+from etsproxy.traits.ui.api import View, Item, VSplit, \
     HGroup, TableEditor, Spring, ModelView
-from enthought.traits.ui.extras.checkbox_column import CheckboxColumn
-from enthought.traits.ui.table_column import ObjectColumn
+from etsproxy.traits.ui.extras.checkbox_column import CheckboxColumn
+from etsproxy.traits.ui.table_column import ObjectColumn
 
 from stats.pdistrib.pdistrib import PDistrib, IPDistrib
 

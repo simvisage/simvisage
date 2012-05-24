@@ -1,5 +1,5 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, \
@@ -17,7 +17,7 @@ from ibvpy.dots.dots_eval import \
 
 from scipy.optimize import brentq
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 from ibvpy.dots.dots_unstructured_eval import DOTSUnstructuredEval
 
 from ibvpy.fets.fets_eval import FETSEval

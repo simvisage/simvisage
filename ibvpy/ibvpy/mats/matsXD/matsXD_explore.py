@@ -12,7 +12,7 @@
 #
 # Created on Sep 4, 2009 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasStrictTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate, List, WeakRef, \
@@ -21,7 +21,7 @@ from enthought.traits.api import \
 from util.traits.either_type import \
     EitherType
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring
 
 from ibvpy.api import BCDof, RTrace, TStepper

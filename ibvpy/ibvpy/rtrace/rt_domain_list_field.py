@@ -1,4 +1,4 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
      Instance, Int, Trait, Str, Enum, \
      Callable, List, TraitDict, Any, Range, \
@@ -6,19 +6,19 @@ from enthought.traits.api import \
      Interface, WeakRef, implements, Property, cached_property, Tuple, \
      Dict, Any, Directory
 
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
      Action
 
-from enthought.traits.ui.ui_editors.array_view_editor \
+from etsproxy.traits.ui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from enthought.traits.ui.table_column \
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
            MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
@@ -26,14 +26,14 @@ from numpy import ix_, mgrid, array, arange, c_, newaxis, setdiff1d, zeros, \
     float_, vstack, hstack, repeat
 
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVUnstructuredGrid, MVPolyData
 from ibvpy.api import RTrace
 
 # tvtk related imports
 #
-from enthought.traits.ui.api import View, Item, HSplit, VSplit
-from enthought.tvtk.api import tvtk
+from etsproxy.traits.ui.api import View, Item, HSplit, VSplit
+from etsproxy.tvtk.api import tvtk
 from ibvpy.core.i_sdomain import \
     ISDomain
 
@@ -44,7 +44,7 @@ from rt_domain_list import RTraceDomainList
 from rt_domain_field import RTraceDomainField
 import os
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 
 class RTraceDomainListField( RTrace, RTraceDomainList ):
 

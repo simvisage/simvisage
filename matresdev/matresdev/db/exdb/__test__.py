@@ -5,12 +5,12 @@ Created on Aug 8, 2009
 '''
 import unittest
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, File, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, Enum, Callable
     
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
     Group, CancelButton, FileEditor

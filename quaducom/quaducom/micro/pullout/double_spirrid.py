@@ -9,7 +9,7 @@ Created on May 27, 2010
 @author: rostislav
 '''
 
-from enthought.traits.api import HasTraits, Float, Str, implements, \
+from etsproxy.traits.api import HasTraits, Float, Str, implements, \
     Float, cached_property, Property, Array, Instance
 from matplotlib import pyplot as plt
 from numpy import linspace, array, frompyfunc

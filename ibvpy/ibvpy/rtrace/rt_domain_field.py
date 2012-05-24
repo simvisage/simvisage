@@ -1,4 +1,4 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
@@ -6,21 +6,21 @@ from enthought.traits.api import \
     Interface, WeakRef, implements, Property, cached_property, Tuple, \
     Dict, TraitError
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from enthought.traits.ui.menu \
+from etsproxy.traits.ui.menu \
     import NoButtons, OKButton, CancelButton, \
     Action
 
-from enthought.traits.ui.ui_editors.array_view_editor \
+from etsproxy.traits.ui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from enthought.traits.ui.table_column \
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
            MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
@@ -28,15 +28,15 @@ from numpy \
     import array, zeros, \
     float_
 
-from ibvpy.plugins.mayavi.pipelines \
+from ibvpy.plugins.mayavi_util.pipelines \
     import MVUnstructuredGrid
 
 
 # tvtk related imports
 #
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, HSplit, VSplit
-from enthought.tvtk.api import \
+from etsproxy.tvtk.api import \
     tvtk
 
 from ibvpy.rtrace.rt_domain import RTraceDomain

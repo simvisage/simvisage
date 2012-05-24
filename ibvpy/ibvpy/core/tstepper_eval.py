@@ -1,5 +1,5 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Enum, Float, HasTraits, \
      HasStrictTraits, \
      Instance, Int, Trait, Str, Enum, \
@@ -7,15 +7,15 @@ from enthought.traits.api import \
      Delegate, Event, on_trait_change, Button, \
      Interface, Property, cached_property, WeakRef, Dict
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, \
      Action
      
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     implements
 
 from numpy import zeros, float_

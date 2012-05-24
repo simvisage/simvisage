@@ -4,14 +4,14 @@ Created on May 26, 2011
 @author: rrypl
 '''
 
-from enthought.mayavi.core.api import PipelineBase
-from enthought.mayavi.core.ui.api import MayaviScene, SceneEditor, \
+from etsproxy.mayavi.core.api import PipelineBase
+from etsproxy.mayavi.core.ui.api import MayaviScene, SceneEditor, \
     MlabSceneModel
-from enthought.mayavi.modules.axes import Axes
+from etsproxy.mayavi.modules.axes import Axes
 
-from enthought.traits.api import HasTraits, Range, Instance, on_trait_change, \
+from etsproxy.traits.api import HasTraits, Range, Instance, on_trait_change, \
     Trait, Property, Constant, cached_property, Str
-from enthought.traits.ui.api import View, Item, Group, ModelView
+from etsproxy.traits.ui.api import View, Item, Group, ModelView
 from numpy import ones_like, array
 from stats.spirrid.i_rf import IRF
 from quaducom.resp_func.po_short_fiber import POShortFiber

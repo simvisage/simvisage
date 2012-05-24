@@ -3,7 +3,7 @@ Created on Jun 18, 2009
 
 @author: jakub
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Int, implements
 
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval

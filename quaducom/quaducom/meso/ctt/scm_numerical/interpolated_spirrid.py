@@ -4,13 +4,13 @@ Created on Aug 17, 2011
 @author: rostar
 '''
 
-from enthought.traits.api import HasTraits, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, \
     implements, Instance, Float, Array, List, Int
 from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
 from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
     CBEMClampedFiberSP
-from enthought.traits.ui.api import View, Item, VGroup
+from etsproxy.traits.ui.api import View, Item, VGroup
 import numpy as np
 from stats.spirrid.rf import \
     RF
@@ -183,7 +183,7 @@ class NonInterpolatedSPIRRID(HasTraits):
 if __name__ == '__main__':
 
 
-    import enthought.mayavi.mlab as m
+    import etsproxy.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize
 
     # filaments

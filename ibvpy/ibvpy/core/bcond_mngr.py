@@ -1,18 +1,22 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Range, \
     Delegate, Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, VSplit, TableEditor, ListEditor
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.table_filter \
+    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
+           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 
 from numpy import ix_, array, int_, dot, newaxis, float_, copy

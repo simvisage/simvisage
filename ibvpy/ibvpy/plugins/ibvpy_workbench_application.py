@@ -8,16 +8,16 @@
 from os.path import dirname
 
 # Enthought library imports.
-from enthought.envisage.ui.workbench.api import WorkbenchApplication
-from enthought.pyface.api import AboutDialog, ImageResource, SplashScreen
+from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
+from etsproxy.pyface.api import AboutDialog, ImageResource, SplashScreen
 
 # Local imports.
-import enthought.mayavi.api
-from enthought.mayavi.preferences.api import preference_manager
+import etsproxy.mayavi.api
+from etsproxy.mayavi.preferences.api import preference_manager
 
-IMG_DIR = dirname(enthought.mayavi.api.__file__)
+IMG_DIR = dirname(etsproxy.mayavi.api.__file__)
 
-from enthought.pyface.message_dialog import MessageDialog
+from etsproxy.pyface.message_dialog import MessageDialog
 
 class AboutDialog( MessageDialog ):
     title = 'About Simvisage.IBVPy'

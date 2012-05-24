@@ -12,14 +12,14 @@
 #
 # Created on Feb 23, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo, Expression, Regex, Callable
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 ## overload the 'get_label' method from 'Item' to display units in the label

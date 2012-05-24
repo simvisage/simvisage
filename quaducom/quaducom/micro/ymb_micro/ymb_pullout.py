@@ -12,11 +12,11 @@
 #
 # Created on Dec 14, 2010 by: kelidas
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Int, Array, Str, implements, Range, Property, cached_property, \
      Float, Instance, Any, Interface, Event, on_trait_change, Button, Bool
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Group, VGroup, HGroup, HSplit, VSplit, Tabbed
 
 from math import pi, e

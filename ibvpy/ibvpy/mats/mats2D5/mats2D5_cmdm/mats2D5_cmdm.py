@@ -12,11 +12,11 @@
 #
 # Created on Aug 19, 2009 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Property, cached_property, Instance, \
     DelegatesTo, Float
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Include
 
 from ibvpy.mats.mats3D.mats3D_cmdm.mats3D_cmdm import \
