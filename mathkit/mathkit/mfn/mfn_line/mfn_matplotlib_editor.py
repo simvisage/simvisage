@@ -25,8 +25,8 @@ from matplotlib.lines import Line2D
 from matplotlib.figure import Figure
 import wx
 
+from etsproxy.traits.api import Any, Instance, on_trait_change, Int
 from etsproxy.traits.ui.api import View, Item
-from etsproxy.traits.api import Any, Instance, on_trait_change
 from etsproxy.traits.ui.wx.editor import Editor
 from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter

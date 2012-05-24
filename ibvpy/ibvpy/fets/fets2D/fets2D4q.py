@@ -50,8 +50,8 @@ class FETS2D4Q(FETSEval):
 
     # Order of node positions for the formulation of shape function
     #
-    dof_r = Array(value=[[-1, -1], [1, -1], [1, 1], [-1, 1]])
-    geo_r = Array(value=[[-1, -1], [1, -1], [1, 1], [-1, 1]])
+    dof_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
+    geo_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
 
     n_e_dofs = Int(8)
     t = Float(1.0, label = 'thickness')
@@ -62,7 +62,7 @@ class FETS2D4Q(FETSEval):
     ngp_s = Int(2)
 
     # Corner nodes are used for visualization 
-    vtk_r = Array(value=[[-1., -1.], [ 1., -1.], [ 1., 1.], [-1., 1.]])
+    vtk_r = Array(value = [[-1., -1.], [ 1., -1.], [ 1., 1.], [-1., 1.]])
     vtk_cells = [[0, 1, 2, 3]]
     vtk_cell_types = 'Quad'
 
@@ -223,6 +223,7 @@ def example_with_new_domain():
     #print 'time'
     #p.sort_stats('time').print_stats(20)
 
+    tloop.eval()
     # Put the whole thing into the simulation-framework to map the
     # individual pieces of definition into the user interface.
     #
