@@ -4,7 +4,6 @@ from etsproxy.traits.api import \
 
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval
 
-
 from numpy import array, dot
 
 from scipy.linalg import \
@@ -91,7 +90,7 @@ class FETS1D2L(FETSEval):
 def __demo__():
     from ibvpy.api import \
         TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDof
+        TLine, BCSlice
     from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
 
     fets_eval = FETS1D2L(mats_eval = MATS1DElastic(E = 10.))
@@ -99,13 +98,13 @@ def __demo__():
 
     # Discretization
     domain = FEGrid(coord_max = (3.,),
-                    shape = (3,),
-                    fets_eval = fets_eval)
+                     shape = (3,),
+                     fets_eval = fets_eval)
 
     ts = TS(dof_resultants = True,
             sdomain = domain,
-            bcond_list = [BCDof(var = 'u', dof = 0, value = 0.),
-                          BCDof(var = 'f', dof = 3, value = 1,) ],
+            bcond_list = [BCSlice(var = 'u', dims = [0], value = 0, slice = domain[0, 0]),
+                          BCSlice(var = 'f', dims = [0], value = 1, slice = domain[-1, -1])],
             rtrace_list = [RTraceGraph(name = 'Fi,right over u_right (iteration)' ,
                                         var_y = 'F_int', idx_y = 0,
                                         var_x = 'U_k', idx_x = 1),
