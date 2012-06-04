@@ -4,19 +4,19 @@ Created on Jun 23, 2010
 @author: alexander
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Instance, Array, Int, Property, cached_property, on_trait_change, Bool, \
     HasTraits, File, Event, Trait
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, FileEditor, HSplit, Group, VSplit, \
     Handler
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     Action, CloseAction, HelpAction, Menu, \
     MenuBar, NoButtons, Separator, ToolBar
 
-from enthought.pyface.api import ImageResource
+from etsproxy.pyface.api import ImageResource
 
 from ibvpy.mats.mats_explore import MATSExplore
 from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
