@@ -87,8 +87,13 @@ class CrackTracer(HasTraits):
     data_dir = Directory
     def _data_dir_default(self):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
+<<<<<<< HEAD
                             'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4','ARAMIS',
                             'Probe-1-Ausschnitt-Xf15a1-Yf5a4')
+=======
+                            'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+                            'ARAMIS', 'V1_kurz')
+>>>>>>> branch 'master' of https://ale-x@github.com/simvisage/simvisage.git
     
     input_list = Property(Array(float), depends_on = 'data_dir')
     @cached_property
@@ -484,7 +489,6 @@ class CrackTracer(HasTraits):
     crack_field_w = Property
     @cached_property
     def _get_crack_field_w(self):    
-
         cf_w = np.zeros_like(self.d_ux_w)
         cf_w[np.where(self.crack_filter)] = self.crack_arr_w
         return cf_w
