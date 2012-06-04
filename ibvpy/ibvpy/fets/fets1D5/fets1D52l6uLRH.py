@@ -40,9 +40,22 @@ class FETS1D52L6ULRH(FETSEval):
     A_phase_2 = Float(1.0, desc = 'Cross sectional area of phase 2')
 
     # Node position distribution
-    dof_r = [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1] ]
-    geo_r = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
-    vtk_r = [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]]
+    dof_r = Array(value = [[-1, -1], 
+                           [1, -1], 
+                           [1, 1], 
+                           [-1, 1], 
+                           [0, -1], 
+                           [0, 1] ])
+    geo_r = Array(value = [[-1, -1], 
+                           [1, -1], 
+                           [1, 1], 
+                           [-1, 1]])
+    vtk_r = Array(value = [[-1, -1], 
+                           [1, -1], 
+                           [1, 1], 
+                           [-1, 1], 
+                           [0, -1], 
+                           [0, 1]])
     vtk_cells = [[0, 1, 4], [3, 2, 5], [0, 3], [4, 5], [1, 2]]
     vtk_cell_types = ['QuadraticEdge', 'QuadraticEdge', 'Line', 'Line', 'Line']
 
