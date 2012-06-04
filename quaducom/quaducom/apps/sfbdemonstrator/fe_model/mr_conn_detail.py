@@ -5,7 +5,7 @@ TODO: @ Andreas
      - split dead load cases, include additional dead load case
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits, Enum, Dict, Str
 

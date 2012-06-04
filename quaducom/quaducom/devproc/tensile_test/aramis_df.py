@@ -4,7 +4,7 @@ Created on Apr 25, 2012
 @author: rch
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Property, cached_property, Int, Directory, Array
     
 import numpy as np
@@ -54,7 +54,7 @@ class CrackTracer(HasTraits):
     data_dir = Directory
     def _data_dir_default(self):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
-                            'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+                            'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
                             'ARAMIS', 'V1_kurz')
     
     input_list = Property(Array(float), depends_on = 'data_dir')
@@ -323,9 +323,9 @@ class CrackTracer(HasTraits):
         return ((dd44_ux_avg_w[1:] * dd44_ux_avg_w[:-1] < 0.0) * 
                 ((ddd444_ux_avg_w[1:] + ddd444_ux_avg_w[:-1]) / 2.0 < -0.01))
 
-    crack_arr = Property
+    crack_arr_w = Property
     @cached_property
-    def _get_crack_arr(self):
+    def _get_crack_arr_w(self):
         return self.d4_ux_w[np.where(self.crack_filter)]
 
     crack_field_w = Property
@@ -333,8 +333,13 @@ class CrackTracer(HasTraits):
     def _get_crack_field_w(self):    
 
         cf_w = np.zeros_like(self.d4_ux_w)
-        cf_w[np.where(self.crack_filter)] = self.crack_arr
+        cf_w[np.where(self.crack_filter)] = self.crack_arr_w
         return cf_w
+
+    crack_arr_t = Property
+    @cached_property
+    def _get_crack_arr_t(self):
+        return self.d4_ux_t[np.where(self.crack_filter[None, :, :])]
 
     crack_field_t = Property
     @cached_property
@@ -356,18 +361,18 @@ class CrackTracer(HasTraits):
                color = 'magenta', linewidth = 2)
         p.plot(self.x_idx_arr, self.d4_ux_avg_w, color = 'black')
 
+        p.subplot(2, 2, 2)
+        p.plot(self.x_idx_arr, self.ux_w, color = 'green')
+        p.plot(self.x_idx_arr, self.ux_w_avg, color = 'red')
+        
         p.subplot(2, 2, 3)
         p.plot(self.x_idx_arr[:-1], self.crack_filter_avg * 0.1,
                color = 'magenta', linewidth = 2)
         p.plot(self.x_idx_arr, self.dd44_ux_avg_w, color = 'black')
         p.plot(self.x_idx_arr, self.ddd444_ux_avg_w, color = 'blue')
         
-        p.subplot(2, 2, 2)
-        p.plot(self.x_idx_arr, self.ux_w, color = 'green')
-        p.plot(self.x_idx_arr, self.ux_w_avg, color = 'red')
-        
         p.subplot(2, 2, 4)
-        p.hist(self.crack_arr, bins = 40)
+        p.hist(self.crack_arr_w, bins = 40)
         
         p.show()
     
@@ -397,4 +402,4 @@ if __name__ == '__main__':
     ct = CrackTracer(time_step_size = 40,
                      integ_radius = 10,
                      w_detect_step = -1)
-    ct.plot3d()
+    ct.plot()

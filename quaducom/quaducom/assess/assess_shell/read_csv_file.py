@@ -43,7 +43,7 @@ print state_data.shape
 
 
 #from numpy import array, random
-#from enthought.tvtk.api import tvtk
+#from etsproxy.tvtk.api import tvtk
 #
 ## The numpy array data.
 #points = array( [[0, -0.5, 0], [1.5, 0, 0], [0, 1, 0], [0, 0, 0.5],
@@ -66,8 +66,8 @@ print state_data.shape
 # License: BSD style.
 
 #from numpy import array
-#from enthought.tvtk.api import tvtk
-#from enthought.mayavi.scripts import mayavi2
+#from etsproxy.tvtk.api import tvtk
+#from etsproxy.mayavi.scripts import mayavi2
 #
 ## The numpy array data.
 #points = array( [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]], 'f' )
@@ -86,8 +86,8 @@ print state_data.shape
 ## Now view the data.
 #@mayavi2.standalone
 #def view():
-#    from enthought.mayavi.sources.vtk_data_source import VTKDataSource
-#    from enthought.mayavi.modules.surface import Surface
+#    from etsproxy.mayavi.sources.vtk_data_source import VTKDataSource
+#    from etsproxy.mayavi.modules.surface import Surface
 #
 #    mayavi.new_scene()
 #    src = VTKDataSource( data = mesh )
@@ -98,7 +98,7 @@ print state_data.shape
 #if __name__ == '__main__':
 #    view()
 
-#from enthought.mayavi import mlab
+#from etsproxy.mayavi import mlab
 #import numpy as np
 #
 ### Generate some random data along a straight line in the x-direction

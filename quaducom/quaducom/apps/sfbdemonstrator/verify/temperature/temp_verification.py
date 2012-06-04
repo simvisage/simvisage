@@ -19,7 +19,7 @@ MUSHROOF - Demostrator SFB532
 1) geo_transform for the bottom bar [Done]
 
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List
 

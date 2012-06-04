@@ -6,7 +6,7 @@ TODO:  @ Andreas
         - update of internal strain bool is not possible default value always set in advance
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Array, implements, Float, Property, cached_property, Instance, \
     Int, List, Bool, Dict, Enum
 

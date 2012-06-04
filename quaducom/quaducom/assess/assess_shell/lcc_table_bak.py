@@ -4,30 +4,30 @@ Created on Jun 29, 2010
 @author: alexander
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, Enum, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Color, Bool, DelegatesTo, Callable
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, Tabbed, VGroup, \
     TableEditor, Group, ListEditor, VSplit, HSplit, VGroup, HGroup, Spring, \
     Include
 
-from enthought.mayavi import \
+from etsproxy.mayavi import \
     mlab
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton, CancelButton
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from numpy import \
