@@ -12,8 +12,8 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from enthought.traits.api import Float, Str, implements
-from enthought.traits.ui.ui_traits import Image
+from etsproxy.traits.api import Float, Str, implements
+from etsproxy.traits.ui.ui_traits import Image
 from math import pi
 from matplotlib import pyplot as plt
 from numpy import sqrt, linspace, minimum, maximum

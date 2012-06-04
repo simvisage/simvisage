@@ -1,14 +1,14 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
     List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
     Callable, Class, This, Str, Event
 
-import enthought.traits.has_traits
-enthought.traits.has_traits.CHECK_INTERFACES = 2
+import etsproxy.traits.has_traits
+etsproxy.traits.has_traits.CHECK_INTERFACES = 2
 
-from enthought.traits.ui.api import View, Item, HSplit, Group, TabularEditor, Include
-from enthought.traits.ui.tabular_adapter import TabularAdapter
+from etsproxy.traits.ui.api import View, Item, HSplit, Group, TabularEditor, Include
+from etsproxy.traits.ui.tabular_adapter import TabularAdapter
 
 from ibvpy.mesh.cell_grid.dof_grid import DofCellGrid, DofCellView
 from ibvpy.mesh.cell_grid.geo_grid import GeoCellGrid, GeoCellView

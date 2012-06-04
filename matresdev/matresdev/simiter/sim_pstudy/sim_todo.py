@@ -12,13 +12,13 @@
 #
 # Created on Jan 26, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, \
     implements
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
 

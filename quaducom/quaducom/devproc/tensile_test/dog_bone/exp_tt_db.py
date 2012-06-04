@@ -23,34 +23,34 @@
 #       
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo, Date, Time
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton, CancelButton
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from numpy import \
     array, where, argmax
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
 
@@ -63,13 +63,13 @@ from os.path import exists
 #-----------------------------------------------------------------------------------
 # ExDesignReader
 #-----------------------------------------------------------------------------------
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from matresdev.db.exdb.ex_type import ExType
@@ -133,19 +133,23 @@ class ExpTTDB(ExType):
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
-#        fabric_layout_key = 'MAG-07-03'
+        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
+#        fabric_layout_key2 = 'C-Grid-C50'
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
-        fabric_layout_key = '2D-05-11'
-#        concrete_mixture_key = 'PZ-0708-1'
-        concrete_mixture_key = 'FIL-10-09'
-        orientation_fn_key = 'all90'
-#        orientation_fn_key = '90_0'
-        n_layers = 12
-        s_tex_z = 0.06 / (n_layers + 1)
+#        fabric_layout_key = '2D-05-11'
+        concrete_mixture_key = 'PZ-0708-1'
+#        concrete_mixture_key = 'FIL-10-09'
+#        orientation_fn_key = 'all0'
+#        orientation_fn_key = 'all90'
+        orientation_fn_key = '90_0'
+        n_layers = 3
+        thickness = 0.01
+
+        s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list = [
                             plain_concrete(s_tex_z * 0.5),

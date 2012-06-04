@@ -13,7 +13,7 @@
 # Created on Jan 19, 2010 by: rch
 
 
-from enthought.traits.api import Array, Bool, Enum, Float, HasTraits, \
+from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
                                  Instance, Int, Trait, Str, Enum, \
                                  Callable, List, TraitDict, Any, Range, \
                                  Delegate, Event, on_trait_change, Button, \

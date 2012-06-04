@@ -27,11 +27,11 @@ if platform.system() == 'Linux':
 elif platform.system() == 'Windows':
     from time import clock as sysclock
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, List, Property, Array, Int, Any, cached_property, Dict, \
     Event, on_trait_change, Bool, Float, WeakRef, Str, Enum, CTrait
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from numpy import \

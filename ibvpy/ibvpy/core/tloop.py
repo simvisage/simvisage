@@ -16,18 +16,18 @@
 Generic implementation of the time loop.
 '''
 
-from enthought.traits.api import Array, Bool, Enum, Float, HasTraits, \
+from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
                                  Instance, Int, Trait, Str, Enum, \
                                  Callable, List, TraitDict, Any, Range, \
                                  Delegate, Event, on_trait_change, Button, Property, \
                                  cached_property, property_depends_on, Event, \
                                  Directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, RangeEditor, spring
-from enthought.traits.ui.api import NoButtons, OKButton, CancelButton, \
-     Action
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+    Action
 
 from weakref import ref
 
@@ -141,7 +141,7 @@ class TLoopHandler(Handler):
 
 RecalcAction = Action(name = 'Recalculate', action = 'recalculate')
 
-from enthought.traits.ui.api import TreeNodeObject
+from etsproxy.traits.ui.api import TreeNodeObject
 from warnings import warn
 
 class TLoop(IBVResource):

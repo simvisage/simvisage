@@ -12,7 +12,7 @@
 #
 # Created on Sep 8, 2011 by: rch
 
-from enthought.traits.api import HasStrictTraits, WeakRef, Bool, on_trait_change, \
+from etsproxy.traits.api import HasStrictTraits, WeakRef, Bool, on_trait_change, \
     Event
 from rv import RV
 import numpy as np # import numpy package
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     n_mu_q_arr = s.mu_q_arr / max_mu_q
     n_std_q_arr = np.sqrt(s.var_q_arr) / max_mu_q
 
-    import enthought.mayavi.mlab as m
+    import etsproxy.mayavi.mlab as m
 
     f = m.figure(1, size = (1000, 500), fgcolor = (0, 0, 0),
                  bgcolor = (1., 1., 1.))

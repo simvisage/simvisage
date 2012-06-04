@@ -4,7 +4,7 @@ Created on Aug 5, 2010
 @author: rostislav
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Str, implements, Range
 
 from math import pi, e

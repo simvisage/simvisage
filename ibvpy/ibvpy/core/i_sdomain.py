@@ -1,5 +1,5 @@
 
-from enthought.traits.api import Interface
+from etsproxy.traits.api import Interface
 
 class ISDomain( Interface ):
     '''

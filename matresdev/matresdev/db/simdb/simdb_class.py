@@ -12,21 +12,24 @@
 #
 # Created on Apr 15, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
     Directory, List, Property, Float, cached_property, Constant
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
 
-from enthought.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
+from etsproxy.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
                                      MenuBar, NoButtons, Separator, ToolBar
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.tabular_adapter \
+    import TabularAdapter
+
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter, AnITabularAdapter
 
 from matresdev.db.simdb import \

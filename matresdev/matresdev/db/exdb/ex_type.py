@@ -14,26 +14,26 @@
 
 # @todo: introduce the activation of filters - ironing, smoothing
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton, CancelButton
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from matresdev.db import SimDBClass
@@ -43,7 +43,7 @@ import os
 from numpy import \
     loadtxt
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
 
@@ -56,13 +56,13 @@ from loadtxt_novalue import loadtxt_novalue
 #-----------------------------------------------------------------------------------
 # ExDesignReader
 #-----------------------------------------------------------------------------------
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from string import split
@@ -152,7 +152,26 @@ class ExType(SimDBClass):
                 units.append(unit)
         return names, units
 
-    def _set_array_attribs(self):
+    def _names_and_units_default(self):
+        ''' Extract the names and units of the measured data.
+        The order of the names in the .DAT-file corresponds 
+        to the order of the .ASC-file.   
+        '''
+        file = open( self.data_file, 'r' )
+        lines = file.read().split()
+        names = []
+        units = []
+        for i in range( len( lines ) ):
+            if lines[i] == '#BEGINCHANNELHEADER':
+                name = lines[i + 1].split( ',' )[1]
+                unit = lines[i + 3].split( ',' )[1]
+                names.append( name )
+                units.append( unit )
+        print 'names, units', names, units
+        return names, units
+
+
+    def _set_array_attribs( self ):
         '''Set the measured data as named attributes defining slices into 
         the processed data array.
         '''

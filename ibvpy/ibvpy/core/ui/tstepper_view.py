@@ -2,13 +2,13 @@
 ######### 
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
     List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
     Callable, Class
 
-import enthought.traits.has_traits
-enthought.traits.has_traits.CHECK_INTERFACES = 2
+import etsproxy.traits.has_traits
+etsproxy.traits.has_traits.CHECK_INTERFACES = 2
 
 if __name__ == '__main__':    
     from ibvpy.api import \

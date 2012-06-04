@@ -19,7 +19,7 @@ from stats.spirrid.spirrid import SPIRRID, orthogonalize
 from stats.spirrid.rv import RV
 from matplotlib import pyplot as plt
 import numpy as np
-from enthought.mayavi import mlab as m
+from etsproxy.mayavi import mlab as m
 
 if __name__ == '__main__':
 

@@ -3,9 +3,9 @@ Created on Nov 19, 2010
 
 @author: kelidas
 '''
-from enthought.traits.api import HasTraits, Property, cached_property, Event, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, Event, \
     Array, Instance, on_trait_change, List
-from enthought.traits.ui.api import Group
+from etsproxy.traits.ui.api import Group
 from matplotlib.figure import Figure
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from numpy import arange
@@ -13,10 +13,10 @@ from ymb_data import IYMBData, YMBSegmentData, YMBSource, var_dict
 import numpy.ma as ma
 from ymb_auto_correl import MatSpearman
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 class ArrayAdapter ( TabularAdapter ):

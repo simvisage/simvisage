@@ -12,8 +12,8 @@
 #
 # Created on Dec 16, 2011 by: rch
 
-from enthought.traits.api import HasTraits, Instance
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.api import HasTraits, Instance
+from etsproxy.traits.ui.api import View, Item
 
 from stats.spirrid.extras import SPIRRIDLAB
 

@@ -29,6 +29,12 @@ ex_path = os.path.join('C:\\simdb_christian','bending_tests','four_point', '2012
 
 print os.path.exists(ex_path)
 
-
 doe_reader = ExRunView(data_file = ex_path)
+
+#print 'model', doe_reader.model.ex_type.Kraft
+#print 'model', doe_reader.model.ex_type.WA_VL 
+#print 'model', doe_reader.model.ex_type.WA_VR
+#print 'model', doe_reader.model.ex_type.WA_HL
+#print 'model', doe_reader.model.ex_type.WA_HR
+
 doe_reader.configure_traits()

@@ -3,8 +3,8 @@ Created on Jun 18, 2009
 
 @author: jakub
 '''
-from enthought.traits.api import \
-    Int, implements
+from etsproxy.traits.api import \
+    Int, implements, Array
 
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval
 
@@ -33,10 +33,10 @@ class FETS1D2L3U( FETSEval ):
     n_e_dofs = Int( 3 )
     n_nodal_dofs = Int( 1 )
 
-    dof_r = [[-1], [0], [1]]
-    geo_r = [[-1], [1]]
+    dof_r = Array(value = [[-1], [0], [1]])
+    geo_r = Array(value = [[-1], [1]])
 
-    vtk_r = [[-1.], [0.], [1.]]
+    vtk_r = Array(value = [[-1.], [0.], [1.]])
     vtk_cells = [[0, 2, 1]]
     vtk_cell_types = 'QuadraticEdge'
 

@@ -14,7 +14,7 @@ diagram is demonstrated.
 
 from matresdev.db import SimDBClass
 from matresdev.db import SimDBClassExt
-from enthought.traits.api import Int, Property, Str, Float
+from etsproxy.traits.api import Int, Property, Str, Float
 
 if __name__ == '__main__':
 

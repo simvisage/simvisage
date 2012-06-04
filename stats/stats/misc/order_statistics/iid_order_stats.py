@@ -8,7 +8,7 @@ Example: k = 1, n = 10 evaluates the PDF of the weakest of 10 elements
 @author: Q
 '''
 
-from enthought.traits.api import HasTraits, Int
+from etsproxy.traits.api import HasTraits, Int
 
 import scipy as sp
 import numpy as np

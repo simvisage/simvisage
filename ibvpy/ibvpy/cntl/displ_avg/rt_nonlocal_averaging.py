@@ -1,4 +1,4 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
      Instance, Int, Trait, Str, Enum, \
      Callable, List, TraitDict, Any, Range, \

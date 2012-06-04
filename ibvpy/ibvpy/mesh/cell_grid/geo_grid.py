@@ -1,11 +1,11 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float, implements, WeakRef, Bool, Any, Interface, \
     DelegatesTo, Bool, Callable
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Group
 
 from ibvpy.core.i_sdomain import \
@@ -21,7 +21,7 @@ from numpy import \
 
 from math import sin
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 from cell_grid import CellGrid
@@ -264,9 +264,9 @@ class GeoGridSlice( CellGridSlice ):
         return self.geo_grid.elem_x_map[ ix_( self.elems, self.cell_grid.grid_cell[idx2] ) ]
 
 #-- Tabular Adapter Definition -------------------------------------------------
-from enthought.traits.ui.tabular_adapter import \
+from etsproxy.traits.ui.tabular_adapter import \
     TabularAdapter
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     TabularEditor
 
 class CoordTabularAdapter ( TabularAdapter ):

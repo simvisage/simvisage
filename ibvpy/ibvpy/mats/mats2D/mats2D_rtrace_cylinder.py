@@ -1,9 +1,9 @@
 
 from ibvpy.api import \
     RTrace
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Str, Callable, Int, List, Bool, Trait
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, HSplit, VGroup, Item
 from numpy import \
     array, hstack, zeros, vstack, pi as Pi, mgrid, arange, \
@@ -11,7 +11,7 @@ from numpy import \
     dot
 
 from mats2D_tensor import map2d_eps_eng_to_mtx
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels
 
 
@@ -144,8 +144,8 @@ class MATS2DRTraceCylinder( RTrace ):
         scene.name =  'Polar domain' 
 
         # Construct the source
-        from enthought.mayavi.sources.vtk_data_source import VTKDataSource
-        from enthought.tvtk.api import tvtk        
+        from etsproxy.mayavi.sources.vtk_data_source import VTKDataSource
+        from etsproxy.tvtk.api import tvtk        
         
         self._mv_src = VTKDataSource( name = 'Time-Strain Cylinder',
                                       data = tvtk.PolyData() )
@@ -153,11 +153,11 @@ class MATS2DRTraceCylinder( RTrace ):
         
         # Construct the warp filter
         if self.var_warp_on:
-            from enthought.mayavi.filters.api import WarpVector
+            from etsproxy.mayavi.filters.api import WarpVector
             e.add_filter(WarpVector())
 
         # Construct visualization modules
-        from enthought.mayavi.modules.api import Outline, Surface
+        from etsproxy.mayavi.modules.api import Outline, Surface
         s = Surface()
         e.add_module(Outline())
         e.add_module(s) 

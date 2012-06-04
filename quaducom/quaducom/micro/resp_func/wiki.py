@@ -12,7 +12,7 @@
 #
 # Created on Oct 11, 2011 by: rch
 
-from enthought.traits.api import HasTraits, Float, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
                                 Instance, List, on_trait_change, Int, Tuple, Bool, \
                                 Event, Button, Str
 import os

@@ -15,15 +15,15 @@
 #import wxversion
 #wxversion.select( '2.8' )
 
-from enthought.traits.api import HasTraits, Property, cached_property, Event, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, Event, \
     Array, Instance, Int, Directory, Range, on_trait_change, Bool, Trait, Constant, \
     Tuple, Interface, implements, Any, Button, Str, List
-from enthought.traits.trait_types import DelegatesTo
-from enthought.traits.ui.api import Item, View, HGroup, RangeEditor, Group, HSplit, \
+from etsproxy.traits.trait_types import DelegatesTo
+from etsproxy.traits.ui.api import Item, View, HGroup, RangeEditor, Group, HSplit, \
                                  HGroup, VGroup, VSplit, VGrid, Handler
 from matplotlib.figure import Figure
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from enthought.traits.trait_types import DelegatesTo
+from etsproxy.traits.trait_types import DelegatesTo
 import os
 from stats.pdistrib.pdistrib import PDistrib, IPDistrib
 

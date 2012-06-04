@@ -1,11 +1,11 @@
 
     
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float, implements, Delegate, Interface
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from ibvpy.core.i_sdomain import \
@@ -19,7 +19,7 @@ from numpy import \
     arange, ones, zeros, multiply, sort, index_exp, indices, add, hstack, \
     frompyfunc, where
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 from ibvpy.mesh.cell_grid.cell_spec import CellSpec, GridCell

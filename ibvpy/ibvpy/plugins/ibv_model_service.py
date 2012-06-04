@@ -1,13 +1,13 @@
 
 
-from enthought.traits.api import HasTraits, Instance
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.api import HasTraits, Instance
+from etsproxy.traits.ui.api import View, Item
 from ibvpy.core.ibv_model import IBVModel
  
 class IBVModelService( HasTraits ):
 
     # Set by envisage when this is offered as a service offer.
-    window = Instance('enthought.pyface.workbench.api.WorkbenchWindow')
+    window = Instance('etsproxy.pyface.workbench.api.WorkbenchWindow')
         
     ibv_model = Instance( IBVModel )
     def _ibv_model_default(self):

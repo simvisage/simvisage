@@ -12,7 +12,7 @@
 #
 # Created on Feb 22, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, Int, Property, Array, cached_property, Instance
 
 from numpy import \

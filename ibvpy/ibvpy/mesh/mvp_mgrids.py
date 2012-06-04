@@ -1,23 +1,23 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
      Instance, Int, Trait, Str, \
      Callable, List, TraitDict, Any, Range, \
      Delegate, Event, on_trait_change, Button, \
      Interface, WeakRef, implements, Property, cached_property, Tuple, \
      Dict
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
 from numpy import \
     array
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 # Mayavi related imports
 #
-from enthought.mayavi.sources.vtk_data_source import VTKDataSource
-from enthought.mayavi.modules.api import Outline, Surface
-from enthought.mayavi.core.source import Source
-from enthought.mayavi.filters.api import WarpVector
+from etsproxy.mayavi.sources.vtk_data_source import VTKDataSource
+from etsproxy.mayavi.modules.api import Outline, Surface
+from etsproxy.mayavi.core.source import Source
+from etsproxy.mayavi.filters.api import WarpVector
 
 # MayaVI engine used for the pipeline construction 
 #
@@ -43,7 +43,7 @@ class MVPStructuredGrid( HasTraits ):
         super( MVPStructuredGrid, self ).__init__(**kw)
         e = get_engine()
 
-        from enthought.mayavi.modules.api import \
+        from etsproxy.mayavi.modules.api import \
         Outline, Surface, StructuredGridOutline, GridPlane
 
         self.src = VTKDataSource( name = self.name, data = self.pd )
@@ -126,7 +126,7 @@ class MVPMeshGridGeo( MVPBase ):
         e = get_engine()
 
         super( MVPMeshGridGeo, self ).__init__(**kw)
-        from enthought.mayavi.modules.api import Outline, Surface, Labels
+        from etsproxy.mayavi.modules.api import Outline, Surface, Labels
 
         self.src = VTKDataSource( name = self.name, data = self.pd )
         e.add_source(self.src)
@@ -143,7 +143,7 @@ class MVPMeshGridLabels( MVPBase ):
         e = get_engine()
 
         super( MVPMeshGridLabels, self ).__init__(**kw)
-        from enthought.mayavi.modules.api import Outline, Surface, Labels
+        from etsproxy.mayavi.modules.api import Outline, Surface, Labels
 
         self.src = VTKDataSource( name = self.name, data = self.pd )
         e.add_source(self.src)

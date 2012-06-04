@@ -1,13 +1,13 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HGroup, ListEditor, VGroup, Group
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
      MenuBar, Separator
 
@@ -26,7 +26,7 @@ import time
 from ibvpy.fets.fets_eval import FETSEval
 from ibvpy.mats.mats_eval import MATSEval
 
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 
 #-----------------------------------------------------------------------------
 # FEQ16sub - 16 nodes subparametric quadrilateral (2D, cubic, Lagrange family)
@@ -77,34 +77,34 @@ class FETS2D4Q16U( FETSEval ):
     ngp_r = 4
     ngp_s = 4
 
-    dof_r = [[ -1., -1.   ],
-                 [  1., -1.   ],
-                 [  1., 1.   ],
-                 [ -1., 1.   ],
-                 [ -1. / 3, -1.   ],
-                 [  1. / 3, -1.   ],
-                 [  1., -1. / 3 ],
-                 [  1., 1. / 3 ],
-                 [  1. / 3, 1.   ],
-                 [ -1. / 3, 1.   ],
-                 [ -1., 1. / 3 ],
-                 [ -1., -1. / 3 ],
-                 [ -1. / 3, -1. / 3 ],
-                 [  1. / 3, -1. / 3 ],
-                 [ -1. / 3, 1. / 3 ],
-                 [  1. / 3, 1. / 3 ]]
+    dof_r = Array(value = [[ -1., -1.   ],
+                           [  1., -1.   ],
+                           [  1., 1.   ],
+                           [ -1., 1.   ],
+                           [ -1. / 3, -1.   ],
+                           [  1. / 3, -1.   ],
+                           [  1., -1. / 3 ],
+                           [  1., 1. / 3 ],
+                           [  1. / 3, 1.   ],
+                           [ -1. / 3, 1.   ],
+                           [ -1., 1. / 3 ],
+                           [ -1., -1. / 3 ],
+                           [ -1. / 3, -1. / 3 ],
+                           [  1. / 3, -1. / 3 ],
+                           [ -1. / 3, 1. / 3 ],
+                           [  1. / 3, 1. / 3 ]])
 
-    geo_r = [[-1., -1.], [1., -1.], [1., 1.], [-1., 1.]]
+    geo_r = Array(value = [[-1., -1.], [1., -1.], [1., 1.], [-1., 1.]])
     # 
-    vtk_r = [[-1., -1.],
-                  [ 0., -1.],
-                  [ 1., -1.],
-                  [-1., 0.],
-                  [ 0., 0.],
-                  [ 1., 0.],
-                  [-1., 1.],
-                  [ 0., 1.],
-                  [ 1., 1.]]
+    vtk_r = Array(value = [[-1., -1.],
+                           [ 0., -1.],
+                           [ 1., -1.],
+                           [-1., 0.],
+                           [ 0., 0.],
+                           [ 1., 0.],
+                           [-1., 1.],
+                           [ 0., 1.],
+                           [ 1., 1.]])
     vtk_cells = [[0, 2, 8, 6, 1, 5, 7, 3, 4]]
     vtk_cell_types = [ 'QuadraticQuad' ] # Biquadratic Quad
 

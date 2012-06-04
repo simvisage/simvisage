@@ -13,9 +13,9 @@
 # Created on Dec 21, 2010 by: kelidas
 
 
-from enthought.traits.api import HasTraits, Instance, on_trait_change, \
+from etsproxy.traits.api import HasTraits, Instance, on_trait_change, \
     Trait, Property, Event, Bool
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.ui.api import View, Item
 from matplotlib.figure import Figure
 from matplotlib.mlab import griddata
 from numpy import ones_like, array, zeros_like, linspace, max, diff, min
