@@ -4,7 +4,7 @@ Created on Jun 16, 2010
 @author: andreas
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, Enum, \
     Dict, Bool, Int
 
@@ -20,7 +20,7 @@ from os.path import join
 
 from math import pi
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, Bool, Enum, Dict
 
 from numpy import \
@@ -36,8 +36,8 @@ from math import pi
 
 import csv
 
-from enthought.mayavi.mlab import colorbar, show, points3d
-from enthought.mayavi.api import Engine
+from etsproxy.mayavi.mlab import colorbar, show, points3d
+from etsproxy.mayavi.api import Engine
 
 def delete_second_rows( arr, nx = 20, ny = 20 ):
     '''Remove the second and second to last column and row from the regular grid of points.
@@ -508,7 +508,7 @@ class HPShell( HasTraits ):
         #try:
         #    engine = mayavi.engine
         #except NameError:
-        #    from enthought.mayavi.api import Engine
+        #    from etsproxy.mayavi.api import Engine
         #    engine = Engine()
         #    engine.start()
         #if len(engine.scenes) == 0:

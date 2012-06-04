@@ -1,5 +1,5 @@
 
-from enthought.traits.api import List
+from etsproxy.traits.api import List
 from ibvpy.api import RTraceGraph, RTraceDomainListField
 from numpy import array, ones, trapz, frompyfunc, dot, zeros, fabs
 

@@ -13,7 +13,7 @@
 # Created on Jun 30, 2009 by: rchx
 
 
-from enthought.traits.api import Interface, List, Int, Array, Property, Class, Instance
+from etsproxy.traits.api import Interface, List, Int, Array, Property, Class, Instance
 
 class IFEGridSlice( Interface ):
     '''

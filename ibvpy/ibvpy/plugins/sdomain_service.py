@@ -1,13 +1,13 @@
 
 
-from enthought.traits.api import HasTraits, Instance
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.api import HasTraits, Instance
+from etsproxy.traits.ui.api import View, Item
 from ibvpy.core.sdomain import SDomain
 
 class SDomainService( HasTraits ):
     
     # Set by envisage when this is offered as a service offer.
-    window = Instance('enthought.pyface.workbench.api.WorkbenchWindow')
+    window = Instance('etsproxy.pyface.workbench.api.WorkbenchWindow')
     
     sdomain = Instance( SDomain )
     def _sdomain_default(self):

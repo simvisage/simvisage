@@ -7,7 +7,7 @@ with different friction at both sides.
 @author: Q
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements
 
 from numpy import sign, linspace

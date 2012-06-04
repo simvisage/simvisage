@@ -4,7 +4,7 @@ stress - strain relation for composites according to Ahn and Curtin 1996
 @author: rostar
 '''
 from material import Material
-from enthought.traits.api import Property, cached_property
+from etsproxy.traits.api import Property, cached_property
 from scipy.stats import weibull_min
 import numpy as np
 from math import e

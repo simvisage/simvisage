@@ -12,22 +12,24 @@
 #
 # Created on May 26, 2009 by: rchx
 
-from enthought.traits.api import Array, Bool, Enum, Float, HasTraits, \
+from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
                                  Instance, Int, Trait, Str, Enum, \
                                  Callable, List, TraitDict, Any, Range, \
                                  Delegate, Event, on_trait_change, Button, \
                                  Interface, implements, Property, cached_property
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
      Action
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, VSplit, TableEditor, ListEditor
-from enthought.traits.ui.table_column \
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 from numpy import \
-    ix_, array, int_, dot, newaxis, float_, copy, repeat, apply_along_axis, zeros, \
-    inner, sum
+    ix_, dot, repeat, zeros
+
+import numpy as np
+
 from scipy.linalg import \
      det, norm
 from ibvpy.api import \
@@ -45,7 +47,7 @@ bcond_list_editor = TableEditor(
     editable = False,
     )
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 class BCSlice(HasTraits):
@@ -56,7 +58,7 @@ class BCSlice(HasTraits):
 
     var = Enum('u', 'f', 'eps', 'sig')
 
-    #slice = Instance( FEGridIdxSlice )
+    #slice = Instance(FEGridIdxSlice)
     slice = Trait
 
     link_slice = Instance(FEGridIdxSlice)
@@ -190,8 +192,8 @@ class BCSlice(HasTraits):
 
         r_arr, w_arr, ix = fets_eval.get_sliced_ip_scheme(n_idx)
 
-        slice_geo_X = self.slice.fe_grid.elem_X_map[ self.slice.elems ]
-        slice_dofs = self.slice.fe_grid.elem_dof_map[ self.slice.elems ]
+        slicegeo_X = self.slice.fe_grid.elem_X_map[ self.slice.elems ]
+        slicedofs = self.slice.fe_grid.elem_dof_map[ self.slice.elems ]
 
         p_value = self.value * float(self.time_function(t_n1))
 
@@ -199,7 +201,7 @@ class BCSlice(HasTraits):
         for d in self.dims:
             p_vct[d] = p_value
 
-        for el, el_dofs, el_geo_X in zip(self.slice.elems, slice_dofs, slice_geo_X):
+        for el, el_dofs, el_geo_X in zip(self.slice.elems, slicedofs, slicegeo_X):
             f_vct = zeros((fets_eval.n_e_dofs,), dtype = 'float_')
             for r_pnt, w in zip(r_arr, w_arr):
                 if len(ix) > 0:
@@ -248,8 +250,8 @@ class BCSlice(HasTraits):
 
     n_dof_nodes = Property
     def _get_n_dof_nodes(self):
-        slice_shape = self.dofs.shape
-        return slice_shape[0] * slice_shape[1]
+        sliceshape = self.dofs.shape
+        return sliceshape[0] * sliceshape[1]
 
     # register the pipelines for plotting labels and geometry
     #
@@ -262,7 +264,15 @@ class BCSlice(HasTraits):
 
     def _get_mvpoints(self):
         ## blow up
-        return self.dof_X.reshape(self.n_dof_nodes, 3)
+        if self.dof_X.shape[2] == 2:
+            dof_X = np.hstack([self.dof_X.reshape(self.n_dof_nodes, 2),
+                               np.zeros((self.n_dof_nodes, 1), dtype = 'f')])
+        elif self.dof_X.shape[2] == 1:
+            dof_X = np.hstack([self.dof_X.reshape(self.n_dof_nodes, 1),
+                               np.zeros((self.n_dof_nodes, 2), dtype = 'f')])
+        else:
+            dof_X = self.dof_X.reshape(self.n_dof_nodes, 3) 
+        return dof_X 
 
     def _get_labels(self):
         ## blow up
@@ -287,8 +297,8 @@ class BCSlice(HasTraits):
 
     n_link_dof_nodes = Property
     def _get_n_link_dof_nodes(self):
-        slice_shape = self.link_dofs.shape
-        return slice_shape[0] * slice_shape[1]
+        sliceshape = self.link_dofs.shape
+        return sliceshape[0] * sliceshape[1]
 
     # register the pipelines for plotting labels and geometry
     #
@@ -301,10 +311,23 @@ class BCSlice(HasTraits):
 
     def _get_link_mvpoints(self):
         ## blow up
-        return self.link_dof_X.reshape(self.n_link_dof_nodes, 3)
+        ## blow up
+        if self.link_slice == None:
+            return np.zeros((0, 3), dtype = 'f')
+        if self.dof_X.shape[2] == 2:
+            dof_X = np.hstack([self.link_dof_X.reshape(self.n_dof_nodes, 2),
+                               np.zeros((self.n_dof_nodes, 1), dtype = 'f')])
+        elif self.dof_X.shape[2] == 1:
+            dof_X = np.hstack([self.link_dof_X.reshape(self.n_dof_nodes, 1),
+                               np.zeros((self.n_dof_nodes, 2), dtype = 'f')])
+        else:
+            dof_X = self.link_dof_X.reshape(self.n_dof_nodes, 3) 
+        return dof_X
 
     def _get_link_labels(self):
         ## blow up
+        if self.link_slice == None:
+            return np.zeros((0, 3), dtype = 'f')        
         n_points = self.n_link_dof_nodes
         dofs = repeat(-1., n_points * 3).reshape(n_points, 3)
         dofs[:, tuple(self.dims) ] = self.link_dofs

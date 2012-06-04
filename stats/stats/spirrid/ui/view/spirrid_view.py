@@ -1,6 +1,6 @@
-from enthought.traits.api import HasTraits, Str, Instance, Float, \
+from etsproxy.traits.api import HasTraits, Str, Instance, Float, \
     Event, Int, Bool, Button
-from enthought.traits.ui.api import View, Item, \
+from etsproxy.traits.ui.api import View, Item, \
     HGroup, Tabbed, VGroup, ModelView, Group, HSplit
 
 from stats.spirrid.old.spirrid import SPIRRID

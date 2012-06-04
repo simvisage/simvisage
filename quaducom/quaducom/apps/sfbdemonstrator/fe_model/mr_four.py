@@ -3,7 +3,7 @@ Created on Jul 30, 2010
 
 @author: abach
 '''
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits
 

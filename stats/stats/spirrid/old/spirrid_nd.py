@@ -20,11 +20,11 @@
 # @todo: Compiled call to rf_grid for the calculation of the standard deviation.
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, List, Property, Array, Int, Any, cached_property, Dict, \
     Event, on_trait_change, Bool, Float, WeakRef, Str
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from numpy import \
@@ -740,7 +740,7 @@ if __name__ == '__main__':
 
     s = SPIRRID( rf = rf, max_eps = 0.05, n_eps = 80 )
 
-    from enthought.traits.traits_listener \
+    from etsproxy.traits.traits_listener \
             import TraitsListener, ListenerParser, ListenerHandler, \
                    ListenerNotifyWrapper
 

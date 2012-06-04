@@ -15,10 +15,10 @@
 #import wxversion
 #wxversion.select( '2.8' )
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, Property, cached_property, List, WeakRef
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VSplit, VGroup, Tabbed, \
     TreeEditor, TreeNode, Handler, ObjectTreeNode
 

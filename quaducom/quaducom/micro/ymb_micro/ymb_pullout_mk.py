@@ -12,11 +12,11 @@
 #
 # Created on Dec 20, 2010 by: rch
 
-from enthought.traits.api import Float, Property, cached_property, Int, \
+from etsproxy.traits.api import Float, Property, cached_property, Int, \
     on_trait_change, Interface, implements, HasTraits, Enum, Instance, Event
-from enthought.traits.ui.api import Item, View, Group, Handler, HSplit, VSplit, \
+from etsproxy.traits.ui.api import Item, View, Group, Handler, HSplit, VSplit, \
     HGroup, HSplit, VGroup, Tabbed, Label, Spring
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 
 from mathkit.mfn import MFnLineArray
 from matplotlib.figure import Figure

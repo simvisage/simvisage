@@ -13,10 +13,10 @@
 # Created on Dec 21, 2011 by: rch
 
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, Str, Property, cached_property, \
     Enum
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 import os.path

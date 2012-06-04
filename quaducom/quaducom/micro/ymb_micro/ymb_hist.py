@@ -12,9 +12,9 @@
 #
 # Created on Dec 13, 2010 by: rch
 
-from enthought.traits.api import HasTraits, Property, cached_property, Event, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, Event, \
     Instance, Int, on_trait_change, Bool, Str, Tuple, List, Float
-from enthought.traits.ui.api import Item, View, Group, HGroup, HSplit
+from etsproxy.traits.ui.api import Item, View, Group, HGroup, HSplit
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
 from pylab import setp

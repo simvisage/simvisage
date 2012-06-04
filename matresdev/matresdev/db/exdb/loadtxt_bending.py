@@ -4,9 +4,9 @@ Created on Apr 9, 2010
 @author: alexander
 '''
 
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, FileEditor, HSplit, Group, VSplit, \
     Handler
 

@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-#from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.mayavi.plugins.app import setup_logger
-from enthought.traits.api import List, Instance
-from enthought.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+#from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.mayavi.plugins.app import setup_logger
+from etsproxy.traits.api import List, Instance
+from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 
 logger = logging.getLogger()
 
@@ -35,7 +35,7 @@ class TLoopPerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id=TLOOPMNGR_VIEW, position='left'),
+        PerspectiveItem(id = TLOOPMNGR_VIEW, position = 'left'),
     ]
 
 ###############################################################################
@@ -45,7 +45,7 @@ class TLoopUIPlugin(Plugin):
 
     # Extension points we contribute to.
     PERSPECTIVES = 'enthought.envisage.ui.workbench.perspectives'
-    VIEWS             = 'enthought.envisage.ui.workbench.views'
+    VIEWS = 'enthought.envisage.ui.workbench.views'
 
     # The plugin's unique identifier.
     id = 'tloop_service.tloop_service'
@@ -54,10 +54,10 @@ class TLoopUIPlugin(Plugin):
     name = 'Time loop'
 
     # Perspectives.
-    perspectives = List(contributes_to=PERSPECTIVES)
+    perspectives = List(contributes_to = PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to=VIEWS)
+    views = List(contributes_to = VIEWS)
 
     ######################################################################
     # Private methods.
@@ -71,19 +71,19 @@ class TLoopUIPlugin(Plugin):
 
     def _tloop_service_view_factory(self, window, **traits):
         """ Factory method for tloop_service views. """
-        from enthought.pyface.workbench.traits_ui_view import \
+        from etsproxy.pyface.workbench.traits_ui_view import \
                 TraitsUIView
 
         tloop_service = self._get_tloop_service(window)
-        tui_engine_view = TraitsUIView(obj=tloop_service,
-                                       id='ibvpy.plugins.tloop_service.tloop_service',
-                                       name='Time loop',
-                                       window=window,
-                                       position='left',
+        tui_engine_view = TraitsUIView(obj = tloop_service,
+                                       id = 'ibvpy.plugins.tloop_service.tloop_service',
+                                       name = 'Time loop',
+                                       window = window,
+                                       position = 'left',
                                        **traits
                                        )
         return tui_engine_view
 
-    def _get_tloop_service(self,window):
+    def _get_tloop_service(self, window):
         """Return the tloop_service service."""
-        return window.get_service('ibvpy.plugins.tloop_service.TLoopService' )
+        return window.get_service('ibvpy.plugins.tloop_service.TLoopService')

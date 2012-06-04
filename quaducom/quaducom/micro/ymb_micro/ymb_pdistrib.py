@@ -3,7 +3,7 @@ Created on Dec 13, 2010
 
 @author: kelidas
 '''
-from enthought.traits.api import Float, Property, cached_property, Int, \
+from etsproxy.traits.api import Float, Property, cached_property, Int, \
     on_trait_change, Interface, implements
 from stats.pdistrib.pdistrib import IPDistrib
 from numpy import mean, hstack

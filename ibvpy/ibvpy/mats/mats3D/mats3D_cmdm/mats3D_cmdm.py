@@ -12,10 +12,10 @@
 #
 # Created on Aug 19, 2009 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Constant, Enum, Property, cached_property, Callable, implements
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Include
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm import \

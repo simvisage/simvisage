@@ -1,4 +1,4 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Int, Property, Array, cached_property, Instance
 
 from numpy import \

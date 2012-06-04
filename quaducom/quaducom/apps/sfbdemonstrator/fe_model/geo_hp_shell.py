@@ -4,7 +4,7 @@ Created on Jun 16, 2010
 @author: alexander
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, Bool, File
 

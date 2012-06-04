@@ -2,23 +2,23 @@
 import sys
 print sys.path
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-import enthought.traits.has_traits
-enthought.traits.has_traits.CHECK_INTERFACES = 2
+import etsproxy.traits.has_traits
+etsproxy.traits.has_traits.CHECK_INTERFACES = 2
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HGroup, ListEditor, VGroup, Group
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
      MenuBar, Separator
 
 from numpy import \
-     array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
+     array, zeros, dot, hstack, \
      identity
 
 from scipy.linalg import \
@@ -50,8 +50,8 @@ class FETS2D4Q(FETSEval):
 
     # Order of node positions for the formulation of shape function
     #
-    dof_r = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
-    geo_r = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+    dof_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
+    geo_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
 
     n_e_dofs = Int(8)
     t = Float(1.0, label = 'thickness')
@@ -62,7 +62,7 @@ class FETS2D4Q(FETSEval):
     ngp_s = Int(2)
 
     # Corner nodes are used for visualization 
-    vtk_r = [[-1., -1.], [ 1., -1.], [ 1., 1.], [-1., 1.]]
+    vtk_r = Array(value = [[-1., -1.], [ 1., -1.], [ 1., 1.], [-1., 1.]])
     vtk_cells = [[0, 1, 2, 3]]
     vtk_cell_types = 'Quad'
 
@@ -187,7 +187,8 @@ def example_with_new_domain():
                          record_on = 'update'),
 #                     RTraceDomainListField(name = 'Damage' ,
 #                                    var = 'omega', idx = 0,
-#                                    record_on = 'update',
+#                
+#                    record_on = 'update',
 #                                    warp = True),
                      RTraceDomainListField(name = 'Displacement' ,
                                     var = 'u', idx = 0,
@@ -223,6 +224,7 @@ def example_with_new_domain():
     #print 'time'
     #p.sort_stats('time').print_stats(20)
 
+    tloop.eval()
     # Put the whole thing into the simulation-framework to map the
     # individual pieces of definition into the user interface.
     #

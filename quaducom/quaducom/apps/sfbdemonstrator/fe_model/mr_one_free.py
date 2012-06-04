@@ -21,7 +21,7 @@ MUSHROOF - Demostrator SFB532
 
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits
 

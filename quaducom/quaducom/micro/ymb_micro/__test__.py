@@ -3,11 +3,11 @@ Created on Dec 12, 2010
 
 @author: kelidas
 '''
-from enthought.traits.api import HasTraits, Property, cached_property, Event, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, Event, \
     Array, Instance, Int, Directory, Range, on_trait_change, Bool, Trait, Constant, \
     Tuple, Interface, implements, Enum, Str, List
-from enthought.traits.trait_types import DelegatesTo
-from enthought.traits.ui.api import Item, View, HGroup, RangeEditor, EnumEditor
+from etsproxy.traits.trait_types import DelegatesTo
+from etsproxy.traits.ui.api import Item, View, HGroup, RangeEditor, EnumEditor
 import unittest
 from numpy import min, array, all, sum, round
 from os.path import join

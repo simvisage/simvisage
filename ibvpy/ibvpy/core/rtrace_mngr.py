@@ -1,19 +1,19 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     Dict, Property, cached_property, WeakRef, Delegate, Button, \
     Constant
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit, \
     TabularEditor
-    
-from enthought.traits.ui.menu import Action, CloseAction, Menu, \
-    MenuBar, Separator, NoButtons, OKButton, CancelButton
-    
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.menu import \
+    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
+    MenuBar, Separator
+
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from numpy import zeros, float_

@@ -12,7 +12,7 @@
 #
 # Created on Jan 19, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
@@ -20,7 +20,7 @@ from enthought.traits.api import \
     Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
                                  
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, TabularEditor, Group
                               
 from numpy import \
@@ -29,7 +29,7 @@ from numpy import \
 from i_sim_model import \
     ISimModel
 
-from enthought.traits.ui.tabular_adapter import \
+from etsproxy.traits.ui.tabular_adapter import \
     TabularAdapter, AnITabularAdapter
 
 class LevelListAdapter( TabularAdapter ):

@@ -12,7 +12,7 @@
 #
 # Created on Jan 20, 2011 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, Enum, \
     Dict, Bool, Int, Callable
 

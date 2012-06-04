@@ -14,10 +14,10 @@
 
 
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Str, implements
 
-from enthought.traits.ui.ui_traits import Image
+from etsproxy.traits.ui.ui_traits import Image
 
 from stats.spirrid.i_rf import \
     IRF

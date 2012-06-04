@@ -3,9 +3,9 @@ Created on Nov 19, 2010
 
 @author: kelidas
 '''
-from enthought.traits.api import HasTraits, Property, cached_property, Event, \
+from etsproxy.traits.api import HasTraits, Property, cached_property, Event, \
     Array, Instance, Range, on_trait_change, Bool, Trait, Constant, Int, Str, List
-from enthought.traits.ui.api import Group, HGroup, View, Item
+from etsproxy.traits.ui.api import Group, HGroup, View, Item
 from matplotlib.figure import Figure
 from numpy import min, array, histogram2d, vstack, hstack, corrcoef, prod, ones, invert
 from scipy.optimize import leastsq

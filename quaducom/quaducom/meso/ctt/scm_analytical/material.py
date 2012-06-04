@@ -3,11 +3,11 @@ Created on Apr 18, 2012
 
 @author: rostar
 '''
-from enthought.traits.api import HasTraits, Float, Property, \
+from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Array
-from enthought.traits.ui.api import View, Item, Tabbed, VGroup, \
+from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 
 import numpy as np
 from scipy.stats import weibull_min

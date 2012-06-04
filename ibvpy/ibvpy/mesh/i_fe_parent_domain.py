@@ -1,6 +1,6 @@
 
 
-from enthought.traits.api import Interface, List, Int, Array, Property, Class, Instance
+from etsproxy.traits.api import Interface, List, Int, Array, Property, Class, Instance
 
 class IFEParentDomain( Interface ):
     '''

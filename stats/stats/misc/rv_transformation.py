@@ -9,7 +9,7 @@ and a transformation method transf_eqn mapping X to Y (y = x**2 in the example)
 @author: Q
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Array, Property, cached_property, \
     Callable
 

@@ -5,9 +5,9 @@ from ibvpy.api import IBVPSolve
 from numpy import frompyfunc, linspace, meshgrid, array, float_, zeros
 from math import log, sin, cos
 from scipy.linalg import solve, norm
-from enthought.traits.api import HasTraits, implements
-#from enthought.traits.ui.api import *
-#from enthought.traits.ui.menu import *
+from etsproxy.traits.api import HasTraits, implements
+#from etsproxy.traits.ui.api import *
+#from etsproxy.traits.ui.menu import *
 from ibvpy.api import RTraceGraph, TStepper as TS
 from ibvpy.core.tstepper import TStepper
 from ibvpy.core.i_tstepper_eval import ITStepperEval

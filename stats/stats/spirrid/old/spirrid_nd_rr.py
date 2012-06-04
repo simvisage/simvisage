@@ -20,11 +20,11 @@
 # @todo: Compiled call to rf_grid for the calculation of the standard deviation.
 #
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Instance, List, Property, Array, Int, Any, cached_property, Dict, \
     Event, on_trait_change, Bool, Float, WeakRef, Str
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from numpy import \
