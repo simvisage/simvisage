@@ -32,7 +32,6 @@ from etsproxy.traits.api import HasTraits, Float, Property, \
 from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
 from etsproxy.traits.ui.menu import OKButton
-
 import numpy as np
 
 class CBRandomSample(HasTraits):
@@ -375,6 +374,7 @@ if __name__ == '__main__':
                        E_m = Em,
                        A_m = Am,
                        Nf = Nf,
+                       
                         ),
          n_int = 10)
 
