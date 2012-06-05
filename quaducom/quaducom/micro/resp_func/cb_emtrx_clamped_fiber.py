@@ -218,21 +218,21 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
 if __name__ == '__main__':
 
-    t = 0.05
-    Af = 5.31e-4
-    Ef = 72e3
-    Am = 50. / 1700
-    Em = 30e3
-    l = 0.
+    t = 0.4
+    Af = 3.84e-5
+    Ef = 200e3
+    Am = 8400
+    Em = 25e3
+    l = 10.
     theta = 0.0
     xi = 50000
     phi = 1.
     Ll = 10.
     Lr = 10.
-    Nf = 1.
+    Nf = 2304000.
 
     def Pw():
-        w = linspace(0, .25, 300)
+        w = linspace(0, .5, 300)
         P = CBEMClampedFiber()
         q = P(w, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
         plt.plot(w, q, lw = 2, ls = '-', color = 'black', label = 'CB_emtrx')
@@ -265,8 +265,8 @@ if __name__ == '__main__':
         plt.legend(loc = 'best')
         plt.ylim(0,60)
         
-    #Pw()
-    SP()
+    Pw()
+    #SP()
     #SP2()
     #plt.show()
 
