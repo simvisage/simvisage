@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>quaducom</name>
 	<comment></comment>
@@ -21,28 +19,3 @@
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
 </projectDescription>
-=======
-<?xml version="1.0" encoding="UTF-8"?>
-<projectDescription>
-	<name>quaducom</name>
-	<comment></comment>
-	<projects>
-		<project>etsproxy</project>
-		<project>ibvpy</project>
-		<project>mathkit</project>
-		<project>matresdev</project>
-		<project>stats</project>
-		<project>util</project>
-	</projects>
-	<buildSpec>
-		<buildCommand>
-			<name>org.python.pydev.PyDevBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-	</buildSpec>
-	<natures>
-		<nature>org.python.pydev.pythonNature</nature>
-	</natures>
-</projectDescription>
->>>>>>> branch 'master' of https://christian4@github.com/simvisage/simvisage.git
