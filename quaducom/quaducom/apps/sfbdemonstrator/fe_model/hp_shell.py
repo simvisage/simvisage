@@ -5,7 +5,7 @@ Created on Jun 16, 2010
 '''
 
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, Enum, \
     Dict, Bool, Int, List
 
@@ -476,7 +476,7 @@ class HPShell(HasTraits):
 if __name__ == '__main__':
 
     from numpy import mgrid, c_, hstack, vstack, shape
-    from enthought.mayavi import mlab
+    from etsproxy.mayavi import mlab
 
     hp = HPShell()
 

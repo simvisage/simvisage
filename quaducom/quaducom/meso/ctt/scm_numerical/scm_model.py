@@ -12,6 +12,12 @@
 #
 # Created on Oct 21, 2011 by: rch
 
+from etsproxy.traits.api import \
+    HasTraits, Float, List, Range, \
+    Callable, Instance, Trait, Int, \
+    cached_property, Property, \
+    implements, Interface, Array, WeakRef, \
+    DelegatesTo, on_trait_change
 
 from etsproxy.traits.api import \
     HasTraits, Instance, on_trait_change, Int, Array, Tuple, List, Callable, Interface, \
@@ -21,6 +27,11 @@ from stats.spirrid.rv import RV
 from interpolated_spirrid import InterpolatedSPIRRID, NonInterpolatedSPIRRID
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
+from etsproxy.traits.api import HasTraits, Float, Property, \
+                                cached_property, Range, Button
+from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
+                                VSplit, Group
+from etsproxy.traits.ui.menu import OKButton
 
 import numpy as np
 
@@ -316,6 +327,7 @@ if __name__ == '__main__':
 
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
         CBEMClampedFiberSP
+    from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
     #import etsproxy.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize

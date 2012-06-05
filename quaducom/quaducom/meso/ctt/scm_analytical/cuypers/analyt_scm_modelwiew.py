@@ -12,11 +12,11 @@
 #
 # Created on Sep 21, 2009 by: rrypl
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Enum, Bool, on_trait_change, Int, Event
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, VGroup, HGroup, ModelView, HSplit, VSplit
-from enthought.traits.ui.menu import OKButton
+from etsproxy.traits.ui.menu import OKButton
 
 from analyt_scm_model import SCM
 

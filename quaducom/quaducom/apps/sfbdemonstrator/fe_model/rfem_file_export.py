@@ -4,7 +4,7 @@ Created on Jun 16, 2010
 @author: andreas
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, Enum, \
     Dict, Bool, Int
 
@@ -20,7 +20,7 @@ from os.path import join
 
 from math import pi
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Array, Bool, Enum, Dict
 
 from numpy import \
@@ -38,8 +38,8 @@ from hp_shell import HPShell
 
 import csv
 
-from enthought.mayavi.mlab import colorbar, show, points3d
-from enthought.mayavi.api import Engine
+from etsproxy.mayavi.mlab import colorbar, show, points3d
+from etsproxy.mayavi.api import Engine
 
 def get_mid_surface_and_thickness( hp_shell, points, perpendicular_t = True ):
     '''Return the global coordinates of the supplied local points.
@@ -425,7 +425,7 @@ def show( hp_shell, x, y, z_middle, displayed_value ):
     #try:
     #    engine = mayavi.engine
     #except NameError:
-    #    from enthought.mayavi.api import Engine
+    #    from etsproxy.mayavi.api import Engine
     #    engine = Engine()
     #    engine.start()
     #if len(engine.scenes) == 0:
@@ -445,7 +445,7 @@ def show( hp_shell, x, y, z_middle, displayed_value ):
 if __name__ == '__main__':
 
     from numpy import mgrid, c_, hstack, vstack, shape
-    from enthought.mayavi import mlab
+    from etsproxy.mayavi import mlab
 
     hp = HPShell( 
 

@@ -12,14 +12,13 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from etsproxy.traits.api import \
+from enthought.traits.api import \
     Float, Str, implements, cached_property, Property
 
-from etsproxy.traits.ui.ui_traits import Image
+from enthought.traits.ui.ui_traits import Image
 
 from math import pi
 
-import numpy as np
 from numpy import \
     sign, sqrt, linspace, minimum, maximum
 
@@ -32,7 +31,7 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 def H(x):
-    return 0.5*(sign(x) + 1.)
+    return sign(sign(x) + 1.)
 
 class CBEMClampedFiber(RF):
     '''
@@ -45,59 +44,59 @@ class CBEMClampedFiber(RF):
     title = Str('crack bridge - clamped fiber with constant friction')
     image = Image('pics/cb_short_fiber.jpg')
 
+    xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
+                distr=['weibull_min', 'uniform'])
 
-    xi = Float(0.0179, auto_set = False, enter_set = True, input = True,
-                distr = ['weibull_min', 'uniform'])
+    tau = Float(2.5, auto_set=False, enter_set=True, input=True,
+                distr=['uniform', 'norm'])
 
-    tau = Float(2.5, auto_set = False, enter_set = True, input = True,
-                distr = ['uniform', 'norm'])
+    l = Float(0.0, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='free length')
 
-    l = Float(10.0, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'free length')
+    A_r = Float(0.89, auto_set=False, input=True,
+              enter_set=True, distr=['uniform', 'weibull_min'],
+              desc='CS area of a the reinforcement')
 
-    A_r = Float(.89, auto_set = False, input = True,
-              enter_set = True, distr = ['uniform', 'weibull_min'],
-              desc = 'CS area of a the reinforcement')
+    E_r = Float(72.0e3, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform'])
 
-    E_r = Float(72e3, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform'])
+    E_m = Float(30.0e3, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform'])
 
-    E_m = Float(30e3, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform'])
+    A_m = Float(50.0, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'])
 
-    A_m = Float(50.0, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'])
+    theta = Float(0.01, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='slack')
 
-    theta = Float(0.01, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'slack')
+    phi = Float(1., auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='bond quality')
 
-    phi = Float(1., auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'bond quality')
+    Ll = Float(1., auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='embedded length - left')
 
-    Ll = Float(1., auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'embedded length - left')
+    Lr = Float(.5, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='embedded length - right')
 
-    Lr = Float(.5, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'embedded length - right')
+    Nf = Float(1., auto_set=False, enter_set=True, input=True,
+              desc='number of parallel fibers', distr=['uniform'])
 
-    Nf = Float(1000., auto_set = False, enter_set = True, input = True,
-              desc = 'number of parallel fibers', distr = ['uniform'])
+    w = Float(auto_set=False, enter_set=True, input=True,
+               distr=['uniform'], desc='crack width',
+               ctrl_range=(0.0, 1.0, 10))
 
-    w = Float(auto_set = False, enter_set = True, input = True,
-               distr = ['uniform'], desc = 'crack width',
-               ctrl_range = (0.0, 1.0, 10))
 
-    Kr = Property(depends_on = 'A_r, E_r')
+    Kr = Property(depends_on='A_r, E_r')
     @cached_property
     def _get_Kr(self):
         return self.A_r * self.E_r
 
-    Km = Property(depends_on = 'A_m, E_m')
+    Km = Property(depends_on='A_r, E_m')
     @cached_property
     def _get_Km(self):
         return self.A_m * self.E_m
 
-    Kc = Property(depends_on = 'A_r, E_r, E_m, A_m')
+    Kc = Property(depends_on='A_r, E_r, E_m')
     @cached_property
     def _get_Kc(self):
         return self.Kr + self.Km
@@ -119,9 +118,10 @@ class CBEMClampedFiber(RF):
 
     def linel(self, u, l, T, Kr, Km, L):
         P2 = (T * L ** 2 + 2 * u * Kr) / 2. / (L + l)
+        
         return P2
 
-    def __call__(self, w, tau, l, A_r, E_r, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, tau, l, A_r, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
 
         # cross sectional area of a single fiber
 
@@ -136,11 +136,11 @@ class CBEMClampedFiber(RF):
         l = l * (1 + theta)
         w = w - theta * l
         w = H(w) * w
-        o = sqrt(4. * A_r * Nf ** 2 * pi)
-        T = tau * phi * o
+        D = sqrt(A_r * Nf / pi) * 2
+        T = tau * phi * D * pi
 
         Km = A_m * E_m
-        Kr = A_r * Nf * E_r
+        Kr = A_r * E_f
 
 
         # double sided debonding
@@ -154,7 +154,7 @@ class CBEMClampedFiber(RF):
         w0 = T * Lmin * ((2 * l0 + Lmin) * (Kr + Km) + Kr * Lmax) / (Km * Kr)
         # force at w0
         Q0 = Lmin * T * (Km + Kr) / (Km)
-
+        #print Q0
         # debonding from one side; the other side is clamped
         # equal to a one sided pullout with embedded length Lmax - Lmin and free length 2*Lmin + l
 
@@ -162,16 +162,18 @@ class CBEMClampedFiber(RF):
         l1 = 2 * Lmin + l
         L1 = Lmax - Lmin
         q1 = self.pullout(w - w0, l1, T, Kr, Km, L1) + Q0
+        
 
         # debonding completed at both sides, response becomes linear elastic
 
         # displacement at which the debonding is finished at both sides
         w1 = (L1 * T * (Kr + Km) * (L1 + l1)) / Kr / Km - T * L1 ** 2 / 2. / Kr
-
+        #print 'alt w0', w0, 'alt w1', w1 , 'alt w0+w1', w0 + w1
         q2 = self.linel(w - w0, l1, T, Kr, Km, L1) + Q0
+        #print self.linel(0, l1, T, Kr, Km, L1)
 
         # cut out definition ranges and add all parts 
-        q0 = H(w) * (q0 + 1e-15) * H(w0 - w)
+        q0 = H(w) * q0 * H(w0 - w)
         q1 = H(w - w0) * q1 * H(w1 + w0 - w)
         q2 = H(w - w1 - w0) * q2
 
@@ -179,10 +181,7 @@ class CBEMClampedFiber(RF):
 
         # include breaking strain
         q = q * H(Kr * xi - q)
-        mask0 = q0 * H(Kr * xi - q0) > 0
-        mask1 = q1 * H(Kr * xi - q1) > 0
-        mask2 = q2 > 0
-        #return (mask0, q0[mask0]), (mask1, q1[mask1]), (mask2, (q2 * H(Kr * xi - q2))[mask2]), q
+    
         return q
 
 class CBEMClampedFiberSP(CBEMClampedFiber):
@@ -191,29 +190,27 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
     frictional interface to the matrix; clamped fiber end
     '''
 
-    x = Float(0.0, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'distance from crack')
+    x = Float(0.0, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='distance from crack')
 
     x_label = Str('position [mm]')
     y_label = Str('force [N]')
 
     C_code = Str('')
 
-    def __call__(self, w, x, tau, l, A_r, E_r, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, x, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
 
-        o = sqrt(4. * A_r * Nf ** 2 * pi)
-        T = tau * phi * o
+        D = sqrt(A_r * Nf / pi) * 2
+        T = tau * phi * D * pi
         Km = A_m * E_m
-        Kr = A_r * Nf * E_r
-#        Kc = Km + Kr
-#        print 'sila', 5.0 * Kc / E_m
-#        print 'delta',(Kc)/E_m/T * 6.0
+        Kr = A_r * E_f
 
-        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_r, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
+        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
         q_x = q * H(l / 2. - abs(x)) + (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
-        q_const = q * Kr / (Km + Kr)
-        q_x = maximum(q_x, q_const)
         #q_x = q_x * H(x + Ll) * H (Lr - x)
+        a = q * Km / (T * (Km + Kr))
+        q_const = (q - T * a)
+        q_x = maximum(q_x, q_const)
         return q_x
 
 if __name__ == '__main__':
@@ -234,23 +231,20 @@ if __name__ == '__main__':
     def Pw():
         w = linspace(0, .5, 300)
         P = CBEMClampedFiber()
-        q = P(w, t, l, Af, Ef, Em, Am, theta, xi, phi, Ll, Lr, Nf)
-        plt.plot(w, q, lw = 2, ls = '-', color = 'black', label = 'CB_emtrx')
-        plt.xlabel('crack width $w$ [mm]')
-        plt.ylabel('filament force $P_\mathrm{f}$ [N]')
-        plt.legend(loc = 'best')
+        q = P(w, t, 10., .89, 72e3, 30000., 50., 0.01, 999, 1., 15., 30., 10)
+        plt.plot(w, q[0], label='CB')
+        plt.legend()
         plt.show()
 
     def SP():
-        plt.figure()
         cbcsp = CBEMClampedFiberSP()
-        x = linspace(-100, 40, 300)
-        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
-        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
-        plt.xticks(fontsize = 14)
-        plt.yticks(fontsize = 14)
-        plt.legend(loc = 'best')
-        plt.ylim(0,1)
+        x = linspace(-60, 30, 300)
+        q = cbcsp(.02, x, t, 10., .89, 72e3, 30000., 50., 0.0, 999, 1., 50., 30., 10)
+        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.legend(loc='best')
+        plt.show()
 
     def SP2():
         plt.figure()
