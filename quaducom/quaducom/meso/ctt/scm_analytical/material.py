@@ -26,11 +26,11 @@ class Material( HasTraits ):
                  desc = 'Modulus of elasticity the matrix [MPa]',
                  modified = True )
 
-    tau = Float( 8.0, auto_set = False, enter_set = True, # [N/mm^2]
+    tau = Float( .1, auto_set = False, enter_set = True, # [N/mm^2]
                  desc = 'frictional stress between fiber and matrix [MPa]',
                  modified = True )
 
-    r = Float( 0.5, auto_set = False, enter_set = True, # [mm]
+    r = Float( 5e-4, auto_set = False, enter_set = True, # [mm]
                  desc = 'radius of the fiber',
                  modified = True )
 
@@ -38,7 +38,7 @@ class Material( HasTraits ):
                  desc = 'Weibull shape parameter for the matrix tensile strength [-]',
                  modified = True )
 
-    sigma_0 = Float( 12.0, auto_set = False, enter_set = True, # [N/mm^2]
+    sigma_0 = Float( 6.0, auto_set = False, enter_set = True, # [N/mm^2]
                        desc = 'Weibull scale parameter for the matrix tensile strength [MPa]',
                        modified = True )
 
@@ -68,15 +68,13 @@ class Material( HasTraits ):
     def _get_Ec( self ):
         return self.Ef * self.Vf + self.Em * (1.-self.Vf)
 
-    sigma_mu_distr = Property(depnds_on = 'm, sigma_0, l0, Lc')
-    @cached_property
-    def _get_sigma_mu_distr(self):
-        return weibull_min(self.m, scale = self.sigma_0*(self.Lc/self.l0)**(-1./self.m))
+    def sigma_mu_distr(self, L):
+        return weibull_min(self.m, scale = self.sigma_0*(L/self.l0)**(-1./self.m))
     
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     m = Material()
     x = np.linspace(0,20,200)
-    y = m.sigma_mu_distr.cdf(x)
+    y = m.sigma_mu_distr(20).cdf(x)
     plt.plot(x,y)
     plt.show()

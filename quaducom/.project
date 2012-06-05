@@ -1,9 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>quaducom</name>
 	<comment></comment>
 	<projects>
-		<project>etsproxy</project>
 		<project>ibvpy</project>
 		<project>mathkit</project>
 		<project>matresdev</project>
