@@ -10,7 +10,7 @@ and functions can be obtained using this class.
 @author: Q
 '''
 
-from enthought.traits.api import HasTraits, Int, Array, Property, cached_property
+from etsproxy.traits.api import HasTraits, Int, Array, Property, cached_property
 
 import scipy as sp
 import numpy as np

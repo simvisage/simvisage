@@ -1,5 +1,5 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Int, implements, List, Array, Property, cached_property, \
     Float
 
@@ -40,9 +40,26 @@ class FETS1D52L8ULRH(FETSEval):
     A_phase_2 = Float(1.0, desc = 'Cross sectional area of phase 2')
 
     # Node position distribution
-    dof_r = [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1. / 3., -1], [1. / 3., -1], [1. / 3., 1], [-1. / 3., 1]]
-    geo_r = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
-    vtk_r = [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1. / 3., -1], [1. / 3., -1], [1. / 3., 1], [-1. / 3., 1]]
+    dof_r = Array(value = [[-1, -1],
+                           [ 1, -1],
+                           [ 1, 1],
+                           [-1, 1],
+                           [-1. / 3., -1],
+                           [ 1. / 3., -1], 
+                           [ 1. / 3., 1], 
+                           [-1. / 3., 1]])
+    geo_r = Array(value = [[-1, -1], 
+                           [ 1, -1], 
+                           [ 1, 1], 
+                           [-1, 1]])
+    vtk_r = Array(value = [[-1, -1], 
+                           [ 1, -1], 
+                           [ 1, 1], 
+                           [-1, 1], 
+                           [-1. / 3., -1], 
+                           [ 1. / 3., -1], 
+                           [ 1. / 3., 1], 
+                           [-1. / 3., 1]])
     vtk_cells = [[0, 4], [4, 5], [5, 1], [1, 2], [2, 6], [6, 7], [7, 3], [3, 0], [4, 7], [5, 6]]
     vtk_cell_types = 'Line'
 

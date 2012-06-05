@@ -12,14 +12,14 @@
 #
 # Created on Sep 8, 2009 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Property, cached_property, implements, List, \
     Callable, String, Int, HasTraits, Float
 
 from mathkit.numpy.numpy_func import Heaviside
 import math
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from ibvpy.mats.mats1D5.mats1D5_eval import MATS1D5Eval

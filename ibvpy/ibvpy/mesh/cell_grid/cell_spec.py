@@ -1,10 +1,10 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from ibvpy.core.i_sdomain import \
@@ -17,7 +17,7 @@ from numpy import \
     array, unique, min, max, mgrid, ogrid, c_, repeat, ix_, \
     arange, ones, zeros, multiply, sort, allclose, index_exp
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels
 
 class CellSpec( HasTraits ):

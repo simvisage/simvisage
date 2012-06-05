@@ -1,30 +1,34 @@
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
      Instance, Int, Trait, Str, Enum, \
      Callable, List, TraitDict, Any, Range, \
      Delegate, Event, on_trait_change, Button, \
      Interface, WeakRef, implements, Property, cached_property, Tuple, \
      Dict
-from enthought.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
      HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from enthought.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
      Action
 
-from enthought.traits.ui.ui_editors.array_view_editor \
+from etsproxy.traits.ui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from enthought.traits.ui.api \
-    import TableFilter, RuleTableFilter, EvalTableFilter
+from etsproxy.traits.ui.table_filter \
+    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
+           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
 from numpy import linspace, ix_, mgrid, ogrid, array, hstack, vstack, zeros, arange, c_, newaxis
 
 # tvtk related imports
 #
-from enthought.tvtk.api import tvtk
+from etsproxy.tvtk.pyface.actor_model import ITVTKActorModel
+from etsproxy.tvtk.pyface.actor_editor import ActorEditor
+from etsproxy.tvtk.pyface import actors
+from etsproxy.tvtk.api import tvtk
 
 class SContext: # (HasTraits):
     '''

@@ -1,5 +1,5 @@
-from enthought.traits.api import HasTraits, Float, Bool
-from enthought.traits.ui.api import View, Item
+from etsproxy.traits.api import HasTraits, Float, Bool
+from etsproxy.traits.ui.api import View, Item
 
 from numpy import where, zeros, dot, diag, linalg, sum
 #from numpy.dual import *

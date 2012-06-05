@@ -10,28 +10,28 @@ from numpy \
 from numpy.random \
     import random
 
-from enthought.traits.api \
+from etsproxy.traits.api \
     import HasTraits, Property, Array, Any, Event, \
     on_trait_change, Instance, WeakRef, Int, Str, Bool, Trait
     
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor, HSplit, Group
     
-from enthought.traits.ui.menu \
+from etsproxy.traits.ui.menu \
     import NoButtons, CancelButton
     
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
-from enthought.pyface.image_resource \
+from etsproxy.pyface.image_resource \
     import ImageResource
     
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid    
 
 #-- Constants ------------------------------------------------------------------
 
-import enthought.traits.ui.api
+import etsproxy.traits.ui.api
 
 #-- Tabular Adapter Definition -------------------------------------------------
 
@@ -177,7 +177,7 @@ class ElemArrayView ( HasTraits ):
 # Run the demo (if invoked from the command line):
 if __name__ == '__main__':
 
-    from enthought.traits.api import Button
+    from etsproxy.traits.api import Button
     from mdomain import MGridDomain
 
     rt_domain = MGridDomain( shape = (20,20,1) )

@@ -1,13 +1,13 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
      Item, View, HGroup, ListEditor, VGroup, Group
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
      MenuBar, Separator
 
@@ -73,27 +73,27 @@ class FETS2D4Q9U(FETSEval):
     ngp_r = 3
     ngp_s = 3
 
-    dof_r = [[ -1.,-1. ],
-                  [  1.,-1. ],
-                  [  1., 1. ],
-                  [ -1., 1. ],
-                  [  0.,-1. ],
-                  [  1., 0. ],
-                  [  0., 1. ],
-                  [ -1., 0. ],
-                  [  0., 0. ]]
-    geo_r = [[-1,-1],[1,-1],[1,1],[-1,1]]
+    dof_r = Array(value = [[ -1.,-1. ],
+                           [  1.,-1. ],
+                           [  1., 1. ],
+                           [ -1., 1. ],
+                           [  0.,-1. ],
+                           [  1., 0. ],
+                           [  0., 1. ],
+                           [ -1., 0. ],
+                           [  0., 0. ]])
+    geo_r = Array(value = [[-1,-1],[1,-1],[1,1],[-1,1]])
     # 
     vtk_cell_types = 'QuadraticQuad'
-    vtk_r = [[-1.,-1.],
-                  [ 0.,-1.],
-                  [ 1.,-1.],
-                  [-1., 0.],
-                  [ 0., 0.],
-                  [ 1., 0.],
-                  [-1., 1.],
-                  [ 0., 1.],
-                  [ 1., 1.]]
+    vtk_r = Array(value = [[-1.,-1.],
+                           [ 0.,-1.],
+                           [ 1.,-1.],
+                           [-1., 0.],
+                           [ 0., 0.],
+                           [ 1., 0.],
+                           [-1., 1.],
+                           [ 0., 1.],
+                           [ 1., 1.]])
     vtk_cells = [[0,2,8,6,1,5,7,3,4]]
     
     n_nodal_dofs = 2

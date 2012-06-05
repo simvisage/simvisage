@@ -17,16 +17,28 @@ import pylab as p
 
 # Access to the toplevel directory of the database
 #
+from matresdev.db.simdb import \
+   SimDB
+#
+import os.path
+#
+## Access to the toplevel directory of the database
+##
 simdb = SimDB()
 
-file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
-                       'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
-                       'ARAMIS', 'V1', 'TT-V1-Stufe-0-428.txt')
+#file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
+#                       'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+#                       'ARAMIS', 'V1', 'TT-V1-Stufe-0-428.txt')
 
-file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
-                       'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
-                       'ARAMIS', 'V1_kurz', 'P1-s458-Xf15a1-Yf5a4-Ausschnitt-Stufe-0-430.txt')
 
+home_dir = os.path.expanduser('~')
+print 'home_dir', home_dir
+
+file_name = os.path.join(home_dir, 'uni', '6-Semester','Praktikum', 'Praktikum_Massivbau','ARAMIS','V1','TT-V1-Stufe-0-300.txt')
+print 'file_name', file_name
+
+#file_name = os.path.join('C:\\','Praktikum_Massivbau','ARAMIS','V1','TT-V1TT-V1-Stufe-0-300.txt')
+file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
 input_arr = np.loadtxt(file_name,
                     skiprows = 14,
                     usecols = [0, 1, 2, 3, 4, 8, 9, 10]
@@ -43,6 +55,7 @@ data_arr = input_arr[ select_idx[0], :]
 data_arr = input_arr
 
 x_arr, y_arr, z_arr = data_arr[:, [2, 3, 4]].T
+X_arr = x_arr
 
 L_x = np.max(x_arr) - np.min(x_arr)
 L_y = np.max(y_arr) - np.min(y_arr)
@@ -177,16 +190,21 @@ p.plot(idx_arr, ux_avg, color = 'red')
 p.subplot(2, 2, 4)
 p.hist(w_arr, bins = 40)
 
-p.show()
+#p.show()
 
 #qargs = [ daf[:, :, i, np.newaxis] for i in range(0, 6)]
 
 #m.quiver3d(*qargs)
 
-s = m.points3d(daf[:-integ_range, :, 0],
-               daf[:-integ_range, :, 1],
-               daf[:-integ_range, :, 2],
-               d4_ux_arr)
+print 'X_arr', X_arr.shape
+print 'y_arr', y_arr.shape
+print 'z_arr', z_arr.shape
+print 'd4_ux_arr', ux_arr.shape
+
+s = m.points3d(X_arr,
+               y_arr,
+               z_arr,
+               ux_arr)
 
 ## print a surface - why is moved in the y direction?
 #m.surf(daf[:-integ_range, :, 0], daf[:-integ_range, :, 1], d4_ux_arr)#, mask = mask_idx_array)

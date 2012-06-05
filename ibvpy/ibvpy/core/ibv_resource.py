@@ -1,7 +1,8 @@
 
-from enthought.traits.api import HasTraits, Instance, Delegate, HasStrictTraits, Str
+from etsproxy.traits.api import \
+    HasTraits, Instance, Delegate, HasStrictTraits, Str
 
-class IBVResource( HasTraits ):
+class IBVResource(HasTraits):
     '''Base class for components of the boundary value problem.
     
     This class defines the generic behavior of the IBVResources, 
@@ -17,8 +18,8 @@ class IBVResource( HasTraits ):
     def bind_services(self, window):
         '''Issue the binding between the service and resource
         '''
-        ibv_service = window.get_service( self.service_class )
-        setattr( ibv_service, self.service_attrib, self )
+        ibv_service = window.get_service(self.service_class)
+        setattr(ibv_service, self.service_attrib, self)
 
-    def register_mv_pipeline(self,e):
+    def register_mv_pipeline(self, e):
         pass

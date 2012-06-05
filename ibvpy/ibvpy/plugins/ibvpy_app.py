@@ -10,18 +10,20 @@ import os.path
 import logging
 
 # Enthought library imports.
-from enthought.logger.api import LogFileHandler, FORMATTER
-from enthought.etsconfig.api import ETSConfig
-from enthought.traits.api import \
+from etsproxy.logger.api import LogFileHandler, FORMATTER
+from etsproxy.etsconfig.api import ETSConfig
+from etsproxy.traits.api import \
     HasTraits, Instance, Int, \
     on_trait_change, Any
 
 # Local imports.
 from ibvpy_workbench_application import IBVPyWorkbenchApplication
-from enthought.mayavi.preferences.api import preference_manager
-from enthought.mayavi.core.customize import get_custom_plugins
+from etsproxy.mayavi.preferences.api import preference_manager
+from etsproxy.mayavi.core.customize import get_custom_plugins
 
-import enthought.mayavi.plugins.app as mayavi_app
+import etsproxy.mayavi.plugins.app as mayavi_app
+
+from etsproxy import ETS_BASENAME
 
 # GLOBALS
 logger = logging.getLogger()
@@ -44,25 +46,25 @@ from mayavi_engine import set_engine
 def get_plugins():
     """Get list of default plugins to use for IBVPy."""
     plugins = mayavi_app.get_plugins()
-    plugins.insert(0, IBVModelPlugin() )
-    plugins.insert(1, IBVModelUIPlugin() )
-    plugins.insert(2, TLoopPlugin() )
-    plugins.insert(3, TLoopUIPlugin() )
-    plugins.insert(4, TStepperPlugin() )
-    plugins.insert(5, TStepperUIPlugin() )
+    plugins.insert(0, IBVModelPlugin())
+    plugins.insert(1, IBVModelUIPlugin())
+    plugins.insert(2, TLoopPlugin())
+    plugins.insert(3, TLoopUIPlugin())
+    plugins.insert(4, TStepperPlugin())
+    plugins.insert(5, TStepperUIPlugin())
 #    plugins.insert(6, SDomainPlugin() )
 #    plugins.insert(7, SDomainUIPlugin() )
-    plugins.insert(6, RTracePlugin() )
-    plugins.insert(7, RTraceUIPlugin() )
+    plugins.insert(6, RTracePlugin())
+    plugins.insert(7, RTraceUIPlugin())
     return plugins
 
 def get_non_gui_plugins():
     """Get list of basic tloop plugins that do not add any views or
     actions."""
     plugins = mayavi_app.get_plugins()
-    plugins.insert(0, TLoopPlugin() )
-    plugins.insert(1, TStepperPlugin() )
-    plugins.insert(2, RTracePlugin() )
+    plugins.insert(0, TLoopPlugin())
+    plugins.insert(1, TStepperPlugin())
+    plugins.insert(2, RTracePlugin())
     return plugins
 
 ###########################################################################
@@ -77,20 +79,22 @@ class IBVPyApp(HasTraits):
     """
 
     # The main envisage application.
-    application = Instance('enthought.envisage.ui.workbench.api.WorkbenchApplication')
+    application = Instance(ETS_BASENAME + 
+                           'envisage.ui.workbench.api.WorkbenchApplication')
 
     # The IBVPy Script instance.
-    script = Instance('enthought.mayavi.plugins.script.Script')
+    script = Instance(ETS_BASENAME + 
+                      'mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
     # @todo: make a base class for the IBVModel components that should be here 
     # instead of Any
-    ibv_resource = Instance( 'ibvpy.core.ibv_resource.IBVResource' )
+    ibv_resource = Instance('ibvpy.core.ibv_resource.IBVResource')
 
     # The logging mode.
-    log_mode = Int(logging.DEBUG, desc='the logging mode to use')
+    log_mode = Int(logging.DEBUG, desc = 'the logging mode to use')
 
-    def main(self, argv=None, plugins=None):
+    def main(self, argv = None, plugins = None):
         """The main application is created and launched here.
 
         Parameters
@@ -122,8 +126,8 @@ class IBVPyApp(HasTraits):
 
         # Create the application
         prefs = preference_manager.preferences
-        app = IBVPyWorkbenchApplication(plugins=plugins,
-                                         preferences=prefs)
+        app = IBVPyWorkbenchApplication(plugins = plugins,
+                                         preferences = prefs)
         self.application = app
 
         # Setup the logger.
@@ -134,7 +138,7 @@ class IBVPyApp(HasTraits):
 
     def setup_logger(self):
         """Setup logging for the application."""
-        mayavi_app.setup_logger(logger, 'ibvpy.log', mode=self.log_mode)
+        mayavi_app.setup_logger(logger, 'ibvpy.log', mode = self.log_mode)
 
     def parse_command_line(self, argv):
         """Parse command line options.
@@ -165,9 +169,11 @@ class IBVPyApp(HasTraits):
         app = self.application
         if self.ibv_resource:
             window = app.workbench.active_window
-            e = window.get_service('enthought.mayavi.core.engine.Engine')
-            set_engine( e )            
-            self.ibv_resource.bind_services( window )
+            e = window.get_service(ETS_BASENAME + 
+                                   'mayavi.core.engine.Engine')
+            print 'e', e
+            set_engine(e)            
+            self.ibv_resource.bind_services(window)
             self.ibv_resource.register_mv_pipelines(e)
 
     ######################################################################
@@ -181,14 +187,14 @@ class IBVPyApp(HasTraits):
         if trait_name != 'started' or not new:
             return
         app = self.application
-        from enthought.mayavi.plugins.script import Script
+        from etsproxy.mayavi.plugins.script import Script
         window = app.workbench.active_window
         # Set our script instance.
         self.script = window.get_service(Script)
         # Call self.run from the GUI thread.
         app.gui.invoke_later(self.run)
 
-def main(argv=None):
+def main(argv = None):
     """Simple helper to start up the ibvpy application.  This returns
     the running application."""
     m = IBVPyApp()

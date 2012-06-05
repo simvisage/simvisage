@@ -4,10 +4,10 @@ Created on Aug 17, 2011
 @author: rostar
 '''
 import numpy as np
-from enthought.traits.api import HasTraits, Float, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
     Range, Bool, on_trait_change, Int, Array, Tuple, \
     List
-from enthought.traits.ui.api import  VGroup, View, Item
+from etsproxy.traits.ui.api import  VGroup, View, Item
 from math import pi as Pi
 from quaducom.resp_func.cb_short_fiber import CBShortFiber
 from scipy.stats import  norm
@@ -299,7 +299,7 @@ if __name__ == '__main__':
 #    plt.plot( x, eps, lw = 2, color = 'black' )
 #    plt.show()
 
-    import enthought.mayavi.mlab as m
+    import etsproxy.mayavi.mlab as m
     from stats.spirrid import orthogonalize
 
     resolution = 200

@@ -7,18 +7,18 @@ Created on Nov 19, 2010
 
 #wxversion.select( '2.8' )
 
-from enthought.mayavi.core.api import PipelineBase
-from enthought.mayavi.core.ui.api import MayaviScene, SceneEditor, \
+from etsproxy.mayavi.core.api import PipelineBase
+from etsproxy.mayavi.core.ui.api import MayaviScene, SceneEditor, \
     MlabSceneModel
-from enthought.mayavi.modules.axes import Axes
+from etsproxy.mayavi.modules.axes import Axes
 
-from enthought.traits.api import HasTraits, Range, Instance, on_trait_change, \
+from etsproxy.traits.api import HasTraits, Range, Instance, on_trait_change, \
     Trait, Property, Constant, DelegatesTo, cached_property, Str
-from enthought.traits.ui.api import View, Item, Group
+from etsproxy.traits.ui.api import View, Item, Group
 from numpy import ones_like, array
 from ymb_data import IYMBData, YMBSegmentData, YMBCutData, YMBSource, var_dict
-from enthought.mayavi import mlab
-from enthought.mayavi.core.api import Engine
+from etsproxy.mayavi import mlab
+from etsproxy.mayavi.core.api import Engine
 
 class YMBView3D( HasTraits ):
     data = Instance( IYMBData )

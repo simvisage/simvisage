@@ -12,7 +12,7 @@
 #
 # Created on Jan 17, 2011 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Float, Str, implements, Bool
 
 from stats.spirrid import RF, IRF

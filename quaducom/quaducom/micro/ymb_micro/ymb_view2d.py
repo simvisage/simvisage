@@ -4,10 +4,10 @@ Created on Nov 20, 2010
 @author: kelidas
 '''
 
-from enthought.traits.api import HasTraits, Float, Property, cached_property, \
+from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
     Event, Array, Instance, Range, on_trait_change, Bool, Trait, DelegatesTo, \
     Constant
-from enthought.traits.ui.api import View, Item, Group
+from etsproxy.traits.ui.api import View, Item, Group
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from numpy import hstack

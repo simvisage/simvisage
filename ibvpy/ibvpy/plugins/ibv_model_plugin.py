@@ -7,11 +7,11 @@ import os.path
 import logging
 
 # Enthought library imports.
-from enthought.mayavi.plugins.app import get_plugins, setup_logger
-from enthought.traits.api import List
-from enthought.envisage.api import Plugin, ServiceOffer
-from enthought.envisage.ui.workbench.api import WorkbenchApplication
-from enthought.pyface.workbench.api import Perspective, PerspectiveItem
+from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
+from etsproxy.traits.api import List
+from etsproxy.envisage.api import Plugin, ServiceOffer
+from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
+from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
 
 ###############################################################################
 # `IBVModelPlugin` class.
@@ -28,7 +28,7 @@ class IBVModelPlugin(Plugin):
     name = 'IBVModel'
 
     # Services we contribute.
-    service_offers = List(contributes_to=SERVICE_OFFERS)
+    service_offers = List(contributes_to = SERVICE_OFFERS)
     
     ######################################################################
     # Private methods.
@@ -36,7 +36,7 @@ class IBVModelPlugin(Plugin):
         """ Trait initializer. """
         ibvpy_service_offer = ServiceOffer(
             protocol = 'ibvpy.plugins.ibv_model_service.IBVModelService',
-            factory  = 'ibvpy.plugins.ibv_model_service.IBVModelService'
+            factory = 'ibvpy.plugins.ibv_model_service.IBVModelService'
         )
 
         return [ibvpy_service_offer]

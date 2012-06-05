@@ -1,10 +1,10 @@
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
     List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
     Callable, Enum, Trait
-from enthought.traits.ui.api import View, Item, HSplit, Group, TabularEditor
-from enthought.traits.ui.tabular_adapter import TabularAdapter
+from etsproxy.traits.ui.api import View, Item, HSplit, Group, TabularEditor
+from etsproxy.traits.ui.tabular_adapter import TabularAdapter
 
 from cell_grid.dof_grid import DofCellGrid, DofCellView
 from cell_grid.geo_grid import GeoCellGrid, GeoCellView
@@ -23,7 +23,7 @@ from mathkit.level_set.level_set import ILevelSetFn, SinLSF
 
 from fe_grid import FEGrid, MElem
 
-from ibvpy.plugins.mayavi.pipelines import \
+from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 

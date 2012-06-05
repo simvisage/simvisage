@@ -13,7 +13,7 @@
 # Created on Jun 2, 2010 by: rch
 
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements, Range #@UnresolvedImport
 
 from math import pi, e

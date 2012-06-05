@@ -11,14 +11,14 @@
 # Thanks for using Simvisage open source!
 
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements
 
-from enthought.traits.ui.ui_traits import Image
+from etsproxy.traits.ui.ui_traits import Image
 
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item
 
 from math import e, pi

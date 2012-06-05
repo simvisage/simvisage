@@ -12,13 +12,13 @@
 #
 # Created on Mar 29, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Property
     
 from os.path import \
     join
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
 class SimDB(HasTraits):
@@ -26,11 +26,15 @@ class SimDB(HasTraits):
     Basic structure of the database directory.
     
     Implements the relative paths for the three different
-    categories of data
+    categories of data that are managed using the svn server.
+    
     - experimental data
     - simulation data
     - material data
     
+    Repository of raw data 
+    
+    - local data
     '''
     home_dir = Property
     def _get_home_dir(self):

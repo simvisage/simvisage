@@ -12,17 +12,17 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, DelegatesTo, \
     Callable
 
-from enthought.util.home_directory import \
+from etsproxy.util.home_directory import \
     get_home_directory
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
@@ -31,13 +31,13 @@ from enthought.traits.ui.api import \
 from util.traits.ui.item import \
     Item
 
-from enthought.traits.ui.table_column import \
+from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
-from enthought.traits.ui.menu import \
+from etsproxy.traits.ui.menu import \
     OKButton, CancelButton
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
@@ -52,7 +52,7 @@ from numpy import array, fabs, where, copy, ones, argsort
 from numpy import \
     loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, unique, around
 
-from enthought.traits.ui.table_filter \
+from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
 
@@ -68,13 +68,13 @@ from os.path import exists
 #-----------------------------------------------------------------------------------
 # ExDesignReader
 #-----------------------------------------------------------------------------------
-from enthought.traits.ui.file_dialog  \
+from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
 
-from enthought.traits.ui.api \
+from etsproxy.traits.ui.api \
     import View, Item, TabularEditor, VGroup, HGroup
 
-from enthought.traits.ui.tabular_adapter \
+from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
 
 from matresdev.db.exdb.ex_type import ExType
@@ -198,6 +198,9 @@ class ExpBT4PT(ExType):
 
     data_array_ironed = Property(Array(float),
                                   depends_on = 'data_array, +ironing_param, +axis_selection')
+
+
+    
     @cached_property
     def _get_data_array_ironed(self):
         '''remove the jumps in the displacement curves 
@@ -214,6 +217,8 @@ class ExpBT4PT(ExType):
 
             # use ironing method only for columns of the displacement gauges.
             #
+            print 'self.names_and_units[0]',self.names_and_units[0]
+            print 'self.names_and_units',self.names_and_units
             if self.names_and_units[0][ idx ] != 'Kraft' and \
                 self.names_and_units[0][ idx ] != 'Bezugskanal' and \
                 self.names_and_units[0][ idx ] != 'DMS_o':
@@ -252,10 +257,12 @@ class ExpBT4PT(ExType):
     def process_source_data(self):
         '''read in the measured data from file and assign
         attributes after array processing.        
-        If necessary modify the assigned data, e.i. change
+        If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
         print '*** process source data ***'
+
+        super(ExpBT4PT, self).process_source_data()
 
         self._read_data_array()
 

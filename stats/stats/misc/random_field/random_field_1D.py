@@ -4,7 +4,7 @@ Created on 24.06.2011
 @author: rrypl
 '''
 
-from enthought.traits.api import HasTraits, Float, Array, Int, Property, \
+from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
 from math import e
 from numpy import dot, transpose, ones, array, eye, real, linspace, reshape
