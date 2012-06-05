@@ -37,7 +37,7 @@ class CrackTracer(HasTraits):
     
     # time step used for the evaluation
     # (if defined as non-zero only the defined time step 
-    # and the 0 load step are read into 'data_arr'
+    # and the 0 time step are read into 'data_arr'
     #
     time_step_eval = Int(0)
     
@@ -64,7 +64,7 @@ class CrackTracer(HasTraits):
     #
     time_step_size = Int(430)
     
-    # load step used to determine the crack pattern
+    # time step used to determine the crack pattern
     #
     w_detect_step = Int(-1)
     
@@ -79,21 +79,16 @@ class CrackTracer(HasTraits):
     #===============================================================================
     #
     # 1) get all files from the directory
-    # 2) loop over the files - read also the load level for each load step
-    # 3) stack the arrays over load steps an array with the dimensions 
+    # 2) loop over the files - read also the load level for each time step
+    # 3) stack the arrays over time steps an array with the dimensions 
     # input_arr[time,node,values]
     
     
     data_dir = Directory
     def _data_dir_default(self):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
-<<<<<<< HEAD
                             'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4','ARAMIS',
                             'Probe-1-Ausschnitt-Xf15a1-Yf5a4')
-=======
-                            'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
-                            'ARAMIS', 'V1_kurz')
->>>>>>> branch 'master' of https://ale-x@github.com/simvisage/simvisage.git
     
     input_list = Property(Array(float), depends_on = 'data_dir')
     @cached_property
@@ -153,6 +148,7 @@ class CrackTracer(HasTraits):
         # Identify the points that do not belong to the specimen
         # 
         return np.array(self.input_list)
+
 
     idx_maps_t = Property()
     @cached_property
@@ -225,7 +221,7 @@ class CrackTracer(HasTraits):
 #        y_idx = np.array(data_arr[-1, :, 1], dtype = int)
 
         # derive the x_idx and y_idx from the undeformed state, 
-        # e.g. the first load step (first slice index = 0)
+        # e.g. the first time step (first slice index = 0)
         #
         x_idx = np.array(data_arr[0, :, 0], dtype = int)
         y_idx = np.array(data_arr[0, :, 1], dtype = int)
@@ -253,50 +249,46 @@ class CrackTracer(HasTraits):
         grid_mask[:, :] = True
         grid_mask[( x_idx, y_idx)] = False
 
-        print 'grid_mask.shape', grid_mask.shape
-        print 'number of missing facettes at load step = 0: ', np.sum(grid_mask)
-        
-        # length of the meassured field in x-direction, pixel size, facette size, facette distance
-        #
-        l_x = self.x_arr[0,0] - self.x_arr[-1,0]
-        px_size_x = l_x / n_x / self.n_px_facette_distance_x
-        facette_size_x = self.n_px_facette_size_x * px_size_x
-        facette_distance_x = self.n_px_facette_distance_x * px_size_x
-        print 'l_x',l_x 
-        print 'self.x_arr[0,0]',self.x_arr[0,0]
-#        print 'self.x_arr[0,-1]',np.average(self.x_arr[-1,0]
-        print 'n_x',n_x 
-        print 'px_size_x',px_size_x 
-        print 'facette_size_x',facette_size_x 
-        print 'facette_distance_x',facette_distance_x 
+#        # length of the meassured field in x-direction, pixel size, facette size, facette distance
+#        #
+#        l_x = self.x_arr[0,0] - self.x_arr[-1,0]
+#        px_size_x = l_x / n_x / self.n_px_facette_distance_x
+#        facette_size_x = self.n_px_facette_size_x * px_size_x
+#        facette_distance_x = self.n_px_facette_distance_x * px_size_x
+#        print 'l_x',l_x 
+#        print 'self.x_arr[0,0]',self.x_arr[0,0]
+##        print 'self.x_arr[0,-1]',np.average(self.x_arr[-1,0]
+#        print 'n_x',n_x 
+#        print 'px_size_x',px_size_x 
+#        print 'facette_size_x',facette_size_x 
+#        print 'facette_distance_x',facette_distance_x 
+#
+#        l_y = self.y_arr[0,0] - self.y_arr[0,-1]
+#        px_size_y = l_y / n_y / self.n_px_facette_distance_y
+#        facette_size_y = self.n_px_facette_size_y * px_size_y
+#        facette_distance_y = self.n_px_facette_distance_y * px_size_y
+#        print 'l_y',l_y 
+#        print 'n_y',n_y 
+#        print 'px_size_y',px_size_y 
+#        print 'facette_size_y',facette_size_y 
+#        print 'facette_distance_y',facette_distance_y 
 
-        l_y = self.y_arr[0,0] - self.y_arr[0,-1]
-        px_size_y = l_y / n_y / self.n_px_facette_distance_y
-        facette_size_y = self.n_px_facette_size_y * px_size_y
-        facette_distance_y = self.n_px_facette_distance_y * px_size_y
-        print 'l_y',l_y 
-        print 'n_y',n_y 
-        print 'px_size_y',px_size_y 
-        print 'facette_size_y',facette_size_y 
-        print 'facette_distance_y',facette_distance_y 
-
-        print 'grid_mask', grid_mask.shape
-        
-        return grid_mask, x_idx, y_idx
+        return grid_mask, x_idx, y_idx, n_x, n_y
 
 
     grid_mask = Property
     def _get_grid_mask(self):
+#        print 'number of missing facettes at time step = 0: ', np.sum(self.idx_maps[0])
         return self.idx_maps[0]
     
     xy_idx = Property
     def _get_xy_idx(self):
         return self.idx_maps[1], self.idx_maps[2]
         
-    data_t = Property()
+    data_t_orig = Property()
     @cached_property
-    def _get_data_t(self):
-    
+    def _get_data_t_orig(self):
+        '''original input data before coordinate transformation'''
         data_arr = self.data_arr
         
         # total number of data values associated with a single point
@@ -318,6 +310,96 @@ class CrackTracer(HasTraits):
         print 'data_t.shape', daf.shape
         return daf
 
+        
+    data_t = Property()
+    @cached_property
+    def _get_data_t(self):
+        '''input data after coordinate transformation'''    
+            
+        # Coordinate transformation:
+        # derive transformation direction from the first time step (t = 0)
+        #
+        daf_0 = self.data_t_orig[0]
+        daf = self.data_t_orig
+        daf_new = np.copy(daf)
+        
+        # @todo: select a facette with none-zero coordinate values
+        # e.g. select a facette from the last middle axis and in a list of the first 10 or last 10 facettes
+        # 
+#        n_x = self.idx_maps[3]
+#        n_y = self.idx_maps[4]
+#        idx_x = self.idx_maps[1]
+#        idx_y = self.idx_maps[2]
+##        n_x_middle = int( n_x/2 )
+##        n_y_middle = int( n_y/2 )
+#        x_idx_middle = int( idx_x.shape[0] / 2 )
+#        y_idx_middle = int( idx_y.shape[0] / 2 )
+#        n_x_middle = idx_x[ x_idx_middle ]
+#        n_y_middle = idx_y[ y_idx_middle ]
+#        print 'n_x_middle', n_x_middle
+#        print 'n_y_middle', n_y_middle
+        n_x_middle = 10
+        n_y_middle = 10
+
+        x_vec_ = daf_0[-1, n_x_middle, :3] - daf_0[0, n_x_middle, :3]
+        y_vec_ = daf_0[n_y_middle, -1, :3] - daf_0[n_y_middle, 0, :3]
+
+#        x_vec_ = daf_0[-1, 10, :3] - daf_0[0, 10, :3]
+#        y_vec_ = daf_0[10, -1, :3] - daf_0[10, 0, :3]
+
+        # base vectors (normed) of the local coordinate system x_, y_, z_
+        #
+        x_ = x_vec_ / np.math.sqrt( np.dot( x_vec_, x_vec_ ))                         
+        y_ = y_vec_ / np.math.sqrt( np.dot( y_vec_, y_vec_ ))        
+        z_ = np.cross( x_, y_)
+        
+        # base vectors (normed) of the global carthesian coordinate system
+        #
+        x = np.array([1,0,0])
+        y = np.array([0,1,0])
+        z = np.array([0,0,1])
+        
+        # get the direction cosines:
+        #
+        cos_xx_ = np.dot(x_,x)
+        cos_yx_ = np.dot(x_,y)
+        cos_zx_ = np.dot(x_,z)
+        cos_xy_ = np.dot(y_,x)
+        cos_yy_ = np.dot(y_,y)
+        cos_zy_ = np.dot(y_,z)
+        cos_xz_ = np.dot(z_,x)
+        cos_yz_ = np.dot(z_,y)
+        cos_zz_ = np.dot(z_,z)
+         
+        # rotatation using transformation matrix T_mtx 
+        # (cf. Zienkiewicz, 6th edition, p.192, (6.18):
+        # T_mtx = np.array([[cos_xx_, cos_yx_, cos_zx_],
+        #                   [cos_xy_, cos_yy_, cos_zy_],
+        #                   [cos_xz_, cos_yz_, cos_zz_]])        
+        #
+        daf_new[:,:,:,0] = daf_new[:,:,:,0] * cos_xx_ + daf_new[:,:,:,1] * cos_yx_ + daf_new[:,:,:,2] * cos_zx_
+        daf_new[:,:,:,1] = daf_new[:,:,:,0] * cos_xy_ + daf_new[:,:,:,1] * cos_yy_ + daf_new[:,:,:,2] * cos_zy_
+        daf_new[:,:,:,2] = daf_new[:,:,:,0] * cos_xz_ + daf_new[:,:,:,1] * cos_yz_ + daf_new[:,:,:,2] * cos_zz_
+
+        daf_new[:,:,:,3] = daf_new[:,:,:,3] * cos_xx_ + daf_new[:,:,:,4] * cos_yx_ + daf_new[:,:,:,5] * cos_zx_
+        daf_new[:,:,:,4] = daf_new[:,:,:,3] * cos_xy_ + daf_new[:,:,:,4] * cos_yy_ + daf_new[:,:,:,5] * cos_zy_
+        daf_new[:,:,:,5] = daf_new[:,:,:,3] * cos_xz_ + daf_new[:,:,:,4] * cos_yz_ + daf_new[:,:,:,5] * cos_zz_
+        
+        # translation of the coordinates into the origin:
+        # 'x_0_vec' derived from the first time step
+        # = distance between origin and the position of the first facette
+        #
+        x_0_vec = daf[0,0,0,:3]
+        
+#        daf_new[:,:,:,0] = daf_new[:,:,:,0] - x_0_vec[0]
+#        daf_new[:,:,:,1] = daf_new[:,:,:,1] - x_0_vec[1]
+#        daf_new[:,:,:,2] = daf_new[:,:,:,2] - x_0_vec[2]
+
+        daf_new[:,:,:,:3] = daf_new[:,:,:,:3] - x_0_vec
+
+        return daf_new
+       
+    
     #===========================================================================
     # Geometry arrays
     #===========================================================================
@@ -328,7 +410,7 @@ class CrackTracer(HasTraits):
 #        print 'np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)',np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
 #        print 'np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1).shape',np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1).shape
 #        return np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
-        # take the x-coords derived from the first load step
+        # take the x-coords derived from the first time step
         # transform the x-coords to start in the origin
 #        print 'self.data_t[0, 0, 0, 0]', self.data_t[0, 0, 0, 0]
 #        print 'x_min', np.min(self.data_t[0, :, :, 0])
@@ -345,7 +427,7 @@ class CrackTracer(HasTraits):
         # use average to eliminate errors in measuring of single points
 #        print 'np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)',np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
 #        return np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
-        # take the y-coords derived from the first load step
+        # take the y-coords derived from the first time step
         # transform the y-coords to start in the origin
 #        print 'self.data_t[0, 0, 0, 1]', self.data_t[0, 0, 0, 1]
 #        print 'self.data_t[0, :, :, 1]', self.data_t[0, :, :, 1]
@@ -383,7 +465,7 @@ class CrackTracer(HasTraits):
     @cached_property
     def _get_ux_t(self):        
         ux_arr = self.data_t[:, :, :, 3]
-        # use an individual grid_mask for each load step
+        # use an individual grid_mask for each time step
         # 
         ux_masked = ma.masked_array(ux_arr, mask = self.grid_mask_t)
 
@@ -555,9 +637,10 @@ class CrackTracer(HasTraits):
         print 'self.y_arr', self.y_arr
 #        m.surf(self.x_arr, self.y_arr, self.crack_field_w )#, mask = self.grid_mask)
 
-        m.points3d(self.x_arr, self.y_arr, self.z_arr, 1.0*self.grid_mask, mode = 'cube', scale_factor = 15., colormap = "blue-red", scale_mode ='none')
-#        m.points3d(self.x_arr, self.y_arr, self.z_arr, self.d_ux_w, mode = 'cube', scale_factor = 15., colormap = "blue-red", scale_mode ='none')
+#        m.points3d(self.x_arr, self.y_arr, self.z_arr, 1.0*self.grid_mask, mode = 'cube', scale_factor = 15., colormap = "blue-red", scale_mode ='none')
+        m.points3d(self.x_arr, self.y_arr, self.z_arr, self.d_ux_w, mode = 'cube', scale_factor = 15., colormap = "blue-red", scale_mode ='none')
 #        m.points3d(self.x_arr, self.y_arr, self.z_arr, self.crack_field_w, mode = 'cube', scale_factor = 15., colormap = "blue-red", scale_mode ='none')
+
         engine = m.get_engine()
         glyph = engine.scenes[0].children[0].children[0].children[0]
         glyph.glyph.glyph_source.glyph_source.x_length = self.glyph_x_length
@@ -610,20 +693,20 @@ if __name__ == '__main__':
 #                     integ_radius = 8,
 #                     w_detect_step = -1)
 #    
-    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1_kurz','f15a3'),
-                     time_step_eval = 3,
-                     integ_radius = 3,
-                     w_detect_step = -1,
-                     glyph_x_length = 0.045,
-                     glyph_y_length = 0.045,
-                     glyph_z_length = 0.000)
+#    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1_kurz','f15a3'),
+#                     time_step_eval = 3,
+#                     integ_radius = 3,
+#                     w_detect_step = -1,
+#                     glyph_x_length = 0.045,
+#                     glyph_y_length = 0.045,
+#                     glyph_z_length = 0.000)
 
 
     
-#    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1'),
-#                     time_step_eval = 3,
-#                     integ_radius = 8,
-#                     w_detect_step = -1)
+    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1'),
+                     time_step_eval = 3,
+                     integ_radius = 8,
+                     w_detect_step = -1)
 #    
 #    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V2'),
 #                     time_step_eval = 3,
@@ -636,6 +719,8 @@ if __name__ == '__main__':
 #                     w_detect_step = -1)
 #
 
-    ct.plot3d()
+    print ct.data_t
+
+#    ct.plot3d()
 #    ct.plot()
 
