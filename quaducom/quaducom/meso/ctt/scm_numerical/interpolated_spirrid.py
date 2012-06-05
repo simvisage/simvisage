@@ -94,28 +94,43 @@ import copy
 
 class InterpolatedSPIRRID(HasTraits):
 
-    ctrl_arr = Property(Array)
-    def _get_ctrl_arr(self):
-        return self.spirrid.evars['w']
+    ctrl_arr = Array
 
     spirrid = Instance(SPIRRID)
     
     def P2w(self, *args):
 
         # set the x position to 0.0
+        print 'args', args
         args = list(args)
-        args[0] = self.ctrl_arr
+        P_given = args[0]
+        args[0] = self.spirrid.evars['w']
+        npoints = len(args[0])
         args[1] = 0.0
         P = self.interp_grid(*args)
-        id_max = np.argmax(P)
-        Pw_line = MFnLineArray(xdata = P[:id_max], ydata = self.ctrl_arr[:id_max])
-#        plt.plot(Pw_line.ydata, Pw_line.xdata)
-#        plt.show()       
-        return Pw_line
+        if np.argmax(P) != len(P)-1:
+            raise ValueError, 'maximum force %.1f reached' % np.max(P)
+        else:
+            if np.max(P_given)/np.max(P) > 1.0 and np.max(P_given)/np.max(P) < 1.2:
+                w = self.spirrid.evars['w']
+            else:             
+                while np.max(P_given)/np.max(P) < 1.0 or np.max(P_given)/np.max(P) > 1.3:
+                    print 'ratio before iteration', np.max(P_given)/np.max(P)
+                    print 'iterating the w interval'
+                    Pw_iter_line = MFnLineArray(extrapolate = 'diff', xdata = P, ydata = self.spirrid.evars['w'])
+                    wmax = Pw_iter_line.get_values(np.max(P_given)* 1.2)
+                    w = np.linspace(0,wmax,npoints)
+                    self.spirrid.evars['w'] = w
+                    args[0] = w
+                    P = self.interp_grid(*args)
+                    print 'ratio after iteration',np.max(P_given)/np.max(P)
+            Pw_line = MFnLineArray(xdata = P, ydata = w)       
+            return Pw_line
 
-    interp_grid = Property()
+    interp_grid = Property(depends_on = 'spirrid.evars')
     @cached_property
     def _get_interp_grid(self):
+        print 'RECALCULATING'
         print 'evaluating spirrid...'
         data = self.spirrid.mu_q_arr
         print 'complete'
@@ -129,8 +144,6 @@ class InterpolatedSPIRRID(HasTraits):
         '''
         P = args[0]
         P2w_line = self.P2w(*args)
-        if np.any(P > np.max(P2w_line.xdata)):
-            raise ValueError, 'maximum force %.1f reached' % np.max(P2w_line.xdata)
         w = P2w_line.get_values(P)
         return self.interp_grid(w, *args[1:]), w
 
