@@ -16,15 +16,12 @@ from etsproxy.traits.ui.menu import \
     Action, CloseAction, HelpAction, Menu, \
     MenuBar, NoButtons, Separator, ToolBar
 
-from etsproxy.pyface.api import ImageResource
+from numpy import zeros, \
+                hstack, \
+                copy as ncopy, frompyfunc, \
+                dot, fabs, arange, ones
 
-from ibvpy.mats.mats_explore import MATSExplore
-from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
-
-from numpy import array, loadtxt, arange, sqrt, zeros, arctan, sin, cos, ones_like, \
-                vstack, savetxt, hstack, argsort, fromstring, zeros_like, \
-                copy as ncopy, c_, newaxis, argmax, where, argsort, sqrt, frompyfunc, \
-                max as ndmax, dot, fabs, arange, ones, ceil
+import numpy as np
 
 from mathkit.mfn import MFnLineArray
 
@@ -113,16 +110,16 @@ class SigFlCalib(HasTraits):
     z_t_i_arr = Property(depends_on = '+changed')
     @cached_property
     def _get_z_t_i_arr(self):
-        return array([ self.thickness_reinf - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
+        return np.array([ self.thickness_reinf - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
                       dtype = float)
 
     # iteration counter:
     #
     n = 1
 
-    sig_comp_i_arr = Array(float)
+    sig_comp_i_arr = np.array(float)
 
-    eps_t_i_arr = Array(float)
+    eps_t_i_arr = np.array(float)
 
     def layer_response_eps_t_E_yarn(self, u, thickness_unreinf):
         '''Unknown constitutive law of the layer
@@ -156,9 +153,9 @@ class SigFlCalib(HasTraits):
         eps_fail = eps_t
         sig_fail = E_yarn * eps_fail
 
-        xdata = array([0., eps_fail ])
-        ydata = array([0., sig_fail ])
-        mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
+        xdata = np.array([0., eps_fail ])
+        ydata = np.array([0., sig_fail ])
+        mfn_line_array = MFnLinenp.array(xdata = xdata, ydata = ydata)
         return x, eps_t_i_arr, mfn_line_array
 
     E_yarn = Float
@@ -205,16 +202,16 @@ class SigFlCalib(HasTraits):
         # conservative for iteration of response due to imposed loads
         # 'Einwirkungsseite'
         #
-        xdata = array([0., eps_fail ])
-        ydata = array([0., sig_fail ])
+        xdata = np.array([0., eps_fail ])
+        ydata = np.array([0., sig_fail ])
 
         # plastic law of the crack bridge
         #-------------------------------
         # conservative for iteration of resistance stress
         # 'Widerstandsseite'
         #
-#        xdata = array( [0, 0.01 * eps_fail, eps_fail ] )
-#        ydata = array( [0, 0.99 * sig_fail, sig_fail ] )
+#        xdata = np.array( [0, 0.01 * eps_fail, eps_fail ] )
+#        ydata = np.array( [0, 0.99 * sig_fail, sig_fail ] )
 
         mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
 
@@ -273,8 +270,8 @@ class SigFlCalib(HasTraits):
     sig_c_mfn = Property(depends_on = '+changed')
     @cached_property
     def _get_sig_c_mfn(self):
-        xdata = array([0., 0.00135, 0.0035])
-        ydata = array([0., self.f_ck, self.f_ck])
+        xdata = np.array([0., 0.00135, 0.0035])
+        ydata = np.array([0., self.f_ck, self.f_ck])
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
 #    #-----------------------------
@@ -284,9 +281,9 @@ class SigFlCalib(HasTraits):
 #    sig_c_mfn = Property( depends_on = '+changed' )
 #    @cached_property
 #    def _get_sig_c_mfn( self ):
-#        xdata = array( [0., 0.00135, 0.0035] )
-#        ydata = array( [0., self.f_ck, self.f_ck] )
-#        return MFnLineArray( xdata = xdata, ydata = ydata )
+#        xdata = np.array( [0., 0.00135, 0.0035] )
+#        ydata = np.array( [0., self.f_ck, self.f_ck] )
+#        return MFnLinenp.array( xdata = xdata, ydata = ydata )
 
     def get_sig_c(self, eps_c):
         sig_c = self.sig_c_mfn.get_value(eps_c)
@@ -377,7 +374,7 @@ class SigFlCalib(HasTraits):
         #
         eps_c_i_arr = self.x_discr * self.eps_c
 #        print 'eps_c_i_arr', eps_c_i_arr
-        sig_c_i_arr = array([self.get_sig_c(eps_c_i) for eps_c_i in eps_c_i_arr])
+        sig_c_i_arr = np.array([self.get_sig_c(eps_c_i) for eps_c_i in eps_c_i_arr])
 #        print 'sig_c_i_arr', sig_c_i_arr
         f_c_i_arr = sig_c_i_arr * self.width * self.x_discr[0] * 2. * x * 1000.
 
@@ -419,7 +416,7 @@ class SigFlCalib(HasTraits):
         self.n += 1
 #        print 'n', self.n
 
-        return array([ d_N, d_M ], dtype = float)
+        return np.array([ d_N, d_M ], dtype = float)
 
     m = 0
     def fit_response(self, M, N, thickness_unreinf, u0_start = [ 0.010, 0.0033 ]):
@@ -501,9 +498,9 @@ class SigFlCalib(HasTraits):
 
     calib_config = Trait('eps_t_E_yarn',
                           {'eps_t_E_yarn' : ('layer_response_eps_t_E_yarn',
-                                              array([ 0.01, 50000.0 ])),
+                                              np.array([ 0.01, 50000.0 ])),
                            'eps_t_eps_c' : ('layer_response_eps_t_eps_c',
-                                             array([ 0.010, 0.0033 ])) },
+                                             np.array([ 0.010, 0.0033 ])) },
                          modified = True)
 
     layer_response = Property(depends_on = 'calib_config')
