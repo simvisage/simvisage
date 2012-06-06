@@ -34,7 +34,7 @@ from matplotlib import pyplot as plt
 def H(x):
     return 0.5 * (sign(x) + 1.)
 
-class CBEMClampedFiber(RF):
+class CBEMClampedFiberStress(RF):
     '''
     Crack bridged by a fiber with constant
     frictional interface to the elastic matrix; clamped fiber end;
@@ -164,7 +164,7 @@ class CBEMClampedFiber(RF):
    
         return q
     
-class CBEMClampedFiberSP(CBEMClampedFiber):
+class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         '''
         stress profile for a crack bridged by a fiber with constant
         frictional interface to the matrix; clamped fiber end
@@ -182,7 +182,7 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
             T = 2. * tau / r / E_r
             T1 = T * E_r
         
-            q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
+            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
             
             #tension in the free length
             q_l = q / V_f * H(l / 2 - abs(x))
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     #Vf = 0.0174887
     V_f = 0.2
     def Pw(w):
-        P = CBEMClampedFiber()
+        P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
         plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx')
         plt.show()
@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
     def SP(x):
         plt.figure()
-        cbcsp = CBEMClampedFiberSP()
+        cbcsp = CBEMClampedFiberStressSP()
         q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='force along filament')
         plt.xticks(fontsize=14)
