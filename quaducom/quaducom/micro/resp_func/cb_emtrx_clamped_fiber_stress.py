@@ -56,7 +56,7 @@ class CBEMClampedFiber(RF):
     l = Float(10.0, auto_set=False, enter_set=True, input=True,
               distr=['uniform'], desc='free length')
 
-    r = Float(0.013, auto_set=False, input=True,
+    r = Float(0.013, auto_set=False, input=True, distr=['uniform'],
               enter_set=True, desc='fiber radius in mm')
 
     E_r = Float(72e3, auto_set=False, enter_set=True, input=True,
@@ -85,24 +85,6 @@ class CBEMClampedFiber(RF):
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
-    Kr = Property(depends_on='A_r, E_r')
-    @cached_property
-    def _get_Kr(self):
-        #fiber stiffness
-        return self.V_f * self.E_r
-
-    Km = Property(depends_on='V_f, E_m')
-    @cached_property
-    def _get_Km(self):
-        #matrix stiffness
-        return (1 - self.V_f) * self.E_m
-
-    Ec = Property(depends_on='V_f, E_r, E_m')
-    @cached_property
-    def _get_Ec(self):
-        #composite stiffness
-        return self.Kr + self.Km
-    
 
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
@@ -203,10 +185,10 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
             q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
             
             #tension in the free length
-            q_l = q / Vf * H(l / 2 - abs(x))
+            q_l = q / V_f * H(l / 2 - abs(x))
             
             #tension in the part, where fiber translates tension to composite
-            q_e = (q / Vf - T1 * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            q_e = (q / V_f - T1 * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
             
             #tension in the composite
             q_const = q 
@@ -214,7 +196,6 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
             #putting all parts together
             q_x = q_l + q_e
             q_x = maximum(q_x, q_const)
-            print type(q_x)
             return q_x
 
 
@@ -232,10 +213,10 @@ if __name__ == '__main__':
     Lr = 35.
     r = 0.013
     #Vf = 0.0174887
-    Vf = 0.2
+    V_f = 0.2
     def Pw(w):
         P = CBEMClampedFiber()
-        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r) 
+        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
         plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx')
         plt.show()
         
@@ -244,7 +225,7 @@ if __name__ == '__main__':
     def SP(x):
         plt.figure()
         cbcsp = CBEMClampedFiberSP()
-        q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r)
+        q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='force along filament')
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
@@ -258,3 +239,5 @@ if __name__ == '__main__':
     
     x = linspace(-40, 40, 300)
     SP(x)
+
+
