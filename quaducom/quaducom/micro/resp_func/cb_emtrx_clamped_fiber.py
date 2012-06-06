@@ -50,11 +50,11 @@ class CBEMClampedFiber(RF):
     l = Float(0.0, auto_set=False, enter_set=True, input=True,
               distr=['uniform'], desc='free length')
 
-    A_r = Float(0.89, auto_set=False, input=True,
+    A_f = Float(0.89, auto_set=False, input=True,
               enter_set=True, distr=['uniform', 'weibull_min'],
               desc='CS area of a the reinforcement')
 
-    E_r = Float(72.0e3, auto_set=False, enter_set=True, input=True,
+    E_f = Float(72.0e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30.0e3, auto_set=False, enter_set=True, input=True,
@@ -82,22 +82,6 @@ class CBEMClampedFiber(RF):
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
-
-    Kr = Property(depends_on='A_r, E_r')
-    @cached_property
-    def _get_Kr(self):
-        return self.A_r * self.E_r
-
-    Km = Property(depends_on='A_r, E_m')
-    @cached_property
-    def _get_Km(self):
-        return self.A_m * self.E_m
-
-    Kc = Property(depends_on='A_r, E_r, E_m')
-    @cached_property
-    def _get_Kc(self):
-        return self.Kr + self.Km
-
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
 
@@ -118,7 +102,7 @@ class CBEMClampedFiber(RF):
         
         return P2
 
-    def __call__(self, w, tau, l, A_r, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, tau, l, A_f, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
 
         # cross sectional area of a single fiber
 
@@ -133,11 +117,11 @@ class CBEMClampedFiber(RF):
         l = l * (1 + theta)
         w = w - theta * l
         w = H(w) * w
-        D = sqrt(A_r * Nf / pi) * 2
+        D = sqrt(A_f * Nf / pi) * 2
         T = tau * phi * D * pi
 
         Km = A_m * E_m
-        Kr = A_r * E_f
+        Kr = A_f * E_f
 
 
         # double sided debonding
@@ -195,14 +179,14 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
     C_code = Str('')
 
-    def __call__(self, w, x, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, x, tau, l, A_f, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
 
-        D = sqrt(A_r * Nf / pi) * 2
+        D = sqrt(A_f * Nf / pi) * 2
         T = tau * phi * D * pi
         Km = A_m * E_m
-        Kr = A_r * E_f
+        Kr = A_f * E_f
 
-        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
+        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_f, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
         q_x = q * H(l / 2. - abs(x)) + (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
         #q_x = q_x * H(x + Ll) * H (Lr - x)
         a = q * Km / (T * (Km + Kr))
