@@ -59,7 +59,7 @@ class CBEMClampedFiberStress(RF):
     r = Float(0.013, auto_set=False, input=True, distr=['uniform'],
               enter_set=True, desc='fiber radius in mm')
 
-    E_r = Float(72e3, auto_set=False, enter_set=True, input=True,
+    E_f = Float(72e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30e3, auto_set=False, enter_set=True, input=True,
@@ -116,7 +116,7 @@ class CBEMClampedFiberStress(RF):
         P2 = 0.5 * (2. * w + T * t1) * Kr / (Lmax + l + Lmin)
         return P2
 
-    def __call__(self, w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+    def __call__(self, w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
         #assigning short and long embedded length
         Lmin = minimum(Ll, Lr)
         Lmax = maximum(Ll, Lr)
@@ -131,9 +131,9 @@ class CBEMClampedFiberStress(RF):
         l = l * (1 + theta)
         w = w - theta * l
         w = H(w) * w
-        T = 2. * tau / (r * E_r)
+        T = 2. * tau / (r * E_f)
         Km = (1. - V_f) * E_m
-        Kr = V_f * E_r
+        Kr = V_f * E_f
         Ec = Km + Kr
 
         # double sided debonding
@@ -178,11 +178,11 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         C_code = Str('')
         
     
-        def __call__(self, w, x, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau / r / E_r
-            T1 = T * E_r
+        def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+            T = 2. * tau / r / E_f
+            T1 = T * E_f
         
-            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
+            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)
             
             #tension in the free length
             q_l = q / V_f * H(l / 2 - abs(x))
@@ -202,6 +202,8 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
 
 
 if __name__ == '__main__':
+    Ll = 3.
+    Lr = 35.
     t = 0.1
     Ef = 72e3
     Em = 30e3
@@ -209,15 +211,18 @@ if __name__ == '__main__':
     theta = 0.
     xi = 10.0179
     phi = 1.
-    Ll = 3.
-    Lr = 35.
     r = 0.013
-    #Vf = 0.0174887
     V_f = 0.2
+    
     def Pw(w):
         P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
-        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx')
+        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
+        #plt.legend(loc='best')
+        plt.ylim(0,)
+        plt.ylabel('stress ', fontsize=14)
+        plt.xlabel('w', fontsize=14)
+        plt.title('Pullout Resp Func Clamped Fiber EMTRX')
         plt.show()
         
   
@@ -226,16 +231,19 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
         q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
-        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        plt.plot(x, q, lw=2, color='black', label='stress along filament')
+        plt.ylabel('stress', fontsize=14)
+        plt.xlabel('position', fontsize=14)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
-        plt.legend(loc='best')
-        #plt.ylim(0, 200)
+        plt.title('Stress Along Filament EMTRX')
+        #plt.legend(loc='best')
+        plt.ylim(0,)
         plt.show()
         
     
     w = linspace(0, 1, 300)
-    #Pw(w)
+    Pw(w)
     
     x = linspace(-40, 40, 300)
     SP(x)
