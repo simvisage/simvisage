@@ -12,10 +12,8 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements, cached_property, Property
-
-from enthought.traits.ui.ui_traits import Image
 
 from math import pi
 
@@ -42,7 +40,6 @@ class CBEMClampedFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -232,7 +229,7 @@ if __name__ == '__main__':
         w = linspace(0, .5, 300)
         P = CBEMClampedFiber()
         q = P(w, t, 10., .89, 72e3, 30000., 50., 0.01, 999, 1., 15., 30., 10)
-        plt.plot(w, q[0], label='CB')
+        plt.plot(w, q, label='CB')
         plt.legend()
         plt.show()
 
@@ -245,22 +242,8 @@ if __name__ == '__main__':
         plt.yticks(fontsize=14)
         plt.legend(loc='best')
         plt.show()
-
-    def SP2():
-        plt.figure()
-        cbcsp = CBEMClampedFiberSP()
-        x = linspace(-100, 40, 7)
-        print x
-        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
-        print q
-        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
-        plt.xticks(fontsize = 14)
-        plt.yticks(fontsize = 14)
-        plt.legend(loc = 'best')
-        plt.ylim(0,60)
         
     Pw()
     #SP()
-    #SP2()
-    #plt.show()
+
 
