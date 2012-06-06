@@ -215,10 +215,21 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
 if __name__ == '__main__':
 
-    t = 2.
+    t = 0.4
+    Af = 3.84e-5
+    Ef = 200e3
+    Am = 8400
+    Em = 25e3
+    l = 10.
+    theta = 0.0
+    xi = 50000
+    phi = 1.
+    Ll = 10.
+    Lr = 10.
+    Nf = 2304000.
 
     def Pw():
-        w = linspace(0, .8, 300)
+        w = linspace(0, .5, 300)
         P = CBEMClampedFiber()
         q = P(w, t, 10., .89, 72e3, 30000., 50., 0.01, 999, 1., 15., 30., 10)
         plt.plot(w, q[0], label='CB')
@@ -235,5 +246,21 @@ if __name__ == '__main__':
         plt.legend(loc='best')
         plt.show()
 
+    def SP2():
+        plt.figure()
+        cbcsp = CBEMClampedFiberSP()
+        x = linspace(-100, 40, 7)
+        print x
+        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
+        print q
+        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
+        plt.xticks(fontsize = 14)
+        plt.yticks(fontsize = 14)
+        plt.legend(loc = 'best')
+        plt.ylim(0,60)
+        
     Pw()
-    SP()
+    #SP()
+    #SP2()
+    #plt.show()
+

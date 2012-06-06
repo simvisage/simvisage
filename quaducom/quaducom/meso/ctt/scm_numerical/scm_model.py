@@ -12,32 +12,26 @@
 #
 # Created on Oct 21, 2011 by: rch
 
-<<<<<<< HEAD
 from etsproxy.traits.api import \
     HasTraits, Float, List, Range, \
     Callable, Instance, Trait, Int, \
     cached_property, Property, \
     implements, Interface, Array, WeakRef, \
     DelegatesTo, on_trait_change
-== == == = 
-from etsproxy.traits.api import \
-    HasTraits, Instance, on_trait_change, Int, Array, Tuple, List
->>>>>>> refs / heads / etsproxy
 
-<<<<<<< HEAD
+from etsproxy.traits.api import \
+    HasTraits, Instance, on_trait_change, Int, Array, Tuple, List, Callable, Interface, \
+    implements, Trait, cached_property, Property, Float
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
 from stats.spirrid.rv import RV
 from interpolated_spirrid import InterpolatedSPIRRID, NonInterpolatedSPIRRID
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
-== == == = 
 from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Range, Button
 from etsproxy.traits.ui.api import View, Item, Tabbed, VGroup, \
                                 VSplit, Group
 from etsproxy.traits.ui.menu import OKButton
->>>>>>> refs / heads / etsproxy
-
 import numpy as np
 
 class CBRandomSample(HasTraits):
@@ -312,7 +306,8 @@ class CTT(HasTraits):
     sigma_r = Property(Array, depends_on = 'cb_list')
     @cached_property
     def _get_sigma_r(self):
-        return (self.applied_force[:, np.newaxis] - self.sigma_m * self.cb_randomization.q.A_m) / self.cb_randomization.q.A_r
+        return ((self.applied_force[:, np.newaxis] - self.sigma_m * self.cb_randomization.q.A_m) /
+                self.cb_randomization.q.A_r / self.cb_randomization.q.Nf)
 
     eps_r = Property(Array, depends_on = 'cb_list')
     @cached_property
@@ -323,7 +318,8 @@ class CTT(HasTraits):
     def _get_eps_sigma(self):
         
         eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
-        sigma = self.applied_force / (self.cb_randomization.q.A_m + self.cb_randomization.q.A_r)
+        sigma = self.applied_force / (self.cb_randomization.q.A_m + self.cb_randomization.q.A_r *
+                                      self.cb_randomization.q.Nf)
         return eps, sigma
 
 if __name__ == '__main__':
@@ -332,56 +328,55 @@ if __name__ == '__main__':
         CBEMClampedFiberSP
     from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
-    import etsproxy.mayavi.mlab as m
-    from stats.spirrid import orthogonalize
-
-    length = 1000.
-    nx = 2000
-    random_field = RandomField(lacor = 5.,
-                                xgrid = np.linspace(0., length, 400),
-                                nsim = 1,
-                                loc = 0.3,
-                                shape = 10.,
-                                scale = 5.,
-                                non_negative_check = True,
-                                distribution = 'Weibull'
-                               )
-
-    rf = CBEMClampedFiberSP()
-    rand = FunctionRandomization(q = rf,
-         evars = dict(w = np.linspace(0.0, .25, 40),
-                       x = np.linspace(-50., 50., 60),
-                       Ll = np.linspace(1., 70., 5),
-                       Lr = np.linspace(1., 70., 5),
-                        ),
-         tvars = dict(tau = .3, #RV('uniform', 0.7, 1.0),
-                       l = RV('uniform', .0, 20.0),
-                       A_r = 5.31e-4,
-                       E_r = 72e3,
-                       theta = 0.01, #RV('uniform', 0.0, .05),
-                       xi = 0.5, #RV( 'weibull_min', scale = 0.017, shape = 5, n_int = 10 ),
-                       phi = 1.0,
-                       E_m = 30e3,
-                       A_m = 50.,
-                       Nf = 1700.,
-                        ),
-         n_int = 10)
-
+    #import etsproxy.mayavi.mlab as m
+    from stats.spirrid import make_ogrid as orthogonalize
+    import pickle
 
 #    t = .1
-#    Af = 5.31e-4
-#    Ef = 72e3
-#    Am = 50. / 1700
-#    Em = 30e3
+    Af = 3.84e-5
+    Ef = 200e3
+    Am = 8400.
+    Em = 25e3
 #    l = 10.
 #    theta = 0.01
 #    xi = 0.0179
 #    phi = 1.
 #    Ll = 50.
 #    Lr = 20.
-#    Nf = 1.
+    Nf = 2304000.
 
+    length = 600.
+    nx = 600
+    random_field = RandomField(lacor = 4.,
+                                xgrid = np.linspace(0., length, 600),
+                                nsim = 1,
+                                loc = .0,
+                                shape = 7.5,
+                                scale = 7.8,
+                                non_negative_check = True,
+                                distribution = 'Weibull'
+                               )
 
+    rf = CBEMClampedFiberSP(A_r = Af, A_m = Am, Nf = Nf, E_r = Ef, E_m = Em)
+    rand = FunctionRandomization(q = rf,
+         evars = dict(w = np.linspace(0.0, .25, 35),
+                       x = np.linspace(-50., 50., 30),
+                       Ll = np.linspace(1., 70., 5),
+                       Lr = np.linspace(1., 70., 5),
+                        ),
+         tvars = dict( tau = .5,#RV('uniform', .4, .8),
+                       l = 10.0,#RV('uniform', 4.0, 12.0),
+                       A_r = Af,
+                       E_r = Ef,
+                       theta = 0.01, #RV('uniform', 0.0, .05),
+                       xi = 1e20, #RV( 'weibull_min', scale = 0.017, shape = 5, n_int = 10 ),
+                       phi = 1.0,
+                       E_m = Em,
+                       A_m = Am,
+                       Nf = Nf,
+                       
+                        ),
+         n_int = 10)
 
     ctt = CTT(length = length,
               nx = nx,
@@ -389,66 +384,46 @@ if __name__ == '__main__':
               cb_randomization = rand,
               cb_type = 'mean',
               force_min = 0.1,
-              force_max = 200,
-              n_force = 3000
+              force_max = 500000,
+              n_force = 100
               )
-
 
     ctt.evaluate()
 
     def plot():
-#        e_arr = orthogonalize([ctt.applied_force, ctt.x_arr])
-#        n_e_arr = [ e / np.max(np.fabs(e)) for e in e_arr ]
+        #e_arr = orthogonalize([ctt.applied_force, ctt.x_arr])
+        #n_e_arr = [ e / np.max(np.fabs(e)) for e in e_arr ]
+
+        #scalar1 = ctt.matrix_strength
+     #   scalar2 = ctt.sigma_m
+    #    scalar3 = ctt.x_area
+
+        #n_scalar1 = scalar1 / np.max(np.fabs(scalar1))
+     #   n_scalar2 = scalar2 / np.max(np.fabs(scalar1))
+    #    n_scalar3 = scalar3 / np.max(np.fabs(scalar3))
+
+        #m.surf(n_e_arr[0], n_e_arr[1], n_scalar1)
+     #   m.surf(n_e_arr[0], n_e_arr[1], n_scalar2)
+    #    m.surf(n_e_arr[0], n_e_arr[1], n_scalar3)
 #
-#        scalar1 = ctt.matrix_strength
-#        scalar2 = ctt.sigma_m
-#    #    scalar3 = ctt.x_area
-#
-#        n_scalar1 = scalar1 / np.max(np.fabs(scalar1))
-#        n_scalar2 = scalar2 / np.max(np.fabs(scalar1))
-#    #    n_scalar3 = scalar3 / np.max(np.fabs(scalar3))
-#
-#        #m.surf(n_e_arr[0], n_e_arr[1], n_scalar1)
-#        #m.surf(n_e_arr[0], n_e_arr[1], n_scalar2)
-#    #    m.surf(n_e_arr[0], n_e_arr[1], n_scalar3)
-#
-#        eps, sigma = ctt.eps_sigma
+        eps, sigma = ctt.eps_sigma
         w_list = []
+
         for i, crack in enumerate(ctt.cb_list):
             w_list.append(crack.get_crack_width()[-1])
+        file = open('w1_3', 'w')
+        pickle.dump(w_list, file)
+        plt.hist(w_list, bins = 20, normed = False, color = 'white', lw = 2)
 
-        plt.hist(w_list, bins = 20, normed = True)
-        #plt.plot(eps, sigma)
-        plt.title('Histogram der Rissbreiten')
-        plt.ylabel('PMF')
-        plt.xlabel('crack width [mm]')
-        plt.legend(loc = 'best')
+#        plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
+#        file = open('ld', 'r')
+#        ld = pickle.load(file)
+#        plt.plot(ld[0][:-100]/550.,ld[1][:-100]/0.84, color = 'black', lw = 2, ls = 'dashed', label = 'experiment')
+#        plt.title('crack opening histogram')
+#        plt.ylabel('PMF')
+#        plt.xlabel('crack width [mm]')
+#        plt.legend(loc = 'best')
         plt.show()
         #m.show()
 
     plot()
-
-
-    #for crack in range(20):
-    #ctt.evaluate()
-
-#    file1 = open('sigma_m.pickle', 'w')
-#    file2 = open('eps_m.pickle', 'w')
-#    file3 = open('eps_r.pickle', 'w')
-#    file4 = open('ld.pickle', 'w')
-#    file5 = open('matr_strength.pickle', 'w')
-#    file6 = open('no_crack_sigma.pickle', 'w')
-#    pickle.dump(ctt.sigma_m, file1)
-#    pickle.dump(ctt.eps_m, file2)
-#    pickle.dump(ctt.eps_r, file3)
-#    pickle.dump(ctt.eps_sigma, file4)
-#    pickle.dump(ctt.matrix_strength, file5)
-#    pickle.dump(ctt.sigma_mxP_ff, file6)
-#    file1.close()
-#    file2.close()
-#    file3.close()
-#    file4.close()
-#    file5.close()
-#    file6.close()
-
-
