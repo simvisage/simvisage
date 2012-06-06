@@ -37,9 +37,9 @@ simdb = SimDB()
 
 class SigFlCalib(HasTraits):
 
-    # thickness of the unreinfoced middle layer of cross section
+    # thickness of reinforced cross section
     #
-    thickness_reinf = Float(0.06)
+    thickness = Float(0.06, geo_input = True)
 
     #---------------------------------------------------------------
     # material properties textile reinforcement
@@ -47,12 +47,12 @@ class SigFlCalib(HasTraits):
 
     # security factor 'gamma_tex' for the textile reinforcement
     #
-    gamma_tex = Float(1.5)
+    gamma_tex = Float(1.5, input = True)
 
     # reduction factor to drive the characteristic value from mean value
     # of the experiment (EN DIN 1990)
     #
-    beta = Float(0.81)
+    beta = Float(0.81, input = True)
 
     #---------------------------------------------------------------
     # material properties concrete
@@ -60,17 +60,24 @@ class SigFlCalib(HasTraits):
 
     # characteristic compressive force [MPa]
     #
-    f_ck = Float(60.0, changed = True)
+    f_ck = Float(60.0, input = True)
+
+#    # mean value of the compressive force [MPa]
+#    # @todo: how to get the realistic concrete strength (use the measured mean value?)
+#
+#    f_cm = Property( Float ) 
+#    def _get_f_cm( self ):
+#        return 1.25 * self.f_ck
 
 #    # security factor 'gamma_c' for hight strength concrete (>C55/67)
 #    #
-#    gamma_c = Property
+#    gamma_c = Property( Float )
 #    def _get_gamma_c( self ):
 #        return 1.5 * ( 1 / ( 1.1 - self.f_ck / 500. ) )
 #
 #    # design value of the compressive force [MPa]
 #    #
-#    f_cd = Property
+#    f_cd = Property( Float )
 #    def _get_f_cd( self ):
 #        return 0.85 * self.f_ck / self.gamma_c
 
@@ -81,7 +88,7 @@ class SigFlCalib(HasTraits):
     # ultimute strain theoreticaly (Brockman): about 4.5
     # NOTE: strain was meassured at a distance of 5 cm
     #
-    eps_c = Float(0.003, changed = True) # 3 promile
+    eps_c = Float(0.003, input = True) # 3 promile
 
     #---------------------------------------------------------------
     # properties of the composite cross section
@@ -89,42 +96,49 @@ class SigFlCalib(HasTraits):
 
     # width of the cross section [m]
     #
-    width = Float(0.20, changed = True)
+    width = Float(0.20, geo_input = True)
 
     # total number of reinforcement layers [-]
     # 
-    n_layers = Float(12, changed = True)
+    n_layers = Float(12, geo_input = True)
 
     # spacing between the layers [m]
     #
-    s_tex_z = Property(depends_on = '+changed')
+    s_tex_z = Property(depends_on = '+geo_input')
     @cached_property
     def _get_s_tex_z(self):
-        return self.thickness_reinf / (self.n_layers + 1)
+        return self.thickness / (self.n_layers + 1)
 
     # tensile force of one reinforced composite layer [kN]:
     #
-    n_rovings = Int(23, changed = True)
+    n_rovings = Int(23, input = True)
 
-    A_roving = Float(0.461)
+    # cross section of one roving [mm**2]:
+    #
+    A_roving = Float(0.461, input = True)
 
     # distance from the top of each reinforcement layer [m]:
     #
-    z_t_i_arr = Property(depends_on = '+changed')
+    z_t_i_arr = Property(depends_on = '+geo_input')
     @cached_property
     def _get_z_t_i_arr(self):
-        return array([ self.thickness_reinf - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
+        return array([ self.thickness - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
                       dtype = float)
 
-    # iteration counter:
-    #
-    n = 1
 
-    sig_comp_i_arr = Array(float)
 
-    eps_t_i_arr = Array(float)
+    # @todo: what about the global variables? remove?
 
-    def layer_response_eps_t_E_yarn(self, u, thickness_unreinf):
+#    E_yarn = Float
+#    sig_comp_i_arr = Array(float)
+
+#    eps_t_i_arr = Property( Array(float), depends_on = '+input')
+#    @cached_property
+#    def _get_eps_t_i_arr(self):
+#        return self.layer_response( self, u )
+
+
+    def layer_response_eps_t_E_yarn( self, u ):
         '''Unknown constitutive law of the layer
         '''
         eps_t, E_yarn = u
@@ -132,9 +146,8 @@ class SigFlCalib(HasTraits):
         # derived params depending on value for 'eps_t'
         # ------------------------------------                
 
-        thickness = self.thickness_reinf + thickness_unreinf
-        mask_arr_reinf = hstack([ ones(self.n_layers / 2), zeros(self.n_layers / 2)])
-        z_t_i_arr = self.z_t_i_arr + mask_arr_reinf * thickness_unreinf
+        thickness = self.thickness 
+        z_t_i_arr = self.z_t_i_arr 
 
         # heights of the compressive zone:
         #
@@ -148,7 +161,10 @@ class SigFlCalib(HasTraits):
         # use a ramp function to consider only positive strains
         eps_t_i_arr = (fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
         # print 'eps_t_i_arr', eps_t_i_arr
-        self.eps_t_i_arr = ncopy(eps_t_i_arr)
+
+        # @todo: does this make sense to send this as a global variable?
+        # use property instead ?!    
+#        self.eps_t_i_arr = ncopy( eps_t_i_arr )
 
         # construct the constitutive law of the crack bridge - linear elastic
         # with the search effective modulus of elasticity 
@@ -161,9 +177,8 @@ class SigFlCalib(HasTraits):
         mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
         return x, eps_t_i_arr, mfn_line_array
 
-    E_yarn = Float
 
-    def layer_response_eps_t_eps_c(self, u, thickness_unreinf):
+    def layer_response_eps_t_eps_c( self, u ):
         '''Unknown constitutive law of the layer
         '''
         eps_t, eps_c = u
@@ -172,10 +187,9 @@ class SigFlCalib(HasTraits):
 
         self.eps_c = eps_c
 
-        thickness = self.thickness_reinf + thickness_unreinf
-        mask_arr_reinf = hstack([ ones(self.n_layers / 2), zeros(self.n_layers / 2)])
-        z_t_i_arr = self.z_t_i_arr + mask_arr_reinf * thickness_unreinf
-
+        thickness = self.thickness 
+        z_t_i_arr = self.z_t_i_arr 
+        
         # ------------------------------------                
         # derived params depending on value for 'eps_t'
         # ------------------------------------                
@@ -192,7 +206,7 @@ class SigFlCalib(HasTraits):
         # use a ramp function to consider only positive strains
         eps_t_i_arr = (fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
         # print 'eps_t_i_arr', eps_t_i_arr
-        self.eps_t_i_arr = ncopy(eps_t_i_arr)
+#        self.eps_t_i_arr = ncopy(eps_t_i_arr)
 
         # construct the constitutive law of the crack bridge - linear elastic
         # with the search effective modulus of elasticity 
@@ -208,25 +222,25 @@ class SigFlCalib(HasTraits):
         xdata = array([0., eps_fail ])
         ydata = array([0., sig_fail ])
 
-        # plastic law of the crack bridge
-        #-------------------------------
-        # conservative for iteration of resistance stress
-        # 'Widerstandsseite'
-        #
+#         # plastic law of the crack bridge
+#         #-------------------------------
+#         # conservative for iteration of resistance stress
+#         # 'Widerstandsseite'
+#        
 #        xdata = array( [0, 0.01 * eps_fail, eps_fail ] )
 #        ydata = array( [0, 0.99 * sig_fail, sig_fail ] )
 
         mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
-
         return x, eps_t_i_arr, mfn_line_array
 
-    def get_f_t_i_arr(self, u, thickness_unreinf):
-        # tensile stress at the height of each reinforcement layer [MPa]:
-        #
-        x, eps_t_i_arr, layer_response = self.layer_response(u, thickness_unreinf)
 
-        get_sig_i_arr = frompyfunc(layer_response.get_value, 1, 1)
-        sig_i_arr = get_sig_i_arr(eps_t_i_arr)
+    def get_f_t_i_arr( self, u ):
+        '''tensile stress at the height of each reinforcement layer [MPa]:
+        '''
+        x, eps_t_i_arr, layer_response = self.layer_response( u )
+
+        get_sig_t_i_arr = frompyfunc( layer_response.get_value, 1, 1 )
+        sig_t_i_arr = get_sig_t_i_arr( eps_t_i_arr )
 
         # print 'sig_i_arr', sig_i_arr
 
@@ -236,15 +250,15 @@ class SigFlCalib(HasTraits):
 
         A_roving = self.A_roving
 
-        f_t_i_arr = sig_i_arr * n_rovings * A_roving / 1000.
+        f_t_i_arr = sig_t_i_arr * n_rovings * A_roving / 1000.
         # print 'f_t_i_arr', f_t_i_arr
 
         return x, f_t_i_arr
 
-    def get_sig_comp_i_arr(self, u, thickness_unreinf):
-        # sig_comp_i_arr [MPa]:
-        #
-        x, f_t_i_arr = self.get_f_t_i_arr(u, thickness_unreinf)
+    def get_sig_comp_i_arr( self, u ):
+        '''sig_comp_i_arr [MPa]:
+        '''
+        x, f_t_i_arr = self.get_f_t_i_arr( u )
         return f_t_i_arr / self.width / self.s_tex_z / 1000.0
 
     #-----------------------------
@@ -270,7 +284,7 @@ class SigFlCalib(HasTraits):
     # for bi-linear stress-strain-diagram of the concrete
     #-----------------------------
 
-    sig_c_mfn = Property(depends_on = '+changed')
+    sig_c_mfn = Property(depends_on = '+input')
     @cached_property
     def _get_sig_c_mfn(self):
         xdata = array([0., 0.00135, 0.0035])
@@ -281,7 +295,7 @@ class SigFlCalib(HasTraits):
 #    # for quadratic stress-strain-diagram of the concrete
 #    #-----------------------------
 #
-#    sig_c_mfn = Property( depends_on = '+changed' )
+#    sig_c_mfn = Property( depends_on = '+input' )
 #    @cached_property
 #    def _get_sig_c_mfn( self ):
 #        xdata = array( [0., 0.00135, 0.0035] )
@@ -294,8 +308,8 @@ class SigFlCalib(HasTraits):
 
 #    get_sig_c_vectorized = frompyfunc( get_sig_c, 1, 1 )
 
-#    def get_a( self, u, thickness_unreinf ):
-#        x, f_t_i_arr = self.get_f_t_i_arr( u, thickness_unreinf )
+#    def get_a( self, u ):
+#        x, f_t_i_arr = self.get_f_t_i_arr( u )
 #        a = self.k * x / 2.
 #        return a
 
@@ -312,7 +326,11 @@ class SigFlCalib(HasTraits):
         return arange(self.n_c) / self.n_c + 1. / (2. * self.n_c)
 
 
-    def get_lack_of_fit(self, u, M, N, thickness_unreinf):
+    # iteration counter:
+    #
+    n = 1
+
+    def get_lack_of_fit(self, u, M, N ):
         '''Return the difference between 
         N_c (=compressive force of the compressive zone of the concrete) 
         N_t (=total tensile force of the reinforcement layers)
@@ -323,22 +341,14 @@ class SigFlCalib(HasTraits):
 #        print '\n'
 #        print '------------- iteration: %g ----------------------------' % ( self.n )
 
-        x, f_t_i_arr = self.get_f_t_i_arr(u, thickness_unreinf)
+        x, f_t_i_arr = self.get_f_t_i_arr( u )
 
-        # total cross sectional thickness consisting of reinforced edge layers
-        # at top and botton of the cross section and an unreinforced internal
-        # layer (sandwich layup)
+        # heigth of the cross section
         #
-        thickness = self.thickness_reinf + thickness_unreinf
+        thickness = self.thickness
 #        print 'thickness', thickness
 
-        # mask array distinction between the lower and upper layers of the 
-        # reiforcement layers
-        #
-        mask_arr_reinf = hstack([ ones(self.n_layers / 2), zeros(self.n_layers / 2)])
-#        print 'mask_arr_reinf', mask_arr_reinf
-
-        z_t_i_arr = self.z_t_i_arr + mask_arr_reinf * thickness_unreinf
+        z_t_i_arr = self.z_t_i_arr
 #        print 'z_t_i_arr', z_t_i_arr
 
         # print 'sig_comp_i_arr', sig_comp_i_arr
@@ -346,7 +356,7 @@ class SigFlCalib(HasTraits):
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (characteristic value)
         #
-        N_tk = sum(f_t_i_arr)
+        N_tk = sum( f_t_i_arr )
         # print 'N_tk', N_tk
 
         # total tensile force of all layers of the composite tensile zone [kN]:
@@ -384,7 +394,7 @@ class SigFlCalib(HasTraits):
         z_c_i_arr = x * self.x_discr[::-1]
 #        print 'z_c_i_arr', z_c_i_arr
 
-        N_ck = sum(f_c_i_arr)
+        N_ck = sum( f_c_i_arr )
 
 #        # total compressive force of the composite compressive zone [kN]:
 #        # (design value)
@@ -403,11 +413,11 @@ class SigFlCalib(HasTraits):
         # resistance moment of one reinforced composite layer [kNm]:
         # (characteristic value)
         #
-        M_tk = dot(f_t_i_arr, z_t_i_arr)
+        M_tk = dot( f_t_i_arr, z_t_i_arr )
         # print 'M_tk', M_tk
 
 #        M_ck = -a * N_ck
-        M_ck = dot(f_c_i_arr, z_c_i_arr)
+        M_ck = dot( f_c_i_arr, z_c_i_arr )
 
         M_internal = M_tk + M_ck
 
@@ -421,8 +431,12 @@ class SigFlCalib(HasTraits):
 
         return array([ d_N, d_M ], dtype = float)
 
+    # iteration tries (up to now one try)
+    # @todo: try different starting vectors 'u0' :
+    #
     m = 0
-    def fit_response(self, M, N, thickness_unreinf, u0_start = [ 0.010, 0.0033 ]):
+    
+    def fit_response(self, M, N, u0 = [ 0.010, 0.0033 ]):
 #                      elem_no = 0, mx = 0.0, my = 0.0, mxy = 0.0, nx = 0.0, ny = 0.0, nxy = 0.0, \
 #                      sig1_up = 0, sig1_lo_sig_up = 0, sig1_lo = 0, sig1_up_sig_lo = 0, ):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -430,13 +444,13 @@ class SigFlCalib(HasTraits):
         is smaller then 'xtol' defined in function 'brentq'.
         NOTE: the method 'get_lack_of_fit' returns the relative error.
         '''
-        self.m += 1
+#        self.m += 1
 #        print '--- fit_response called --- %g' % ( self.m )
 
 #        print self.thickness
 #        print self.width
 
-        thickness = self.thickness_reinf + thickness_unreinf
+        thickness = self.thickness
 
         W = thickness ** 2 * self.width / 6.0
         A = thickness * self.width
@@ -448,25 +462,22 @@ class SigFlCalib(HasTraits):
         sig_minus = sig_normal - sig_bending
         print 'M', M
         print 'N', N
-        print 'W', W
-        print 'A', A
-        print 'M/W', sig_bending
-        print 'N/A', sig_normal
+#        print 'W', W
+#        print 'A', A
+#        print 'M/W', sig_bending
+#        print 'N/A', sig_normal
         print 'thickness', thickness
         print 'self.width', self.width
 
-        print 'sig_plus', sig_plus
-        print 'sig_minus', sig_minus
+#        print 'sig_plus', sig_plus
+#        print 'sig_minus', sig_minus
 
-        E_comp = 30000. # MPa
-        eps_t_estimate = abs(sig_plus) / E_comp
-        eps_c_estimate = abs(sig_minus) / E_comp
 
         if sig_plus * sig_minus < 0.0:
             # bending
 
             # use scipy-functionality to get the iterated value of 'eps_t'
-            # NOTE: get_lack_of_fit must have a sign change as a requirement
+            # NOTE: 'get_lack_of_fit' must have a sign change as a requirement
             # for the function call 'brentq' to work property. 
 
             # The method brentq has optional arguments such as
@@ -476,14 +487,28 @@ class SigFlCalib(HasTraits):
             #
             xtol = 1.0e-5
 
+            # default value as defined in 'calib_config'
+            #
+            u0 = self.u0
+            
             #----------------
             # @todo: how can the rupture strain in the bending test be estimated realistically?
             # in which boundaries shall brentq search for a solution? (5*eps_u)?
             #----------------
-            u0 = self.u0
-            u0_start = [eps_t_estimate, eps_c_estimate]
-            print 'u0_start', u0_start
-            u_sol = fsolve(self.get_lack_of_fit, u0_start, args = (M, N, thickness_unreinf), xtol = xtol)
+            #
+            # @todo: find a starting estimate for 'fsolve'
+            # depending on the given values of 'M' and 'N'
+            #
+#            E_comp = 30000. # MPa
+#            eps_t_estimate = abs(sig_plus) / E_comp
+#            eps_c_estimate = abs(sig_minus) / E_comp
+#            u0 = [eps_t_estimate, eps_c_estimate]
+#            print 'u0', u0
+
+            # use 'fsolve' to find the solution vector 'u' in order to minimize
+            # the 'lack_of_fit' within the given tolerance 'xtol'
+            #
+            u_sol = fsolve(self.get_lack_of_fit, u0, args = (M, N), xtol = xtol)
 #            print 'u_sol', u_sol
 
             # @todo: check if 'brenth' gives better fitting results; faster? 
@@ -491,7 +516,7 @@ class SigFlCalib(HasTraits):
 
         else:
 
-            raise ValueError, 'pure tension'# with\n input elem_num = %d,\n %g, %g, %g, %g, %g, %g, %g, %g, %g, %g' % ( elem_no, mx, my, mxy, nx, ny, nxy, sig1_up, sig1_lo_sig_up, sig1_lo, sig1_up_sig_lo )
+            raise ValueError, 'pure tension or pure bending'# with\n input elem_num = %d,\n %g, %g, %g, %g, %g, %g, %g, %g, %g, %g' % ( elem_no, mx, my, mxy, nx, ny, nxy, sig1_up, sig1_lo_sig_up, sig1_lo, sig1_up_sig_lo )
 
 #        print 'u_sol', u_sol
 #        print 'u_sol.shape', u_sol.shape
@@ -501,7 +526,7 @@ class SigFlCalib(HasTraits):
 
     calib_config = Trait('eps_t_E_yarn',
                           {'eps_t_E_yarn' : ('layer_response_eps_t_E_yarn',
-                                              array([ 0.01, 50000.0 ])),
+                                              array([ 0.010, 50000.0 ])),
                            'eps_t_eps_c' : ('layer_response_eps_t_eps_c',
                                              array([ 0.010, 0.0033 ])) },
                          modified = True)
@@ -516,105 +541,12 @@ class SigFlCalib(HasTraits):
     def _get_u0(self):
         return self.calib_config_[1]
 
-    def get_sig_max(self, u, thickness_unreinf):
-        sig_max = max(self.get_sig_comp_i_arr(u, thickness_unreinf))
+    def get_sig_max( self, u ):
+        sig_max = max(self.get_sig_comp_i_arr( u ))
         print 'sig_max', sig_max
         return sig_max
 
 if __name__ == '__main__':
-
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last five Jacobian evaluations.
-#    M 2.40048145726
-#    N -46.4211016241
-#    W 0.00245228166667
-#    A 0.1213
-#    M/W 978.87672933
-#    N/A -382.69663334
-#    thickness 0.1213
-#    self.width 1.0
-#    sig_plus 0.59618009599
-#    sig_minus -1.36157336267
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last five Jacobian evaluations.
-#    M 1.48189230462
-#    N -12.6736994734
-#    W 0.00245228166667
-#    A 0.1213
-#    M/W 604.291229986
-#    N/A -104.482271009
-#    thickness 0.1213
-#    self.width 1.0
-#    sig_plus 0.499808958977
-#    sig_minus -0.708773500995
-#    M 0.522605261163
-#    N -5.69214290302
-#    W 0.00141066666667
-#    A 0.092
-#    M/W 370.466867554
-#    N/A -61.8711185111
-#    thickness 0.092
-#    self.width 1.0
-#    sig_plus 0.308595749043
-#    sig_minus -0.432337986065
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last five Jacobian evaluations.
-#    M 0.0968931191613
-#    N 2.66739081386
-#    W 0.000866401666667
-#    A 0.0721
-#    M/W 111.833948259
-#    N/A 36.995711704
-#    thickness 0.0721
-#    self.width 1.0
-#    sig_plus 0.148829659963
-#    sig_minus -0.0748382365548
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last five Jacobian evaluations.
-#    M 0.04899455187
-#    N -0.353559761996
-#    W 0.000606015
-#    A 0.0603
-#    M/W 80.8470943294
-#    N/A -5.86334597008
-#    thickness 0.0603
-#    self.width 1.0
-#    sig_plus 0.0749837483593
-#    sig_minus -0.0867104402995
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last ten iterations.
-#    M 1.28501248235
-#    N -48.1198047849
-#    W 0.00141066666667
-#    A 0.092
-#    M/W 910.925672741
-#    N/A -523.041356357
-#    thickness 0.092
-#    self.width 1.0
-#    sig_plus 0.387884316384
-#    sig_minus -1.4339670291
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last five Jacobian evaluations.
-#    M 2.76615857258
-#    N -50.0719958244
-#    W 0.00245228166667
-#    A 0.1213
-#    M/W 1127.99382313
-#    N/A -412.794689401
-#    thickness 0.1213
-#    self.width 1.0
-#    sig_plus 0.715199133731
-#    sig_minus -1.54078851253
-#    Warning: The iteration is not making good progress, as measured by the 
-#      improvement from the last ten iterations.
-
-
-
-
-
-
-
-
 
     import pylab as p
 
@@ -629,12 +561,10 @@ if __name__ == '__main__':
     #
     M = 3.49
 
-    # value per m
+    # bending moment corresponds to a 
+    # line moment of the following value in [kNm/m]
+    #
 #    M = 5*3.49
-
-    M = 2.40048145726
-    N = -46.4211016241
-    thickness_unreinf = 0.1213 - 0.06
 
     #------------------------------------------------
     # get 'E_yarn' and 'eps_t' for given 'eps_c'
@@ -643,7 +573,7 @@ if __name__ == '__main__':
     print '\n'
     print 'setup SigFlCalib'
     print '\n'
-    sig_fl_calib = SigFlCalib(# concrete strength after 9 days
+    sig_fl_calib = SigFlCalib( calib_config = 'eps_t_E_yarn',# concrete strength after 9 days
                                #
                                f_ck = 49.9,
 
@@ -651,60 +581,65 @@ if __name__ == '__main__':
                                #
                                eps_c = 3.3 / 1000.,
 
-                               # values for experiment beam with width = 20 cm
+                               # values for experiment beam with width = 0.20 m
                                #
-#                               width = 0.20,
-#                               n_roving = 23,
+                               width = 0.20,
+                               n_roving = 23,
 
-                               # values per m
-                               #
-                               width = 1.0,
-                               n_roving = 120,
+#                               # values per m
+#                               #
+#                               width = 1.0,
+#                               n_roving = 120,
 
                               )
 
+    #------------------------------------------------
+    # calibration of effective crack bridge law:
+    #------------------------------------------------
+    #
 #    sig_fl_calib.calib_config = 'eps_t_E_yarn'
-#    eps_t, E_yarn = sig_fl_calib.fit_response( M, N, thickness_unreinf )
-#    print 'eps_t', eps_t
-#    print 'E_yarn', E_yarn
-
+    sig_fl_calib.set(calib_config = 'eps_t_E_yarn')
+    
+    eps_t, E_yarn = sig_fl_calib.fit_response( M, N )
+    print 'E_yarn', E_yarn
+    eps_c = sig_fl_calib.eps_c
+    print 'eps_t', eps_t
+    print 'eps_c', eps_c
+    print 'max_sig', sig_fl_calib.get_sig_max([ eps_t, eps_c ] )
 
     #------------------------------------------------
     # get 'eps_c', 'esp_t' for given/calibrated 'E_yarn' 
     #------------------------------------------------
-    #
-    E_yarn = 84384.2115269
+    
+#    E_yarn = 84384.2115269
+#    N = 10
+#    M = 30
     print '\n'
     print 'set E_yarn to %g' % (E_yarn)
     print '\n'
     sig_fl_calib.set(E_yarn = E_yarn,
-                      calib_config = 'eps_t_eps_c')
+                     calib_config = 'eps_t_eps_c')
 
-    u0_start = [0.003, 0.01]
-    print 'starting with u0_start = [%g, %g]' % (u0_start[0], u0_start[1])
+    u0 = [0.003, 0.01]
+    print 'starting with u0 = [%g, %g]' % (u0[0], u0[1])
 
-    eps_t, eps_c = sig_fl_calib.fit_response(M, N, thickness_unreinf, u0_start)
+    eps_t, eps_c = sig_fl_calib.fit_response( M, N, u0)
     print 'eps_t', eps_t
     print 'eps_c', eps_c
-    print 'max_sig', sig_fl_calib.get_sig_max([ eps_t, eps_c ], thickness_unreinf)
+    print 'max_sig', sig_fl_calib.get_sig_max([ eps_t, eps_c ] )
 
     #------------------------------------------------
     # plot response
     #------------------------------------------------
     #
-    layer_arr = arange(sig_fl_calib.n_layers)
-    sig_comp_i_arr = sig_fl_calib.get_sig_comp_i_arr([eps_t, eps_c], thickness_unreinf)
+    layer_arr = arange( sig_fl_calib.n_layers )
+    sig_comp_i_arr = sig_fl_calib.get_sig_comp_i_arr([eps_t, eps_c] )
     p.bar(layer_arr, sig_comp_i_arr, 0.2)
-    ax2 = p.twinx()
-    ax2.plot(layer_arr, sig_fl_calib.eps_t_i_arr)
+#    ax2 = p.twinx()
+#    ax2.plot(layer_arr, sig_fl_calib.eps_t_i_arr)
 
 #    print 'eps_t_i_arr', sig_fl_calib.eps_t_i_arr
 #    p.plot( layer_arr, sig_fl_calib.eps_t_i_arr )
 
     p.show()
 
-
-#---
-# @todo: get plot including unreinforced layers
-#    n_layers_unreinf = ceil( thickness_unreinf / sig_fl_calib.s_tex_z )
-#    layer_arr = arange( sig_fl_calib.n_layers + n_layers_unreinf )
