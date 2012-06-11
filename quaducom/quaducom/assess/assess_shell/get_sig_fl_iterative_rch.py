@@ -37,22 +37,18 @@ simdb = SimDB()
 
 class SigFlCalib(HasTraits):
 
-    # thickness of reinforced cross section
-    #
-    thickness = Float(0.06, geo_input = True)
-
     #---------------------------------------------------------------
     # material properties textile reinforcement
     #-------------------------------------------------------------------
 
     # security factor 'gamma_tex' for the textile reinforcement
     #
-    gamma_tex = Float(1.5, input = True)
+#    gamma_tex = Float(1.5, input = True)
 
     # reduction factor to drive the characteristic value from mean value
     # of the experiment (EN DIN 1990)
     #
-    beta = Float(0.81, input = True)
+#    beta = Float(0.81, input = True)
 
     #---------------------------------------------------------------
     # material properties concrete
@@ -94,9 +90,9 @@ class SigFlCalib(HasTraits):
     # properties of the composite cross section
     #-------------------------------------------------------------------
 
-    # width of the cross section [m]
+    # thickness of reinforced cross section
     #
-    width = Float(0.20, geo_input = True)
+    thickness = Float(0.06, geo_input = True)
 
     # total number of reinforcement layers [-]
     # 
@@ -109,14 +105,6 @@ class SigFlCalib(HasTraits):
     def _get_s_tex_z(self):
         return self.thickness / (self.n_layers + 1)
 
-    # tensile force of one reinforced composite layer [kN]:
-    #
-    n_rovings = Int(23, input = True)
-
-    # cross section of one roving [mm**2]:
-    #
-    A_roving = Float(0.461, input = True)
-
     # distance from the top of each reinforcement layer [m]:
     #
     z_t_i_arr = Property(depends_on = '+geo_input')
@@ -125,6 +113,22 @@ class SigFlCalib(HasTraits):
         return array([ self.thickness - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
                       dtype = float)
 
+    #---------------------------------------------------------------
+    # properties of the bending specimens (tree point bending test):
+    #---------------------------------------------------------------
+
+    # width of the cross section [m]
+    #
+    width = Float(0.20, input = True)
+    
+    # number of rovings in 0-direction of one composite 
+    # layer of the bending test [-]:
+    #
+    n_rovings = Int(23, input = True)
+
+    # cross section of one roving [mm**2]:
+    #
+    A_roving = Float(0.461, input = True)
 
 
     # @todo: what about the global variables? remove?
@@ -139,7 +143,8 @@ class SigFlCalib(HasTraits):
 
 
     def layer_response_eps_t_E_yarn( self, u ):
-        '''Unknown constitutive law of the layer
+        '''CALIBRATION: derive the unknown constitutive law of the layer
+        (effective crack bridge law)
         '''
         eps_t, E_yarn = u
         # ------------------------------------                
@@ -152,7 +157,7 @@ class SigFlCalib(HasTraits):
         # heights of the compressive zone:
         #
         x = abs(self.eps_c) / (abs(self.eps_c) + abs(eps_t)) * thickness
-        # print 'x', x
+        print 'x', x
 
         # strain at the height of each reinforcement layer [-]:
         #
@@ -166,12 +171,11 @@ class SigFlCalib(HasTraits):
         # use property instead ?!    
 #        self.eps_t_i_arr = ncopy( eps_t_i_arr )
 
-        # construct the constitutive law of the crack bridge - linear elastic
-        # with the search effective modulus of elasticity 
+        # constitutive law of the crack bridge
+        # linear elastic: effective modulus of elasticity 
         #
         eps_fail = eps_t
         sig_fail = E_yarn * eps_fail
-
         xdata = array([0., eps_fail ])
         ydata = array([0., sig_fail ])
         mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
@@ -179,7 +183,7 @@ class SigFlCalib(HasTraits):
 
 
     def layer_response_eps_t_eps_c( self, u ):
-        '''Unknown constitutive law of the layer
+        '''EVALUATION: using the calibrated constitutive law of the layer
         '''
         eps_t, eps_c = u
 
@@ -197,7 +201,7 @@ class SigFlCalib(HasTraits):
         # heights of the compressive zone:
         #
         x = abs(eps_c) / (abs(eps_c) + abs(eps_t)) * thickness
-        # print 'x', x
+        print 'x', x
 
         # strain at the height of each reinforcement layer [-]:
         #
@@ -235,7 +239,7 @@ class SigFlCalib(HasTraits):
 
 
     def get_f_t_i_arr( self, u ):
-        '''tensile stress at the height of each reinforcement layer [MPa]:
+        '''tensile force at the height of each reinforcement layer [kN]:
         '''
         x, eps_t_i_arr, layer_response = self.layer_response( u )
 
@@ -247,26 +251,24 @@ class SigFlCalib(HasTraits):
         # tensile force of one reinforced composite layer [kN]:
         #
         n_rovings = self.n_rovings
-
         A_roving = self.A_roving
-
         f_t_i_arr = sig_t_i_arr * n_rovings * A_roving / 1000.
         # print 'f_t_i_arr', f_t_i_arr
 
         return x, f_t_i_arr
 
     def get_sig_comp_i_arr( self, u ):
-        '''sig_comp_i_arr [MPa]:
+        '''tensile stress at the height of each reinforcement layer [MPa]:
         '''
         x, f_t_i_arr = self.get_f_t_i_arr( u )
         return f_t_i_arr / self.width / self.s_tex_z / 1000.0
 
     #-----------------------------
-    # for simplified constant stress-strain-diagram of the concrete
+    # for simplified constant stress-strain-diagram of the concrete (EC2)
     #-----------------------------
 
 #    # factor [-] to calculate the value of the resulting compressive 
-#    # force, i.e. f_c = chi * fck / gamma_c 
+#    # force, i.e. f_c = fck / gamma_c 
 #    # (for high strength concrete)
 #    #
 #    chi = Property
@@ -281,13 +283,13 @@ class SigFlCalib(HasTraits):
 #        return 1.05 - self.f_ck / 250.
 
     #-----------------------------
-    # for bi-linear stress-strain-diagram of the concrete
+    # for bi-linear stress-strain-diagram of the concrete (EC2)
     #-----------------------------
 
     sig_c_mfn = Property(depends_on = '+input')
     @cached_property
     def _get_sig_c_mfn(self):
-        xdata = array([0., 0.00135, 0.0035])
+        xdata = array([0., 0.00175, 0.0035])
         ydata = array([0., self.f_ck, self.f_ck])
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
@@ -306,7 +308,12 @@ class SigFlCalib(HasTraits):
         sig_c = self.sig_c_mfn.get_value(eps_c)
         return sig_c
 
-#    get_sig_c_vectorized = frompyfunc( get_sig_c, 1, 1 )
+    sig_c_mfn_vect = Property(depends_on = '+input')
+    @cached_property
+    def _get_sig_c_mfn_vect(self):
+        return frompyfunc( self.sig_c_mfn.get_value, 1, 1 )
+
+    get_sig_c_vectorized = frompyfunc( get_sig_c, 1, 1 )
 
 #    def get_a( self, u ):
 #        x, f_t_i_arr = self.get_f_t_i_arr( u )
@@ -315,14 +322,16 @@ class SigFlCalib(HasTraits):
 
     # number of subdivisions of the compressive zone
     #
-    n_c = float(5)
+    n_c = float(20)
 
-    x_discr = Property(Array)
+    x_frac_i = Property(Array)
     @cached_property
-    def _get_x_discr(self):
-        '''subdivide the compression zone 'x' in 'n_c' sub-areas
+    def _get_x_frac_i(self):
+        '''subdivide the compression zone 'x' in 'n_c' sub-areas;
+        'x_frac_i' giving the fraction of each distance of the sub-area from the upper surface 
+        with respect to the compressive zone 'x'
         '''
-#        print 'X_DISCR', arange( self.n_c ) / self.n_c + 1. / ( 2. * self.n_c )
+        print 'x_frac_i', arange( self.n_c ) / self.n_c + 1. / ( 2. * self.n_c )
         return arange(self.n_c) / self.n_c + 1. / (2. * self.n_c)
 
 
@@ -343,15 +352,13 @@ class SigFlCalib(HasTraits):
 
         x, f_t_i_arr = self.get_f_t_i_arr( u )
 
-        # heigth of the cross section
+        # height of the cross section
         #
         thickness = self.thickness
 #        print 'thickness', thickness
 
         z_t_i_arr = self.z_t_i_arr
 #        print 'z_t_i_arr', z_t_i_arr
-
-        # print 'sig_comp_i_arr', sig_comp_i_arr
 
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (characteristic value)
@@ -365,11 +372,7 @@ class SigFlCalib(HasTraits):
 #        N_td = N_tk / self.gamma_tex * self.beta
 #        print 'N_td', N_td
 
-
-
-
 #        k_exact = ( 1.74 * self.eps_c / 4.56 - ( self.eps_c / 4.56 ) ** 2 / ( 1 - 0.12 * self.eps_c / 4.56 ) )
-
 
 #        # distance [m] of the resulting compressive 
 #        # force from the top, i.e. a = k * x / 2
@@ -382,16 +385,19 @@ class SigFlCalib(HasTraits):
 #        #
 #        N_ck = 2.0 * a * self.width * self.chi * self.f_ck * 1000.
 
-        # subdivide the compression zone 'x' in 'n_c'
-        # sub-areas
+        # compressive strain in the compression zone 'x' in each sub-area ('A_c' divided in 'n_c' parts)
         #
-        eps_c_i_arr = self.x_discr * self.eps_c
+        eps_c_i_arr = self.x_frac_i * self.eps_c
 #        print 'eps_c_i_arr', eps_c_i_arr
-        sig_c_i_arr = array([self.get_sig_c(eps_c_i) for eps_c_i in eps_c_i_arr])
-#        print 'sig_c_i_arr', sig_c_i_arr
-        f_c_i_arr = sig_c_i_arr * self.width * self.x_discr[0] * 2. * x * 1000.
 
-        z_c_i_arr = x * self.x_discr[::-1]
+        # @todo: get vectorized version running: 
+#        sig_c_i_arr = self.sig_c_mfn_vect( eps_c_i_arr )
+        sig_c_i_arr = array([self.get_sig_c(eps_c_i) for eps_c_i in eps_c_i_arr])
+        
+#        print 'sig_c_i_arr', sig_c_i_arr
+        f_c_i_arr = sig_c_i_arr * self.width * self.x_frac_i[0] * 2. * x * 1000.
+
+        z_c_i_arr = x * self.x_frac_i[::-1]
 #        print 'z_c_i_arr', z_c_i_arr
 
         N_ck = sum( f_c_i_arr )
