@@ -16,9 +16,9 @@ from ibvpy.core.sdomain import \
 from numpy import \
     array, unique, min, max, mgrid, ogrid, c_, alltrue, repeat, ix_, \
     arange, ones, zeros, multiply, sort, index_exp, hstack, where, \
-    intersect1d, intersect1d_nu, copy, vstack
+    intersect1d, copy, vstack
 
-from ibvpy.plugins.mayavi_util.pipelines import \
+from ibvpy.plugins.maryavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
 from cell_grid import CellGrid

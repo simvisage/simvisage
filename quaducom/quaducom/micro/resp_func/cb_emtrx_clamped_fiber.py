@@ -12,8 +12,10 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from etsproxy.traits.api import \
+from enthought.traits.api import \
     Float, Str, implements, cached_property, Property
+
+from enthought.traits.ui.ui_traits import Image
 
 from math import pi
 
@@ -40,6 +42,7 @@ class CBEMClampedFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
+    image = Image('pics/cb_short_fiber.jpg')
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -50,11 +53,11 @@ class CBEMClampedFiber(RF):
     l = Float(0.0, auto_set=False, enter_set=True, input=True,
               distr=['uniform'], desc='free length')
 
-    A_f = Float(0.89, auto_set=False, input=True,
+    A_r = Float(0.89, auto_set=False, input=True,
               enter_set=True, distr=['uniform', 'weibull_min'],
               desc='CS area of a the reinforcement')
 
-    E_f = Float(72.0e3, auto_set=False, enter_set=True, input=True,
+    E_r = Float(72.0e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30.0e3, auto_set=False, enter_set=True, input=True,
@@ -82,6 +85,22 @@ class CBEMClampedFiber(RF):
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
+
+    Kr = Property(depends_on='A_r, E_r')
+    @cached_property
+    def _get_Kr(self):
+        return self.A_r * self.E_r
+
+    Km = Property(depends_on='A_r, E_m')
+    @cached_property
+    def _get_Km(self):
+        return self.A_m * self.E_m
+
+    Kc = Property(depends_on='A_r, E_r, E_m')
+    @cached_property
+    def _get_Kc(self):
+        return self.Kr + self.Km
+
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
 
@@ -102,7 +121,7 @@ class CBEMClampedFiber(RF):
         
         return P2
 
-    def __call__(self, w, tau, l, A_f, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, tau, l, A_r, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
 
         # cross sectional area of a single fiber
 
@@ -117,11 +136,11 @@ class CBEMClampedFiber(RF):
         l = l * (1 + theta)
         w = w - theta * l
         w = H(w) * w
-        D = sqrt(A_f * Nf / pi) * 2
+        D = sqrt(A_r * Nf / pi) * 2
         T = tau * phi * D * pi
 
         Km = A_m * E_m
-        Kr = A_f * E_f
+        Kr = A_r * E_f
 
 
         # double sided debonding
@@ -179,14 +198,14 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
     C_code = Str('')
 
-    def __call__(self, w, x, tau, l, A_f, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
+    def __call__(self, w, x, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf):
 
-        D = sqrt(A_f * Nf / pi) * 2
+        D = sqrt(A_r * Nf / pi) * 2
         T = tau * phi * D * pi
         Km = A_m * E_m
-        Kr = A_f * E_f
+        Kr = A_r * E_f
 
-        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_f, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
+        q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
         q_x = q * H(l / 2. - abs(x)) + (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
         #q_x = q_x * H(x + Ll) * H (Lr - x)
         a = q * Km / (T * (Km + Kr))
@@ -213,7 +232,7 @@ if __name__ == '__main__':
         w = linspace(0, .5, 300)
         P = CBEMClampedFiber()
         q = P(w, t, 10., .89, 72e3, 30000., 50., 0.01, 999, 1., 15., 30., 10)
-        plt.plot(w, q, label='CB')
+        plt.plot(w, q[0], label='CB')
         plt.legend()
         plt.show()
 
@@ -226,8 +245,22 @@ if __name__ == '__main__':
         plt.yticks(fontsize=14)
         plt.legend(loc='best')
         plt.show()
+
+    def SP2():
+        plt.figure()
+        cbcsp = CBEMClampedFiberSP()
+        x = linspace(-100, 40, 7)
+        print x
+        q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
+        print q
+        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
+        plt.xticks(fontsize = 14)
+        plt.yticks(fontsize = 14)
+        plt.legend(loc = 'best')
+        plt.ylim(0,60)
         
     Pw()
     #SP()
-
+    #SP2()
+    #plt.show()
 
