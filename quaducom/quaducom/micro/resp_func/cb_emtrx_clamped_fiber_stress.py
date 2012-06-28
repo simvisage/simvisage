@@ -206,9 +206,7 @@ if __name__ == '__main__':
     r = 0.00345
     V_f = 0.0103
     t = 0.5
-    Af = 3.75e-5 * 2304000.
     Ef = 200e3
-    Am = 8400
     Em = 25e3
     l = 10.
     theta = 0.0
@@ -218,37 +216,34 @@ if __name__ == '__main__':
     Lr = 20.
     
     def Pw():
+        plt.figure()
         w = linspace(0, 1, 300)
         P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
-        plt.plot(w, Am*q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
+        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
         #plt.legend(loc='best')
         plt.ylim(0,)
         plt.ylabel('stress ', fontsize=14)
         plt.xlabel('w', fontsize=14)
         plt.title('Pullout Resp Func Clamped Fiber EMTRX')
-        plt.show()
-        
-  
 
     def SP():
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
         x = linspace(-40, 40, 300)
-        q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
+        w = 0.1
+        q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
         plt.xlabel('position', fontsize=14)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
-        plt.title('Stress Along Filament EMTRX')
+        plt.title('Stress Along Filament EMTRX at w = %.1f' %w)
         #plt.legend(loc='best')
         plt.ylim(0,)
-        plt.show()
-        
 
     Pw()
-   
-    #SP()
+    SP()
+    plt.show()
 
 
