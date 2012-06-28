@@ -179,8 +179,7 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         
     
         def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau / r / E_f
-            T1 = T * E_f
+            T = 2. * tau / r
         
             q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)
             
@@ -188,7 +187,7 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             q_l = q / V_f * H(l / 2 - abs(x))
             
             #tension in the part, where fiber translates tension to composite
-            q_e = (q / V_f - T1 * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
             
             #tension in the composite
             q_const = q 
