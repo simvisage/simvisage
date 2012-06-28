@@ -202,22 +202,26 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
 
 
 if __name__ == '__main__':
-    Ll = 3.
-    Lr = 35.
-    t = 0.1
-    Ef = 72e3
-    Em = 30e3
+
+    r = 0.00345
+    V_f = 0.0103
+    t = 0.5
+    Af = 3.75e-5 * 2304000.
+    Ef = 200e3
+    Am = 8400
+    Em = 25e3
     l = 10.
-    theta = 0.
-    xi = 10.0179
+    theta = 0.0
+    xi = 0.017
     phi = 1.
-    r = 0.013
-    V_f = 0.2
+    Ll = 20.
+    Lr = 20.
     
-    def Pw(w):
+    def Pw():
+        w = linspace(0, 1, 300)
         P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
-        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
+        plt.plot(w, Am*q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
         #plt.legend(loc='best')
         plt.ylim(0,)
         plt.ylabel('stress ', fontsize=14)
@@ -227,9 +231,10 @@ if __name__ == '__main__':
         
   
 
-    def SP(x):
+    def SP():
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
+        x = linspace(-40, 40, 300)
         q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
@@ -241,11 +246,9 @@ if __name__ == '__main__':
         plt.ylim(0,)
         plt.show()
         
-    
-    w = linspace(0, 1, 300)
-    Pw(w)
-    
-    x = linspace(-40, 40, 300)
-    SP(x)
+
+    Pw()
+   
+    #SP()
 
 
