@@ -3,8 +3,14 @@
 	<name>stats</name>
 	<comment></comment>
 	<projects>
-		<project>first</project>
+		<project>etsproxy</project>
+		<project>ibvpy</project>
 		<project>mathkit</project>
+		<project>matresdev</project>
+		<project>quaducom</project>
+		<project>rostar</project>
+		<project>simdb</project>
+		<project>spirrid</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>

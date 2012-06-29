@@ -212,10 +212,10 @@ class CTT(HasTraits):
         '''2D array of stress in the matrix along an uncracked composite X force array'''
         Em = self.cb_randomization.tvars['E_m']
         Am = self.cb_randomization.tvars['A_m']
-        Er = self.cb_randomization.tvars['E_r']
-        Ar = self.cb_randomization.tvars['A_r']
+        Ef = self.cb_randomization.tvars['E_f']
+        Af = self.cb_randomization.tvars['A_f']
         Nf = self.cb_randomization.tvars['Nf']
-        sig_ff = self.applied_force[:, np.newaxis] * Em / (Em * Am + Er * Ar * Nf)
+        sig_ff = self.applied_force[:, np.newaxis] * Em / (Em * Am + Ef * Af * Nf)
         return np.ones(len(self.x_arr)) * sig_ff
 
     random_field = Instance(RandomField)
@@ -259,8 +259,8 @@ class CTT(HasTraits):
             #print 'IDX', idx, 'of', len(self.cb_list) - 1, 'position', cb.position, 'force', P[0]
             self.cb_list[idx].P = P
             crack_position_idx = np.argwhere(self.x_arr == cb.position)
-            left = crack_position_idx - np.count_nonzero(cb.x < 0.)
-            right = crack_position_idx + np.count_nonzero(cb.x > 0.) + 1
+            left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
+            right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
             self.sigma_m[-len(P):, left:right] = cb.get_sigma_x_matrix().T
 
     x_area = Property(depends_on = 'length, nx')
@@ -357,17 +357,17 @@ if __name__ == '__main__':
                                 distribution = 'Weibull'
                                )
 
-    rf = CBEMClampedFiberSP(A_r = Af, A_m = Am, Nf = Nf, E_r = Ef, E_m = Em)
+    rf = CBEMClampedFiberSP(A_f = Af, A_m = Am, Nf = Nf, E_r = Ef, E_m = Em)
     rand = FunctionRandomization(q = rf,
-         evars = dict(w = np.linspace(0.0, .25, 35),
-                       x = np.linspace(-50., 50., 30),
-                       Ll = np.linspace(1., 70., 5),
-                       Lr = np.linspace(1., 70., 5),
+         evars = dict(w = np.linspace(0.0, 2.25, 35),
+                       x = np.linspace(-50., 50., 10),
+                       Ll = np.linspace(1., 70., 3),
+                       Lr = np.linspace(1., 70., 3),
                         ),
          tvars = dict( tau = .5,#RV('uniform', .4, .8),
                        l = 10.0,#RV('uniform', 4.0, 12.0),
-                       A_r = Af,
-                       E_r = Ef,
+                       A_f = Af,
+                       E_f = Ef,
                        theta = 0.01, #RV('uniform', 0.0, .05),
                        xi = 1e20, #RV( 'weibull_min', scale = 0.017, shape = 5, n_int = 10 ),
                        phi = 1.0,

@@ -16,7 +16,7 @@ from ibvpy.core.sdomain import \
 from numpy import \
     array, unique, min, max, mgrid, ogrid, c_, alltrue, repeat, ix_, \
     arange, ones, zeros, multiply, sort, index_exp, hstack, where, \
-    intersect1d, intersect1d_nu, copy, vstack
+    intersect1d, copy, vstack
 
 from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
@@ -27,52 +27,52 @@ from cell_array import CellView, ICellView, CellArray, ICellArraySource
 #--------------------------------------------------------------------------
 # DofGrid
 #--------------------------------------------------------------------------
-class DofCellGrid( SDomain ):
+class DofCellGrid(SDomain):
     '''
     Get an array with element Dof numbers
     '''
-    implements( ICellArraySource )
+    implements(ICellArraySource)
 
-    cell_grid = Instance( CellGrid )
+    cell_grid = Instance(CellGrid)
 
-    get_cell_point_X_arr = DelegatesTo( 'cell_grid' )
-    get_cell_mvpoints = DelegatesTo( 'cell_grid' )
-    cell_node_map = DelegatesTo( 'cell_grid' )
-    get_cell_offset = DelegatesTo( 'cell_grid' )
+    get_cell_point_X_arr = DelegatesTo('cell_grid')
+    get_cell_mvpoints = DelegatesTo('cell_grid')
+    cell_node_map = DelegatesTo('cell_grid')
+    get_cell_offset = DelegatesTo('cell_grid')
 
     # offset of dof within domain list
     #
-    dof_offset = Int( 0 )
+    dof_offset = Int(0)
 
     # number of degrees of freedom in a single node
     # 
-    n_nodal_dofs = Int( 3 )
+    n_nodal_dofs = Int(3)
     #-------------------------------------------------------------------------
     # Generation methods for geometry and index maps
     #-------------------------------------------------------------------------
-    n_dofs = Property( depends_on = 'cell_grid.shape,n_nodal_dofs,dof_offset' )
-    def _get_n_dofs( self ):
+    n_dofs = Property(depends_on = 'cell_grid.shape,n_nodal_dofs,dof_offset')
+    def _get_n_dofs(self):
         '''
         Get the total number of DOFs
         '''
-        unique_cell_nodes = unique( self.cell_node_map.flatten() )
-        n_unique_nodes = len( unique_cell_nodes )
+        unique_cell_nodes = unique(self.cell_node_map.flatten())
+        n_unique_nodes = len(unique_cell_nodes)
         return n_unique_nodes * self.n_nodal_dofs
 
-    dofs = Property( depends_on = 'cell_grid.shape,n_nodal_dofs,dof_offset' )
+    dofs = Property(depends_on = 'cell_grid.shape,n_nodal_dofs,dof_offset')
     @cached_property
-    def _get_dofs( self ):
+    def _get_dofs(self):
         '''
         Construct the point grid underlying the mesh grid structure.
         '''
         cell_node_map = self.cell_node_map
 
-        unique_cell_nodes = unique( cell_node_map.flatten() )
-        n_unique_nodes = len( unique_cell_nodes )
+        unique_cell_nodes = unique(cell_node_map.flatten())
+        n_unique_nodes = len(unique_cell_nodes)
 
         n_nodal_dofs = self.n_nodal_dofs
         n_nodes = self.cell_grid.point_grid_size
-        node_dof_array = repeat( -1, n_nodes * n_nodal_dofs ).reshape( n_nodes, n_nodal_dofs )
+        node_dof_array = repeat(-1, n_nodes * n_nodal_dofs).reshape(n_nodes, n_nodal_dofs)
 
         # Enumerate the DOFs in the mesh. The result is an array with n_nodes rows  
         # and n_nodal_dofs columns
@@ -82,52 +82,52 @@ class DofCellGrid( SDomain ):
         #             [ 4, 5 ]] );
         # 
         node_dof_array[ index_exp[ unique_cell_nodes ] ] = \
-            arange( n_unique_nodes * n_nodal_dofs ).reshape( n_unique_nodes, n_nodal_dofs )
+            arange(n_unique_nodes * n_nodal_dofs).reshape(n_unique_nodes, n_nodal_dofs)
 
         # add the dof_offset before returning the array
         #
         node_dof_array += self.dof_offset
         return node_dof_array
 
-    def _get_doffed_nodes( self ):
+    def _get_doffed_nodes(self):
         '''
         Get the indices of nodes containing DOFs. 
         '''
         cell_node_map = self.cell_node_map
 
-        unique_cell_nodes = unique( cell_node_map.flatten() )
+        unique_cell_nodes = unique(cell_node_map.flatten())
 
         n_nodes = self.cell_grid.point_grid_size
-        doffed_nodes = repeat( -1, n_nodes )
+        doffed_nodes = repeat(-1, n_nodes)
 
         doffed_nodes[ index_exp[ unique_cell_nodes ] ] = 1
-        return where( doffed_nodes > 0 )
+        return where(doffed_nodes > 0)
 
     #-----------------------------------------------------------------
     # Elementwise-representation of dofs
     #-----------------------------------------------------------------
 
-    cell_dof_map = Property( depends_on = 'cell_grid.shape,n_nodal_dofs' )
-    def _get_cell_dof_map( self ):
+    cell_dof_map = Property(depends_on = 'cell_grid.shape,n_nodal_dofs')
+    def _get_cell_dof_map(self):
         return self.dofs[ index_exp[self.cell_grid.cell_node_map] ]
 
-    cell_grid_dof_map = Property( depends_on = 'cell_grid.shape,n_nodal_dofs' )
-    def _get_cell_grid_dof_map( self ):
+    cell_grid_dof_map = Property(depends_on = 'cell_grid.shape,n_nodal_dofs')
+    def _get_cell_grid_dof_map(self):
         return self.dofs[ index_exp[self.cell_grid.cell_grid_node_map] ]
 
-    def get_cell_dofs( self, cell_idx ):
+    def get_cell_dofs(self, cell_idx):
         return self.cell_dof_map[ cell_idx ]
 
-    elem_dof_map = Property( depends_on = 'cell_grid.shape,n_nodal_dofs' )
+    elem_dof_map = Property(depends_on = 'cell_grid.shape,n_nodal_dofs')
     @cached_property
-    def _get_elem_dof_map( self ):
-        el_dof_map = copy( self.cell_dof_map )
+    def _get_elem_dof_map(self):
+        el_dof_map = copy(self.cell_dof_map)
         tot_shape = el_dof_map.shape[0]
         n_entries = el_dof_map.shape[1] * el_dof_map.shape[2]
-        elem_dof_map = el_dof_map.reshape( tot_shape, n_entries )
+        elem_dof_map = el_dof_map.reshape(tot_shape, n_entries)
         return elem_dof_map
 
-    def __getitem__( self, idx ):
+    def __getitem__(self, idx):
         '''High level access and slicing to the cells within the grid.
         
         The return value is a tuple with 
@@ -135,130 +135,130 @@ class DofCellGrid( SDomain ):
         2. array of nodes for each element
         3. array of coordinates for each node.
         '''
-        dgs = DofGridSlice( dof_grid = self, grid_slice = idx )
+        dgs = DofGridSlice(dof_grid = self, grid_slice = idx)
         return dgs
 
     #-----------------------------------------------------------------
     # Spatial queries for dofs
     #-----------------------------------------------------------------
 
-    def _get_dofs_for_nodes( self, nodes ):
+    def _get_dofs_for_nodes(self, nodes):
         '''Get the dof numbers and associated coordinates
         given the array of nodes.
         '''
         doffed_nodes = self._get_doffed_nodes()
-        intersect_nodes = intersect1d_nu( nodes, doffed_nodes )
-        return ( self.dofs[ index_exp[ intersect_nodes ] ],
-                self.cell_grid.point_X_arr[  index_exp[ intersect_nodes] ] )
+        intersect_nodes = intersect1d_nu(nodes, doffed_nodes)
+        return (self.dofs[ index_exp[ intersect_nodes ] ],
+                self.cell_grid.point_X_arr[  index_exp[ intersect_nodes] ])
 
-    def get_boundary_dofs( self ):
+    def get_boundary_dofs(self):
         '''Get the boundary dofs and the associated coordinates
         '''
         nodes = [ self.cell_grid.point_idx_grid[s] for s in self.cell_grid.boundary_slices ]
         dofs, coords = [], []
         for n in nodes:
-            d, c = self._get_dofs_for_nodes( n )
-            dofs.append( d )
-            coords.append( c )
-        return ( vstack( dofs ), vstack( coords ) )
+            d, c = self._get_dofs_for_nodes(n)
+            dofs.append(d)
+            coords.append(c)
+        return (vstack(dofs), vstack(coords))
 
-    def get_all_dofs( self ):
+    def get_all_dofs(self):
         nodes = self.cell_grid.point_idx_grid[...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_left_dofs( self ):
+    def get_left_dofs(self):
         nodes = self.cell_grid.point_idx_grid[0, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_right_dofs( self ):
+    def get_right_dofs(self):
         nodes = self.cell_grid.point_idx_grid[-1, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_top_dofs( self ):
+    def get_top_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, -1, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_dofs( self ):
+    def get_bottom_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, 0, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_front_dofs( self ):
+    def get_front_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, :, -1]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_back_dofs( self ):
+    def get_back_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, :, 0]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_left_dofs( self ):
+    def get_bottom_left_dofs(self):
         nodes = self.cell_grid.point_idx_grid[0, 0, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_front_dofs( self ):
+    def get_bottom_front_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, 0, -1]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_back_dofs( self ):
+    def get_bottom_back_dofs(self):
         nodes = self.cell_grid.point_idx_grid[:, 0, 0]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_top_left_dofs( self ):
+    def get_top_left_dofs(self):
         nodes = self.cell_grid.point_idx_grid[0, -1, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_right_dofs( self ):
+    def get_bottom_right_dofs(self):
         nodes = self.cell_grid.point_idx_grid[-1, 0, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_top_right_dofs( self ):
+    def get_top_right_dofs(self):
         nodes = self.cell_grid.point_idx_grid[-1, -1, ...]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_bottom_middle_dofs( self ):
+    def get_bottom_middle_dofs(self):
         if self.cell_grid.point_idx_grid.shape[0] % 2 == 1:
             slice_middle_x = self.cell_grid.point_idx_grid.shape[0] / 2
             nodes = self.cell_grid.point_idx_grid[slice_middle_x, 0, ...]
-            return self._get_dofs_for_nodes( nodes )
+            return self._get_dofs_for_nodes(nodes)
         else:
             print 'Error in get_bottom_middle_dofs:'\
             ' the method is only defined for an odd number of dofs in x-direction'
 
-    def get_top_middle_dofs( self ):
+    def get_top_middle_dofs(self):
         if self.cell_grid.point_idx_grid.shape[0] % 2 == 1:
             slice_middle_x = self.cell_grid.point_idx_grid.shape[0] / 2
             nodes = self.cell_grid.point_idx_grid[slice_middle_x, -1, ...]
-            return self._get_dofs_for_nodes( nodes )
+            return self._get_dofs_for_nodes(nodes)
         else:
             print 'Error in get_top_middle_dofs:'\
             ' the method is only defined for an odd number of dofs in x-direction'
 
-    def get_left_middle_dofs( self ):
+    def get_left_middle_dofs(self):
         if self.cell_grid.point_idx_grid.shape[1] % 2 == 1:
             slice_middle_y = self.cell_grid.point_idx_grid.shape[1] / 2
             nodes = self.cell_grid.point_idx_grid[0, slice_middle_y, ...]
-            return self._get_dofs_for_nodes( nodes )
+            return self._get_dofs_for_nodes(nodes)
         else:
             print 'Error in get_left_middle_dofs:'\
             ' the method is only defined for an odd number of dofs in y-direction'
 
-    def get_right_middle_dofs( self ):
+    def get_right_middle_dofs(self):
         if self.cell_grid.point_idx_grid.shape[1] % 2 == 1:
             slice_middle_y = self.cell_grid.point_idx_grid.shape[1] / 2
             nodes = self.cell_grid.point_idx_grid[-1, slice_middle_y, ...]
-            return self._get_dofs_for_nodes( nodes )
+            return self._get_dofs_for_nodes(nodes)
         else:
             print 'Error in get_right_middle_dofs:'\
             ' the method is only defined for an odd number of dofs in y-direction'
 
-    def get_left_front_bottom_dof( self ):
+    def get_left_front_bottom_dof(self):
         nodes = self.cell_grid.point_idx_grid[0, 0, -1]
-        return self._get_dofs_for_nodes( nodes )
+        return self._get_dofs_for_nodes(nodes)
 
-    def get_left_front_middle_dof( self ):
+    def get_left_front_middle_dof(self):
         if self.cell_grid.point_idx_grid.shape[1] % 2 == 1:
             slice_middle_y = self.cell_grid.point_idx_grid.shape[1] / 2
             nodes = self.cell_grid.point_idx_grid[0, slice_middle_y, -1]
-            return self._get_dofs_for_nodes( nodes )
+            return self._get_dofs_for_nodes(nodes)
         else:
             print 'Error in get_left_middle_front_dof:'\
             ' the method is only defined for an odd number of dofs in y-direction'
@@ -267,51 +267,51 @@ class DofCellGrid( SDomain ):
     # Visualization related methods
     #-----------------------------------------------------------------
 
-    refresh_button = Button( 'Draw' )
-    @on_trait_change( 'refresh_button' )
-    def redraw( self ):
+    refresh_button = Button('Draw')
+    @on_trait_change('refresh_button')
+    def redraw(self):
         '''Redraw the point grid.
         '''
         self.cell_grid.redraw()
 
     dof_cell_array = Button
-    def _dof_cell_array_fired( self ):
+    def _dof_cell_array_fired(self):
         cell_array = self.cell_grid.cell_node_map
-        self.show_array = CellArray( data = cell_array,
-                                     cell_view = DofCellView( cell_grid = self ) )
+        self.show_array = CellArray(data = cell_array,
+                                     cell_view = DofCellView(cell_grid = self))
         self.show_array.current_row = 0
-        self.show_array.configure_traits( kind = 'live' )
+        self.show_array.configure_traits(kind = 'live')
     #------------------------------------------------------------------
     # UI - related methods
     #------------------------------------------------------------------
-    traits_view = View( Item( 'n_nodal_dofs' ),
-                       Item( 'dof_offset' ),
-                       Item( 'cell_grid@', show_label = False ),
-                       Item( 'refresh_button', show_label = False ),
-                       Item( 'dof_cell_array', show_label = False ),
+    traits_view = View(Item('n_nodal_dofs'),
+                       Item('dof_offset'),
+                       Item('cell_grid@', show_label = False),
+                       Item('refresh_button', show_label = False),
+                       Item('dof_cell_array', show_label = False),
                        resizable = True,
                        scrollable = True,
                        height = 0.5,
-                       width = 0.5 )
+                       width = 0.5)
 
 from cell_grid_slice import CellGridSlice
-class DofGridSlice( CellGridSlice ):
+class DofGridSlice(CellGridSlice):
 
-    dof_grid = WeakRef( DofCellGrid )
+    dof_grid = WeakRef(DofCellGrid)
 
-    def __init__( self, dof_grid, **args ):
+    def __init__(self, dof_grid, **args):
         self.dof_grid = dof_grid
-        super( DofGridSlice, self ).__init__( **args )
+        super(DofGridSlice, self).__init__(**args)
 
-    cell_grid = Property( depends_on = 'dof_grid.+changed_structure' )
+    cell_grid = Property(depends_on = 'dof_grid.+changed_structure')
     @cached_property
-    def _get_cell_grid( self ):
+    def _get_cell_grid(self):
         return self.dof_grid.cell_grid
 
     dofs = Property
-    def _get_dofs( self ):
+    def _get_dofs(self):
         idx1, idx2 = self.idx_tuple
-        return self.dof_grid.cell_dof_map[ ix_( self.elems, self.cell_grid.grid_cell[idx2] ) ]
+        return self.dof_grid.cell_dof_map[ ix_(self.elems, self.cell_grid.grid_cell[idx2]) ]
 
 #-----------------------------------------------------------------------
 # View a single cell instance
@@ -323,20 +323,20 @@ from etsproxy.traits.ui.tabular_adapter import \
 from etsproxy.traits.ui.api import \
     TabularEditor
 
-class DofTabularAdapter ( TabularAdapter ):
+class DofTabularAdapter (TabularAdapter):
 
     columns = Property
-    def _get_columns( self ):
-        data = getattr( self.object, self.name )
-        if len( data.shape ) > 2:
-            raise ValueError( 'point array must be 1-2-3-dimensional' )
+    def _get_columns(self):
+        data = getattr(self.object, self.name)
+        if len(data.shape) > 2:
+            raise ValueError('point array must be 1-2-3-dimensional')
 
         n_columns = 0
-        if len( data.shape ) == 2:
+        if len(data.shape) == 2:
             n_columns = data.shape[1]
 
-        cols = [ ( str( i ), i ) for i in range( n_columns ) ]
-        return [ ( 'node', 'index' ) ] + cols
+        cols = [ (str(i), i) for i in range(n_columns) ]
+        return [ ('node', 'index') ] + cols
 
 #    columns = Property
 #    def _get_columns(self):
@@ -350,75 +350,75 @@ class DofTabularAdapter ( TabularAdapter ):
     format = '%d'
     index_text = Property
 
-    def _get_index_text ( self ):
-        return str( self.row )
+    def _get_index_text (self):
+        return str(self.row)
 
 #-- Tabular Editor Definition --------------------------------------------------
 
-dof_tabular_editor = TabularEditor( 
+dof_tabular_editor = TabularEditor(
     adapter = DofTabularAdapter(),
  )
 
-class DofCellView( CellView ):
+class DofCellView(CellView):
     '''View a single cell instance.
     '''
-    implements( ICellView )
+    implements(ICellView)
 
     elem_dofs = Array
 
-    def set_cell_traits( self ):
+    def set_cell_traits(self):
         '''Set the trait values for the current cell_idx
         '''
-        self.elem_dofs = self.cell_grid.get_cell_dofs( self.cell_idx )
+        self.elem_dofs = self.cell_grid.get_cell_dofs(self.cell_idx)
 
     #---------------------------------------------------------------------
     # Visualize
     #---------------------------------------------------------------------
-    draw_cell = Bool( False )
+    draw_cell = Bool(False)
 
-    view = View( 
-                 Item( 'cell_idx', style = 'readonly',
-                             resizable = False, label = 'Cell index' ),
-                 Group( Item( 'elem_dofs',
+    view = View(
+                 Item('cell_idx', style = 'readonly',
+                             resizable = False, label = 'Cell index'),
+                 Group(Item('elem_dofs',
                               editor = dof_tabular_editor,
                               show_label = False,
                               resizable = True,
-                              style = 'readonly' ) ),
-                 Item( 'draw_cell' , label = 'show DOFs' )
+                              style = 'readonly')),
+                 Item('draw_cell' , label = 'show DOFs')
                  )
 
     # register the pipelines for plotting labels and geometry
     #
-    mvp_elem_labels = Trait( MVPointLabels )
-    def _mvp_elem_labels_default( self ):
-        return MVPointLabels( name = 'Geo node numbers',
+    mvp_elem_labels = Trait(MVPointLabels)
+    def _mvp_elem_labels_default(self):
+        return MVPointLabels(name = 'Geo node numbers',
                               points = self._get_cell_mvpoints,
                               vectors = self._get_cell_labels,
-                              color = ( 0.0, 0.411765, 0.882353 ) )
+                              color = (0.0, 0.411765, 0.882353))
 
-    mvp_elem_geo = Trait( MVPolyData )
-    def _mvp_elem_geo_default( self ):
-        return MVPolyData( name = 'Geo node numbers',
+    mvp_elem_geo = Trait(MVPolyData)
+    def _mvp_elem_geo_default(self):
+        return MVPolyData(name = 'Geo node numbers',
                            points = self._get_elem_points,
                            lines = self._get_elem_lines,
-                           color = ( 0.254902, 0.411765, 0.882353 ) )
+                           color = (0.254902, 0.411765, 0.882353))
 
-    def _get_cell_mvpoints( self ):
-        return self.cell_grid.get_cell_mvpoints( self.cell_idx )
+    def _get_cell_mvpoints(self):
+        return self.cell_grid.get_cell_mvpoints(self.cell_idx)
 
-    def _get_cell_labels( self ):
-        cell_dofs = self.cell_grid.get_cell_dofs( self.cell_idx )
+    def _get_cell_labels(self):
+        cell_dofs = self.cell_grid.get_cell_dofs(self.cell_idx)
         shape = cell_dofs.shape
         if shape[1] < 3:
-            cd = zeros( ( shape[0], 3 ) )
+            cd = zeros((shape[0], 3))
             cd[:, :shape[1]] = cell_dofs
             return cd
         else:
             return cell_dofs
 
-    def redraw( self ):
+    def redraw(self):
         if self.draw_cell:
-            self.mvp_elem_labels.redraw( label_mode = 'label_vectors' )
+            self.mvp_elem_labels.redraw(label_mode = 'label_vectors')
 
 
 if __name__ == '__main__':
@@ -434,8 +434,8 @@ if __name__ == '__main__':
 #    print 'idx_grid'
 #    print dof_grid.cell_grid.idx_grid
 
-    dof_grid = DofCellGrid( cell_grid = CellGrid( shape = ( 1, 1, 1 ) ),
-                            dof_offset = 1000 )
+    dof_grid = DofCellGrid(cell_grid = CellGrid(shape = (1, 1, 1)),
+                            dof_offset = 1000)
     print 'idx_grid'
     print dof_grid.cell_grid.point_idx_grid
     print 'base node array'
@@ -456,20 +456,20 @@ if __name__ == '__main__':
     print 'boundary'
     print dof_grid.get_boundary_dofs()
 
-    cell_grid = CellGrid( grid_cell_spec = CellSpec( node_coords = [[-1, -1],
+    cell_grid = CellGrid(grid_cell_spec = CellSpec(node_coords = [[-1, -1],
                                                                       [1, -1],
                                                                       [0, 0],
                                                                       [1, 1],
-                                                                      [-1, 1]] ),
-                                                                      shape = ( 2, 3 ) )
+                                                                      [-1, 1]]),
+                                                                      shape = (2, 3))
 
-    cell_grid = CellGrid( grid_cell_spec = CellSpec( node_coords = [[-1, -1], [1, -1], [0, 0], [1, 1], [-1, 1]] ),
-                          coord_max = ( 2., 3. ),
-                          shape = ( 2, 3 ) )
+    cell_grid = CellGrid(grid_cell_spec = CellSpec(node_coords = [[-1, -1], [1, -1], [0, 0], [1, 1], [-1, 1]]),
+                          coord_max = (2., 3.),
+                          shape = (2, 3))
 
-    dof_grid = DofCellGrid( cell_grid = cell_grid,
+    dof_grid = DofCellGrid(cell_grid = cell_grid,
                             n_nodal_dofs = 2,
-                            dof_offset = 2000 )
+                            dof_offset = 2000)
 
     print 'node_grid_shape'
     print dof_grid.cell_grid.cell_idx_grid_shape

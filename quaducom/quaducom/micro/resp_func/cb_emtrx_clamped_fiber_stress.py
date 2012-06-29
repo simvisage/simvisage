@@ -15,8 +15,6 @@
 from etsproxy.traits.api import \
     Float, Str, implements, cached_property, Property
 
-from etsproxy.traits.ui.ui_traits import Image
-
 from math import pi
 
 import numpy as np
@@ -44,8 +42,6 @@ class CBEMClampedFiberStress(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
-
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -56,10 +52,10 @@ class CBEMClampedFiberStress(RF):
     l = Float(10.0, auto_set=False, enter_set=True, input=True,
               distr=['uniform'], desc='free length')
 
-    r = Float(0.013, auto_set=False, input=True, distr=['uniform'],
+    r = Float(0.013, auto_set=False, input=True,
               enter_set=True, desc='fiber radius in mm')
 
-    E_f = Float(72e3, auto_set=False, enter_set=True, input=True,
+    E_r = Float(72e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30e3, auto_set=False, enter_set=True, input=True,
@@ -85,6 +81,24 @@ class CBEMClampedFiberStress(RF):
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
+    Kr = Property(depends_on='A_r, E_r')
+    @cached_property
+    def _get_Kr(self):
+        #fiber stiffness
+        return self.V_f * self.E_r
+
+    Km = Property(depends_on='V_f, E_m')
+    @cached_property
+    def _get_Km(self):
+        #matrix stiffness
+        return (1 - self.V_f) * self.E_m
+
+    Ec = Property(depends_on='V_f, E_r, E_m')
+    @cached_property
+    def _get_Ec(self):
+        #composite stiffness
+        return self.Kr + self.Km
+    
 
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
@@ -116,7 +130,7 @@ class CBEMClampedFiberStress(RF):
         P2 = 0.5 * (2. * w + T * t1) * Kr / (Lmax + l + Lmin)
         return P2
 
-    def __call__(self, w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+    def __call__(self, w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
         #assigning short and long embedded length
         Lmin = minimum(Ll, Lr)
         Lmax = maximum(Ll, Lr)
@@ -131,9 +145,9 @@ class CBEMClampedFiberStress(RF):
         l = l * (1 + theta)
         w = w - theta * l
         w = H(w) * w
-        T = 2. * tau / (r * E_f)
+        T = 2. * tau / (r * E_r)
         Km = (1. - V_f) * E_m
-        Kr = V_f * E_f
+        Kr = V_f * E_r
         Ec = Km + Kr
 
         # double sided debonding
@@ -178,16 +192,16 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         C_code = Str('')
         
     
+
         def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau / r
-        
-            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)
-            
+            T = 2. * tau / r        
+            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
             #tension in the free length
             q_l = q / V_f * H(l / 2 - abs(x))
             
             #tension in the part, where fiber translates tension to composite
             q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+
             
             #tension in the composite
             q_const = q 
@@ -195,6 +209,7 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             #putting all parts together
             q_x = q_l + q_e
             q_x = maximum(q_x, q_const)
+            print type(q_x)
             return q_x
 
 
@@ -244,5 +259,3 @@ if __name__ == '__main__':
     Pw()
     SP()
     plt.show()
-
-
