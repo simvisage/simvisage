@@ -71,13 +71,18 @@ class CBEMClampedFiberStress(RF):
                   distr=['uniform', 'norm'], desc='bond quality')
 
     Ll = Float(1., auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - left')
+              distr=['uniform'], desc='embedded length - left',
+               ctrl_range=(0.0, 1.0, 10))
 
     Lr = Float(.5, auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - right')
-
+              distr=['uniform'], desc='embedded length - right',
+               ctrl_range=(0.0, 1.0, 10))
 
     w = Float(auto_set=False, enter_set=True, input=True,
+               distr=['uniform'], desc='crack width',
+               ctrl_range=(0.0, 1.0, 10))
+
+    x = Float(auto_set=False, enter_set=True, input=True,
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
@@ -209,11 +214,7 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             #putting all parts together
             q_x = q_l + q_e
             q_x = maximum(q_x, q_const)
-            print type(q_x)
             return q_x
-
-
-
 
 if __name__ == '__main__':
 
