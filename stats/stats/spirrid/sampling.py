@@ -120,7 +120,7 @@ class FunctionRandomization(HasStrictTraits):
         ''' sort entries according to var_names.'''
         return [ self.evars[ nm ] for nm in self.evar_names ]
 
-    evar_names = Property(depends_on = '_evars')
+    evar_names = Property(depends_on = 'evars')
     @cached_property
     def _get_evar_names(self):
         evar_keys = self.evars.keys()
@@ -146,7 +146,8 @@ class FunctionRandomization(HasStrictTraits):
 
     tvars = Dict(input_change = True)
 
-    tvar_lst = Property()
+    tvar_lst = Property(depends_on = 'tvars')
+    @cached_property
     def _get_tvar_lst(self):
         '''sort entries according to var_names
         '''
