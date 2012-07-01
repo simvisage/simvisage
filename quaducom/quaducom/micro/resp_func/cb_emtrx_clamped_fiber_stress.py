@@ -206,7 +206,7 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             
             #tension in the part, where fiber translates tension to composite
             q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
-
+            #q_e = q_e * H(x + Ll) * H (Lr - x)
             
             #tension in the composite
             q_const = q 
