@@ -284,10 +284,10 @@ if __name__ == '__main__':
     Em = 25e3
     l = 10.#RV( 'norm', scale = 10., loc = 1. )
     theta = 0.0
-    xi = RV( 'weibull_min', scale = 0.013, shape = 5 ) # 0.017
+    xi = RV( 'weibull_min', scale = 0.0179, shape = 5 ) # 0.017
     phi = 1.
-    Ll = np.linspace(0.5,50,5)
-    Lr = np.linspace(0.5,50,5)
+    Ll = np.linspace(0.5,50,2)
+    Lr = np.linspace(0.5,50,2)
 
     rf = CBEMClampedFiberStressSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
