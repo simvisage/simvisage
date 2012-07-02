@@ -229,12 +229,9 @@ class CTT(HasTraits):
             f = mask.sum(0)[idx]
             crack_position = self.x_arr[idx]
             load_sigma_c = self.load_sigma_c[f:]
-            self.load_sigma_c_list.append(load_sigma_c[0])
             cbf = self.cb_factory
             new_cb = cbf.new_cb()
             new_cb.position = float(crack_position)
-            self.crack_positions.append(float(crack_position))
-            self.crack_positions.sort()
             new_cb.load_sigma_c = load_sigma_c
             self.cb_list.append(new_cb)
             self.sort_cbs(load_sigma_c)
@@ -243,12 +240,10 @@ class CTT(HasTraits):
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
 #            m.show()  
             if self.last_pos == crack_position:
-                print 'FAIL'
+                print 'FAIL - refine the Ll, Lr, w or x ranges'
                 break
-            self.last_pos = crack_position  
+            self.last_pos = crack_position 
     last_pos = Float
-    crack_positions = List
-    load_sigma_c_list = []
 
     sigma_m = Array
     def _sigma_m_default(self):
@@ -295,14 +290,14 @@ if __name__ == '__main__':
     tau = .5 #RV('uniform', loc = 0.02, scale = .01) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = RV( 'uniform', scale = 10., loc = 2. )
+    l = 10.#RV( 'uniform', scale = 10., loc = 2. )
     theta = 0.0
-    xi = 0.2#RV( 'weibull_min', scale = 0.12, shape = 5 ) # 0.017
+    xi = 0.007#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
-    w = np.linspace(0.0, .7, 41)
-    x = np.linspace(-50., 50., 121)
-    Ll = np.linspace(0.5,50,5)
-    Lr = np.linspace(0.5,50,5)
+    w = np.linspace(0.0, .1, 41)
+    x = np.linspace(-50., 50., 51)
+    Ll = np.linspace(0.5,50,10)
+    Lr = np.linspace(0.5,50,10)
 
     length = 600.
     nx = 600
