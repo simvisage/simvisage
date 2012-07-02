@@ -133,7 +133,6 @@ class NDIdxInterp(HasTraits):
         # interpolate the value (linear)
         # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
         # icoords = [a, b, c]
-
         val = ndimage.map_coordinates(data, icoords, order = 1, mode = mode)
         return val
 
@@ -209,14 +208,27 @@ class InterpolatedSPIRRID(HasTraits):
         sigma_f_cutoff = self.spirrid.mu_q_arr[:idxmax]
         return sigma_f_cutoff
 
-    def preinterpolate(self, mu_w_x, sigma_f_cutoff):
-        # cut off the 2D array
-        mu_w_x = mu_w_x[:len(sigma_f_cutoff),:]
-        load_sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
-        x = self.spirrid.evars['x']
-        axes_values = [sigma_f_cutoff, x]
-        interp_coords = [load_sigma_f, x]
+    def adapt_x_range(self, x, i, Ll, j, Lr):
+        try:
+            Ll[i+1]
+            l_bound = np.min([Ll[i+1], -x[0]])
+        except IndexError:
+            l_bound = np.min([Ll[i], -x[0]])        
+        try:
+            Lr[j+1]
+            r_bound = np.min([Lr[j+1], x[-1]])
+        except IndexError:
+            r_bound = np.min([Lr[j], x[-1]])
+        return np.linspace(-l_bound, r_bound, len(x))
+
+    def preinterpolate(self, mu_w_x, sigma_f_cutoff, x_adapt):
+        # values to create array grid
+        axes_values = [sigma_f_cutoff, x_adapt]
         preinterp = NDIdxInterp(data = mu_w_x, axes_values = axes_values)
+        # values to interpolate for
+        load_sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
+        x = self.initial_evars[1]
+        interp_coords = [load_sigma_f, x]
         return preinterp(*interp_coords, mode = 'constant')
 
     interp_grid = Property(depends_on = 'spirrid.evars')
@@ -237,17 +249,24 @@ class InterpolatedSPIRRID(HasTraits):
         result = np.zeros((len(self.load_sigma_c),len(x),len(Ll),len(Lr)))
         for i, ll in enumerate(Ll):
             for j, lr in enumerate(Lr):
+                # adapt w range
                 sigma_f_cutoff = self.adapt_w_range(self.load_sigma_c, ll, lr)
-                self.spirrid.evars['x'] = x
+                self.spirrid.evars['w'] = self.spirrid.evars['w'][:len(sigma_f_cutoff)]
+                # adapt x range
+                adapted_x = self.adapt_x_range(x, i, Ll, j, Lr)
+                self.spirrid.evars['x'] = adapted_x
                 del self.spirrid.tvars['x']
+                # evaluate 2D (w,x) SPIRRID with adapted ranges x and w
                 mu_w_x = self.spirrid.mu_q_arr
 #                e_arr = orthogonalize([np.arange(len(w)), np.arange(len(x))])
 #                m.surf(e_arr[0], e_arr[1], mu_w_x/np.max(mu_w_x)*50.)
 #                m.show()
-                mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_cutoff).T
+                # preinterpolate particular result for the given x and sigma ranges
+                mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_cutoff, self.spirrid.evars['x']).T
 #                e_arr = orthogonalize([np.arange(len(self.load_sigma_c)), np.arange(len(x))])
 #                m.surf(e_arr[0], e_arr[1], mu_w_x_interp/np.max(mu_w_x)*50.)
 #                m.show()
+                # store the particular result for BC ll and lr into the result array 
                 result[:,:,i,j] = mu_w_x_interp
         return result
 
@@ -282,12 +301,12 @@ if __name__ == '__main__':
     tau = 0.1 #RV('uniform', loc = 0.02, scale = .01) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = 10.#RV( 'norm', scale = 10., loc = 1. )
+    l = RV( 'uniform', scale = 10., loc = 0. )
     theta = 0.0
     xi = RV( 'weibull_min', scale = 0.0179, shape = 5 ) # 0.017
     phi = 1.
-    Ll = np.linspace(0.5,50,2)
-    Lr = np.linspace(0.5,50,2)
+    Ll = np.linspace(0.5,50,4)
+    Lr = np.linspace(0.5,50,4)
 
     rf = CBEMClampedFiberStressSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
@@ -312,10 +331,10 @@ if __name__ == '__main__':
 
     def plot():
         
-        sigma = np.linspace(0, 20, 100)
-        x = np.linspace(-60., 60., 61)
-        Ll = 1.
-        Lr = 45.
+        sigma = np.linspace(0, 20, 120)
+        Ll = 20.
+        Lr = 30.
+        x = np.linspace(-Ll, Lr, 100)
     
         e_arr = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
         #mu_q_nisp = nisp(P, x, Ll, Lr)[0]
