@@ -80,7 +80,7 @@ class NDIdxInterp(HasTraits):
         # interpolate the value (linear)
         # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
         # icoords = [a, b, c]
-        val = ndimage.map_coordinates(data, icoords, order = 1, mode = mode)
+        val = ndimage.map_coordinates(data, icoords, order = 1)
         return val
 
     def get_icoords(self, gcoords):
@@ -208,11 +208,10 @@ class InterpolatedSPIRRID(HasTraits):
                 del self.spirrid.tvars['x']
                 # evaluate 2D (w,x) SPIRRID with adapted ranges x and w
                 mu_w_x = self.spirrid.mu_q_arr
-#                e_arr = orthogonalize([np.arange(len(w)), np.arange(len(x))])
-#                m.surf(e_arr[0], e_arr[1], mu_w_x/np.max(mu_w_x)*50.)
-#                m.show()
                 # preinterpolate particular result for the given x and sigma ranges
                 mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_cutoff, self.spirrid.evars['x']).T
+                mask = np.where(self.load_sigma_f <= sigma_f_cutoff[-1], 1, np.NaN)[:,np.newaxis]               
+                mu_w_x_interp = mu_w_x_interp*mask
 #                e_arr = orthogonalize([np.arange(len(self.initial_evars[0])), np.arange(len(x))])
 #                m.surf(e_arr[0], e_arr[1], mu_w_x_interp/np.max(mu_w_x)*50.)
 #                m.show()
@@ -256,10 +255,10 @@ if __name__ == '__main__':
     theta = 0.0
     xi = 0.01#RV( 'weibull_min', scale = 0.12, shape = 5 ) # 0.017
     phi = 1.
-    w = np.linspace(0.0, .1, 51)
+    w = np.linspace(0.0, .1, 121)
     x = np.linspace(-50., 50., 51)
-    Ll = np.linspace(0.5,50,10)
-    Lr = np.linspace(0.5,50,10)
+    Ll = np.linspace(0.5,50,3)
+    Lr = np.linspace(0.5,50,3)
 
     rf = CBEMClampedFiberStressSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
@@ -283,7 +282,7 @@ if __name__ == '__main__':
                                     )
 
     def plot():
-        sigma = np.linspace(0, 20, 120)
+        sigma = np.linspace(0, 30, 120)
         Ll = 20.
         Lr = 30.
         x = np.linspace(-Ll, Lr, 100)
@@ -297,22 +296,3 @@ if __name__ == '__main__':
         m.show()
         
     plot()
-#    nisp = NonInterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
-#                                          sampling_type = 'LHS',
-#                                       evars = dict(w = np.linspace(0.0, .7, 31),
-#                                                   x = np.linspace(-10., 10., 11),
-#                                                   Ll = Ll,
-#                                                   Lr = Lr,
-#                                                    ),
-#                                     tvars = dict(tau = tau,
-#                                                   l = l,
-#                                                   E_f = Ef,
-#                                                   theta = theta,
-#                                                   xi = xi,
-#                                                   phi = phi,
-#                                                   E_m = Em,
-#                                                   r = r,
-#                                                   V_f = Vf
-#                                                        ),
-#                                        n_int = 20),
-#                                    )
