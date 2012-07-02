@@ -148,8 +148,8 @@ class NDIdxInterp(HasTraits):
 class InterpolatedSPIRRID(HasTraits):
 
     spirrid = Instance(SPIRRID)
-
-    def adapt_w_higher_stress(self, sigma_f, load_sigma_f):
+    
+    def adapt_w_higher_stress(self, sigma_f, load_sigma_f, len_w):
         # case 1) stretch the w range
         while np.max(sigma_f)/np.max(load_sigma_f) > 1.1 or \
             float(np.argmax(sigma_f))/float(len(sigma_f) - 1) < 0.9:
@@ -157,15 +157,15 @@ class InterpolatedSPIRRID(HasTraits):
             idx_closest = arg_find_closest_higher(sigma_f, np.max(load_sigma_f))
             wmax = self.spirrid.evars['w'][idx_closest]
             #adapt the w range and evaluate spirrid with the adapted range
-            self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
-            sigma_f = self.spirrid.mu_q_arr   
+            self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
+            sigma_f = self.spirrid.mu_q_arr
 
-    def adapt_w_lower_stress(self, sigma_f, load_sigma_f):
+    def adapt_w_lower_stress(self, sigma_f, load_sigma_f, len_w):
         # the peak is within the w range - stretch the w range
         if np.argmax(sigma_f) != len(sigma_f) -1:
             while np.argmax(sigma_f)/float(len(sigma_f)-1) < 0.9:
                 wmax = self.spirrid.evars['w'][np.argmax(sigma_f)] * 1.05
-                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
+                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
                 sigma_f = self.spirrid.mu_q_arr
         # the peak is beyond the w range
         else:
@@ -173,18 +173,18 @@ class InterpolatedSPIRRID(HasTraits):
             while np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) < np.max(load_sigma_f):
                 factor = np.max(load_sigma_f)/np.max(sigma_f)
                 wmax = self.spirrid.evars['w'][-1] * factor * 1.2
-                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
+                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
                 sigma_f = self.spirrid.mu_q_arr
             # case 1)
             if np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) > np.max(load_sigma_f):
-                self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+                self.adapt_w_higher_stress(sigma_f, load_sigma_f, len_w)
             elif np.argmax(sigma_f) != len(sigma_f) -1 and np.max(sigma_f) > np.max(load_sigma_f):
-                self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+                self.adapt_w_higher_stress(sigma_f, load_sigma_f, len_w)
             # case 2)
             elif np.argmax(sigma_f) != len(sigma_f) -1 and np.max(sigma_f) < np.max(load_sigma_f):
-                self.adapt_w_lower_stress(sigma_f, load_sigma_f)
+                self.adapt_w_lower_stress(sigma_f, load_sigma_f, len_w)
 
-    def adapt_w_range(self, load_sigma_c, ll, lr):
+    def adapt_w_range(self, w, ll, lr):
         # three cases of the peak response are distinguished:
         # 1) response includes a higher value than the applied load
         # 2) response peak is lower and lies within the given w range
@@ -195,17 +195,17 @@ class InterpolatedSPIRRID(HasTraits):
         self.spirrid.tvars['Lr'] = lr
         sigma_f = self.spirrid.mu_q_arr
         # finding appropriate range for w
-        load_sigma_f = load_sigma_c/self.spirrid.tvars['V_f']
+        load_sigma_f = self.initial_evars[0]
         # is the evaluated stress higher than the applied stress? case 1)
         # if so, the CB will not break during the loading process
         if np.max(sigma_f) >= np.max(load_sigma_f):
-            self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+            self.adapt_w_higher_stress(sigma_f, load_sigma_f, len(w))
         # the evaluated stress has a peak lower than the maximum of the applied stress
         else:
-            self.adapt_w_lower_stress(sigma_f, load_sigma_f)
+            self.adapt_w_lower_stress(sigma_f, load_sigma_f, len(w))
         # cut off the part after peak value and invert w and sigma_f
         idxmax = np.argmax(self.spirrid.mu_q_arr)
-        sigma_f_cutoff = self.spirrid.mu_q_arr[:idxmax]
+        sigma_f_cutoff = self.spirrid.mu_q_arr[:idxmax+1]
         return sigma_f_cutoff
 
     def adapt_x_range(self, x, i, Ll, j, Lr):
@@ -226,15 +226,17 @@ class InterpolatedSPIRRID(HasTraits):
         axes_values = [sigma_f_cutoff, x_adapt]
         preinterp = NDIdxInterp(data = mu_w_x, axes_values = axes_values)
         # values to interpolate for
-        load_sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
+        load_sigma_f = self.initial_evars[0]
         x = self.initial_evars[1]
         interp_coords = [load_sigma_f, x]
         return preinterp(*interp_coords, mode = 'constant')
 
     interp_grid = Property(depends_on = 'spirrid.evars')
     @cached_property
-    def _get_interp_grid(self):        
+    def _get_interp_grid(self):
+        print 'evaluating mean response and adapting ranges...'        
         spirrid_result = self.spirrid_result
+        print 'complete'
         axes_values = self.initial_evars
         ni = NDIdxInterp(data = spirrid_result, axes_values = axes_values)
         return ni
@@ -245,12 +247,13 @@ class InterpolatedSPIRRID(HasTraits):
         w = self.spirrid.evars['w']
         x = self.spirrid.evars['x']
         Ll = self.spirrid.evars['Ll']
-        Lr = self.spirrid.evars['Lr']
-        result = np.zeros((len(self.load_sigma_c),len(x),len(Ll),len(Lr)))
+        Lr = self.spirrid.evars['Lr']      
+        result = np.zeros((len(self.initial_evars[0]),len(x),len(Ll),len(Lr)))
+        loops_tot = len(Ll)*len(Lr)
         for i, ll in enumerate(Ll):
             for j, lr in enumerate(Lr):
                 # adapt w range
-                sigma_f_cutoff = self.adapt_w_range(self.load_sigma_c, ll, lr)
+                sigma_f_cutoff = self.adapt_w_range(w, ll, lr)
                 self.spirrid.evars['w'] = self.spirrid.evars['w'][:len(sigma_f_cutoff)]
                 # adapt x range
                 adapted_x = self.adapt_x_range(x, i, Ll, j, Lr)
@@ -263,32 +266,33 @@ class InterpolatedSPIRRID(HasTraits):
 #                m.show()
                 # preinterpolate particular result for the given x and sigma ranges
                 mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_cutoff, self.spirrid.evars['x']).T
-#                e_arr = orthogonalize([np.arange(len(self.load_sigma_c)), np.arange(len(x))])
+#                e_arr = orthogonalize([np.arange(len(self.initial_evars[0])), np.arange(len(x))])
 #                m.surf(e_arr[0], e_arr[1], mu_w_x_interp/np.max(mu_w_x)*50.)
 #                m.show()
                 # store the particular result for BC ll and lr into the result array 
                 result[:,:,i,j] = mu_w_x_interp
+                current_loop = i*len(Lr)+j+1
+                print 'progress: %2.1f %%' %(current_loop/float(loops_tot)*100.)
         return result
 
-    # load in terms of composite stress    
-    load_sigma_c = Array
-    initial_evars = List(Array)
+    load_sigma_f = Array    
+    initial_evars = Property(List(Array))
+    @cached_property
+    def _get_initial_evars(self):
+        return [self.load_sigma_f,
+                self.spirrid.evars['x'],
+                self.spirrid.evars['Lr'],
+                self.spirrid.evars['Ll']]
 
     def __call__(self, *args):
         '''
         evaluation of force profile in the vicinity of a crack bridge
         '''
         args = list(args)
-        # applied composite stress
-        self.load_sigma_c = args[0]
+        load_sigma_f = args[0]/self.spirrid.tvars['V_f']
         # fiber stress
-        sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
-        args[0] = sigma_f
-        self.initial_evars = [sigma_f,
-                              self.spirrid.evars['x'],
-                              self.spirrid.evars['Ll'],
-                              self.spirrid.evars['Lr'],
-                              ]
+        args[0] = load_sigma_f
+        self.load_sigma_f = load_sigma_f
         return self.interp_grid(*args)
 
 if __name__ == '__main__':
@@ -303,16 +307,18 @@ if __name__ == '__main__':
     Em = 25e3
     l = RV( 'uniform', scale = 10., loc = 0. )
     theta = 0.0
-    xi = RV( 'weibull_min', scale = 0.0179, shape = 5 ) # 0.017
+    xi = 0.2#RV( 'weibull_min', scale = 0.12, shape = 5 ) # 0.017
     phi = 1.
-    Ll = np.linspace(0.5,50,4)
-    Lr = np.linspace(0.5,50,4)
+    w = np.linspace(0.0, .7, 51)
+    x = np.linspace(-50., 50., 51)
+    Ll = np.linspace(0.5,50,10)
+    Lr = np.linspace(0.5,50,10)
 
     rf = CBEMClampedFiberStressSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
                                           sampling_type = 'LHS',
-                                       evars = dict(w = np.linspace(0.0, .7, 51),
-                                                   x = np.linspace(-50., 50., 41),
+                                       evars = dict(w = w,
+                                                   x = x,
                                                    Ll = Ll,
                                                    Lr = Lr,
                                                     ),
@@ -330,7 +336,6 @@ if __name__ == '__main__':
                                     )
 
     def plot():
-        
         sigma = np.linspace(0, 20, 120)
         Ll = 20.
         Lr = 30.

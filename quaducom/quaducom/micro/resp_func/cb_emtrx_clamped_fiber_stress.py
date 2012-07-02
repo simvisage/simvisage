@@ -86,25 +86,6 @@ class CBEMClampedFiberStress(RF):
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
-    Kr = Property(depends_on='A_r, E_r')
-    @cached_property
-    def _get_Kr(self):
-        #fiber stiffness
-        return self.V_f * self.E_r
-
-    Km = Property(depends_on='V_f, E_m')
-    @cached_property
-    def _get_Km(self):
-        #matrix stiffness
-        return (1 - self.V_f) * self.E_m
-
-    Ec = Property(depends_on='V_f, E_r, E_m')
-    @cached_property
-    def _get_Ec(self):
-        #composite stiffness
-        return self.Kr + self.Km
-    
-
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
 
@@ -201,15 +182,16 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
             T = 2. * tau / r        
             q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
-            #tension in the free length
+            #stress in the free length
             q_l = q / V_f * H(l / 2 - abs(x))
             
-            #tension in the part, where fiber translates tension to composite
+            #stress in the part, where fiber transmits stress to the matrix
             q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
             #q_e = q_e * H(x + Ll) * H (Lr - x)
             
-            #tension in the composite
-            q_const = q 
+            #far field stress
+            E_c = E_m * (1-V_f) + E_f * V_f
+            q_const = q * E_f/E_c
             
             #putting all parts together
             q_x = q_l + q_e
@@ -246,7 +228,7 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
         x = linspace(-40, 40, 300)
-        w = 0.1
+        w = linspace(0, 1, 300)[113]
         q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
