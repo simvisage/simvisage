@@ -12,10 +12,8 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements, cached_property, Property
-
-from enthought.traits.ui.ui_traits import Image
 
 from math import pi
 
@@ -34,7 +32,7 @@ from matplotlib import pyplot as plt
 def H(x):
     return 0.5 * (sign(x) + 1.)
 
-class CBEMClampedFiber(RF):
+class CBEMClampedFiberStress(RF):
     '''
     Crack bridged by a fiber with constant
     frictional interface to the elastic matrix; clamped fiber end;
@@ -44,8 +42,6 @@ class CBEMClampedFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
-
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -75,13 +71,18 @@ class CBEMClampedFiber(RF):
                   distr=['uniform', 'norm'], desc='bond quality')
 
     Ll = Float(1., auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - left')
+              distr=['uniform'], desc='embedded length - left',
+               ctrl_range=(0.0, 1.0, 10))
 
     Lr = Float(.5, auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - right')
-
+              distr=['uniform'], desc='embedded length - right',
+               ctrl_range=(0.0, 1.0, 10))
 
     w = Float(auto_set=False, enter_set=True, input=True,
+               distr=['uniform'], desc='crack width',
+               ctrl_range=(0.0, 1.0, 10))
+
+    x = Float(auto_set=False, enter_set=True, input=True,
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
@@ -182,7 +183,7 @@ class CBEMClampedFiber(RF):
    
         return q
     
-class CBEMClampedFiberSP(CBEMClampedFiber):
+class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         '''
         stress profile for a crack bridged by a fiber with constant
         frictional interface to the matrix; clamped fiber end
@@ -196,17 +197,16 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
         C_code = Str('')
         
     
-        def __call__(self, w, x, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau / r / E_r
-            T1 = T * E_r
-        
-            q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
-            
+
+        def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+            T = 2. * tau / r        
+            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
             #tension in the free length
-            q_l = q / Vf * H(l / 2 - abs(x))
+            q_l = q / V_f * H(l / 2 - abs(x))
             
             #tension in the part, where fiber translates tension to composite
-            q_e = (q / Vf - T1 * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            #q_e = q_e * H(x + Ll) * H (Lr - x)
             
             #tension in the composite
             q_const = q 
@@ -214,47 +214,49 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
             #putting all parts together
             q_x = q_l + q_e
             q_x = maximum(q_x, q_const)
-            print type(q_x)
             return q_x
 
-
-
-
 if __name__ == '__main__':
-    t = 0.1
-    Ef = 72e3
-    Em = 30e3
-    l = 10.
-    theta = 0.
-    xi = 10.0179
-    phi = 1.
-    Ll = 3.
-    Lr = 35.
-    r = 0.013
-    #Vf = 0.0174887
-    Vf = 0.2
-    def Pw(w):
-        P = CBEMClampedFiber()
-        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r) 
-        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx')
-        plt.show()
-        
-  
 
-    def SP(x):
+    r = 0.00345
+    V_f = 0.0103
+    t = 0.5
+    Ef = 200e3
+    Em = 25e3
+    l = 10.
+    theta = 0.0
+    xi = 0.017
+    phi = 1.
+    Ll = 20.
+    Lr = 20.
+    
+    def Pw():
         plt.figure()
-        cbcsp = CBEMClampedFiberSP()
-        q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r)
-        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        w = linspace(0, 1, 300)
+        P = CBEMClampedFiberStress()
+        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
+        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx_stress')
+        #plt.legend(loc='best')
+        plt.ylim(0,)
+        plt.ylabel('stress ', fontsize=14)
+        plt.xlabel('w', fontsize=14)
+        plt.title('Pullout Resp Func Clamped Fiber EMTRX')
+
+    def SP():
+        plt.figure()
+        cbcsp = CBEMClampedFiberStressSP()
+        x = linspace(-40, 40, 300)
+        w = 0.1
+        q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
+        plt.plot(x, q, lw=2, color='black', label='stress along filament')
+        plt.ylabel('stress', fontsize=14)
+        plt.xlabel('position', fontsize=14)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
-        plt.legend(loc='best')
-        #plt.ylim(0, 200)
-        plt.show()
-        
-    
-    w = linspace(0, 1, 300)
-    #Pw(w)
-    
-    x = linspace(-40, 40, 300)
-    SP(x)
+        plt.title('Stress Along Filament EMTRX at w = %.1f' %w)
+        #plt.legend(loc='best')
+        plt.ylim(0,)
+
+    Pw()
+    SP()
+    plt.show()

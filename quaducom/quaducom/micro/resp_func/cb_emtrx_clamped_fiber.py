@@ -12,10 +12,8 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Float, Str, implements, cached_property, Property
-
-from enthought.traits.ui.ui_traits import Image
 
 from math import pi
 
@@ -42,7 +40,6 @@ class CBEMClampedFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -215,24 +212,24 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
 if __name__ == '__main__':
 
-    t = 0.4
-    Af = 3.84e-5
+    t = 0.5
+    Af = 3.75e-5 * 2304000.
     Ef = 200e3
     Am = 8400
     Em = 25e3
     l = 10.
     theta = 0.0
-    xi = 50000
+    xi = 0.017
     phi = 1.
-    Ll = 10.
-    Lr = 10.
+    Ll = 20.
+    Lr = 20.
     Nf = 2304000.
 
     def Pw():
-        w = linspace(0, .5, 300)
+        w = linspace(0, .8, 300)
         P = CBEMClampedFiber()
-        q = P(w, t, 10., .89, 72e3, 30000., 50., 0.01, 999, 1., 15., 30., 10)
-        plt.plot(w, q[0], label='CB')
+        q = P(w, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
+        plt.plot(w, q, label='CB')
         plt.legend()
         plt.show()
 

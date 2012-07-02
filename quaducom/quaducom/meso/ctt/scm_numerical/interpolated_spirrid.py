@@ -10,6 +10,8 @@ from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
 from quaducom.micro.resp_func.cb_emtrx_clamped_fiber import \
     CBEMClampedFiberSP
+from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
+    CBEMClampedFiberStressSP
 from etsproxy.traits.ui.api import View, Item, VGroup
 import numpy as np
 from stats.spirrid.rf import \
@@ -52,101 +54,15 @@ def orthogonalize_filled(args):
             array_list.append(np.ones_like(meshgrid[0]) * arg)
     return array_list
 
+def find_closest_higher(array, scalar):
+    idx = np.argwhere((array - scalar) > 0.0).flat[0]
+    return array.flat[idx]
 
-class NDIdxInterp(HasTraits):
-
-    data = Array # nd array of values (measured, computed..) of size orthogonalize(axes_values)
-    axes_values = List(Array(float)) # list of control input parameter values
-
-    def __call__(self, *gcoords, **kw):
-        ''' 
-        kw: dictionary of values to interpolate for;
-        len(kw) has to be equal the data dimension
-        '''
-        order = kw.get('order', 1)
-
-        # check if the number of dimensions to interpolate in equals the number of given coordinates
-        if len(self.axes_values) != len(gcoords):
-            raise TypeError, 'method takes {req} arguments ({given} given)'.format(req = \
-                len(self.axes_values), given = len(gcoords))
-        icoords = self.get_icoords(gcoords)
-
-        # create a meshgrid for the interpolation
-        icoords = orthogonalize_filled(icoords)
-        data = self.data
-        # interpolate the value (linear)
-        # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
-        # icoords = [a, b, c]
-
-        val = ndimage.map_coordinates(data, icoords, order = 1, mode = 'nearest')
-        return val
-
-    def get_icoords(self, gcoords):
-        '''
-        gcoords: values to be interpolated for
-        this method transforms the global coords to "index" coords
-        '''
-        icoords = [np.interp(gcoord, axis_values, np.arange(len(axis_values)))
-                   for gcoord, axis_values in zip(gcoords, self.axes_values) ]
-        return icoords
+def arg_find_closest_higher(array, scalar):
+    idx = np.argwhere((array - scalar) > 0.0).flat[0]
+    return idx
 
 import copy
-
-class InterpolatedSPIRRID(HasTraits):
-
-    ctrl_arr = Array
-
-    spirrid = Instance(SPIRRID)
-    
-    def P2w(self, *args):
-
-        # set the x position to 0.0
-        print 'args', args
-        args = list(args)
-        P_given = args[0]
-        args[0] = self.spirrid.evars['w']
-        npoints = len(args[0])
-        args[1] = 0.0
-        P = self.interp_grid(*args)
-        if np.argmax(P) != len(P)-1:
-            raise ValueError, 'maximum force %.1f reached' % np.max(P)
-        else:
-            if np.max(P_given)/np.max(P) > 1.0 and np.max(P_given)/np.max(P) < 1.2:
-                w = self.spirrid.evars['w']
-            else:             
-                while np.max(P_given)/np.max(P) < 1.0 or np.max(P_given)/np.max(P) > 1.3:
-                    print 'ratio before iteration', np.max(P_given)/np.max(P)
-                    print 'iterating the w interval'
-                    Pw_iter_line = MFnLineArray(extrapolate = 'diff', xdata = P, ydata = self.spirrid.evars['w'])
-                    wmax = Pw_iter_line.get_values(np.max(P_given)* 1.2)
-                    w = np.linspace(0,wmax,npoints)
-                    self.spirrid.evars['w'] = w
-                    args[0] = w
-                    P = self.interp_grid(*args)
-                    print 'ratio after iteration',np.max(P_given)/np.max(P)
-            Pw_line = MFnLineArray(xdata = P, ydata = w)       
-            return Pw_line
-
-    interp_grid = Property(depends_on = 'spirrid.evars')
-    @cached_property
-    def _get_interp_grid(self):
-        print 'RECALCULATING'
-        print 'evaluating spirrid...'
-        data = self.spirrid.mu_q_arr
-        print 'complete'
-        axes_values = self.spirrid.evar_lst
-        ni = NDIdxInterp(data = data, axes_values = axes_values)
-        return ni
-
-    def __call__(self, *args):
-        '''
-        evaluation of force profile in the vicinity of a crack bridge
-        '''
-        P = args[0]
-        P2w_line = self.P2w(*args)
-        w = P2w_line.get_values(P)
-        return self.interp_grid(w, *args[1:]), w
-
 
 class NonInterpolatedSPIRRID(HasTraits):
 
@@ -192,83 +108,259 @@ class NonInterpolatedSPIRRID(HasTraits):
         w = P2w_line.get_values(P)
         return self.spirrid_response(w, *args[1:]), w
 
+class NDIdxInterp(HasTraits):
+
+    data = Array # nd array of values (measured, computed..) of size orthogonalize(axes_values)
+    axes_values = List(Array(float)) # list of control input parameter values
+
+    def __call__(self, *gcoords, **kw):
+        ''' 
+        kw: dictionary of values to interpolate for;
+        len(kw) has to be equal the data dimension
+        '''
+        order = kw.get('order', 1)
+        mode = kw.get('mode', 'nearest')
+
+        # check if the number of dimensions to interpolate in equals the number of given coordinates
+        if len(self.axes_values) != len(gcoords):
+            raise TypeError, 'method takes {req} arguments ({given} given)'.format(req = \
+                len(self.axes_values), given = len(gcoords))
+        icoords = self.get_icoords(gcoords)
+
+        # create a meshgrid for the interpolation
+        icoords = orthogonalize_filled(icoords)
+        data = self.data
+        # interpolate the value (linear)
+        # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
+        # icoords = [a, b, c]
+        val = ndimage.map_coordinates(data, icoords, order = 1, mode = mode)
+        return val
+
+    def get_icoords(self, gcoords):
+        '''
+        gcoords: values to be interpolated for
+        this method transforms the global coords to "index" coords
+        '''
+        icoords = [np.interp(gcoord, axis_values, np.arange(len(axis_values)))
+                   for gcoord, axis_values in zip(gcoords, self.axes_values) ]
+        return icoords
+
+class InterpolatedSPIRRID(HasTraits):
+
+    spirrid = Instance(SPIRRID)
+
+    def adapt_w_higher_stress(self, sigma_f, load_sigma_f):
+        # case 1) stretch the w range
+        while np.max(sigma_f)/np.max(load_sigma_f) > 1.1 or \
+            float(np.argmax(sigma_f))/float(len(sigma_f) - 1) < 0.9:
+            # find the closest higher value to the max applied stress
+            idx_closest = arg_find_closest_higher(sigma_f, np.max(load_sigma_f))
+            wmax = self.spirrid.evars['w'][idx_closest]
+            #adapt the w range and evaluate spirrid with the adapted range
+            self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
+            sigma_f = self.spirrid.mu_q_arr   
+
+    def adapt_w_lower_stress(self, sigma_f, load_sigma_f):
+        # the peak is within the w range - stretch the w range
+        if np.argmax(sigma_f) != len(sigma_f) -1:
+            while np.argmax(sigma_f)/float(len(sigma_f)-1) < 0.9:
+                wmax = self.spirrid.evars['w'][np.argmax(sigma_f)] * 1.05
+                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
+                sigma_f = self.spirrid.mu_q_arr
+        # the peak is beyond the w range
+        else:
+            # stretch the w range until case 1) or 2) is attained
+            while np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) < np.max(load_sigma_f):
+                factor = np.max(load_sigma_f)/np.max(sigma_f)
+                wmax = self.spirrid.evars['w'][-1] * factor * 1.2
+                self.spirrid.evars['w'] = np.linspace(0.0, wmax, len(self.spirrid.evars['w']))
+                sigma_f = self.spirrid.mu_q_arr
+            # case 1)
+            if np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) > np.max(load_sigma_f):
+                self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+            elif np.argmax(sigma_f) != len(sigma_f) -1 and np.max(sigma_f) > np.max(load_sigma_f):
+                self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+            # case 2)
+            elif np.argmax(sigma_f) != len(sigma_f) -1 and np.max(sigma_f) < np.max(load_sigma_f):
+                self.adapt_w_lower_stress(sigma_f, load_sigma_f)
+
+    def adapt_w_range(self, load_sigma_c, ll, lr):
+        # three cases of the peak response are distinguished:
+        # 1) response includes a higher value than the applied load
+        # 2) response peak is lower and lies within the given w range
+        # 3) response peak is lower and lies beyond the given w range
+        self.spirrid.evars = dict(w = self.spirrid.evars['w'])
+        self.spirrid.tvars['x'] = 0.0
+        self.spirrid.tvars['Ll'] = ll
+        self.spirrid.tvars['Lr'] = lr
+        sigma_f = self.spirrid.mu_q_arr
+        # finding appropriate range for w
+        load_sigma_f = load_sigma_c/self.spirrid.tvars['V_f']
+        # is the evaluated stress higher than the applied stress? case 1)
+        # if so, the CB will not break during the loading process
+        if np.max(sigma_f) >= np.max(load_sigma_f):
+            self.adapt_w_higher_stress(sigma_f, load_sigma_f)
+        # the evaluated stress has a peak lower than the maximum of the applied stress
+        else:
+            self.adapt_w_lower_stress(sigma_f, load_sigma_f)
+        # cut off the part after peak value and invert w and sigma_f
+        idxmax = np.argmax(self.spirrid.mu_q_arr)
+        sigma_f_cutoff = self.spirrid.mu_q_arr[:idxmax]
+        return sigma_f_cutoff
+
+    def adapt_x_range(self, x, i, Ll, j, Lr):
+        try:
+            Ll[i+1]
+            l_bound = np.min([Ll[i+1], -x[0]])
+        except IndexError:
+            l_bound = np.min([Ll[i], -x[0]])        
+        try:
+            Lr[j+1]
+            r_bound = np.min([Lr[j+1], x[-1]])
+        except IndexError:
+            r_bound = np.min([Lr[j], x[-1]])
+        return np.linspace(-l_bound, r_bound, len(x))
+
+    def preinterpolate(self, mu_w_x, sigma_f_cutoff, x_adapt):
+        # values to create array grid
+        axes_values = [sigma_f_cutoff, x_adapt]
+        preinterp = NDIdxInterp(data = mu_w_x, axes_values = axes_values)
+        # values to interpolate for
+        load_sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
+        x = self.initial_evars[1]
+        interp_coords = [load_sigma_f, x]
+        return preinterp(*interp_coords, mode = 'constant')
+
+    interp_grid = Property(depends_on = 'spirrid.evars')
+    @cached_property
+    def _get_interp_grid(self):        
+        spirrid_result = self.spirrid_result
+        axes_values = self.initial_evars
+        ni = NDIdxInterp(data = spirrid_result, axes_values = axes_values)
+        return ni
+
+    spirrid_result = Property(Array)
+    @cached_property
+    def _get_spirrid_result(self):
+        w = self.spirrid.evars['w']
+        x = self.spirrid.evars['x']
+        Ll = self.spirrid.evars['Ll']
+        Lr = self.spirrid.evars['Lr']
+        result = np.zeros((len(self.load_sigma_c),len(x),len(Ll),len(Lr)))
+        for i, ll in enumerate(Ll):
+            for j, lr in enumerate(Lr):
+                # adapt w range
+                sigma_f_cutoff = self.adapt_w_range(self.load_sigma_c, ll, lr)
+                self.spirrid.evars['w'] = self.spirrid.evars['w'][:len(sigma_f_cutoff)]
+                # adapt x range
+                adapted_x = self.adapt_x_range(x, i, Ll, j, Lr)
+                self.spirrid.evars['x'] = adapted_x
+                del self.spirrid.tvars['x']
+                # evaluate 2D (w,x) SPIRRID with adapted ranges x and w
+                mu_w_x = self.spirrid.mu_q_arr
+#                e_arr = orthogonalize([np.arange(len(w)), np.arange(len(x))])
+#                m.surf(e_arr[0], e_arr[1], mu_w_x/np.max(mu_w_x)*50.)
+#                m.show()
+                # preinterpolate particular result for the given x and sigma ranges
+                mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_cutoff, self.spirrid.evars['x']).T
+#                e_arr = orthogonalize([np.arange(len(self.load_sigma_c)), np.arange(len(x))])
+#                m.surf(e_arr[0], e_arr[1], mu_w_x_interp/np.max(mu_w_x)*50.)
+#                m.show()
+                # store the particular result for BC ll and lr into the result array 
+                result[:,:,i,j] = mu_w_x_interp
+        return result
+
+    # load in terms of composite stress    
+    load_sigma_c = Array
+    initial_evars = List(Array)
+
+    def __call__(self, *args):
+        '''
+        evaluation of force profile in the vicinity of a crack bridge
+        '''
+        args = list(args)
+        # applied composite stress
+        self.load_sigma_c = args[0]
+        # fiber stress
+        sigma_f = self.load_sigma_c/self.spirrid.tvars['V_f']
+        args[0] = sigma_f
+        self.initial_evars = [sigma_f,
+                              self.spirrid.evars['x'],
+                              self.spirrid.evars['Ll'],
+                              self.spirrid.evars['Lr'],
+                              ]
+        return self.interp_grid(*args)
 
 if __name__ == '__main__':
-
-
     import etsproxy.mayavi.mlab as m
     from stats.spirrid import make_ogrid as orthogonalize
 
     # filaments
-    tau = 2.01
-    Af = 5.31e-4
-    Ef = 72e3
-    Am = 50.
-    Em = 30e3
-    l = 0.0#RV('uniform', 5.0, 20.0)
+    r = 0.00345
+    Vf = 0.0103
+    tau = 0.1 #RV('uniform', loc = 0.02, scale = .01) # 0.5
+    Ef = 200e3
+    Em = 25e3
+    l = RV( 'uniform', scale = 10., loc = 0. )
     theta = 0.0
+    xi = RV( 'weibull_min', scale = 0.0179, shape = 5 ) # 0.017
     phi = 1.
-    Ll = np.linspace(0.01, 100., 3)
-    Lr = np.linspace(0.01, 100., 3)
-    Nf = 1700.
-    xi = 50.#RV( 'weibull_min', scale = 0.017, shape = 5 )
+    Ll = np.linspace(0.5,50,4)
+    Lr = np.linspace(0.5,50,4)
 
-    rf = CBEMClampedFiberSP()
-    nisp = NonInterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
-                                          sampling_type = 'LHS',
-                                       evars = dict(w = np.linspace(0.0, .1, 100),
-                                                   x = np.linspace(-10., 10., 100),
-                                                   Ll = Ll,
-                                                   Lr = Lr,
-                                                    ),
-                                     tvars = dict(tau = tau,
-                                                   l = l,
-                                                   A_r = Af,
-                                                   E_r = Ef,
-                                                   theta = theta,
-                                                   xi = xi,
-                                                   phi = phi,
-                                                   E_m = Em,
-                                                   A_m = Am,
-                                                   Nf = Nf,
-                                                        ),
-                                        n_int = 20),
-                                    )
-
+    rf = CBEMClampedFiberStressSP()
     isp = InterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
                                           sampling_type = 'LHS',
-                                       evars = dict(w = np.linspace(0.0, .1, 100),
-                                                   x = np.linspace(-10., 10., 61),
+                                       evars = dict(w = np.linspace(0.0, .7, 51),
+                                                   x = np.linspace(-50., 50., 41),
                                                    Ll = Ll,
                                                    Lr = Lr,
                                                     ),
                                      tvars = dict(tau = tau,
                                                    l = l,
-                                                   A_r = Af,
-                                                   E_r = Ef,
+                                                   E_f = Ef,
                                                    theta = theta,
                                                    xi = xi,
                                                    phi = phi,
                                                    E_m = Em,
-                                                   A_m = Am,
-                                                   Nf = Nf,
+                                                   r = r,
+                                                   V_f = Vf
                                                         ),
-                                        n_int = 20),
+                                        n_int = 30),
                                     )
 
     def plot():
         
-        P = np.linspace(0, 500, 100)
-        x = np.linspace(-10., 10., 61)
-        Ll = 100.
-        Lr = 100.
+        sigma = np.linspace(0, 20, 120)
+        Ll = 20.
+        Lr = 30.
+        x = np.linspace(-Ll, Lr, 100)
     
-        e_arr = orthogonalize([P, x])
-        mu_q_nisp = nisp(P, x, Ll, Lr)[0]
-        mu_q_isp = isp(P, x, Ll, Lr)[0]
+        e_arr = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
+        #mu_q_nisp = nisp(P, x, Ll, Lr)[0]
+        mu_q_isp = isp(sigma, x, Ll, Lr)
         #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
-        m.surf(e_arr[0], e_arr[1], mu_q_nisp)
-        m.surf(e_arr[0], e_arr[1], mu_q_isp)
+        #m.surf(e_arr[0], e_arr[1], mu_q_nisp)
+        m.surf(e_arr[0], e_arr[1], mu_q_isp/50.)
         m.show()
         
     plot()
+#    nisp = NonInterpolatedSPIRRID(spirrid = SPIRRID(q = rf,
+#                                          sampling_type = 'LHS',
+#                                       evars = dict(w = np.linspace(0.0, .7, 31),
+#                                                   x = np.linspace(-10., 10., 11),
+#                                                   Ll = Ll,
+#                                                   Lr = Lr,
+#                                                    ),
+#                                     tvars = dict(tau = tau,
+#                                                   l = l,
+#                                                   E_f = Ef,
+#                                                   theta = theta,
+#                                                   xi = xi,
+#                                                   phi = phi,
+#                                                   E_m = Em,
+#                                                   r = r,
+#                                                   V_f = Vf
+#                                                        ),
+#                                        n_int = 20),
+#                                    )
