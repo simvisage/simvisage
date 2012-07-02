@@ -63,13 +63,14 @@ class SigFlCalib(HasTraits):
 #        return 0.85 * self.f_ck / self.gamma_c
 
     # compressive strain at the top at rupture [-]
+    # (positive value is used)
     # value measured at the experiment (with DMS)
     # for 0: about 3.3
     # for 90: about 3.0
     # ultimute strain theoreticaly (Brockman): about 4.5
     # NOTE: strain was meassured at a distance of 5 cm
     #
-    eps_c = Float(0.003, input = True) # 3 promile
+    eps_c = Float(0.003, input = True) # float value corresponds to 3 promile
 
     #---------------------------------------------------------------
     # properties of the composite cross section
@@ -115,197 +116,125 @@ class SigFlCalib(HasTraits):
     #
     A_roving = Float(0.461, input = True)
 
-#    sig_comp_i_arr = np.array(float)
-#    eps_t_i_arr = np.array(float)
 
-#    E_yarn = Float
-#    sig_comp_i_arr = Array(float)
-
-#    eps_t_i_arr = Property( Array(float), depends_on = '+input')
-#    @cached_property
-#    def _get_eps_t_i_arr(self):
-#        return self.layer_response( self, u )
-
-#   ------------------------------------    
-#   for effective linear crack bridge law
-#   ------------------------------------    
-#    def layer_response_eps_t_E_yarn( self, u ):
-#        '''CALIBRATION: derive the unknown constitutive law of the layer
-#        (effective crack bridge law)
-#        '''
-#        eps_t, E_yarn = u
-#        # ------------------------------------                
-#        # derived params depending on value for 'eps_t'
-#        # ------------------------------------                
-#
-#        thickness = self.thickness
-#        z_t_i_arr = self.z_t_i_arr
-#
-#        # heights of the compressive zone:
-#        #
-#        x = abs(self.eps_c) / (abs(self.eps_c) + abs(eps_t)) * thickness
-##        print 'x', x
-#
-#        # strain at the height of each reinforcement layer [-]:
-#        
-#        eps_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
-#
-#        eps_t_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
-#
-#        # use a ramp function to consider only negative strains
-#        eps_c_i_arr = (-np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
-#
-#        # use a ramp function to consider only positive strains
-#        eps_t_i_arr = (np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
-#        # print 'eps_t_i_arr', eps_t_i_arr
-##       self.eps_t_i_arr = ncopy(eps_t_i_arr)
-#
-#        # constitutive law of the crack bridge
-#        # linear elastic: effective modulus of elasticity 
-#        
-#        eps_fail = eps_t_i_arr[0]
-#        sig_fail = E_yarn * eps_fail
-#        xdata = np.array([0., eps_fail, 1.00001*eps_fail ])
-#        ydata = np.array([0., sig_fail, sig_fail ])
-#        cb_law_mfn = MFnLineArray(xdata = xdata, ydata = ydata)
-#        return x, eps_t_i_arr,eps_c_i_arr cb_law_mfn
-##    
-# # ------------------------------------    
-# #  for effective quadratic crack bridge law
-# # ------------------------------------    
-#
-    def layer_response_eps_t_a( self, u ):
+    # ultimate textile stress meassured in the tensile test [MPa]
+    #
+    sig_tex_fail = Float( 1216. )
+    
+    def calib_layer_response( self, u ):
         
         '''CALIBRATION: derive the unknown constitutive law of the layer
         (effective crack bridge law)
         '''
-        eps_t, a = u
-        # ------------------------------------                
-        # derived params depending on value for 'eps_t'
-        # ------------------------------------                
+        eps_t, var_a = u
 
+        # ------------------------------------------------------------------------                
+        # geometric params independent from the value for 'eps_t'
+        # ------------------------------------------------------------------------                
         thickness = self.thickness
         z_t_i_arr = self.z_t_i_arr
+        
+        # ------------------------------------------------------------------------                
+        # derived params depending on value for 'eps_t'
+        # ------------------------------------------------------------------------                
 
         # heights of the compressive zone:
         #
         x = abs(self.eps_c) / (abs(self.eps_c) + abs(eps_t)) * thickness
-#        print 'x', x
 
         # strain at the height of each reinforcement layer [-]:
         #
         eps_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
 
-        eps_t_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
-
         # use a ramp function to consider only negative strains
-        eps_c_i_arr = (-np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
+        eps_c_i_arr = (-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
 
         # use a ramp function to consider only positive strains
-        eps_t_i_arr = (np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
-        print 'eps_t_i_arr[0]', eps_t_i_arr[0]
-#        self.eps_t_i_arr = ncopy(eps_t_i_arr)
+        eps_t_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
 
+        # ------------------------------------------------------------------------                
+        # function used to approximate the effective crack bridge law
+        # ------------------------------------------------------------------------                
+        
+        # linear cb-law using only the effective yarn modulus
+        if self.calib_config == 'calibration-linear':
+            E_yarn = var_a
+            xdata = np.array([ 0., 1. ])
+            ydata = np.array([ 0., E_yarn ])
 
-    
-        #quadratic effective modulus of elasticity
-        eps_fail = eps_t_i_arr[0]
-        sig_fail = 1216
-        eps = np.arange(0, eps_fail, 0.001) 
-        b = (sig_fail - a * eps_fail **2) / eps_fail 
-        print 'b', b
-        sigma_tex = a * eps ** 2 + b * eps 
-        xdata = np.hstack([eps, 1.1*eps[-1]])  
-        ydata = np.hstack([sigma_tex, sigma_tex[-1]]) 
-        cb_law_mfn = MFnLineArray(xdata = xdata, ydata = ydata)
+        # linear cb-law up to reaching the rupture strain, behaves plastic afterwards
+        elif self.calib_config == 'calibration-bilinear':
+            E_yarn = var_a
+            sig_fail = self.sig_tex_fail
+            eps_fail = sig_fail / E_yarn
+            xdata = np.array([0., eps_fail, 2.*eps_fail ])
+            ydata = np.array([0., sig_fail, sig_fail ])
+
+        # full plastic cb-law 
+        elif self.calib_config == 'calibration-plastic':
+            sig_fail = self.sig_tex_fail
+            eps_fail = eps_t_i_arr[0]
+            xdata = np.array([0., 0.01*eps_fail, eps_fail ])
+            ydata = np.array([0., 0.99*sig_fail, sig_fail ])
+
+        # quadratic cb-law up to reaching the rupture strain, behaves plastic afterwards
+        elif self.calib_config == 'calibration-quadratic':
+            # use strain at the lowest textile layer as rupture strain 
+            eps_fail = eps_t_i_arr[0]
+            sig_fail = self.sig_tex_fail
+            eps_arr = np.arange(0, eps_fail, eps_fail / 50.) 
+            var_b = (sig_fail - var_a * eps_fail **2) / eps_fail 
+            sig_tex_arr = var_a * eps_arr ** 2 + var_b * eps_arr 
+            xdata = np.hstack([eps_arr, 2.*eps_arr[-1]])  
+            ydata = np.hstack([sig_tex_arr, sig_tex_arr[-1]]) 
+
+        cb_law_mfn = MFnLineArray( xdata = xdata, ydata = ydata )
+        
         return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
 
-         
-    E_yarn = Float
 
-    def layer_response_eps_t_eps_c( self, u ):
+    def eval_layer_response( self, u ):
         '''EVALUATION: using the calibrated constitutive law of the layer
         '''
         eps_t, eps_c = u
 
-        E_yarn = self.E_yarn
-        a = self.a
+        # ------------------------------------------------------------------------                
+        # geometric params independent from the value for 'eps_t'
+        # ------------------------------------------------------------------------                
+
         thickness = self.thickness
         z_t_i_arr = self.z_t_i_arr
-         # ------------------------------------                
+       
+        # ------------------------------------------------------------------------                
         # derived params depending on value for 'eps_t'
-        # ------------------------------------              
+        # ------------------------------------------------------------------------                
+
         # heights of the compressive zone:
-        x = abs(eps_c) / (abs(eps_c) + abs(eps_t)) * thickness
-#         print 'x', x
-        eps_t_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
-        eps_fail = eps_t_i_arr[0]
-        sig_fail = 1216
-        b = (sig_fail - a * eps_fail **2) / eps_fail
-        eps = np.arange(0, eps_fail, 0.001) 
-        self.eps_c = eps_c
+        #
+        x = abs(self.eps_c) / (abs(self.eps_c) + abs(eps_t)) * thickness
 
         # strain at the height of each reinforcement layer [-]:
         #
         eps_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
 
-        eps_t_i_arr = eps_t / (thickness - x) * (z_t_i_arr - x)
-
-       # use a ramp function to consider only negative strains
-        eps_c_i_arr = (-np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
+        # use a ramp function to consider only negative strains
+        eps_c_i_arr = (-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
 
         # use a ramp function to consider only positive strains
-        eps_t_i_arr = (np.fabs(eps_t_i_arr) + eps_t_i_arr) / 2.0
-        # print 'eps_t_i_arr', eps_t_i_arr
-#        self.eps_t_i_arr = np.ncopy(eps_t_i_arr)
-
-        # construct the constitutive law of the crack bridge - linear elastic
-        # with the search effective modulus of elasticity 
-        #-------------------------------
-        # linear law of the crack bridge
-        #-------------------------------
-#        eps_fail = eps_t_i_arr[0]
-#        sig_fail = E_yarn * eps_fail
-
-        # conservative for iteration of response due to imposed loads
-        # 'Einwirkungsseite'
-        #
-#        xdata = np.array([0., eps_fail, 1,0000001 eps_fail ])
-#        ydata = np.array([0., sig_fail, sig_fail])
-
-        # plastic law of the crack bridge
-        #-------------------------------
-        # conservative for iteration of resistance stress
-        # 'Widerstandsseite'
-        #
-#        xdata = np.array( [0, 0.01 * eps_fail, eps_fail ] )
-#        ydata = np.array( [0, 0.99 * sig_fail, sig_fail ] )
-
- # ------------------------------------    
- #  for effective quadratic crack bridge law
- # ------------------------------------    
+        eps_t_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
         
-        #eps = np.arange(0, eps_t, 0.001)
-        sigma_tex = a * eps ** 2 + b * eps
-        
-        xdata = np.hstack([eps, 1.1*eps[-1]])  
-        ydata = np.hstack([sigma_tex, sigma_tex[-1]]) 
-      
+        cb_law_mfn = self.cb_law_mfn
 
-
-
-        mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
-
-        return x, eps_t_i_arr, eps_c_i_arr, mfn_line_array
+        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
 
 
 
     def get_f_i_arr( self, u ):
         '''tensile force at the height of each reinforcement layer [kN]:
         '''
-        x, eps_t_i_arr, eps_c_i_arr, layer_response = self.layer_response( u )
+        x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = self.layer_response( u )
 
-        get_sig_t_i_arr = np.frompyfunc( layer_response.get_value, 1, 1 )
+        get_sig_t_i_arr = np.frompyfunc( cb_law_mfn.get_value, 1, 1 )
         sig_t_i_arr = get_sig_t_i_arr( eps_t_i_arr )
 
         # print 'sig_i_arr', sig_i_arr
@@ -333,82 +262,76 @@ class SigFlCalib(HasTraits):
         x, f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
         return (f_t_i_arr - f_c_i_arr) / self.width / self.s_tex_z / 1000.0
 
-    #-----------------------------
-#     for simplified constant stress-strain-diagram of the concrete (EC2)
-    #-----------------------------
-#    sig_c_mfn = Property
-#    @cached_property
-#    def _get_sig_c_mfn(self):
-#        #(for standard concrete)
-#        
-#        if self.f_ck<=50:
-#            lamda= 0.8
-#            eta= 1.0  
-#            eps_cu3= 0.0035
-#
-#        # (for high strength concrete)
-#        #
-#        else:
-#            eta = 1.0 - ( self.f_ck / 50) / 200
-#        # factor [-] to calculate the height of the compressive zone  
-#            lamda = 0.8 - (self.f_ck - 50) / 400
-#            eps_cu3 = 2.6 + 35 * (90 - self.f_ck) **4 / 100000000 
-#    
-#        xdata = np.array([0., (1 - lamda) * eps_cu3 - 0.0000001, (1 - lamda) * 0.0035, 0.0035]) 
-#        ydata = np.array([0., 0., eta*self.f_ck, eta*self.f_ck])
-#        return MFnLineArray(xdata = xdata, ydata = ydata)   
-####
 
- 
+    #-----------------------------
+    # for simplified constant stress-strain-diagram of the concrete (EC2)
+    #-----------------------------
+    sig_c_mfn_block = Property
+    def _get_sig_c_mfn_block(self):
+        #(for standard concrete)
+        if self.f_ck <= 50:
+            lamda = 0.8
+            eta = 1.0  
+            eps_cu3 = 0.0035
+        # (for high strength concrete)
+        #
+        else:
+            eta = 1.0 - ( self.f_ck / 50.) / 200.
+        # factor [-] to calculate the height of the compressive zone  
+            lamda = 0.8 - (self.f_ck - 50.) / 400.
+            eps_cu3 = 2.6 + 35. * (90. - self.f_ck) **4 / 100000000 
+        xdata = np.array([0., (1. - lamda) * eps_cu3 - 0.0000001, (1 - lamda) * 0.0035, 0.0035]) 
+        ydata = np.array([0., 0., eta*self.f_ck, eta * self.f_ck])
+        return MFnLineArray(xdata = xdata, ydata = ydata)   
 
 
     #-----------------------------
-    # for bi-linear stress-strain-diagram of the concrete (EC2)
+    # for bilinear stress-strain-diagram of the concrete (EC2)
     #-----------------------------
+    sig_c_mfn_bilinear = Property
+    def _get_sig_c_mfn_bilinear(self):
+        #(for standard concrete)
+        if self.f_ck <= 50.:
+            epsilon_c3 = 0.00175
+            epsilon_cu3 = 0.0035
+        #(for high strength concrete)
+        else :
+            epsilon_c3 = 1,75 + 0,55 * (self.f_ck - 50.) / 40.
+            epsilon_cu3 = 2,6 + 35 * (90 - self.f_ck) ** 4. / 100000000.      
+  
+        xdata = np.array( [0., epsilon_c3, epsilon_cu3] )
+        ydata = np.array( [0., self.f_ck, self.f_ck] )
+        return MFnLineArray(xdata = xdata, ydata = ydata)
 
-#    sig_c_mfn = Property
-#    @cached_property
-#    def get_sig_c_mfn(self):
-#        #(for standard concrete)
-#        if self.f_ck <= 50:
-#            epsilon_c3= 0.00175
-#            epsilon_cu3= 0.0035
-#        #(for high strength concrete)
-#        else :
-#            epsilon_c3= 1,75 + 0,55 * (self.f_ck - 50) / 40
-#            epsilon_cu3= 2,6 + 35 * (90 - self.f_ck) ** 4 / 100000000      
-#  
-#        xdata = np.array( [0., epsilon_c3, epsilon_cu3] )
-#        ydata = np.array( [0., self.f_ck, self.f_ck] )
-#        return MFnLineArray(xdata = xdata, ydata = ydata)
-#-----------------------------
-#    sig_c_mfn = Property
-#    @cached_property
-#    def _get_sig_c_mfn( self ):
-#        
-#        xdata = np.array( [0., 0.00175, 0.0035] )
-#        ydata = np.array( [0., self.f_ck, self.f_ck] )
-#        return MFnLineArray( xdata = xdata, ydata = ydata )
-##    #-----------------------------
-##    # for quadratic stress-strain-diagram of the concrete
-##    #-----------------------------
-#
-    sig_c_mfn = Property
-    @cached_property
-    def _get_sig_c_mfn( self ):
+
+    #-----------------------------
+    # for quadratic stress-strain-diagram of the concrete
+    #-----------------------------
+    sig_c_mfn_quadratic = Property
+    def _get_sig_c_mfn_quadratic( self ):
         # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
-        f_cm= self.f_ck + 8
-        E_tan= 9500 * (f_cm) ** (1/3) #SBT 17
-        E_sec= f_cm / 0.0022
+        f_cm = self.f_ck + 8
+        E_tan = 9500 * (f_cm) ** (1/3) #SBT 17
+        E_sec = f_cm / 0.0022
         epsilon_c1 = 0.0022 # min(0.7*f_cm**0.31, 2.8)/1000 #EC
-        epsilon=np.arange(0, 0.0022, 0.000022)
-        sigma_c=(E_tan / E_sec * epsilon / epsilon_c1 - (epsilon / epsilon_c1) **2) / (1 + (E_tan/E_sec - 2)*epsilon / epsilon_c1) * f_cm
-        print'epsilon', epsilon
-        print'sigma_c=', sigma_c
+        epsilon = np.arange(0, 0.0022, 0.000022)
+        sigma_c = (E_tan / E_sec * epsilon / epsilon_c1 - (epsilon / epsilon_c1) **2) / (1 + (E_tan/E_sec - 2)*epsilon / epsilon_c1) * f_cm
+#        print'epsilon', epsilon
+#        print'sigma_c=', sigma_c
         xdata = epsilon
         ydata = sigma_c
         return MFnLineArray( xdata = xdata, ydata = ydata )
-#
+
+    sig_c_config = Trait('quadratic',{
+                          'quadratic' : 'sig_c_mfn_quadratic',
+                          'bilinear'  : 'sig_c_mfn_bilinear',
+                          'block'     : 'sig_c_mfn_block'
+                          },
+                         modified = True)
+
+    sig_c_mfn = Property(depends_on = 'sig_c_config')
+    def _get_sig_c_mfn(self):
+        return getattr( self, self.sig_c_config_)
 
     def get_sig_c(self, eps_c):
         sig_c = self.sig_c_mfn.get_value(eps_c)
@@ -421,11 +344,6 @@ class SigFlCalib(HasTraits):
 
     get_sig_c_vectorized = np.frompyfunc( get_sig_c, 1, 1 )
 
-#    def get_a( self, u ):
-#        x, f_t_i_arr = self.get_f_t_i_arr( u )
-#        a = self.k * x / 2.
-#        return a
-
     # number of subdivisions of the compressive zone
     #
     n_c = float(5)
@@ -437,7 +355,7 @@ class SigFlCalib(HasTraits):
         'x_frac_i' giving the fraction of each distance of the sub-area from the upper surface 
         with respect to the compressive zone 'x'
         '''
-        print 'x_frac_i', np.arange( self.n_c ) / self.n_c + 1. / ( 2. * self.n_c )
+#        print 'x_frac_i', np.arange( self.n_c ) / self.n_c + 1. / ( 2. * self.n_c )
         return np.arange(self.n_c) / self.n_c + 1. / (2. * self.n_c)
 
     # iteration counter
@@ -548,7 +466,7 @@ class SigFlCalib(HasTraits):
     #
     m = 0
 
-    def fit_response(self, M, N, u0 = [ 0.010, 0.0033 ]):
+    def fit_response( self, M, N ):
 #                      elem_no = 0, mx = 0.0, my = 0.0, mxy = 0.0, nx = 0.0, ny = 0.0, nxy = 0.0, \
 #                      sig1_up = 0, sig1_lo_sig_up = 0, sig1_lo = 0, sig1_up_sig_lo = 0, ):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -624,13 +542,14 @@ class SigFlCalib(HasTraits):
         return u_sol
   
 
-    
-    calib_config = Trait('eps_t_E_yarn',
-                          {'eps_t_a' : ('layer_response_eps_t_a',
+    calib_config = Trait('calibration-quadratic',
+                          {'calibration-quadratic' : ('calib_layer_response',
                                               np.array([ 0.01, -500 ])),
-                           'eps_t_E_yarn' : ('layer_response_eps_t_E_yarn',
+                           'calibration-linear' : ('calib_layer_response',
                                               np.array([ 0.01, 50000.0 ])),
-                           'eps_t_eps_c' : ('layer_response_eps_t_eps_c',
+                           'calibration-bilinear' : ('calib_layer_response',
+                                              np.array([ 0.01, 50000.0 ])),
+                           'evaluation' : ('eval_layer_response',
                                              np.array([ 0.010, 0.0033 ])) },
                          modified = True)
 
@@ -648,6 +567,16 @@ class SigFlCalib(HasTraits):
         sig_max = max(self.get_sig_comp_i_arr( u ))
         print 'sig_max', sig_max
         return sig_max
+
+    cb_law_mfn = MFnLineArray()
+
+#    cb_law_mfn = Property( MFnLineArray, depends_on = 'calib_config')
+#    @cached_property
+#    def _get_cb_law_mfn(self, u):
+#        x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = self.layer_response( u )
+#        return cb_law_mfn
+
+
 
 if __name__ == '__main__':
 
@@ -670,7 +599,9 @@ if __name__ == '__main__':
 #    N = -46.4211016241
 
     #------------------------------------------------
-    # get 'E_yarn' and 'eps_t' for given 'eps_c' bzw get 'a' and 'eps_t' for given 'eps_c'
+    # 1) CALIBRATION:
+    # get 'eps_t' and the parameter of the effective 
+    # crack bridge function 'var_a' for a given 'eps_c'
     #------------------------------------------------
     #
     print '\n'
@@ -694,46 +625,35 @@ if __name__ == '__main__':
 #                               width = 1.0,
 #                               n_roving = 120,
 
-                              # calib_config = 'eps_t_E_yarn'
-# ------------------------------------    
-#  for effective quadratic crack bridge law
-# ------------------------------------    
-                                calib_config = 'eps_t_a'
+                               # define shape of the crack-bridge law ('linear', 'bilinear' or 'quadratic')
+                               #
+                               calib_config = 'calibration-quadratic',
+
+                               # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
+                               #
+                               sig_c_config = 'quadratic'
+                              
                               )
 
-    eps_t, E_yarn = sig_fl_calib.fit_response( M, N )
-    eps_t, a = sig_fl_calib.fit_response( M, N )
+    eps_t, var_a = sig_fl_calib.fit_response( M, N )
+    u_sol = [ eps_t, var_a ]
     eps_c = sig_fl_calib.eps_c
     print 'eps_c', eps_c
     print 'eps_t', eps_t
-    print 'E_yarn', E_yarn
-    #print 'a', a
+    print 'u_sol', u_sol
+
+    x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = sig_fl_calib.layer_response( u_sol )
+
     
-
     #------------------------------------------------
-    # get 'eps_c', 'esp_t' for given/calibrated 'E_yarn' 
+    # 2) EVALUATION / VALIDATION:
+    # get 'eps_c', 'esp_t' for given/calibrated cb-law 
     #------------------------------------------------
-    #
-#    E_yarn = 84384.2115269
-    print '\n'
-   # print 'set E_yarn to %g' % (E_yarn)
-    print '\n'
-# ------------------------------------    
-#     for effective linear crack bridge law
-# ------------------------------------    
-#    sig_fl_calib.set(E_yarn = E_yarn,
-#                     calib_config = 'eps_t_eps_c')
-##    
-#    # ------------------------------------    
-##  for effective quadratic crack bridge law
-## ------------------------------------    
-    sig_fl_calib.set(a = a,
-                     calib_config = 'eps_t_eps_c')
 
-    u0 = [0.003, 0.01]
-    print 'starting with u0 = [%g, %g]' % (u0[0], u0[1])
-
-    eps_t, eps_c = sig_fl_calib.fit_response(M, N, u0)
+    sig_fl_calib.set( cb_law_mfn = cb_law_mfn,
+                      calib_config = 'evaluation' )
+    
+    eps_t, eps_c = sig_fl_calib.fit_response( M, N )
     print 'eps_t', eps_t
     print 'eps_c', eps_c
     print 'max_sig', sig_fl_calib.get_sig_max( [ eps_t, eps_c ] )
@@ -744,22 +664,6 @@ if __name__ == '__main__':
     #
     layer_arr = np.arange(sig_fl_calib.n_layers)
     sig_comp_i_arr = sig_fl_calib.get_sig_comp_i_arr( [eps_t, eps_c] )
-   
-
-
-
-
-
-
-
-    
     p.bar(layer_arr, sig_comp_i_arr, 0.2)
-    
-#    ax2 = p.twinx()
-
-#    ax2.plot(layer_arr, sig_fl_calib.eps_t_i_arr)
-#    print 'eps_t_i_arr', sig_fl_calib.eps_t_i_arr
-#    p.plot( layer_arr, sig_fl_calib.eps_t_i_arr )
-
     p.show()
 
