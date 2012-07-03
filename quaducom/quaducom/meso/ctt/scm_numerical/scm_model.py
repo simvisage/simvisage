@@ -21,6 +21,9 @@ from interpolated_spirrid import InterpolatedSPIRRID
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
+from stats.spirrid import make_ogrid as orthogonalize
+import etsproxy.mayavi.mlab as m
+from matplotlib import pyplot as plt
 
 class CBRandomSample(HasTraits):
 
@@ -271,22 +274,17 @@ class SCM(HasTraits):
 
     eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
     def _get_eps_sigma(self):
-#        coords = self.eps_r.shape
-#        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
-#        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
-#        m.show() 
+        coords = self.eps_r.shape
+        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
+        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
+        m.show() 
         eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
         sigma = self.load_sigma_c
         return eps, sigma
 
 if __name__ == '__main__':
-
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
-        CBEMClampedFiberStressSP
-    from stats.spirrid import make_ogrid as orthogonalize
-    from matplotlib import pyplot as plt
-    import etsproxy.mayavi.mlab as m
-    import pickle
+    CBEMClampedFiberStressSP
 
     # filaments
     r = 0.00345
