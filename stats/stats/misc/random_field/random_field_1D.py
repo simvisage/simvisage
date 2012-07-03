@@ -7,7 +7,7 @@ Created on 24.06.2011
 from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
 from math import e
-from numpy import dot, transpose, ones, array, eye, real, linspace, reshape
+from numpy import dot, transpose, ones, array, eye, linspace, reshape
 from numpy.linalg import eig
 from numpy.random import shuffle
 from scipy.linalg import toeplitz
@@ -39,6 +39,7 @@ class RandomField(HasTraits):
 
     non_negative_check = False
     reevaluate = Event
+    seed = Bool(False)
 
     def acor(self, dx, lcorr):
         '''autocorrelation function'''
@@ -61,7 +62,8 @@ class RandomField(HasTraits):
     random_field = Property(Array , depends_on = '+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
-        np.random.seed(4)
+        if self.seed == True:
+            np.random.seed(10)
         '''simulates the Gaussian random field'''
         #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
