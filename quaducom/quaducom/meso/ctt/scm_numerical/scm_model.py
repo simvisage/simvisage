@@ -290,18 +290,19 @@ if __name__ == '__main__':
     tau = .5 #RV('uniform', loc = 0.02, scale = .01) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = 10.#RV( 'uniform', scale = 10., loc = 2. )
+    l = RV( 'uniform', scale = 10., loc = 2. )
     theta = 0.0
-    xi = 0.007#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
+    xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
-    w = np.linspace(0.0, .1, 41)
-    x = np.linspace(-50., 50., 51)
-    Ll = np.linspace(0.5,50,10)
-    Lr = np.linspace(0.5,50,10)
+    w = np.linspace(0.0, .5, 41)
+    x = np.linspace(-30., 30., 51)
+    Ll = np.linspace(0.5,30,4)
+    Lr = np.linspace(0.5,30,4)
 
     length = 600.
     nx = 600
-    random_field = RandomField(lacor = 4.,
+    random_field = RandomField(seed = False,
+                               lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
                                 nsim = 1,
                                 loc = .0,
@@ -348,6 +349,5 @@ if __name__ == '__main__':
         plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
         plt.legend(loc = 'best')
         plt.show()
-        #m.show()
 
     plot()
