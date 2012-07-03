@@ -229,62 +229,62 @@ class SigFlCalib(HasTraits):
 
 
 
-        def eval_layer_response_t( self, u ):
-            '''EVALUATION: using the calibrated constitutive law of the layer
-            ''' 
-            eps_tl, eps_tu = u
+    def eval_layer_response_t( self, u ):
+        '''EVALUATION: using the calibrated constitutive law of the layer
+        ''' 
+        eps_tl, eps_tu = u
 
-            # ------------------------------------------------------------------------                
-            # geometric params independent from the value for 'eps_tl'
-            # ------------------------------------------------------------------------                
+        # ------------------------------------------------------------------------                
+        # geometric params independent from the value for 'eps_tl'
+        # ------------------------------------------------------------------------                
 
-            thickness = self.thickness
-            z_t_i_arr = self.z_t_i_arr
-       
-            # ------------------------------------------------------------------------                
-            # derived params depending on value for 'eps_tl'
-            # ------------------------------------------------------------------------                
+        thickness = self.thickness
+        z_t_i_arr = self.z_t_i_arr
+   
+        # ------------------------------------------------------------------------                
+        # derived params depending on value for 'eps_tl'
+        # ------------------------------------------------------------------------                
 
-            # heights of the compressive zone: the whole cross-section is stressed with tension            #
-            x = 0
+        # heights of the compressive zone: the whole cross-section is stressed with tension            #
+        x = 0
 
-            # strain at the height of each reinforcement layer [-]:
-            #
-            eps_i_arr = eps_tl - (eps_tl - eps_tu ) / thickness * (thickness - z_t_i_arr)
-            eps_t_i_arr = eps_i_arr
-            eps_c_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
-            cb_law_mfn = self.cb_law_mfn
+        # strain at the height of each reinforcement layer [-]:
+        #
+        eps_i_arr = eps_tl - (eps_tl - eps_tu ) / thickness * (thickness - z_t_i_arr)
+        eps_t_i_arr = eps_i_arr
+        eps_c_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
+        cb_law_mfn = self.cb_law_mfn
 
-            return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
-         
-        def eval_layer_response_c( self, u ):
-            '''EVALUATION: using the calibrated constitutive law of the layer
-            ''' 
-            eps_cl, eps_cu = u
+        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+     
+    def eval_layer_response_c( self, u ):
+        '''EVALUATION: using the calibrated constitutive law of the layer
+        ''' 
+        eps_cl, eps_cu = u
 
-            # ------------------------------------------------------------------------                
-            # geometric params independent from the value for 'eps_cl'
-            # ------------------------------------------------------------------------                
+        # ------------------------------------------------------------------------                
+        # geometric params independent from the value for 'eps_cl'
+        # ------------------------------------------------------------------------                
 
-            thickness = self.thickness
-            z_t_i_arr = self.z_t_i_arr
-       
-            # ------------------------------------------------------------------------                
-            # derived params depending on value for 'eps_cl'
-            # ------------------------------------------------------------------------                
+        thickness = self.thickness
+        z_t_i_arr = self.z_t_i_arr
+   
+        # ------------------------------------------------------------------------                
+        # derived params depending on value for 'eps_cl'
+        # ------------------------------------------------------------------------                
 
-            # heights of the compressive zone: the whole cross-section is stressed by compression            #
-            x = thickness
+        # heights of the compressive zone: the whole cross-section is stressed by compression            #
+        x = thickness
 
-            # strain at the height of each reinforcement layer [-]:
-            #
-            eps_i_arr = eps_cl - (eps_cl - eps_cu) / thickness * z_t_i_arr
-            eps_t_i_arr = (-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
-            eps_c_i_arr = eps_i_arr
-            cb_law_mfn = self.cb_law_mfn
+        # strain at the height of each reinforcement layer [-]:
+        #
+        eps_i_arr = eps_cl - (eps_cl - eps_cu) / thickness * z_t_i_arr
+        eps_t_i_arr = (-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
+        eps_c_i_arr = eps_i_arr
+        cb_law_mfn = self.cb_law_mfn
 
-            return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
-    
+        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+
 
 
     def get_f_i_arr( self, u ):
@@ -429,6 +429,12 @@ class SigFlCalib(HasTraits):
         to be found iteratively!
         '''
         print '------------- iteration: %g ----------------------------' % ( self.n )
+
+        if self.calib_config != 'calibration-quadratic'  or \
+                                'calibration-linear' or \
+                                'calibration-bilinear':
+            stress_case = self.determine_stress_case(N,M)
+            self.calib_config = stress_case
 
         x, f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
 
@@ -595,25 +601,18 @@ class SigFlCalib(HasTraits):
         print 'sig_minus', sig_minus
         
         if sig_plus * sig_minus < 0.0:
-          
-            print 'flexion'
-            stress_case = 'flexion'
-        
+            stress_case = 'evaluation-flexion'
 
         elif sig_plus < 0.0 and sig_minus < 0.0:
-            
-            print 'pure_compression'
-            stress_case = 'pure_compression'
+            stress_case = 'evaluation-compression'
           
-            
         elif sig_plus > 0.0 and sig_minus > 0.0:
-            
-            print 'pure_tension'
-            stress_case = 'pure_tension'
+            stress_case = 'evaluation-tension'
         
+        print 'evaluation for stress case: ', stress_case
         return stress_case
         
-
+        
     calib_config = Trait('calibration-quadratic',
                           {'calibration-quadratic' : ('calib_layer_response',
                                               np.array([ 0.01, -500 ])),
@@ -622,6 +621,12 @@ class SigFlCalib(HasTraits):
                            'calibration-bilinear' : ('calib_layer_response',
                                               np.array([ 0.01, 50000.0 ])),
                            'evaluation' : ('eval_layer_response_f',
+                                             np.array([ 0.010, 0.0033 ])),
+                           'evaluation-flexion' : ('eval_layer_response_f',
+                                              np.array([ 0.01, 0.0033 ])),
+                           'evaluation-tension' : ('eval_layer_response_t',
+                                              np.array([ 0.01, 0.001 ])),
+                           'evaluation-compression' : ('eval_layer_response_c',
                                              np.array([ 0.010, 0.0033 ])) },
                          modified = True)
 
@@ -642,26 +647,6 @@ class SigFlCalib(HasTraits):
 
     cb_law_mfn = MFnLineArray()
 
-#    cb_law_mfn = Property( MFnLineArray, depends_on = 'calib_config')
-#    @cached_property
-#    def _get_cb_law_mfn(self, u):
-#        x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = self.layer_response( u )
-#        return cb_law_mfn
-
-    stress_mode = Trait('eval_flexion',
-                          {'eval_flexion' : ('eval_layer_response_f',
-                                              np.array([ 0.01, 0.0033 ])),
-                           'eval_pure_tension' : ('eval_layer_response_t',
-                                              np.array([ 0.01, 0.001 ])),
-                           'eval_pure_compression' : ('eval_layer_response_c',
-                                             np.array([ 0.010, 0.0033 ]))},
-                         modified = True)
- 
-    layer_response_mode = Property(depends_on = 'stress case')
-    @cached_property
-    
-    def _get_layer_response_eval(self):
-        return getattr(self, self.stress_case[0])
 
 
 if __name__ == '__main__':
@@ -741,34 +726,15 @@ if __name__ == '__main__':
     
     # select the right stress_mode for calculation
     #
-    stress_case = determine_stress_case ( M, N)
-                               
-    if stress_case == 'flexion':
-                                   
-        stress_mode = 'eval_flexion'
-        
-        eps_t, eps_c = sig_fl_calib.fit_response( M, N )
-        print 'eps_t', eps_t
-        print 'eps_c', eps_c
-        print 'max_sig', sig_fl_calib.get_sig_max( [ eps_t, eps_c ] )
-                               
-    elif  stress_case == 'pure_tension':
-                                   
-        stress_mode = 'eval_pure_tension'
-        eps_tl, eps_tu = sig_fl_calib.fit_response( M, N )
-        print 'eps_tl', eps_tl
-        print 'eps_tu', eps_tu
-        print 'max_sig', sig_fl_calib.get_sig_max( [ eps_tl, eps_tu ] )   
-                   
-    elif  stress_case == 'pure_compression':
-        
-        stress_mode = 'eval_pure_compression'
-        eps_cl, eps_cu = sig_fl_calib.fit_response( M, N )
-        print 'eps_cl', eps_cl
-        print 'eps_cu', eps_cu
-        print 'max_sig', sig_fl_calib.get_sig_max( [ eps_cl, eps_cu ] )                      
+    stress_case = sig_fl_calib.determine_stress_case( M, N)
+    print 'stress_case', stress_case
+    print 'calib_config', sig_fl_calib.calib_config
+
+    eps_lo, eps_up = sig_fl_calib.fit_response( M, N )
+    print 'eps_lo', eps_lo
+    print 'eps_uo', eps_up
+    print 'max_sig', sig_fl_calib.get_sig_max( [ eps_lo, eps_up ] )                      
                               
-    
 
     #------------------------------------------------
     # plot response
