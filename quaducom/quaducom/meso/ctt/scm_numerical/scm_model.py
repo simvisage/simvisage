@@ -37,7 +37,8 @@ class CBRandomSample(HasTraits):
         return np.sum(sig)
 
 class CB(HasTraits):
-
+    '''crack bridge class - includes informations about position, stress range and evaluates
+    the stress and strain profiles in the composite components'''
     get_sigma_f_x_reinf = Callable
     randomization = Instance(FunctionRandomization)
 
@@ -135,8 +136,10 @@ class CBRandomFactory(CBMFactory):
 
 from scipy.interpolate import RectBivariateSpline
 
-class CTT(HasTraits):
-
+class SCM(HasTraits):
+    '''Stochastic Cracking Model - compares matrix strength and stress, inserts new CS instances
+    at positions, where the matrix strength is lower than the stress; evaluates stress-strain diagram
+    by integrating the strain profile along the composite'''
     cb_randomization = Instance(FunctionRandomization)
 
     cb_type = Trait('mean', dict(mean = CBMeanFactory,
@@ -155,6 +158,7 @@ class CTT(HasTraits):
 
     load_sigma_c = Property(depends_on = '+load')
     def _get_load_sigma_c(self):
+        #applied external load in terms of composite stress
         return np.linspace(self.load_sigma_c_min, self.load_sigma_c_max, self.load_n_sigma_c)
 
     load_sigma_c_min = Float(load = True)
@@ -164,13 +168,13 @@ class CTT(HasTraits):
     x_arr = Property(Array, depends_on = 'length, nx')
     @cached_property
     def _get_x_arr(self):
-        '''discretizes the specimen length'''
+        # discretizes the specimen length
         return np.linspace(0., self.length, self.nx)
 
     sigma_mx_load_ff = Property(depends_on = '+load, cb_randomization')
     @cached_property
     def _get_sigma_mx_load_ff(self):
-        '''2D array of stress in the matrix along an uncracked composite X load array'''
+        # 2D array of stress in the matrix along an uncracked composite of shape (load_sigma_c, x_arr)
         Em = self.cb_randomization.tvars['E_m']
         Ef = self.cb_randomization.tvars['E_f']
         Vf = self.cb_randomization.tvars['V_f']
@@ -182,13 +186,14 @@ class CTT(HasTraits):
     matrix_strength = Property(depends_on = 'random_field.+modified')
     @cached_property
     def _get_matrix_strength(self):
+        # evaluates a random field realization and creates a 2D spline reprezentation
         rf = self.random_field.random_field
         field_2D = np.ones_like(self.load_sigma_c[:, np.newaxis]) * rf
         rf_spline = RectBivariateSpline(self.load_sigma_c, self.random_field.xgrid, field_2D)
         return rf_spline(self.load_sigma_c, self.x_arr)
 
     def sort_cbs(self, load_sigma_c):
-        '''sorts the CBs by position and adjusts the boundary conditions'''
+        # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
         self.cb_list = sorted(self.cb_list, key = attrgetter('position'))
         # specify the boundaries at the ends (0 and self.length) of the specimen 
@@ -221,8 +226,7 @@ class CTT(HasTraits):
         return  np.ones_like(self.load_sigma_c)[:, np.newaxis] * self.x_arr[np.newaxis, :]
 
     def evaluate(self):
-        '''seek for the minimum strength redundancy to find the position
-        of the next crack'''
+        #seek for the minimum strength redundancy to find the position of the next crack
         while np.any(self.sigma_m > self.matrix_strength):
             mask = self.sigma_m < self.matrix_strength
             idx = np.argmin(mask.sum(0))
@@ -267,7 +271,7 @@ class CTT(HasTraits):
 
     eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
     def _get_eps_sigma(self):
-        coords = self.eps_r.shape
+#        coords = self.eps_r.shape
 #        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
 #        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
 #        m.show() 
@@ -332,7 +336,7 @@ if __name__ == '__main__':
                                     n_int = 30
                                     )
 
-    ctt = CTT(length = length,
+    scm = SCM(length = length,
               nx = nx,
               random_field = random_field,
               cb_randomization = rand,
@@ -342,12 +346,14 @@ if __name__ == '__main__':
               load_n_sigma_c = 100
               )
     
-    ctt.evaluate()
+    scm.evaluate()
 
     def plot():
-        eps, sigma = ctt.eps_sigma
+        eps, sigma = scm.eps_sigma
         plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
         plt.legend(loc = 'best')
+        plt.xlabel('composite strain [-]')
+        plt.ylabel('composite stress [MPa]')
         plt.show()
 
     plot()
