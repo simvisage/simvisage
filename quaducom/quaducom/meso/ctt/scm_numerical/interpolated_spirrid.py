@@ -98,6 +98,7 @@ class InterpolatedSPIRRID(HasTraits):
     
     def adapt_w_higher_stress(self, sigma_f, load_sigma_f, len_w):
         # case 1) stretch the w range
+        count = 0
         while np.max(sigma_f)/np.max(load_sigma_f) > 1.1 or \
             float(np.argmax(sigma_f))/float(len(sigma_f) - 1) < 0.9:
             # find the closest higher value to the max applied stress
@@ -106,22 +107,33 @@ class InterpolatedSPIRRID(HasTraits):
             #adapt the w range and evaluate spirrid with the adapted range
             self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
             sigma_f = self.spirrid.mu_q_arr
+            count += 1
+            if count > 3:
+                raise ValueError('got stuck in a loop adapting w - try to change the w range')
 
     def adapt_w_lower_stress(self, sigma_f, load_sigma_f, len_w):
         # the peak is within the w range - stretch the w range
         if np.argmax(sigma_f) != len(sigma_f) -1:
+            count = 0
             while np.argmax(sigma_f)/float(len(sigma_f)-1) < 0.9:
                 wmax = self.spirrid.evars['w'][np.argmax(sigma_f)] * 1.05
                 self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
                 sigma_f = self.spirrid.mu_q_arr
+                count += 1
+                if count > 3:
+                    raise ValueError('got stuck in a loop adapting w - try to change the w range')
         # the peak is beyond the w range
         else:
             # stretch the w range until case 1) or 2) is attained
+            count = 0
             while np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) < np.max(load_sigma_f):
                 factor = np.max(load_sigma_f)/np.max(sigma_f)
                 wmax = self.spirrid.evars['w'][-1] * factor * 1.2
                 self.spirrid.evars['w'] = np.linspace(0.0, wmax, len_w)
                 sigma_f = self.spirrid.mu_q_arr
+                count += 1
+                if count > 3:
+                    raise ValueError('got stuck in a loop adapting w - try to change the w range')
             # case 1)
             if np.argmax(sigma_f) == len(sigma_f) -1 and np.max(sigma_f) > np.max(load_sigma_f):
                 self.adapt_w_higher_stress(sigma_f, load_sigma_f, len_w)
