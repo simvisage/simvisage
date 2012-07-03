@@ -245,7 +245,7 @@ class SCM(HasTraits):
 #            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
 #            m.surf(e_arr[0], e_arr[1], self.sigma_m)
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
-#            m.show()  
+#            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
                 break
@@ -274,10 +274,10 @@ class SCM(HasTraits):
 
     eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
     def _get_eps_sigma(self):
-        coords = self.eps_r.shape
-        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
-        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
-        m.show() 
+#        coords = self.eps_r.shape
+#        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
+#        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
+#        m.show() 
         eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
         sigma = self.load_sigma_c
         return eps, sigma
