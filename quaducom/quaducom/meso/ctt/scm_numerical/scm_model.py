@@ -21,6 +21,9 @@ from interpolated_spirrid import InterpolatedSPIRRID
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
+from stats.spirrid import make_ogrid as orthogonalize
+import etsproxy.mayavi.mlab as m
+from matplotlib import pyplot as plt
 
 class CBRandomSample(HasTraits):
 
@@ -171,16 +174,17 @@ class SCM(HasTraits):
         # discretizes the specimen length
         return np.linspace(0., self.length, self.nx)
 
-    sigma_mx_load_ff = Property(depends_on = '+load, cb_randomization')
+    sigma_mx_load_ff = Property(depends_on = '+load, +cb_randomization.tvars')
     @cached_property
     def _get_sigma_mx_load_ff(self):
         # 2D array of stress in the matrix along an uncracked composite of shape (load_sigma_c, x_arr)
         Em = self.cb_randomization.tvars['E_m']
         Ef = self.cb_randomization.tvars['E_f']
         Vf = self.cb_randomization.tvars['V_f']
-        Ec = Ef*Vf + Em*(1-Vf)
+        Ec = Ef*Vf + Em*(1.-Vf)
         sigma_m_ff = self.load_sigma_c[:, np.newaxis] * Em / Ec
-        return np.ones(len(self.x_arr)) * sigma_m_ff
+        sigma_mx_load_ff = np.ones(len(self.x_arr)) * sigma_m_ff
+        return sigma_mx_load_ff
 
     random_field = Instance(RandomField)
     matrix_strength = Property(depends_on = 'random_field.+modified')
@@ -242,7 +246,7 @@ class SCM(HasTraits):
 #            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
 #            m.surf(e_arr[0], e_arr[1], self.sigma_m)
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
-#            m.show()  
+#            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
                 break
@@ -256,18 +260,18 @@ class SCM(HasTraits):
     eps_m = Property(Array, depends_on = 'cb_list')
     @cached_property
     def _get_eps_m(self):
-        return self.sigma_m / self.cb_randomization.q.E_m
+        return self.sigma_m / self.cb_randomization.tvars['E_f']
 
     sigma_r = Property(Array, depends_on = 'cb_list')
     @cached_property
     def _get_sigma_r(self):
-        Vf = self.cb_randomization.q.V_f
-        return (self.load_sigma_c[:, np.newaxis] - self.sigma_m * (1-Vf))/Vf
+        Vf = self.cb_randomization.tvars['V_f']
+        return (self.load_sigma_c[:, np.newaxis] - self.sigma_m * (1.-Vf))/Vf
 
     eps_r = Property(Array, depends_on = 'cb_list')
     @cached_property
     def _get_eps_r(self):
-        return self.sigma_r / self.cb_randomization.q.E_r
+        return self.sigma_r / self.cb_randomization.tvars['E_f']
 
     eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
     def _get_eps_sigma(self):
@@ -276,17 +280,19 @@ class SCM(HasTraits):
 #        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
 #        m.show() 
         eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
-        sigma = self.load_sigma_c
+        if np.sum(np.isnan(eps))==0:
+            sigma = self.load_sigma_c
+        else:
+            idx = np.sum(np.isnan(eps) == False)
+            eps = eps[:idx]
+            eps[-1] = eps[-2]
+            sigma = self.load_sigma_c[:idx]
+            sigma[-1] = 0.0
         return eps, sigma
 
 if __name__ == '__main__':
-
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
-        CBEMClampedFiberStressSP
-    from stats.spirrid import make_ogrid as orthogonalize
-    from matplotlib import pyplot as plt
-    import etsproxy.mayavi.mlab as m
-    import pickle
+    CBEMClampedFiberStressSP
 
     # filaments
     r = 0.00345
@@ -357,3 +363,4 @@ if __name__ == '__main__':
         plt.show()
 
     plot()
+

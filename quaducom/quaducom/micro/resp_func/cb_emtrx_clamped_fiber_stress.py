@@ -55,7 +55,7 @@ class CBEMClampedFiberStress(RF):
     r = Float(0.013, auto_set=False, input=True,
               enter_set=True, desc='fiber radius in mm')
 
-    E_r = Float(72e3, auto_set=False, enter_set=True, input=True,
+    E_f = Float(72e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30e3, auto_set=False, enter_set=True, input=True,
