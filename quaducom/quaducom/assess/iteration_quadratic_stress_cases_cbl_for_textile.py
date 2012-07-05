@@ -187,17 +187,19 @@ class SigFlCalib(HasTraits):
             sig_tex_arr = var_a * eps_arr ** 2 + var_b * eps_arr 
             xdata = np.hstack([eps_arr, 2.*eps_arr[-1]])  
             ydata = np.hstack([sig_tex_arr, sig_tex_arr[-1]]) 
+            print 'var_b', var_b 
 
-        cb_law_mfn = MFnLineArray( xdata = xdata, ydata = ydata )
+        sig_t_mfn = MFnLineArray( xdata = xdata, ydata = ydata )
         
-        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+        return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn
 
 
     def eval_layer_response_f( self, u ):
         '''EVALUATION: using the calibrated constitutive law of the layer
         '''
         eps_t, eps_c = u
-
+#        eps_t = eps_lo
+#        eps_c = eps_up
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_t'
         # ------------------------------------------------------------------------                
@@ -223,16 +225,16 @@ class SigFlCalib(HasTraits):
         # use a ramp function to consider only positive strains
         eps_t_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
         
-        cb_law_mfn = self.cb_law_mfn
+        sig_t_mfn = self.sig_t_mfn
 
-        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+        return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn
 
 
 
     def eval_layer_response_t( self, u ):
         '''EVALUATION: using the calibrated constitutive law of the layer
         ''' 
-        eps_tl, eps_tu = u
+        eps_lo, eps_up = u
 
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_tl'
@@ -250,17 +252,17 @@ class SigFlCalib(HasTraits):
 
         # strain at the height of each reinforcement layer [-]:
         #
-        eps_i_arr = eps_tl - (eps_tl - eps_tu ) / thickness * (thickness - z_t_i_arr)
+        eps_i_arr = eps_lo - (eps_lo - eps_up ) / thickness * (thickness - z_t_i_arr)
         eps_t_i_arr = eps_i_arr
         eps_c_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
-        cb_law_mfn = self.cb_law_mfn
+        sig_t_mfn = self.sig_t_mfn
 
-        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+        return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn
      
     def eval_layer_response_c( self, u ):
         '''EVALUATION: using the calibrated constitutive law of the layer
         ''' 
-        eps_cl, eps_cu = u
+        eps_lo, eps_up = u
 
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_cl'
@@ -278,21 +280,21 @@ class SigFlCalib(HasTraits):
 
         # strain at the height of each reinforcement layer [-]:
         #
-        eps_i_arr = eps_cl - (eps_cl - eps_cu) / thickness * z_t_i_arr
+        eps_i_arr = eps_lo - (eps_lo - eps_up) / thickness * z_t_i_arr
         eps_t_i_arr = (-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
         eps_c_i_arr = eps_i_arr
-        cb_law_mfn = self.cb_law_mfn
+        sig_t_mfn = self.sig_t_mfn
 
-        return x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn
+        return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn
 
 
 
     def get_f_i_arr( self, u ):
         '''tensile force at the height of each reinforcement layer [kN]:
         '''
-        x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = self.layer_response( u )
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn = self.layer_response( u )
 
-        get_sig_t_i_arr = np.frompyfunc( cb_law_mfn.get_value, 1, 1 )
+        get_sig_t_i_arr = np.frompyfunc( sig_t_mfn.get_value, 1, 1 )
         sig_t_i_arr = get_sig_t_i_arr( eps_t_i_arr )
 
         # print 'sig_i_arr', sig_i_arr
@@ -338,6 +340,9 @@ class SigFlCalib(HasTraits):
         # factor [-] to calculate the height of the compressive zone  
             lamda = 0.8 - (self.f_ck - 50.) / 400.
             eps_cu3 = 2.6 + 35. * (90. - self.f_ck) **4 / 100000000 
+#        xdata = np.array([0., (1. - lamda) * eps_cu3 - 0.0000001, (1 - lamda) * 0.0035, 0.0035,0.0035+0.0000001,0.0035*2]) 
+#        ydata = np.array([0., 0., eta*self.f_ck, eta * self.f_ck,0.,0.])
+        #concrete law without limit for eps_c
         xdata = np.array([0., (1. - lamda) * eps_cu3 - 0.0000001, (1 - lamda) * 0.0035, 0.0035]) 
         ydata = np.array([0., 0., eta*self.f_ck, eta * self.f_ck])
         return MFnLineArray(xdata = xdata, ydata = ydata)   
@@ -357,6 +362,10 @@ class SigFlCalib(HasTraits):
             epsilon_c3 = 1,75 + 0,55 * (self.f_ck - 50.) / 40.
             epsilon_cu3 = 2,6 + 35 * (90 - self.f_ck) ** 4. / 100000000.      
   
+#        xdata = np.array( [0., epsilon_c3, epsilon_cu3,epsilon_cu3+0.00000001,epsilon_cu3*2] )
+#        ydata = np.array( [0., self.f_ck, self.f_ck,0.,0.] )
+        
+        #concrete law without limit for eps_c
         xdata = np.array( [0., epsilon_c3, epsilon_cu3] )
         ydata = np.array( [0., self.f_ck, self.f_ck] )
         return MFnLineArray(xdata = xdata, ydata = ydata)
@@ -376,8 +385,14 @@ class SigFlCalib(HasTraits):
         sigma_c = (E_tan / E_sec * epsilon / epsilon_c1 - (epsilon / epsilon_c1) **2) / (1 + (E_tan/E_sec - 2)*epsilon / epsilon_c1) * f_cm
 #        print'epsilon', epsilon
 #        print'sigma_c=', sigma_c
-        xdata = epsilon
+#        xdata = np.hstack([ epsilon, epsilon[-1] + 0.00000001, 2.*epsilon[-1]])  
+#        ydata = np.hstack([sigma_c, 0, 0 ])
+        #concrete law without limit for eps_c
+        xdata = epsilon  
         ydata = sigma_c
+      
+#        xdata = epsilon
+#        ydata = sigma_c
         return MFnLineArray( xdata = xdata, ydata = ydata )
 
     sig_c_config = Trait('quadratic',{
@@ -430,11 +445,14 @@ class SigFlCalib(HasTraits):
         '''
         print '------------- iteration: %g ----------------------------' % ( self.n )
 
-        if self.calib_config != 'calibration-quadratic'  or \
-                                'calibration-linear' or \
-                                'calibration-bilinear':
-            stress_case = self.determine_stress_case(N,M)
-            self.calib_config = stress_case
+       
+        
+        if self.calc_mode == 'eval':
+            stress_case = self.determine_stress_case( M, N )
+#            print 'stress_case',stress_case
+            self.eval_config = stress_case
+      
+
 
         x, f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
 
@@ -473,7 +491,25 @@ class SigFlCalib(HasTraits):
 
         # compressive strain in the compression zone 'x' in each sub-area ('A_c' divided in 'n_c' parts)
         #
-        eps_c_i_arr = self.x_frac_i * self.eps_c
+        if self.calib_config == 'evaluation-flexion' or \
+                                    'evaluation-tension':                            
+             
+                eps_c_i_arr = (1-self.x_frac_i) * self.eps_c
+                
+        elif  self.calib_config == 'evaluation-compression':
+            eps_lo = self.eps_lo
+            eps_up = self.eps_up
+            
+            if eps_lo < eps_up:
+                 
+                
+                eps_c_i_arr = eps_lo + (1-self.x_frac_i) * (eps_up-self.eps_lo)
+                
+            else:
+                
+                eps_c_i_arr = eps_up + (self.x_frac_i) * (eps_lo-self.eps_up)
+                
+                
 #        print 'eps_c_i_arr', eps_c_i_arr
 
         # @todo: get vectorized version running: 
@@ -485,8 +521,8 @@ class SigFlCalib(HasTraits):
 #        print 'sig_c_i_arr', sig_c_i_arr
         f_c_i_arr = sig_c_i_arr * self.width * self.x_frac_i[0] * 2. * x * 1000.
 
-        z_c_i_arr = x * self.x_frac_i[::-1]
-#        print 'z_c_i_arr', z_c_i_arr
+        z_c_i_arr = x * self.x_frac_i
+        
 
         N_ck = sum(f_c_i_arr)
 
@@ -562,11 +598,12 @@ class SigFlCalib(HasTraits):
 #            eps_t_estimate = abs(sig_plus) / E_comp
 #            eps_c_estimate = abs(sig_minus) / E_comp
 #            u0 = [eps_t_estimate, eps_c_estimate]
-            
+        
         u0 = self.u0
         u_sol = fsolve(self.get_lack_of_fit, u0, args = (M, N), xtol = xtol)
 #            print 'u_sol', u_sol
 
+        
             # @todo: check if 'brenth' gives better fitting results; faster? 
     #            phi_new = brenth( self.get_lack_of_fit, 0., eps_t )
             
@@ -582,7 +619,7 @@ class SigFlCalib(HasTraits):
 
         thickness = self.thickness
 
-        W = thickness ** 2 * self.width / 6.0
+        W = thickness ** 2. * self.width / 6.0
         A = thickness * self.width
 
         sig_bending = M / W / 1000.0
@@ -611,25 +648,37 @@ class SigFlCalib(HasTraits):
         
         print 'evaluation for stress case: ', stress_case
         return stress_case
-        
-        
-    calib_config = Trait('calibration-quadratic',
-                          {'calibration-quadratic' : ('calib_layer_response',
-                                              np.array([ 0.01, -500 ])),
-                           'calibration-linear' : ('calib_layer_response',
-                                              np.array([ 0.01, 50000.0 ])),
-                           'calibration-bilinear' : ('calib_layer_response',
-                                              np.array([ 0.01, 50000.0 ])),
-                           'evaluation' : ('eval_layer_response_f',
-                                             np.array([ 0.010, 0.0033 ])),
+    # set configuration for calibration or evaluation    
+    
+   
+     
+    eval_config = Trait('evaluation-flexion',
+                          {
                            'evaluation-flexion' : ('eval_layer_response_f',
                                               np.array([ 0.01, 0.0033 ])),
                            'evaluation-tension' : ('eval_layer_response_t',
-                                              np.array([ 0.01, 0.001 ])),
+                                              np.array([ 0.02, 0.02 ])),
                            'evaluation-compression' : ('eval_layer_response_c',
-                                             np.array([ 0.010, 0.0033 ])) },
+                                             np.array([ 0.0033, 0.0033 ])) },
+                         modified = True)
+       
+       
+    calib_config = Trait('calibration-quadratic',
+                          {'calibration-quadratic' : ('calib_layer_response',
+                                              np.array([ 0.01, -50000 ])),
+                           'calibration-linear' : ('calib_layer_response',
+                                              np.array([ 0.01, 50000.0 ])),
+                           'calibration-plastic' : ('calib_layer_response',
+                                              np.array([ 0.01, 50000.0 ])),
+                           'calibration-bilinear' : ('calib_layer_response',
+                                              np.array([ 0.01, 50000.0 ])) },
                          modified = True)
 
+    calc_mode = Trait('calib',
+                    {'calib' : ('calib_config'),
+                     'eval'  : ('eval_config')},
+                                modified = True)
+                              
     layer_response = Property(depends_on = 'calib_config')
     @cached_property
     def _get_layer_response(self):
@@ -641,11 +690,11 @@ class SigFlCalib(HasTraits):
         return self.calib_config_[1]
 
     def get_sig_max(self, u):
-        sig_max = max(self.get_sig_comp_i_arr( u ))
+        sig_max = np.max(self.get_sig_comp_i_arr( u ))
         print 'sig_max', sig_max
         return sig_max
 
-    cb_law_mfn = MFnLineArray()
+    sig_t_mfn = MFnLineArray()
 
 
 
@@ -657,7 +706,7 @@ if __name__ == '__main__':
     # define input params
     #------------------------------
     #
-    N = 0.
+    N = 0
 
     # measured value in bending test
     #
@@ -698,7 +747,9 @@ if __name__ == '__main__':
 
                                # define shape of the crack-bridge law ('linear', 'bilinear' or 'quadratic')
                                #
+                               calc_mode = 'calib',
                                calib_config = 'calibration-quadratic',
+                               eval_config = 'evaluation-flexion' ,
 
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
@@ -712,27 +763,28 @@ if __name__ == '__main__':
     print 'eps_c', eps_c
     print 'eps_t', eps_t
     print 'u_sol', u_sol
-
-    x, eps_t_i_arr, eps_c_i_arr, cb_law_mfn = sig_fl_calib.layer_response( u_sol )
+    print 'var_a', var_a
+    x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn = sig_fl_calib.layer_response( u_sol )
 
     
     #------------------------------------------------
     # 2) EVALUATION / VALIDATION:
-    # get 'eps_c', 'esp_t' for given/calibrated cb-law 
+    # get 'eps_lo', 'esp_up' for given/calibrated cb-law 
     #------------------------------------------------
-
-    sig_fl_calib.set( cb_law_mfn = cb_law_mfn,
-                      calib_config = 'evaluation' )
+    
+    sig_fl_calib.set( sig_t_mfn = sig_t_mfn, calc_mode = 'eval',
+                      eval_config = 'evaluation-flexion' )
     
     # select the right stress_mode for calculation
     #
     stress_case = sig_fl_calib.determine_stress_case( M, N)
+    eval_config = stress_case
     print 'stress_case', stress_case
-    print 'calib_config', sig_fl_calib.calib_config
+
 
     eps_lo, eps_up = sig_fl_calib.fit_response( M, N )
     print 'eps_lo', eps_lo
-    print 'eps_uo', eps_up
+    print 'eps_up', eps_up
     print 'max_sig', sig_fl_calib.get_sig_max( [ eps_lo, eps_up ] )                      
                               
 
@@ -741,7 +793,7 @@ if __name__ == '__main__':
     #------------------------------------------------
     #
     layer_arr = np.arange(sig_fl_calib.n_layers)
-    sig_comp_i_arr = sig_fl_calib.get_sig_comp_i_arr( [eps_t, eps_c] )
+    sig_comp_i_arr = sig_fl_calib.get_sig_comp_i_arr( [eps_lo, eps_up] )
     p.bar(layer_arr, sig_comp_i_arr, 0.2)
     p.show()
 
