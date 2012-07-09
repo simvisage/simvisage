@@ -182,7 +182,7 @@ class SigFlCalib(HasTraits):
             xdata = np.array([0., eps_fail, 2.*eps_fail ])
             ydata = np.array([0., sig_fail, sig_fail ])
 
-         # quadratic cb-law up to reaching the rupture strain, behaves plastic afterwards
+        # quadratic cb-law up to reaching the rupture strain, behaves plastic afterwards
         elif self.calib_config == 'quadratic':
             # use strain at the lowest textile layer as rupture strain 
             eps_fail = eps_t_i_arr[0]
@@ -206,7 +206,7 @@ class SigFlCalib(HasTraits):
             # use strain at the lowest textile layer as rupture strain 
             eps_fail = eps_t_i_arr[0]
             sig_fail = self.sig_tex_fail
-            eps_arr = np.arange(0, eps_fail, eps_fail / 100.)
+            eps_arr = np.arange(0, eps_fail, eps_fail / 200.)
             var_b = ( sig_fail + var_a *(-eps_fail ** 3. + 3. * var_a * eps_fail ** 3. ))/( eps_fail ** 2. - 2.* eps_fail ** 2. ) 
             var_c = -3. * var_a * eps_fail ** 2. - 2. * var_b * eps_fail 
             sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c *eps_arr 
@@ -456,7 +456,10 @@ class SigFlCalib(HasTraits):
         #
         xdata = np.hstack([ eps_arr, eps_arr[-1] + 0.00000001, 2.*eps_arr[-1]])  
         ydata = np.hstack([ sig_c_arr, 0, 0 ])
-#        
+#       
+        # concrete law without rupture limit for eps_c 
+        xdata = np.hstack([ eps_arr, eps_arr[-1] + 0.00000001])  
+        ydata = np.hstack([ sig_c_arr, sig_c_arr[-1] ])
         print 'xdata', np.shape( xdata)
         print 'ydata', np.shape( ydata)
         return MFnLineArray( xdata = xdata, ydata = ydata )
@@ -798,7 +801,7 @@ if __name__ == '__main__':
 
     # normal force [kN]
     #
-    N = 500
+    N = 0
 
     # value per m
 #    M = 5*3.49
