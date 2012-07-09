@@ -156,13 +156,27 @@ class SigFlCalib(HasTraits):
         # constitutive law of the crack bridge
         # linear elastic: effective modulus of elasticity 
         #
+#        eps_fail = eps_t
+#        sig_fail = E_yarn * eps_fail
+#        xdata = np.array([0., eps_fail ])
+#        ydata = np.array([0., sig_fail ])
+#        cb_law_mfn = MFnLineArray(xdata = xdata, ydata = ydata)
+#        return x, eps_t_i_arr, cb_law_mfn
+    
+        #quadratic effective modulus of elasticity
         eps_fail = eps_t
-        sig_fail = E_yarn * eps_fail
-        xdata = np.array([0., eps_fail ])
-        ydata = np.array([0., sig_fail ])
-        mfn_line_array = MFnLineArray(xdata = xdata, ydata = ydata)
-        return x, eps_t_i_arr, mfn_line_array
+        sig_fail = 1216
+        eps = np.arange(0, eps_t, 0.001)
+        a = np.arange (0, 10, 0.01)
+        b = np.arange (0, 10, 0.01)
+        sigma_tex = a * eps ** 2 + b * eps
+        xdata = eps
+        ydata = sigma_tex
+        cb_law_mfn = MFnLineArray(xdata = xdata, ydata = ydata)
+        return x, eps_t_i_arr, cb_law_mfn
 
+        
+         
     E_yarn = Float
 
     def layer_response_eps_t_eps_c( self, u ):
@@ -246,45 +260,82 @@ class SigFlCalib(HasTraits):
         return f_t_i_arr / self.width / self.s_tex_z / 1000.0
 
     #-----------------------------
-    # for simplified constant stress-strain-diagram of the concrete (EC2)
+#     for simplified constant stress-strain-diagram of the concrete (EC2)
     #-----------------------------
-
-#    # factor [-] to calculate the value of the resulting compressive 
-#    # force, i.e. f_c = fck / gamma_c 
-#    # (for high strength concrete)
-#    #
-#    chi = Property
-#    def _get_chi( self ):
-#        return 1.05 - self.f_ck / 500.
+#    sig_c_mfn = Property
+#    @cached_property
+#    def _get_sig_c_mfn(self):
+#        #(for standard concrete)
+#        
+#        if self.f_ck<=50:
+#            lamda= 0.8
+#            eta= 1.0  
+#            eps_cu3= 0.0035
 #
-#    # factor [-] to calculate the distance of the resulting compressive 
-#    # force from the top, i.e. a = k * x
-#    #
-#    k = Property
-#    def _get_k( self ):
-#        return 1.05 - self.f_ck / 250.
+#        # (for high strength concrete)
+#        #
+#        else:
+#            eta = 1.0 - ( self.f_ck / 50) / 200
+#        # factor [-] to calculate the height of the compressive zone  
+#            lamda = 0.8 - (self.f_ck - 50) / 400
+#            eps_cu3 = 2.6 + 35 * (90 - self.f_ck) **4 / 100000000 
+#    
+#        xdata = np.array([0., (1 - lamda) * eps_cu3 - 0.0000001, (1 - lamda) * 0.0035, 0.0035]) 
+#        ydata = np.array([0., 0., eta*self.f_ck, eta*self.f_ck])
+#        return MFnLineArray(xdata = xdata, ydata = ydata)   
+####
+
+ 
+
 
     #-----------------------------
     # for bi-linear stress-strain-diagram of the concrete (EC2)
     #-----------------------------
 
-    sig_c_mfn = Property
-    @cached_property
-    def _get_sig_c_mfn(self):
-        xdata = np.array([0., 0.00175, 0.0035])
-        ydata = np.array([0., self.f_ck, self.f_ck])
-        return MFnLineArray(xdata = xdata, ydata = ydata)
-
-#    #-----------------------------
-#    # for quadratic stress-strain-diagram of the concrete
-#    #-----------------------------
-#
+#    sig_c_mfn = Property
+#    @cached_property
+#    def get_sig_c_mfn(self):
+#        #(for standard concrete)
+#        if self.f_ck <= 50:
+#            epsilon_c3= 0.00175
+#            epsilon_cu3= 0.0035
+#        #(for high strength concrete)
+#        else :
+#            epsilon_c3= 1,75 + 0,55 * (self.f_ck - 50) / 40
+#            epsilon_cu3= 2,6 + 35 * (90 - self.f_ck) ** 4 / 100000000      
+#  
+#        xdata = np.array( [0., epsilon_c3, epsilon_cu3] )
+#        ydata = np.array( [0., self.f_ck, self.f_ck] )
+#        return MFnLineArray(xdata = xdata, ydata = ydata)
+#-----------------------------
 #    sig_c_mfn = Property
 #    @cached_property
 #    def _get_sig_c_mfn( self ):
-#        xdata = np.array( [0., 0.00135, 0.0035] )
+#        
+#        xdata = np.array( [0., 0.00175, 0.0035] )
 #        ydata = np.array( [0., self.f_ck, self.f_ck] )
-#        return MFnLinenp.array( xdata = xdata, ydata = ydata )
+#        return MFnLineArray( xdata = xdata, ydata = ydata )
+##    #-----------------------------
+##    # for quadratic stress-strain-diagram of the concrete
+##    #-----------------------------
+#
+    sig_c_mfn = Property
+    @cached_property
+    def _get_sig_c_mfn( self ):
+        # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
+        f_cm= self.f_ck + 8
+        E_tan= 9500 * (f_cm) ** (1/3) #SBT 17
+        E_sec= f_cm / 0.0022
+        epsilon_c1 = 0.0022 # min(0.7*f_cm**0.31, 2.8)/1000 #EC
+        epsilon=np.arange(0, 0.0022, 0.000022)
+        sigma_c=(E_tan / E_sec * epsilon / epsilon_c1 - (epsilon / epsilon_c1) **2) / (1 + (E_tan/E_sec - 2)*epsilon / epsilon_c1) * f_cm
+        print'epsilon', epsilon
+        print'sigma_c=', sigma_c
+        xdata = epsilon
+        ydata = sigma_c
+        return MFnLineArray( xdata = xdata, ydata = ydata )
+
+
 
     def get_sig_c(self, eps_c):
         sig_c = self.sig_c_mfn.get_value(eps_c)
