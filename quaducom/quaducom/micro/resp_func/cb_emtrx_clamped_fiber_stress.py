@@ -162,7 +162,7 @@ class CBEMClampedFiberStress(RF):
         # include breaking strain
         q = q * H(Kr * xi - q)
    
-        return q
+        return q/V_f
     
 class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         '''
@@ -183,15 +183,15 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             T = 2. * tau / r        
             q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
             #stress in the free length
-            q_l = q / V_f * H(l / 2 - abs(x))
+            q_l = q * H(l / 2 - abs(x))
             
             #stress in the part, where fiber transmits stress to the matrix
-            q_e = (q / V_f - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            q_e = (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
             #q_e = q_e * H(x + Ll) * H (Lr - x)
             
             #far field stress
             E_c = E_m * (1-V_f) + E_f * V_f
-            q_const = q * E_f/E_c
+            q_const = q * V_f * E_f / E_c
             
             #putting all parts together
             q_x = q_l + q_e
