@@ -87,26 +87,26 @@ class CBEMClampedFiberStress(RF):
 
     C_code = Str('')
     
-    def crackbridge(self, w, l, T , Kf, Km):
+    def crackbridge(self, w, l, T , Kf, Km, Vf):
         #Phase A : Both sides debonding .
         Kc = Kf + Km
         c = Kc * T * l/2.
-        P0 = (np.sqrt(c**2 + w*Kf*Km*Kc*T) - c)/Km
-        return P0
+        q0 = (np.sqrt(c**2 + w*Kf*Km*Kc*T) - c)/Km
+        return q0/Vf
 
     def pullout(self, w, l, T, Kf, Km, Vf, Lmin, Lmax):
         #Phase B : Debonding of shorter side is finished
         Kc = Kf + Km
         c = Kc*T*(Lmin + l)
         f = T**2*Lmin**2*Kc**2
-        P1 = (np.sqrt(c ** 2. + f + 2*w*Kc*T*Kf*Km) - c)/Km
-        return P1
+        q1 = (np.sqrt(c ** 2. + f + 2*w*Kc*T*Kf*Km) - c)/Km
+        return q1/Vf
 
-    def linel(self, w, l, T, Kf, Km, Lmax, Lmin):
+    def linel(self, w, l, T, Kf, Km, Vf, Lmax, Lmin):
         #Phase C: Both sides debonded - linear elastic behavior.
         Kc = Kf + Km
-        P2 = (2.*w*Kf*Km + T*Kc*(Lmin**2+Lmax**2))/(2.*Km *(Lmax + l + Lmin))
-        return P2
+        q2 = (2.*w*Kf*Km + T*Kc*(Lmin**2+Lmax**2))/(2.*Km *(Lmax + l + Lmin))
+        return q2/Vf
 
     def __call__(self, w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
         #assigning short and long embedded length
@@ -130,7 +130,7 @@ class CBEMClampedFiberStress(RF):
         
         # double sided debonding
         #q0 = self.crackbridge(w, l, T, Kr, Km, Lmin, Lmax)
-        q0 = self.crackbridge(w, l, T, Kf, Km)
+        q0 = self.crackbridge(w, l, T, Kf, Km, V_f)
 
         # displacement at which the debonding to the closer clamp is finished
         w0 = (Lmin+l)*Lmin*Kc*T/Kf/Km
@@ -143,7 +143,7 @@ class CBEMClampedFiberStress(RF):
         w1 = e1*(l+Lmax/2.)+(e1+e1*Lmin/Lmax)*Lmin/2.
         
         # debonding completed at both sides, response becomes linear elastic
-        q2 = self.linel(w , l, T, Kf, Km, Lmax, Lmin)
+        q2 = self.linel(w , l, T, Kf, Km, V_f, Lmax, Lmin)
 
         # cut out definition ranges 
         q0 = H(w) * (q0 + 1e-15) * H(w0 - w)
@@ -154,8 +154,8 @@ class CBEMClampedFiberStress(RF):
         q = q0 + q1 + q2
 
         # include breaking strain
-        q = q * H(Kf * xi - q)
-        return q/V_f
+        q = q * H(E_f * xi - q)
+        return q
     
 class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         '''
