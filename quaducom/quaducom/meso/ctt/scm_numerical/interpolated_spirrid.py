@@ -96,22 +96,22 @@ class RangeAdaption(HasTraits):
     ''' incorporates methods for defining the ranges of BCs, w and x'''
     
     spirrid = Instance(SPIRRID)
-    max_load_sigma = Float
-    n_load_sigma = Int
+    load_sigma_c_max = Float
+    load_n_sigma_c = Int
     n_w = Int
     n_x = Int
     n_BC = Int
     
-    load_sigma = Property(Array, depends_on = 'n_load_sigma, max_load_sigma')
+    load_sigma_c = Property(Array, depends_on = 'load_n_sigma_c, load_sigma_c_max')
     @cached_property
-    def _get_load_sigma(self):
-        return np.linspace(1e-6, self.max_load_sigma, self.n_load_sigma)
+    def _get_load_sigma_c(self):
+        return np.linspace(1e-6, self.load_sigma_c_max, self.load_n_sigma_c)
 
-    load_sigma_f = Property(Array, depends_on = 'n_load_sigma, max_load_sigma')
+    load_sigma_f = Property(Array, depends_on = 'load_n_sigma_c, load_sigma_c_max')
     @cached_property
     def _get_load_sigma_f(self):
         Vf = self.spirrid.tvars['V_f']
-        return self.load_sigma / Vf
+        return self.load_sigma_c / Vf
 
     stress_transm_props = Property(Float, depends_on = 'spirrid.tvars')
     @cached_property
@@ -127,8 +127,8 @@ class RangeAdaption(HasTraits):
         if isinstance(l, RV):
             l = l._distr.mean
         Vf = self.spirrid.tvars['V_f']
-        w_approx = (r*self.max_load_sigma/2./tau + l/2.) * self.max_load_sigma * Vf
-        return r*self.max_load_sigma/2./tau/self.spirrid.tvars['V_f'], l/2., w_approx
+        w_approx = (r*self.load_sigma_c_max/2./tau + l/2.) * self.load_sigma_c_max * Vf
+        return r*self.load_sigma_c_max/2./tau/self.spirrid.tvars['V_f'], l/2., w_approx
     
     delta = Property(Float, depends_on = 'spirrid.tvars')
     @cached_property
@@ -299,7 +299,7 @@ class InterpolatedSPIRRID(HasTraits):
         Lr = Ll
         w_init = self.adaption.w_init
         x_init = self.adaption.x_init
-        result = np.zeros((self.adaption.n_load_sigma,len(x_init),len(Ll),len(Lr)))
+        result = np.zeros((self.adaption.load_n_sigma_c, len(x_init),len(Ll),len(Lr)))
         loops_tot = len(Ll)*len(Lr)
         for i, ll in enumerate(Ll):
             for j, lr in enumerate(Lr):
@@ -360,8 +360,8 @@ if __name__ == '__main__':
     phi = 1.
 
     rf = CBEMClampedFiberStressSP()
-    ra = RangeAdaption(max_load_sigma = 30.0,
-                       n_load_sigma = 100,
+    ra = RangeAdaption(load_sigma_c_max = 30.0,
+                       load_n_sigma_c = 100,
                        n_w = 50,
                        n_x = 30,
                        n_BC = 3,
@@ -382,7 +382,7 @@ if __name__ == '__main__':
     
     isp = InterpolatedSPIRRID(adaption = ra)
     def plot():
-        sigma = isp.adaption.load_sigma
+        sigma = isp.adaption.load_sigma_c
         Ll = 60.
         Lr = 50.
         x = np.linspace(-Ll, Lr, 200)
