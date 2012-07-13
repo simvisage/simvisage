@@ -140,7 +140,11 @@ class CBEMClampedFiberStress(RF):
         
         # displacement at which the debonding is finished at both sides
         e1 = Lmax*Kc*T/Km/Kf
-        w1 = e1*(l+Lmax/2.)+(e1+e1*Lmin/Lmax)*Lmin/2.
+        if Lmax == 0.0:
+            fact = 0.
+        else:
+            fact = Lmin/Lmax
+        w1 = e1*(l+Lmax/2.)+(e1+e1*fact)*Lmin/2.
         
         # debonding completed at both sides, response becomes linear elastic
         q2 = self.linel(w , l, T, Kf, Km, V_f, Lmax, Lmin)
@@ -198,8 +202,8 @@ if __name__ == '__main__':
     t = .1
     Ef = 200e3
     Em = 25e3
-    l = 10.
-    theta = 0.01
+    l = 100.
+    theta = 0.0
     xi = 0.017
     phi = 1.
     Ll = 40.
