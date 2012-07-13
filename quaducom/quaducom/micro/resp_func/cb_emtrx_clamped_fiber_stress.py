@@ -113,8 +113,8 @@ class CBEMClampedFiberStress(RF):
         Lmin = np.minimum(Ll, Lr)
         Lmax = np.maximum(Ll, Lr)
         
-        Lmin = np.maximum(Lmin - l / 2., 0.)
-        Lmax = np.maximum(Lmax - l / 2., 0.)
+        Lmin = np.maximum(Lmin - l / 2., 1e-15)
+        Lmax = np.maximum(Lmax - l / 2., 1e-15)
 
         #maximum condition for free length
         l = np.minimum(l / 2., Lr) + np.minimum(l / 2., Ll)
@@ -140,11 +140,7 @@ class CBEMClampedFiberStress(RF):
         
         # displacement at which the debonding is finished at both sides
         e1 = Lmax*Kc*T/Km/Kf
-        if Lmax == 0.0:
-            fact = 0.
-        else:
-            fact = Lmin/Lmax
-        w1 = e1*(l+Lmax/2.)+(e1+e1*fact)*Lmin/2.
+        w1 = e1*(l+Lmax/2.)+(e1+e1*Lmin/Lmax)*Lmin/2.
         
         # debonding completed at both sides, response becomes linear elastic
         q2 = self.linel(w , l, T, Kf, Km, V_f, Lmax, Lmin)
