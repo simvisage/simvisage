@@ -17,7 +17,7 @@ from etsproxy.traits.api import \
     implements, Trait, cached_property, Property, Float
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
 from stats.spirrid.rv import RV
-from interpolated_spirrid import InterpolatedSPIRRID
+from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
@@ -112,12 +112,16 @@ class CBMeanFactory(CBMFactory):
     def _get_spirrid(self):
         args = self.randomization.trait_get(['q', 'evars', 'tvars'])
         return SPIRRID(**args)
+    
+    adaption = Instance(RangeAdaption)
+    def _adaption_default(self):
+        return RangeAdaption
 
     interpolated_spirrid = Property()
     @cached_property
     def _get_interpolated_spirrid(self):
-        return InterpolatedSPIRRID(spirrid = self.spirrid)
-        #return NonInterpolatedSPIRRID(spirrid = self.spirrid)
+        return InterpolatedSPIRRID(spirrid = self.spirrid,
+                                   adaption = self.adaption)
 
     #===========================================================================
     # Construct new crack bridge (the mean response is shared by all instances)
@@ -304,10 +308,6 @@ if __name__ == '__main__':
     theta = 0.0
     xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
-    w = np.linspace(0.0, .5, 41)
-    x = np.linspace(-30., 30., 51)
-    Ll = np.linspace(0.5,30,4)
-    Lr = np.linspace(0.5,30,4)
 
     length = 600.
     nx = 600
@@ -324,11 +324,6 @@ if __name__ == '__main__':
 
     rf = CBEMClampedFiberStressSP()
     rand = FunctionRandomization(   q = rf,
-                                    evars = dict(w = w,
-                                                 x = x,
-                                                 Ll = Ll,
-                                                 Lr = Lr,
-                                                 ),
                                     tvars = dict(tau = tau,
                                                  l = l,
                                                  E_f = Ef,
