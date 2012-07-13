@@ -106,6 +106,11 @@ class CBMFactory(HasTraits):
 
 class CBMeanFactory(CBMFactory):
 
+    load_sigma_c_max = Float
+    load_n_sigma_c = Int
+    n_w = Int
+    n_x = Int
+    n_BC = Int
     # homogenization model
     spirrid = Property(Instance(SPIRRID))
     @cached_property
@@ -115,8 +120,13 @@ class CBMeanFactory(CBMFactory):
     
     adaption = Instance(RangeAdaption)
     def _adaption_default(self):
-        return RangeAdaption
-
+        return RangeAdaption(spirrid = self.spirrid,
+                             load_sigma_c_max = self.load_sigma_c_max,
+                             load_n_sigma_c = self.load_n_sigma_c,
+                             n_w = self.n_w,
+                             n_x = self.n_x,
+                             n_BC = self.n_BC)
+        
     interpolated_spirrid = Property()
     @cached_property
     def _get_interpolated_spirrid(self):
@@ -148,14 +158,24 @@ class SCM(HasTraits):
     at positions, where the matrix strength is lower than the stress; evaluates stress-strain diagram
     by integrating the strain profile along the composite'''
     cb_randomization = Instance(FunctionRandomization)
-
+    
     cb_type = Trait('mean', dict(mean = CBMeanFactory,
                                  random = CBRandomFactory))
 
     cb_factory = Property(depends_on = 'cb_type')
     @cached_property
     def _get_cb_factory(self):
-        return self.cb_type_(randomization = self.cb_randomization)
+        return self.cb_type_(randomization = self.cb_randomization,
+                             load_sigma_c_max = self.load_sigma_c_max,
+                             load_n_sigma_c = self.load_n_sigma_c,
+                             n_w = self.n_w,
+                             n_x = self.n_x,
+                             n_BC = self.n_BC
+                             )
+
+    n_w = Int
+    n_x = Int
+    n_BC = Int
 
     cb_list = List
 
@@ -344,7 +364,10 @@ if __name__ == '__main__':
               cb_type = 'mean',
               load_sigma_c_min = 0.1,
               load_sigma_c_max = 20.,
-              load_n_sigma_c = 100
+              load_n_sigma_c = 100,
+              n_w = 40,
+              n_x = 50,
+              n_BC = 4
               )
     
     scm.evaluate()
