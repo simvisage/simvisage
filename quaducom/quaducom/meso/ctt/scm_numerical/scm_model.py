@@ -176,11 +176,8 @@ class SCM(HasTraits):
     n_w = Int
     n_x = Int
     n_BC = Int
-
     cb_list = List
-
     length = Float(desc = 'composite specimen length')
-
     nx = Int(desc = 'number of discretization points')
 
     load_sigma_c = Property(depends_on = '+load')
@@ -220,34 +217,51 @@ class SCM(HasTraits):
         rf_spline = RectBivariateSpline(self.load_sigma_c, self.random_field.xgrid, field_2D)
         return rf_spline(self.load_sigma_c, self.x_arr)
 
-    def sort_cbs(self, load_sigma_c):
+    def sort_cbs(self, load_sigma_c, crack_position):
         # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
         self.cb_list = sorted(self.cb_list, key = attrgetter('position'))
-        # specify the boundaries at the ends (0 and self.length) of the specimen 
-        self.cb_list[0].Ll = self.cb_list[0].position
-        self.cb_list[-1].Lr = self.length - self.cb_list[-1].position
+        #find idx of the new crack
+        for i, crack in enumerate(self.cb_list):
+            if crack.position == crack_position:
+                idx = i
+        # specify the boundaries
+        if idx != 0:
+            # there is a crack at the left hand side
+            cbl = self.cb_list[idx - 1]
+            cb = self.cb_list[idx]
+            cbl.Lr = (cb.position - cbl.position) / 2. 
+            cb.Ll = cbl.Lr
+        else:
+            # the new crack is the first from the left hand side
+            self.cb_list[idx].Ll = self.cb_list[idx].position
 
-        # specify the boundaries between the cracks
-        for i, cb in enumerate(self.cb_list[:-1]):
-            self.cb_list[i].Lr = (self.cb_list[i + 1].position - cb.position) / 2.
-        for i, cb in enumerate(self.cb_list[1:]):
-            self.cb_list[i + 1].Ll = (cb.position - self.cb_list[i].position) / 2.
+        if idx != len(self.cb_list) - 1:
+            # there is a crack at the right hand side
+            cb, cbr = self.cb_list[idx], self.cb_list[idx+1]
+            cbr.Ll = (cbr.position - cb.position) / 2.
+            cb.Lr = cbr.Ll
+        else:
+            # the new crack is the first from the right hand side
+            self.cb_list[idx].Lr = self.length - self.cb_list[idx].position
 
-        # specify the x range within the specimen length for every crack
-        for i, cb in enumerate(self.cb_list):
-            mask1 = self.x_arr >= (cb.position - cb.Ll)
-            if i == 0:
+        # specify the x range and stress profile for the new crack and its neighbors
+        idxs = [idx-1,idx,idx+1]
+        if idx == 0:
+            idxs.remove(-1)
+        if idx == len(self.cb_list) - 1:
+            idxs.remove(len(self.cb_list))
+        for idx in idxs:
+            mask1 = self.x_arr >= (self.cb_list[idx].position - self.cb_list[idx].Ll)
+            if idx == 0:
                 mask1[0] = True
-            mask2 = self.x_arr <= (cb.position + cb.Lr)
-            cb.x = self.x_arr[mask1 * mask2] - cb.position
-
-        for idx, cb in enumerate(self.cb_list):
+            mask2 = self.x_arr <= (self.cb_list[idx].position + self.cb_list[idx].Lr)
+            self.cb_list[idx].x = self.x_arr[mask1 * mask2] - self.cb_list[idx].position
             self.cb_list[idx].load_sigma_c = load_sigma_c
-            crack_position_idx = np.argwhere(self.x_arr == cb.position)
-            left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
-            right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-            self.sigma_m[-len(load_sigma_c):, left:right] = cb.get_sigma_x_matrix().T
+            crack_position_idx = np.argwhere(self.x_arr == self.cb_list[idx].position)
+            left = crack_position_idx - len(np.nonzero(self.cb_list[idx].x < 0.)[0])
+            right = crack_position_idx + len(np.nonzero(self.cb_list[idx].x > 0.)[0]) + 1
+            self.sigma_m[-len(load_sigma_c):, left:right] = self.cb_list[idx].get_sigma_x_matrix().T
 
     x_area = Property(depends_on = 'length, nx')
     def _get_x_area(self):
@@ -266,15 +280,24 @@ class SCM(HasTraits):
             new_cb.position = float(crack_position)
             new_cb.load_sigma_c = load_sigma_c
             self.cb_list.append(new_cb)
-            self.sort_cbs(load_sigma_c)
+            self.sort_cbs(load_sigma_c, float(crack_position))
 #            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
 #            m.surf(e_arr[0], e_arr[1], self.sigma_m)
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
 #            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
+                idx = np.where(load_sigma_c[0]==self.load_sigma_c)[0]
+                plt.plot(self.sigma_m[idx,:].flatten())
+                plt.show()
                 break
-            self.last_pos = crack_position 
+            self.last_pos = crack_position
+
+#        e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
+#        m.surf(e_arr[0], e_arr[1], self.sigma_m)
+#        m.surf(e_arr[0], e_arr[1], self.matrix_strength)
+#        m.show()
+    
     last_pos = Float
 
     sigma_m = Array
@@ -330,7 +353,7 @@ if __name__ == '__main__':
     phi = 1.
 
     length = 600.
-    nx = 600
+    nx = 2000
     random_field = RandomField(seed = False,
                                lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
@@ -367,7 +390,7 @@ if __name__ == '__main__':
               load_n_sigma_c = 100,
               n_w = 40,
               n_x = 50,
-              n_BC = 4
+              n_BC = 2
               )
     
     scm.evaluate()
