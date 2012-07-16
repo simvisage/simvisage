@@ -290,13 +290,14 @@ class SCM(HasTraits):
                 idx = np.where(load_sigma_c[0]==self.load_sigma_c)[0]
                 plt.plot(self.sigma_m[idx,:].flatten())
                 plt.show()
+                e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
+                m.surf(e_arr[0], e_arr[1][::20], self.sigma_m[:,::20])
+                m.surf(e_arr[0], e_arr[1][::20], self.matrix_strength[:,::20])
+                m.show()
                 break
             self.last_pos = crack_position
 
-#        e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
-#        m.surf(e_arr[0], e_arr[1], self.sigma_m)
-#        m.surf(e_arr[0], e_arr[1], self.matrix_strength)
-#        m.show()
+
     
     last_pos = Float
 
