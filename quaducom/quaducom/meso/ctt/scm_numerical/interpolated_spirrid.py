@@ -80,7 +80,7 @@ class NDIdxInterp(HasTraits):
         # interpolate the value (linear)
         # a, b, c = [0.5, 0.5, 0.5], [0, 0, 0], [0, 1, 2]
         # icoords = [a, b, c]
-        val = ndimage.map_coordinates(data, icoords, order = 1)
+        val = ndimage.map_coordinates(data, icoords, order = order, mode = mode)
         return val
 
     def get_icoords(self, gcoords):
@@ -126,9 +126,13 @@ class RangeAdaption(HasTraits):
         l = self.spirrid.tvars['l']
         if isinstance(l, RV):
             l = l._distr.mean
+        theta = self.spirrid.tvars['theta']
+        if isinstance(theta, RV):
+            theta = theta._distr.mean
         Vf = self.spirrid.tvars['V_f']
-        w_approx = (r*self.load_sigma_c_max/2./tau + l/2.) * self.load_sigma_c_max * Vf
-        return r*self.load_sigma_c_max/2./tau/self.spirrid.tvars['V_f'], l/2., w_approx
+        l = l * (1 + theta)
+        w_approx = (r*self.load_sigma_c_max/2./tau + l/2.) * self.load_sigma_c_max * Vf + l*theta
+        return r*self.load_sigma_c_max/2./tau/Vf, l/2., w_approx
     
     delta = Property(Float, depends_on = 'spirrid.tvars')
     @cached_property
@@ -351,20 +355,20 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = 0.1 #RV('uniform', loc = 0.02, scale = .01) # 0.5
+    tau = RV('uniform', loc = 0.02, scale = .3) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = 0.#RV( 'uniform', scale = 10., loc = 0. )
-    theta = 0.0
-    xi = 0.01#RV( 'weibull_min', scale = 0.12, shape = 5 ) # 0.017
+    l = 5.0#RV( 'uniform', scale = 10., loc = 0. )
+    theta = 0.1
+    xi = 0.01#RV( 'weibull_min', scale = 0.012, shape = 5 ) # 0.017
     phi = 1.
 
     rf = CBEMClampedFiberStressSP()
-    ra = RangeAdaption(load_sigma_c_max = 30.0,
+    ra = RangeAdaption(load_sigma_c_max = 10.0,
                        load_n_sigma_c = 100,
-                       n_w = 50,
-                       n_x = 30,
-                       n_BC = 3,
+                       n_w = 40,
+                       n_x = 61,
+                       n_BC = 7,
                        spirrid = SPIRRID(q = rf,
                                           sampling_type = 'LHS',
                                      tvars = dict( tau = tau,
@@ -377,22 +381,29 @@ if __name__ == '__main__':
                                                    r = r,
                                                    V_f = Vf
                                                         ),
-                                        n_int = 30),
+                                        n_int = 20),
                                     )
     
     isp = InterpolatedSPIRRID(adaption = ra)
     def plot():
         sigma = isp.adaption.load_sigma_c
-        Ll = 60.
-        Lr = 50.
-        x = np.linspace(-Ll, Lr, 200)
+        Ll = 20.
+        Lr = 20.
+        x = np.linspace(-Ll, Lr, 201)
     
         e_arr = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
         #mu_q_nisp = nisp(P, x, Ll, Lr)[0]
-        mu_q_isp = isp(sigma, x, Ll, Lr)
+        mu_q_isp2 = isp(sigma, x, Ll, Lr)
+        lsp = InterpolatedSPIRRID(adaption = ra)
+        lsp.adaption.spirrid.tvars['theta'] = 0.01
+        mu_q_isp = lsp(sigma, x, 20., .1)
+#        plt.plot(np.arange(len(sigma)), sigma/0.0103)
+#        plt.plot(np.arange(len(sigma)), np.max(mu_q_isp,axis = 0))
+#        plt.show()
         #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
         #m.surf(e_arr[0], e_arr[1], mu_q_nisp)
         m.surf(e_arr[0], e_arr[1], mu_q_isp/50.)
+        m.surf(e_arr[0], e_arr[1], mu_q_isp2/50.)
         m.show()
         
     plot()
