@@ -173,7 +173,8 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
     
 
         def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau * V_f / r        
+            T = 2. * tau * V_f / r
+            l = l * (1 + theta)      
             q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
             #stress in the free length
             q_l = q * H(l / 2 - abs(x))
@@ -198,8 +199,8 @@ if __name__ == '__main__':
     t = .1
     Ef = 200e3
     Em = 25e3
-    l = 100.
-    theta = 0.0
+    l = 10.
+    theta = 1.0
     xi = 0.017
     phi = 1.
     Ll = 40.
@@ -221,7 +222,7 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
         x = np.linspace(-40, 40, 300)
-        w = np.linspace(0, 1, 300)[113]
+        w = np.linspace(0, 1, 300)[113] + 10
         q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
