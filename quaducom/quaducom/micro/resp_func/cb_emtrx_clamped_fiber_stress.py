@@ -178,7 +178,6 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
             #stress in the free length
             l = l * (1 + theta)  
             q_l = q * H(l / 2 - abs(x))
-            
             #stress in the part, where fiber transmits stress to the matrix
             q_e = (q - T/V_f * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
             #q_e = q_e * H(x + Ll) * H (Lr - x)
@@ -196,11 +195,11 @@ if __name__ == '__main__':
 
     r = 0.00345
     V_f = 0.0103
-    t = .1
+    t = .17
     Ef = 200e3
     Em = 25e3
-    l = 10.
-    theta = 0.
+    l = 1.
+    theta = 0.1
     xi = 0.017
     phi = 1.
     Ll = 40.
@@ -208,7 +207,7 @@ if __name__ == '__main__':
     
     def Pw():
         plt.figure()
-        w = np.linspace(0, 11, 300)
+        w = np.linspace(0, 1, 300)
         P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
         plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
