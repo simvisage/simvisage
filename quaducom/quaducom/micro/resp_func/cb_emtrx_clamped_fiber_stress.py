@@ -120,8 +120,8 @@ class CBEMClampedFiberStress(RF):
         l = np.minimum(l / 2., Lr) + np.minimum(l / 2., Ll)
         
         #defining variables
-        l = l * (1 + theta)
         w = w - theta * l
+        l = l * (1 + theta)
         w = H(w) * w
         T = 2. * tau * V_f / r
         Km = (1. - V_f) * E_m
@@ -173,10 +173,10 @@ class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
     
 
         def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau * V_f / r
-            l = l * (1 + theta)      
+            T = 2. * tau * V_f / r    
             q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
             #stress in the free length
+            l = l * (1 + theta)  
             q_l = q * H(l / 2 - abs(x))
             
             #stress in the part, where fiber transmits stress to the matrix
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     Ef = 200e3
     Em = 25e3
     l = 10.
-    theta = 1.0
+    theta = 0.
     xi = 0.017
     phi = 1.
     Ll = 40.
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     
     def Pw():
         plt.figure()
-        w = np.linspace(0, 1, 300)
+        w = np.linspace(0, 11, 300)
         P = CBEMClampedFiberStress()
         q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
         plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberStressSP()
         x = np.linspace(-40, 40, 300)
-        w = np.linspace(0, 1, 300)[113] + 10
+        w = .4
         q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
