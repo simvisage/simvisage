@@ -17,7 +17,7 @@ from etsproxy.traits.api import \
     implements, Trait, cached_property, Property, Float
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
 from stats.spirrid.rv import RV
-from interpolated_spirrid import InterpolatedSPIRRID
+from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
@@ -106,18 +106,32 @@ class CBMFactory(HasTraits):
 
 class CBMeanFactory(CBMFactory):
 
+    load_sigma_c_max = Float
+    load_n_sigma_c = Int
+    n_w = Int
+    n_x = Int
+    n_BC = Int
     # homogenization model
     spirrid = Property(Instance(SPIRRID))
     @cached_property
     def _get_spirrid(self):
         args = self.randomization.trait_get(['q', 'evars', 'tvars'])
         return SPIRRID(**args)
-
+    
+    adaption = Instance(RangeAdaption)
+    def _adaption_default(self):
+        return RangeAdaption(spirrid = self.spirrid,
+                             load_sigma_c_max = self.load_sigma_c_max,
+                             load_n_sigma_c = self.load_n_sigma_c,
+                             n_w = self.n_w,
+                             n_x = self.n_x,
+                             n_BC = self.n_BC)
+        
     interpolated_spirrid = Property()
     @cached_property
     def _get_interpolated_spirrid(self):
-        return InterpolatedSPIRRID(spirrid = self.spirrid)
-        #return NonInterpolatedSPIRRID(spirrid = self.spirrid)
+        return InterpolatedSPIRRID(spirrid = self.spirrid,
+                                   adaption = self.adaption)
 
     #===========================================================================
     # Construct new crack bridge (the mean response is shared by all instances)
@@ -144,19 +158,26 @@ class SCM(HasTraits):
     at positions, where the matrix strength is lower than the stress; evaluates stress-strain diagram
     by integrating the strain profile along the composite'''
     cb_randomization = Instance(FunctionRandomization)
-
+    
     cb_type = Trait('mean', dict(mean = CBMeanFactory,
                                  random = CBRandomFactory))
 
     cb_factory = Property(depends_on = 'cb_type')
     @cached_property
     def _get_cb_factory(self):
-        return self.cb_type_(randomization = self.cb_randomization)
+        return self.cb_type_(randomization = self.cb_randomization,
+                             load_sigma_c_max = self.load_sigma_c_max,
+                             load_n_sigma_c = self.load_n_sigma_c,
+                             n_w = self.n_w,
+                             n_x = self.n_x,
+                             n_BC = self.n_BC
+                             )
 
+    n_w = Int
+    n_x = Int
+    n_BC = Int
     cb_list = List
-
     length = Float(desc = 'composite specimen length')
-
     nx = Int(desc = 'number of discretization points')
 
     load_sigma_c = Property(depends_on = '+load')
@@ -196,34 +217,51 @@ class SCM(HasTraits):
         rf_spline = RectBivariateSpline(self.load_sigma_c, self.random_field.xgrid, field_2D)
         return rf_spline(self.load_sigma_c, self.x_arr)
 
-    def sort_cbs(self, load_sigma_c):
+    def sort_cbs(self, load_sigma_c, crack_position):
         # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
         self.cb_list = sorted(self.cb_list, key = attrgetter('position'))
-        # specify the boundaries at the ends (0 and self.length) of the specimen 
-        self.cb_list[0].Ll = self.cb_list[0].position
-        self.cb_list[-1].Lr = self.length - self.cb_list[-1].position
+        #find idx of the new crack
+        for i, crack in enumerate(self.cb_list):
+            if crack.position == crack_position:
+                idx = i
+        # specify the boundaries
+        if idx != 0:
+            # there is a crack at the left hand side
+            cbl = self.cb_list[idx - 1]
+            cb = self.cb_list[idx]
+            cbl.Lr = (cb.position - cbl.position) / 2. 
+            cb.Ll = cbl.Lr
+        else:
+            # the new crack is the first from the left hand side
+            self.cb_list[idx].Ll = self.cb_list[idx].position
 
-        # specify the boundaries between the cracks
-        for i, cb in enumerate(self.cb_list[:-1]):
-            self.cb_list[i].Lr = (self.cb_list[i + 1].position - cb.position) / 2.
-        for i, cb in enumerate(self.cb_list[1:]):
-            self.cb_list[i + 1].Ll = (cb.position - self.cb_list[i].position) / 2.
+        if idx != len(self.cb_list) - 1:
+            # there is a crack at the right hand side
+            cb, cbr = self.cb_list[idx], self.cb_list[idx+1]
+            cbr.Ll = (cbr.position - cb.position) / 2.
+            cb.Lr = cbr.Ll
+        else:
+            # the new crack is the first from the right hand side
+            self.cb_list[idx].Lr = self.length - self.cb_list[idx].position
 
-        # specify the x range within the specimen length for every crack
-        for i, cb in enumerate(self.cb_list):
-            mask1 = self.x_arr >= (cb.position - cb.Ll)
-            if i == 0:
+        # specify the x range and stress profile for the new crack and its neighbors
+        idxs = [idx-1,idx,idx+1]
+        if idx == 0:
+            idxs.remove(-1)
+        if idx == len(self.cb_list) - 1:
+            idxs.remove(len(self.cb_list))
+        for idx in idxs:
+            mask1 = self.x_arr >= (self.cb_list[idx].position - self.cb_list[idx].Ll)
+            if idx == 0:
                 mask1[0] = True
-            mask2 = self.x_arr <= (cb.position + cb.Lr)
-            cb.x = self.x_arr[mask1 * mask2] - cb.position
-
-        for idx, cb in enumerate(self.cb_list):
+            mask2 = self.x_arr <= (self.cb_list[idx].position + self.cb_list[idx].Lr)
+            self.cb_list[idx].x = self.x_arr[mask1 * mask2] - self.cb_list[idx].position
             self.cb_list[idx].load_sigma_c = load_sigma_c
-            crack_position_idx = np.argwhere(self.x_arr == cb.position)
-            left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
-            right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-            self.sigma_m[-len(load_sigma_c):, left:right] = cb.get_sigma_x_matrix().T
+            crack_position_idx = np.argwhere(self.x_arr == self.cb_list[idx].position)
+            left = crack_position_idx - len(np.nonzero(self.cb_list[idx].x < 0.)[0])
+            right = crack_position_idx + len(np.nonzero(self.cb_list[idx].x > 0.)[0]) + 1
+            self.sigma_m[-len(load_sigma_c):, left:right] = self.cb_list[idx].get_sigma_x_matrix().T
 
     x_area = Property(depends_on = 'length, nx')
     def _get_x_area(self):
@@ -242,15 +280,25 @@ class SCM(HasTraits):
             new_cb.position = float(crack_position)
             new_cb.load_sigma_c = load_sigma_c
             self.cb_list.append(new_cb)
-            self.sort_cbs(load_sigma_c)
+            self.sort_cbs(load_sigma_c, float(crack_position))
 #            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
 #            m.surf(e_arr[0], e_arr[1], self.sigma_m)
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
 #            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
+                idx = np.where(load_sigma_c[0]==self.load_sigma_c)[0]
+                plt.plot(self.sigma_m[idx,:].flatten())
+                plt.show()
+                e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
+                m.surf(e_arr[0], e_arr[1][::20], self.sigma_m[:,::20])
+                m.surf(e_arr[0], e_arr[1][::20], self.matrix_strength[:,::20])
+                m.show()
                 break
-            self.last_pos = crack_position 
+            self.last_pos = crack_position
+
+
+    
     last_pos = Float
 
     sigma_m = Array
@@ -304,13 +352,9 @@ if __name__ == '__main__':
     theta = 0.0
     xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
-    w = np.linspace(0.0, .5, 41)
-    x = np.linspace(-30., 30., 51)
-    Ll = np.linspace(0.5,30,4)
-    Lr = np.linspace(0.5,30,4)
 
     length = 600.
-    nx = 600
+    nx = 2000
     random_field = RandomField(seed = False,
                                lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
@@ -324,11 +368,6 @@ if __name__ == '__main__':
 
     rf = CBEMClampedFiberStressSP()
     rand = FunctionRandomization(   q = rf,
-                                    evars = dict(w = w,
-                                                 x = x,
-                                                 Ll = Ll,
-                                                 Lr = Lr,
-                                                 ),
                                     tvars = dict(tau = tau,
                                                  l = l,
                                                  E_f = Ef,
@@ -349,7 +388,10 @@ if __name__ == '__main__':
               cb_type = 'mean',
               load_sigma_c_min = 0.1,
               load_sigma_c_max = 20.,
-              load_n_sigma_c = 100
+              load_n_sigma_c = 100,
+              n_w = 40,
+              n_x = 50,
+              n_BC = 2
               )
     
     scm.evaluate()
