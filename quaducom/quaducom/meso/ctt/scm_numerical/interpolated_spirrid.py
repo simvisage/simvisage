@@ -339,9 +339,10 @@ class InterpolatedSPIRRID(HasTraits):
                 mu_w_x_interp = self.preinterpolate(mu_w_x, sigma_f_opt, x_opt).T
                 mask = np.where(self.adaption.load_sigma_f <= sigma_f_opt[-1], 1, np.NaN)[:,np.newaxis]      
                 mu_w_x_interp = mu_w_x_interp * mask
-#                e_arr = orthogonalize([np.arange(len(w_opt)), np.arange(len(x_opt))])
-#                m.surf(e_arr[0], e_arr[1], mu_w_x/np.max(mu_w_x)*50.)
-#                m.show()
+                #e_arr = orthogonalize([np.arange(len(w_opt)), np.arange(len(x_opt))])
+                #m.surf(e_arr[0], e_arr[1], mu_w_x * 0.05)
+                #m.surf(e_arr[0], e_arr[1], mu_w_x_interp * 0.05)
+                #m.show()
                 # store the particular result for BC ll and lr into the result array 
                 result[:,:,i,j] = mu_w_x_interp
                 current_loop = i*len(Lr)+j+1
@@ -374,40 +375,20 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = 0.2#RV('uniform', loc = 0.02, scale = .5) # 0.5
+    tau = 1.#RV('uniform', loc = 0.02, scale = .5) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = RV( 'uniform', scale = 15., loc = 5. )
+    l = RV( 'uniform', scale = 10., loc = 0. )
     theta = 0.0#RV( 'uniform', scale = .01, loc = 0. )
-    xi = 0.01#RV( 'weibull_min', scale = 0.012, shape = 5 ) # 0.017
+    xi = 10.01#RV( 'weibull_min', scale = 0.012, shape = 5 ) # 0.017
     phi = 1.
 
     rf = CBEMClampedFiberStressSP()
     ra = RangeAdaption(load_sigma_c_max = 10.0,
                        load_n_sigma_c = 100,
-                       n_w = 80,
-                       n_x = 161,
-                       n_BC = 10,
-                       spirrid = SPIRRID(q = rf,
-                                          sampling_type = 'LHS',
-                                     tvars = dict( tau = tau,
-                                                   l = RV( 'uniform', scale = 10., loc = 0. ),
-                                                   E_f = Ef,
-                                                   theta = theta,
-                                                   xi = xi,
-                                                   phi = phi,
-                                                   E_m = Em,
-                                                   r = r,
-                                                   V_f = Vf
-                                                        ),
-                                        n_int = 20),
-                                    )
-
-    rb = RangeAdaption(load_sigma_c_max = 10.0,
-                       load_n_sigma_c = 100,
-                       n_w = 80,
-                       n_x = 61,
-                       n_BC = 10,
+                       n_w = 100,
+                       n_x = 101,
+                       n_BC = 3,
                        spirrid = SPIRRID(q = rf,
                                           sampling_type = 'LHS',
                                      tvars = dict( tau = tau,
@@ -424,28 +405,23 @@ if __name__ == '__main__':
                                     )
     
     isp = InterpolatedSPIRRID(adaption = ra)
-    #isp2 = InterpolatedSPIRRID(adaption = rb)
     def plot():
         sigma = isp.adaption.load_sigma_c
-        Ll = 20.
-        Lr = 20.
+        Ll = 14.
+        Lr = 14.
         x = np.linspace(-Ll, Lr, 201)
     
         e_arr = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
         #mu_q_nisp = nisp(P, x, Ll, Lr)[0]
-        mu_q_isp = isp(sigma, x, Ll, Lr)
-        mu_q_isp2 = isp(sigma, x, Ll, 1.)
-        mu_q_isp3 = isp(sigma, x, Ll, 10.)
-        mu_q_isp4 = isp(sigma, x, Ll, 20.)
+        mu_q_isp = isp(sigma, x, 1., 14.)
+        mu_q_isp2 = isp(sigma, x, 14., 14.)
 
 #        plt.plot(np.arange(len(sigma)), sigma/0.0103)
 #        plt.plot(np.arange(len(sigma)), np.max(mu_q_isp,axis = 0))
 #        plt.show()
         #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
-        m.surf(e_arr[0], e_arr[1], mu_q_isp/50.)
-        m.surf(e_arr[0], e_arr[1], mu_q_isp2/50.)
-        m.surf(e_arr[0], e_arr[1], mu_q_isp3/50.)
-        m.surf(e_arr[0], e_arr[1], mu_q_isp4/50.)
+        m.surf(e_arr[0], e_arr[1], mu_q_isp/10.)
+        m.surf(e_arr[0], e_arr[1], mu_q_isp2/10.)
         m.show()
         
     plot()
