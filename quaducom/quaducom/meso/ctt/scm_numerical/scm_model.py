@@ -296,8 +296,6 @@ class SCM(HasTraits):
                 m.show()
                 break
             self.last_pos = crack_position
-
-
     
     last_pos = Float
 
@@ -310,24 +308,21 @@ class SCM(HasTraits):
     def _get_eps_m(self):
         return self.sigma_m / self.cb_randomization.tvars['E_f']
 
-    sigma_r = Property(Array, depends_on = 'cb_list')
+    sigma_f = Property(Array, depends_on = 'cb_list')
     @cached_property
-    def _get_sigma_r(self):
+    def _get_sigma_f(self):
         Vf = self.cb_randomization.tvars['V_f']
         return (self.load_sigma_c[:, np.newaxis] - self.sigma_m * (1.-Vf))/Vf
 
-    eps_r = Property(Array, depends_on = 'cb_list')
+    eps_f = Property(Array, depends_on = 'cb_list')
     @cached_property
-    def _get_eps_r(self):
-        return self.sigma_r / self.cb_randomization.tvars['E_f']
+    def _get_eps_f(self):
+        return self.sigma_f / self.cb_randomization.tvars['E_f']
 
     eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
+    @cached_property
     def _get_eps_sigma(self):
-#        coords = self.eps_r.shape
-#        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
-#        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
-#        m.show() 
-        eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
+        eps = np.trapz(self.eps_f, self.x_area, axis = 1) / self.length
         if np.sum(np.isnan(eps))==0:
             sigma = self.load_sigma_c
         else:
@@ -338,6 +333,21 @@ class SCM(HasTraits):
             sigma[-1] = 0.0
         return eps, sigma
 
+    def crack_widths(self, sigma_c):
+        # find the index of the nearest value in the load range
+        idx = np.abs(self.load_sigma_c - sigma_c).argmin()
+        eps_relative = self.eps_f - self.eps_m
+        e = eps_relative[idx,:]
+        # find the symmetry points between cracks
+        minima = np.r_[True, e[1:] < e[:-1]] & np.r_[e[:-1] < e[1:], True]
+        idxs = np.where(minima == True)[0]
+        crack_widths = []
+        for i, idx in enumerate(idxs[:-1]):
+            w = np.trapz(e[idx:idxs[i+1]], self.x_arr[idx:idxs[i+1]])
+            crack_widths.append(w)
+        return np.array(crack_widths)
+        
+
 if __name__ == '__main__':
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
     CBEMClampedFiberStressSP
@@ -345,16 +355,16 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = .2 #RV('uniform', loc = 0.02, scale = .01) # 0.5
+    tau = RV('uniform', loc = 0.02, scale = .5) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = 15.#RV( 'uniform', scale = 20., loc = 10. )
+    l = RV( 'uniform', scale = 10., loc = 2. )
     theta = 0.0
     xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
 
-    length = 400.
-    nx = 600
+    length = 2000.
+    nx = 1000
     random_field = RandomField(seed = False,
                                lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
@@ -389,9 +399,9 @@ if __name__ == '__main__':
               load_sigma_c_min = 0.1,
               load_sigma_c_max = 20.,
               load_n_sigma_c = 100,
-              n_w = 40,
-              n_x = 50,
-              n_BC = 5
+              n_w = 60,
+              n_x = 101,
+              n_BC = 4
               )
     
     scm.evaluate()
@@ -402,6 +412,10 @@ if __name__ == '__main__':
         plt.legend(loc = 'best')
         plt.xlabel('composite strain [-]')
         plt.ylabel('composite stress [MPa]')
+        plt.show()
+        plt.hist(scm.crack_widths(10.), bins = 40, range = (0,0.2))
+        plt.hist(scm.crack_widths(15.), bins = 40, range = (0,0.2))
+        plt.hist(scm.crack_widths(20.), bins = 40, range = (0,0.2))
         plt.show()
 
     plot()
