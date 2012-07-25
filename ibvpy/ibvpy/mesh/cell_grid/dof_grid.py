@@ -101,7 +101,7 @@ class DofCellGrid(SDomain):
         doffed_nodes = repeat(-1, n_nodes)
 
         doffed_nodes[ index_exp[ unique_cell_nodes ] ] = 1
-        return where(doffed_nodes > 0)
+        return where(doffed_nodes > 0)[0]
 
     #-----------------------------------------------------------------
     # Elementwise-representation of dofs
@@ -147,7 +147,11 @@ class DofCellGrid(SDomain):
         given the array of nodes.
         '''
         doffed_nodes = self._get_doffed_nodes()
-        intersect_nodes = intersect1d_nu(nodes, doffed_nodes)
+        print 'nodes'
+        print nodes
+        print 'doffed_nodes'
+        print doffed_nodes
+        intersect_nodes = intersect1d(nodes, doffed_nodes, assume_unique = False)
         return (self.dofs[ index_exp[ intersect_nodes ] ],
                 self.cell_grid.point_X_arr[  index_exp[ intersect_nodes] ])
 
