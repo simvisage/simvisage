@@ -12,16 +12,10 @@
 #
 # Created on Jun 14, 2010 by: rch
 
-from enthought.traits.api import \
-    Float, Str, implements, cached_property, Property
-
-from enthought.traits.ui.ui_traits import Image
-
-from math import pi
+from etsproxy.traits.api import \
+    Float, Str, implements
 
 import numpy as np
-from numpy import \
-    sign, sqrt, linspace, minimum, maximum
 
 from stats.spirrid.i_rf import \
     IRF
@@ -32,9 +26,9 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 def H(x):
-    return 0.5 * (sign(x) + 1.)
+    return 0.5 * (np.sign(x) + 1.)
 
-class CBEMClampedFiber(RF):
+class CBEMClampedFiberStress(RF):
     '''
     Crack bridged by a fiber with constant
     frictional interface to the elastic matrix; clamped fiber end;
@@ -44,8 +38,6 @@ class CBEMClampedFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - clamped fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
-
 
     xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -59,7 +51,7 @@ class CBEMClampedFiber(RF):
     r = Float(0.013, auto_set=False, input=True,
               enter_set=True, desc='fiber radius in mm')
 
-    E_r = Float(72e3, auto_set=False, enter_set=True, input=True,
+    E_f = Float(72e3, auto_set=False, enter_set=True, input=True,
                   distr=['uniform'])
 
     E_m = Float(30e3, auto_set=False, enter_set=True, input=True,
@@ -75,100 +67,84 @@ class CBEMClampedFiber(RF):
                   distr=['uniform', 'norm'], desc='bond quality')
 
     Ll = Float(1., auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - left')
+              distr=['uniform'], desc='embedded length - left',
+               ctrl_range=(0.0, 1.0, 10))
 
     Lr = Float(.5, auto_set=False, enter_set=True, input=True,
-              distr=['uniform'], desc='embedded length - right')
-
+              distr=['uniform'], desc='embedded length - right',
+               ctrl_range=(0.0, 1.0, 10))
 
     w = Float(auto_set=False, enter_set=True, input=True,
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
 
-    Kr = Property(depends_on='A_r, E_r')
-    @cached_property
-    def _get_Kr(self):
-        #fiber stiffness
-        return self.V_f * self.E_r
-
-    Km = Property(depends_on='V_f, E_m')
-    @cached_property
-    def _get_Km(self):
-        #matrix stiffness
-        return (1 - self.V_f) * self.E_m
-
-    Ec = Property(depends_on='V_f, E_r, E_m')
-    @cached_property
-    def _get_Ec(self):
-        #composite stiffness
-        return self.Kr + self.Km
-    
+    x = Float(auto_set=False, enter_set=True, input=True,
+               distr=['uniform'], desc='crack width',
+               ctrl_range=(0.0, 1.0, 10))
 
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
 
     C_code = Str('')
-
-    def crackbridge(self, w, l, T, Kr, Km, Lmin, Lmax):
+    
+    def crackbridge(self, w, l, T , Kf, Km, Vf):
         #Phase A : Both sides debonding .
-        Ec = Kr + Km
-        c = Kr * T * (Lmin + Lmax) + l * T * Ec
-        t1 = 0.5 * (Kr * Ec / Km ** 2)
-        t2 = 4 * Km ** 2. * w * T
-        P0 = t1 * ((c ** 2 + t2) ** 0.5 - c)
-        return P0
+        Kc = Kf + Km
+        c = Kc * T * l/2.
+        q0 = (np.sqrt(c**2 + w*Kf*Km*Kc*T) - c)/Km
+        return q0/Vf
 
-    def pullout(self, w, l, T, Kr, Km, Lmin, Lmax):
+    def pullout(self, w, l, T, Kf, Km, Vf, Lmin, Lmax):
         #Phase B : Debonding of shorter side is finished
-        Ec = Kr + Km
-        c = T * Kr * Lmax + T * Ec * (Lmin + l)
-        t1 = Ec * Kr / Km ** 2.
-        t2 = 2. * Km ** 2. * w * T
-        t3 = (Km ** 2.) * (Lmin ** 2.) * (T ** 2.)
-        P1 = t1 * (sqrt(c ** 2. + t2 + t3) - c)
-        return P1
+        Kc = Kf + Km
+        c = Kc*T*(Lmin + l)
+        f = T**2*Lmin**2*Kc**2
+        q1 = (np.sqrt(c ** 2. + f + 2*w*Kc*T*Kf*Km) - c)/Km
+        return q1/Vf
 
-    def linel(self, w, l, T, Kr, Km, Lmax, Lmin):
+    def linel(self, w, l, T, Kf, Km, Vf, Lmax, Lmin):
         #Phase C: Both sides debonded - linear elastic behavior.
-        t1 = Lmax ** 2. + Lmin ** 2.
-        P2 = 0.5 * (2. * w + T * t1) * Kr / (Lmax + l + Lmin)
-        return P2
+        Kc = Kf + Km
+        q2 = (2.*w*Kf*Km + T*Kc*(Lmin**2+Lmax**2))/(2.*Km *(Lmax + l + Lmin))
+        return q2/Vf
 
-    def __call__(self, w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+    def __call__(self, w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
         #assigning short and long embedded length
-        Lmin = minimum(Ll, Lr)
-        Lmax = maximum(Ll, Lr)
+        Lmin = np.minimum(Ll, Lr)
+        Lmax = np.maximum(Ll, Lr)
         
-        Lmin = maximum(Lmin - l / 2., 0.)
-        Lmax = maximum(Lmax - l / 2., 0.)
+        Lmin = np.maximum(Lmin - l / 2., 1e-15)
+        Lmax = np.maximum(Lmax - l / 2., 1e-15)
 
         #maximum condition for free length
-        l = minimum(l / 2., Lr) + minimum(l / 2., Ll)
+        l = np.minimum(l / 2., Lr) + np.minimum(l / 2., Ll)
         
         #defining variables
-        l = l * (1 + theta)
         w = w - theta * l
+        l = l * (1 + theta)
         w = H(w) * w
-        T = 2. * tau / (r * E_r)
+        T = 2. * tau * V_f / r
         Km = (1. - V_f) * E_m
-        Kr = V_f * E_r
-        Ec = Km + Kr
-
+        Kf = V_f * E_f
+        Kc = Km + Kf
+        
         # double sided debonding
-        q0 = self.crackbridge(w, l, T, Kr, Km, Lmin, Lmax)
+        #q0 = self.crackbridge(w, l, T, Kr, Km, Lmin, Lmax)
+        q0 = self.crackbridge(w, l, T, Kf, Km, V_f)
 
         # displacement at which the debonding to the closer clamp is finished
-        w0 = T * Lmin * (Lmin * Km + Kr * (Lmin + Lmax) + l * Ec) / Km
+        w0 = (Lmin+l)*Lmin*Kc*T/Kf/Km
         
         # debonding of one side; the other side is clamped
-        q1 = self.pullout(w , l, T, Kr, Km, Lmin, Lmax) 
+        q1 = self.pullout(w, l, T, Kf, Km, V_f, Lmin, Lmax)
         
         # displacement at which the debonding is finished at both sides
-        w1 = (1. / 2.) * T / Km * (2. * Kr * Lmax ** 2. - Km * Lmin ** 2. + 2. * Lmin * Ec * Lmax + 2 * l * Ec * Lmax + Km * Lmax ** 2)
+        e1 = Lmax*Kc*T/Km/Kf
+        w1 = e1*(l+Lmax/2.)+(e1+e1*Lmin/Lmax)*Lmin/2.
         
         # debonding completed at both sides, response becomes linear elastic
-        q2 = self.linel(w , l, T, Kr, Km, Lmax, Lmin) 
-        
+        q2 = self.linel(w , l, T, Kf, Km, V_f, Lmax, Lmin)
+
         # cut out definition ranges 
         q0 = H(w) * (q0 + 1e-15) * H(w0 - w)
         q1 = H(w - w0) * q1 * H(w1 - w)
@@ -178,11 +154,10 @@ class CBEMClampedFiber(RF):
         q = q0 + q1 + q2
 
         # include breaking strain
-        q = q * H(Kr * xi - q)
-   
+        q = q * H(E_f * xi - q)
         return q
     
-class CBEMClampedFiberSP(CBEMClampedFiber):
+class CBEMClampedFiberStressSP(CBEMClampedFiberStress):
         '''
         stress profile for a crack bridged by a fiber with constant
         frictional interface to the matrix; clamped fiber end
@@ -196,65 +171,67 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
         C_code = Str('')
         
     
-        def __call__(self, w, x, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r):
-            T = 2. * tau / r / E_r
-            T1 = T * E_r
-        
-            q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, E_r, E_m, theta, xi, phi, Ll, Lr, V_f, r)
+
+        def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r):
+            T = 2. * tau * V_f / r    
+            q = super(CBEMClampedFiberStressSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r)            
+            #stress in the free length
+            l = l * (1 + theta)  
+            q_l = q * H(l / 2 - abs(x))
+            #stress in the part, where fiber transmits stress to the matrix
+            q_e = (q - T/V_f * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+            #q_e = q_e * H(x + Ll) * H (Lr - x)
             
-            #tension in the free length
-            q_l = q / Vf * H(l / 2 - abs(x))
-            
-            #tension in the part, where fiber translates tension to composite
-            q_e = (q / Vf - T1 * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
-            
-            #tension in the composite
-            q_const = q 
+            #far field stress
+            E_c = E_m * (1-V_f) + E_f * V_f
+            q_const = q * V_f * E_f / E_c
             
             #putting all parts together
             q_x = q_l + q_e
-            q_x = maximum(q_x, q_const)
-            print type(q_x)
+            q_x = np.maximum(q_x, q_const)
             return q_x
 
-
-
-
 if __name__ == '__main__':
-    t = 0.1
-    Ef = 72e3
-    Em = 30e3
-    l = 10.
-    theta = 0.
-    xi = 10.0179
-    phi = 1.
-    Ll = 3.
-    Lr = 35.
-    r = 0.013
-    #Vf = 0.0174887
-    Vf = 0.2
-    def Pw(w):
-        P = CBEMClampedFiber()
-        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r) 
-        plt.plot(w, q , lw=2, ls='-', color='black', label='CB_emtrx')
-        plt.show()
-        
-  
 
-    def SP(x):
+    r = 0.00345
+    V_f = 0.0103
+    t = .17
+    Ef = 200e3
+    Em = 25e3
+    l = 1.
+    theta = 0.1
+    xi = 0.017
+    phi = 1.
+    Ll = 40.
+    Lr = 20.
+    
+    def Pw():
         plt.figure()
-        cbcsp = CBEMClampedFiberSP()
-        q = cbcsp(.1, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, Vf, r)
-        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        w = np.linspace(0, 1, 300)
+        P = CBEMClampedFiberStress()
+        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r) 
+        plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
+        #plt.legend(loc='best')
+        plt.ylim(0,)
+        plt.ylabel('stress', fontsize=14)
+        plt.xlabel('w', fontsize=14)
+        plt.title('Pullout Resp Func Clamped Fiber EMTRX')
+
+    def SP():
+        plt.figure()
+        cbcsp = CBEMClampedFiberStressSP()
+        x = np.linspace(-40, 40, 300)
+        w = .4
+        q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r)
+        plt.plot(x, q, lw=2, color='black', label='stress along filament')
+        plt.ylabel('stress', fontsize=14)
+        plt.xlabel('position', fontsize=14)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
-        plt.legend(loc='best')
-        #plt.ylim(0, 200)
-        plt.show()
-        
-    
-    w = linspace(0, 1, 300)
-    #Pw(w)
-    
-    x = linspace(-40, 40, 300)
-    SP(x)
+        plt.title('Stress Along Filament EMTRX at w = %.1f' %w)
+        #plt.legend(loc='best')
+        plt.ylim(0,)
+
+    Pw()
+    SP()
+    plt.show()
