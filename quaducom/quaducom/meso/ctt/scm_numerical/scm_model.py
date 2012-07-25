@@ -345,16 +345,16 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = .5 #RV('uniform', loc = 0.02, scale = .01) # 0.5
+    tau = .2 #RV('uniform', loc = 0.02, scale = .01) # 0.5
     Ef = 200e3
     Em = 25e3
-    l = RV( 'uniform', scale = 10., loc = 2. )
+    l = 15.#RV( 'uniform', scale = 20., loc = 10. )
     theta = 0.0
     xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
 
-    length = 600.
-    nx = 2000
+    length = 400.
+    nx = 600
     random_field = RandomField(seed = False,
                                lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
@@ -391,7 +391,7 @@ if __name__ == '__main__':
               load_n_sigma_c = 100,
               n_w = 40,
               n_x = 50,
-              n_BC = 2
+              n_BC = 5
               )
     
     scm.evaluate()
