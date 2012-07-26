@@ -77,33 +77,33 @@ from matplotlib.pyplot import bar, show, axhline
 
 import csv
 
-class MRone( MushRoofModel ):
+class MRone(MushRoofModel):
 
-    implements( ISimModel )
+    implements(ISimModel)
     mushroof_part = 'one'
     #===============================================================================
     # fe_grid
     #===============================================================================
 
-    n_elems_xy_quarter = Int( 10, input = True )#, ps_levels = [4, 16, 5] )
-    n_elems_z = Int( 1, input = True )#, ps_levels = [1, 2, 1] )
-    n_elems_col_z = Int( 10  , input = True, ps_levels = [5, 20, 3 ] )
-    n_elems_col_xy = Int( 2 , input = True, ps_levels = [2, 4, 1] )
+    n_elems_xy_quarter = Int(10, input = True)#, ps_levels = [4, 16, 5] )
+    n_elems_z = Int(1, input = True)#, ps_levels = [1, 2, 1] )
+    n_elems_col_z = Int(10  , input = True, ps_levels = [5, 20, 3 ])
+    n_elems_col_xy = Int(2 , input = True, ps_levels = [2, 4, 1])
 
     shift_elems = True
 
-    vtk_r = Float( 0.90 )
+    vtk_r = Float(0.90)
 
     #default roof
-    fe_roof = Instance( ( FETSEval ), depends_on = '+ps_levels, +input' )
-    def _fe_roof_default( self ):
+    fe_roof = Instance((FETSEval), depends_on = '+ps_levels, +input')
+    def _fe_roof_default(self):
         fets = self.fe_quad_serendipity_roof
         fets.vtk_r *= 0.9
         return fets
 
     #default plate
-    fe_plate = Instance( ( FETSEval ), depends_on = '+ps_levels, +input' )
-    def _fe_plate_default ( self ):
+    fe_plate = Instance((FETSEval), depends_on = '+ps_levels, +input')
+    def _fe_plate_default (self):
         fets = self.fe_quad_serendipity_plate
         fets.ngp_r = 3
         fets.ngp_s = 3
@@ -114,10 +114,10 @@ class MRone( MushRoofModel ):
 
     # shell
     #
-    hp_shell = Property( Instance( HPShell ) , depends_on = '+ps_levels, +input' )
+    hp_shell = Property(Instance(HPShell) , depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_hp_shell( self ):
-        return HPShell( length_xy_quarter = self.length_xy_quarter,
+    def _get_hp_shell(self):
+        return HPShell(length_xy_quarter = self.length_xy_quarter,
                         length_z = self.length_z,
                         n_elems_xy_quarter = self.n_elems_xy_quarter,
                         n_elems_z = self.n_elems_z,
@@ -126,71 +126,71 @@ class MRone( MushRoofModel ):
                         width_top_col = self.width_top_col,
                         mushroof_part = self.mushroof_part,
                         shift_array = self.shift_array,
-                        X0 = self.X0 )
+                        X0 = self.X0)
 
     # plate
     #
-    plate = Property( Instance( GEOColumn ) , depends_on = '+ps_levels, +input' )
+    plate = Property(Instance(GEOColumn) , depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_plate( self ):
-        return GEOColumn( width_top = self.width_top_col,
+    def _get_plate(self):
+        return GEOColumn(width_top = self.width_top_col,
                           width_bottom = self.width_top_col,
                           X0 = [ 3.5, 3.5, -self.t_plate ], # - 0.25],
-                          h_col = self.t_plate )
+                          h_col = self.t_plate)
 
     # column
     #
 #    X0_column = Array( [ 4., 4., -3.] )
-    column = Property( Instance( GEOColumn ) , depends_on = '+ps_levels, +input' )
+    column = Property(Instance(GEOColumn) , depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_column( self ):
-        return GEOColumn( width_top_col = self.width_top_col,
+    def _get_column(self):
+        return GEOColumn(width_top_col = self.width_top_col,
                           width_bottom_col = self.width_bottom_col,
                           h_col = self.h_col - self.t_plate,
                           #r_pipe = self.r_pipe,
-                          X0 = [ 3.5, 3.5, -( self.h_col ) ] ) # - 0.5] )
+                          X0 = [ 3.5, 3.5, -(self.h_col) ]) # - 0.5] )
 
 
     #default column
-    fe_column = Instance( ( FETSEval ), transient = True , depends_on = '+ps_levels, +input' )
-    def _fe_column_default( self ):
+    fe_column = Instance((FETSEval), transient = True , depends_on = '+ps_levels, +input')
+    def _fe_column_default(self):
         fets = self.fe_quad_serendipity_column
         fets.vtk_r *= 0.9
         return fets
 
 
-    fe_grid_roof = Property( Instance( FEGrid ), depends_on = '+ps_levels, +input' )
+    fe_grid_roof = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_fe_grid_roof( self ):
-        return FEGrid( coord_min = ( 0.0, 0.0, 0.0 ),
-                       coord_max = ( 1.0, 1.0, 1.0 ),
+    def _get_fe_grid_roof(self):
+        return FEGrid(coord_min = (0.0, 0.0, 0.0),
+                       coord_max = (1.0, 1.0, 1.0),
                        geo_transform = self.hp_shell,
                        shift_array = self.shift_array,
-                       shape = ( self.n_elems_xy, self.n_elems_xy, self.n_elems_z ),
-                       fets_eval = self.fe_roof )
+                       shape = (self.n_elems_xy, self.n_elems_xy, self.n_elems_z),
+                       fets_eval = self.fe_roof)
 
-    fe_grid_column = Property( Instance( FEGrid ), depends_on = '+ps_levels, +input' )
+    fe_grid_column = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_fe_grid_column( self ):
-        return  FEGrid( coord_min = ( 0.0, 0.0, 0.0 ),
-                        coord_max = ( 1.0, 1.0, 1.0 ),
+    def _get_fe_grid_column(self):
+        return  FEGrid(coord_min = (0.0, 0.0, 0.0),
+                        coord_max = (1.0, 1.0, 1.0),
                         geo_transform = self.column,
-                        shape = ( self.n_elems_col_xy, self.n_elems_col_xy, self.n_elems_col_z ),
-                        fets_eval = self.fe_column )
+                        shape = (self.n_elems_col_xy, self.n_elems_col_xy, self.n_elems_col_z),
+                        fets_eval = self.fe_column)
 
-    fe_grid_plate = Property( Instance( FEGrid ), depends_on = '+ps_levels, +input' )
+    fe_grid_plate = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_fe_grid_plate( self ):
-        return  FEGrid( coord_min = ( 0.0, 0.0, 0.0 ),
-                        coord_max = ( 1.0, 1.0, 1.0 ),
+    def _get_fe_grid_plate(self):
+        return  FEGrid(coord_min = (0.0, 0.0, 0.0),
+                        coord_max = (1.0, 1.0, 1.0),
                         geo_transform = self.plate,
-                        shape = ( self.n_elems_col_xy, self.n_elems_col_xy, 2 ),
-                        fets_eval = self.fe_plate )
+                        shape = (self.n_elems_col_xy, self.n_elems_col_xy, 2),
+                        fets_eval = self.fe_plate)
 
     #===============================================================================
     # ps_study
     #===============================================================================
-    def peval( self ):
+    def peval(self):
         '''
         Evaluate the model and return the array of results specified
         in the method get_sim_outputs.
@@ -206,12 +206,12 @@ class MRone( MushRoofModel ):
 
         #bring dofs into right order for plot
         #
-        F_hinge_in_order_x = self.sort_by_dofs( self.edge_roof_top, F_int_slice_x )
-        F_hinge_in_order_y = self.sort_by_dofs( self.edge_roof_top, F_int_slice_y )
-        F_hinge_x = append( F_hinge_in_order_x[:, :-1, 0], F_hinge_in_order_x[-1, -1, 0] )
-        F_hinge_y = append( F_hinge_in_order_y[:, :-1, 1], F_hinge_in_order_y[-1, -1, 1] )
-        F_hinge_y_sum = sum( F_hinge_y.flatten() )
-        F_hinge_x_sum = sum( F_hinge_x.flatten() )
+        F_hinge_in_order_x = self.sort_by_dofs(self.edge_roof_top, F_int_slice_x)
+        F_hinge_in_order_y = self.sort_by_dofs(self.edge_roof_top, F_int_slice_y)
+        F_hinge_x = append(F_hinge_in_order_x[:, :-1, 0], F_hinge_in_order_x[-1, -1, 0])
+        F_hinge_y = append(F_hinge_in_order_y[:, :-1, 1], F_hinge_in_order_y[-1, -1, 1])
+        F_hinge_y_sum = sum(F_hinge_y.flatten())
+        F_hinge_x_sum = sum(F_hinge_x.flatten())
 #
 #        self.visual_force_bar( F_hinge_x.flatten()
 #                               , y_label = "internal force x [MN]"
@@ -227,19 +227,19 @@ class MRone( MushRoofModel ):
 
 
 
-        return array( [ U_edge,
+        return array([ U_edge,
 #                        u_x_corner2,
 #                       F_hinge_y_sum] )
 #                        u_z_corner2,
 #                        max_princ_stress ]
-                       ], dtype = 'float_' )
+                       ], dtype = 'float_')
 
-    def get_sim_outputs( self ):
+    def get_sim_outputs(self):
         '''
         Specifies the results and their order returned by the model
         evaluation.
         '''
-        return [ SimOut( name = 'U', unit = 'm' ),
+        return [ SimOut(name = 'U', unit = 'm'),
 #                 SimOut( name = 'u_x_corner2', unit = 'm' ),
 #                 SimOut( name = 'N Gelenk', unit = 'MN' ), ]
 #                 SimOut( name = 'u_z_corner2', unit = 'm' ),
@@ -251,20 +251,20 @@ class MRone( MushRoofModel ):
     #===============================================================================
 
     rtrace_list = List
-    def _rtrace_list_default( self ):
+    def _rtrace_list_default(self):
         return [  self.max_princ_stress, self.sig_app, self.u, self.f_dof]
 
 
-    shift_array = Array( value = [[0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1], ], input = True )
+    shift_array = Array(value = [[0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1], ], input = True)
 
 
     #===============================================================================
     # boundary conditions
     #===============================================================================
 
-    bc_plate_roof_link_list = Property( List, depends_on = '+ps_levels, +input' )
+    bc_plate_roof_link_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_bc_plate_roof_link_list( self ):
+    def _get_bc_plate_roof_link_list(self):
         '''
         links all plate corner nodes of each elements to the adjacent elements of the roof
         '''
@@ -272,40 +272,40 @@ class MRone( MushRoofModel ):
         plate = self.fe_grid_plate
         bc_col_link_list = []
 
-        slice_1 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_1 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = roof[self.n_elems_xy_quarter - 1 ,
                                            self.n_elems_xy_quarter, 0,
                                            0, 0, 0 ],
                               link_slice = plate[ 0 , 0 , -1, 0, 0, -1], link_coeffs = [1.0],
-                              value = 0. )]
-        slice_2 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+                              value = 0.)]
+        slice_2 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = roof[self.n_elems_xy_quarter,
                                            self.n_elems_xy_quarter - 1, 0,
                                            0, 0, 0 ],
                               link_slice = plate[ -1, 0, -1, -1, 0, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_3 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_3 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = roof[self.n_elems_xy_quarter + 1,
                                            self.n_elems_xy_quarter, 0,
                                            0, 0, 0 ],
                               link_slice = plate[ -1 , -1 , -1, -1, -1, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_4 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_4 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                             slice = roof[self.n_elems_xy_quarter ,
                                          self.n_elems_xy_quarter + 1, 0,
                                          0, 0, 0 ],
                             link_slice = plate[ 0 , -1 , -1, 0, -1, -1], link_coeffs = [1.0],
-                            value = 0. )]
+                            value = 0.)]
 
-        slice_5 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_5 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                             slice = roof[self.n_elems_xy_quarter ,
                                          self.n_elems_xy_quarter , 0,
                                          0, 0, 0 ],
                             link_slice = plate[ self.n_elems_col_xy / 2.0 , self.n_elems_col_xy / 2.0 , -1,
                                                 0, 0, -1], link_coeffs = [1.0],
-                            value = 0. )]
+                            value = 0.)]
 
 
         bc_plate_roof_link_list = slice_1 + slice_2 + slice_3 + slice_4 + slice_5
@@ -313,9 +313,9 @@ class MRone( MushRoofModel ):
         return bc_plate_roof_link_list
 
 
-    bc_roof_top_roof_low_link_list = Property( List, depends_on = '+ps_levels, +input' )
+    bc_roof_top_roof_low_link_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_bc_roof_top_roof_low_link_list( self ):
+    def _get_bc_roof_top_roof_low_link_list(self):
         '''
         links all plate corner nodes of each elements to the adjacent elements of the roof
         '''
@@ -323,49 +323,49 @@ class MRone( MushRoofModel ):
         plate = self.fe_grid_plate
         bc_roof_top_roof_low_link_list = []
 
-        slice_1 = [BCSlice( var = 'u'  , dims = [ 2],
+        slice_1 = [BCSlice(var = 'u'  , dims = [ 2],
                               link_slice = roof[self.n_elems_xy_quarter - 1 ,
                                            self.n_elems_xy_quarter, 0,
                                            0, 0, 0 ],
                               slice = roof[self.n_elems_xy_quarter - 1 ,
                                                 self.n_elems_xy_quarter, -1,
                                                 0, 0, -1 ], link_coeffs = [1.0],
-                              value = 0. )]
-        slice_2 = [BCSlice( var = 'u'  , dims = [ 2],
+                              value = 0.)]
+        slice_2 = [BCSlice(var = 'u'  , dims = [ 2],
                               link_slice = roof[self.n_elems_xy_quarter,
                                            self.n_elems_xy_quarter - 1, 0,
                                            0, 0, 0 ],
                               slice = roof[self.n_elems_xy_quarter ,
                                                 self.n_elems_xy_quarter - 1, -1,
                                                 0, 0, -1 ], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_3 = [BCSlice( var = 'u'  , dims = [ 2],
+        slice_3 = [BCSlice(var = 'u'  , dims = [ 2],
                               link_slice = roof[self.n_elems_xy_quarter + 1,
                                            self.n_elems_xy_quarter, 0,
                                            0, 0, 0 ],
                               slice = roof[self.n_elems_xy_quarter + 1 ,
                                                 self.n_elems_xy_quarter, -1,
                                                 0, 0, -1 ], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_4 = [BCSlice( var = 'u'  , dims = [ 2],
+        slice_4 = [BCSlice(var = 'u'  , dims = [ 2],
                             link_slice = roof[self.n_elems_xy_quarter ,
                                          self.n_elems_xy_quarter + 1, 0,
                                          0, 0, 0 ],
                             slice = roof[self.n_elems_xy_quarter  ,
                                                 self.n_elems_xy_quarter + 1, -1,
                                                 0, 0, -1 ], link_coeffs = [1.0],
-                            value = 0. )]
+                            value = 0.)]
 
-        slice_5 = [BCSlice( var = 'u'  , dims = [ 2],
+        slice_5 = [BCSlice(var = 'u'  , dims = [ 2],
                             link_slice = roof[self.n_elems_xy_quarter ,
                                          self.n_elems_xy_quarter , 0,
                                          0, 0, 0 ],
                             slice = roof[self.n_elems_xy_quarter  ,
                                                 self.n_elems_xy_quarter, -1,
                                                 0, 0, -1 ], link_coeffs = [1.0],
-                            value = 0. )]
+                            value = 0.)]
 
 
         bc_roof_top_roof_low_link_list = slice_1 + slice_2 + slice_3 + slice_4 + slice_5
@@ -374,82 +374,82 @@ class MRone( MushRoofModel ):
 
 
 
-    bc_plate_column_link_list = Property( List, depends_on = '+ps_levels, +input' )
+    bc_plate_column_link_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_bc_plate_column_link_list( self ):
+    def _get_bc_plate_column_link_list(self):
         '''
         links all column nodes to plate nodes
         '''
         column = self.fe_grid_column
         plate = self.fe_grid_plate
 
-        slice_1 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_1 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = plate[:, :, 0, -1, -1, 0 ],
                               link_slice = column[ :, :, -1 , -1, -1, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_2 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_2 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = plate[:, :, 0, 0, 0, 0 ],
                               link_slice = column[ :, :, -1 , 0, 0, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_3 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_3 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = plate[:, :, 0, 0, -1, 0 ],
                               link_slice = column[ :, :, -1 , 0, -1, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
-        slice_4 = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        slice_4 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                               slice = plate[:, :, 0, -1, 0, 0 ],
                               link_slice = column[ :, :, -1 , -1, 0, -1], link_coeffs = [1.0],
-                              value = 0. )]
+                              value = 0.)]
 
         return slice_1 + slice_2 + slice_3 + slice_4
 #        return [BCSlice( var = 'u'  , dims = [0, 1, 2],
 #                         slice = plate[:,:,0,:,:, 0 ],
 #                         link_slice = column[ :,:,-1 ,:,:,-1], link_coeffs = [1.0], value = 0. )]
 
-    link_edge_list = Property( List, depends_on = '+ps_levels, +input' )
+    link_edge_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_link_edge_list( self ):
+    def _get_link_edge_list(self):
         '''
         links all edge nodes to one node, for this node boundary conditions are applied,
         the complete force within the edge hinge can therefore be evaluated at one node
         '''
         roof = self.fe_grid_roof
-        dof_constraint_0 = [BCSlice( var = 'u', dims = [1],
+        dof_constraint_0 = [BCSlice(var = 'u', dims = [1],
                                      slice = roof[ : , -1, -1, :, -1, -1],
-                                    value = 0.0 )]
-        dof_constraint_1 = [BCSlice( var = 'u', dims = [0],
+                                    value = 0.0)]
+        dof_constraint_1 = [BCSlice(var = 'u', dims = [0],
                                      slice = roof[ -1 , :, -1, -1, :, -1],
-                                    value = 0.0 )]
+                                    value = 0.0)]
         link_edge_list = dof_constraint_0 + dof_constraint_1
         return link_edge_list
 
-    bc_col_clamped_list = Property( List, depends_on = '+ps_levels, +input' )
+    bc_col_clamped_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_bc_col_clamped_list( self ):
+    def _get_bc_col_clamped_list(self):
         column = self.fe_grid_column
-        constraint = [ BCSlice( var = 'u', dims = [0, 1, 2],
+        constraint = [ BCSlice(var = 'u', dims = [0, 1, 2],
                                slice = column[ :, :, 0, :, :, 0 ],
-                               value = 0.0 ) ]
+                               value = 0.0) ]
         return constraint
 
-    bc_col_hinge_list = Property( List, depends_on = '+ps_levels, +input' )
+    bc_col_hinge_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_bc_col_hinge_list( self ):
+    def _get_bc_col_hinge_list(self):
         constraint = []
         column = self.fe_grid_column
-        for i in range( 0, self.n_elems_col ):
-            dof_const = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        for i in range(0, self.n_elems_col):
+            dof_const = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                          slice = column[i , 0 , 0, 0, 0, 0 ],
                          link_slice = column[ -1 - i , -1, 0, -1 , -1, 0], link_coeffs = [-1.0],
-                         value = 0.0 )]
+                         value = 0.0)]
             constraint = constraint + dof_const
-        for i in range( 0, self.n_elems_col ):
-            dof_const = [BCSlice( var = 'u'  , dims = [0, 1, 2],
+        for i in range(0, self.n_elems_col):
+            dof_const = [BCSlice(var = 'u'  , dims = [0, 1, 2],
                          slice = column[0 , -1 - i , 0, 0, -1, 0 ],
                          link_slice = column[ -1, i , 0, -1, 0 , 0], link_coeffs = [-1.0],
-                         value = 0.0 )]
+                         value = 0.0)]
             constraint = constraint + dof_const
 
         return constraint
@@ -458,9 +458,9 @@ class MRone( MushRoofModel ):
     # loading cases for mr_one only symmetric 
     #===============================================================================
 
-    lc_g_list = Property( List, depends_on = '+ps_levels, +input' )
+    lc_g_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_lc_g_list( self ):
+    def _get_lc_g_list(self):
         #slices   
         roof = self.fe_grid_roof
         column = self.fe_grid_column
@@ -474,12 +474,12 @@ class MRone( MushRoofModel ):
         additional_surface_load = -0.20e-3 # [MN/m^2]
         additional_t_constr = -0.02 * 22.4e-3
         edge_load = -0.35e-3 # [MN/m]
-        return [ BCSlice( var = 'f', value = material_density_roof, dims = [2],
+        return [ BCSlice(var = 'f', value = material_density_roof, dims = [2],
                           integ_domain = 'global',
-                          slice = roof[:, :, :, :, :, :] ),
-                 BCSlice( var = 'f', value = material_density_column, dims = [2],
+                          slice = roof[:, :, :, :, :, :]),
+                 BCSlice(var = 'f', value = material_density_column, dims = [2],
                           integ_domain = 'global',
-                          slice = column[:, :, :, :, :, :] ), ]
+                          slice = column[:, :, :, :, :, :]), ]
 #                 BCSlice( var = 'f', value = additional_surface_load + additional_t_constr,
 #                          dims = [2], integ_domain = 'global',
 #                          slice = upper_surf ),
@@ -490,20 +490,20 @@ class MRone( MushRoofModel ):
 #                          integ_domain = 'global',
 #                          slice = left_edge_roof )]
 
-    lc_s_list = Property( List, depends_on = '+ps_levels, +input' )
+    lc_s_list = Property(List, depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_lc_s_list( self ):
+    def _get_lc_s_list(self):
         # slices
         roof = self.fe_grid_roof
         upper_surf = roof[:, :, -1, :, :, -1]
         # loads in global z- direction
         snow_load = -0.85e-3
-        return [ BCSlice( var = 'f', value = snow_load, dims = [2],
+        return [ BCSlice(var = 'f', value = snow_load, dims = [2],
                           integ_domain = 'global',
-                          slice = upper_surf )]
+                          slice = upper_surf)]
 
-    lc_shrink_list = Property( List, depends_on = '+ps_levels, +input' )
-    def _get_lc_shrink_list ( self ):
+    lc_shrink_list = Property(List, depends_on = '+ps_levels, +input')
+    def _get_lc_shrink_list (self):
         self.initial_strain_roof = True
         self.initial_strain_col = True
         self.t_up = -100
@@ -513,25 +513,25 @@ class MRone( MushRoofModel ):
     # time loop
     #===============================================================================
 
-    tloop = Property( depends_on = '+ps_levels, +input' )
+    tloop = Property(depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_tloop( self ):
+    def _get_tloop(self):
         roof = self.fe_grid_roof
         column = self.fe_grid_column
         plate = self.fe_grid_plate
 
 
-        ts = TS( sdomain = [roof, plate, column],
+        ts = TS(sdomain = [roof, plate, column],
                  dof_resultants = True,
-                 bcond_list =
+                 bcond_list = 
 
                               # boundary conditions
                               #
-                              self.bc_roof_top_roof_low_link_list +
-                              self.bc_plate_column_link_list +
-                              self.bc_plate_roof_link_list +
-                              self.link_edge_list +
-                              self.bc_col_clamped_list +
+                              self.bc_roof_top_roof_low_link_list + 
+                              self.bc_plate_column_link_list + 
+                              self.bc_plate_roof_link_list + 
+                              self.link_edge_list + 
+                              self.bc_col_clamped_list + 
 
                               # loading
                               #
@@ -541,9 +541,9 @@ class MRone( MushRoofModel ):
                )
 
         # Add the time-loop control
-        tloop = TLoop( tstepper = ts,
+        tloop = TLoop(tstepper = ts,
                        tolerance = 1e-4,
-                       tline = self.tline )
+                       tline = self.tline)
         self.edge_corner_1_dof = roof[0, 0, 0, 0, 0, 0].dofs
         self.edge_corner_2_dof = roof[-1, 0, -1, -1, 0, -1].dofs
         self.dof = roof[ -1, 0, -1, -1, 0, -1 ].dofs[0][0][0]
@@ -555,7 +555,7 @@ class MRone( MushRoofModel ):
 
 if __name__ == '__main__':
 
-    sim_model = MRone( #n_elems_xy_quarter = 8,
+    sim_model = MRone(#n_elems_xy_quarter = 8,
                        #n_elems_z = 1,
                        #n_elems_col = 2,
                        #vtk_r = 1.0,
@@ -574,19 +574,19 @@ if __name__ == '__main__':
 
 #        sim_model.peval()
         from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp( ibv_resource = sim_model )
+        app = IBVPyApp(ibv_resource = sim_model)
         app.main()
 
     elif do == 'ps':
 
-        sim_ps = SimPStudy( sim_model = sim_model )
+        sim_ps = SimPStudy(sim_model = sim_model)
         sim_ps.configure_traits()
 
     elif do == 'cs':
 
 #        sim_ps = SimPStudy( sim_model = sim_model )
-        pstudy = SimArray( sim_model = sim_model )
-        pstudy_view = SimArrayView( model = pstudy )
+        pstudy = SimArray(sim_model = sim_model)
+        pstudy_view = SimArrayView(model = pstudy)
 #        pstudy_view._start_study()
         pstudy_view.configure_traits()
 
@@ -633,7 +633,7 @@ if __name__ == '__main__':
         idx_x_axes = Int
         idx_z_axes = Int
 
-        for i, name in enumerate( pstudy.factor_names ):
+        for i, name in enumerate(pstudy.factor_names):
             if name == 'n_elems_col_xy':
                idx_z_axes = i
             if name == 'n_elems_col_z':
@@ -644,22 +644,22 @@ if __name__ == '__main__':
                idx_z_axes = i
 
 
-        def n_dof_serendipity_grid( x, y, z ):
-            return ( ( 2 * x + 1 ) * ( 2 * y + 1 ) * ( 2 * z + 1 ) - 6 * x * y * z \
-                   + ( ( x - 1 ) * y * z + ( y - 1 ) * x * z + ( z - 1 ) * x * y ) - x * y * z ) * 3.0
+        def n_dof_serendipity_grid(x, y, z):
+            return ((2 * x + 1) * (2 * y + 1) * (2 * z + 1) - 6 * x * y * z \
+                   + ((x - 1) * y * z + (y - 1) * x * z + (z - 1) * x * y) - x * y * z) * 3.0
 
         if cs == 'shell':
-            n_dofs = n_dof_serendipity_grid( input_array[:, 0] * 2,
+            n_dofs = n_dof_serendipity_grid(input_array[:, 0] * 2,
                                             input_array[:, 0] * 2,
-                                            input_array[:, 1] )
-            n_dofs_0 = n_dofs[where( input_array[:, idx_z_axes] == 1 )]
-            n_dofs_1 = n_dofs[where( input_array[:, idx_z_axes] == 2 )]
-            n_dofs_2 = n_dofs[where( input_array[:, idx_z_axes] == 3 )]
+                                            input_array[:, 1])
+            n_dofs_0 = n_dofs[where(input_array[:, idx_z_axes] == 1)]
+            n_dofs_1 = n_dofs[where(input_array[:, idx_z_axes] == 2)]
+            n_dofs_2 = n_dofs[where(input_array[:, idx_z_axes] == 3)]
 
         if cs == 'column':
-            n_dofs = n_dof_serendipity_grid( ones_like( input_array ) * 2,
-                                            ones_like( input_array ) * 2,
-                                            input_array )
+            n_dofs = n_dof_serendipity_grid(ones_like(input_array) * 2,
+                                            ones_like(input_array) * 2,
+                                            input_array)
             n_dofs_0 = n_dofs
 #            n_dofs_0 = n_dofs[where(input_array[:,idx_z_axes]==2)]
 #            n_dofs_1 = n_dofs[where(input_array[:,idx_z_axes]==4)]
@@ -669,8 +669,8 @@ if __name__ == '__main__':
 
 
 
-        idx_1 = where( input_array[:, idx_x_axes] == choosen_x )
-        idx_2 = where( input_array[:, idx_z_axes] == choosen_z )
+        idx_1 = where(input_array[:, idx_x_axes] == choosen_x)
+        idx_2 = where(input_array[:, idx_z_axes] == choosen_z)
 
         for i in  idx_1[0]:
             for j in idx_2[0]:
@@ -685,13 +685,13 @@ if __name__ == '__main__':
         y_choosen = c_[y_0,
                        y_1,
 #                       y_2
-                       ][where( c_[n_dofs_0,
+                       ][where(c_[n_dofs_0,
                        n_dofs_1,
 #                       n_dofs_2
-                       ] == n_dofs_choosen )]
+                       ] == n_dofs_choosen)]
 
-        fig = figure( facecolor = 'white' )
-        ax1 = fig.add_subplot( 1, 1, 1 )
+        fig = figure(facecolor = 'white')
+        ax1 = fig.add_subplot(1, 1, 1)
 
 #        from matplotlib import rc
 #        rc( 'text', usetex = True )
@@ -701,33 +701,33 @@ if __name__ == '__main__':
 #        ax1.set_xticklabels(("50000","100000", '300000'))
 
         for tick in ax1.xaxis.get_major_ticks():
-            tick.label1.set_fontsize( 20 )
+            tick.label1.set_fontsize(20)
 
         for tick in ax1.yaxis.get_major_ticks():
-            tick.label1.set_fontsize( 20 )
+            tick.label1.set_fontsize(20)
 
 
 
         if cs == 'shell':
 
-            ax1.plot( n_dofs_0 , y_0, color = 'b', label = '1', linewidth = 1.5 )
-            ax1.plot( n_dofs_1 , y_1, color = 'g', label = '2', linewidth = 1.5 )
+            ax1.plot(n_dofs_0 , y_0, color = 'b', label = '1', linewidth = 1.5)
+            ax1.plot(n_dofs_1 , y_1, color = 'g', label = '2', linewidth = 1.5)
 #            ax1.plot(n_dofs_2 ,y_2, color = 'r', label = '3', linewidth=1.5)
-            ax1.plot( n_dofs_choosen.reshape( -1, 1 ), y_choosen.reshape( -1, 1 ), marker = 'o', color = 'b', markerfacecolor = 'b', markersize = 8 )#
-            xlim ( 0, 15000 )
+            ax1.plot(n_dofs_choosen.reshape(-1, 1), y_choosen.reshape(-1, 1), marker = 'o', color = 'b', markerfacecolor = 'b', markersize = 8)#
+            xlim (0, 15000)
 
         if cs == 'column':
-            xlim ( 0, 2000 )
-            ax1.plot( n_dofs_0 , y_0, color = 'b', label = '2', linewidth = 1.5 )
+            xlim (0, 2000)
+            ax1.plot(n_dofs_0 , y_0, color = 'b', label = '2', linewidth = 1.5)
 #            ax1.plot(n_dofs_1 ,y_1, color = 'g', label = '4', linewidth=1.5)
 #            ax1.plot(n_dofs_2 ,y_2, color = 'r', label = '4', linewidth=1.5)
-            ax1.plot( n_dofs_choosen.reshape( -1, 1 ), y_choosen.reshape( -1, 1 ), marker = 'o', color = 'b', markerfacecolor = 'b', markersize = 8 )#
+            ax1.plot(n_dofs_choosen.reshape(-1, 1), y_choosen.reshape(-1, 1), marker = 'o', color = 'b', markerfacecolor = 'b', markersize = 8)#
 
-        ylim ( -0.0031, -0.0029 )
+        ylim (-0.0031, -0.0029)
 
 #        ax1.plot( [0.25,0.75],[0.45/2**0.5,2], 'bo')
-        ax1.set_xlabel( 'Freiheitsgrade ', fontsize = 24 )
-        ax1.set_ylabel( 'U [m]', fontsize = 24 )
+        ax1.set_xlabel('Freiheitsgrade ', fontsize = 24)
+        ax1.set_ylabel('U [m]', fontsize = 24)
 
         legend()
         show()
@@ -737,18 +737,18 @@ if __name__ == '__main__':
         print '*** writing study data to file,', filename, ' ***'
 
         if cs == 'column':
-            X_data = vstack( ( hstack( ( n_dofs_0.reshape( -1, 1 ), ones_like( n_dofs_0.reshape( -1, 1 ) ) * 2, y_0 ) ) ) )
+            X_data = vstack((hstack((n_dofs_0.reshape(-1, 1), ones_like(n_dofs_0.reshape(-1, 1)) * 2, y_0))))
         if cs == 'shell':
-            X_data = vstack( ( hstack( ( n_dofs_0.reshape( -1, 1 ), ones_like( n_dofs_0.reshape( -1, 1 ) ) * 1, y_0 ) ),
-                            hstack( ( n_dofs_1.reshape( -1, 1 ), ones_like( n_dofs_1.reshape( -1, 1 ) ) * 2, y_1 ) ) ) )
+            X_data = vstack((hstack((n_dofs_0.reshape(-1, 1), ones_like(n_dofs_0.reshape(-1, 1)) * 1, y_0)),
+                            hstack((n_dofs_1.reshape(-1, 1), ones_like(n_dofs_1.reshape(-1, 1)) * 2, y_1))))
 
 
 
-        file = open( filename, 'w' )
+        file = open(filename, 'w')
 #        
-        writer = csv.writer( file, delimiter = ";", lineterminator = "\n" )
-        writer.writerow( ['nodes' + cs , 'n_elems_t', 'U_z'] )
-        writer.writerows( X_data )
+        writer = csv.writer(file, delimiter = ";", lineterminator = "\n")
+        writer.writerow(['nodes' + cs , 'n_elems_t', 'U_z'])
+        writer.writerows(X_data)
 
         file = file.close()
 
@@ -767,10 +767,10 @@ if __name__ == '__main__':
 
         import pickle
         filename = '/tmp/sim.pickle'
-        file = open( filename, 'w' )
-        pickle.dump( sim_model, file )
+        file = open(filename, 'w')
+        pickle.dump(sim_model, file)
         file.close()
-        file = open( filename, 'r' )
-        sm = pickle.load( file )
+        file = open(filename, 'r')
+        sm = pickle.load(file)
         file.close()
 
