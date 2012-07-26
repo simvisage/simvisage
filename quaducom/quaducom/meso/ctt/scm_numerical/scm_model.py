@@ -15,16 +15,11 @@
 from etsproxy.traits.api import \
     HasTraits, Instance, Int, Array, List, Callable, Interface, \
     implements, Trait, cached_property, Property, Float
-from etsproxy.traits.ui.api import ModelView
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
-from stats.spirrid.rv import RV
 from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
-from stats.spirrid import make_ogrid as orthogonalize
-import etsproxy.mayavi.mlab as m
-from matplotlib import pyplot as plt
 
 class CBRandomSample(HasTraits):
 
@@ -284,13 +279,6 @@ class SCM(HasTraits):
 #            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
-                idx = np.where(load_sigma_c[0]==self.load_sigma_c)[0]
-                plt.plot(self.sigma_m[idx,:].flatten())
-                plt.show()
-                e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
-                m.surf(e_arr[0], e_arr[1][::20], self.sigma_m[:,::20])
-                m.surf(e_arr[0], e_arr[1][::20], self.matrix_strength[:,::20])
-                m.show()
                 break
             self.last_pos = crack_position
     
