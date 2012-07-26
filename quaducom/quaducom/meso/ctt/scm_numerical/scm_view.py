@@ -5,15 +5,12 @@ Created on Jul 26, 2012
 '''
 
 from etsproxy.traits.api import \
-    HasTraits, Instance, Int, Array, List, Callable, Interface, \
-    implements, Trait, cached_property, Property, Float
+    Instance, Array, List, cached_property, Property
 from etsproxy.traits.ui.api import ModelView
 from stats.spirrid.spirrid import FunctionRandomization
 from stats.spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
-from stats.spirrid import make_ogrid as orthogonalize
-import etsproxy.mayavi.mlab as m
 from matplotlib import pyplot as plt
 from quaducom.meso.ctt.scm_numerical.scm_model import SCM
 
@@ -45,7 +42,32 @@ class SCMView(ModelView):
             return np.array(crack_widths)
         else:
             return np.array([0.])
+    
+    eval_w = Property(List, depends_on = 'model')
+    @cached_property
+    def _get_eval_w(self):
+        return [self.crack_widths(load) for load in self.model.load_sigma_c]
 
+    w_mean = Property(Array, depends_on = 'model')
+    @cached_property
+    def _get_w_mean(self):
+        return np.array([np.mean(w) for w in self.eval_w])
+
+    w_median = Property(Array, depends_on = 'model')
+    @cached_property
+    def _get_w_median(self):
+        return np.array([np.median(w) for w in self.eval_w])
+    
+    w_stdev = Property(Array, depends_on = 'model')
+    @cached_property
+    def _get_w_stdev(self):
+        return np.array([np.std(w) for w in self.eval_w])
+    
+    w_max = Property(Array, depends_on = 'model')
+    @cached_property
+    def _get_w_max(self):
+        return np.array([np.max(w) for w in self.eval_w])
+    
     x_area = Property(depends_on = 'model.')
     def _get_x_area(self):
         return  np.ones_like(self.model.load_sigma_c)[:, np.newaxis] * self.model.x_arr[np.newaxis, :]
@@ -95,8 +117,8 @@ if __name__ == '__main__':
     xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
     phi = 1.
 
-    length = 2000.
-    nx = 2000
+    length = 1000.
+    nx = 1000
     random_field = RandomField(seed = False,
                                lacor = 4.,
                                 xgrid = np.linspace(0., length, 600),
@@ -133,7 +155,7 @@ if __name__ == '__main__':
               load_n_sigma_c = 100,
               n_w = 60,
               n_x = 101,
-              n_BC = 1
+              n_BC = 3
               )
     
     scm_view = SCMView(model = scm)
@@ -147,14 +169,11 @@ if __name__ == '__main__':
         plt.xlabel('composite strain [-]')
         plt.ylabel('composite stress [MPa]')
         plt.figure()
-        w_load = [scm_view.crack_widths(load) for load in scm.load_sigma_c]
-        w_mean = np.array([np.mean(w) for w in w_load])
-        w_median = np.array([np.median(w) for w in w_load])
-        w_stdev = np.array([np.std(w) for w in w_load])
-        plt.plot(scm.load_sigma_c,w_mean, color = 'red', lw = 2, label = 'mean crack width')
-        plt.plot(scm.load_sigma_c,w_median, color = 'blue', lw = 2, label = 'median crack width')
-        plt.plot(scm.load_sigma_c,w_mean + w_stdev, color = 'black', label = 'stdev')
-        plt.plot(scm.load_sigma_c,w_mean - w_stdev, color = 'black')
+        plt.plot(scm.load_sigma_c, scm_view.w_mean, color = 'green', lw = 2, label = 'mean crack width')
+        plt.plot(scm.load_sigma_c, scm_view.w_median, color = 'blue', lw = 2, label = 'median crack width')
+        plt.plot(scm.load_sigma_c, scm_view.w_mean + scm_view.w_stdev, color = 'black', label = 'stdev')
+        plt.plot(scm.load_sigma_c, scm_view.w_mean - scm_view.w_stdev, color = 'black')
+        plt.plot(scm.load_sigma_c, scm_view.w_max, ls = 'dashed', color = 'red', label = 'max crack width')
         plt.legend(loc = 'best')
         plt.figure()
         plt.hist(scm_view.crack_widths(20.), bins = 25, label = 'load = 20 MPa')
