@@ -33,7 +33,6 @@ def get_d(u_arr, integ_radius):
     return du_arr
 
 class CrackTracer(HasTraits):
-
     
     # time step used for the evaluation
     # (if defined as non-zero only the defined time step 
@@ -59,7 +58,7 @@ class CrackTracer(HasTraits):
     
     # size of the steps between the evaluated time steps
     # all time steps found in the read in directory are taken starting
-    # with time_step = 0 untill the last time_step found in the directory in steps of
+    # with time_step = 0 until the last time_step found in the directory in steps of
     # 'time_step_size'  
     #
     time_step_size = Int(430)
@@ -71,7 +70,9 @@ class CrackTracer(HasTraits):
     # integration radius for the non-local average of the measured strain
     # defined as integer value of the number of facettes (or elements) 
     # 
-    # the value should correspond to ceil( float( n_px_facette_size / n_px_facette_distance ) )
+    # the value should correspond to 
+#    def _integ_radius_default(self):
+#        return ceil( float( self.n_px_f / self.n_px_a )
     integ_radius = Int(7)
 
     #===============================================================================
@@ -82,7 +83,6 @@ class CrackTracer(HasTraits):
     # 2) loop over the files - read also the load level for each time step
     # 3) stack the arrays over time steps an array with the dimensions 
     # input_arr[time,node,values]
-    
     
     data_dir = Directory
     def _data_dir_default(self):
@@ -199,8 +199,16 @@ class CrackTracer(HasTraits):
         grid_mask_t[:, :, :] = True
         grid_mask_t[(t_idx.flatten(), x_idx_t.flatten(), y_idx_t.flatten())] = False
         
-        return grid_mask_t, t_idx, x_idx_t, y_idx_t
+        return grid_mask_t, t_idx, x_idx_t, y_idx_t, n_x, n_y
 
+    n_x_t = Property
+    def _get_n_x_t(self):
+        return self.idx_maps_t[4]
+
+    n_y_t = Property
+    def _get_n_y_t(self):
+        return self.idx_maps_t[5]
+    
     grid_mask_t = Property
     def _get_grid_mask_t(self):
         return self.idx_maps_t[0]
@@ -429,7 +437,7 @@ class CrackTracer(HasTraits):
     @cached_property    
     def _get_x_arr_avg(self):
         # use average to eliminate errors in measuring of single points (yields a 1d-array)
-        return np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
+        return np.ones( self.n_y_t ) * np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
 
     x_idx_arr = Property
     @cached_property    
@@ -446,7 +454,7 @@ class CrackTracer(HasTraits):
     @cached_property    
     def _get_y_arr_avg(self):
         # use average to eliminate errors in measuring of single points (yields a 1d-array)
-        return np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
+        return np.ones( self.n_y_t ) * np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
 
     y_idx_arr = Property
     @cached_property    
@@ -528,7 +536,7 @@ class CrackTracer(HasTraits):
         return np.average(self.ux_w, axis = 1)
     
     # tolerance to distinguish cracks from noise
-    # i.e. use only displacement
+    # i.e. consider only displacement jumps greater then 'd_ux_tol'
     #
     d_ux_tol = Float(0.00)
     
@@ -687,6 +695,7 @@ class CrackTracer(HasTraits):
         vmax = self.plot3d_var_[1]
         
         m.points3d(self.x_arr, self.y_arr, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
+        m.points3d(self.x_arr_avg, self.y_arr_avg, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
 
         # switch coordinate order to display glyphs at their head/tail insted of their center
 #        m.points3d(self.z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
@@ -867,7 +876,8 @@ class CrackTracer(HasTraits):
         plot3d_var = getattr(self, self.plot3d_var_[0])
         vmax = self.plot3d_var_[1]
 
-        m.surf(self.x_arr, self.y_arr, plot3d_var, vmax = vmax, mask = mask_arr, warp_scale = warp_scale)
+#        m.surf(self.x_arr, self.y_arr, plot3d_var, vmax = vmax, mask = mask_arr, warp_scale = warp_scale)
+        m.surf(self.x_arr_avg, self.y_arr_avg, plot3d_var, vmax = vmax, mask = mask_arr, warp_scale = warp_scale)
 
         # use average coordinate values (1D-arrays)
         #    
@@ -928,9 +938,9 @@ if __name__ == '__main__':
 # select plot typ
 #-----------------------------------------------------------------------------------
 
-#    plot_typ = '3d-surf'
+    plot_typ = '3d-surf'
 #    plot_typ = '3d-points'
-    plot_typ = '3d-cracks'
+#    plot_typ = '3d-cracks'
 #    plot_typ = '2d'
 
 #-----------------------------------------------------------------------------------
