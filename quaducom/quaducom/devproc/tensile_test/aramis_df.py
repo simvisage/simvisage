@@ -87,7 +87,7 @@ class CrackTracer(HasTraits):
     data_dir = Directory
     def _data_dir_default(self):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
-                            'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4','ARAMIS',
+                            'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4', 'ARAMIS',
                             'Probe-1-Ausschnitt-Xf15a1-Yf5a4')
     
     input_list = Property(Array(float), depends_on = 'data_dir')
@@ -117,7 +117,7 @@ class CrackTracer(HasTraits):
         # construct a data_arr consiting of time_step = 0 and time_step = evaluated_time_step
         #
         if self.evaluated_time_step != 0:
-            print 'NOTE: single time step has been selected for evaluation: t = %g' %(self.evaluated_time_step) 
+            print 'NOTE: single time step has been selected for evaluation: t = %g' % (self.evaluated_time_step) 
             time_step_stop = self.evaluated_time_step + 1
             time_step_size = self.evaluated_time_step
         else:
@@ -156,7 +156,7 @@ class CrackTracer(HasTraits):
     def _get_idx_maps_t(self):
 
         data_arr = self.data_arr
-        print 'data_arr.shape',data_arr.shape
+        print 'data_arr.shape', data_arr.shape
         x_idx_t = np.array(data_arr[:, :, 0], dtype = int)
         y_idx_t = np.array(data_arr[:, :, 1], dtype = int)
 #        print 'x_idx_t: ',x_idx_t
@@ -174,8 +174,8 @@ class CrackTracer(HasTraits):
 #        print 'y_idx_max_t: ',y_idx_max_t
         
         # make sure that indices start at 0
-        x_idx_t -= x_idx_min_t[:,np.newaxis]
-        y_idx_t -= y_idx_min_t[:,np.newaxis]
+        x_idx_t -= x_idx_min_t[:, np.newaxis]
+        y_idx_t -= y_idx_min_t[:, np.newaxis]
 #        print 'x_idx_t_new: ',x_idx_t
 #        print 'y_idx_t_new: ',y_idx_t
 #        print 'x_idx_max_t_new: ',x_idx_max_t
@@ -184,12 +184,12 @@ class CrackTracer(HasTraits):
         # number of grid points 
         n_x = np.max(x_idx_max_t - x_idx_min_t) + 1
         n_y = np.max(y_idx_max_t - y_idx_min_t) + 1
-        print 'nx',n_x
-        print 'ny',n_y
+        print 'nx', n_x
+        print 'ny', n_y
         
         # number of time steps
         n_t = data_arr.shape[0]
-        print 'nt',n_t
+        print 'nt', n_t
         t_idx = (np.arange(n_t)[:, np.newaxis] * 
                  np.ones((data_arr.shape[1],), dtype = int)[np.newaxis, :])
 #        print 't_idx',t_idx
@@ -215,8 +215,8 @@ class CrackTracer(HasTraits):
     
     grid_mask_w = Property
     def _get_grid_mask_w(self):
-        grid_mask_w = self.grid_mask_t[self.w_detect_step,:,:]
-        print 'number of missing facettes at crack_detect_step: ', np.sum( grid_mask_w )
+        grid_mask_w = self.grid_mask_t[self.w_detect_step, :, :]
+        print 'number of missing facettes at crack_detect_step: ', np.sum(grid_mask_w)
         return 1.0 * grid_mask_w
     
     txy_idx = Property
@@ -258,7 +258,7 @@ class CrackTracer(HasTraits):
 #        grid_mask[(slice(None), x_idx, y_idx)] = False
         grid_mask = np.zeros((n_x, n_y), dtype = bool)
         grid_mask[:, :] = True
-        grid_mask[( x_idx, y_idx)] = False
+        grid_mask[(x_idx, y_idx)] = False
 
 #        # length of the meassured field in x-direction, pixel size, facette size, facette distance
 #        #
@@ -361,27 +361,27 @@ class CrackTracer(HasTraits):
     
             # base vectors (normed) of the local coordinate system x_, y_, z_
             #
-            x_ = x_vec_ / np.math.sqrt( np.dot( x_vec_, x_vec_ ))                         
-            y_ = y_vec_ / np.math.sqrt( np.dot( y_vec_, y_vec_ ))        
-            z_ = np.cross( x_, y_)
+            x_ = x_vec_ / np.math.sqrt(np.dot(x_vec_, x_vec_))                         
+            y_ = y_vec_ / np.math.sqrt(np.dot(y_vec_, y_vec_))        
+            z_ = np.cross(x_, y_)
             
             # base vectors (normed) of the global carthesian coordinate system
             #
-            x = np.array([1,0,0])
-            y = np.array([0,1,0])
-            z = np.array([0,0,1])
+            x = np.array([1, 0, 0])
+            y = np.array([0, 1, 0])
+            z = np.array([0, 0, 1])
             
             # get the direction cosines:
             #
-            cos_xx_ = np.dot(x_,x)
-            cos_yx_ = np.dot(x_,y)
-            cos_zx_ = np.dot(x_,z)
-            cos_xy_ = np.dot(y_,x)
-            cos_yy_ = np.dot(y_,y)
-            cos_zy_ = np.dot(y_,z)
-            cos_xz_ = np.dot(z_,x)
-            cos_yz_ = np.dot(z_,y)
-            cos_zz_ = np.dot(z_,z)
+            cos_xx_ = np.dot(x_, x)
+            cos_yx_ = np.dot(x_, y)
+            cos_zx_ = np.dot(x_, z)
+            cos_xy_ = np.dot(y_, x)
+            cos_yy_ = np.dot(y_, y)
+            cos_zy_ = np.dot(y_, z)
+            cos_xz_ = np.dot(z_, x)
+            cos_yz_ = np.dot(z_, y)
+            cos_zz_ = np.dot(z_, z)
              
             # rotation using transformation matrix T_mtx 
             # (cf. Zienkiewicz, 6th edition, p.192, (6.18):
@@ -395,34 +395,33 @@ class CrackTracer(HasTraits):
             
             # rotate the coordinate values (x,y,z)    
             #
-            daf_new[:,:,:,0] = daf_new[:,:,:,0] * cos_xx_ + daf_new[:,:,:,1] * cos_yx_ + daf_new[:,:,:,2] * cos_zx_
-            daf_new[:,:,:,1] = daf_new[:,:,:,0] * cos_xy_ + daf_new[:,:,:,1] * cos_yy_ + daf_new[:,:,:,2] * cos_zy_
-            daf_new[:,:,:,2] = daf_new[:,:,:,0] * cos_xz_ + daf_new[:,:,:,1] * cos_yz_ + daf_new[:,:,:,2] * cos_zz_
+            daf_new[:, :, :, 0] = daf_new[:, :, :, 0] * cos_xx_ + daf_new[:, :, :, 1] * cos_yx_ + daf_new[:, :, :, 2] * cos_zx_
+            daf_new[:, :, :, 1] = daf_new[:, :, :, 0] * cos_xy_ + daf_new[:, :, :, 1] * cos_yy_ + daf_new[:, :, :, 2] * cos_zy_
+            daf_new[:, :, :, 2] = daf_new[:, :, :, 0] * cos_xz_ + daf_new[:, :, :, 1] * cos_yz_ + daf_new[:, :, :, 2] * cos_zz_
     
             # rotate the displacement values (ux,uy,uz)    
             #
-            daf_new[:,:,:,3] = daf_new[:,:,:,3] * cos_xx_ + daf_new[:,:,:,4] * cos_yx_ + daf_new[:,:,:,5] * cos_zx_
-            daf_new[:,:,:,4] = daf_new[:,:,:,3] * cos_xy_ + daf_new[:,:,:,4] * cos_yy_ + daf_new[:,:,:,5] * cos_zy_
-            daf_new[:,:,:,5] = daf_new[:,:,:,3] * cos_xz_ + daf_new[:,:,:,4] * cos_yz_ + daf_new[:,:,:,5] * cos_zz_
+            daf_new[:, :, :, 3] = daf_new[:, :, :, 3] * cos_xx_ + daf_new[:, :, :, 4] * cos_yx_ + daf_new[:, :, :, 5] * cos_zx_
+            daf_new[:, :, :, 4] = daf_new[:, :, :, 3] * cos_xy_ + daf_new[:, :, :, 4] * cos_yy_ + daf_new[:, :, :, 5] * cos_zy_
+            daf_new[:, :, :, 5] = daf_new[:, :, :, 3] * cos_xz_ + daf_new[:, :, :, 4] * cos_yz_ + daf_new[:, :, :, 5] * cos_zz_
             
             # translation of the coordinates into the origin:
             # 'x_0_vec' derived from the first time step
             # = distance between origin and the position of the first facette
             # @todo: make sure that facette (0,0) is non-zero due to lost facette!
             #
-            x_0_vec = daf[0,0,0,:3]
+            x_0_vec = daf[0, 0, 0, :3]
             print 'x_0_vec', x_0_vec
             
     #        daf_new[:,:,:,0] = daf_new[:,:,:,0] - x_0_vec[0]
     #        daf_new[:,:,:,1] = daf_new[:,:,:,1] - x_0_vec[1]
     #        daf_new[:,:,:,2] = daf_new[:,:,:,2] - x_0_vec[2]
     
-            daf_new[:,:,:,:3] = daf_new[:,:,:,:3] - x_0_vec
+            daf_new[:, :, :, :3] = daf_new[:, :, :, :3] - x_0_vec
     
             return daf_new
         else:
             return self.data_t_orig
-
     
     #===========================================================================
     # Geometry arrays
@@ -464,7 +463,7 @@ class CrackTracer(HasTraits):
     l_x = Property
     @cached_property    
     def _get_l_x(self):
-        return abs( self.x_arr_avg[-1] - self.x_arr_avg[0] )
+        return abs(self.x_arr_avg[-1] - self.x_arr_avg[0])
 
     z_arr = Property
     @cached_property    
@@ -593,15 +592,15 @@ class CrackTracer(HasTraits):
         ddd_ux_avg_w = self.ddd_ux_avg_w
         crack_filter_avg = ((dd_ux_avg_w[1:] * dd_ux_avg_w[:-1] < 0.0) * 
                            ((ddd_ux_avg_w[1:] + ddd_ux_avg_w[:-1]) / 2.0 < -0.01))
-        print "number of cracks determined by 'crack_filter_avg': ", np.sum( crack_filter_avg )
+        print "number of cracks determined by 'crack_filter_avg': ", np.sum(crack_filter_avg)
         return crack_filter_avg
 
     crack_spacing_avg = Property
     @cached_property
     def _get_crack_spacing_avg(self):
-        n_cr_avg = np.sum( self.crack_filter_avg )
+        n_cr_avg = np.sum(self.crack_filter_avg)
         s_cr_avg = self.l_x / n_cr_avg
-        print "average crack spacing [mm]: %.1f" %(s_cr_avg)
+        print "average crack spacing [mm]: %.1f" % (s_cr_avg)
         return s_cr_avg 
         
     crack_arr_w = Property
@@ -659,7 +658,31 @@ class CrackTracer(HasTraits):
         # uses directory path by default
         #
         if plot_title == 'true':
-            m.title( os.path.join( self.data_dir, self.basename ) )
+            m.title(os.path.join(self.data_dir, self.basename))
+        
+        p.show()
+    
+    def plot_w_hist(self):
+        font = {'family' : 'times new roman',
+                #'weight' : 'bold',
+                'size'   : 20 }
+        
+        p.rc('font', **font)  # pass in the font dict as kwargs
+        p.hist(self.crack_arr_w, normed = True, range = (0, 0.25),
+               bins = 40, histtype = 'bar', color = 'gray')
+        p.xlabel('w [mm]')
+        p.ylabel('frequency [%]')
+        p.twinx()
+        p.hist(self.crack_arr_w, normed = True, range = (0, 0.25),
+               histtype = 'step', color = 'black',
+               cumulative = True, linewidth = 3, bins = 40)
+        p.ylim(0, 1)
+        p.ylabel('fraction [-]')
+        # figure title 
+        # uses directory path by default
+        #
+        if plot_title == 'true':
+            m.title(os.path.join(self.data_dir, self.basename))
         
         p.show()
     
@@ -667,8 +690,8 @@ class CrackTracer(HasTraits):
     # variable to be plotted in 3d-plot
     # set variable to 'd_ux_w', 'd_ux_w'
     #
-    plot3d_var = Trait('d_ux_w', {'ux_w [mm]':( 'ux_w', None),
-                                  'd_ux_w [mm]':( 'd_ux_w', 0.2),
+    plot3d_var = Trait('d_ux_w', {'ux_w [mm]':('ux_w', None),
+                                  'd_ux_w [mm]':('d_ux_w', 0.2),
                                   'w_cr [mm]': ('crack_field_w', 0.2),
                                   'grid_mask_w': ('grid_mask_w', 1.0)})
 
@@ -694,15 +717,16 @@ class CrackTracer(HasTraits):
         plot3d_var = getattr(self, self.plot3d_var_[0])
         vmax = self.plot3d_var_[1]
         
-        m.points3d(self.x_arr, self.y_arr, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
-        m.points3d(self.x_arr_avg, self.y_arr_avg, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
+#        m.points3d(self.x_arr, self.y_arr, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
+#        m.points3d(self.x_arr_avg, self.y_arr_avg, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
+        m.points3d(self.x_arr, self.y_arr, self.z_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode = 'none', vmax = vmax)
 
         # switch coordinate order to display glyphs at their head/tail insted of their center
 #        m.points3d(self.z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
 
         # plot scalarbar
         #
-        m.scalarbar(orientation='horizontal', title = self.plot3d_var)
+        m.scalarbar(orientation = 'horizontal', title = self.plot3d_var)
         # @todo: predefine scalarbar position
 #        m.scalarbar().position = [0., 0.]
 
@@ -714,7 +738,7 @@ class CrackTracer(HasTraits):
         # uses directory path by default
         #
         if plot_title == 'true':
-            m.title( os.path.join( self.data_dir, self.basename ) )
+            m.title(os.path.join(self.data_dir, self.basename))
 
         # get mayavi engine 
         #
@@ -739,9 +763,9 @@ class CrackTracer(HasTraits):
         module_manager = engine.scenes[0].children[0].children[0]
         module_manager.scalar_lut_manager.scalar_bar_representation.maximum_size = np.array([100000, 100000])
         module_manager.scalar_lut_manager.scalar_bar_representation.minimum_size = np.array([1, 1])
-        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.20603604,  0.16827586])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.20603604, 0.16827586])
         module_manager.scalar_lut_manager.scalar_bar_representation.moving = 0
-        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.40858859,  0.09310345])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.40858859, 0.09310345])
         module_manager.scalar_lut_manager.scalar_bar_representation.maximum_size = np.array([100000, 100000])
 
 #        # @todo: use mlab-functionality instead
@@ -776,18 +800,18 @@ class CrackTracer(HasTraits):
         # flatten z_arr
         # @todo: use instead: extent = [xmin, xmax, ymin, ymax, zmin, zmax], 
         #
-        z_arr = np.zeros_like( self.z_arr )
+        z_arr = np.zeros_like(self.z_arr)
         # NOTE: coordinate order is switched in order to display glyphs at their tail instead of their center
         # (only possible in mayavis's x-direction)    
         #
         plot3d_var = getattr(self, self.plot3d_var_[0])
 #        plot3d_var = getattr(self, 'crack_field_w')
         vmax = self.plot3d_var_[1]
-        m.points3d(z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='scalar', vmax = vmax)
+        m.points3d(z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode = 'scalar', vmax = vmax)
 
         # plot scalarbar
         #
-        m.scalarbar(orientation='horizontal', title = self.plot3d_var)
+        m.scalarbar(orientation = 'horizontal', title = self.plot3d_var)
 
         # plot axes
         #
@@ -797,7 +821,7 @@ class CrackTracer(HasTraits):
         # uses directory path by default
         #
         if plot_title == 'true':
-            m.title( os.path.join( self.data_dir, self.basename ) )
+            m.title(os.path.join(self.data_dir, self.basename))
         
         # get mayavi engine
         #
@@ -817,7 +841,7 @@ class CrackTracer(HasTraits):
 
 #        plot3d_var = getattr(self, 'd_ux_w')
         plot3d_var = getattr(self, 'crack_field_w')
-        m.points3d(z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode ='none', vmax = vmax)
+        m.points3d(z_arr, self.x_arr, self.y_arr, plot3d_var, mode = 'cube', colormap = "blue-red", scale_mode = 'none', vmax = vmax)
         glyph1 = engine.scenes[0].children[1].children[0].children[0]
         # switch order of the scale_factor corresponding to the order of the 
         glyph1.glyph.glyph_source.glyph_source.x_length = self.glyph_z_length
@@ -841,9 +865,9 @@ class CrackTracer(HasTraits):
         
         module_manager = engine.scenes[0].children[0].children[0]
         module_manager.scalar_lut_manager.scalar_bar_representation.minimum_size = np.array([1, 1])
-        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.20603604,  0.16827586])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.20603604, 0.16827586])
         module_manager.scalar_lut_manager.scalar_bar_representation.moving = 0
-        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.53971972,  0.19931035])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.53971972, 0.19931035])
         module_manager.scalar_lut_manager.scalar_bar_representation.maximum_size = np.array([100000, 100000])
         
         m.show()
@@ -886,7 +910,7 @@ class CrackTracer(HasTraits):
 
         # plot scalarbar
         #
-        m.scalarbar(orientation='horizontal', title = self.plot3d_var)
+        m.scalarbar(orientation = 'horizontal', title = self.plot3d_var)
 
         # plot axes
         #
@@ -896,7 +920,7 @@ class CrackTracer(HasTraits):
         # uses directory path by default
         #
         if plot_title == 'true':
-            m.title( os.path.join( self.data_dir, self.basename ) )
+            m.title(os.path.join(self.data_dir, self.basename))
 
         # get mayavi engine
         #
@@ -922,8 +946,8 @@ class CrackTracer(HasTraits):
         #
         module_manager = engine.scenes[0].children[0].children[0].children[0].children[0]
         module_manager.scalar_lut_manager.scalar_bar_representation.minimum_size = np.array([1, 1])
-        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.27780226,  0.11638842])
-        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.59707606,  0.16105125])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position2 = np.array([ 0.27780226, 0.11638842])
+        module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.59707606, 0.16105125])
         module_manager.scalar_lut_manager.scalar_bar_representation.maximum_size = np.array([100000, 100000])        
         m.show()
         
@@ -932,16 +956,17 @@ class CrackTracer(HasTraits):
         
 if __name__ == '__main__':
 
-    aramis_dir = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4','ARAMIS')
+    aramis_dir = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4', 'ARAMIS')
 
 #-----------------------------------------------------------------------------------
 # select plot typ
 #-----------------------------------------------------------------------------------
 
-    plot_typ = '3d-surf'
-#    plot_typ = '3d-points'
-#    plot_typ = '3d-cracks'
-#    plot_typ = '2d'
+#    plot_type = '3d-surf'
+#    plot_type = '3d-points'
+#    plot_type = '3d-cracks'
+#    plot_type = '2d'
+    plot_type = 'w_hist'
 
 #-----------------------------------------------------------------------------------
 # select variable to be plotted
@@ -1011,7 +1036,7 @@ if __name__ == '__main__':
 #                     glyph_y_length = 0.05
 #                     )
   
-    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1_kurz','f15a3'),
+    ct = CrackTracer(data_dir = os.path.join(aramis_dir, 'V1_kurz', 'f15a3'),
                      evaluated_time_step = 3,
                      integ_radius = 3,
                      w_detect_step = -1,
@@ -1143,12 +1168,14 @@ if __name__ == '__main__':
     ct.crack_spacing_avg
     print 'l_x', ct.l_x
     
-    if plot_typ == '3d-surf':
+    if plot_type == '3d-surf':
         ct.plot3d_surf()
-    elif plot_typ == '3d-points':
+    elif plot_type == '3d-points':
         ct.plot3d_points()
-    if plot_typ == '3d-cracks':
+    if plot_type == '3d-cracks':
         ct.plot3d_cracks()
-    elif plot_typ == '2d':
+    elif plot_type == '2d':
         ct.plot2d()
+    elif plot_type == 'w_hist':
+        ct.plot_w_hist()
 
