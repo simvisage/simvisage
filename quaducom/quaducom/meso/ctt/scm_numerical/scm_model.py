@@ -16,14 +16,10 @@ from etsproxy.traits.api import \
     HasTraits, Instance, Int, Array, List, Callable, Interface, \
     implements, Trait, cached_property, Property, Float
 from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
-from stats.spirrid.rv import RV
 from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
-from stats.spirrid import make_ogrid as orthogonalize
-import etsproxy.mayavi.mlab as m
-from matplotlib import pyplot as plt
 
 class CBRandomSample(HasTraits):
 
@@ -217,9 +213,10 @@ class SCM(HasTraits):
         rf_spline = RectBivariateSpline(self.load_sigma_c, self.random_field.xgrid, field_2D)
         return rf_spline(self.load_sigma_c, self.x_arr)
 
-    def sort_cbs(self, load_sigma_c, crack_position):
+    def sort_cbs(self):
         # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
+        crack_position = self.cb_list[-1].position
         self.cb_list = sorted(self.cb_list, key = attrgetter('position'))
         #find idx of the new crack
         for i, crack in enumerate(self.cb_list):
@@ -257,15 +254,10 @@ class SCM(HasTraits):
                 mask1[0] = True
             mask2 = self.x_arr <= (self.cb_list[idx].position + self.cb_list[idx].Lr)
             self.cb_list[idx].x = self.x_arr[mask1 * mask2] - self.cb_list[idx].position
-            self.cb_list[idx].load_sigma_c = load_sigma_c
             crack_position_idx = np.argwhere(self.x_arr == self.cb_list[idx].position)
             left = crack_position_idx - len(np.nonzero(self.cb_list[idx].x < 0.)[0])
             right = crack_position_idx + len(np.nonzero(self.cb_list[idx].x > 0.)[0]) + 1
-            self.sigma_m[-len(load_sigma_c):, left:right] = self.cb_list[idx].get_sigma_x_matrix().T
-
-    x_area = Property(depends_on = 'length, nx')
-    def _get_x_area(self):
-        return  np.ones_like(self.load_sigma_c)[:, np.newaxis] * self.x_arr[np.newaxis, :]
+            self.sigma_m[-len(self.cb_list[idx].load_sigma_c):, left:right] = self.cb_list[idx].get_sigma_x_matrix().T
 
     def evaluate(self):
         #seek for the minimum strength redundancy to find the position of the next crack
@@ -280,129 +272,18 @@ class SCM(HasTraits):
             new_cb.position = float(crack_position)
             new_cb.load_sigma_c = load_sigma_c
             self.cb_list.append(new_cb)
-            self.sort_cbs(load_sigma_c, float(crack_position))
+            self.sort_cbs()
 #            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
 #            m.surf(e_arr[0], e_arr[1], self.sigma_m)
 #            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
 #            m.show()
             if self.last_pos == crack_position:
                 print 'FAIL - refine the Ll, Lr, w or x ranges'
-                idx = np.where(load_sigma_c[0]==self.load_sigma_c)[0]
-                plt.plot(self.sigma_m[idx,:].flatten())
-                plt.show()
-                e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
-                m.surf(e_arr[0], e_arr[1][::20], self.sigma_m[:,::20])
-                m.surf(e_arr[0], e_arr[1][::20], self.matrix_strength[:,::20])
-                m.show()
                 break
             self.last_pos = crack_position
-
-
     
     last_pos = Float
 
     sigma_m = Array
     def _sigma_m_default(self):
         return self.sigma_mx_load_ff
-
-    eps_m = Property(Array, depends_on = 'cb_list')
-    @cached_property
-    def _get_eps_m(self):
-        return self.sigma_m / self.cb_randomization.tvars['E_f']
-
-    sigma_r = Property(Array, depends_on = 'cb_list')
-    @cached_property
-    def _get_sigma_r(self):
-        Vf = self.cb_randomization.tvars['V_f']
-        return (self.load_sigma_c[:, np.newaxis] - self.sigma_m * (1.-Vf))/Vf
-
-    eps_r = Property(Array, depends_on = 'cb_list')
-    @cached_property
-    def _get_eps_r(self):
-        return self.sigma_r / self.cb_randomization.tvars['E_f']
-
-    eps_sigma = Property(depends_on = '+load, length, nx, random_field.+modified')
-    def _get_eps_sigma(self):
-#        coords = self.eps_r.shape
-#        e_arr = orthogonalize([np.arange(coords[0]), np.arange(coords[1])])
-#        m.surf(e_arr[0], e_arr[1], self.eps_r*1000)
-#        m.show() 
-        eps = np.trapz(self.eps_r, self.x_area, axis = 1) / self.length
-        if np.sum(np.isnan(eps))==0:
-            sigma = self.load_sigma_c
-        else:
-            idx = np.sum(np.isnan(eps) == False)
-            eps = eps[:idx]
-            eps[-1] = eps[-2]
-            sigma = self.load_sigma_c[:idx]
-            sigma[-1] = 0.0
-        return eps, sigma
-
-if __name__ == '__main__':
-    from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
-    CBEMClampedFiberStressSP
-
-    # filaments
-    r = 0.00345
-    Vf = 0.0103
-    tau = .5 #RV('uniform', loc = 0.02, scale = .01) # 0.5
-    Ef = 200e3
-    Em = 25e3
-    l = RV( 'uniform', scale = 10., loc = 2. )
-    theta = 0.0
-    xi = 0.0179#RV( 'weibull_min', scale = 0.01, shape = 5 ) # 0.017
-    phi = 1.
-
-    length = 600.
-    nx = 2000
-    random_field = RandomField(seed = False,
-                               lacor = 4.,
-                                xgrid = np.linspace(0., length, 600),
-                                nsim = 1,
-                                loc = .0,
-                                shape = 7.5,
-                                scale = 7.8,
-                                non_negative_check = True,
-                                distribution = 'Weibull'
-                               )
-
-    rf = CBEMClampedFiberStressSP()
-    rand = FunctionRandomization(   q = rf,
-                                    tvars = dict(tau = tau,
-                                                 l = l,
-                                                 E_f = Ef,
-                                                 theta = theta,
-                                                 xi = xi,
-                                                 phi = phi,
-                                                 E_m = Em,
-                                                 r = r,
-                                                 V_f = Vf
-                                                 ),
-                                    n_int = 30
-                                    )
-
-    scm = SCM(length = length,
-              nx = nx,
-              random_field = random_field,
-              cb_randomization = rand,
-              cb_type = 'mean',
-              load_sigma_c_min = 0.1,
-              load_sigma_c_max = 20.,
-              load_n_sigma_c = 100,
-              n_w = 40,
-              n_x = 50,
-              n_BC = 2
-              )
-    
-    scm.evaluate()
-
-    def plot():
-        eps, sigma = scm.eps_sigma
-        plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
-        plt.legend(loc = 'best')
-        plt.xlabel('composite strain [-]')
-        plt.ylabel('composite stress [MPa]')
-        plt.show()
-
-    plot()
-
