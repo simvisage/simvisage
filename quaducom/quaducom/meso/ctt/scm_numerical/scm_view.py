@@ -34,7 +34,7 @@ class SCMView(ModelView):
             for cb in cb_load:
                 indexes.append(np.where(cb.position + cb.x[0] == self.model.x_arr)[0])
             # add the index of the last point
-            indexes.append(self.model.n_x-1)
+            indexes.append(self.model.nx-1)
             # list of crack widths to be filled in a loop with integrated e_rel
             
             crack_widths = [np.trapz(e_rel[idx:indexes[i+1]], self.model.x_arr[idx:indexes[i+1]])
@@ -153,28 +153,28 @@ if __name__ == '__main__':
               load_sigma_c_min = 0.1,
               load_sigma_c_max = 20.,
               load_n_sigma_c = 100,
-              n_w = 60,
-              n_x = 101,
-              n_BC = 3
+              n_w = 40,
+              n_x = 61,
+              n_BC = 2
               )
     
     scm_view = SCMView(model = scm)
     scm_view.model.evaluate()
 
     def plot():
-        eps, sigma = scm_view.eps_sigma
-        plt.figure()
-        plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
-        plt.legend(loc = 'best')
-        plt.xlabel('composite strain [-]')
-        plt.ylabel('composite stress [MPa]')
-        plt.figure()
-        plt.plot(scm.load_sigma_c, scm_view.w_mean, color = 'green', lw = 2, label = 'mean crack width')
-        plt.plot(scm.load_sigma_c, scm_view.w_median, color = 'blue', lw = 2, label = 'median crack width')
-        plt.plot(scm.load_sigma_c, scm_view.w_mean + scm_view.w_stdev, color = 'black', label = 'stdev')
-        plt.plot(scm.load_sigma_c, scm_view.w_mean - scm_view.w_stdev, color = 'black')
-        plt.plot(scm.load_sigma_c, scm_view.w_max, ls = 'dashed', color = 'red', label = 'max crack width')
-        plt.legend(loc = 'best')
+#        eps, sigma = scm_view.eps_sigma
+#        plt.figure()
+#        plt.plot(eps, sigma, color = 'black', lw = 2, label = 'model')
+#        plt.legend(loc = 'best')
+#        plt.xlabel('composite strain [-]')
+#        plt.ylabel('composite stress [MPa]')
+#        plt.figure()
+#        plt.plot(scm.load_sigma_c, scm_view.w_mean, color = 'green', lw = 2, label = 'mean crack width')
+#        plt.plot(scm.load_sigma_c, scm_view.w_median, color = 'blue', lw = 2, label = 'median crack width')
+#        plt.plot(scm.load_sigma_c, scm_view.w_mean + scm_view.w_stdev, color = 'black', label = 'stdev')
+#        plt.plot(scm.load_sigma_c, scm_view.w_mean - scm_view.w_stdev, color = 'black')
+#        plt.plot(scm.load_sigma_c, scm_view.w_max, ls = 'dashed', color = 'red', label = 'max crack width')
+#        plt.legend(loc = 'best')
         plt.figure()
         plt.hist(scm_view.crack_widths(20.), bins = 25, label = 'load = 20 MPa')
         plt.hist(scm_view.crack_widths(15.), bins = 25, label = 'load = 15 MPa')
