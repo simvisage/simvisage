@@ -966,8 +966,8 @@ if __name__ == '__main__':
 
     print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     
-    sig_fl_calib.set( eps_n = 0.0,
-                      kappa = 0.01,
+    sig_fl_calib.set( eps_n = -0.0,
+                      kappa = 0.03,
                       sig_t_mfn = sig_t_mfn, 
                       calc_mode = 'eval' )
         
