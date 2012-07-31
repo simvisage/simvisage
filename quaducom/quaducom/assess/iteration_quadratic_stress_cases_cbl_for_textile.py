@@ -232,18 +232,27 @@ class SigFlCalib(HasTraits):
             #           help function for iteration: 
             #
             eps_calc_arr = np.arange ( eps_fail, 1.2 * eps_fail, 0.2 * eps_fail / 100.) 
-            sig_calc_arr = sig_fail * eps_calc_arr ** 40.0 / (sig_fail **40.)
+            sig_calc_arr = sig_fail * eps_calc_arr ** 20.0 / (sig_fail **20.)
             eps_arr = np.arange(0, eps_fail, eps_fail / 100.)
             var_b = - ( sig_fail + 2. * var_a * eps_fail**3.) / eps_fail**2. 
             var_c = -3. * var_a * eps_fail ** 2. - 2. * var_b * eps_fail 
             sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c *eps_arr 
 #            print 'eps_arr', eps_arr
-#            # crack brige law without  limit for eps_tex
+
+            # crack bridge law with abrupt limit for eps_tex
+            #
 #            xdata = np.hstack([ eps_arr, 2. * eps_arr[-1] ])  
-#            ydata = np.hstack([ sig_tex_arr, sig_tex_arr[-1] ]) 
-#            # crack brige law with  limit for eps_tex
-            xdata = np.hstack([ eps_arr, eps_calc_arr ])  
-            ydata = np.hstack([ sig_tex_arr,sig_calc_arr]) 
+#            ydata = np.hstack([ sig_tex_arr, 0. ]) 
+
+            # crack bridge law without  limit for eps_tex
+            #
+            xdata = np.hstack([ eps_arr, 2. * eps_arr[-1] ])  
+            ydata = np.hstack([ sig_tex_arr, sig_tex_arr[-1] ]) 
+
+            # crack bridge law with limit for eps_tex
+            #
+#            xdata = np.hstack([ eps_arr, eps_calc_arr ])  
+#            ydata = np.hstack([ sig_tex_arr,sig_calc_arr]) 
            
             print 'var_a', var_a
 
@@ -816,7 +825,7 @@ class SigFlCalib(HasTraits):
     # 
     eval_config = Trait('flexion',
                           {'flexion'     : ('eval_layer_response_f',
-                                              np.array([ 0.01, 0.0033])),
+                                              np.array([ 0.015, 0.0033])),
                            'tension'     : ('eval_layer_response_t',
                                               np.array([ 0.002, 0.002 ])),
                            'compression' : ('eval_layer_response_c',
@@ -931,10 +940,10 @@ if __name__ == '__main__':
 
     # for calculated u1, u2 solution get:
     #
-    x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_tex, var_a = sig_fl_calib.layer_response( u_sol )
+    x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, var_a = sig_fl_calib.layer_response( u_sol )
     eps_c = sig_fl_calib.eps_c
     print 'eps_c', abs(eps_c)
-    #print 'eps_t', eps_t
+    print 'eps_t', eps_t
     print 'eps_tex',abs(eps_t_i_arr[0])
     
     print 'var_a', var_a
@@ -953,7 +962,7 @@ if __name__ == '__main__':
     
     #N,M used for evaluation (if different from 'calib'
     M = 3.49
-    N = 0
+    N = -200
     # select the right stress_mode for calculation
     #
     eps_t, eps_c = sig_fl_calib.fit_response( M, N )
