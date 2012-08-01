@@ -119,9 +119,9 @@ if __name__ == '__main__':
     print '3 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     
     
-    n_A = 200
-    n_B = 200
-    n_C = 200
+    n_A = 20
+    n_B = 20
+    n_C = 20
 
     eps_c_fail = sig_fl_calib.eps_c_fail
     eps_t_fail = sig_fl_calib.eps_t_fail
@@ -138,47 +138,12 @@ if __name__ == '__main__':
     eps_lo_arr = np.hstack([ eps_lo_arr_A, eps_lo_arr_B, eps_lo_arr_C ])
     eps_up_arr = np.hstack([ eps_up_arr_A, eps_up_arr_B, eps_up_arr_C ])
 
-
-    eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
-    N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
-    
-    from mpl_toolkits.axes_grid.axislines import SubplotZero
-    
-    fig = p.figure(1)
-
-    ax = SubplotZero(fig, 111)
-    fig.add_subplot(ax)
-
-#    for direction in ["xzero", "yzero"]:
-#        ax.axis[direction].set_axisline_style("-|>")
-#        ax.axis[direction].set_visible(True)
-#
-#    for direction in ["left", "right", "bottom", "top"]:
-#        ax.axis[direction].set_visible(False)
-
-#    plot_list = [for (M, N) in zip(M_list, N_list) ]
-    ax.plot( M_arr, N_arr )
-
-#    ax = p.gca()
-
-    ax.set_ylim(ax.get_ylim()[::-1])
+#    just one diagram with a specific value for n_layers and thickness is plotted
+# ------------------------------------------------------------------------------------
 
 
-
-    p.show()
-
-
-##    n_layers_arr = np.array([12, 18])
-#    n_layers_arr = np.array([12])
-#
-#    N_list = []
-#    M_list = []
-#    for n in n_layers_arr:   
-#        sig_fl_calib.n_layers = n
-#        eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
-#        N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
-#        N_list.append( N_arr )
-#        M_list.append( M_arr )
+#    eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
+#    N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
 #    
 #    from mpl_toolkits.axes_grid.axislines import SubplotZero
 #    
@@ -194,12 +159,8 @@ if __name__ == '__main__':
 ##    for direction in ["left", "right", "bottom", "top"]:
 ##        ax.axis[direction].set_visible(False)
 #
-##    plot_list = [for (M, N) in zip(M_list, N_list) ]
-#    plt_list = []
-#    for n in range( len( M_list )):
-#        plt_list.append(M_list[n])
-#        plt_list.append(N_list[n])
-#    ax.plot( plt_list[0] )
+##   plot_list = [for (M, N) in zip(M_list, N_list) ]
+#    ax.plot( M_arr, N_arr )
 #
 ##    ax = p.gca()
 #
@@ -209,43 +170,150 @@ if __name__ == '__main__':
 #
 #    p.show()
 
+#    various diagrams with a specific value for n_layers and thickness are plotted
+# ------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
+    #n_layers_arr = np.array([8,9,10,11,12,13,14,15,16,17,18])
+    n_layers_arr = np.array([8,12,18])
+    thickness_arr = np.array ([0.04,0.06])
+    #thickness_arr = np.array ([0.06])
     
+    N_list = []
+    M_list = []
+    for n in n_layers_arr:   
+        for k in thickness_arr:
+            
+            sig_fl_calib.n_layers = n        
+            sig_fl_calib.thickness = k
+            eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
+            N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
+            N_list.append( N_arr )
+            M_list.append( M_arr )
+        
+
+
+    from mpl_toolkits.axes_grid.axislines import SubplotZero
     
+    fig = p.figure(1)
+
+    ax = SubplotZero(fig, 111)
+    fig.add_subplot(ax)
+
+
+#    plot_list = [for (M, N) in zip(M_list, N_list) ]
+
+#    plt_list = []
+#    for n in range( len( M_list )):
+#        plt_list.append(M_list[n])
+#        plt_list.append(N_list[n])
+#    ax.plot( plt_list[0] )
+    #ax.plot (M_list[0], N_list[0],M_list[1], N_list[1],M_list[2], N_list[2],M_list[3], N_list[3],M_list[4], N_list[4],M_list[5], N_list[5],M_list[6], N_list[6],M_list[7], N_list[7],M_list[8], N_list[8],M_list[9], N_list[9],M_list[10], N_list[10],M_list[11], N_list[11],M_list[12], N_list[12],M_list[13], N_list[13],M_list[14], N_list[14],M_list[15], N_list[15],M_list[16], N_list[16],M_list[17], N_list[17],M_list[18], N_list[18],M_list[19], N_list[19],M_list[20], N_list[20],M_list[21], N_list[21])
+    ax.plot (M_list[0], N_list[0],M_list[1], N_list[1],M_list[2], N_list[2],M_list[3], N_list[3],M_list[4], N_list[4],M_list[5], N_list[5])
+    #for negative values at the top
+    #ax.set_ylim(ax.get_ylim()[::-1])
+    
+    from pylab import *
+    grid(True)
+    from mpl_toolkits.axes_grid.axislines import SubplotZero
+    import matplotlib.pyplot as plt
+    
+
+    for direction in ["xzero", "yzero"]:
+        ax.axis[direction].set_axisline_style("-|>")
+        ax.axis[direction].set_visible(True)
+
+    for direction in ["left", "right", "bottom", "top"]:
+        ax.axis[direction].set_visible(False)
+    plt.axis([0, 6, 250 ,-700])
+    # change thickenss of a line in the diagram
+    plt.plot(M_list[0], N_list[0],M_list[1], N_list[1],M_list[2], N_list[2],M_list[3], N_list[3],M_list[4], N_list[4],M_list[5], N_list[5],color='black')
+    plt.plot(M_list[3], N_list[3],color='blue', linewidth=2.0)
+    #plt.tick_params(axis='x',direction='out', length=6, width=2, colors='r')
+    plt.title('Interaction Diagram M/N')
+    #plt.xlabel('Normal Force')
+    #plt.ylabel('Moment')
+    
+    p.show()
+    
+#
+#   normed Ny-My interaction diagram
+# ------------------------------------------------------------------------------------
+
 #    
-#    kappa_arr = np.linspace( 0., 0.25, 20 )
-#    print 'kappa_arr', kappa_arr
-#
-#    N_list = []
-#    M_list = []
+#    n_layers_arr = np.array([8,12,18])
+#    thickness_arr = np.array ([0.04,0.06])
+#    #thickness_arr = np.array ([0.06])
 #    
-#    for kappa in kappa_arr:
 #
-#        sig_fl_calib.set( eps_n = eps_n,
-#                          kappa = kappa,
-#                          sig_t_mfn = sig_t_mfn, 
-#                          calc_mode = 'eval' )
-#
-#        u_sol = [ abs(sig_fl_calib.eps_lo), abs(sig_fl_calib.eps_up) ]
-#        print 'u_sol', u_sol
+#    Ny_list = []
+#    My_list = []
+#    for n in n_layers_arr:   
+#        for k in thickness_arr:
+#            
+#            sig_fl_calib.n_layers = n        
+#            sig_fl_calib.thickness = k
+#            eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
+#            N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
+#            Ny_arr = N_arr / (1000. * sig_fl_calib.thickness * sig_fl_calib.width * sig_fl_calib.f_ck)
+#            Ny_list.append( Ny_arr )
+#            My_arr = M_arr / (1000. * sig_fl_calib.thickness **2. * sig_fl_calib.width  * sig_fl_calib.f_ck)
+#            My_list.append( My_arr )
+#            
 #        
-#        N, M = sig_fl_calib.get_lack_of_fit( u_sol, 0, 0 )
-#    
-##        max_sig = sig_fl_calib.get_sig_max( u_sol )                                   
-##        print 'eps_up', abs(sig_fl_calib.eps_up)
-##        print 'eps_lo', abs(sig_fl_calib.eps_lo)
-##        print 'max_sig', sig_fl_calib.get_sig_max( u_sol )    
 #
-#        N_list.append( N )
-#        M_list.append( M )
+#
+#    from mpl_toolkits.axes_grid.axislines import SubplotZero
+#    
+#    fig = p.figure(1)
+#
+#    ax = SubplotZero(fig, 111)
+#    fig.add_subplot(ax)
+#
+#    ax.plot (My_list[0], Ny_list[0],My_list[1], Ny_list[1],My_list[2], Ny_list[2])
+#    ax.set_ylim(ax.get_ylim()[::-1])
+#    
+#    
+#  
+#
+#
+#    p.show()
+
+#
+#
+#
+#
+#
+#
+#
+#
+#    
+#    
+##    
+##    kappa_arr = np.linspace( 0., 0.25, 20 )
+##    print 'kappa_arr', kappa_arr
+##
+##    N_list = []
+##    M_list = []
+##    
+##    for kappa in kappa_arr:
+##
+##        sig_fl_calib.set( eps_n = eps_n,
+##                          kappa = kappa,
+##                          sig_t_mfn = sig_t_mfn, 
+##                          calc_mode = 'eval' )
+##
+##        u_sol = [ abs(sig_fl_calib.eps_lo), abs(sig_fl_calib.eps_up) ]
+##        print 'u_sol', u_sol
+##        
+##        N, M = sig_fl_calib.get_lack_of_fit( u_sol, 0, 0 )
+##    
+###        max_sig = sig_fl_calib.get_sig_max( u_sol )                                   
+###        print 'eps_up', abs(sig_fl_calib.eps_up)
+###        print 'eps_lo', abs(sig_fl_calib.eps_lo)
+###        print 'max_sig', sig_fl_calib.get_sig_max( u_sol )    
+##
+##        N_list.append( N )
+##        M_list.append( M )
 #
 #    N_idx_max = np.argmax( N_list ) 
 #    M_idx_max = np.argmax( M_list ) 

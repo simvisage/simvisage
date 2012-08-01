@@ -94,7 +94,7 @@ class SigFlCalib(HasTraits):
 
     # total number of reinforcement layers [-]
     # 
-    n_layers = Float(12, geo_input = True)
+    n_layers = Int(12, geo_input = True)
 
     # spacing between the layers [m]
     #
@@ -102,7 +102,7 @@ class SigFlCalib(HasTraits):
     @cached_property
     def _get_s_tex_z(self):
         return self.thickness / (self.n_layers + 1)
-    
+    print 's_tex_z', s_tex_z
     # actual strain at the top and bottom surface of the cross section [-]
     # for a given combined loading situation (N,M):
     #
@@ -190,6 +190,30 @@ class SigFlCalib(HasTraits):
             ydata = np.array([ 0., E_yarn ])
             print 'E_yarn',E_yarn
             print 'sig_fail', sig_fail
+         
+        elif self.calib_config == 'root1':
+            # use strain at the lowest textile layer as rupture strain 
+            eps_fail = eps_t_i_arr[0]
+            sig_fail = self.sig_tex_fail
+            
+            # help function for iteration (strain softening after rupture): 
+            #
+            eps_calc_arr = np.arange ( eps_fail, 1.2 * eps_fail, 0.2 * eps_fail / 2.) 
+            sig_calc_arr = sig_fail * eps_calc_arr ** 50.0 / (sig_fail **50)
+            eps_arr = np.arange(0., eps_fail, eps_fail / 30.) 
+            sig_tex_arr = np.sqrt((var_a) * eps_arr) 
+            
+            # crack bridge law without limit for eps_tex
+            #            xdata = np.hstack([ eps_arr, 2. * eps_arr[-1] ])  
+            #            ydata = np.hstack([ sig_tex_arr, sig_tex_arr[-1] ]) 
+            
+            # crack bridge law with limit for eps_tex
+            xdata = np.hstack([ eps_arr, eps_calc_arr ])  
+            ydata = np.hstack([ sig_tex_arr,sig_calc_arr ]) 
+            
+            print 'xdata',xdata
+            print 'ydata',ydata
+            print 'var_a', var_a   
             
         # full plastic cb-law 
         elif self.calib_config == 'plastic':
@@ -224,7 +248,7 @@ class SigFlCalib(HasTraits):
             sig_fail = self.sig_tex_fail
             # help function for iteration (strain softening after rupture): 
             #
-            eps_calc_arr = np.arange ( eps_fail, 1.2 * eps_fail, 0.2 * eps_fail / 100.) 
+            eps_calc_arr = np.arange ( eps_fail, 1.2 * eps_fail, 0.2 * eps_fail / 2.) 
             sig_calc_arr = sig_fail * eps_calc_arr ** 50.0 / (sig_fail **50)
             eps_arr = np.arange(0, eps_fail, eps_fail / 100.) 
             var_b = -eps_fail * 2* var_a 
@@ -237,7 +261,36 @@ class SigFlCalib(HasTraits):
             # crack bridge law with limit for eps_tex
             xdata = np.hstack([ eps_arr, eps_calc_arr ])  
             ydata = np.hstack([ sig_tex_arr,sig_calc_arr ]) 
-
+            
+            print 'xdata',xdata
+            print 'ydata',ydata
+            print 'var_b', var_b 
+            print 'var_a', var_a
+        
+        elif self.calib_config == 'root2':
+            # use strain at the lowest textile layer as rupture strain 
+            eps_fail = eps_t_i_arr[0]
+            sig_fail = self.sig_tex_fail
+            
+            # help function for iteration (strain softening after rupture): 
+            #
+            eps_calc_arr = np.arange ( eps_fail, 1.2 * eps_fail, 0.2 * eps_fail / 2.) 
+            sig_calc_arr = sig_fail * eps_calc_arr ** 50.0 / (sig_fail **50)
+            eps_arr = np.arange(0., eps_fail, eps_fail / 30.) 
+            var_b = (sig_fail**2. - (var_a) * eps_fail ) / eps_fail ** 2. 
+           # var_b = (sig_fail ** 2. - var_a *eps_fail ** 2.) / eps_fail
+            sig_tex_arr = np.sqrt((var_b) * eps_arr ** 2. + (var_a) * eps_arr) 
+            
+            # crack bridge law without limit for eps_tex
+            #            xdata = np.hstack([ eps_arr, 2. * eps_arr[-1] ])  
+            #            ydata = np.hstack([ sig_tex_arr, sig_tex_arr[-1] ]) 
+            
+            # crack bridge law with limit for eps_tex
+            xdata = np.hstack([ eps_arr, eps_calc_arr ])  
+            ydata = np.hstack([ sig_tex_arr,sig_calc_arr ]) 
+            
+            print 'xdata',xdata
+            print 'ydata',ydata
             print 'var_b', var_b 
             print 'var_a', var_a
             
@@ -273,7 +326,8 @@ class SigFlCalib(HasTraits):
             #
 #            xdata = np.hstack([ eps_arr, eps_calc_arr ])  
 #            ydata = np.hstack([ sig_tex_arr,sig_calc_arr]) 
-           
+            print 'xdata',xdata
+            print 'ydata',ydata
             print 'var_a', var_a
             print 'var_b', var_b 
             print 'var_c', var_c
@@ -807,14 +861,18 @@ class SigFlCalib(HasTraits):
     calib_config = Trait('quadratic',
                           {'linear'   : ('calib_layer_response',
                                               np.array([ 0.010,   50000. ])),
+                           'root1': ('calib_layer_response',
+                                              np.array([ 0.01,   5000000. ])),
                            'plastic'  : ('calib_layer_response',
                                               np.array([ 0.010,   50000. ])),
                            'bilinear' : ('calib_layer_response',
                                               np.array([ 0.010,   50000. ])),
                            'quadratic': ('calib_layer_response',
                                               np.array([ 0.010, -500000. ])),
+                           'root2': ('calib_layer_response',
+                                              np.array([ 0.01,  5000. ])),
                            'cubic'    : ('calib_layer_response',
-                                              np.array([ 0.010, -500000. ]))},
+                                              np.array([ 0.01, -500000. ]))},
                          config_modified = True)
 
     calc_mode = Str('calib', config_modified = True)
@@ -919,12 +977,12 @@ if __name__ == '__main__':
 #                               width = 1.0,
 #                               n_roving = 120,
 
-                               # define shape of the crack-bridge law ('linear', 'bilinear' or 'quadratic')
+                               # define shape of the crack-bridge law ('linear', 'bilinear' , 'quadratic','root1','root2','cubic')
                                #
                                calc_mode = 'calib',
 #                               calib_config = 'linear',
 #                               calib_config = 'quadratic',
-                               calib_config = 'cubic',
+                               calib_config = 'quadratic',
 
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
