@@ -13,7 +13,7 @@
 # Created on Jun 14, 2010 by: rch
 
 from etsproxy.traits.api import \
-    Float, Str, implements
+    Float, Str, implements, Range
 
 import numpy as np
 
@@ -26,8 +26,6 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 from scipy.stats import weibull_min
-
-from stats.spirrid.sampling import make_ogrid
 
 def H(x):
     return 0.5 * (np.sign(x) + 1.)
@@ -43,8 +41,8 @@ class CBEMClampedFiberStressResidual(RF):
 
     title = Str('crack bridge - clamped fiber with constant friction')
 
-    xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
-                distr=['weibull_min', 'uniform'])
+    Pf = Range(0,1,auto_set=False, enter_set=True, input=True,
+                distr=['uniform'])
     
     m = Float(5.0, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'], desc = 'filament Weibull shape parameter')
@@ -119,7 +117,10 @@ class CBEMClampedFiberStressResidual(RF):
         return q2/V_f
 
     def eps_n(self, q, tau, x, E_f, E_m, V_f, r, l, theta):
-        q, tau, x, E_f, E_m, V_f, r, l, theta = make_ogrid([q, tau, x, E_f, E_m, V_f, r, l, theta])
+        q = q.reshape(tuple(list(q.shape)+[1]))
+        x = x.reshape(tuple((len(q.shape) - 1)*[1]+[len(x)]))
+        q = q * np.ones_like(q*x)
+        x = x * np.ones_like(q)
         T = 2. * tau * V_f / r            
         #stress in the free length
         l = l * (1 + theta)
@@ -139,7 +140,7 @@ class CBEMClampedFiberStressResidual(RF):
     def CDF_n(self,s0,m,n_eps):
         return weibull_min(m, scale = s0).cdf(n_eps)
 
-    def __call__(self, w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r, s0, m):
+    def __call__(self, w, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
         np.random.seed(10)
         #assigning short and long embedded length
         Lmin = np.minimum(Ll, Lr)
@@ -201,10 +202,8 @@ class CBEMClampedFiberStressResidual(RF):
         sf = 1-CDF_n
         chain_sf = sf.prod(axis = len(CDF_n.shape) - 1)
         # compare failure probability of the chain of the chain with Pf of xi
-        Pf_xi = self.CDF_n(s0, m, xi)
         # index of filament failure
-        flat_idx_ult = np.argmin(np.abs(1-chain_sf - Pf_xi))
-        print flat_idx_ult
+        flat_idx_ult = np.argmin(np.abs(1-chain_sf - Pf))
         idx_ult = np.unravel_index(flat_idx_ult, chain_sf.shape)
         # position of fiber breakage
         rand = np.random.rand(n)
@@ -214,7 +213,7 @@ class CBEMClampedFiberStressResidual(RF):
             L_res = 0.0
         else:
             L_res = np.abs(x_n[L_idx]) - l/2.
-        q = q * H(Pf_xi - (1-chain_sf)) + L_res * T / V_f * H((1-chain_sf) - Pf_xi)
+        q = q * H(Pf - (1-chain_sf)) + L_res * T / V_f * H((1-chain_sf) - Pf)
         return q
     
 class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
@@ -229,12 +228,10 @@ class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
         y_label = Str('force [N]')
     
         C_code = Str('')
-        
-    
 
-        def __call__(self, w, x, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r, s0, m):
+        def __call__(self, w, x, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
             T = 2. * tau * V_f / r    
-            q = super(CBEMClampedFiberStressResidualSP, self).__call__(w, tau, l, E_f, E_m, theta, xi, phi, Ll, Lr, V_f, r,s0,m)            
+            q = super(CBEMClampedFiberStressResidualSP, self).__call__(w, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r,s0,m)            
             #stress in the free length
             l = l * (1 + theta)  
             q_l = q * H(l / 2 - abs(x))
@@ -260,7 +257,7 @@ if __name__ == '__main__':
     Em = 25e3
     l = 30.
     theta = 0.
-    xi = 0.017
+    Pf = 0.5
     phi = 1.
     Ll = 40.
     Lr = 20.
@@ -271,7 +268,7 @@ if __name__ == '__main__':
         plt.figure()
         w = np.linspace(0, 1, 300)
         P = CBEMClampedFiberStressResidual()
-        q = P(w, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r, s0, m) 
+        q = P(w, t, l, Ef, Em, theta, Pf, phi, Ll, Lr, V_f, r, s0, m) 
         plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
         #plt.legend(loc='best')
         plt.ylim(0,)
@@ -284,7 +281,7 @@ if __name__ == '__main__':
         cbcsp = CBEMClampedFiberStressResidualSP()
         x = np.linspace(-40, 40, 300)
         w = .4
-        q = cbcsp(w, x, t, l, Ef, Em, theta, xi, phi, Ll, Lr, V_f, r, s0,m)
+        q = cbcsp(w, x, t, l, Ef, Em, theta, Pf, phi, Ll, Lr, V_f, r, s0,m)
         plt.plot(x, q, lw=2, color='black', label='stress along filament')
         plt.ylabel('stress', fontsize=14)
         plt.xlabel('position', fontsize=14)
