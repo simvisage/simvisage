@@ -11,7 +11,7 @@ from numpy import linspace
 from scipy.stats import norm, uniform, weibull_min
 from stats.pdistrib.sin2x_distr import sin2x
 from stats.pdistrib.sinus_distribution import sin_distr
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
+
 from pylab import plt
 import tempfile
 
@@ -34,11 +34,6 @@ class IPDistrib(Interface):
 class PDistrib(HasTraits):
 
     implements = IPDistrib
-
-    def __init__(self, **kw):
-        super(PDistrib, self).__init__(**kw)
-        self.on_trait_change(self.refresh, 'distr_type.changed,quantile,n_segments')
-        self.refresh()
 
     # puts all chosen continuous distributions distributions defined
     # in the scipy.stats.distributions module as a list of strings
@@ -164,103 +159,118 @@ class PDistrib(HasTraits):
     def get_rvs_array(self, n_samples):
         return self.distr_type.distr.rvs(n_samples)
 
-    figure = Instance(Figure)
-    def _figure_default(self):
-        figure = Figure(facecolor = 'white')
-        return figure
-
-    data_changed = Event
-
-    def plot(self, fig):
-        figure = fig
-        figure.clear()
-        axes = figure.gca()
-        # plot PDF
-        axes.plot(self.x_array, self.pdf_array, lw = 1.0, color = 'blue', \
-                  label = 'PDF')
-        axes2 = axes.twinx()
-        # plot CDF on a separate axis (tick labels left)
-        axes2.plot(self.x_array, self.cdf_array, lw = 2, color = 'red', \
-                  label = 'CDF')
-        # fill the unity area given by integrating PDF along the X-axis
-        axes.fill_between(self.x_array, 0, self.pdf_array, color = 'lightblue',
-                           alpha = 0.8, linewidth = 2)
-        # plot mean
-        mean = self.distr_type.distr.stats('m')
-        axes.plot([mean, mean], [0.0, self.distr_type.distr.pdf(mean)],
-                   lw = 1.5, color = 'black', linestyle = '-')
-        # plot stdev
-        stdev = sqrt(self.distr_type.distr.stats('v'))
-        axes.plot([mean - stdev, mean - stdev],
-                   [0.0, self.distr_type.distr.pdf(mean - stdev)],
-                   lw = 1.5, color = 'black', linestyle = '--')
-        axes.plot([mean + stdev, mean + stdev],
-                   [0.0, self.distr_type.distr.pdf(mean + stdev)],
-                   lw = 1.5, color = 'black', linestyle = '--')
-
-        axes.legend(loc = 'center left')
-        axes2.legend(loc = 'center right')
-        axes.ticklabel_format(scilimits = (-3., 4.))
-        axes2.ticklabel_format(scilimits = (-3., 4.))
-
-        # plot limits on X and Y axes
-        axes.set_ylim(0.0, max(self.pdf_array) * 1.15)
-        axes2.set_ylim(0.0, 1.15)
-        range = self.range[1] - self.range[0]
-        axes.set_xlim(self.x_array[0] - 0.05 * range,
-                      self.x_array[-1] + 0.05 * range)
-        axes2.set_xlim(self.x_array[0] - 0.05 * range,
-                      self.x_array[-1] + 0.05 * range)
-
-    def refresh(self):
-        self.plot(self.figure)
-        self.data_changed = True
-
-    icon = Property(Instance(ImageResource), depends_on = 'distr_type.changed,quantile,n_segments')
-    @cached_property
-    def _get_icon(self):
-        fig = plt.figure(figsize = (4, 4), facecolor = 'white')
-        self.plot(fig)
-        tf_handle, tf_name = tempfile.mkstemp('.png')
-        fig.savefig(tf_name, dpi = 35)
-        return ImageResource(name = tf_name)
-
-    traits_view = View(HSplit(VGroup(Group(Item('distr_choice', show_label = False),
-                                           Item('@distr_type', show_label = False),
-                                           ),
-                                      id = 'pdistrib.distr_type.pltctrls',
-                                      label = 'Distribution parameters',
-                                      scrollable = True,
-                                      ),
-                                Tabbed(Group(Item('figure',
-                                            editor = MPLFigureEditor(),
-                                            show_label = False,
-                                            resizable = True),
-                                            scrollable = True,
-                                            label = 'Plot',
-                                            ),
-                                       Group(Item('quantile', label = 'quantile'),
-                                             Item('n_segments', label = 'plot points'),
-                                             label = 'Plot parameters'
-                                            ),
-                                        label = 'Plot',
-                                        id = 'pdistrib.figure.params',
-                                        dock = 'tab',
-                                       ),
-                                dock = 'tab',
-                                id = 'pdistrib.figure.view'
-                                ),
-                                id = 'pdistrib.view',
-                                dock = 'tab',
-                                title = 'Statistical distribution',
-                                buttons = [OKButton, CancelButton],
-                                scrollable = True,
-                                resizable = True,
-                                width = 600, height = 400
-                        )
-
-
 if __name__ == '__main__':
+    
+    from util.traits.editors.mpl_figure_editor import MPLFigureEditor
+    from etsproxy.traits.ui.api import ModelView
+    
+    
+    class PDistribView(ModelView):
+        
+        def __init__(self, **kw):
+            super(PDistribView, self).__init__(**kw)
+            self.on_trait_change(self.refresh, 'model.distr_type.changed, model.quantile, model.n_segments')
+            self.refresh()
+
+        model = Instance(PDistrib)
+        
+        figure = Instance(Figure)
+        def _figure_default(self):
+            figure = Figure(facecolor = 'white')
+            return figure
+    
+        data_changed = Event
+    
+        def plot(self, fig):
+            figure = fig
+            figure.clear()
+            axes = figure.gca()
+            # plot PDF
+            axes.plot(self.model.x_array, self.model.pdf_array, lw = 1.0, color = 'blue', \
+                      label = 'PDF')
+            axes2 = axes.twinx()
+            # plot CDF on a separate axis (tick labels left)
+            axes2.plot(self.model.x_array, self.model.cdf_array, lw = 2, color = 'red', \
+                      label = 'CDF')
+            # fill the unity area given by integrating PDF along the X-axis
+            axes.fill_between(self.model.x_array, 0, self.model.pdf_array, color = 'lightblue',
+                               alpha = 0.8, linewidth = 2)
+            # plot mean
+            mean = self.model.distr_type.distr.stats('m')
+            axes.plot([mean, mean], [0.0, self.model.distr_type.distr.pdf(mean)],
+                       lw = 1.5, color = 'black', linestyle = '-')
+            # plot stdev
+            stdev = sqrt(self.model.distr_type.distr.stats('v'))
+            axes.plot([mean - stdev, mean - stdev],
+                       [0.0, self.model.distr_type.distr.pdf(mean - stdev)],
+                       lw = 1.5, color = 'black', linestyle = '--')
+            axes.plot([mean + stdev, mean + stdev],
+                       [0.0, self.model.distr_type.distr.pdf(mean + stdev)],
+                       lw = 1.5, color = 'black', linestyle = '--')
+    
+            axes.legend(loc = 'center left')
+            axes2.legend(loc = 'center right')
+            axes.ticklabel_format(scilimits = (-3., 4.))
+            axes2.ticklabel_format(scilimits = (-3., 4.))
+    
+            # plot limits on X and Y axes
+            axes.set_ylim(0.0, max(self.model.pdf_array) * 1.15)
+            axes2.set_ylim(0.0, 1.15)
+            range = self.model.range[1] - self.model.range[0]
+            axes.set_xlim(self.model.x_array[0] - 0.05 * range,
+                          self.model.x_array[-1] + 0.05 * range)
+            axes2.set_xlim(self.model.x_array[0] - 0.05 * range,
+                          self.model.x_array[-1] + 0.05 * range)
+    
+        def refresh(self):
+            self.plot(self.figure)
+            self.data_changed = True
+    
+        icon = Property(Instance(ImageResource), depends_on = 'model.distr_type.changed, model.quantile, model.n_segments')
+        @cached_property
+        def _get_icon(self):
+            fig = plt.figure(figsize = (4, 4), facecolor = 'white')
+            self.plot(fig)
+            tf_handle, tf_name = tempfile.mkstemp('.png')
+            fig.savefig(tf_name, dpi = 35)
+            return ImageResource(name = tf_name)
+    
+        traits_view = View(HSplit(VGroup(Group(Item('model.distr_choice', show_label = False),
+                                               Item('@model.distr_type', show_label = False),
+                                               ),
+                                          id = 'pdistrib.distr_type.pltctrls',
+                                          label = 'Distribution parameters',
+                                          scrollable = True,
+                                          ),
+                                    Tabbed(Group(Item('figure',
+                                                editor = MPLFigureEditor(),
+                                                show_label = False,
+                                                resizable = True),
+                                                scrollable = True,
+                                                label = 'Plot',
+                                                ),
+                                           Group(Item('model.quantile', label = 'quantile'),
+                                                 Item('model.n_segments', label = 'plot points'),
+                                                 label = 'Plot parameters'
+                                                ),
+                                            label = 'Plot',
+                                            id = 'pdistrib.figure.params',
+                                            dock = 'tab',
+                                           ),
+                                    dock = 'tab',
+                                    id = 'pdistrib.figure.view'
+                                    ),
+                                    id = 'pdistrib.view',
+                                    dock = 'tab',
+                                    title = 'Statistical distribution',
+                                    buttons = [OKButton, CancelButton],
+                                    scrollable = True,
+                                    resizable = True,
+                                    width = 600, height = 400
+                            )
+
+        
     pdistrib = PDistrib()
-    pdistrib.refresh()
-    pdistrib.configure_traits()
+    pdistribview = PDistribView(model = pdistrib)
+    pdistribview.refresh()
+    pdistribview.configure_traits()
