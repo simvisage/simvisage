@@ -116,17 +116,22 @@ class CBEMClampedFiberStressResidual(RF):
         q2 = (2.*w*Kf*Km + T*Kc*(Lmin**2+Lmax**2))/(2.*Km *(Lmax + l + Lmin))
         return q2/V_f
 
-    def eps_n(self, q, tau, x, E_f, E_m, V_f, r, l, theta):
-        q = q.reshape(tuple(list(q.shape)+[1]))
-        x = x.reshape(tuple((len(q.shape) - 1)*[1]+[len(x)]))
-        q = q * np.ones_like(q*x)
-        x = x * np.ones_like(q)
-        T = 2. * tau * V_f / r            
+    def fil_break(self, q, x_n, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
+        
+        varlist = [q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m]
+        reshaped = []
+        for var in varlist:
+            if isinstance(var, np.ndarray):
+                shape = tuple(list(var.shape)+[1])
+                var = var.reshape(shape)
+            reshaped.append(var)
+        q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m = reshaped
+        T = 2. * tau * V_f / r
         #stress in the free length
         l = l * (1 + theta)
-        q_l = q * H(l / 2 - abs(x))
+        q_l = q * H(l / 2 - abs(x_n))
         #stress in the part, where fiber transmits stress to the matrix
-        q_e = (q - T/V_f * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
+        q_e = (q - T/V_f * (abs(x_n) - l / 2.)) * H(abs(x_n) - l / 2.)
         
         #far field stress
         E_c = E_m * (1-V_f) + E_f * V_f
@@ -135,13 +140,25 @@ class CBEMClampedFiberStressResidual(RF):
         #putting all parts together
         q_x = q_l + q_e
         q_x = np.maximum(q_x, q_const)
-        return q_x/E_f
+        eps_n = q_x/E_f
+        
+        # evaluate failure probabilities for these parts
+        CDF_n = self.CDF_n(s0,m,eps_n)
+        
+        # survival probability of the whole system along x_n
+        sf = 1-CDF_n
+        chain_sf = sf.prod(axis = -1)
+        
+        # residual bonded length
+        L_bond_x = np.abs(x_n) - l/2.
+        L_bond_x = L_bond_x*H(L_bond_x)
+        L_bond_mean = np.sum(CDF_n * L_bond_x, axis = -1) / np.sum(CDF_n, axis = -1)
+        return chain_sf, L_bond_mean
 
     def CDF_n(self,s0,m,n_eps):
         return weibull_min(m, scale = s0).cdf(n_eps)
 
     def __call__(self, w, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
-        np.random.seed(10)
         #assigning short and long embedded length
         Lmin = np.minimum(Ll, Lr)
         Lmax = np.maximum(Ll, Lr)
@@ -185,7 +202,6 @@ class CBEMClampedFiberStressResidual(RF):
         
         #add all parts
         q = q0 + q1 + q2
-
         # include breaking strain
         n = (Ll + Lr)/10.
         if n < 1.0:
@@ -193,27 +209,11 @@ class CBEMClampedFiberStressResidual(RF):
         else:
             n = int(n)
         # within a crack bridge divide the filament into parts with constant strengths
-        x_n = np.linspace(-Ll, Lr, n)
+        x_n = np.linspace(-Ll, Lr, n).reshape(tuple([1]*len(q.shape)+[n]))
         # create an array of strains along these parts
-        eps_n = self.eps_n(q, tau, x_n, E_f, E_m, V_f, r, l, theta)
-        # evaluate failure probabilities for these parts
-        CDF_n = self.CDF_n(s0,m,eps_n)
-        # survival probability of the whole system along x_n
-        sf = 1-CDF_n
-        chain_sf = sf.prod(axis = len(CDF_n.shape) - 1)
-        # compare failure probability of the chain of the chain with Pf of xi
-        # index of filament failure
-        flat_idx_ult = np.argmin(np.abs(1-chain_sf - Pf))
-        idx_ult = np.unravel_index(flat_idx_ult, chain_sf.shape)
-        # position of fiber breakage
-        rand = np.random.rand(n)
-        L_idx = np.argmax(CDF_n[idx_ult]*rand)
-        # residual bonded length
-        if np.abs(x_n[L_idx]) < l/2.:
-            L_res = 0.0
-        else:
-            L_res = np.abs(x_n[L_idx]) - l/2.
-        q = q * H(Pf - (1-chain_sf)) + L_res * T / V_f * H((1-chain_sf) - Pf)
+        tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m
+        chain_sf, L_bond_mean = self.fil_break(q, x_n, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+        q = q * H(Pf - (1-chain_sf)) + L_bond_mean * T / V_f * H((1-chain_sf) - Pf)
         return q
     
 class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
