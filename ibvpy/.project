@@ -5,6 +5,11 @@
 	<projects>
 		<project>etsproxy</project>
 		<project>mathkit</project>
+		<project>matresdev</project>
+		<project>quaducom</project>
+		<project>rostar</project>
+		<project>simdb</project>
+		<project>stats</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>

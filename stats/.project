@@ -10,7 +10,6 @@
 		<project>quaducom</project>
 		<project>rostar</project>
 		<project>simdb</project>
-		<project>spirrid</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>

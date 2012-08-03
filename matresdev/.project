@@ -3,7 +3,12 @@
 	<name>matresdev</name>
 	<comment></comment>
 	<projects>
+		<project>etsproxy</project>
+		<project>ibvpy</project>
 		<project>mathkit</project>
+		<project>quaducom</project>
+		<project>rostar</project>
+		<project>simdb</project>
 		<project>stats</project>
 		<project>util</project>
 	</projects>
