@@ -26,6 +26,7 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 from scipy.stats import weibull_min
+from scipy.optimize import fsolve
 
 def H(x):
     return 0.5 * (np.sign(x) + 1.)
@@ -116,6 +117,25 @@ class CBEMClampedFiberStressResidual(RF):
         q2 = (2.*w*Kf*Km + T*Kc*(Lmin**2+Lmax**2))/(2.*Km *(Lmax + l + Lmin))
         return q2/V_f
 
+    def L_bond_mean(self, q, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):     
+        L_bond_x = np.abs(x_n) - l/2.
+        L_bond_x = L_bond_x*H(L_bond_x)
+        q_break = fsolve(self.opt_q0, np.ones_like(q.flatten()),
+                         args = (q.shape, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m),
+                         col_deriv = True)
+        q_break = q_break.reshape(q.shape)
+        CDF_n0 = self.CDF_n(q_break, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+        L_bond_mean = np.sum(CDF_n0 * L_bond_x, axis = -1) / (1e-15 + np.sum(CDF_n0, axis = -1))
+        return L_bond_mean
+
+    def opt_q0(self, q0, q_shape, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):        
+        CDF_n = self.CDF_n(q0.reshape(q_shape), tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+        # survival probability of the whole system along x_n
+        sf = 1-CDF_n
+        chain_sf = sf.prod(axis = -1)
+        value = 1 - chain_sf - Pf
+        return value.flatten()
+
     def fil_break(self, q, x_n, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
         
         varlist = [q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m]
@@ -125,12 +145,22 @@ class CBEMClampedFiberStressResidual(RF):
                 shape = tuple(list(var.shape)+[1])
                 var = var.reshape(shape)
             reshaped.append(var)
-        q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m = reshaped
-        T = 2. * tau * V_f / r
+        q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m = reshaped      
+        # evaluate survival probability of the fiber along a crack bridge
+        CDF_n = self.CDF_n(q, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+        # survival probability of the whole system along x_n
+        sf = 1-CDF_n
+        chain_sf = sf.prod(axis = -1)
+        # residual bonded length
+        L_bond_mean = self.L_bond_mean(q, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+        return chain_sf, L_bond_mean
+
+    def CDF_n(self,q, tau, x_n, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
         #stress in the free length
         l = l * (1 + theta)
         q_l = q * H(l / 2 - abs(x_n))
         #stress in the part, where fiber transmits stress to the matrix
+        T = 2. * tau * V_f / r
         q_e = (q - T/V_f * (abs(x_n) - l / 2.)) * H(abs(x_n) - l / 2.)
         
         #far field stress
@@ -141,22 +171,8 @@ class CBEMClampedFiberStressResidual(RF):
         q_x = q_l + q_e
         q_x = np.maximum(q_x, q_const)
         eps_n = q_x/E_f
-        
-        # evaluate failure probabilities for these parts
-        CDF_n = self.CDF_n(s0,m,eps_n)
-        
-        # survival probability of the whole system along x_n
-        sf = 1-CDF_n
-        chain_sf = sf.prod(axis = -1)
-        
-        # residual bonded length
-        L_bond_x = np.abs(x_n) - l/2.
-        L_bond_x = L_bond_x*H(L_bond_x)
-        L_bond_mean = np.sum(CDF_n * L_bond_x, axis = -1) / np.sum(CDF_n, axis = -1)
-        return chain_sf, L_bond_mean
-
-    def CDF_n(self,s0,m,n_eps):
-        return weibull_min(m, scale = s0).cdf(n_eps)
+        CDF_n = weibull_min(m, scale = s0).cdf(eps_n)
+        return CDF_n
 
     def __call__(self, w, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
         #assigning short and long embedded length
@@ -211,9 +227,11 @@ class CBEMClampedFiberStressResidual(RF):
         # within a crack bridge divide the filament into parts with constant strengths
         x_n = np.linspace(-Ll, Lr, n).reshape(tuple([1]*len(q.shape)+[n]))
         # create an array of strains along these parts
-        tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m
         chain_sf, L_bond_mean = self.fil_break(q, x_n, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
-        q = q * H(Pf - (1-chain_sf)) + L_bond_mean * T / V_f * H((1-chain_sf) - Pf)
+        #print np.unravel_index(a.argmin(axis = -1), a.shape)
+        surv = q * H(Pf - (1-chain_sf))
+        broken = L_bond_mean * T / V_f * H((1-chain_sf) - Pf)
+        q = surv + broken    
         return q
     
 class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
@@ -266,7 +284,7 @@ if __name__ == '__main__':
     
     def Pw():
         plt.figure()
-        w = np.linspace(0, 1, 300)
+        w = np.linspace(0, 1, 50)
         P = CBEMClampedFiberStressResidual()
         q = P(w, t, l, Ef, Em, theta, Pf, phi, Ll, Lr, V_f, r, s0, m) 
         plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
@@ -292,5 +310,5 @@ if __name__ == '__main__':
         plt.ylim(0,)
 
     Pw()
-    SP()
+    #SP()
     plt.show()
