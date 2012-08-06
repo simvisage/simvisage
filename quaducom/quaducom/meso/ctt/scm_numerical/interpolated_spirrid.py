@@ -10,6 +10,8 @@ from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
 from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
     CBEMClampedFiberStressSP
+from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress_residual import \
+    CBEMClampedFiberStressResidualSP
 import numpy as np
 from scipy import ndimage
 from matplotlib import pyplot as plt
@@ -168,13 +170,13 @@ class RangeAdaption(HasTraits):
         l = self.tvar_dict['l']
         theta = self.tvar_dict['theta']     
         x_init = np.linspace(-self.delta0 - l*(1+theta)/2., self.delta0 + l*(1+theta)/2., self.n_x)
-        x_opt = self.adapt_x_range(self.w_opt_init[-1], x_init, 1e15, 1e15)
+        x_opt = self.adapt_x_range(self.w_opt_init[-1], x_init, 1000., 1000.)
         return x_opt
 
     w_opt_init = Property(Array)
     @cached_property
     def _get_w_opt_init(self):
-        return self.adapt_w_range(1e15, 1e15)[0]
+        return self.adapt_w_range(1000., 1000.)[0]
     
     BC_range = Property(Array)
     @cached_property
@@ -369,22 +371,25 @@ class InterpolatedSPIRRID(HasTraits):
         return self.interp_grid(*args)
 
 if __name__ == '__main__':
-    import etsproxy.mayavi.mlab as m
+    from etsproxy.mayavi import mlab
     from stats.spirrid import make_ogrid as orthogonalize
 
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = 1.#RV('uniform', loc = 0.02, scale = .5) # 0.5
+    tau = 0.1#RV('uniform', loc = 0.02, scale = .5) # 0.5
     Ef = 200e3
     Em = 25e3
     l = RV( 'uniform', scale = 10., loc = 0. )
     theta = 0.0#RV( 'uniform', scale = .01, loc = 0. )
     xi = 10.01#RV( 'weibull_min', scale = 0.012, shape = 5 ) # 0.017
     phi = 1.
+    Pf = 0.5#RV('uniform', loc = 0.0, scale = 1.0)
+    m = 5.0
+    s0 = 0.02
 
     rf = CBEMClampedFiberStressSP()
-    ra = RangeAdaption(load_sigma_c_max = 10.0,
+    ra = RangeAdaption(load_sigma_c_max = 22.0,
                        load_n_sigma_c = 100,
                        n_w = 100,
                        n_x = 101,
@@ -400,6 +405,29 @@ if __name__ == '__main__':
                                                    E_m = Em,
                                                    r = r,
                                                    V_f = Vf
+                                                        ),
+                                        n_int = 20),
+                                    )
+
+    rf = CBEMClampedFiberStressResidualSP()
+    ra = RangeAdaption(load_sigma_c_max = 22.0,
+                       load_n_sigma_c = 100,
+                       n_w = 100,
+                       n_x = 101,
+                       n_BC = 3,
+                       spirrid = SPIRRID(q = rf,
+                                          sampling_type = 'LHS',
+                                     tvars = dict( tau = tau,
+                                                   l = l,
+                                                   E_f = Ef,
+                                                   theta = theta,
+                                                   Pf = Pf,
+                                                   phi = phi,
+                                                   E_m = Em,
+                                                   r = r,
+                                                   V_f = Vf,
+                                                   m = m,
+                                                   s0 = s0
                                                         ),
                                         n_int = 20),
                                     )
@@ -420,8 +448,8 @@ if __name__ == '__main__':
 #        plt.plot(np.arange(len(sigma)), np.max(mu_q_isp,axis = 0))
 #        plt.show()
         #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
-        m.surf(e_arr[0], e_arr[1], mu_q_isp/10.)
-        m.surf(e_arr[0], e_arr[1], mu_q_isp2/10.)
-        m.show()
+        mlab.surf(e_arr[0], e_arr[1], mu_q_isp/10.)
+        mlab.surf(e_arr[0], e_arr[1], mu_q_isp2/10.)
+        mlab.show()
         
     plot()
