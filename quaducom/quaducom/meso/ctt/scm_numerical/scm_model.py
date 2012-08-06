@@ -20,6 +20,11 @@ from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
+from scipy.interpolate import interp1d
+from scipy.optimize import brentq
+from stats.spirrid.spirrid import make_ogrid
+from mayavi import mlab
+from matplotlib import pyplot as plt
 
 class CBRandomSample(HasTraits):
 
@@ -43,7 +48,7 @@ class CB(HasTraits):
 
     E_m = Property
     @cached_property
-    def _get_Em(self):
+    def _get_E_m(self):
         return self.randomization.tvars['E_m']
 
     V_f = Property
@@ -56,38 +61,47 @@ class CB(HasTraits):
     def _get_E_f(self):
         return self.randomization.tvars['E_f']
 
+    E_c = Property
+    @cached_property
+    def _get_E_c(self):
+        return self.E_f * self.V_f + self.E_m * (1. - self.V_f)
+
     position = Float
     Ll = Float
     Lr = Float
     x = Array
-    load_sigma_c = Array
+    crack_load_sigma_c = Float
 
-    def get_sigma_x_reinf(self):
+    def get_sigma_x_reinf(self, load):
         '''
         evaluation of stress profile in the vicinity of a crack bridge
         '''
-        return self.get_sigma_f_x_reinf(self.load_sigma_c, self.x, self.Ll, self.Lr)
+        if load < self.crack_load_sigma_c:
+            return load * self.E_f / self.E_c * np.ones(len(self.x))
+        return self.get_sigma_f_x_reinf(load, self.x, self.Ll, self.Lr)
 
-    def get_eps_x_reinf(self):
+    def get_eps_x_reinf(self, load):
         '''
         evaluation of strain profile in the vicinity of a crack bridge
         '''
-        return self.get_sigma_x_reinf() / self.E_f
+        return self.get_sigma_x_reinf(load) / self.E_f
 
-    def get_eps_x_matrix(self):
+    def get_eps_x_matrix(self,load):
         '''
         evaluation of strain profile in the vicinity of a crack bridge
         '''
-        return self.get_sigma_x_matrix()/self.E_m
+        return self.get_sigma_x_matrix(load)/self.E_m
 
-    def get_sigma_x_matrix(self):
+    def get_sigma_x_matrix(self, load):
         '''
         evaluation of stress profile in the vicinity of a crack bridge
         '''
-        load_sigma_c = self.load_sigma_c
-        sigma_c_ff = np.ones(len(self.x))[:, np.newaxis] * load_sigma_c[np.newaxis, :]
-        sigma_x_matrix = (sigma_c_ff - self.get_sigma_x_reinf() * self.V_f)/(1.-self.V_f)
-        return sigma_x_matrix
+        if load < self.crack_load_sigma_c:
+            return load * self.E_m / self.E_c * np.ones(len(self.x))
+        else:
+            sigma_c_ff = np.ones(len(self.x)) * load
+            sigma_x_matrix = (sigma_c_ff - self.get_sigma_x_reinf(load) * self.V_f)/(1.-self.V_f)
+            return sigma_x_matrix
 
 class ICBMFactory(Interface):
 
@@ -147,8 +161,6 @@ class CBRandomFactory(CBMFactory):
         return CB(get_sigma_f_x_reinf = sample,
                   randomization = self.randomization)
 
-from scipy.interpolate import RectBivariateSpline
-
 class SCM(HasTraits):
     '''Stochastic Cracking Model - compares matrix strength and stress, inserts new CS instances
     at positions, where the matrix strength is lower than the stress; evaluates stress-strain diagram
@@ -191,27 +203,14 @@ class SCM(HasTraits):
         # discretizes the specimen length
         return np.linspace(0., self.length, self.nx)
 
-    sigma_mx_load_ff = Property(depends_on = '+load, +cb_randomization.tvars')
-    @cached_property
-    def _get_sigma_mx_load_ff(self):
-        # 2D array of stress in the matrix along an uncracked composite of shape (load_sigma_c, x_arr)
-        Em = self.cb_randomization.tvars['E_m']
-        Ef = self.cb_randomization.tvars['E_f']
-        Vf = self.cb_randomization.tvars['V_f']
-        Ec = Ef*Vf + Em*(1.-Vf)
-        sigma_m_ff = self.load_sigma_c[:, np.newaxis] * Em / Ec
-        sigma_mx_load_ff = np.ones(len(self.x_arr)) * sigma_m_ff
-        return sigma_mx_load_ff
-
     random_field = Instance(RandomField)
     matrix_strength = Property(depends_on = 'random_field.+modified')
     @cached_property
     def _get_matrix_strength(self):
-        # evaluates a random field realization and creates a 2D spline reprezentation
+        # evaluates a random field realization and creates a spline reprezentation
         rf = self.random_field.random_field
-        field_2D = np.ones_like(self.load_sigma_c[:, np.newaxis]) * rf
-        rf_spline = RectBivariateSpline(self.load_sigma_c, self.random_field.xgrid, field_2D)
-        return rf_spline(self.load_sigma_c, self.x_arr)
+        rf_spline = interp1d(self.random_field.xgrid, rf)
+        return rf_spline(self.x_arr)
 
     def sort_cbs(self):
         # sorts the CBs by position and adjusts the boundary conditions
@@ -254,36 +253,50 @@ class SCM(HasTraits):
                 mask1[0] = True
             mask2 = self.x_arr <= (self.cb_list[idx].position + self.cb_list[idx].Lr)
             self.cb_list[idx].x = self.x_arr[mask1 * mask2] - self.cb_list[idx].position
-            crack_position_idx = np.argwhere(self.x_arr == self.cb_list[idx].position)
-            left = crack_position_idx - len(np.nonzero(self.cb_list[idx].x < 0.)[0])
-            right = crack_position_idx + len(np.nonzero(self.cb_list[idx].x > 0.)[0]) + 1
-            self.sigma_m[-len(self.cb_list[idx].load_sigma_c):, left:right] = self.cb_list[idx].get_sigma_x_matrix().T
+
+    def sigma_m(self, load):
+        Em = self.cb_randomization.tvars['E_m']
+        Ef = self.cb_randomization.tvars['E_f']
+        Vf = self.cb_randomization.tvars['V_f']
+        Ec = Ef*Vf + Em*(1.-Vf)
+        sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
+        for cb in self.cb_list:
+            crack_position_idx = np.argwhere(self.x_arr == cb.position)
+            left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
+            right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
+            sigma_m[left:right] = cb.get_sigma_x_matrix(load).T
+        return sigma_m
+
+    def residuum(self, q):
+        return np.min(self.matrix_strength - self.sigma_m(q))
 
     def evaluate(self):
         #seek for the minimum strength redundancy to find the position of the next crack
-        while np.any(self.sigma_m > self.matrix_strength):
-            mask = self.sigma_m < self.matrix_strength
-            idx = np.argmin(mask.sum(0))
-            f = mask.sum(0)[idx]
-            crack_position = self.x_arr[idx]
-            load_sigma_c = self.load_sigma_c[f:]
+        last_pos = 0.0
+        q_min = 0.0
+        while np.any(self.sigma_m(self.load_sigma_c_max) > self.matrix_strength):
+            q = brentq(self.residuum, q_min, self.load_sigma_c_max)
+            q_min = q
+            crack_position = self.x_arr[np.argmin(self.matrix_strength - self.sigma_m(q))]
             cbf = self.cb_factory
             new_cb = cbf.new_cb()
             new_cb.position = float(crack_position)
-            new_cb.load_sigma_c = load_sigma_c
+            new_cb.crack_load_sigma_c = q - self.load_sigma_c_max/1000.
             self.cb_list.append(new_cb)
             self.sort_cbs()
-#            e_arr = orthogonalize([np.arange(len(self.x_arr)), np.arange(len(self.load_sigma_c))])
-#            m.surf(e_arr[0], e_arr[1], self.sigma_m)
-#            m.surf(e_arr[0], e_arr[1], self.matrix_strength)
-#            m.show()
-            if self.last_pos == crack_position:
-                print 'FAIL - refine the Ll, Lr, w or x ranges'
+#            plt.plot(self.x_arr, self.sigma_m(q))
+#            plt.plot(self.x_arr, self.sigma_m(self.load_sigma_c_max))
+#            plt.plot(self.x_arr, self.matrix_strength)
+#            plt.show()
+            if float(crack_position) == last_pos:
                 break
-            self.last_pos = crack_position
-    
-    last_pos = Float
+                raise ValueError, 'got stuck in loop, try to adapt x, w, BC ranges'
+            last_pos = float(crack_position)
 
-    sigma_m = Array
-    def _sigma_m_default(self):
-        return self.sigma_mx_load_ff
+    sigma_m_x = Property(depends_on = 'random_field.+modified, +load, nx, length, cb_type')
+    @cached_property            
+    def _get_sigma_m_x(self):
+        sigma_m_x = np.zeros_like(self.load_sigma_c[:,np.newaxis] * self.x_arr[np.newaxis,:])
+        for i, q in enumerate(self.load_sigma_c):
+            sigma_m_x[i,:] = self.sigma_m(q)
+        return sigma_m_x
