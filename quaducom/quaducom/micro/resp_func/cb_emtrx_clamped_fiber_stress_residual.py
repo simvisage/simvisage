@@ -119,7 +119,7 @@ class CBEMClampedFiberStressResidual(RF):
 
     params = List
     
-    L_bond_mean = Property(depends_on = 'BCs')
+    L_bond_mean = Property(depends_on = 'CB_params')
     @cached_property
     def _get_L_bond_mean(self):
         return self.L_bond_mean_func(*self.params)
@@ -131,18 +131,20 @@ class CBEMClampedFiberStressResidual(RF):
         left_side = np.log(1.-Pf)*s0**m
         tt = time.clock()
         q_break = fsolve(self.opt_q0, q_init_guess.flatten(),
-                         args = (q_init_guess.shape, tau, x_n, l, V_f, E_f, E_m, theta, Pf, r, s0, m, left_side),
+                         args = (q_init_guess.shape, tau, x_n, l, V_f, E_f, E_m, theta, Pf, r, m, left_side),
                          xtol = 0.01,
                          col_deriv = True)
-        print 'fsolve ', time.clock() - tt
+        print 'fsolve ', time.clock() - tt, 'iter = ', self.i
         q_break = q_break.reshape(q_init_guess.shape)
         CDF_n0 = self.CDF_n(q_break, tau, x_n, l, V_f, E_f, E_m, theta, r, s0, m)
         L_bond_mean = np.sum(CDF_n0 * L_bond_x, axis = -1) / (1e-15 + np.sum(CDF_n0, axis = -1))
         return L_bond_mean
- 
-    def opt_q0(self, q0, q_shape, tau, x_n, l, V_f, E_f, E_m, theta, Pf, r, s0, m, left_side):
+
+    i = 0 
+    def opt_q0(self, q0, q_shape, tau, x_n, l, V_f, E_f, E_m, theta, Pf, r, m, left_side):
         right = np.sum(self.fx(q0.reshape(q_shape), tau, x_n, l, V_f, E_f, E_m, theta, r)**m, axis = -1)
         value = left_side + right
+        self.i += 1
         return value.flatten()
 
     def fx(self,q, tau, x_n, l, V_f, E_f, E_m, theta, r):
@@ -201,10 +203,10 @@ class CBEMClampedFiberStressResidual(RF):
         CDF_n = weibull_min(m, scale = s0).cdf(eps_n * H(q_tau))
         return CDF_n
 
-    BCs = Tuple
+    CB_params = Tuple
     
     def __call__(self, w, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
-        self.BCs = (Ll, Lr)
+        self.CB_params = (tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
         #assigning short and long embedded length
         Lmin = np.minimum(Ll, Lr)
         Lmax = np.maximum(Ll, Lr)
