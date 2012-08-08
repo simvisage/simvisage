@@ -88,7 +88,7 @@ class SCMView(ModelView):
         return self.model.sigma_m_x / self.model.cb_randomization.tvars['E_m']
 
     sigma_f = Property(Array, depends_on='model.')
-    
+
     @cached_property
     def _get_sigma_f(self):
         V_f = self.model.cb_randomization.tvars['V_f']
@@ -106,21 +106,22 @@ class SCMView(ModelView):
     @cached_property
     def _get_eps_sigma(self):
         eps = np.trapz(self.eps_f, self.x_area, axis=1) / self.model.length
-        if np.sum(np.isnan(eps)) == 0:
-            sigma = self.model.load_sigma_c
-        else:
-            idx = np.sum(np.isnan(eps) == False)
-            eps = eps[:idx]
-            eps[-1] = eps[-2]
-            sigma = self.model.load_sigma_c[:idx]
+        eps = eps[np.isnan(eps) == False]
+        if len(eps) != len(self.model.load_sigma_c):
+            eps = list(eps) + [list(eps)[-1]]
+            sigma = self.model.load_sigma_c[:len(eps)]
             sigma[-1] = 0.0
-        return eps, sigma
+            return eps, sigma
+        else:
+            return eps, self.model.load_sigma_c
 
 if __name__ == '__main__':
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
     CBEMClampedFiberStressSP
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress_residual \
     import CBEMClampedFiberStressResidualSP
+    from etsproxy.mayavi import mlab
+    from stats.spirrid import make_ogrid as orthogonalize
 
     # filaments
     r = 0.00345
@@ -136,8 +137,8 @@ if __name__ == '__main__':
     m = 5.0
     s0 = 0.02
 
-    length = 3000.
-    nx = 3000
+    length = 5000.
+    nx = 5000
     random_field = RandomField(seed=True,
                                lacor=4.,
                                 xgrid=np.linspace(0., length, 1000),
@@ -148,20 +149,20 @@ if __name__ == '__main__':
                                 non_negative_check=True,
                                 distribution='Weibull'
                                )
-#
+
 #    rf = CBEMClampedFiberStressSP()
-#    rand = FunctionRandomization(   q = rf,
-#                                    tvars = dict(tau = tau,
-#                                                 l = l,
-#                                                 E_f = Ef,
-#                                                 theta = theta,
-#                                                 xi = xi,
-#                                                 phi = phi,
-#                                                 E_m = Em,
-#                                                 r = r,
-#                                                 V_f = Vf
+#    rand = FunctionRandomization(q=rf,
+#                                 tvars=dict(tau=tau,
+#                                            l=l,
+#                                            E_f=Ef,
+#                                            theta=theta,
+#                                            xi=xi,
+#                                            phi=phi,
+#                                            E_m=Em,
+#                                            r=r,
+#                                            V_f=Vf
 #                                                 ),
-#                                    n_int = 20
+#                                    n_int=20
 #                                    )
 
     rf = CBEMClampedFiberStressResidualSP()
@@ -187,11 +188,11 @@ if __name__ == '__main__':
               cb_randomization=rand,
               cb_type='mean',
               load_sigma_c_min=.1,
-              load_sigma_c_max=16.,
+              load_sigma_c_max=204.,
               load_n_sigma_c=200,
               n_w=60,
               n_x=101,
-              n_BC=3
+              n_BC=4
               )
 
     scm_view = SCMView(model=scm)
