@@ -22,6 +22,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 import copy
+from matplotlib import pyplot as plt
+import numpy.ma as ma
 
 
 class CBRandomSample(HasTraits):
@@ -41,8 +43,9 @@ class CBRandomSample(HasTraits):
 
 
 class CB(HasTraits):
-    '''crack bridge class - includes informations about position, stress range and evaluates
-    the stress and strain profiles in the composite components'''
+    '''crack bridge class - includes informations about position,
+    stress range and evaluates the stress and strain profiles in the
+    composite components'''
     get_sigma_f_x_reinf = Callable
     randomization = Instance(FunctionRandomization)
 
@@ -308,29 +311,33 @@ class SCM(HasTraits):
         # of the next crack
         last_pos = 0.0
         q_min = 0.0
-        while np.any(self.sigma_m(self.load_sigma_c_max) >
-                     self.matrix_strength):
-            q = brentq(self.residuum, q_min, self.load_sigma_c_max)
-            q_min = q
+        q_max = self.load_sigma_c_max
+        while np.any(self.sigma_m(q_max) > self.matrix_strength):
+            q_min = brentq(self.residuum, q_min, q_max)
             crack_position = self.x_arr[np.argmin(self.matrix_strength -
-                                                  self.sigma_m(q))]
+                                                  self.sigma_m(q_min))]
             cbf = self.cb_factory
             new_cb = cbf.new_cb()
             new_cb.position = float(crack_position)
-            new_cb.crack_load_sigma_c = q - self.load_sigma_c_max / 1000.
-            self.sigma_c_crack.append(q - self.load_sigma_c_max / 1000.)
+            new_cb.crack_load_sigma_c = q_min - self.load_sigma_c_max / 1000.
+            self.sigma_c_crack.append(q_min - self.load_sigma_c_max / 1000.)
             if len(self.cracks_list) is not 0:
                 self.cracks_list.append(copy.deepcopy(self.cracks_list[-1])
                                         + [new_cb])
             else:
                 self.cracks_list.append([new_cb])
             self.sort_cbs()
-#            plt.plot(self.x_arr, self.sigma_m(q))
-#            plt.plot(self.x_arr, self.sigma_m(self.load_sigma_c_max))
-#            plt.plot(self.x_arr, self.matrix_strength)
-#            plt.show()
+            cb_list = self.cracks_list[-1]
+            cb = [CB for CB in cb_list if
+                  CB.position == float(crack_position)][0]
+            mu_q = cb.get_sigma_f_x_reinf(self.load_sigma_c,
+                                          np.array([0.0]),
+                                          cb.Ll, cb.Lr).flatten()
+            mu_q_real = mu_q[np.isnan(mu_q) == False]
+            new_q_max = np.max(mu_q_real) * self.cb_randomization.tvars['V_f']
+            if new_q_max < q_max:
+                q_max = new_q_max
             if float(crack_position) == last_pos:
-                break
                 raise ValueError('''got stuck in loop,
                 try to adapt x, w, BC ranges''')
             last_pos = float(crack_position)
