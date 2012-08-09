@@ -1,74 +1,91 @@
 '''
 Created on Sep 30, 2011
 
-the example implements the micromechanical response of a crack opening
+The example implements micromechanical responses of a crack opening
 in a composite material where a single discrete crack is bridged
-by a single homogeneous filament. The diagram shows:
-    a) force vs crack width (class CBClampedFiber)
-    b) force profile along the filament (class CBClampedFiberSP)
-
-The boundary conditions in this example are set to fixed displacement at both ends
-of the filament (yarn). Classes with free fiber end and infinite embedded length are
-available too in the resp_func folder.
-
+by:
+a) single homogeneous filament
+b) yarn with random filament properties
+The diagram shows a comparison between the formulation with discrete
+filament strength and length dependent strength with residual filament
+stress due to pullout of the broken filament from the matrix.
+BC - fixed displacement at both ends (Ll and Lr) of the filament.
 @author: rostar
 '''
 
-from quaducom.resp_func.cb_clamped_fiber import CBClampedFiberSP
-from stats.spirrid.spirrid import SPIRRID, orthogonalize
+from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress import \
+    CBEMClampedFiberStress
+from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress_residual import \
+    CBEMClampedFiberStressResidual
+
+from stats.spirrid.spirrid import SPIRRID
 from stats.spirrid.rv import RV
 from matplotlib import pyplot as plt
 import numpy as np
-from etsproxy.mayavi import mlab as m
 
 if __name__ == '__main__':
 
-    w = np.linspace(0, 2., 100)
-    x = np.linspace(-60, 110, 100)
+    # filaments
+    r = 0.00345
+    V_f = 0.0103
+    tau = RV('uniform', loc=0.1, scale=.3)
+    E_f = 200e3
+    E_m = 25e3
+    l = RV('uniform', scale=10., loc=2.)
+    theta = 0.0
+    xi = RV('weibull_min', scale=0.02, shape=5)
+    phi = 1.
+    Ll = 20.
+    Lr = 30.
+    s0 = 0.0205
+    m = 5.0
+    Pf = RV('uniform', loc=0., scale=1.0)
 
-    cbcsp = CBClampedFiberSP()
+    w = np.linspace(0, 1.3, 100)
 
-    s = SPIRRID(q = cbcsp,
-         sampling_type = 'PGrid',
-         implicit_var_eval = False,
-         evars = dict(w = w,
-                       x = x,
-                        ),
-         tvars = dict(tau = 0.1,
-                         l = 3.5,
-                         D_f = 26e-3,
-                         E_f = 72e3,
-                         theta = 0.05,
-                         xi = 0.02, # RV( 'weibull_min', scale = 0.02, shape = 50 ),
-                         phi = 1.,
-                         Ll = 20.,
-                         Lr = 80.),
-         n_int = 20)
+    cb_emtrx = CBEMClampedFiberStress()
+    s = SPIRRID(q=cb_emtrx,
+         sampling_type='PGrid',
+         evars=dict(w=w),
+         tvars=dict(tau=tau, l=l, E_f=E_f, theta=theta, xi=xi, phi=phi,
+                    E_m=E_m, r=r, V_f=V_f, Ll=Ll, Lr=Lr),
+         n_int=30)
 
-    mu_q_arr = np.array(s.mu_q_arr)
+    cb_emtrx_r = CBEMClampedFiberStressResidual()
+    s_r = SPIRRID(q=cb_emtrx_r,
+         sampling_type='PGrid',
+         evars=dict(w=w),
+         tvars=dict(tau=tau, l=l, E_f=E_f, theta=theta, Pf=Pf, phi=phi,
+                    E_m=E_m, r=r, V_f=V_f, Ll=Ll, Lr=Lr, s0=s0, m=m),
+         n_int=30)
 
-    def mlab3Dview():
+    mean_params = []
+    for param in s.tvar_lst:
+        if isinstance(param, RV):
+            mean_params.append(param._distr.mean)
+        else:
+            mean_params.append(param)
 
-        e_arr = orthogonalize([x, w])
-        n_e_arr = [ e / np.max(np.fabs(e)) for e in e_arr ]
+    mean_params_r = []
+    for param in s_r.tvar_lst:
+        if isinstance(param, RV):
+            mean_params_r.append(param._distr.mean)
+        else:
+            mean_params_r.append(param)
+    fil = cb_emtrx(w, *mean_params)
+    fil_r = cb_emtrx_r(w, *mean_params_r)
 
-        n_mu_q_arr = mu_q_arr / np.max(np.fabs(mu_q_arr))
-        m.surf(n_e_arr[0], n_e_arr[1], n_mu_q_arr)
-        m.show()
-
-    def w_P():
-        plt.plot(w, mu_q_arr[:, np.argwhere(x >= 0)[0]], color = 'black', lw = 2)
-        plt.title('force in reinforcement at the crack plane: x = 0')
+    def w_sigmaf():
+        plt.plot(w, s.mu_q_arr, lw=2, color='blue',
+                 ls='dashed', label='no res stress')
+        plt.plot(w, fil, color='blue', lw=2,
+                 ls='solid', label='filament')
+        plt.plot(w, s_r.mu_q_arr, lw=2, color='red',
+                 ls='dashed', label='residual stress')
+        plt.plot(w, fil_r, color='red', lw=2,
+                 ls='solid', label='filament')
+        plt.title('comparison no res stress vs. res stress after breakage')
+        plt.legend(loc='best')
         plt.show()
 
-    def x_P():
-        plt.plot(x, mu_q_arr[20, :], lw = 2, label = 'w = %0.2f mm' % w[20])
-        plt.plot(x, mu_q_arr[60, :], lw = 2, label = 'w = %0.2f mm' % w[40])
-        plt.plot(x, mu_q_arr[80, :], lw = 2, label = 'w = %0.2f mm' % w[80])
-        plt.title('force profile along reinforcement at various crack openings')
-        plt.legend()
-        plt.show()
-
-    mlab3Dview()
-    w_P()
-    x_P()
+    w_sigmaf()
