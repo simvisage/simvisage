@@ -227,12 +227,12 @@ if __name__ == '__main__':
 
         # plot absolute values for N and M
         #
-#        if t == 0.06 and n == 12:
-#            p.plot( M_arr, N_arr,
-#                    color='blue', 
-#                    linewidth=2.0)
-#        else:
-#            p.plot( M_arr, N_arr )
+        if t == 0.06 and n == 12:
+            p.plot( M_arr, N_arr,
+                    color='blue', 
+                    linewidth=2.0)
+        else:
+            p.plot( M_arr, N_arr )
 
  
     # @todo: format plot and axes (legend, grid, font etc.)
