@@ -32,41 +32,47 @@ from etsproxy.traits.ui.tabular_adapter \
 
 from numpy import \
     array, loadtxt, arange, sqrt, zeros, arctan, sin, cos, ones_like, \
-    vstack, savetxt, hstack, argsort, fromstring, zeros_like, \
+    vstack, savetxt, hstack, argsort, fromstring, zeros_like, shape, \
     copy, c_, newaxis, argmax, where, sqrt, frompyfunc, sum, \
-    ones, transpose, shape, append, argmin, fabs, identity, \
+    ones, transpose, shape, append, argmin, fabs, identity, unique, vdot, \
     max as ndmax, min as ndmin
 
-from ls_table import \
+from ls_table_hf import \
     LSTable, ULS, SLS
 
 from math import pi
 from string import split
 import os
 
-from scipy.io import read_array
-
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
-import os
 import pickle
 import string
+import csv
 from os.path import join
+
 
 # Access to the top level directory of the database
 #
 simdb = SimDB()
 
-
-
-
 class LC( HasTraits ):
     '''Loading case class
     '''
-    # name of the file containing the stress resultants
+    # path to the directory containing the state data files
+    #
+    data_dir = Directory
+
+    # name of the file containing the hinge forces 
+    # or the displacements
     #
     file_name = Str( input = True )
+
+    plt_export = Property
+    def _get_plt_export( self ):
+        basename = 'hf_' + self.name + '_'
+        return os.path.join( data_dir, basename )
 
     # data filter (used to hide unwanted values, e.g. high sigularities etc.) 
     #
@@ -131,95 +137,144 @@ class LC( HasTraits ):
     def _gamma_unf_SLS_default( self ):
         return 1.00
 
-    def _read_state_data( self, file_name ):
-        '''to read the stb-stress resultants save the xls-worksheet 
-        to a csv-file using ';' as filed delimiter and ' ' (blank)
+
+
+    def _read_data( self, file_name ):
+        '''read state data and geo data from csv-file using ';' as filed delimiter and ' ' (blank)
         as text delimiter.
         '''
         print '*** read state data from file: %s ***' % ( file_name )
 
-        # get the column headings defined in the second row 
-        # of the csv soliciotations input file
-        # column_headings = array(["Nr.","Punkt","X","Y","Z","mx","my","mxy","vx","vy","nx","ny","nxy"])
+        input_arr = loadtxt( file_name , delimiter = ';', skiprows = 2, usecols = ( 2, 3, 4, 8, 9 ) )
+
+        # hinge position [m]
         #
-        file = open( file_name, 'r' )
-        lines = file.readlines()
-        column_headings = lines[1].split( ';' )
-        # remove '\n' from last string element in list
+        X_hf = input_arr[:, 0][:, None]
+        Y_hf = input_arr[:, 1][:, None]
+        Z_hf = input_arr[:, 2][:, None]
+
+        #INPUT Matthias - RFEM
+        X_hf += 3.5
+        Y_hf += 3.5
+
+        # local hinge forces [kN]
         #
-        column_headings[-1] = column_headings[-1][:-1]
-        column_headings_arr = array( column_headings )
+        N_ip = input_arr[:, 3][:, None]
+        V_op = input_arr[:, 4][:, None]
+        V_ip = 0. * V_op
 
-        elem_no_idx = where( 'Nr.' == column_headings_arr )[0]
-        X_idx = where( 'X' == column_headings_arr )[0]
-        Y_idx = where( 'Y' == column_headings_arr )[0]
-        Z_idx = where( 'Z' == column_headings_arr )[0]
-        mx_idx = where( 'mx' == column_headings_arr )[0]
-        my_idx = where( 'my' == column_headings_arr )[0]
-        mxy_idx = where( 'mxy' == column_headings_arr )[0]
-        nx_idx = where( 'nx' == column_headings_arr )[0]
-        ny_idx = where( 'ny' == column_headings_arr )[0]
-        nxy_idx = where( 'nxy' == column_headings_arr )[0]
+        return {'X_hf' : X_hf, 'Y_hf' : Y_hf, 'Z_hf' : Z_hf,
+                'N_ip' : N_ip, 'V_ip' : V_ip, 'V_op' : V_op,
+                }
 
-        file.close()
 
-        # define arrays containing the information from the raw input file
-        #
-        input_arr = loadtxt( file_name , delimiter = ';', skiprows = 2 )
 
-        # element number:
-        #
-        elem_no = input_arr[:, elem_no_idx]
-
-        # coordinates [m]:
-        #
-        X = input_arr[:, X_idx]
-        Y = input_arr[:, Y_idx]
-        Z = input_arr[:, Z_idx]
-
-        # moments [kNm/m]
-        #
-        mx = input_arr[:, mx_idx]
-        my = input_arr[:, my_idx]
-        mxy = input_arr[:, mxy_idx]
-
-        # normal forces [kN/m]:
-        #
-        nx = input_arr[:, nx_idx]
-        ny = input_arr[:, ny_idx]
-        nxy = input_arr[:, nxy_idx]
-
-        return { 'elem_no' : elem_no, 'X' : X, 'Y' : Y, 'Z' : Z,
-                 'mx' : mx, 'my' : my, 'mxy' : mxy,
-                 'nx' : nx, 'ny' : ny, 'nxy' : nxy,
-               }
-
-    # original state data (before filtering)
+    # original data (before filtering)
     #
-    state_data_orig = Property( Dict, depends_on = 'file_name' )
+    data_orig = Property( Dict, depends_on = 'file_name' )
     @cached_property
-    def _get_state_data_orig( self ):
-        return self._read_state_data( self.file_name )
+    def _get_data_orig( self ):
+        return self._read_data( self.file_name )
 
-    # state data (after filtering)
+    # data (after filtering)
     #
-    state_data_dict = Property( Dict, depends_on = 'file_name, data_filter' )
+    data_dict = Property( Dict, depends_on = 'file_name, data_filter' )
     @cached_property
-    def _get_state_data_dict( self ):
+    def _get_data_dict( self ):
         d = {}
-        for k, arr in self.state_data_orig.items():
+        for k, arr in self.data_orig.items():
             d[k] = self.data_filter( arr )
         return d
 
-    sr_columns = List( ['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'] )
+
+    #---------------------------------------------
+    # NEEDS TO BE CHANGED FOR DISPLACEMENT OR FORCES DEPENDING ON OPTION
+    #---------------------------------------------
+
+    # use this line to evaluate the displacement files using LCCTable as combination tool
+    # (for the files with spring elements the displacement in the .csv-files is only given for U_x, U_y and U_z)
+
+    # if do == hf (hinge force evaluation)
+    #
+    sr_columns = List( ['N_ip', 'V_ip', 'V_op'] )
+#    sr_columns = List( ['U_x', 'U_y', 'U_z', 'dU_y', 'dU_z'] )
+    geo_columns = List( ['X_hf', 'Y_hf', 'Z_hf'] )
+
+    # if do == dp (edge displacement evaluation)
+    #
+#    sr_columns = List( ['U_x', 'U_y', 'U_z'] )
+#    geo_columns = List( ['X_u', 'Y_u', 'Z_u'] )
 
     sr_arr = Property( Array )
     def _get_sr_arr( self ):
         '''return the stress resultants of the loading case 
         as stack of all sr-column arrays.
         '''
-        sd_dict = self.state_data_dict
-        return hstack( [ sd_dict[ sr_key ] for sr_key in self.sr_columns ] )
+        data_dict = self.data_dict
+        return hstack( [ data_dict[ sr_key ] for sr_key in self.sr_columns ] )
+
+    geo_data_dict = Property( Array )
+    def _get_geo_data_dict( self ):
+        '''Dict of coords as sub-Dict of read in data dict
+        '''
+        data_dict = self.data_dict
+        geo_data_dict = {}
+        for geo_key in self.geo_columns:
+            geo_data_dict[ geo_key ] = data_dict[ geo_key ]
+        return geo_data_dict
+
+
+    def _read_data_u( self, file_name_u ):
+        '''read state data and geo date from csv-file using ';' as filed delimiter and ' ' (blank)
+        as text delimiter for displacement.
+        '''
+        print '*** read state data from file: %s ***' % ( file_name_u )
+
+        # get the column headings defined in the first row 
+        # of the csv hinge force input file
+        # column_headings = array(["elem_no", "N_ip", "V_ip", "V_op"])
+        #
+        file = open( file_name_u, 'r' )
+        lines = file.readlines()
+        column_headings = lines[0].split( ';' )
+        # remove '\n' from last string element in list
+        #
+        column_headings[-1] = column_headings[-1][:-1]
+        column_headings_arr = array( column_headings )
+
+        # geo_data:
+        #
+        X_idx = where( 'X[m]' == column_headings_arr )[0]
+        Y_idx = where( 'Y[m]' == column_headings_arr )[0]
+        Z_idx = where( 'Z[m]' == column_headings_arr )[0]
+
+        # state_data:
+        #
+        U_x = where( 'u-x[m]' == column_headings_arr )[0]
+        U_y = where( 'u-y[m]' == column_headings_arr )[0]
+        U_z = where( 'u-z[m]' == column_headings_arr )[0]
+        dU_y_idx = where( 'du-y[m]' == column_headings_arr )[0]
+        dU_z_idx = where( 'du-z[m]' == column_headings_arr )[0]
+
+        file.close()
+        input_arr = loadtxt( file_name_u , delimiter = ';', skiprows = 1 )
+
+        # global coords [m]
+        #
+        self.X_u = input_arr[:, X_idx]
+        self.Y_u = input_arr[:, Y_idx]
+        self.Z_u = input_arr[:, Z_idx]
+
+        # hinge forces [kN]
+        #
+        self.U_x = input_arr[:, dU_y_idx]
+        self.U_y = input_arr[:, dU_y_idx]
+        self.U_z = input_arr[:, dU_y_idx]
+
+        self.dU_y_idx = input_arr[:, dU_y_idx]
+        self.dU_z_idx = input_arr[:, dU_z_idx]
+
+
 
 
 class LCC( HasTraits ):
@@ -281,13 +336,14 @@ class LCCTable( HasTraits ):
     # list of load cases
     #
     lc_list_ = List( Instance( LC ) )
+
     lc_list = Property( List, depends_on = '+filter' )
     def _set_lc_list( self, value ):
         self.lc_list_ = value
     def _get_lc_list( self ):
-        for lc in self.lc_list_:
-            if lc.data_filter != self.data_filter:
-                lc.data_filter = self.data_filter
+#        for lc in self.lc_list_:
+#            if lc.data_filter != self.data_filter:
+#                lc.data_filter = self.data_filter
         return self.lc_list_
 
     lcc_table_columns = Property( depends_on = 'lc_list_, +filter' )
@@ -296,6 +352,15 @@ class LCCTable( HasTraits ):
                [ ObjectColumn( label = lc.name, name = lc.name )
                 for idx, lc in enumerate( self.lc_list ) ] + \
                 [ ObjectColumn( label = 'assess_value', name = 'assess_value' ) ]
+
+    geo_columns = Property( List( Str ), depends_on = 'lc_list_, +filter' )
+    def _get_geo_columns( self ):
+        '''derive the order of the geo columns
+        from the first element in 'lc_list'. The internal
+        consistency is checked separately in the
+        'check_consistency' method.
+        '''
+        return self.lc_list[0].geo_columns
 
     sr_columns = Property( List( Str ), depends_on = 'lc_list_, +filter' )
     def _get_sr_columns( self ):
@@ -313,28 +378,6 @@ class LCCTable( HasTraits ):
     def _check_for_consistency( self ):
         ''' check input files for consitency:
         '''
-
-        for lc in self.lc_list:
-            # check internal LC-consitency: 
-            # (compare coords-values of first LC with all other LC's in 'lc_list')
-            #
-            if not all( lc_list[0].state_data_dict['X'] == lc.state_data_dict['X'] ) and \
-                not all( lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y'] ) and \
-                not all( lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z'] ):
-                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % ( self.lc_list[0].name, lc.name )
-                return False
-
-            # check external consistency:
-            # (compare 'elem_no' in 'thickness.csv' and in all loading-cases 
-            # input files (e.g. 'LC1.csv') defined in 'lc_list')
-            #
-            if not all( self.geo_data_dict['elem_no'] == lc.state_data_dict['elem_no'] ):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % ( self.lc_list[0].name, lc.name )
-                return False
-
-        print '*** input files checked for consistency (OK) ***'
         return True
 
     #-------------------------------
@@ -347,6 +390,9 @@ class LCCTable( HasTraits ):
         This yields an array of shape ( n_lc, n_elems, n_sr )
         '''
         sr_arr_list = [ lc.sr_arr for lc in self.lc_list ]
+#        for x in sr_arr_list:
+#            print x.shape
+
         return array( sr_arr_list )
 
     #-------------------------------
@@ -561,13 +607,14 @@ class LCCTable( HasTraits ):
         # as exclusive to each other. 
         # 
         combi_arr_psi_exclusive = combi_arr_psi
+#        print 'combi_arr_psi_exclusive', combi_arr_psi_exclusive
         for exclusive_list_entry in exclusive_list_unique:
             # check where maximum one value of the exclusive load cases is unequal to one 
             #              LC1  LC2  LC3  (all LCs are defined as exclusive to each other)
             #
             # e.g.         1.5  0.9  0.8  (example of 'combi_arr_psi') 
             #              1.5  0.0  0.0  
-            #              0.0  0.0  0.0  (combination with all imposed loads = 0 after multiplication wit hpsi and gamma)
+            #              0.0  0.0  0.0  (combination with all imposed loads = 0 after multiplication wit psi and gamma)
             #              ...  ...  ...
             #
             # this would yield the following mask_arr (containing ones or zeros):
@@ -577,7 +624,9 @@ class LCCTable( HasTraits ):
             #              ...  ...  ...
             #
             mask_arr = where( combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0 )
+#            print 'mask_arr', mask_arr
             true_combi = where( sum( mask_arr, axis = 1 ) <= 1.0 )
+#            print 'true_combi', true_combi
             combi_arr_psi_exclusive = combi_arr_psi_exclusive[ true_combi ]
 
         #---------------------------------------------------------------
@@ -604,8 +653,8 @@ class LCCTable( HasTraits ):
         # is enlarged with an identity matrix in order to see the 
         # characteristic values of each loading case.
         #
-        if self.show_lc_characteristic:
-            combi_arr_psi_exclusive_unique = vstack( [ identity( self.n_lc ), combi_arr_psi_exclusive_unique ] )
+#        if self.show_lc_characteristic:
+#            combi_arr_psi_exclusive_unique = vstack( [ identity( self.n_lc ), combi_arr_psi_exclusive_unique ] )
 
         return combi_arr_psi_exclusive_unique
 
@@ -633,6 +682,7 @@ class LCCTable( HasTraits ):
         # Broadcasting is used to generate array containing the multiplied lc's
         # yielding an array of shape ( n_lcc, n_lc, n_elems, n_sr )
         #
+
         lc_combi_arr = lc_arr[ None, :, :, :] * combi_arr[:, :, None, None ]
 
         # Then the sum over index 'n_lc' is evaluated yielding 
@@ -643,115 +693,479 @@ class LCCTable( HasTraits ):
 
         return lcc_arr
 
+
     #-------------------------------
-    # min/max-values - for verification only!
+    # geo_arr 
+    #-------------------------------
+
+    geo_data_dict = Property( Dict, depends_on = 'lc_list_' )
+    @cached_property
+    def _get_geo_data_dict( self ):
+        '''Array of global coords derived from the first loading case defined in lc_list.
+        Coords are identical for all LC's.
+        '''
+        return self.lc_list[0].geo_data_dict
+
+
+    #-------------------------------
+    # min/max-values 
     #-------------------------------
 
     def get_min_max_state_data( self ):
         ''' get the surrounding curve of all 'lcc' values
         '''
         lcc_arr = self.lcc_arr
-
         min_arr = ndmin( lcc_arr, axis = 0 )
         max_arr = ndmax( lcc_arr, axis = 0 )
-
         return min_arr, max_arr
 
-    #------------------------------------------
-    # read the geometry data from file 
-    # (element number and thickness):
-    #------------------------------------------
+## fuer Fall max N* nach ZiE
+#    max_sr_grouped_dict = Property( Dict )
+#    @cached_property
+#    def _get_max_sr_grouped_dict( self ):
+#        ''' get the surrounding curve for each stress resultant
+#            shape lcc_array ( n_lcc, n_elems, n_sr )
+#        '''
+#        sr_columns = self.sr_columns
+#        lcc_arr = self.lcc_arr
+#        dict = {}
+#        for i, sr in enumerate( self.sr_columns ):
+#            idx_1 = argmax( abs( lcc_arr[:, :, i] ), axis = 0 )
+#            idx_2 = arange( 0, idx_1.shape[0], 1 )
+#            dict[sr] = lcc_arr[idx_1, idx_2, :]
+#        return dict
 
-    # thickness_data input file:
-    #
-    geo_data_file = Property
-    def _get_geo_data_file( self ):
-        return os.path.join( self.data_dir, 'thickness.csv' )
 
-    def _read_geo_data( self, file_name ):
-        '''to read the stb - thickness save the xls - worksheet
-        to a csv - file using ';' as filed delimiter and ' ' ( blank )
-        as text delimiter.
+# fuer Fall max Ausnutzungsgrad nach ZiE
+    max_sr_grouped_dict = Property( Dict )
+    @cached_property
+    def _get_max_sr_grouped_dict( self ):
+        ''' get the surrounding curve for each stress resultant
+            shape lcc_array ( n_lcc, n_elems, n_sr )
         '''
-        print '*** read geo data from file: %s ***' % ( file_name )
-
-
-        # coordinates [m]:
-        # (NOTE: corrds are taken from the state data file of the first loading case) 
-
-        # the column headings are defined in the first/second row 
-        # of the csv thickness input file
-        # Flaeche;;;Material;Dicke;;Exzentrizitaet;Integrierte Objekte;;;
-
-        # (NOTE: the headings contain non-ascii characters. Therefore the
-        #       column indices can not be derived using the 'where'-method.)
-
-        # read the float data:
+        sr_columns = self.sr_columns
+        lcc_arr = self.lcc_arr
+        ### N_s6cm_d results from 'V_op_d'*1.5
+        # assume a distribution of stresses as for a simple
+        # supported beam with cantilever corresponding
+        # to the distance of the screws to each other and to the edge
+        # of the TRC shell (33cm/17cm)
         #
-        input_arr = loadtxt( file_name, usecols = ( 0, 5 ), delimiter = ';', skiprows = 2 )
-        elem_no_idx = 0
-        thickness_idx = 1
+        N_s6cm_d = lcc_arr[:, :, 2] * ( 17. + 33. + 1. ) / 33.
 
-        # element number:
-        # (NOTE: column array must be of shape (n_elems, 1)
+        ### V_s6cm_d results from 'N_ip_d'/2
+        # assume an equal distribution (50% each) of the
+        # normal forces to each screw
         #
-        elem_no = input_arr[:, elem_no_idx][:, None]
+        V_s6cm_d = lcc_arr[:, :, 0] * 0.56
+#        V_s6cm_d = ( ( lcc_arr[:, :, 0] / 2 ) ** 2 + ( lcc_arr[:, :, 1] * 1.5 ) ** 2 ) ** 0.5
 
-        # element thickness [mm]:
-        # (NOTE: column array must be of shape (n_elems, 1)
+        # resistance ac characteristic value obtained from the
+        # experiment and EN DIN 1990
         #
-        thickness = input_arr[:, thickness_idx][:, None]
+        N_ck = 28.3
+        V_ck = 63.8
 
-        # coordinates [m]:
-        # (NOTE: corrds are taken from the state data file of the first loading case) 
-        #
-        X = self.lc_list[0].state_data_orig['X']
-        Y = self.lc_list[0].state_data_orig['Y']
-        Z = self.lc_list[0].state_data_orig['Z']
+        gamma_s = 1.53
 
-        return  {'elem_no':elem_no,
-                 'X':X, 'Y':Y, 'Z':Z,
-                 'thickness':thickness }
+        eta_N = N_s6cm_d / ( N_ck / gamma_s )
+        eta_V = abs( V_s6cm_d / ( V_ck / gamma_s ) )
+        eta_inter = ( eta_N ) + ( eta_V )
 
-    #------------------------------------------
-    # get thickness data:
-    #------------------------------------------
+        idx_max_hinge = eta_inter.argmax( axis = 0 )
 
-    # coordinates and element thickness read from file:
-    # 
-    geo_data_orig = Property( Dict, depends_on = 'geo_data_file' )
-    @cached_property
-    def _get_geo_data_orig( self ):
-        return self._read_geo_data( self.geo_data_file )
+        dict = {}
+        for i, sr in enumerate( self.sr_columns ):
+            idx_1 = idx_max_hinge
+            idx_2 = arange( 0, idx_1.shape[0], 1 )
+            dict[sr] = lcc_arr[idx_1, idx_2, :]
+        return dict
 
-    # parameter that defines for which z-coordinate values
-    # the read in data is not evaluated (filtered out)
-    # 
-    cut_z_fraction = Float( 0.0, filter = True )
 
-    # construct a filter 
+    # choose linking type (in-plane shear dof blocked or not)
     #
-    data_filter = Property( Callable, depends_on = 'geo_data_file, +filter' )
-    def _get_data_filter( self ):
+    link_type = Enum( 'exc_V_ip', 'inc_V_ip' )
 
-        def remove_midpoints( arr ):
-            # remove the center points of the shells 
-            Zp = fabs( self.geo_data_orig['Z'] )
-            max_Z = max( Zp )
-            min_Z = min( Zp )
-            h = max_Z - min_Z
-            z_active_idx = where( Zp >= ( min_Z + self.cut_z_fraction * h ) )[0]
-            return arr[ z_active_idx ]
+    # length of the shell (needed to plot the hinge forces plots correctly)
+    #
+    length_xy_quarter = 3.5 # m
 
-        return remove_midpoints
+    def export_hf_max_grouped( self, filename ):
+        """exports with one leading value
+        """
+        from matplotlib import pyplot
+        sr_columns = self.sr_columns
+        dict = self.max_sr_grouped_dict
+        length_xy_quarter = self.length_xy_quarter
 
-    geo_data_dict = Property( Dict, depends_on = 'geo_data_file, +filter' )
-    @cached_property
-    def _get_geo_data_dict( self ):
-        d = {}
-        for k, arr in self.geo_data_orig.items():
-            d[ k ] = self.data_filter( arr )
-        return d
+        def save_bar_plot( x, y, filename = 'bla', title = 'Title',
+                            xlabel = 'xlabel', ylabel = 'ylavel',
+                            width = 0.1, xmin = 0, xmax = 1000 ,
+                            ymin = -1000, ymax = 1000, figsize = [10, 5] ):
+            fig = pyplot.figure( facecolor = "white", figsize = figsize )
+            ax1 = fig.add_subplot( 1, 1, 1 )
+            ax1.bar( x , y , width = width, align = 'center', color = 'green' )
+            ax1.set_xlim( xmin, xmax )
+            ax1.set_ylim( ymin, ymax )
+            ax1.set_xlabel( xlabel, fontsize = 22 )
+            ax1.set_ylabel( ylabel, fontsize = 22 )
+            if title == 'N_ip max':
+                title = 'Fall max $\eta$'
+#                title = 'Fall max $N^{*}$'
+
+            if title == 'V_ip max':
+                title = 'max $V_{ip}$'
+            if title == 'V_op max':
+                title = 'Fall max $V^{*}$'
+            ax1.set_title( title )
+            fig.savefig( filename, orientation = 'portrait', bbox_inches = 'tight' )
+            pyplot.clf()
+
+
+        X = array( self.geo_data_dict['X_hf'] )
+        Y = array( self.geo_data_dict['Y_hf'] )
+
+        # symmetric axes
+        #
+        idx_sym = where( abs( Y[:, 0] - 2.0 * length_xy_quarter ) <= 0.0001 )
+        X_sym = X[idx_sym].reshape( -1 )
+        idx_r0_r1 = where( abs( X[:, 0] - 2.0 * length_xy_quarter ) <= 0.0001 )
+        X_r0_r1 = Y[idx_r0_r1].reshape( -1 )
+
+        for sr in sr_columns:
+            F_int = dict[sr]    #first row N_ip, second V_ip third V_op
+            F_sym = F_int[idx_sym, :].reshape( -1, len( sr_columns ) )
+            F_r0_r1 = F_int[idx_r0_r1, :].reshape( -1, len( sr_columns ) )
+
+            save_bar_plot( X_sym, F_sym[:, 0].reshape( -1 ),
+                          xlabel = '$X$ [m]', ylabel = '$N^{*}_{Ed}$ [kN]',
+                          filename = filename + 'N_ip' + '_sym_' + sr + '_max',
+                          title = sr + ' max',
+                          xmin = 0.0, xmax = 4.0 * length_xy_quarter, figsize = [10, 5], ymin = -30, ymax = +30 )
+            if self.link_type == 'inc_V_ip':
+                save_bar_plot( X_sym, F_sym[:, 1].reshape( -1 ),
+                              xlabel = '$X$ [m]', ylabel = '$V_{ip}$ [kN]',
+                              filename = filename + 'V_ip' + '_sym_' + sr + '_max',
+                              title = sr + ' max',
+                              xmin = 0.0, xmax = 4.0 * length_xy_quarter, figsize = [10, 5], ymin = -30, ymax = +30 )
+
+
+            save_bar_plot( X_sym, F_sym[:, 2].reshape( -1 ),
+                          xlabel = '$X$ [m]', ylabel = '$V^{*}_{Ed}$ [kN]',
+                          filename = filename + 'V_op' + '_sym_' + sr + '_max',
+                          title = sr + ' max',
+                          xmin = 0.0, xmax = 4.0 * length_xy_quarter, figsize = [10, 5], ymin = -10, ymax = +10 )
+
+            # r0_r1
+            #
+            save_bar_plot( X_r0_r1, F_r0_r1[:, 0].reshape( -1 ),
+                          xlabel = '$Y$ [m]', ylabel = '$N^{*}_{Ed}$ [kN]',
+                          filename = filename + 'N_ip' + '_r0_r1_' + sr + '_max',
+                           title = sr + ' max',
+                          xmin = 0.0, xmax = 2.0 * length_xy_quarter, figsize = [5, 5], ymin = -30, ymax = +30 )
+            if self.link_type == 'inc_V_ip':
+                save_bar_plot( X_r0_r1, F_r0_r1[:, 1].reshape( -1 ),
+                              xlabel = '$Y$ [m]', ylabel = '$V_{ip}$ [kN]',
+                              filename = filename + 'V_ip' + '_r0_r1_' + sr + '_max',
+                              title = sr + ' max',
+                              xmin = 0.0, xmax = 2.0 * length_xy_quarter, figsize = [5, 5], ymin = -30, ymax = +30 )
+            save_bar_plot( X_r0_r1, F_r0_r1[:, 2].reshape( -1 ),
+                          xlabel = '$Y$ [m]', ylabel = '$V^{*}_{Ed}$ [kN]',
+                          filename = filename + 'V_op' + '_r0_r1_' + sr + '_max',
+                          title = sr + ' max',
+                          xmin = 0.0, xmax = 2.0 * length_xy_quarter, figsize = [5, 5], ymin = -10, ymax = +10 )
+
+    def export_u( self, filename ):
+        """exports u values, maximum and minimum of each lc and combination
+        """
+        length_xy_quarter = self.length_xy_quarter
+
+        n_lc = self.n_lc
+        n_sr = self.n_sr
+        # max value charakteristic
+        #
+        max_export_arr = zeros( ( n_lc, n_sr ) )
+        min_export_arr = zeros( ( n_lc, n_sr ) )
+
+
+        for i in range( 0, n_lc ):
+            for j in range( 0, n_sr ):
+                max_export_arr[i, j] = ndmax( self.lc_arr[i, :, j] )
+                min_export_arr[i, j] = ndmin( self.lc_arr[i, :, j] )
+
+        # from combinated values
+        #
+        # from outer_edges (= r0_r1_bottom, r0_left, r1_right)
+        #
+        idx_bottom = where( abs( self.geo_data_dict['Y_u'].flatten() ) <= 0.001 )
+        idx_left = where( abs( self.geo_data_dict['X_u'].flatten() ) <= 0.001 )
+        idx_right = where( abs( self.geo_data_dict['X_u'].flatten() - 4.0 * length_xy_quarter ) <= 0.001 )
+        idx_out = unique( hstack( [idx_bottom, idx_left, idx_right] ) )
+#        print 'idx_out', idx_out
+
+        # for internal edge
+        #
+        idx_sym = where( abs( self.geo_data_dict['Y_u'].reshape( -1 ) - 2.0 * length_xy_quarter ) <= 0.001 )
+        idx_r0_r1 = where( abs( self.geo_data_dict['X_u'].reshape( -1 ) - 2.0 * length_xy_quarter ) <= 0.001 )
+        idx_int = unique( hstack( [idx_sym, idx_left, idx_r0_r1] ) )
+
+        # look in lcc_arr (= array with the combined values)
+        # for the combination with the maximum or minimum combined value 
+        # NOTE: lcc_arr.shape = ( n_lcc, n_elems, n_sr )
+        #
+        max_komb_out = zeros( ( n_sr ) )
+        min_komb_out = zeros( ( n_sr ) )
+        for j in range( 0, n_sr ):
+            max_komb_out[j] = ndmax( lct.lcc_arr[:, idx_out, j].reshape( -1 ), axis = 0 )
+            min_komb_out[j] = ndmin( lct.lcc_arr[:, idx_out, j].reshape( -1 ), axis = 0 )
+
+            print"\n"
+            print"-------------------"
+            print self.sr_columns[j] + " - MAX"
+            print"-------------------"
+            idx_max = where ( lct.lcc_arr[:, :, j] == max_komb_out[j] )
+            print 'idx_max', idx_max
+            idx_comb = idx_max[0][0]
+            print 'idx_comb', idx_comb
+            idx_point = idx_max[1][0]
+            print 'idx_point', idx_point
+            idx_sr = j
+            print 'max_komb_out', max_komb_out[j]
+            print 'combi_arr', self.combi_arr[idx_comb, :]
+            print 'lc_arr', self.lc_arr[:, idx_point, j]
+            print self.lc_arr[:, idx_point, j] * self.combi_arr[idx_comb, :] / max_komb_out[j]
+            print "design value ", vdot( self.lc_arr[:, idx_point, j], self.combi_arr[idx_comb, :] )
+
+            print 'at position X,Y,Z', self.geo_data_dict['X_u'][idx_point], self.geo_data_dict['Y_u'][idx_point], self.geo_data_dict['Z_u'][idx_point]
+
+            print"-------------------"
+            print self.sr_columns[j] + " - MIN"
+            print"-------------------"
+            idx_min = where ( lct.lcc_arr[:, :, j] == min_komb_out[j] )
+            print 'idx_min', idx_min
+            idx_comb = idx_min[0][0]
+            print 'idx_comb', idx_comb
+            idx_point = idx_min[1][0]
+            print 'idx_point', idx_point
+            idx_sr = j
+
+            print min_komb_out[j]
+            print self.combi_arr[idx_comb, :]
+            print self.lc_arr[:, idx_point, j]
+            print self.lc_arr[:, idx_point, j] * self.combi_arr[idx_comb, :] / min_komb_out[j]
+            print "design value ", vdot( self.combi_arr[idx_comb, :], self.lc_arr[:, idx_point, j] )
+            print 'at position X,Y,Z', self.geo_data_dict['X_u'][idx_point], self.geo_data_dict['Y_u'][idx_point], self.geo_data_dict['Z_u'][idx_point]
+
+        max_komb_int = zeros( ( n_sr ) )
+        min_komb_int = zeros( ( n_sr ) )
+        for j in range( 0, n_sr ):
+
+            max_komb_int[j] = ndmax( lct.lcc_arr[:, idx_int, j].reshape( -1 ), axis = 0 )
+            min_komb_int[j] = ndmin( lct.lcc_arr[:, idx_int, j].reshape( -1 ), axis = 0 )
+
+
+
+        max_export_arr = vstack( ( max_export_arr, max_komb_out, max_komb_int ) )
+        min_export_arr = vstack( ( min_export_arr, min_komb_out, min_komb_int ) )
+
+        def csv_u( data, filename = 'U_data.csv' ):
+            '''exports X_U_export and U_export data to csv - worksheet
+            '''
+            file = open( filename, 'w' )
+
+            writer = csv.writer( file, delimiter = ";", lineterminator = "\n" )
+
+            #first row
+            #
+            writer.writerow( ['-'] + self.sr_columns )
+
+            # not combinated rows
+            #
+            for i in range( 0, self.n_lc ):
+                a = [lc_list[i].name] + list( data[i] )
+                writer.writerow( a )
+
+            # combinated rows
+            #
+            writer.writerow( ['komb_out'] + list( data[-2] ) )
+            writer.writerow( ['komb_int'] + list( data[-1] ) )
+
+
+            file = file.close()
+
+        csv_u( max_export_arr, filename = filename + 'max_U' + '.csv' )
+        csv_u( min_export_arr, filename = filename + 'min_U' + '.csv' )
+
+
+
+
+    def plot_interaction_s6cm( self ):
+        """get interaction pairs max"""
+
+        lcc_arr = self.lcc_arr
+
+        ### N_s6cm_d results from 'V_op_d'*1.5
+        # assume a distribution of stresses as for a simple
+        # supported beam with cantilever corresponding
+        # to the distance of the screws to each other and to the edge
+        # of the TRC shell (33cm/17cm)
+        #
+        N_s6cm_d = lcc_arr[:, :, 2] * ( 17. + 33. + 1. ) / 33.
+
+        ### V_s6cm_d results from 'N_ip_d'/2
+        # assume an equal distribution (50% each) of the
+        # normal forces to each screw
+        #
+        V_s6cm_d = lcc_arr[:, :, 0] * 0.56
+#        V_s6cm_d = ( ( lcc_arr[:, :, 0] / 2 ) ** 2 + ( lcc_arr[:, :, 1] * 1.5 ) ** 2 ) ** 0.5
+
+        # resistance ac characteristic value obtained from the
+        # experiment and EN DIN 1990
+        #
+        N_ck = 28.3
+        V_ck = 63.8
+
+        gamma_s = 1.53
+
+        eta_N = N_s6cm_d / ( N_ck / gamma_s )
+        eta_V = abs( V_s6cm_d / ( V_ck / gamma_s ) )
+        eta_inter = ( eta_N ) + ( eta_V )
+
+        idx_max_hinge = eta_inter.argmax( axis = 0 )
+        idx_hinge = arange( 0, len( idx_max_hinge ), 1 )
+        plot_eta_N = eta_N[idx_max_hinge, idx_hinge]
+        plot_eta_V = eta_V[idx_max_hinge, idx_hinge]
+        self.interaction_plot( plot_eta_N, plot_eta_V )
+
+
+
+    def interaction_plot( self, eta_N, eta_V ):
+            from matplotlib import pyplot
+            fig = pyplot.figure( facecolor = "white", figsize = [10, 10] )
+            ax1 = fig.add_subplot( 1, 1, 1 )
+            x = arange( 0, 1.01, 0.01 )
+#            y = ( 1 - x ** 1.5 ) ** ( 1 / 1.5 )
+#            limit = eta_N ** 1.5 + eta_V ** 1.5
+            y = ( 1 - x )
+            limit = eta_N + eta_V
+
+
+            ax1.set_xlabel( '$V^{*}_{Ed}/F_{Rd,V1}$' , fontsize = 24 )
+            ax1.set_ylabel( '$N^{*}_{Ed}/F_{Rd,t}$', fontsize = 24 )
+            ax1.plot( x , y, '--', color = 'black'
+                      , linewidth = 2.0 )
+
+            ax1.plot( eta_V, eta_N, 'o', markersize = 8 )
+            ax1.plot( eta_V, eta_N, 'o', color = 'green', markersize = 8 )
+
+#            ax1.plot( eta_V[where( limit < 1 )] , eta_N[where( limit < 1 )], 'o', markersize = 8 )
+#            ax1.plot( eta_V[where( limit > 1 )] , eta_N[where( limit > 1 )], 'o', color = 'red', markersize = 8 )
+
+            for xlabel_i in ax1.get_xticklabels():
+                xlabel_i.set_fontsize( 18 )
+
+            for ylabel_i in ax1.get_yticklabels():
+                ylabel_i.set_fontsize( 18 )
+
+
+    #        ax1.plot( x , 1 - x, '--', color = 'black', label = 'lineare Interaktion' )
+
+            ax1.set_xlim( 0, 1.0 )
+            ax1.set_ylim( 0, 1.0 )
+            ax1.legend()
+            pyplot.show()
+            pyplot.clf()
+
+
+
+    def export_hf_lc( self ):
+        """exports with one leading value
+        """
+
+        from matplotlib import pyplot
+        sr_columns = self.sr_columns
+        dict = self.max_sr_grouped_dict
+        length_xy_quarter = self.length_xy_quarter
+
+        def save_bar_plot( x, y, filename = 'bla',
+                              xlabel = 'xlabel', ylabel = 'ylavel', ymin = -10 , ymax = 10,
+                              width = 0.1, xmin = 0, xmax = 1000 , figsize = [10, 5] ):
+            fig = pyplot.figure( facecolor = "white", figsize = figsize )
+            ax1 = fig.add_subplot( 1, 1, 1 )
+            ax1.bar( x , y , width = width, align = 'center', color = 'blue' )
+            ax1.set_xlim( xmin, xmax )
+            ax1.set_ylim( ymin, ymax )
+            ax1.set_xlabel( xlabel, fontsize = 22 )
+            ax1.set_ylabel( ylabel, fontsize = 22 )
+            fig.savefig( filename, orientation = 'portrait', bbox_inches = 'tight' )
+            pyplot.clf()
+
+
+        X = array( self.geo_data_dict['X_hf'] )
+        Y = array( self.geo_data_dict['Y_hf'] )
+
+        # symmetric axes
+        #
+        idx_sym = where( abs( Y[:, 0] - 2.0 * length_xy_quarter ) <= 0.0001 )
+        X_sym = X[idx_sym].reshape( -1 )
+        idx_r0_r1 = where( abs( X[:, 0] - 2.0 * length_xy_quarter ) <= 0.0001 )
+        X_r0_r1 = Y[idx_r0_r1].reshape( -1 )
+        F_int = self.lc_arr
+
+        for i, lc_name in enumerate( self.lc_name_list ):
+            filename = self.lc_list[i].plt_export
+
+            max_N_ip = max( int( ndmax( F_int[i, :, 0], axis = 0 ) ) + 1, 1 )
+            max_V_ip = max( int( ndmax( F_int[i, :, 1], axis = 0 ) ) + 1, 1 )
+            max_V_op = max( int( ndmax( F_int[i, :, 2], axis = 0 ) ) + 1, 1 )
+
+
+            F_int_lc = F_int[i, :, :]   #first row N_ip, second V_ip third V_op
+            F_sym = F_int_lc[idx_sym, :].reshape( -1, len( sr_columns ) )
+            F_r0_r1 = F_int_lc[idx_r0_r1, :].reshape( -1, len( sr_columns ) )
+
+
+            save_bar_plot( X_sym, F_sym[:, 0].reshape( -1 ),
+#                          xlabel = '$X$ [m]', ylabel = '$N^{ip}$ [kN]',
+                          xlabel = '$X$ [m]', ylabel = '$N^{*}$ [kN]',
+                          filename = filename + 'N_ip' + '_sym',
+                          xmin = 0.0, xmax = 4.0 * length_xy_quarter,
+                          ymin = -max_N_ip, ymax = max_N_ip, figsize = [10, 5] )
+
+            save_bar_plot( X_sym, F_sym[:, 1].reshape( -1 ),
+                          xlabel = '$X$ [m]', ylabel = '$V_{ip}$ [kN]',
+                          filename = filename + 'V_ip' + '_sym',
+                          xmin = 0.0, xmax = 4.0 * length_xy_quarter,
+                          ymin = -max_V_ip, ymax = max_V_ip, figsize = [10, 5] )
+
+
+            save_bar_plot( X_sym, F_sym[:, 2].reshape( -1 ),
+#                          xlabel = '$X$ [m]', ylabel = '$V_{op}$ [kN]',
+                          xlabel = '$X$ [m]', ylabel = '$V^{*}$ [kN]',
+                          filename = filename + 'V_op' + '_sym',
+                          xmin = 0.0, xmax = 4.0 * length_xy_quarter,
+                          ymin = -max_V_op, ymax = max_V_op, figsize = [10, 5] )
+
+
+            # r0_r1
+            #
+            save_bar_plot( X_r0_r1, F_r0_r1[:, 0].reshape( -1 ),
+#                          xlabel = '$Y$ [m]', ylabel = '$N_{ip}$ [kN]',
+                          xlabel = '$Y$ [m]', ylabel = '$N^{*}$ [kN]',
+                          filename = filename + 'N_ip' + '_r0_r1',
+                          xmin = 0.0, xmax = 2.0 * length_xy_quarter,
+                          ymin = -max_N_ip, ymax = max_N_ip, figsize = [5, 5] )
+            save_bar_plot( X_r0_r1, F_r0_r1[:, 1].reshape( -1 ),
+                          xlabel = '$Y$ [m]', ylabel = '$V_{ip}$ [kN]',
+                          filename = filename + 'V_ip' + '_r0_r1',
+                          xmin = 0.0, xmax = 2.0 * length_xy_quarter,
+                          ymin = -max_V_ip, ymax = max_V_ip, figsize = [5, 5] )
+            save_bar_plot( X_r0_r1, F_r0_r1[:, 2].reshape( -1 ),
+#                          xlabel = '$Y$ [m]', ylabel = '$V_{op}$ [kN]',
+                          xlabel = '$Y$ [m]', ylabel = '$V^{*}$ [kN]',
+                          filename = filename + 'V_op' + '_r0_r1',
+                          xmin = 0.0, xmax = 2.0 * length_xy_quarter,
+                          ymin = -max_V_op, ymax = max_V_op, figsize = [5, 5] )
 
     #-------------------------------
     # lcc_lists 
@@ -765,7 +1179,15 @@ class LCCTable( HasTraits ):
         combi_arr = self.combi_arr
         lcc_arr = self.lcc_arr
         sr_columns = self.sr_columns
+        geo_columns = self.geo_columns
+
         n_lcc = self.n_lcc
+
+#        print 'combi_arr', combi_arr
+#        print 'lcc_arr', lcc_arr
+#        print 'sr_columns', sr_columns
+#        print 'geo_columns', geo_columns
+#        print 'n_lcc', n_lcc
 
         # return a dictionary of the stress resultants
         # this is used by LSTable to determine the stress 
@@ -778,10 +1200,12 @@ class LCCTable( HasTraits ):
             for i_sr, name in enumerate( sr_columns ):
                 state_data_dict[ name ] = lcc_arr[ i_lcc, :, i_sr ][:, None]
 
+            geo_data_dict = self.geo_data_dict
+
             lcc = LCC( #lcc_table = self,
                        factors = combi_arr[ i_lcc, : ],
                        lcc_id = i_lcc,
-                       ls_table = LSTable( geo_data = self.geo_data_dict,
+                       ls_table = LSTable( geo_data = geo_data_dict,
                                            state_data = state_data_dict,
                                            ls = self.ls )
                        )
@@ -803,9 +1227,6 @@ class LCCTable( HasTraits ):
 
     traits_view = View( VGroup( 
 
-                        Item( 'geo_data_file',
-                              label = 'Evaluated input file for thicknesses ',
-                               style = 'readonly', emphasized = True ),
                         VSplit( 
                                     Item( 'lcc_list', editor = lcc_list_editor,
                                           show_label = False ),
@@ -873,7 +1294,8 @@ class LCCTableSLS( LCCTable ):
 
         # generate [1.0]-entry in case of body-loads:
         #
-        gamma_list = [[ 1.0 ]] * len( self.lc_list )
+        gamma_list = [[ 1.0 , 3.0]] * len( self.lc_list ) # for creeping
+#        gamma_list = [[ 1.0]] * len( self.lc_list ) # for creeping
 
         # overwrite those in case of imposed-loads:
         #
@@ -916,26 +1338,79 @@ if __name__ == '__main__':
 
     #---------------------------------------------
     # 2 shells: 
-    # new geometry with new loading cases plus waterfilling
+    # new geometry 7m x 7m
     #---------------------------------------------
 
-    data_dir = os.path.join( simdb.simdb_dir,
-                             'simdata', 'input_data_mushroof_stb',
-                             'ZiE_state_data_2shells_delta_h_865mm_2011-08-16' )
+    #------------------------
+    # evaluate the combination for the displpacements (SLS) or the hinge forces (ULS)
+    #------------------------
+
+    # choose!
+    #
+    do = 'hf'
+#    do = 'dp'
+
+    if do == 'dp':
+        # NOTE: switch those values from hf to dp in the source code directly!
+        # !!!!!!!    sr_columns and geo_columns need to be changed for dp and hf options
+        #            for hf : N_IP..... 
+        #            for dp: u_z .....
+        #            as state in quellcode above
+
+        # NOTE: switch those values from hf to dp in the source code directly!
+        sr_columns = ['U_x', 'U_y', 'U_z']
+#        sr_columns = ['U_x', 'U_y', 'U_z', 'dU_y', 'dU_z']
+        geo_columns = ['X_u', 'Y_u', 'Z_u']
+        data_dir = os.path.join( simdb.simdb_dir,
+                                 'simdata', 'input_data_mushroof_stb',
+                                 'ZiE_state_data_2shells_delta_h_865mm_2011-08-16',
+                                 'u' )
+
+    if do == 'hf':
+        sr_columns = ['N_ip', 'V_ip', 'V_op']
+        geo_columns = ['X_hf', 'Y_hf', 'Z_hf']
+        data_dir = os.path.join( simdb.simdb_dir,
+                                 'simdata', 'input_data_mushroof_stb',
+                                 'ZiE_state_data_2shells_delta_h_865mm_2011-08-16',
+                                 'hf' )
+
+    #------------------------
+    # specify linking option:
+    #------------------------
+
+    link_case = 'equal_100cm_7m'
+
+    link_type = 'exc_V_ip'
+#        link_type = 'inc_V_ip'
+
+    spring = 'no_spring'
+#        spring = 'spring'
+
+    if spring == 'spring':
+        spring_type = 'spring_1_'
+    else:
+        spring_type = ''
+
+    #------------------------
+    # specify directory containig csv-files of the hinge forces and the displacements:
+    #------------------------
+
+    #---------------------------------------------
+    # 2 shells: 
+    # new geometry with new loading cases plus waterfilling
+    #---------------------------------------------
 
     #------------------------
     # define loading cases:
     #------------------------
     # NOTE:
     #
-    #---------------------------------------------------------
-    # "staendige und voruebergehende Bemessungssitauation":
-    #---------------------------------------------------------
     lc_list = [
                  # LC1:
                  # own weight:
                  #
                  LC( name = 'g', category = 'dead-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC1.csv' ),
                      ),
 
@@ -943,6 +1418,7 @@ if __name__ == '__main__':
                  # s_sym:
                  #
                  LC( name = 's_sym', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC2.csv' ),
                      exclusive_to = ['s_asym', 'WF'],
                      psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
@@ -952,6 +1428,7 @@ if __name__ == '__main__':
                  # s_asym:
                  #
                  LC( name = 's_asym', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC3.csv' ),
                      exclusive_to = ['s_sym', 'WF'],
                      psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
@@ -961,6 +1438,7 @@ if __name__ == '__main__':
                  # w_neg:
                  #
                  LC( name = 'w_neg', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC4.csv' ),
                      exclusive_to = ['w_pos', 'w_asym', 'w_int', 'WF'],
                      psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
@@ -970,6 +1448,7 @@ if __name__ == '__main__':
                  # w_pos:
                  #
                  LC( name = 'w_pos', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC5.csv' ),
                      exclusive_to = ['w_neg', 'w_asym', 'w_int', 'WF'],
                      psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
@@ -979,6 +1458,7 @@ if __name__ == '__main__':
                  # w_asym:
                  #
                  LC( name = 'w_asym', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC6.csv' ),
                      exclusive_to = ['w_pos', 'w_neg', 'w_int', 'WF'],
                      psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
@@ -988,6 +1468,7 @@ if __name__ == '__main__':
                  # w_int: Bauzustand
                  #
                  LC( name = 'w_int', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC7.csv' ),
                      exclusive_to = ['w_pos', 'w_neg', 'w_asym', 'WF', 'T_shrinkage'],
                      psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
@@ -997,6 +1478,7 @@ if __name__ == '__main__':
                  # 1 kN man load (corner):
                  #
                  LC( name = 'Q_corner', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC8.csv' ),
                      exclusive_to = ['Q_edge', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0 ),
 
@@ -1004,6 +1486,7 @@ if __name__ == '__main__':
                  # 1 kN man load (edge, center):
                  #
                  LC( name = 'Q_edge', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC9.csv' ),
                      exclusive_to = ['Q_corner', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0 ),
 
@@ -1011,6 +1494,7 @@ if __name__ == '__main__':
                  # temperature (sommer):
                  #
                  LC( name = 'T_pos', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC10.csv' ),
                      exclusive_to = ['T_neg', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0 ),
 
@@ -1018,6 +1502,7 @@ if __name__ == '__main__':
                  # temperature (winter):
                  #
                  LC( name = 'T_neg', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC11.csv' ),
                      exclusive_to = ['T_pos', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0 ),
 
@@ -1026,6 +1511,7 @@ if __name__ == '__main__':
                  # combination coefficients taken from case 'general imposed load'
                  # 
                  LC( name = 'T_shrinkage', category = 'imposed-load',
+                     data_dir = data_dir,
                      file_name = os.path.join( data_dir, 'LC12.csv' ),
                      exclusive_to = ['WF'], psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5 ),
 
@@ -1105,13 +1591,14 @@ if __name__ == '__main__':
 #                     psi_0 = 0.7 / 0.8 # = psi_1
 #                     ),
 #
-##                 # LC13:
-##                 # water filling:
-##                 #
-##                 LC( name = 'WF', category = 'imposed-load',
-##                     file_name = os.path.join( data_dir, 'LC13.csv' ),
-##                     gamma_unf = 1.00,
-##                     psi_0 = 1.0 ),
+#                 # LC13:
+#                 # water filling:
+#                 #
+#                 LC( name = 'WF', category = 'imposed-load',
+#                     file_name = os.path.join( data_dir, 'LC13.csv' ),
+#                     gamma_unf = 1.00,
+#                     exclusive_to = ['EQ_1-2', 'EQ_3-4'],
+#                     psi_0 = 1.0 ),
 #
 #                 # LC14_1-2:
 #                 # earth quake:
@@ -1119,7 +1606,7 @@ if __name__ == '__main__':
 #                 LC( name = 'EQ_1-2', category = 'imposed-load',
 #                     file_name = os.path.join( data_dir, 'LC14_1-2.csv' ),
 #                     gamma_unf = 1.00,
-#                     exclusive_to = ['EQ_3-4'],
+#                     exclusive_to = ['WF', 'EQ_3-4'],
 #                     psi_0 = 1.0 ),
 #
 #                 # LC14_3-4:
@@ -1128,128 +1615,66 @@ if __name__ == '__main__':
 #                 LC( name = 'EQ_3-4', category = 'imposed-load',
 #                     file_name = os.path.join( data_dir, 'LC14_3-4.csv' ),
 #                     gamma_unf = 1.00,
-#                     exclusive_to = ['EQ_1-2'],
+#                     exclusive_to = ['WF', 'EQ_1-2'],
 #                     psi_0 = 1.0 ),
 #
 #               ]
 
-#--------------------------------------------------------
 
 
-    lct = LCCTableULS( data_dir = data_dir,
-                       lc_list = lc_list,
 
-                       # remove only the lowest point = connection shell/column
-                       # as this is a singularity of the FE-shell-model
-                       #
-                       cut_z_fraction = 0.10,
-                       show_lc_characteristic = True
-                        )
-
-#    lct = LCCTableSLS( data_dir = data_dir,
-#                       lc_list = lc_list,
-#                       cut_z_fraction = 0.2,
-#                       combination_SLS = 'rare',
-##                       combination_SLS = 'freq',
-##                       combination_SLS = 'perm',
-##                       show_lc_characteristic = True
-#                        )
-
-
-#    lct.configure_traits()
-
-    #----------------------------------------
-    # script to get the maximum number of reinforcement ('n_tex')
-    # at all given coordinate points for all possible loading
-    # case combinations:
-    #----------------------------------------
-    # set option to "True" for surrounding 
-    # evaluation of necessary layers "n_tex"
-    # needed for all loading cases
+    #-------------------------------------------------------
+    # evaluate the displacement files csv:
+    #-------------------------------------------------------
     #
-    plot_n_tex_all_lcc = True
+    if do == 'dp':
 
-    if plot_n_tex_all_lcc == True:
+        lct = LCCTableSLS( data_dir = data_dir,
+                            lc_list = lc_list,
+        #                       cut_z_fraction = 0.2,
+                            combination_SLS = 'rare',
+        ##                       combination_SLS = 'freq',
+        ##                       combination_SLS = 'perm',
+        ##                       show_lc_characteristic = True
+                            )
 
-        print 'lct.combi_arr', lct.combi_arr
-
-        # get the list of all loading case combinations:
+        # export of the max edge displacement 
         #
-        lcc_list = lct.lcc_list
+#        lct.export_u( filename = spring + "_" + link_type + "_" + link_case )
 
-        #----------------------------------------------
-        # run trough all loading case combinations:
-        #----------------------------------------------
+        # LCC-TABLE
+        lct.configure_traits()
 
-        # list of 'n_tex'-column arrays for all 
-        # loading case combinations 
+
+    #-------------------------------------------------------
+    # evaluate the "hinge forces"-csv-files
+    #-------------------------------------------------------
+    #
+    elif do == 'hf':
+
+        # combination
         #
-        n_tex_max_list = []
-        for lcc in lcc_list:
+        lct = LCCTableULS( data_dir = data_dir,
+                           lc_list = lc_list,
+    #                       cut_z_fraction = 0.05,
 
-            # get the ls_table object and retrieve its 'ls_list'
-            # (list of LSTable_ULS-objects)
-            #
-            ls_list = lcc.ls_table.ls_list
+                           # remove only the lowest point = connection shell/column
+                           # as this is a singularity of the FE-shell-model
+                           #
+    #                       cut_z_fraction = 0.0000001,
+                           show_lc_characteristic = True
+                            )
 
-            #----------------------------------------------
-            # run through all cases defined in 'ls_list'
-            # of 'ls_table' (case 'Mx', 'My', 'Nx', 'Ny') 
-            #----------------------------------------------
+        # INTERACTION plot
 
-            # list of 'n_tex'-column arrays for all 
-            # investigated directions: 
-            #
-            n_tex_list = []
-            for ls in ls_list:
-                n_tex_list.append( ls.n_tex )
+        lct.plot_interaction_s6cm()
 
-            n_tex_arr = hstack( n_tex_list )
-            n_tex_max = ndmax( n_tex_arr, axis = 1 )[:, None]
+        # LCC-TABLE
+#        lct.configure_traits()
 
-            n_tex_max_list.append( n_tex_max )
-
-        # stack the list to an array in order to use ndmax-function
+        # Internal Force EXPORT
         #
-        n_tex_max_arr = hstack( n_tex_max_list )
+#        lct.link_type = link_type
+#        lct.export_hf_max_grouped( os.path.join( data_dir, 'hf' ) )
+#        lct.export_hf_lc()
 
-        #----------------------------------------------
-        # get the overall maximum values:
-        #----------------------------------------------
-
-        n_tex_max_max = ndmax( n_tex_max_arr, axis = 1 )[:, None]
-
-        #----------------------------------------------
-        # plot
-        #----------------------------------------------
-        #
-        X = lcc_list[0].ls_table.X[:, 0]
-        Y = lcc_list[0].ls_table.Y[:, 0]
-        Z = lcc_list[0].ls_table.Z[:, 0]
-        plot_col = n_tex_max_max[:, 0]
-
-        # if n_tex is negative plot 0 instead:
-        #
-        plot_col = where( plot_col < 0, 0, plot_col )
-
-        mlab.figure( figure = "SFB532Demo",
-                     bgcolor = ( 1.0, 1.0, 1.0 ),
-                     fgcolor = ( 0.0, 0.0, 0.0 ) )
-
-        mlab.points3d( X, Y, ( -1.0 ) * Z, plot_col,
-                       colormap = "YlOrBr",
-                       mode = "cube",
-                       scale_factor = 0.10 )
-
-        mlab.scalarbar( title = 'n_tex (all LCs)', orientation = 'vertical' )
-
-        mlab.show()
-
-
-
-#    print 'lc_arr', lct.lc_arr
-#    print 'lc_list[0].sr_arr.shape[0]', lct.lc_list[0].sr_arr.shape[0]
-#    print 'lc_arr.shape', lct.lc_arr.shape
-#    print 'combi_arr', lct.combi_arr
-#    print 'combi_arr.shape', lct.combi_arr.shape
-#    print 'lcc_arr', lct.lcc_arr

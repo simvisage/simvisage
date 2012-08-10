@@ -46,8 +46,8 @@ from math import pi
 from string import split
 import os
 
-from apps.projects.sfb532demo.assess_shell.ls_table import LSTable
-
+#from apps.projects.sfb532demo.assess_shell.ls_table import LSTable
+from quaducom.assess.assess_shell.ls_table import LSTable
 
 class InfoShellMngr( HasTraits ):
     '''Assessment tool
@@ -233,7 +233,7 @@ class InfoShellMngr( HasTraits ):
         ######################################################
 
         # get the column headings defined in the second row 
-        # of the csv soliciotations input file
+        # of the csv solicitations input file
         #
 #        column_headings = array(["Nr.","Punkt","X","Y","Z","mx","my","mxy","vx","vy","nx","ny","nxy"])
         file = open( file_name, 'r' )
@@ -357,14 +357,12 @@ class InfoShellMngr( HasTraits ):
 
 
 if __name__ == '__main__':
-#    ifs = InfoShellMngr( state_data_file = 'input_state_data.csv',
-#                         geo_data_file = 'input_geo_data.csv' )
 
-    ifs = InfoShellMngr( state_data_file = 'input_state_data_principal_values.csv',
+    ifs = InfoShellMngr( state_data_file = 'input_state_data.csv',
                          geo_data_file = 'input_geo_data.csv' )
 
     print ifs.info_shell_uls.assess_value
-    print ifs.info_shell_sls.assess_value
+#    print ifs.info_shell_sls.assess_value
 
     ifs.configure_traits()
 

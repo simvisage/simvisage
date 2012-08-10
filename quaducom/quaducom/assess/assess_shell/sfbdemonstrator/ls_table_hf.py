@@ -51,9 +51,9 @@ import os
 from ls_table import \
     LSArrayAdapter
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
-
+    
 import os
 import pickle
 import string
