@@ -6,7 +6,7 @@ Based on the RFEM hinge forces (N_ip, V_op = normal forces in-plan and shear for
 the interaction diagram is evaluated and plotted as 
 result for all loading-case combinations. 
 
-This file uses the 'ls_table_hf' from the  file 'ls_table_hf' stored in the same package.
+This file uses the 'LSTable'-class from the  file 'ls_table_hf' stored in the same package.
 '''
 
 from etsproxy.traits.api import \
