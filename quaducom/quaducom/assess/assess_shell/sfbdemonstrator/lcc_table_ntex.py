@@ -1,12 +1,14 @@
 '''
 @author: alexander
 
-The file reproduce the results used in the ZiE of the SFB-demonstrator:
+The file reproduces the results used in the ZiE of the SFB-demonstrator:
 Based on the RFEM-stress resultants (n_x, ny, nxy, mx, my, mxy) the 
 necessary number of reinforcement layers is evaluated and plotted as 
 result for all loading-case combinations. 
 
-This file uses the 'ls_table' from the  file 'ls_table_ntex' stored in the same package.
+This file uses the 'LSTable'-class from the  file 'ls_table_ntex' stored in the same package.
+
+To generate the plot for the accidental loading cases use the uncommented 'lc_list' defined in '__main__'
 '''
 
 from etsproxy.traits.api import \
