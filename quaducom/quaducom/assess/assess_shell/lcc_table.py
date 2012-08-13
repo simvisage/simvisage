@@ -1147,7 +1147,7 @@ if __name__ == '__main__':
 #                        )
 
 
-    lct.configure_traits()
+#    lct.configure_traits()
 
     #----------------------------------------
     # script to get the maximum number of reinforcement ('n_tex')
