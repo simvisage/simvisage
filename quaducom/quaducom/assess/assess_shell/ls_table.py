@@ -46,7 +46,6 @@ from math import pi
 from string import split
 import os
 
-from get_sig_fl_iterative_rch import SigFlCalib
 
 class LSArrayAdapter (TabularAdapter):
 
@@ -1565,9 +1564,9 @@ class LSTable(HasTraits):
         ### NOTE: for ZiE the following line was used containing one wrong parameter ('sigy_up' instead of 'sig2_up')
         ### this leads to conservative values (more reinforcement then necessary  --> n_tex = 9.78 insted of 9.42)
         #
-        alpha_sig_up[ bool ] = arctan( sigxy_up[ bool ] / ( sigy_up[ bool ] - sigx_up[ bool ] ) )
+#        alpha_sig_up[ bool ] = arctan( sigxy_up[ bool ] / ( sigy_up[ bool ] - sigx_up[ bool ] ) )
 
-#        alpha_sig_up[ bool ] = arctan(sigxy_up[ bool ] / (sig2_up[ bool ] - sigx_up[ bool ]))
+        alpha_sig_up[ bool ] = arctan(sigxy_up[ bool ] / (sig2_up[ bool ] - sigx_up[ bool ]))
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
