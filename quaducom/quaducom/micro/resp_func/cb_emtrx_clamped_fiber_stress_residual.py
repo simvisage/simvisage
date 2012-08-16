@@ -12,7 +12,7 @@
 # Created on Jun 14, 2010 by: rch
 import time
 from etsproxy.traits.api import \
-    Float, Str, implements, Range, List, Property, cached_property, Tuple
+    Float, Str, implements, Range, List, Property, cached_property, Tuple, Array
 
 import numpy as np
 
@@ -293,6 +293,7 @@ class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
             Tf = 2. * tau / r
             q = super(CBEMClampedFiberStressResidualSP, self).__call__(w,
                     tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
+            self.q = q
             #stress in the free length
             l = l * (1 + theta)
             q_l = q * H(l / 2 - abs(x))
@@ -309,6 +310,8 @@ class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
             q_x = np.maximum(q_x, q_const)
             return q_x
 
+        q = Array(Float)
+
 if __name__ == '__main__':
 
     r = 0.00345
@@ -316,13 +319,13 @@ if __name__ == '__main__':
     t = .1
     Ef = 200e3
     Em = 25e3
-    l = 30.
+    l = 10.
     theta = 0.
     Pf = 0.5
     phi = 1.
     Ll = 40.
     Lr = 20.
-    s0 = 0.02
+    s0 = 10.02
     m = 5.0
 
     def Pw():
@@ -337,8 +340,7 @@ if __name__ == '__main__':
         plt.xlabel('w', fontsize=14)
         plt.title('Pullout Resp Func Clamped Fiber EMTRX Residual Stress')
 
-    def SP():
-        plt.figure()
+    def SP(w, x, t, l, Ef, Em, theta, Pf, phi, Ll, Lr, V_f, r, s0, m):
         cbcsp = CBEMClampedFiberStressResidualSP()
         x = np.linspace(-40, 40, 300)
         w = .4
@@ -349,9 +351,9 @@ if __name__ == '__main__':
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
         plt.title('Stress Along Filament at w = %.1f' % w)
-        plt.legend(loc='best')
+        #plt.legend(loc='best')
         plt.ylim(0,)
+
 
     Pw()
     SP()
-    plt.show()
