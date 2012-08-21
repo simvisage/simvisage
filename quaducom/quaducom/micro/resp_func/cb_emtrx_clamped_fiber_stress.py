@@ -26,7 +26,7 @@ from stats.spirrid.rf import \
 from matplotlib import pyplot as plt
 
 def H(x):
-    return 0.5 * (np.sign(x) + 1.)
+    return x >= 0.0
 
 class CBEMClampedFiberStress(RF):
     '''
@@ -87,12 +87,12 @@ class CBEMClampedFiberStress(RF):
 
     C_code = Str('')
     
-    def crackbridge(self, w, l, T , Kf, Km, Vf):
+    def crackbridge(self, w, l, T, Kf, Km, Vf):
         #Phase A : Both sides debonding .
         Kc = Kf + Km
-        c = Kc * T * l/2.
-        q0 = (np.sqrt(c**2 + w*Kf*Km*Kc*T) - c)/Km
-        return q0/Vf
+        c = Kc * T * l / 2.
+        q0 = (np.sqrt(c ** 2 + w * Kf * Km * Kc * T) - c) / Km
+        return q0 / Vf
 
     def pullout(self, w, l, T, Kf, Km, Vf, Lmin, Lmax):
         #Phase B : Debonding of shorter side is finished
