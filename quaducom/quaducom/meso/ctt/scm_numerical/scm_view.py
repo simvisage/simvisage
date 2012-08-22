@@ -7,8 +7,8 @@ Created on Jul 26, 2012
 from etsproxy.traits.api import \
     Instance, Array, List, cached_property, Property
 from etsproxy.traits.ui.api import ModelView
-from stats.spirrid.spirrid import FunctionRandomization
-from stats.spirrid.rv import RV
+from spirrid.spirrid.function_randomization import FunctionRandomization
+from spirrid.spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
 from matplotlib import pyplot as plt
