@@ -64,7 +64,7 @@ class SigFlCalib(HasTraits):
 
     # ultimate textile stress measured in the tensile test [MPa]
     #
-    sig_tex_fail = Float( 1216., sig_t_modified = True )
+    sig_tex_fail = Float(1216., sig_t_modified = True)
     
     
     # compressive strain at the top at rupture [-]
@@ -81,7 +81,7 @@ class SigFlCalib(HasTraits):
     # value is derived based on the calibrated crack bridge law
     #
     eps_t_fail = Float
-    sig_t_mfn = Instance( MFnLineArray )
+    sig_t_mfn = Instance(MFnLineArray)
 
     # rupture moment and normal force meassured in the calibration experiment
     # (three point bending test)
@@ -137,14 +137,11 @@ class SigFlCalib(HasTraits):
     #
     n_rovings = Int(23, geo_input = True)
     
-
     # cross section of one roving [mm**2]:
     #
     A_roving = Float(0.461, geo_input = True)
-    
-
-  
-    def calib_layer_response( self, u ):
+      
+    def calib_layer_response(self, u):
         '''CALIBRATION: derive the unknown constitutive law of the layer
         (effective crack bridge law)
         '''
@@ -186,18 +183,18 @@ class SigFlCalib(HasTraits):
             # with limit for eps_tex
             #
             eps_fail = eps_t_i_arr[0]
-            sig_fail = E_yarn * eps_t_i_arr[0]
+            sig_fail = E_yarn * eps_fail
         
             eps_arr = np.array([ 0., eps_fail])
-            sig_tex_arr = np.array([ 0., eps_fail * E_yarn])
+            sig_tex_arr = E_yarn * eps_arr
             #E_yarn 131176.670505
-            print 'E_yarn',E_yarn
+            print 'E_yarn', E_yarn
             print 'sig_fail', sig_fail
          
         elif self.calib_config == 'root1':
             # use strain at the lowest textile layer as rupture strain 
             eps_fail = eps_t_i_arr[0]
-            sig_fail = np.sqrt(eps_t_i_arr[0]*var_a)
+            sig_fail = np.sqrt(eps_t_i_arr[0] * var_a)
             
             eps_arr = np.linspace(0, eps_fail, num = 100.)
             sig_tex_arr = np.sqrt((var_a) * eps_arr) 
@@ -217,7 +214,7 @@ class SigFlCalib(HasTraits):
             eps_fail = eps_t_i_arr[0]
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
-            var_b = (sig_fail**2. - (var_a) * eps_fail ) / eps_fail ** 2. 
+            var_b = (sig_fail ** 2. - (var_a) * eps_fail) / eps_fail ** 2. 
             sig_tex_arr = np.sqrt((var_b) * eps_arr ** 2. + (var_a) * eps_arr) 
             
         elif self.calib_config == 'root3':
@@ -225,17 +222,17 @@ class SigFlCalib(HasTraits):
             eps_fail = eps_t_i_arr[0]
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
-            var_b = ((sig_fail + abs(var_a)) **2. - abs(var_a) **2.) / eps_fail
-            sig_tex_arr = -abs(var_a) + np.sqrt(abs(var_a)**2. + var_b * eps_arr) 
+            var_b = ((sig_fail + abs(var_a)) ** 2. - abs(var_a) ** 2.) / eps_fail
+            sig_tex_arr = -abs(var_a) + np.sqrt(abs(var_a) ** 2. + var_b * eps_arr) 
                 
         # full plastic cb-law 
         elif self.calib_config == 'plastic':
             E_yarn = abs(var_a)
             eps_fail = eps_t_i_arr[0]
-            sig_fail =  E_yarn * eps_t_i_arr[0]
-            eps_arr = np.hstack([0., 0.01*eps_fail, eps_fail ])
-            sig_tex_arr = np.hstack([0., 0.99*sig_fail, sig_fail])
-            print 'E_yarn',E_yarn
+            sig_fail = E_yarn * eps_t_i_arr[0]
+            eps_arr = np.hstack([0., 0.01 * eps_fail, eps_fail ])
+            sig_tex_arr = np.hstack([0., 0.99 * sig_fail, sig_fail])
+            print 'E_yarn', E_yarn
             
         # linear cb-law up to reaching the rupture strain, behaves plastic afterwards
         elif self.calib_config == 'bilinear':
@@ -244,7 +241,7 @@ class SigFlCalib(HasTraits):
             eps_fail = sig_fail / E_yarn
             eps_arr = np.array([0., eps_fail, 2.*eps_fail ])
             sig_tex_arr = np.array([0., sig_fail, sig_fail ])
-            print 'E_yarn',E_yarn
+            print 'E_yarn', E_yarn
             
         # quadratic cb-law up to reaching the rupture strain, behaves plastic afterwards
         elif self.calib_config == 'quadratic':
@@ -252,7 +249,7 @@ class SigFlCalib(HasTraits):
             eps_fail = eps_t_i_arr[0]
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
-            var_b = -eps_fail * 2* var_a 
+            var_b = -eps_fail * 2 * var_a 
             sig_tex_arr = var_a * eps_arr ** 2 + var_b * eps_arr 
         
 #        elif self.calib_config == 'quadratic_eps_max':
@@ -278,7 +275,7 @@ class SigFlCalib(HasTraits):
             d_eps = var_a
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
-            var_c = - sig_fail / ((eps_fail + var_a) **2.)
+            var_c = -sig_fail / ((eps_fail + var_a) ** 2.)
             var_b = -2. * (eps_fail + d_eps) * var_c 
             sig_tex_arr = var_c * eps_arr ** 2 + var_b * eps_arr 
                 
@@ -288,8 +285,8 @@ class SigFlCalib(HasTraits):
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
            
-            var_b = sig_fail / eps_fail / (1- eps_fail / (2. *(eps_fail+ abs( var_a))))
-            var_c = - var_b / (2 * (eps_fail + abs(var_a)))
+            var_b = sig_fail / eps_fail / (1 - eps_fail / (2. *(eps_fail + abs(var_a))))
+            var_c = -var_b / (2 * (eps_fail + abs(var_a)))
            
             sig_tex_arr = var_c * eps_arr ** 2 + abs(var_b) * eps_arr 
 
@@ -299,7 +296,7 @@ class SigFlCalib(HasTraits):
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
 
-            var_b = ( sig_fail - var_a * eps_fail**2) / eps_fail 
+            var_b = (sig_fail - var_a * eps_fail ** 2) / eps_fail 
             sig_tex_arr = var_a * eps_arr ** 2 + var_b * eps_arr
 
         if self.calib_config == 'cubic':
@@ -310,7 +307,7 @@ class SigFlCalib(HasTraits):
             eps_arr = np.linspace(0, eps_fail, num = 100.)
             
             #for horizontal tangent at eps_fail
-            var_b = - ( sig_fail + 2. * var_a * eps_fail**3.) / eps_fail**2. 
+            var_b = -(sig_fail + 2. * var_a * eps_fail ** 3.) / eps_fail ** 2. 
             
             var_c = -3. * var_a * eps_fail ** 2. - 2. * var_b * eps_fail 
             #for horizontal tangent at 1.5 eps_fail
@@ -321,7 +318,7 @@ class SigFlCalib(HasTraits):
             #var_b = -( sig_fail + 26 * var_a * eps_fail**3.) / (5. * eps_fail**2.) 
             
             #var_c = -3. * var_a * (3 * eps_fail) ** 2. - 2. * var_b * (3 *eps_fail)
-            sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c *eps_arr 
+            sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c * eps_arr 
         
             
         print'eps_t1', eps_t_i_arr[0]
@@ -329,7 +326,7 @@ class SigFlCalib(HasTraits):
         # function for cb-law 
         xdata = eps_arr
         ydata = sig_tex_arr
-        sig_t_mfn = MFnLineArray( xdata = xdata, ydata = ydata )
+        sig_t_mfn = MFnLineArray(xdata = xdata, ydata = ydata)
 
 #        print 'xdata',xdata
 #        print 'ydata',ydata
@@ -350,7 +347,7 @@ class SigFlCalib(HasTraits):
         return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, var_a
 
 
-    def eval_layer_response_f( self, u ):
+    def eval_layer_response_f(self, u):
         '''EVALUATION for flexion case: using the calibrated constitutive law of the layer
         '''
         # @todo: u = 'u_sol' is not needed for the evaluation of given stress at the top and bottom but must be
@@ -361,7 +358,7 @@ class SigFlCalib(HasTraits):
 
         eps_lo, eps_up = self.eps_lo, self.eps_up
         eps_t = eps_lo  
-        eps_c = abs( eps_up ) 
+        eps_c = abs(eps_up) 
 
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_t'
@@ -397,14 +394,14 @@ class SigFlCalib(HasTraits):
 
 
 
-    def eval_layer_response_t( self, u ):
+    def eval_layer_response_t(self, u):
         '''EVALUATION for tension case: using the calibrated constitutive law of the layer
         ''' 
         print 'eval_layer_response_t called'
 
         eps_lo, eps_up = self.eps_lo, self.eps_up
-        eps_t_lo = abs( eps_lo )  
-        eps_t_up = abs( eps_up ) 
+        eps_t_lo = abs(eps_lo)  
+        eps_t_up = abs(eps_up) 
         
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_tl'
@@ -423,7 +420,7 @@ class SigFlCalib(HasTraits):
 
         # strain at the height of each reinforcement layer [-]:
         #
-        eps_i_arr = eps_t_lo - (eps_t_lo - eps_t_up ) / thickness * (thickness - z_t_i_arr)
+        eps_i_arr = eps_t_lo - (eps_t_lo - eps_t_up) / thickness * (thickness - z_t_i_arr)
         eps_t_i_arr = eps_i_arr
         eps_c_i_arr = abs(-np.fabs(eps_i_arr) + eps_i_arr) / 2.0
         
@@ -432,14 +429,14 @@ class SigFlCalib(HasTraits):
         return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t_lo, eps_t_up
 
      
-    def eval_layer_response_c( self, u ):
+    def eval_layer_response_c(self, u):
         '''EVALUATION for compression case: using the calibrated constitutive law of the layer
         ''' 
 
         print 'eval_layer_response_c called'
         eps_lo, eps_up = self.eps_lo, self.eps_up
-        eps_c_lo = abs( eps_lo )  
-        eps_c_up = abs( eps_up ) 
+        eps_c_lo = abs(eps_lo)  
+        eps_c_up = abs(eps_up) 
         
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_cl'
@@ -458,7 +455,7 @@ class SigFlCalib(HasTraits):
         
         # strain at the height of each reinforcement layer [-]:
         #
-        eps_i_arr = -(abs(eps_c_lo) - (abs(eps_c_lo) - abs(eps_c_up)) / thickness * ( x - z_t_i_arr ))
+        eps_i_arr = -(abs(eps_c_lo) - (abs(eps_c_lo) - abs(eps_c_up)) / thickness * (x - z_t_i_arr))
         eps_t_i_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0
         eps_c_i_arr = abs(eps_i_arr)
         sig_t_mfn = self.sig_t_mfn
@@ -467,13 +464,13 @@ class SigFlCalib(HasTraits):
 
 
 
-    def get_f_i_arr( self, u ):
+    def get_f_i_arr(self, u):
         '''force at the height of each reinforcement layer [kN]:
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.layer_response( u )
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.layer_response(u)
                 
-        get_sig_t_i_arr = np.frompyfunc( sig_t_mfn.get_value, 1, 1 )
-        sig_t_i_arr = get_sig_t_i_arr( eps_t_i_arr )
+        get_sig_t_i_arr = np.frompyfunc(sig_t_mfn.get_value, 1, 1)
+        sig_t_i_arr = get_sig_t_i_arr(eps_t_i_arr)
 
         # tensile force of one reinforced composite layer [kN]:
         #
@@ -487,15 +484,15 @@ class SigFlCalib(HasTraits):
 
         # visualize signed sig_c_i_arr in[kN]
         #
-        f_c_i_arr = sig_c_i_arr * self.width * self.s_tex_z *1000.
+        f_c_i_arr = sig_c_i_arr * self.width * self.s_tex_z * 1000.
 
         return f_t_i_arr, f_c_i_arr
 
 
-    def get_sig_comp_i_arr( self, u ):
+    def get_sig_comp_i_arr(self, u):
         '''tensile stress at the height of each reinforcement layer [MPa]:
         '''
-        f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
+        f_t_i_arr, f_c_i_arr = self.get_f_i_arr(u)
         return (f_t_i_arr - f_c_i_arr) / self.width / self.s_tex_z / 1000.
 
 
@@ -517,13 +514,13 @@ class SigFlCalib(HasTraits):
         # (for high strength concrete)
         #
         else:
-            eta = 1.0 - ( f_ck / 50.) / 200.
+            eta = 1.0 - (f_ck / 50.) / 200.
         # factor [-] to calculate the height of the compressive zone  
             lamda = 0.8 - (f_ck - 50.) / 400.
-            eps_cu3 = (2.6 + 35. * ((90. - f_ck)/100) **4.) / 1000. 
+            eps_cu3 = (2.6 + 35. * ((90. - f_ck) / 100) ** 4.) / 1000. 
             
         xdata = np.hstack([0., (1. - lamda) * eps_cu3 - 0.00001, (1 - lamda) * eps_cu3, eps_cu3 ]) 
-        ydata = np.hstack([0., 0., eta*(f_ck), eta * (f_ck),])
+        ydata = np.hstack([0., 0., eta * (f_ck), eta * (f_ck), ])
        
         return MFnLineArray(xdata = xdata, ydata = ydata)   
 
@@ -548,8 +545,8 @@ class SigFlCalib(HasTraits):
             eps_cu3 = (2.6 + 35 * (90 - f_ck) ** 4.) / 1000.      
         # concrete law with limit for eps_c
        
-        xdata = np.hstack( [0., eps_c3, eps_cu3] )
-        ydata = np.hstack( [0., (f_ck), (f_ck)] )
+        xdata = np.hstack([0., eps_c3, eps_cu3])
+        ydata = np.hstack([0., (f_ck), (f_ck)])
         
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
@@ -559,13 +556,13 @@ class SigFlCalib(HasTraits):
     #-----------------------------
     sig_c_mfn_quadratic = Property(depends_on = '+sig_c_modified')
     @cached_property
-    def _get_sig_c_mfn_quadratic( self ):
+    def _get_sig_c_mfn_quadratic(self):
         '''quadratic stress-strain-diagram of the concrete
         '''
         print 'sig_c: quadratic'
         # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
-        f_cm = self.f_ck +8 
-        E_tan = 22. * (f_cm/10)** 0.3 *1000.
+        f_cm = self.f_ck + 8 
+        E_tan = 22. * (f_cm / 10) ** 0.3 * 1000.
 #        print 'E_tan', E_tan
         eps_c1 = min(0.7 * f_cm ** 0.31, 2.8) / 1000. #EC2
         # @todo: with constant value this yields negative values for strains close to 'eps_c1u'
@@ -578,33 +575,33 @@ class SigFlCalib(HasTraits):
             eps_arr = np.linspace(0., eps_c1u, num = 100.)
         
         elif self.f_ck > 50.:   
-            eps_c1u = ( 2.8 + 27. * ((( 98. - f_cm ) / 100. ) ** 4.)) / 1000.
-            print 'eps_c1u',eps_c1u
-            eps_arr =  np.linspace( 0., eps_c1u, num = 100.) 
+            eps_c1u = (2.8 + 27. * (((98. - f_cm) / 100.) ** 4.)) / 1000.
+            print 'eps_c1u', eps_c1u
+            eps_arr = np.linspace(0., eps_c1u, num = 100.) 
 
         k = E_tan / E_sec
-        sig_c_arr = (( k * eps_arr / eps_c1 - (eps_arr / eps_c1) **2.) / (1. + (k - 2.)*eps_arr/ eps_c1)) * f_cm
+        sig_c_arr = ((k * eps_arr / eps_c1 - (eps_arr / eps_c1) ** 2.) / (1. + (k - 2.) * eps_arr / eps_c1)) * f_cm
         
         #print 'sig_c_arr[0]',sig_c_arr[0]
-        xdata =  eps_arr  
-        ydata =  sig_c_arr
+        xdata = eps_arr  
+        ydata = sig_c_arr
         
-        return MFnLineArray( xdata = xdata, ydata = ydata )
+        return MFnLineArray(xdata = xdata, ydata = ydata)
 
 
-    sig_c_config = Trait('quadratic',{'quadratic' : 'sig_c_mfn_quadratic',
+    sig_c_config = Trait('quadratic', {'quadratic' : 'sig_c_mfn_quadratic',
                                       'bilinear'  : 'sig_c_mfn_bilinear',
                                       'block'     : 'sig_c_mfn_block'
                                       }, sig_c_modified = True)
 
     sig_c_mfn = Property(depends_on = '+sig_c_modified')
     def _get_sig_c_mfn(self):
-        return getattr( self, self.sig_c_config_)
+        return getattr(self, self.sig_c_config_)
 
     sig_c_mfn_vect = Property(depends_on = '+sig_c_modified')
     @cached_property
     def _get_sig_c_mfn_vect(self):
-        return np.frompyfunc( self.sig_c_mfn.get_value, 1, 1 )
+        return np.frompyfunc(self.sig_c_mfn.get_value, 1, 1)
 
     # number of subdivisions of the compressive zone
     #
@@ -624,13 +621,13 @@ class SigFlCalib(HasTraits):
     #
     get_eps_c_arr = Trait('flexion', {'flexion'     : 'get_eps_c_arr_f',
                                       'compression' : 'get_eps_c_arr_c',
-                                      'tension'     : 'get_eps_c_arr_t',})
+                                      'tension'     : 'get_eps_c_arr_t', })
     
-    def get_eps_c_arr_f( self, u ):
+    def get_eps_c_arr_f(self, u):
         '''get compression strain at each integration layer of the compressive zone [-]:
         for 'stress_case' flexion
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.layer_response( u )
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.layer_response(u)
 
         # for calibration us measured compressive strain
         # @todo: use mapped traits instead
@@ -638,25 +635,25 @@ class SigFlCalib(HasTraits):
         if self.calc_mode == 'calib':
             eps_c = self.eps_c_fail
         
-        eps_c_arr = (1. - self.xi_arr) * abs( eps_c )
+        eps_c_arr = (1. - self.xi_arr) * abs(eps_c)
         return x, eps_c_arr
 
 
-    def get_eps_c_arr_c( self, u ):
+    def get_eps_c_arr_c(self, u):
         '''get compression strain at each integration layer of the compressive zone [-]:
         for 'stress_case' compression
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_c_lo, eps_c_up = self.layer_response( u )
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_c_lo, eps_c_up = self.layer_response(u)
         eps_c_arr = abs(eps_c_lo) + (1 - self.xi_arr) * (abs(eps_c_up) - abs(eps_c_lo))
         return x, eps_c_arr
 
 
-    def get_eps_c_arr_t( self, u ):
+    def get_eps_c_arr_t(self, u):
         '''get compression strain at each integration layer of the compressive zone [-]:
         for 'stress_case' tension this evaluates to x=0, eps_c_arr = zeros(..)
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.layer_response( u )
-        eps_c_arr = np.zeros_like( self.xi_arr )
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.layer_response(u)
+        eps_c_arr = np.zeros_like(self.xi_arr)
         return x, eps_c_arr
 
 
@@ -674,16 +671,16 @@ class SigFlCalib(HasTraits):
         # all stress cases refer to a stress configuration in which M is positive 
         #(maximum eps_c at the top, maximum eps_t at the bottom of the cross-section 
         #
-        print '------------- iteration: %g ----------------------------' % ( self.n )
+        print '------------- iteration: %g ----------------------------' % (self.n)
 
         
         print 'self.calc_mode', self.calc_mode
   
         self.get_eps_c_arr = self.stress_case 
         self.eval_config = self.stress_case
-        x, eps_c_arr = getattr( self, self.get_eps_c_arr_ )( u )
+        x, eps_c_arr = getattr(self, self.get_eps_c_arr_)(u)
         
-        f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
+        f_t_i_arr, f_c_i_arr = self.get_f_i_arr(u)
 
         # height of the cross section
         #
@@ -695,7 +692,7 @@ class SigFlCalib(HasTraits):
         # (characteristic value)
         #
         N_tk = sum(f_t_i_arr)
-        print 'N_tk',N_tk 
+        print 'N_tk', N_tk 
 
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (design value)
@@ -707,16 +704,16 @@ class SigFlCalib(HasTraits):
 #        sig_c_i_arr = self.sig_c_mfn_vect( eps_c_i_arr )
 #        get_sig_c_i_arr = np.frompyfunc( self.sig_c_mfn.get_value, 1, 1 )
 #        sig_c_i_arr = get_sig_c_i_arr( eps_c_i_arr )
-        sig_c_arr = np.array([self.sig_c_mfn.get_value( eps_c_i ) for eps_c_i in eps_c_arr])
+        sig_c_arr = np.array([self.sig_c_mfn.get_value(eps_c_i) for eps_c_i in eps_c_arr])
         
-        f_c_arr = sig_c_arr * self.width * self.xi_arr[0] * 2. * x *1000.
+        f_c_arr = sig_c_arr * self.width * self.xi_arr[0] * 2. * x * 1000.
         
         # 'z_c_arr' meassured from the top surface to the resulting compressive forces in 'f_c_arr'
         #
         z_c_arr = x * self.xi_arr
 
         N_ck = sum(f_c_arr)
-        print 'N_ck',N_ck 
+        print 'N_ck', N_ck 
 
 #        # total compressive force of the composite compressive zone [kN]:
 #        # (design value)
@@ -755,7 +752,7 @@ class SigFlCalib(HasTraits):
         d_N = N_internal - N_external
         print 'd_N', d_N
          
-        M = abs( M )
+        M = abs(M)
         M_external = M 
         d_M = M_internal - M_external
         print 'd_M', d_M
@@ -766,7 +763,7 @@ class SigFlCalib(HasTraits):
     # iteration counter
     #
     m = 0        
-    def fit_response( self ):
+    def fit_response(self):
 #                      elem_no = 0, mx = 0.0, my = 0.0, mxy = 0.0, nx = 0.0, ny = 0.0, nxy = 0.0, \
 #                      sig1_up = 0, sig1_lo_sig_up = 0, sig1_lo = 0, sig1_up_sig_lo = 0, ):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -799,7 +796,7 @@ class SigFlCalib(HasTraits):
 
     stress_case = Str
     
-    def determine_stress_case( self ):
+    def determine_stress_case(self):
         '''determine_stress_case
         '''
         if self.eps_up < 0 and self.eps_lo > 0:
@@ -826,19 +823,19 @@ class SigFlCalib(HasTraits):
        
     calib_config = Trait('quadratic',
                           {'linear'   : ('calib_layer_response',
-                                              np.array([ 0.01,   80000. ])),
+                                              np.array([ 0.01, 80000. ])),
                            'root1': ('calib_layer_response',
-                                              np.array([ 0.02,   90000. ])),
+                                              np.array([ 0.02, 90000. ])),
                            'root2': ('calib_layer_response',
-                                              np.array([ 0.02,  500000 ])),
+                                              np.array([ 0.02, 500000 ])),
                            'root3': ('calib_layer_response',
-                                              np.array([ 0.013,   11000. ])),  # solved for: eps_tex= 0.13,var_a = 11000  plastic: var_a -520.290186234,var_b 26537508.6905,eps_t1 0.00803806678189
+                                              np.array([ 0.013, 11000. ])), # solved for: eps_tex= 0.13,var_a = 11000  plastic: var_a -520.290186234,var_b 26537508.6905,eps_t1 0.00803806678189
 
 
                            'plastic'  : ('calib_layer_response',
-                                              np.array([ 0.014,   50000. ])),
+                                              np.array([ 0.014, 50000. ])),
                            'bilinear' : ('calib_layer_response',
-                                              np.array([ 0.010,   50000. ])),
+                                              np.array([ 0.010, 50000. ])),
                            'quadratic': ('calib_layer_response',
                                               np.array([ 0.010, 50000.])),
                            'quadratic_monoton': ('calib_layer_response',
@@ -867,37 +864,37 @@ class SigFlCalib(HasTraits):
         return calc_config_[1]      
 
     def get_sig_max(self, u):
-        sig_max = np.max(self.get_sig_comp_i_arr( u ))
+        sig_max = np.max(self.get_sig_comp_i_arr(u))
         print 'sig_max', sig_max
         return sig_max
 
     # solution vector returned by 'fit_response'
     #
-    u_sol = Array( Float )
+    u_sol = Array(Float)
 
-    def calib_sig_t_mfn( self ):
+    def calib_sig_t_mfn(self):
         '''calibrate the effective crack bridge law
         '''
         print "'calib_sig_t_mfn' called"
         self.calc_mode = 'calib'
         self.stress_case = 'flexion'
         u_sol = self.fit_response()
-        x, eps_t_i_arr, eps_c_i_arr, self.sig_t_mfn, self.eps_t_fail, var_a = self.layer_response( u_sol )
+        x, eps_t_i_arr, eps_c_i_arr, self.sig_t_mfn, self.eps_t_fail, var_a = self.layer_response(u_sol)
 
         
-    def plot_sig_t_mfn( self, u ):
+    def plot_sig_t_mfn(self, u):
         '''plot calibrated effective crack bridge law
         '''
         import pylab as p
         print "'plot_sig_t_mfn' called"
         # graph shows sig_comp at the height of the textile layer in [MPa] 
-        layer_arr = np.arange( self.n_layers )
-        sig_comp_i_arr = self.get_sig_comp_i_arr( u )
+        layer_arr = np.arange(self.n_layers)
+        sig_comp_i_arr = self.get_sig_comp_i_arr(u)
         p.bar(layer_arr, sig_comp_i_arr, 0.2)
         p.show()
 
 
-    def plot_sig_c_mfn( self ):
+    def plot_sig_c_mfn(self):
         '''plot concrete law
         '''
         import pylab as p
@@ -905,11 +902,11 @@ class SigFlCalib(HasTraits):
         # graph shows sig_c in [MPa] 
         eps_arr = self.sig_c_mfn.xdata
         sig_c_arr = self.sig_c_mfn.ydata
-        p.plot(eps_arr, sig_c_arr )
+        p.plot(eps_arr, sig_c_arr)
         p.show()
         
 
-    def eval_N_M( self, eps_lo, eps_up ):
+    def eval_N_M(self, eps_lo, eps_up):
         '''evaluate the normal force and bending moment for given strains at the top and bottom
         using a calibrated crack bridge law;
         '''
@@ -920,14 +917,14 @@ class SigFlCalib(HasTraits):
         self.eps_up = eps_up
         self.calc_mode = 'eval'
         self.stress_case = self.determine_stress_case()
-        u_sol = [ abs( self.eps_lo ), abs( self.eps_up ) ]
+        u_sol = [ abs(self.eps_lo), abs(self.eps_up) ]
 
         # use method 'lack_of_fit' setting external forces to 0.
         # yielding 'N_internal = -N_ck + N_tk' and 'M_internal'
         # NOTE: the returned internal forces would correspond to an 
         # external loading yielding the given strain distribution
         #
-        N_internal, M_internal = self.get_lack_of_fit( u_sol, 0., 0. )
+        N_internal, M_internal = self.get_lack_of_fit(u_sol, 0., 0.)
         return N_internal, M_internal
 
     # ------------------------------------------------------------------------                
@@ -947,7 +944,7 @@ if __name__ == '__main__':
     print '\n'
     print 'setup SigFlCalib'
     print '\n'
-    sig_fl_calib = SigFlCalib( # mean concrete strength after 9 days
+    sig_fl_calib = SigFlCalib(# mean concrete strength after 9 days
                                # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                                # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
                                f_ck = 55.7,
@@ -991,7 +988,7 @@ if __name__ == '__main__':
     print 'XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
-    max_sig = sig_fl_calib.get_sig_max( u_sol )     
+    max_sig = sig_fl_calib.get_sig_max(u_sol)     
     print 'u_sol', u_sol
     print 'eps_c_fail', sig_fl_calib.eps_c_fail
     print 'eps_t_fail', sig_fl_calib.eps_t_fail
@@ -1010,9 +1007,9 @@ if __name__ == '__main__':
     ### get 'N', 'M' for given strains using the calibrated cb-law 
     #
     print 'XXX EVAL XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-    eps_lo =  0.0121696378784
+    eps_lo = 0.0121696378784
     eps_up = -0.0033
-    N_internal, M_internal = sig_fl_calib.eval_N_M( eps_lo, eps_up )
+    N_internal, M_internal = sig_fl_calib.eval_N_M(eps_lo, eps_up)
 
 
 
