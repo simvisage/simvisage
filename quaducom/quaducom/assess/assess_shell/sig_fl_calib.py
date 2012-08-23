@@ -226,6 +226,7 @@ class SigFlCalib(HasTraits):
             sig_fail = self.sig_tex_fail
             eps_arr = np.linspace(0, eps_fail, num = 100.)
             var_b = ((sig_fail + abs(var_a)) **2. - abs(var_a) **2.) / eps_fail
+#            var_b = ( sig_fail**2 + 2. * var_a * sig_fail ) / eps_fail
             sig_tex_arr = -abs(var_a) + np.sqrt(abs(var_a)**2. + var_b * eps_arr) 
                 
         # full plastic cb-law 
@@ -334,7 +335,7 @@ class SigFlCalib(HasTraits):
 #        print 'xdata',xdata
 #        print 'ydata',ydata
 #        print 'var_b', var_b 
-#        print 'var_a', var_a
+        print 'var_a', var_a
 
 #        # get the slope of the cb-function to check for monotony
 #        #
@@ -832,7 +833,9 @@ class SigFlCalib(HasTraits):
                            'root2': ('calib_layer_response',
                                               np.array([ 0.02,  500000 ])),
                            'root3': ('calib_layer_response',
-                                              np.array([ 0.013,   11000. ])),  # solved for: eps_tex= 0.13,var_a = 11000  plastic: var_a -520.290186234,var_b 26537508.6905,eps_t1 0.00803806678189
+                                              np.array([ 0.015,   -70. ])),  
+                            # solved for: eps_tex= 0.13,var_a = 11000  
+                            # plastic: var_a -520.290186234,var_b 26537508.6905,eps_t1 0.00803806678189
 
 
                            'plastic'  : ('calib_layer_response',
@@ -985,17 +988,24 @@ if __name__ == '__main__':
                               
                               )
 
-
+#    M_fail = sig_fl_calib.M_fail
+#    N_fail = sig_fl_calib.N_fail
+#    def get_lack_of_fit(eps_t, var_a):
+#        u_sol = np.array([eps_t, var_a])
+#        return sig_fl_calib.get_lack_of_fit( u_sol, M_fail, N_fail )
+#    
+#    get_lack_of_fit_vectorized = frompyfunc
+    
     ### call calibration and get 'u_sol':
     #
     print 'XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
     max_sig = sig_fl_calib.get_sig_max( u_sol )     
-    print 'u_sol', u_sol
-    print 'eps_c_fail', sig_fl_calib.eps_c_fail
-    print 'eps_t_fail', sig_fl_calib.eps_t_fail
-    print 'max_sig', max_sig
+#    print 'u_sol', u_sol
+#    print 'eps_c_fail', sig_fl_calib.eps_c_fail
+#    print 'eps_t_fail', sig_fl_calib.eps_t_fail
+#    print 'max_sig', max_sig
 
 
     ### plot concrete law [MPa]:
@@ -1005,14 +1015,14 @@ if __name__ == '__main__':
     
     ### plot composite stress over the cross section [MPa]:
     #
-#    sig_fl_calib.plot_sig_t_mfn( u_sol )
+    sig_fl_calib.plot_sig_t_mfn( u_sol )
 
     ### get 'N', 'M' for given strains using the calibrated cb-law 
     #
-    print 'XXX EVAL XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-    eps_lo =  0.0121696378784
-    eps_up = -0.0033
-    N_internal, M_internal = sig_fl_calib.eval_N_M( eps_lo, eps_up )
+#    print 'XXX EVAL XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+#    eps_lo =  0.0121696378784
+#    eps_up = -0.0033
+#    N_internal, M_internal = sig_fl_calib.eval_N_M( eps_lo, eps_up )
 
 
 
