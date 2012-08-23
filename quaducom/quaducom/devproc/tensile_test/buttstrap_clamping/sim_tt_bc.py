@@ -83,7 +83,7 @@ class SimTTBC(IBVModel):
 
     buttstrap_max_thickness = Int(0.04, input = True,
                                   label = 'maximum thickness of the buttstrap')
-    buttstrap_min_thickness = Int(0.004, input = True,
+    buttstrap_min_thickness = Int(0.04, input = True,
                                   label = 'mimnimum thickness of the buttstrsp')
 
     #===========================================================================
@@ -110,7 +110,7 @@ class SimTTBC(IBVModel):
     def _get_friction_ne_x(self):
         return self.buttstrap_ne_x
 
-    vtk_r = Float(0.9, input = True)
+    vtk_r = Float(1.0, input = True)
 
     #===========================================================================
     # Element types
@@ -235,8 +235,8 @@ class SimTTBC(IBVModel):
             h_max = self.buttstrap_max_thickness
             h_min = self.buttstrap_min_thickness
             y *= (h_max - (h_max - h_min) / self.buttstrap_length * x)
-            y_offset = (self.specimen_thickness +
-                        self.friction_thickness +
+            y_offset = (self.specimen_thickness + 
+                        self.friction_thickness + 
                         self.elastomer_thickness)
             points[:, 0], points[:, 1] = x, y + y_offset
             return points
@@ -252,8 +252,8 @@ class SimTTBC(IBVModel):
             x *= self.buttstrap_length
             x -= self.buttstrap_length
             y *= self.buttstrap_max_thickness
-            y_offset = (self.specimen_thickness +
-                        self.friction_thickness +
+            y_offset = (self.specimen_thickness + 
+                        self.friction_thickness + 
                         self.elastomer_thickness)
             points[:, 0], points[:, 1] = x, y + y_offset
             return points
