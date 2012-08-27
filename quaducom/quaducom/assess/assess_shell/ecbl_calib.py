@@ -21,6 +21,7 @@ import math
 import numpy as np
 
 import pylab as p
+import etsproxy.mayavi.mlab as m
 
 from mathkit.mfn import MFnLineArray
 
@@ -538,8 +539,8 @@ class ECBLCalib(HasTraits):
 
         M_external = math.fabs(self.M_fail)
         N_external = self.N_fail
-        x, eps_c_arr = self.get_eps_c_arr(u)
-        f_t_i_arr, f_c_i_arr = self.get_f_i_arr(u)
+        x, eps_c_arr = self.get_eps_c_arr( u )
+        f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
         z_t_i_arr = self.z_t_i_arr
 
         # total tensile force of all layers of the composite tensile zone [kN]:
@@ -774,14 +775,28 @@ if __name__ == '__main__':
 #    sig_fl_calib.plot_ecb_law()
 #    sig_fl_calib.plot_sig_t_mfn()
 
-    u_grid = np.ogrid[0.01:0.02:30j, 0.0:10000.0:30j]
+    u_grid = np.mgrid[0.01:0.02:20j, 0.0:-10000000.0:20j]
     N_grid = sig_fl_calib.get_lack_of_fit_dN(u_grid[0], u_grid[1])
     M_grid = sig_fl_calib.get_lack_of_fit_dM(u_grid[0], u_grid[1])
-    ones = np.ones_like(N_grid)
+    
     p.subplot(1, 2, 1)
-    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, N_grid)
+    p.pcolor(u_grid[0], u_grid[1], N_grid)
     p.colorbar()
     p.subplot(1, 2, 2)
-    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
+    p.pcolor(u_grid[0], u_grid[1], M_grid)
     p.colorbar()
     p.show()
+
+    print 'N_grid',N_grid
+    print 'u_grid[0] ',u_grid[0]
+    print 'u_grid[1] ',u_grid[1]
+
+#    m.figure(fgcolor = (0, 0, 0), bgcolor = (1, 1, 1), size = (1600, 900))                
+#    m.surf(u_grid[0], u_grid[1], N_grid)
+##    m.points3d(u_grid[0], u_grid[1], N_grid, mode = 'cube', colormap = "blue-red", scale_mode = 'none')
+#    m.axes(extent =(0.01,0.02, 0.,-10000., -50.,50.))
+#    m.show()
+
+
+
+
