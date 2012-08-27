@@ -21,6 +21,7 @@ import math
 import numpy as np
 
 import pylab as p
+import etsproxy.mayavi.mlab as m
 
 from mathkit.mfn import MFnLineArray
 
@@ -559,8 +560,8 @@ class ECBLCalib(HasTraits):
 
         M_external = math.fabs(self.M_fail)
         N_external = self.N_fail
-        x, eps_c_arr = self.get_eps_c_arr(u)
-        f_t_i_arr, f_c_i_arr = self.get_f_i_arr(u)
+        x, eps_c_arr = self.get_eps_c_arr( u )
+        f_t_i_arr, f_c_i_arr = self.get_f_i_arr( u )
         z_t_i_arr = self.z_t_i_arr
 
         # total tensile force of all layers of the composite tensile zone [kN]:
@@ -809,3 +810,10 @@ if __name__ == '__main__':
     p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
     p.colorbar()
     p.show()
+
+    print 'N_grid',N_grid
+    print 'u_grid[0] ',u_grid[0]
+    print 'u_grid[1] ',u_grid[1]
+
+
+
