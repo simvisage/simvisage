@@ -39,11 +39,13 @@ class ECBFBase(HasTraits):
 class ECBLFBM(ECBFBase):
     '''Base class for Effective Crack Bridge Laws.'''
     
-    sig_u_tt = Float
+    sig_tex_fail = Float
         
-    def __call__(self, eps_u_tt, m, eps):
-        return (self.sig_u_tt / eps_u_tt / exp(-pow(exp(-log(m) / m), 1.0 * m)) * 
-                eps * np.exp(-np.power(eps / eps_u_tt * exp(-log(m) / m), 1.0 * m)))
+    def __call__(self, eps_t_fail, m):
+        eps_arr = np.linspace(0, eps_t_fail, num = 100.)
+        sig_t_arr = (self.sig_tex_fail / eps_t_fail / exp(-pow(exp(-log(m) / m), 1.0 * m)) * 
+                     eps_arr * np.exp(-np.power(eps_arr / eps_t_fail * exp(-log(m) / m), 1.0 * m)))            
+        return eps_arr, sig_t_arr 
         
 
 class ECBLCalib(HasTraits):
@@ -282,11 +284,11 @@ class ECBLCalib(HasTraits):
     #===========================================================================
     # Calculation of stress resultants
     #===========================================================================
-    def calib_layer_response(self, u):
+    def get_layer_response(self, u):
         '''CALIBRATION: derive the unknown constitutive law of the layer
         (effective crack bridge law)
         '''
-        print 'calib_layer_response called'
+        print 'get_layer_response called'
         
         eps_t, var_a = u
 
@@ -326,7 +328,6 @@ class ECBLCalib(HasTraits):
             #
             eps_fail = eps_t_i_arr[0]
             sig_fail = E_yarn * eps_fail
-        
             eps_arr = np.array([ 0., eps_fail])
             sig_tex_arr = E_yarn * eps_arr
             #E_yarn 131176.670505
@@ -334,17 +335,16 @@ class ECBLCalib(HasTraits):
             print 'sig_fail', sig_fail
          
         if self.ecb_law == 'fbm':
-            ecbl_fbm = ECBLFBM(sig_u_tt = self.sig_tex_fail)
             eps_fail = eps_t_i_arr[0]
-            eps_arr = np.linspace(0, eps_fail, num = 100.)            
-            sig_tex_arr = ecbl_fbm(eps_fail, var_a, eps_arr)
+            ecbl_fbm = ECBLFBM(sig_tex_fail = self.sig_tex_fail)
+            eps_arr, sig_tex_arr = ecbl_fbm(eps_fail, var_a)
          
         elif self.ecb_law == 'root1':
             # use strain at the lowest textile layer as rupture strain 
             eps_fail = eps_t_i_arr[0]
             sig_fail = np.sqrt(eps_t_i_arr[0] * var_a)
-            
             eps_arr = np.linspace(0, eps_fail, num = 100.)
+            
             sig_tex_arr = np.sqrt((var_a) * eps_arr) 
 
 #        elif self.ecb_law == 'root2':
@@ -497,7 +497,7 @@ class ECBLCalib(HasTraits):
     def get_f_i_arr(self, u):
         '''force at the height of each reinforcement layer [kN]:
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.calib_layer_response(u)
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, u1, u2 = self.get_layer_response(u)
                 
         get_sig_t_i_arr = np.frompyfunc(sig_t_mfn.get_value, 1, 1)
         sig_t_i_arr = get_sig_t_i_arr(eps_t_i_arr)
@@ -522,7 +522,7 @@ class ECBLCalib(HasTraits):
         '''get compression strain at each integration layer of the compressive zone [-]:
         for 'stress_case' flexion
         '''
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.calib_layer_response(u)
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.get_layer_response(u)
 
         # for calibration us measured compressive strain
         # @todo: use mapped traits instead
@@ -723,7 +723,7 @@ class ECBLCalib(HasTraits):
         # graph shows sig_c in [MPa]
         if u == None:
             u = self.u_sol
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.calib_layer_response(u)
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.get_layer_response(u)
         eps_arr = sig_t_mfn.xdata
         sig_t_arr = sig_t_mfn.ydata
         p.plot(eps_arr, sig_t_arr)
