@@ -291,9 +291,9 @@ class ECBLCalib(HasTraits):
     def _get_sig_c_mfn(self):
         return getattr(self, self.sig_c_config_)
 
-    sig_c_mfn_vect = Property(depends_on = '+sig_c_modified')
+    sig_c_mfn_vct = Property(depends_on = '+sig_c_modified')
     @cached_property
-    def _get_sig_c_mfn_vect(self):
+    def _get_sig_c_mfn_vct(self):
         return np.vectorize(self.sig_c_mfn.get_value)
 
     # number of subdivisions of the compressive zone
@@ -412,7 +412,7 @@ class ECBLCalib(HasTraits):
 
     def get_sig_cj_arr(self, eps_tu):
         x, eps_cj_arr = self.get_eps_cj_arr(eps_tu)
-        return x, self.sig_c_mfn_vect(eps_cj_arr)
+        return x, self.sig_c_mfn_vct(eps_cj_arr)
 
     def get_f_cj_arr(self, eps_tu):
         x, sig_cj_arr = self.get_sig_cj_arr(eps_tu)
