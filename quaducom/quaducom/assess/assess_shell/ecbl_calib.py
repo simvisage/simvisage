@@ -32,6 +32,21 @@ data_file_editor = FileEditor(filter = ['*.DAT'])
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+from math import exp, log
+
+class ECBFBase(HasTraits):
+    '''Base class for Effective Crack Bridge Laws.'''
+    
+class ECBLFBM(ECBFBase):
+    '''Base class for Effective Crack Bridge Laws.'''
+    
+    sig_u_tt = Float
+        
+    def __call__(self, eps_u_tt, m, eps):
+        return (self.sig_u_tt / eps_u_tt / exp(-pow(exp(-log(m) / m), 1.0 * m)) * 
+                eps * np.exp(-np.power(eps / eps_u_tt * exp(-log(m) / m), 1.0 * m)))
+        
+
 class ECBLCalib(HasTraits):
 
     #---------------------------------------------------------------
@@ -318,6 +333,12 @@ class ECBLCalib(HasTraits):
             #E_yarn 131176.670505
             print 'E_yarn', E_yarn
             print 'sig_fail', sig_fail
+         
+        if self.ecb_law == 'fbm':
+            ecbl_fbm = ECBLFBM(sig_u_tt = self.sig_tex_fail)
+            eps_fail = eps_t_i_arr[0]
+            eps_arr = np.linspace(0, eps_fail, num = 100.)            
+            sig_tex_arr = ecbl_fbm(eps_fail, var_a, eps_arr)
          
         elif self.ecb_law == 'root1':
             # use strain at the lowest textile layer as rupture strain 
@@ -648,6 +669,7 @@ class ECBLCalib(HasTraits):
 
     ecb_law = Trait('quadratic',
                           {'linear'   : [ 0.01, 80000. ],
+                           'fbm' : [0.014, 0.5 ],
                            'root1': [ 0.02, 90000. ],
                            'root2': [ 0.02, 500000 ],
                            'root3': [ 0.018, -80. ], # solved for: eps_tex= 0.13,var_a = 11000  plastic: var_a -520.290186234,var_b 26537508.6905,eps_t1 0.00803806678189
@@ -687,7 +709,6 @@ class ECBLCalib(HasTraits):
         p.bar(zz_t_arr, sig_comp_i_arr, 0.02 * self.thickness, align = 'center')
         zz_c_arr, sig_c_arr = self.get_sig_c_arr(self.u_sol)
         p.plot(zz_c_arr, -sig_c_arr, color = 'red')
-        p.show()
 
     def plot_sig_c_mfn(self):
         '''plot concrete law
@@ -696,17 +717,17 @@ class ECBLCalib(HasTraits):
         eps_arr = self.sig_c_mfn.xdata
         sig_c_arr = self.sig_c_mfn.ydata
         p.plot(eps_arr, sig_c_arr)
-        p.show()
 
-    def plot_ecb_law(self):
+    def plot_ecb_law(self, u = None):
         '''plot concrete law
         '''
         # graph shows sig_c in [MPa]
-        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.calib_layer_response(self.u_sol)
+        if u == None:
+            u = self.u_sol
+        x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = self.calib_layer_response(u)
         eps_arr = sig_t_mfn.xdata
         sig_t_arr = sig_t_mfn.ydata
         p.plot(eps_arr, sig_t_arr)
-        p.show()
 
 if __name__ == '__main__':
 
@@ -747,8 +768,8 @@ if __name__ == '__main__':
 #                               ecb_law = 'quadratic_monoton', 
 #                                ecb_law = 'quadratic_TT',  
 #                               ecb_law = 'plastic', 
-                               ecb_law = 'cubic',
-
+#                               ecb_law = 'cubic',
+                               ecb_law = 'fbm',
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
 #                              sig_c_config = 'block'       #cubic:   #eps_t_fail 0.0137706348812      
@@ -757,46 +778,42 @@ if __name__ == '__main__':
                               )
 
 
-    ### call calibration and get 'u_sol':
-    #
-#    print 'XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-#    u_sol = sig_fl_calib.u_sol
-#    max_sig = sig_fl_calib.get_sig_max()     
-#    print 'u_sol', u_sol
-#    print 'eps_c_fail', sig_fl_calib.eps_c_fail
-#    print 'eps_t_fail', sig_fl_calib.eps_t_fail
-#    print 'max_sig', max_sig
-#
-#
-#
-#    ### plot concrete law [MPa]:
-#    #
-#    sig_fl_calib.plot_sig_c_mfn()
-#    sig_fl_calib.plot_ecb_law()
-#    sig_fl_calib.plot_sig_t_mfn()
+    ## call calibration and get 'u_sol':
+    
+    print 'XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    u_sol = sig_fl_calib.u_sol
+    print 'u_sol', u_sol
+    max_sig = sig_fl_calib.get_sig_max()     
+    print 'u_sol', u_sol
+    print 'eps_c_fail', sig_fl_calib.eps_c_fail
+    print 'eps_t_fail', sig_fl_calib.eps_t_fail
+    print 'max_sig', max_sig
 
-    u_grid = np.mgrid[0.01:0.02:20j, 0.0:-10000000.0:20j]
+    ### plot crack bridge law [MPa]:
+    #
+    p.subplot(2, 2, 1)
+    sig_fl_calib.plot_ecb_law(u_sol)
+
+    ### plot concrete law
+#    sig_fl_calib.plot_sig_c_mfn()
+    p.subplot(2, 2, 2)
+    sig_fl_calib.plot_sig_t_mfn()
+
+    u_grid = np.ogrid[0.01:0.02:30j, 0.1:2.0:30j]
     N_grid = sig_fl_calib.get_lack_of_fit_dN(u_grid[0], u_grid[1])
     M_grid = sig_fl_calib.get_lack_of_fit_dM(u_grid[0], u_grid[1])
-    
-    p.subplot(1, 2, 1)
-    p.pcolor(u_grid[0], u_grid[1], N_grid)
+    ones = np.ones_like(N_grid)
+    p.subplot(2, 2, 3)
+    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, N_grid)
     p.colorbar()
-    p.subplot(1, 2, 2)
-    p.pcolor(u_grid[0], u_grid[1], M_grid)
+    p.subplot(2, 2, 4)
+    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
     p.colorbar()
     p.show()
 
     print 'N_grid',N_grid
     print 'u_grid[0] ',u_grid[0]
     print 'u_grid[1] ',u_grid[1]
-
-#    m.figure(fgcolor = (0, 0, 0), bgcolor = (1, 1, 1), size = (1600, 900))                
-#    m.surf(u_grid[0], u_grid[1], N_grid)
-##    m.points3d(u_grid[0], u_grid[1], N_grid, mode = 'cube', colormap = "blue-red", scale_mode = 'none')
-#    m.axes(extent =(0.01,0.02, 0.,-10000., -50.,50.))
-#    m.show()
-
 
 
 
