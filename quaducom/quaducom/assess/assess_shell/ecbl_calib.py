@@ -5,29 +5,15 @@ Created on Jun 23, 2010
 '''
 
 from etsproxy.traits.api import \
-    Float, Instance, Array, Int, Property, cached_property, on_trait_change, Bool, \
-    HasTraits, File, Event, Trait, Str, List
-
-from etsproxy.traits.ui.api import \
-    View, Item, FileEditor, HSplit, Group, VSplit, \
-    Handler
-
-from etsproxy.traits.ui.menu import \
-    Action, CloseAction, HelpAction, Menu, \
-    MenuBar, NoButtons, Separator, ToolBar
+    Float, Instance, Array, Int, Property, cached_property, \
+    HasTraits, Trait, List
 
 import math
-
 import numpy as np
-
 import pylab as p
-import etsproxy.mayavi.mlab as m
-
 from mathkit.mfn import MFnLineArray
 
 from scipy.optimize import fsolve
-
-data_file_editor = FileEditor(filter = ['*.DAT'])
 
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -92,11 +78,9 @@ class ECBLPlastic(ECBLBase):
     u0 = List([ 0.014, 50000. ])
                                    
     def __call__(self, eps_tex_u, var_a):
-        E_yarn = abs(var_a)
         sig_tex_u = self.sig_tex_u
-        eps_tex_arr = np.hstack([0., 0.01 * eps_tex_u, eps_tex_u ])
-        sig_tex_arr = np.hstack([0., 0.99 * sig_tex_u, sig_tex_u])
-        print 'E_yarn', E_yarn
+        eps_tex_arr = np.hstack([0., 0.9999 * eps_tex_u, eps_tex_u ])
+        sig_tex_arr = np.hstack([0., var_a * sig_tex_u, sig_tex_u])
         return eps_tex_arr, sig_tex_arr         
 
 class ECBLCalib(HasTraits):
@@ -331,6 +315,10 @@ class ECBLCalib(HasTraits):
         eps_tex_arr, sig_tex_arr = self.get_ecbl_tex_arr(eps_tex_u, var_a)
         return MFnLineArray(xdata = eps_tex_arr, ydata = sig_tex_arr)
 
+    ecbl_mfn = Property(depends_on = '+config_modified')
+    @cached_property
+    def _get_ecbl_mfn(self):
+        return self.get_ecbl_tex_mfn(*self.u_sol)
     #===========================================================================
     # Discretization conform to the tex layers
     #===========================================================================
@@ -365,7 +353,10 @@ class ECBLCalib(HasTraits):
         eps_ti_arr = (np.fabs(eps_i_arr) + eps_i_arr) / 2.0     
         
         return x, eps_ti_arr, eps_ci_arr
-        
+
+    #===========================================================================
+    # Layer conform discretization of the tensile zone
+    #===========================================================================
     def get_f_ti_arr(self, eps_tu, var_a):
         '''force at the height of each reinforcement layer [kN]:
         '''
@@ -432,7 +423,7 @@ class ECBLCalib(HasTraits):
         # all stress cases refer to a stress configuration in which M is positive 
         #(maximum eps_c at the top, maximum eps_t at the bottom of the cross-section 
         #
-        print '------------- iteration: %g ----------------------------' % (self.n)
+        #print '------------- iteration: %g ----------------------------' % (self.n)
 
         eps_tu, var_a = u
         M_external = math.fabs(self.Mu)
@@ -544,15 +535,6 @@ class ECBLCalib(HasTraits):
         sig_c_arr = self.sig_c_mfn.ydata
         p.plot(eps_c_arr, sig_c_arr)
 
-    def plot_ecb_law(self, u = None):
-        '''plot concrete law
-        '''
-        # graph shows sig_c in [MPa]
-        if u == None:
-            u = self.u_sol
-        eps_tex_arr, sig_tex_arr = self.get_ecbl_tex_arr(*u)
-        p.plot(eps_tex_arr, sig_tex_arr)
-
 if __name__ == '__main__':
 
     #------------------------------------------------
@@ -564,41 +546,42 @@ if __name__ == '__main__':
     print '\n'
     print 'setup ECBLCalib'
     print '\n'
+    p.plot([0, 0], [0, 2.4e3])
     ecbl_calib = ECBLCalib(# mean concrete strength after 9 days
-                             # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
-                             # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
-                             f_ck = 55.7,
+                           # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
+                           # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
+                           f_ck = 55.7,
 
-                               # measured strain at bending test rupture (0-dir)
-                               #
-                               eps_cu = 3.3 / 1000.,
+                           # measured strain at bending test rupture (0-dir)
+                           #
+                           eps_cu = 3.3 / 1000.,
 
-                               # measured value in bending test [kNm]
-                               # value per m: M = 5*3.49
-                               #
-                               Mu = 3.49,
-                           
-                               # values for experiment beam with width = 0.20 m
-                               #
-                               width = 0.20,
-                               n_roving = 23.,
+                           # measured value in bending test [kNm]
+                           # value per m: M = 5*3.49
+                           #
+                           Mu = 3.49,
+                       
+                           # values for experiment beam with width = 0.20 m
+                           #
+                           width = 0.20,
+                           n_roving = 23.,
 
-                               ecbl_type = 'linear',
-                               # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
-                               #
+                           ecbl_type = 'linear',
+                           # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
+                           #
 #                              sig_c_config = 'block'       #cubic:   #eps_tu 0.0137706348812      
 #                              sig_c_config = 'bilinear'              #eps_tu 0.0142981075345
-                              sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
-                              )
+                          sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
+                          )
 
 
-    ## call calibration and get 'u_sol':
-    
-    for ecbl_type in ['linear', 'cubic', 'fbm']:
-        print 'XXX CALIB ', ecbl_type
+    for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
+        print 'CALIB TYPE', ecbl_type
         ecbl_calib.n = 0
         ecbl_calib.ecbl_type = ecbl_type
-        ecbl_calib.plot_ecb_law()
+        ecbl_calib.ecbl_mfn.plot(p)
+        print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+        print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
 
     p.show()
 #    ### plot crack bridge law [MPa]:
