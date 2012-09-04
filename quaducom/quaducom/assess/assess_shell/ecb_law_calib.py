@@ -386,7 +386,7 @@ if __name__ == '__main__':
                           sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
                           )
 
-    do = 'plot_cs_state'
+    do = 'plot_ecbl'
 
     if do == 'plot_ecbl':
         for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
