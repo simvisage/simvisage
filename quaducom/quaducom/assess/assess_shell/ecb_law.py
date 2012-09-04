@@ -70,7 +70,11 @@ class ECBLPlastic(ECBLBase):
                                    
     def __call__(self, eps_tex_u, var_a):
         sig_tex_u = self.sig_tex_u
-        eps_tex_arr = np.hstack([0., 0.9999 * eps_tex_u, eps_tex_u ])
+        eps_tex_arr = np.hstack([0., 0.999999 * eps_tex_u, eps_tex_u ])
         sig_tex_arr = np.hstack([0., var_a * sig_tex_u, sig_tex_u])
         return eps_tex_arr, sig_tex_arr         
 
+if __name__ == '__main__':
+    ecbl = ECBLPlastic(sig_tex_u = 2e+3)
+    print ecbl(0.04, 0.02)
+    

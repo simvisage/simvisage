@@ -107,12 +107,7 @@ class MFnLineArray(HasTraits):
         _xdata = self.xdata
         _ydata = self.ydata
         # integral under the stress strain curve
-        E_t = np.trapz(_ydata, _xdata)
-        # area of the stored elastic energy  
-        U_t = 0.0
-        if len(_xdata) != 0:
-            U_t = 0.5 * _ydata[-1] * _xdata[-1]
-        return E_t - U_t
+        return np.trapz(_ydata, _xdata)
 
     def clear(self):
         self.xdata = np.array([])

@@ -5,12 +5,13 @@ Created on Jun 23, 2010
 '''
 
 from etsproxy.traits.api import \
-    Float, Instance, Array, Int, Property, cached_property, \
-    HasTraits, Trait, DelegatesTo
+    Float, Instance, Array, Property, cached_property, \
+    HasTraits, Trait
 
 import math
 import numpy as np
 import pylab as p
+
 from mathkit.mfn import MFnLineArray
 
 from scipy.optimize import fsolve
@@ -20,6 +21,9 @@ from ecb_cross_section import \
     
 from ecb_law import \
     ECBLLinear, ECBLFBM, ECBLCubic, ECBLPlastic
+
+from cc_law import \
+    CCLawBlock, CCLawLinear, CCLawQuadratic
 
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -43,10 +47,6 @@ class ECBLCalib(HasTraits):
     # material properties 
     #-------------------------------------------------------------------
 
-    # characteristic compressive stress [MPa]
-    #
-    f_ck = Float(60.0, sig_c_modified = True)
-
     # ultimate textile stress measured in the tensile test [MPa]
     #
     sig_tex_u = Float(1216., sig_t_modified = True)
@@ -61,175 +61,48 @@ class ECBLCalib(HasTraits):
     #
     eps_cu = Float(0.0033, sig_t_modified = True) # float value corresponds to 3 promile
 
-    # ultimate limit strain at the tensile surface of the cross section [-]:
-    # value is derived based on the calibrated crack bridge law
-    #
-    eps_tu = Float
-    sig_tex_mfn = Instance(MFnLineArray)
-
     # rupture moment and normal force meassured in the calibration experiment
     # (three point bending test)
     #
     Mu = Float(3.5) # [kNm]
     Nu = Float(0.0) # [kN]
 
-    #---------------------------------------------------------------
-    # properties of the composite cross section
-    #-------------------------------------------------------------------
+    #===========================================================================
+    # Cross Section Specification (Geometry and Layout)
+    #===========================================================================
 
     cs = Instance(ECBCrossSection)
-    
-    # thickness of reinforced cross section
-    #
-    thickness = DelegatesTo('cs')
-
-    # total number of reinforcement layers [-]
-    # 
-    n_layers = DelegatesTo('cs')
-
-    # spacing between the layers [m]
-    #
-    s_tex_z = DelegatesTo('cs')
-    
-    # distance from the top of each reinforcement layer [m]:
-    #
-    z_ti_arr = DelegatesTo('cs')
-    zz_ti_arr = DelegatesTo('cs')
-
-    # width of the cross section [m]
-    #
-    width = DelegatesTo('cs')
-    
-    # number of rovings in 0-direction of one composite 
-    # layer of the bending test [-]:
-    #
-    n_rovings = DelegatesTo('cs')
-    
-    # cross section of one roving [mm**2]:
-    #
-    A_roving = DelegatesTo('cs')
 
     #===========================================================================
-    # Derived input properties
+    # Compressive concrete constitutive law
     #===========================================================================
-    #-----------------------------
-    # Concrete constitutive law
-    # for simplified constant stress-strain-diagram of the concrete (EC2)
-    #-----------------------------
-    sig_c_mfn_block = Property(depends_on = '+sig_c_modified')
+    cc_law_type = Trait('constant', dict(constant = CCLawBlock,
+                                         linear = CCLawLinear,
+                                         quadratic = CCLawQuadratic),
+                      config_modified = True)
+    
+    cc_law = Property(depends_on = 'cc_law_type')
     @cached_property
-    def _get_sig_c_mfn_block(self):
-        '''simplified constant stress-strain-diagram of the concrete (EC2)
-        '''
-        #(for standard concrete)
-        f_ck = self.f_ck + 8. 
-        if f_ck <= 50:
-            lamda = 0.8
-            eta = 1.0  
-            eps_cu3 = 0.0035
-        # (for high strength concrete)
-        #
-        else:
-            eta = 1.0 - (f_ck / 50.) / 200.
-        # factor [-] to calculate the height of the compressive zone  
-            lamda = 0.8 - (f_ck - 50.) / 400.
-            eps_cu3 = (2.6 + 35. * ((90. - f_ck) / 100) ** 4.) / 1000. 
-            
-        xdata = np.hstack([0., (1. - lamda) * eps_cu3 - 0.00001, (1 - lamda) * eps_cu3, eps_cu3 ]) 
-        ydata = np.hstack([0., 0., eta * (f_ck), eta * (f_ck), ])
-       
-        return MFnLineArray(xdata = xdata, ydata = ydata)   
-
-    #-----------------------------
-    # for bilinear stress-strain-diagram of the concrete (EC2)
-    #-----------------------------
-    sig_c_mfn_bilinear = Property(depends_on = '+sig_c_modified')
-    @cached_property
-    def _get_sig_c_mfn_bilinear(self):
-        '''bilinear stress-strain-diagram of the concrete
-        '''
-        #(for standard concrete)
-        f_ck = self.f_ck + 8.  
-        if f_ck <= 50.:
-            eps_c3 = 0.00175
-            eps_cu3 = 0.0035
-        #(for high strength concrete)
-        else :
-            eps_c3 = (1.75 + 0.55 * (f_ck - 50.) / 40.) / 1000.
-            eps_cu3 = (2.6 + 35 * (90 - f_ck) ** 4.) / 1000.      
-        # concrete law with limit for eps_c
-       
-        xdata = np.hstack([0., eps_c3, eps_cu3])
-        ydata = np.hstack([0., (f_ck), (f_ck)])
-        
-        return MFnLineArray(xdata = xdata, ydata = ydata)
-
-    #-----------------------------
-    # for quadratic stress-strain-diagram of the concrete
-    #-----------------------------
-    sig_c_mfn_quadratic = Property(depends_on = '+sig_c_modified')
-    @cached_property
-    def _get_sig_c_mfn_quadratic(self):
-        '''quadratic stress-strain-diagram of the concrete
-        '''
-        # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
-        f_cm = self.f_ck + 8 
-        E_tan = 22. * (f_cm / 10) ** 0.3 * 1000.
-        eps_c1 = min(0.7 * f_cm ** 0.31, 2.8) / 1000. #EC2
-        # @todo: with constant value this yields negative values for strains close to 'eps_c1u'
-#        eps_c1 = 0.0022 #Brockmann
-        E_sec = f_cm / eps_c1   
-       
-        if self.f_ck <= 50.:
-            eps_c1u = 0.0035
-            eps_arr = np.linspace(0., eps_c1u, num = 100.)
-        
-        elif self.f_ck > 50.:   
-            eps_c1u = (2.8 + 27. * (((98. - f_cm) / 100.) ** 4.)) / 1000.
-            eps_arr = np.linspace(0., eps_c1u, num = 100.) 
-
-        k = E_tan / E_sec
-        sig_c_arr = ((k * eps_arr / eps_c1 - (eps_arr / eps_c1) ** 2.) / (1. + (k - 2.) * eps_arr / eps_c1)) * f_cm
-        
-        xdata = eps_arr  
-        ydata = sig_c_arr
-        
-        return MFnLineArray(xdata = xdata, ydata = ydata)
-
-    sig_c_config = Trait('quadratic', {'quadratic' : 'sig_c_mfn_quadratic',
-                                      'bilinear'  : 'sig_c_mfn_bilinear',
-                                      'block'     : 'sig_c_mfn_block'
-                                      }, sig_c_modified = True)
+    def _get_cc_law(self):
+        '''Construct the compressive concrete law'''
+        return self.cc_law_type_(f_ck = self.f_ck)
 
     sig_c_mfn = Property(depends_on = '+sig_c_modified')
     def _get_sig_c_mfn(self):
-        return getattr(self, self.sig_c_config_)
+        return self.cc_law.mfn
 
     sig_c_mfn_vct = Property(depends_on = '+sig_c_modified')
     @cached_property
     def _get_sig_c_mfn_vct(self):
         return np.vectorize(self.sig_c_mfn.get_value)
 
-    # number of subdivisions of the compressive zone
-    #
-    n_cj = Float(20., sig_c_modified = True)
-
-    zeta_cj_arr = Property(Array, depends_on = '+sig_c_modified')
-    @cached_property
-    def _get_zeta_cj_arr(self):
-        '''subdivide the compression zone 'x' in 'n_cj' sub-areas;
-        'zeta_cj_arr' giving the fraction of each distance of the sub-area from the upper surface 
-        with respect to the compressive zone 'x'
-        '''
-        return np.arange(self.n_cj) / self.n_cj + 1. / (2. * self.n_cj)
-
     #===========================================================================
     # Effective crack bridge law
     #===========================================================================
     ecbl_type = Trait('fbm', dict(fbm = ECBLFBM,
-                                   cubic = ECBLCubic,
-                                   linear = ECBLLinear,
-                                   plastic = ECBLPlastic),
+                                  cubic = ECBLCubic,
+                                  linear = ECBLLinear,
+                                  plastic = ECBLPlastic),
                       config_modified = True)
     
     ecbl = Property(depends_on = 'ecbl_type')
@@ -238,10 +111,14 @@ class ECBLCalib(HasTraits):
         return self.ecbl_type_(sig_tex_u = self.sig_tex_u)
     
     def get_ecbl_tex_arr(self, eps_tex_u, var_a):
+        '''Get the arrays sigma - epsilon defining the crack bridge law.
+        '''
         eps_tex_arr, sig_tex_arr = self.ecbl(eps_tex_u, var_a)    
         return eps_tex_arr, sig_tex_arr
     
     def get_ecbl_tex_mfn(self, eps_tex_u, var_a):
+        '''Get the callable function for effective crack brige law.
+        '''
         eps_tex_arr, sig_tex_arr = self.get_ecbl_tex_arr(eps_tex_u, var_a)
         return MFnLineArray(xdata = eps_tex_arr, ydata = sig_tex_arr)
 
@@ -249,6 +126,7 @@ class ECBLCalib(HasTraits):
     @cached_property
     def _get_ecbl_mfn(self):
         return self.get_ecbl_tex_mfn(*self.u_sol)
+    
     #===========================================================================
     # Discretization conform to the tex layers
     #===========================================================================
@@ -259,8 +137,8 @@ class ECBLCalib(HasTraits):
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_t'
         # ------------------------------------------------------------------------                
-        thickness = self.thickness
-        z_ti_arr = self.z_ti_arr
+        thickness = self.cs.thickness
+        z_ti_arr = self.cs.z_ti_arr
         
         # ------------------------------------------------------------------------                
         # derived params depending on value for 'eps_t'
@@ -300,8 +178,8 @@ class ECBLCalib(HasTraits):
 
         # tensile force of one reinforced composite layer [kN]:
         #
-        n_rovings = self.n_rovings
-        A_roving = self.A_roving
+        n_rovings = self.cs.n_rovings
+        A_roving = self.cs.A_roving
         return sig_ti_arr * n_rovings * A_roving / 1000. 
 
     #===========================================================================
@@ -312,7 +190,7 @@ class ECBLCalib(HasTraits):
         '''
         x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
         sig_ci_arr = np.array([self.sig_c_mfn.get_value(eps_ci) for eps_ci in eps_ci_arr])
-        return sig_ci_arr * self.width * self.s_tex_z * 1000.
+        return sig_ci_arr * self.cs.width * self.cs.s_tex_z * 1000.
 
     #===========================================================================
     # Fine discretization of the compressive zone
@@ -328,7 +206,7 @@ class ECBLCalib(HasTraits):
         #
         eps_c = self.eps_cu
         
-        eps_cj_arr = (1. - self.zeta_cj_arr) * abs(eps_c)
+        eps_cj_arr = (1. - self.cs.zeta_cj_arr) * abs(eps_c)
         return x, eps_cj_arr
 
     def get_sig_cj_arr(self, eps_tu):
@@ -337,7 +215,7 @@ class ECBLCalib(HasTraits):
 
     def get_f_cj_arr(self, eps_tu):
         x, sig_cj_arr = self.get_sig_cj_arr(eps_tu)
-        return sig_cj_arr * self.width * x / self.n_cj * 1000. 
+        return sig_cj_arr * self.cs.width * x / self.cs.n_cj * 1000. 
                 
     # iteration counter
     #
@@ -360,7 +238,7 @@ class ECBLCalib(HasTraits):
         N_external = self.Nu
         x, eps_cj_arr = self.get_eps_cj_arr(eps_tu)
         f_ti_arr = self.get_f_ti_arr(eps_tu, var_a)
-        z_ti_arr = self.z_ti_arr
+        z_ti_arr = self.cs.z_ti_arr
 
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (characteristic value)
@@ -371,7 +249,7 @@ class ECBLCalib(HasTraits):
         
         # 'z_c_arr' measured from the top surface to the resulting compressive forces in 'f_c_arr'
         #
-        z_cj_arr = x * self.zeta_cj_arr
+        z_cj_arr = x * self.cs.zeta_cj_arr
 
         N_ck = sum(f_cj_arr)
 
@@ -390,7 +268,7 @@ class ECBLCalib(HasTraits):
 
         # moment evaluated with respect to the center line
         #
-        M_internal = M_internal_ - N_internal * self.thickness / 2.
+        M_internal = M_internal_ - N_internal * self.cs.thickness / 2.
 
         # set iteration counter
         #
@@ -441,8 +319,9 @@ class ECBLCalib(HasTraits):
     def get_sig_comp_i_arr(self):
         '''tensile stress at the height of each reinforcement layer [MPa]:
         '''
-        f_t_i_arr, f_c_i_arr = self.get_f_i_arr(*self.u_sol)
-        return (f_t_i_arr - f_c_i_arr) / self.width / self.s_tex_z / 1000.
+        f_ti_arr = self.get_f_ti_arr(*self.u_sol)
+        f_ci_arr = self.get_f_ci_arr(*self.u_sol)
+        return (f_ti_arr - f_ci_arr) / self.cs.width / self.cs.s_tex_z / 1000.
 
     def get_sig_max(self):
         return np.max(self.get_sig_comp_i_arr())
@@ -451,9 +330,9 @@ class ECBLCalib(HasTraits):
         '''plot calibrated effective crack bridge law
         '''
         # graph shows sig_comp at the height of the textile layer in [MPa] 
-        zz_t_arr = self.zz_ti_arr
+        zz_t_arr = self.cs.zz_ti_arr
         sig_comp_i_arr = self.get_sig_comp_i_arr()
-        p.bar(zz_t_arr, sig_comp_i_arr, 0.02 * self.thickness, align = 'center')
+        p.bar(zz_t_arr, sig_comp_i_arr, 0.02 * self.cs.thickness, align = 'center')
         zz_c_arr, sig_c_arr = self.get_sig_c_arr(self.u_sol[0])
         p.plot(zz_c_arr, -sig_c_arr, color = 'red')
 
@@ -499,6 +378,7 @@ if __name__ == '__main__':
                                                 n_roving = 23.,
                                                 ),
                            ecbl_type = 'linear',
+
                            # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                            #
 #                              sig_c_config = 'block'       #cubic:   #eps_tu 0.0137706348812      
@@ -506,42 +386,45 @@ if __name__ == '__main__':
                           sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
                           )
 
+    do = 'plot_cs_state'
 
-    for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
-        print 'CALIB TYPE', ecbl_type
-        ecbl_calib.n = 0
-        ecbl_calib.ecbl_type = ecbl_type
-        ecbl_calib.ecbl_mfn.plot(p)
-        print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
-        print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+    if do == 'plot_ecbl':
+        for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
+            print 'CALIB TYPE', ecbl_type
+            ecbl_calib.n = 0
+            ecbl_calib.ecbl_type = ecbl_type
+            ecbl_calib.ecbl_mfn.plot(p)
+            print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+            print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
 
+    elif do == 'plot_cs_state':    
+    #    ### plot crack bridge law [MPa]:
+    #    #
+    #    p.subplot(1, 2, 1)
+    #    sig_fl_calib.plot_ecb_law(u_sol)
+    #
+        ### plot concrete law
+        ecbl_calib.plot_sig_c_mfn()
+    #    p.subplot(1, 2, 2)
+        ecbl_calib.plot_sig_comp_i()
+    #
+    elif do == 'plot_MN_grid':
+    
+        u_grid = np.ogrid[0.01:0.02:30j, 0.1:2.0:30j]
+        N_grid = ecbl_calib.get_lack_of_fit_dN(u_grid[0], u_grid[1])
+        M_grid = ecbl_calib.get_lack_of_fit_dM(u_grid[0], u_grid[1])
+        ones = np.ones_like(N_grid)
+        p.subplot(2, 2, 3)
+        p.pcolor(u_grid[0] * ones, u_grid[1] * ones, N_grid)
+        p.colorbar()
+        p.subplot(2, 2, 4)
+        p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
+        p.colorbar()
+    
+        print 'N_grid', N_grid
+        print 'u_grid[0] ', u_grid[0]
+        print 'u_grid[1] ', u_grid[1]
+    
+    
     p.show()
-#    ### plot crack bridge law [MPa]:
-#    #
-#    p.subplot(1, 2, 1)
-#    sig_fl_calib.plot_ecb_law(u_sol)
-#
-#    ### plot concrete law
-##    sig_fl_calib.plot_sig_c_mfn()
-#    p.subplot(1, 2, 2)
-#    sig_fl_calib.plot_sig_comp_i()
-#
-
-
-#    u_grid = np.ogrid[0.01:0.02:30j, 0.1:2.0:30j]
-#    N_grid = sig_fl_calib.get_lack_of_fit_dN(u_grid[0], u_grid[1])
-#    M_grid = sig_fl_calib.get_lack_of_fit_dM(u_grid[0], u_grid[1])
-#    ones = np.ones_like(N_grid)
-#    p.subplot(2, 2, 3)
-#    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, N_grid)
-#    p.colorbar()
-#    p.subplot(2, 2, 4)
-#    p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
-#    p.colorbar()
-    p.show()
-#
-#    print 'N_grid', N_grid
-#    print 'u_grid[0] ', u_grid[0]
-#    print 'u_grid[1] ', u_grid[1]
-#
-#
+        
