@@ -6,7 +6,7 @@ Created on Jun 23, 2010
 
 from etsproxy.traits.api import \
     Float, Instance, Array, Int, Property, cached_property, \
-    HasTraits, Trait, List
+    HasTraits, Trait, DelegatesTo
 
 import math
 import numpy as np
@@ -15,73 +15,14 @@ from mathkit.mfn import MFnLineArray
 
 from scipy.optimize import fsolve
 
+from ecb_cross_section import \
+    ECBCrossSection
+    
+from ecb_law import \
+    ECBLLinear, ECBLFBM, ECBLCubic, ECBLPlastic
+
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
-
-from math import exp, log
-
-class ECBLBase(HasTraits):
-    '''Base class for Effective Crack Bridge Laws.'''
-    
-    u0 = List([0.0, 0.0])
-
-class ECBLLinear(ECBLBase):
-    '''Effective crack bridge Law with linear elastic response.'''
-    
-    sig_tex_u = Float
-
-    u0 = List([ 0.01, 80000. ])
-                                   
-    def __call__(self, eps_tex_u, var_a):
-        E_yarn = abs(var_a)
-
-        # with limit for eps_tex
-        #
-        eps_tex_arr = np.array([ 0., eps_tex_u])
-        sig_tex_arr = E_yarn * eps_tex_arr
-        return eps_tex_arr, sig_tex_arr 
-    
-class ECBLFBM(ECBLBase):
-    '''Effective crack bridge Law based on fiber-bundle-model.'''
-    
-    sig_tex_u = Float
-        
-    u0 = List([0.014, 0.5 ])
-        
-    def __call__(self, eps_tex_u, m):
-        eps_tex_arr = np.linspace(0, eps_tex_u, num = 100.)
-        sig_tex_arr = (self.sig_tex_u / eps_tex_u / exp(-pow(exp(-log(m) / m), 1.0 * m)) * 
-                     eps_tex_arr * np.exp(-np.power(eps_tex_arr / eps_tex_u * exp(-log(m) / m), 1.0 * m)))            
-        return eps_tex_arr, sig_tex_arr 
-        
-class ECBLCubic(ECBLBase):
-    '''Effective crack bridge Law using a cubic polynomial.'''
-    
-    sig_tex_u = Float
-
-    u0 = List([ 0.016, -5000000. ])
-                                   
-    def __call__(self, eps_tex_u, var_a):
-        sig_tex_u = self.sig_tex_u
-        eps_tex_arr = np.linspace(0, eps_tex_u, num = 100.)
-        # for horizontal tangent at eps_tex_u
-        var_b = -(sig_tex_u + 2. * var_a * eps_tex_u ** 3.) / eps_tex_u ** 2. 
-        var_c = -3. * var_a * eps_tex_u ** 2. - 2. * var_b * eps_tex_u 
-        sig_tex_arr = var_a * eps_tex_arr ** 3. + var_b * eps_tex_arr ** 2. + var_c * eps_tex_arr
-        return eps_tex_arr, sig_tex_arr         
-
-class ECBLPlastic(ECBLBase):
-    '''Effective crack bridge Law using a cubic polynomial.'''
-    
-    sig_tex_u = Float
-
-    u0 = List([ 0.014, 50000. ])
-                                   
-    def __call__(self, eps_tex_u, var_a):
-        sig_tex_u = self.sig_tex_u
-        eps_tex_arr = np.hstack([0., 0.9999 * eps_tex_u, eps_tex_u ])
-        sig_tex_arr = np.hstack([0., var_a * sig_tex_u, sig_tex_u])
-        return eps_tex_arr, sig_tex_arr         
 
 class ECBLCalib(HasTraits):
 
@@ -136,48 +77,37 @@ class ECBLCalib(HasTraits):
     # properties of the composite cross section
     #-------------------------------------------------------------------
 
+    cs = Instance(ECBCrossSection)
+    
     # thickness of reinforced cross section
     #
-    thickness = Float(0.06, geo_input = True)
+    thickness = DelegatesTo('cs')
 
     # total number of reinforcement layers [-]
     # 
-    n_layers = Int(12, geo_input = True)
+    n_layers = DelegatesTo('cs')
 
     # spacing between the layers [m]
     #
-    s_tex_z = Property(depends_on = '+geo_input')
-    @cached_property
-    def _get_s_tex_z(self):
-        return self.thickness / (self.n_layers + 1)
+    s_tex_z = DelegatesTo('cs')
     
     # distance from the top of each reinforcement layer [m]:
     #
-    z_ti_arr = Property(depends_on = '+geo_input')
-    @cached_property
-    def _get_z_ti_arr(self):
-        return np.array([ self.thickness - (i + 1) * self.s_tex_z for i in range(self.n_layers) ],
-                      dtype = float)
-
-    zz_ti_arr = Property
-    def _get_zz_ti_arr(self):
-        return self.thickness - self.z_ti_arr
-    #---------------------------------------------------------------
-    # properties of the bending specimens (tree point bending test):
-    #---------------------------------------------------------------
+    z_ti_arr = DelegatesTo('cs')
+    zz_ti_arr = DelegatesTo('cs')
 
     # width of the cross section [m]
     #
-    width = Float(0.20, geo_input = True)
+    width = DelegatesTo('cs')
     
     # number of rovings in 0-direction of one composite 
     # layer of the bending test [-]:
     #
-    n_rovings = Int(23, geo_input = True)
+    n_rovings = DelegatesTo('cs')
     
     # cross section of one roving [mm**2]:
     #
-    A_roving = Float(0.461, geo_input = True)
+    A_roving = DelegatesTo('cs')
 
     #===========================================================================
     # Derived input properties
@@ -547,6 +477,7 @@ if __name__ == '__main__':
     print 'setup ECBLCalib'
     print '\n'
     p.plot([0, 0], [0, 2.4e3])
+    
     ecbl_calib = ECBLCalib(# mean concrete strength after 9 days
                            # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
@@ -563,9 +494,10 @@ if __name__ == '__main__':
                        
                            # values for experiment beam with width = 0.20 m
                            #
-                           width = 0.20,
-                           n_roving = 23.,
-
+                           cs = ECBCrossSection(
+                                                width = 0.20,
+                                                n_roving = 23.,
+                                                ),
                            ecbl_type = 'linear',
                            # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                            #
