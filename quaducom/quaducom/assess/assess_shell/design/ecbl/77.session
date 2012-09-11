@@ -1,0 +1,12 @@
+window_sizes 1276 997 337 933 773 144
+diagrams
+  active  classdiagram_ref 128077 // effective_crack_bridge
+    746 618 100 4 0 0
+end
+show_stereotypes
+selected attribute_ref 128205 // mn_diagram
+open
+  class_ref 128077 // ECBLawCalib
+  class_ref 128333 // ECBLawMxN
+end
+end

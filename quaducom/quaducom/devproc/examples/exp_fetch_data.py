@@ -1,6 +1,10 @@
 '''
 Created on Sep 11, 2012
 
+The script demonstrates how to fetch a database object with
+measured and postprocessed test results and how to 
+access the data.
+
 @author: rch
 '''
 
