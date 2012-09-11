@@ -28,6 +28,10 @@ from cc_law import \
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+from mpl_toolkits.axes_grid.axislines import SubplotZero
+from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import AutoMinorLocator
+
 class ECBLCalib(HasTraits):
 
     #---------------------------------------------------------------
@@ -76,7 +80,7 @@ class ECBLCalib(HasTraits):
     #===========================================================================
     # Compressive concrete constitutive law
     #===========================================================================
-    cc_law_type = Trait('constant', dict(constant = CCLawBlock,
+    cc_law_type = Trait('quadratic', dict(constant = CCLawBlock,
                                          linear = CCLawLinear,
                                          quadratic = CCLawQuadratic),
                       config_modified = True)
@@ -113,19 +117,31 @@ class ECBLCalib(HasTraits):
     def get_ecbl_tex_arr(self, eps_tex_u, var_a):
         '''Get the arrays sigma - epsilon defining the crack bridge law.
         '''
+        print'eps_tex_u ',eps_tex_u 
+         
         eps_tex_arr, sig_tex_arr = self.ecbl(eps_tex_u, var_a)    
         return eps_tex_arr, sig_tex_arr
     
     def get_ecbl_tex_mfn(self, eps_tex_u, var_a):
-        '''Get the callable function for effective crack brige law.
+        '''Get the callable function for effective crack bridge law.
         '''
+#        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
+#        eps_tex_u = eps_ti_arr[0]
         eps_tex_arr, sig_tex_arr = self.get_ecbl_tex_arr(eps_tex_u, var_a)
         return MFnLineArray(xdata = eps_tex_arr, ydata = sig_tex_arr)
 
     ecbl_mfn = Property(depends_on = '+config_modified')
     @cached_property
+
+    
     def _get_ecbl_mfn(self):
-        return self.get_ecbl_tex_mfn(*self.u_sol)
+        u_sol = self.u_sol
+        eps_tu = u_sol[0]
+        var_a = u_sol[1]
+        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr( eps_tu)
+        eps_tex_u = eps_ti_arr[0]
+        u_sol = (eps_tex_u,var_a)
+        return self.get_ecbl_tex_mfn(*u_sol)
     
     #===========================================================================
     # Discretization conform to the tex layers
@@ -139,7 +155,7 @@ class ECBLCalib(HasTraits):
         # ------------------------------------------------------------------------                
         thickness = self.cs.thickness
         z_ti_arr = self.cs.z_ti_arr
-        
+     
         # ------------------------------------------------------------------------                
         # derived params depending on value for 'eps_t'
         # ------------------------------------------------------------------------                
@@ -170,12 +186,14 @@ class ECBLCalib(HasTraits):
         '''
         x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
         eps_tex_u = eps_ti_arr[0]
+        
+        x, eps_ti_arr, eps_ci_arr
                         
         sig_tex_mfn = self.get_ecbl_tex_mfn(eps_tex_u, var_a)
                 
         get_sig_ti_arr = np.vectorize(sig_tex_mfn.get_value)
         sig_ti_arr = get_sig_ti_arr(eps_ti_arr)
-
+        
         # tensile force of one reinforced composite layer [kN]:
         #
         n_rovings = self.cs.n_rovings
@@ -239,6 +257,7 @@ class ECBLCalib(HasTraits):
         x, eps_cj_arr = self.get_eps_cj_arr(eps_tu)
         f_ti_arr = self.get_f_ti_arr(eps_tu, var_a)
         z_ti_arr = self.cs.z_ti_arr
+        
 
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (characteristic value)
@@ -289,6 +308,7 @@ class ECBLCalib(HasTraits):
     # solution vector returned by 'fit_response'
     #
     u_sol = Property(Array(Float), depends_on = '+config_modified')
+    
     @cached_property
     def _get_u_sol(self):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -302,7 +322,7 @@ class ECBLCalib(HasTraits):
         # for the function call 'brentq' to work property. 
 
         # The method brentq has optional arguments such as
-        #   'xtol'    - absolut error (default value = 1.0e-12)
+        #   'xtol'    - absolut error (default value = 1.0e-12)8
         #   'rtol'    - relative error (not supported at the time)
         #   'maxiter' - maximum numbers of iterations used
         #
@@ -335,6 +355,7 @@ class ECBLCalib(HasTraits):
         p.bar(zz_t_arr, sig_comp_i_arr, 0.02 * self.cs.thickness, align = 'center')
         zz_c_arr, sig_c_arr = self.get_sig_c_arr(self.u_sol[0])
         p.plot(zz_c_arr, -sig_c_arr, color = 'red')
+        p.grid(b=None, which='both')
 
     def plot_sig_c_mfn(self):
         '''plot concrete law
@@ -379,24 +400,40 @@ if __name__ == '__main__':
                                                 ),
                            ecbl_type = 'linear',
 
-                           # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
+                           # define shape of the concrete stress-strain-law ('constant', 'linear' or 'quadratic')
                            #
-#                              sig_c_config = 'block'       #cubic:   #eps_tu 0.0137706348812      
-#                              sig_c_config = 'bilinear'              #eps_tu 0.0142981075345
-                          sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
+#                            
+                          cc_law_type = 'quadratic'                                          
                           )
 
     do = 'plot_ecbl'
 
     if do == 'plot_ecbl':
-        for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
+        for ecbl_type in [ 'linear','cubic','fbm','plastic']:
             print 'CALIB TYPE', ecbl_type
             ecbl_calib.n = 0
             ecbl_calib.ecbl_type = ecbl_type
-            ecbl_calib.ecbl_mfn.plot(p)
+            ecbl_calib.ecbl_mfn.plot(p,'red')
+            p.legend (('bilinear','linear','cubic','fbm'))
             print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
             print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+            print 'eps_tu',ecbl_calib.u_sol
+            
 
+
+#    if do == 'plot_ecbl':
+#        for cc_law_type in ['constant','linear','quadratic']:
+#            
+#            for ecbl_type in [ 'linear','cubic','fbm','plastic']:
+#                print 'CALIB TYPE', ecbl_type
+#                ecbl_calib.n = 0
+#                ecbl_calib.ecbl_type = ecbl_type
+#                ecbl_calib.cc_law_type = cc_law_type
+#                ecbl_calib.ecbl_mfn.plot(p,color= 'blue')
+#                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+#                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+#                print 'eps_tu',ecbl_calib.u_sol
+                
     elif do == 'plot_cs_state':    
     #    ### plot crack bridge law [MPa]:
     #    #
@@ -420,11 +457,17 @@ if __name__ == '__main__':
         p.subplot(2, 2, 4)
         p.pcolor(u_grid[0] * ones, u_grid[1] * ones, M_grid)
         p.colorbar()
-    
+        p.grid(b=None, which='both')
         print 'N_grid', N_grid
         print 'u_grid[0] ', u_grid[0]
         print 'u_grid[1] ', u_grid[1]
-    
-    
+        
+    #p.legend([ 'bilinear','linear'  ,'cubic','fbm' ])
+    p.xticks(0.0025*np.arange(10))
+    p.yticks(200*np.arange(10))
+    p.xlabel('Dehnung [-]')
+    p.ylabel('Textilspannung [MPa]')
+
+    p.grid(b=None, which='both')
     p.show()
         

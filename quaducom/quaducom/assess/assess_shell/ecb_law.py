@@ -66,11 +66,12 @@ class ECBLPlastic(ECBLBase):
     
     sig_tex_u = Float
 
-    u0 = List([ 0.014, 50000. ])
+    u0 = List([ 0.014, 1.3313 ])
                                    
     def __call__(self, eps_tex_u, var_a):
         sig_tex_u = self.sig_tex_u
-        eps_tex_arr = np.hstack([0., 0.999999 * eps_tex_u, eps_tex_u ])
+        eps_tex_arr = np.hstack([0.,0.0000000000000000001*eps_tex_u, eps_tex_u ])
+        #eps_tex_arr = np.hstack([0.,0.999999999999999999*eps_tex_u, eps_tex_u ])
         sig_tex_arr = np.hstack([0., var_a * sig_tex_u, sig_tex_u])
         return eps_tex_arr, sig_tex_arr         
 
