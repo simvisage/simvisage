@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print '\n'
     print 'setup SigFlCalib'
     print '\n'
-    sig_fl_calib = SigFlCalib( # concrete strength after 9 days
+    sig_fl_calib = SigFlCalib(# concrete strength after 9 days
                                #
                                f_ck = 49.9,
 
@@ -78,10 +78,10 @@ if __name__ == '__main__':
 
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
-    max_sig = sig_fl_calib.get_sig_max( u_sol )     
+    max_sig = sig_fl_calib.get_sig_max(u_sol)     
     print 'eps_c_fail', sig_fl_calib.eps_c_fail
     print 'eps_t_fail', sig_fl_calib.eps_t_fail
-    print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
+    print 'max_sig', sig_fl_calib.get_sig_max(u_sol)                      
 #    sig_fl_calib.plot_sig_t_mfn( u_sol )
     
     
@@ -94,9 +94,9 @@ if __name__ == '__main__':
     
     # reproduce the forces for the calibration test:
     #
-    eps_lo =   sig_fl_calib.eps_t_fail
-    eps_up = - sig_fl_calib.eps_c_fail
-    N_internal, M_internal = sig_fl_calib.eval_N_M( eps_lo, eps_up )
+    eps_lo = sig_fl_calib.eps_t_fail
+    eps_up = -sig_fl_calib.eps_c_fail
+    N_internal, M_internal = sig_fl_calib.eval_N_M(eps_lo, eps_up)
 
     
     #------------------------------------------------
@@ -108,18 +108,18 @@ if __name__ == '__main__':
     n_B = 20
     n_C = 20
 
-    eps_c_fail = 3.3/1000.
+    eps_c_fail = 3.3 / 1000.
     eps_t_fail = sig_fl_calib.eps_t_fail
-    print'eps_t_fail ',eps_t_fail
+    print'eps_t_fail ', eps_t_fail
     
-    eps_lo_arr_A = np.linspace( eps_t_fail,   eps_t_fail, n_A )
-    eps_up_arr_A = np.linspace( eps_t_fail, - eps_c_fail, n_A )
+    eps_lo_arr_A = np.linspace(eps_t_fail, eps_t_fail, n_A)
+    eps_up_arr_A = np.linspace(eps_t_fail, -eps_c_fail, n_A)
     
-    eps_lo_arr_B = np.linspace( eps_t_fail,           0., n_B )
-    eps_up_arr_B = np.linspace(-eps_c_fail, - eps_c_fail, n_B )
+    eps_lo_arr_B = np.linspace(eps_t_fail, 0., n_B)
+    eps_up_arr_B = np.linspace(-eps_c_fail, -eps_c_fail, n_B)
     
-    eps_lo_arr_C = np.linspace(         0.,       -0.002, n_C )
-    eps_up_arr_C = np.linspace(-eps_c_fail,       -0.002, n_C )
+    eps_lo_arr_C = np.linspace(0., -0.002, n_C)
+    eps_up_arr_C = np.linspace(-eps_c_fail, -0.002, n_C)
         
     eps_lo_arr = np.hstack([ eps_lo_arr_A, eps_lo_arr_B, eps_lo_arr_C ])
     eps_up_arr = np.hstack([ eps_up_arr_A, eps_up_arr_B, eps_up_arr_C ])
@@ -134,8 +134,8 @@ if __name__ == '__main__':
     fig = p.figure(1)
     fig.set_facecolor('w')
 
-    ax = SubplotZero(fig, 111, axisbg='w')
-    fig.add_subplot( ax )
+    ax = SubplotZero(fig, 111, axisbg = 'w')
+    fig.add_subplot(ax)
 
     for direction in ["xzero", "yzero"]:
 #        ax.axis[direction].set_axisline_style("-|>")
@@ -166,9 +166,9 @@ if __name__ == '__main__':
 
     # constant 'thickness':
     #
-    n_layers_list  = [   4,    8,    12,   16,   20]
-    thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
-    zip_list = zip( n_layers_list, thickness_list  )
+    n_layers_list = [   4, 8, 12, 16, 20]
+    thickness_list = [0.06, 0.06, 0.06, 0.06, 0.06]
+    zip_list = zip(n_layers_list, thickness_list)
     legend_list = n_layers_list 
     
     # constant 'rho_tex':
@@ -189,41 +189,41 @@ if __name__ == '__main__':
 #            zip_list.append((n,t)) 
 
 
-    for n,t in zip_list:
+    for n, t in zip_list:
         #
         sig_fl_calib.n_layers = n        
         sig_fl_calib.thickness = t
         #
-        eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
-        N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
+        eval_N_M_vectorized = np.frompyfunc(sig_fl_calib.eval_N_M, 2, 2)
+        N_arr, M_arr = eval_N_M_vectorized(eps_lo_arr, eps_up_arr)
         #
         # @todo: check which value to be used for normalization if sig_c = parabolic is used
         # NOTE that for this case f_cm  is used not f_ck; NOTE that for pure compression eps = 2E-3 is used
         # which does not yield f_cm in the parabolic law; for the default concrete laws for pure
         # compression the value should evaluated to 1.0!
         #
-        c1 = 1000. * t* b * f_ck
-        c2 = 1000. * t**2. * b * f_ck 
+        c1 = 1000. * t * b * f_ck
+        c2 = 1000. * t ** 2. * b * f_ck 
         #
         # @todo: why does an error occure when multiplying an array by a float value (caused by vectorized)
         nu_arr = N_arr / np.array([ c1 ]) 
         mu_arr = M_arr / np.array([ c2 ])
         rho_tex = n * A_roving * n_rovings / c1
         #
-        N_list.append( N_arr )
-        M_list.append( M_arr )
-        nu_list.append( nu_arr )
-        mu_list.append( mu_arr )
-        rho_list.append( rho_tex )
+        N_list.append(N_arr)
+        M_list.append(M_arr)
+        nu_list.append(nu_arr)
+        mu_list.append(mu_arr)
+        rho_list.append(rho_tex)
         
         # plot normalized values nu and mu
         #
         if t == 0.06 and n == 12:
-            p.plot( mu_arr, nu_arr,
-                    color='blue', 
-                    linewidth=2.0)
+            p.plot(mu_arr, nu_arr,
+                    color = 'blue',
+                    linewidth = 2.0)
         else:
-            p.plot( mu_arr, nu_arr )
+            p.plot(mu_arr, nu_arr)
 
 
         # plot absolute values for N and M
@@ -242,12 +242,12 @@ if __name__ == '__main__':
 
     ### GRID
     #
-#    p.grid(b=None, which='both')
+    p.grid(b = None, which = 'both')
 
 
     ### LEGEND
     #
-    p.legend( legend_list )
+    p.legend(legend_list)
 #    legend( (l2, l4), ('oscillatory', 'damped'), 'upper right', shadow=True)
 
 
@@ -260,10 +260,10 @@ if __name__ == '__main__':
     
     ax.xaxis.set_major_locator(MaxNLocator(10))
     ax.yaxis.set_major_locator(MaxNLocator(10))
-    minorLocator   = AutoMinorLocator()
+    minorLocator = AutoMinorLocator()
     ax.xaxis.set_minor_locator(minorLocator)
-#    p.tick_params(axis='both',which='major',direction='out', length=15, width=2, colors='black')
-#    p.tick_params(axis='both',which='minor',direction='in', length=100, width=1, colors='black')
+    p.tick_params(axis = 'both', which = 'major', direction = 'out', length = 15, width = 2, colors = 'black')
+    p.tick_params(axis = 'both', which = 'minor', direction = 'in', length = 100, width = 1, colors = 'black')
 
 
     ### TITEL

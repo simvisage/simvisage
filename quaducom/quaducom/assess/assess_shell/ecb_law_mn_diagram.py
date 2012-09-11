@@ -4,7 +4,7 @@ Created on Sep 4, 2012
 @author: rch
 '''
 from etsproxy.traits.api import \
-    HasTraits, Float, Instance, Property, cached_property
+    HasTraits, Float, Instance, Property, cached_property, DelegatesTo
 
 from ecb_law_calib import \
     ECBLCalib
@@ -13,10 +13,14 @@ import numpy as np
     
 class ECBLMNDiagram(HasTraits):
 
+    # calibrator supplying the effective material law
     calib = Instance(ECBLCalib)
+    
+    # cross section
+    cs = DelegatesTo('calib')
 
     def _get_eps_f(self, eps_lo, eps_up):
-        '''EVALUATION for flexion case: using the calibrated constitutive law of the layer
+        '''EVALUATION for bending case: using the calibrated constitutive law of the layer
         '''
         # @todo: u = 'u_sol' is not needed for the evaluation of given stress at the top and bottom but must be
         # passed in general so that if calibration method is called 'layer_response' works correctly
@@ -32,7 +36,7 @@ class ECBLMNDiagram(HasTraits):
         # ------------------------------------------------------------------------                
 
         thickness = self.thickness
-        z_t_i_arr = self.z_t_i_arr
+        z_t_i_arr = self.cs.z_t_i_arr
        
         # ------------------------------------------------------------------------                
         # derived params depending on value for 'eps_t'
@@ -124,6 +128,18 @@ class ECBLMNDiagram(HasTraits):
 
         return x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_c_lo, eps_c_up
 
+    def _get_eps_ij(self, eps_lo, eps_up):
+        '''determine_stress_case
+        '''
+        if eps_up < 0 and eps_lo > 0:
+            return self._get_eps_f(eps_lo, eps_up)
+
+        elif self.eps_up <= 0 and self.eps_lo <= 0:
+            return self._get_eps_c(eps_lo, eps_up)
+          
+        elif self.eps_up >= 0 and self.eps_lo >= 0:
+            return self._get_eps_t(eps_lo, eps_up)
+            
     def get_M_N_value(self, eps_lo, eps_up):
         '''evaluate the normal force and bending moment for given strains at the top and bottom
         using a calibrated crack bridge law;

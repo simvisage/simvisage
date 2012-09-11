@@ -6,7 +6,7 @@ Created on Jun 23, 2010
 
 from etsproxy.traits.api import \
     Float, Instance, Array, Property, cached_property, \
-    HasTraits, Trait
+    HasTraits, Trait, Event, on_trait_change
 
 import math
 import numpy as np
@@ -20,7 +20,7 @@ from ecb_cross_section import \
     ECBCrossSection
     
 from ecb_law import \
-    ECBLLinear, ECBLFBM, ECBLCubic, ECBLPlastic
+    ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
 from cc_law import \
     CCLawBlock, CCLawLinear, CCLawQuadratic
@@ -61,7 +61,7 @@ class ECBLCalib(HasTraits):
     #
     eps_cu = Float(0.0033, sig_t_modified = True) # float value corresponds to 3 promile
 
-    # rupture moment and normal force meassured in the calibration experiment
+    # rupture moment and normal force measured in the calibration experiment
     # (three point bending test)
     #
     Mu = Float(3.5) # [kNm]
@@ -102,34 +102,49 @@ class ECBLCalib(HasTraits):
     ecbl_type = Trait('fbm', dict(fbm = ECBLFBM,
                                   cubic = ECBLCubic,
                                   linear = ECBLLinear,
-                                  plastic = ECBLPlastic),
+                                  bilinear = ECBLBilinear),
                       config_modified = True)
     
     ecbl = Property(depends_on = 'ecbl_type')
     @cached_property
     def _get_ecbl(self):
         return self.ecbl_type_(sig_tex_u = self.sig_tex_u)
+
+    ecbl_modified = Event
+    @on_trait_change('ecbl.+input')
+    def _set_ecbl_modified(self):
+        self.ecbl_modified = True
     
-    def get_ecbl_tex_arr(self, eps_tex_u, var_a):
+    ecbl_tex_mfn = Property(depends_on = '+config_modified, ecbl_modified')
+    @cached_property
+    def _get_ecbl_tex_arr(self):
         '''Get the arrays sigma - epsilon defining the crack bridge law.
         '''
-        eps_tex_arr, sig_tex_arr = self.ecbl(eps_tex_u, var_a)    
-        return eps_tex_arr, sig_tex_arr
+        return self.ecbl.arr
     
-    def get_ecbl_tex_mfn(self, eps_tex_u, var_a):
+    ecbl_tex_mfn = Property(depends_on = '+config_modified, ecbl_modified')
+    @cached_property
+    def _get_ecbl_tex_mfn(self):
         '''Get the callable function for effective crack brige law.
         '''
-        eps_tex_arr, sig_tex_arr = self.get_ecbl_tex_arr(eps_tex_u, var_a)
-        return MFnLineArray(xdata = eps_tex_arr, ydata = sig_tex_arr)
+        return self.ecbl.mfn
 
-    ecbl_mfn = Property(depends_on = '+config_modified')
+    ecbl_tex_mfn_vct = Property(depends_on = '+config_modified, ecbl_modified')
     @cached_property
-    def _get_ecbl_mfn(self):
-        return self.get_ecbl_tex_mfn(*self.u_sol)
-    
+    def _get_ecbl_tex_mfn_vct(self):
+        '''Get the callable function for effective crack brige law.
+        '''
+        return self.ecbl.mfn_vct
+
+    u0 = Property(Array(float), depends_on = '+config_modified, ecbl_modified')
+    @cached_property
+    def _get_u0(self):
+        return self.ecbl.u0
+
     #===========================================================================
     # Discretization conform to the tex layers
     #===========================================================================
+
     def get_eps_i_arr(self, eps_tu):
         '''CALIBRATION: derive the unknown constitutive law of the layer
         (effective crack bridge law)
@@ -162,20 +177,17 @@ class ECBLCalib(HasTraits):
         
         return x, eps_ti_arr, eps_ci_arr
 
+    def get_sig_ti_arr(self, eps_ti_arr):
+        '''force at the height of each reinforcement layer [kN]:
+        '''
+        return self.ecbl.mfn_vct(eps_ti_arr)
+        
     #===========================================================================
     # Layer conform discretization of the tensile zone
     #===========================================================================
-    def get_f_ti_arr(self, eps_tu, var_a):
+    def get_f_ti_arr(self, sig_ti_arr):
         '''force at the height of each reinforcement layer [kN]:
         '''
-        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
-        eps_tex_u = eps_ti_arr[0]
-                        
-        sig_tex_mfn = self.get_ecbl_tex_mfn(eps_tex_u, var_a)
-                
-        get_sig_ti_arr = np.vectorize(sig_tex_mfn.get_value)
-        sig_ti_arr = get_sig_ti_arr(eps_ti_arr)
-
         # tensile force of one reinforced composite layer [kN]:
         #
         n_rovings = self.cs.n_rovings
@@ -185,21 +197,20 @@ class ECBLCalib(HasTraits):
     #===========================================================================
     # Discretization of the compressive zone - tex layer conform
     #===========================================================================
-    def get_f_ci_arr(self, eps_tu, var_a):
+    def get_f_ci_arr(self, eps_ci_arr):
         '''Compressive stress in the compresive zone 'x' for each layer i.
         '''
-        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
-        sig_ci_arr = np.array([self.sig_c_mfn.get_value(eps_ci) for eps_ci in eps_ci_arr])
+        sig_ci_arr = self.sig_c_mfn_vct(eps_ci_arr)
         return sig_ci_arr * self.cs.width * self.cs.s_tex_z * 1000.
 
     #===========================================================================
     # Fine discretization of the compressive zone
     #===========================================================================
-    def get_eps_cj_arr(self, eps_tu):
+    def get_eps_cj_arr(self, eps_lo):
         '''get compressive strain at each integration layer of the compressive zone [-]:
         for 'stress_case' flexion
         '''
-        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_tu)
+        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_lo)
 
         # for calibration us measured compressive strain
         # @todo: use mapped traits instead
@@ -209,22 +220,14 @@ class ECBLCalib(HasTraits):
         eps_cj_arr = (1. - self.cs.zeta_cj_arr) * abs(eps_c)
         return x, eps_cj_arr
 
-    def get_sig_cj_arr(self, eps_tu):
-        x, eps_cj_arr = self.get_eps_cj_arr(eps_tu)
-        return x, self.sig_c_mfn_vct(eps_cj_arr)
+    def get_sig_cj_arr(self, eps_cj_arr):
+        return self.sig_c_mfn_vct(eps_cj_arr)
 
-    def get_f_cj_arr(self, eps_tu):
-        x, sig_cj_arr = self.get_sig_cj_arr(eps_tu)
+    def get_f_cj_arr(self, x, sig_cj_arr):
         return sig_cj_arr * self.cs.width * x / self.cs.n_cj * 1000. 
-                
-    # iteration counter
-    #
-    n = 0
-    def get_lack_of_fit(self, u):
-        '''Return the difference between 'N_external' and 'N_internal' as well as 'M_external' and 'M_internal'
-        N_c (=compressive force of the compressive zone of the concrete) 
-        N_t (=total tensile force of the reinforcement layers) 
-
+         
+    def get_NM_internal(self, eps_lo, eps_up):
+        '''
         NOTE: eps_t (=tensile strain at the bottom [MPa]) is the search parameter
         to be found iteratively!
         '''
@@ -232,12 +235,10 @@ class ECBLCalib(HasTraits):
         #(maximum eps_c at the top, maximum eps_t at the bottom of the cross-section 
         #
         #print '------------- iteration: %g ----------------------------' % (self.n)
+        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_lo)
+        sig_ti_arr = self.get_sig_ti_arr(eps_ti_arr)
+        f_ti_arr = self.get_f_ti_arr(sig_ti_arr)
 
-        eps_tu, var_a = u
-        M_external = math.fabs(self.Mu)
-        N_external = self.Nu
-        x, eps_cj_arr = self.get_eps_cj_arr(eps_tu)
-        f_ti_arr = self.get_f_ti_arr(eps_tu, var_a)
         z_ti_arr = self.cs.z_ti_arr
 
         # total tensile force of all layers of the composite tensile zone [kN]:
@@ -245,7 +246,9 @@ class ECBLCalib(HasTraits):
         #
         N_tk = sum(f_ti_arr)
 
-        f_cj_arr = self.get_f_cj_arr(eps_tu)
+        x, eps_cj_arr = self.get_eps_cj_arr(eps_lo)
+        sig_cj_arr = self.get_sig_cj_arr(eps_cj_arr)
+        f_cj_arr = self.get_f_cj_arr(x, sig_cj_arr)
         
         # 'z_c_arr' measured from the top surface to the resulting compressive forces in 'f_c_arr'
         #
@@ -269,10 +272,29 @@ class ECBLCalib(HasTraits):
         # moment evaluated with respect to the center line
         #
         M_internal = M_internal_ - N_internal * self.cs.thickness / 2.
+        
+        # return the internal stress resultants
+        return N_internal, M_internal
 
+    # iteration counter
+    #
+    n = 0
+    def get_lack_of_fit(self, u):
+        '''Return the difference between 'N_external' and 'N_internal' as well as 'M_external' and 'M_internal'
+        N_c (=compressive force of the compressive zone of the concrete) 
+        N_t (=total tensile force of the reinforcement layers) 
+        '''
+        print 'iteration', self.n
+        self.n += 1
         # set iteration counter
         #
-        self.n += 1
+        self.ecbl.set_cparams(*u)
+        N_internal, M_internal = self.get_NM_internal(eps_lo = u[0],
+                                                      eps_up = self.eps_cu)
+
+        M_external = math.fabs(self.Mu)
+        N_external = self.Nu
+        
         d_N = N_internal - N_external
         d_M = M_internal - M_external
 
@@ -288,7 +310,7 @@ class ECBLCalib(HasTraits):
 
     # solution vector returned by 'fit_response'
     #
-    u_sol = Property(Array(Float), depends_on = '+config_modified')
+    u_sol = Property(Array(Float), depends_on = '+config_modified, ecbl_modified')
     @cached_property
     def _get_u_sol(self):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -308,10 +330,14 @@ class ECBLCalib(HasTraits):
         #
         return fsolve(self.get_lack_of_fit, self.u0, xtol = 1.0e-5)
 
-    u0 = Property(Array(float), depends_on = '+config_modified')
+    #===========================================================================
+    # Calibrated ecbl_mfn
+    #===========================================================================
+    ecbl_mfn = Property(depends_on = '+config_modified, ecbl_modified')
     @cached_property
-    def _get_u0(self):
-        return self.ecbl.u0
+    def _get_ecbl_mfn(self):
+        self.ecbl.set_cparams(*self.u_sol)
+        return self.ecbl.mfn
 
     #===========================================================================
     # Postprocessing for plotting
@@ -319,8 +345,9 @@ class ECBLCalib(HasTraits):
     def get_sig_comp_i_arr(self):
         '''tensile stress at the height of each reinforcement layer [MPa]:
         '''
-        f_ti_arr = self.get_f_ti_arr(*self.u_sol)
-        f_ci_arr = self.get_f_ci_arr(*self.u_sol)
+        x, eps_ti_arr, eps_ci_arr = self.get_eps_i_arr(eps_lo = self.u_sol[0])        
+        f_ti_arr = self.get_f_ti_arr(eps_ti_arr)
+        f_ci_arr = self.get_f_ci_arr(eps_ci_arr)
         return (f_ti_arr - f_ci_arr) / self.cs.width / self.cs.s_tex_z / 1000.
 
     def get_sig_max(self):
@@ -389,14 +416,28 @@ if __name__ == '__main__':
     do = 'plot_ecbl'
 
     if do == 'plot_ecbl':
-        for ecbl_type in ['linear', 'cubic', 'fbm', 'plastic']:
-            print 'CALIB TYPE', ecbl_type
-            ecbl_calib.n = 0
-            ecbl_calib.ecbl_type = ecbl_type
-            ecbl_calib.ecbl_mfn.plot(p)
-            print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
-            print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+        for sig_tex_u, color in zip([1200, 1300, 1400], ['red', 'green', 'blue', 'black', 'orange', 'brown']):
 
+            for ecbl_type in ['linear', 'cubic', 'fbm']:
+            #for ecbl_type in ['fbm']:
+                print 'CALIB TYPE', ecbl_type
+                ecbl_calib.n = 0
+                ecbl_calib.ecbl_type = ecbl_type
+                ecbl_calib.ecbl.sig_tex_u = sig_tex_u
+                ecbl_calib.ecbl_mfn.plot(p, color = color, linewidth = 8)
+                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+
+            ecbl_calib.ecbl_type = 'bilinear'
+            ecbl_calib.ecbl.sig_tex_u = sig_tex_u
+            for eps_el_fraction in [0.999]: # np.linspace(0.25, 0.99999, 4):
+                ecbl_calib.n = 0
+                ecbl_calib.ecbl.eps_el_fraction = eps_el_fraction
+                ecbl_calib.ecbl_mfn.plot(p, color = color)
+                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+        p.plot([0.0, 0.01], [0.0, 2400], color = 'black')
+            
     elif do == 'plot_cs_state':    
     #    ### plot crack bridge law [MPa]:
     #    #
