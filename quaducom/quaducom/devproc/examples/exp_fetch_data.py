@@ -8,9 +8,6 @@ access the data.
 @author: rch
 '''
 
-from quaducom.devproc.tensile_test.dog_bone.exp_tt_db import \
-    ExpTTDB
-
 from os.path import join
 from matresdev.db import SimDB
 from matresdev.db.exdb import ExRun
@@ -19,15 +16,16 @@ if __name__ == '__main__':
 
     simdb = SimDB()
 
+    # specify the path to the data file.
     test_file = join(simdb.exdata_dir,
                      'tensile_tests',
                      'dog_bone',
                      '2012-04-12_TT-12c-6cm-0-TU_SH4',
                      'TT-12c-6cm-0-TU-SH4-V1.DAT')
 
+    # construct the experiment
     tt = ExRun(data_file = test_file)
 
-    print tt.ex_type
-    
+    # access the response values.
     print tt.ex_type.eps_asc
     print tt.ex_type.sig_c_asc
