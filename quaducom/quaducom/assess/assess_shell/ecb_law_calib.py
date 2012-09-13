@@ -284,12 +284,15 @@ class ECBLCalib(HasTraits):
         N_c (=compressive force of the compressive zone of the concrete) 
         N_t (=total tensile force of the reinforcement layers) 
         '''
-        print 'iteration', self.n
+        #print 'iteration', self.n
         self.n += 1
         # set iteration counter
         #
-        self.ecbl.set_cparams(*u)
-        N_internal, M_internal = self.get_NM_internal(eps_lo = u[0],
+        eps_tu = u[0]
+        eps_tex_u = self.get_eps_i_arr(eps_tu)[1][0]
+        self.ecbl.set_cparams(eps_tex_u, u[1])
+        
+        N_internal, M_internal = self.get_NM_internal(eps_lo = eps_tu,
                                                       eps_up = self.eps_cu)
 
         M_external = math.fabs(self.Mu)
@@ -416,10 +419,10 @@ if __name__ == '__main__':
     do = 'plot_ecbl'
 
     if do == 'plot_ecbl':
-        for sig_tex_u, color in zip([1200, 1300, 1400], ['red', 'green', 'blue', 'black', 'orange', 'brown']):
+        for sig_tex_u, color in zip([1216], ['red']): #, 1300, 1400], ['red', 'green', 'blue', 'black', 'orange', 'brown']):
 
-            for ecbl_type in ['linear', 'cubic', 'fbm']:
-            #for ecbl_type in ['fbm']:
+            #for ecbl_type in ['linear', 'cubic', 'fbm']:
+            for ecbl_type in ['fbm']:
                 print 'CALIB TYPE', ecbl_type
                 ecbl_calib.n = 0
                 ecbl_calib.ecbl_type = ecbl_type
@@ -427,15 +430,17 @@ if __name__ == '__main__':
                 ecbl_calib.ecbl_mfn.plot(p, color = color, linewidth = 8)
                 print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
                 print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+                print 'eps_tu', ecbl_calib.u_sol
 
-            ecbl_calib.ecbl_type = 'bilinear'
-            ecbl_calib.ecbl.sig_tex_u = sig_tex_u
-            for eps_el_fraction in [0.999]: # np.linspace(0.25, 0.99999, 4):
-                ecbl_calib.n = 0
-                ecbl_calib.ecbl.eps_el_fraction = eps_el_fraction
-                ecbl_calib.ecbl_mfn.plot(p, color = color)
-                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
-                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+#            ecbl_calib.ecbl_type = 'bilinear'
+#            ecbl_calib.ecbl.sig_tex_u = sig_tex_u
+#            for eps_el_fraction in [0.999]: # np.linspace(0.25, 0.99999, 4):
+#                ecbl_calib.n = 0
+#                ecbl_calib.ecbl.eps_el_fraction = eps_el_fraction
+#                ecbl_calib.ecbl_mfn.plot(p, color = color)
+#                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
+#                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+#                print 'eps_tu', ecbl_calib.u_sol
         p.plot([0.0, 0.01], [0.0, 2400], color = 'black')
             
     elif do == 'plot_cs_state':    

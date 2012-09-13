@@ -26,19 +26,19 @@ import os.path
 ##
 simdb = SimDB()
 
-#file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
-#                       'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
-#                       'ARAMIS', 'V1', 'TT-V1-Stufe-0-428.txt')
+file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
+                       'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+                       'ARAMIS', 'V1', 'TT-V1-Stufe-0-428.txt')
 
 
 home_dir = os.path.expanduser('~')
 print 'home_dir', home_dir
 
-file_name = os.path.join(home_dir, 'uni', '6-Semester','Praktikum', 'Praktikum_Massivbau','ARAMIS','V1','TT-V1-Stufe-0-300.txt')
+#file_name = os.path.join(home_dir, 'uni', '6-Semester', 'Praktikum', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1-Stufe-0-300.txt')
 print 'file_name', file_name
 
-#file_name = os.path.join('C:\\','Praktikum_Massivbau','ARAMIS','V1','TT-V1TT-V1-Stufe-0-300.txt')
-file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
+#file_name = os.path.join('C:\\', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1TT-V1-Stufe-0-300.txt')
+#file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
 input_arr = np.loadtxt(file_name,
                     skiprows = 14,
                     usecols = [0, 1, 2, 3, 4, 8, 9, 10]
@@ -103,59 +103,59 @@ daf[select_idx_arr] = data_arr[:, 2:]
 #
 #x_vec=np.average(np.array([daf[-1,:,0]-daf[0,:,0],[daf[-1,:,1]-daf[0,:,1],[daf[-1,:,2]-daf[0,:,2]]))
 #y_vec=np.average(np.array([daf[:,-1,0]-daf[:,0,0],[daf[:,-1,1]-daf[:,0,1],[daf[0,-1,2]-daf[:,0,2]]))
-daf_new=np.copy(daf)
+daf_new = np.copy(daf)
 
 # @todo: select a facette with none-zero coordinate values
 # e.g. select a facette from the last middle axis and in a list of the first 10 or last 10 facettes
 # 
-x_vec_ = daf[-1,10,:3] - daf[0,10,:3]
+x_vec_ = daf[-1, 10, :3] - daf[0, 10, :3]
 #print'x_vec_', x_vec_
 
-x_vec_normed = x_vec_ / np.math.sqrt( np.dot( x_vec_, x_vec_ ))                         
+x_vec_normed = x_vec_ / np.math.sqrt(np.dot(x_vec_, x_vec_))                         
 #print 'x_vec_normed', x_vec_normed
 
-y_vec_ = daf[10,-1,:3] - daf[10,0,:3]
-y_vec_normed = y_vec_ / np.math.sqrt( np.dot( y_vec_, y_vec_ ))        
+y_vec_ = daf[10, -1, :3] - daf[10, 0, :3]
+y_vec_normed = y_vec_ / np.math.sqrt(np.dot(y_vec_, y_vec_))        
                     
-z_vec_normed = np.cross( x_vec_normed, y_vec_normed)
+z_vec_normed = np.cross(x_vec_normed, y_vec_normed)
 
-x = np.array([1,0,0])
-y = np.array([0,1,0])
-z = np.array([0,0,1])
+x = np.array([1, 0, 0])
+y = np.array([0, 1, 0])
+z = np.array([0, 0, 1])
 
-cos_xx_ = np.dot(x_vec_normed,x)
+cos_xx_ = np.dot(x_vec_normed, x)
 #angle_xx_ = np.arccos(cos_xx_)
 #print 'angle_xx_',angle_xx_ 
 
-cos_yx_ = np.dot(x_vec_normed,y)
+cos_yx_ = np.dot(x_vec_normed, y)
 #angle_yx_ = np.arccos(cos_yx_)
 #print 'angle_yx_',angle_yx_ 
 
-cos_zx_ = np.dot(x_vec_normed,z)
+cos_zx_ = np.dot(x_vec_normed, z)
 #angle_zx_ = np.arccos(cos_zx_)
 #print 'angle_zx_',angle_zx_ 
 
-cos_xy_ = np.dot(y_vec_normed,x)
+cos_xy_ = np.dot(y_vec_normed, x)
 #angle_xy_ = np.arccos(cos_xy_)
 #print 'angle_xy_',angle_xy_ 
 
-cos_yy_ = np.dot(y_vec_normed,y)
+cos_yy_ = np.dot(y_vec_normed, y)
 #angle_yy_ = np.arccos(cos_yy_)
 #print 'angle_yy_',angle_yy_ 
 
-cos_zy_ = np.dot(y_vec_normed,z)
+cos_zy_ = np.dot(y_vec_normed, z)
 #angle_zy_ = np.arccos(cos_zy_)
 #print 'angle_zy_',angle_zy_ 
 
-cos_xz_ = np.dot(z_vec_normed,x)
+cos_xz_ = np.dot(z_vec_normed, x)
 #angle_xz_ = np.arccos(cos_xz_)
 #print 'angle_xz_',angle_xz_ 
 
-cos_yz_ = np.dot(z_vec_normed,y)
+cos_yz_ = np.dot(z_vec_normed, y)
 #angle_yz_ = np.arccos(cos_yz_)
 #print 'angle_yz_',angle_yz_ 
 
-cos_zz_ = np.dot(z_vec_normed,z)
+cos_zz_ = np.dot(z_vec_normed, z)
 #angle_zz_ = np.arccos(cos_zz_) 
 #print 'angle_zz_',angle_zz_
 
@@ -167,15 +167,15 @@ T_mtx = np.array([[cos_xx_, cos_yx_, cos_zx_],
 
 # rotatation:
 #
-daf_new[:,:,0] = daf_new[:,:,0] * cos_xx_ + daf_new[:,:,1] * cos_yx_ + daf_new[:,:,2] * cos_zx_
-daf_new[:,:,1] = daf_new[:,:,0] * cos_xy_ + daf_new[:,:,1] * cos_yy_ + daf_new[:,:,2] * cos_zy_
-daf_new[:,:,2] = daf_new[:,:,0] * cos_xz_ + daf_new[:,:,1] * cos_yz_ + daf_new[:,:,2] * cos_zz_
+daf_new[:, :, 0] = daf_new[:, :, 0] * cos_xx_ + daf_new[:, :, 1] * cos_yx_ + daf_new[:, :, 2] * cos_zx_
+daf_new[:, :, 1] = daf_new[:, :, 0] * cos_xy_ + daf_new[:, :, 1] * cos_yy_ + daf_new[:, :, 2] * cos_zy_
+daf_new[:, :, 2] = daf_new[:, :, 0] * cos_xz_ + daf_new[:, :, 1] * cos_yz_ + daf_new[:, :, 2] * cos_zz_
 
 # translation:
 #
-daf_new[:,:,0] = daf_new[:,:,0] - daf[0,0,0]
-daf_new[:,:,1] = daf_new[:,:,1] - daf[0,0,1]
-daf_new[:,:,2] = daf_new[:,:,2] - daf[0,0,2]
+daf_new[:, :, 0] = daf_new[:, :, 0] - daf[0, 0, 0]
+daf_new[:, :, 1] = daf_new[:, :, 1] - daf[0, 0, 1]
+daf_new[:, :, 2] = daf_new[:, :, 2] - daf[0, 0, 2]
 
 
 
@@ -287,7 +287,7 @@ p.plot(idx_arr, ux_avg, color = 'red')
 p.subplot(2, 2, 4)
 p.hist(w_arr, bins = 40)
 
-#p.show()
+p.show()
 
 #qargs = [ daf[:, :, i, np.newaxis] for i in range(0, 6)]
 
@@ -298,10 +298,10 @@ print 'y_arr', y_arr.shape
 print 'z_arr', z_arr.shape
 print 'd4_ux_arr', ux_arr.shape
 
-s = m.points3d(X_arr,
-               y_arr,
-               z_arr,
-               ux_arr)
+#s = m.points3d(X_arr,
+#               y_arr,
+#               z_arr,
+#               ux_arr)
 
 ## print a surface - why is moved in the y direction?
 #m.surf(daf[:-integ_range, :, 0], daf[:-integ_range, :, 1], d4_ux_arr)#, mask = mask_idx_array)
