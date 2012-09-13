@@ -53,7 +53,7 @@ class ECBLCalib(HasTraits):
 
     # ultimate textile stress measured in the tensile test [MPa]
     #
-    sig_tex_u = Float(1216., sig_t_modified = True)
+    sig_tex_u = Float(1338., sig_t_modified = True)
     
     # compressive strain at the top at rupture [-]
     # (positive value is used)

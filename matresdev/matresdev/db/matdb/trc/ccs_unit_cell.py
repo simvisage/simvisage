@@ -13,11 +13,11 @@
 # Created on May 12, 2010 by: rch
 
 from etsproxy.traits.api import \
-    HasTraits, Directory, List, Int, Float, Any, \
-    on_trait_change, File, Constant, Instance, Trait, \
-    Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Bool, Enum, Event, implements, \
-    DelegatesTo, Tuple, Callable
+    HasTraits, List, Float, \
+    on_trait_change, Instance, \
+    Str, Property, cached_property, \
+    Event, \
+    DelegatesTo
 
 from etsproxy.traits.ui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \

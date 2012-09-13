@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print '\n'
     print 'setup SigFlCalib'
     print '\n'
-    sig_fl_calib = SigFlCalib( # concrete strength after 9 days
+    sig_fl_calib = SigFlCalib(# concrete strength after 9 days
                                #
                                f_ck = 55.7,
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     
     print '1 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-  
+
 #    sig_fl_calib.calib_sig_t_mfn()
 #    u_sol = sig_fl_calib.u_sol
 #    max_sig = sig_fl_calib.get_sig_max( u_sol )     
@@ -85,6 +85,7 @@ if __name__ == '__main__':
 ##    sig_fl_calib.plot_sig_t_mfn( u_sol )
 #    
 #    
+
     #------------------------------------------------
     # 2) EVALUATION / VALIDATION:
     # get 'eps_lo', 'esp_up' for given/calibrated cb-law 
@@ -102,8 +103,8 @@ if __name__ == '__main__':
     fig = p.figure(1)
     fig.set_facecolor('w')
 
-    ax = SubplotZero(fig, 111, axisbg='w')
-    fig.add_subplot( ax )
+    ax = SubplotZero(fig, 111, axisbg = 'w')
+    fig.add_subplot(ax)
 
     for direction in ["xzero", "yzero"]:
 #        ax.axis[direction].set_axisline_style("-|>")
@@ -159,7 +160,7 @@ if __name__ == '__main__':
 #            zip_list.append((n,t)) 
 
 
-    for n,t in zip_list:
+    for n, t in zip_list:
         #
         #decide which cbls shall be plottet
         # possible options: 'linear','cubic','fbm','bilinear'
@@ -514,4 +515,3 @@ if __name__ == '__main__':
     #  p.ylabel(r\textbf{$\nu$}")
         
         p.show()
-        
