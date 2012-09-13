@@ -575,7 +575,7 @@ class SigFlCalib(HasTraits):
         #(for high strength concrete)
         else :
             eps_c2 = (2. + 0.085 * (f_ck - 50)**0.53) / 1000.
-            eps_cu2 = (2.6 + 35. * (90. - f_ck) ** 4.) / 1000.  
+            eps_cu2 = (2.6 + 35. * ((90. - f_ck) /100.) ** 4.) / 1000.  
             n = 1.4 + 23.4 * ((90. - f_ck ) /100.)**4.    
         # concrete law with limit for eps_c
         eps_c_arr = np.linspace(0., eps_c2, num = 100.) 
@@ -1028,7 +1028,7 @@ if __name__ == '__main__':
 #                               calib_config = 'plastic', 
 #                               calib_config = 'cubic',
 #                               calib_config = 'fbm',
-                               calib_config = 'bilinear',
+                               calib_config = 'fbm',
 #                               # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
 #                              sig_c_config = 'block'       #cubic:   #eps_t_fail 0.0137706348812      

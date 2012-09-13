@@ -76,15 +76,15 @@ if __name__ == '__main__':
     
     print '1 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
   
-    sig_fl_calib.calib_sig_t_mfn()
-    u_sol = sig_fl_calib.u_sol
-    max_sig = sig_fl_calib.get_sig_max( u_sol )     
-    print 'eps_c_fail', sig_fl_calib.eps_c_fail
-    print 'eps_t_fail', sig_fl_calib.eps_t_fail
-    print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
-#    sig_fl_calib.plot_sig_t_mfn( u_sol )
-    
-    
+#    sig_fl_calib.calib_sig_t_mfn()
+#    u_sol = sig_fl_calib.u_sol
+#    max_sig = sig_fl_calib.get_sig_max( u_sol )     
+#    print 'eps_c_fail', sig_fl_calib.eps_c_fail
+#    print 'eps_t_fail', sig_fl_calib.eps_t_fail
+#    print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
+##    sig_fl_calib.plot_sig_t_mfn( u_sol )
+#    
+#    
     #------------------------------------------------
     # 2) EVALUATION / VALIDATION:
     # get 'eps_lo', 'esp_up' for given/calibrated cb-law 
@@ -165,25 +165,25 @@ if __name__ == '__main__':
         # possible options: 'linear','cubic','fbm','bilinear'
         #
 ###################################################################################        
-        for  calib_config in [ 'linear','cubic','fbm','bilinear']:   
-           
-            sig_fl_calib.calib_config = calib_config
-            sig_fl_calib.calib_sig_t_mfn()
-            u_sol = sig_fl_calib.u_sol
-            max_sig = sig_fl_calib.get_sig_max( u_sol )     
-            
+#        for  calib_config in [ 'linear','cubic','fbm','bilinear']:   
+#           
+#            sig_fl_calib.calib_config = calib_config
+#            sig_fl_calib.calib_sig_t_mfn()
+#            u_sol = sig_fl_calib.u_sol
+#            max_sig = sig_fl_calib.get_sig_max( u_sol )     
+#            
 ####################################################################################            
 #        #
 #        # decide which interaction diagram depending on cclaw shall be plottet
 #        # possible options: 'bilinear','block','quadratic'
 #        #
 #                
-#        for  sig_c_config in ['bilinear','block','quadratic', 'quadratic_2']:   
-#            sig_fl_calib.sig_c_config = sig_c_config
-#            sig_fl_calib.calib_config = 'cubic'
-#            sig_fl_calib.calib_sig_t_mfn()
-#            u_sol = sig_fl_calib.u_sol
-#          
+        for  sig_c_config in ['bilinear','block','quadratic', 'quadratic_2']:   
+            sig_fl_calib.sig_c_config = sig_c_config
+            sig_fl_calib.calib_config = 'cubic'
+            sig_fl_calib.calib_sig_t_mfn()
+            u_sol = sig_fl_calib.u_sol
+          
 #        
 ###################################################################################   
 #       # compare effects in the interaction diagramm for bilinear cclaw
@@ -197,15 +197,13 @@ if __name__ == '__main__':
 #            u_sol = sig_fl_calib.u_sol
 #            sig_fl_calib
 ##           
-            
+#            
             
               
 ##################################################################################
 # for loop push text to the right
 ##################################################################################
-            print 'eps_c_fail', sig_fl_calib.eps_c_fail
-            print 'eps_t_fail', sig_fl_calib.eps_t_fail
-            print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
+                         
         #    sig_fl_calib.plot_sig_t_mfn( u_sol )
             
             
@@ -219,8 +217,8 @@ if __name__ == '__main__':
             # reproduce the forces for the calibration test:
             #
             eps_lo =   sig_fl_calib.eps_t_fail
-            eps_up = - sig_fl_calib.eps_c_fail
-            N_internal, M_internal = sig_fl_calib.eval_N_M( eps_lo, eps_up )
+            
+            
         
             
             #------------------------------------------------
@@ -232,6 +230,7 @@ if __name__ == '__main__':
             n_B = 20
             n_C = 20
             
+            ##########################################################################
             #mainly compression strain:
             
             if  sig_fl_calib.sig_c_config== 'quadratic_2':    
@@ -248,6 +247,29 @@ if __name__ == '__main__':
             elif sig_fl_calib.sig_c_config== 'block':   
                 
                 eps_compression = -0.002
+            
+            ##########################################################################
+          #    eps_fail for different concrete laws
+            
+#            if sig_fl_calib.sig_c_config == 'block':
+#                
+#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8)) / 100) ** 4.) / 1000. 
+#                
+#            elif sig_fl_calib.sig_c_config == 'bilinear':
+#                
+#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8.))/ 100.) ** 4.) / 1000.
+#                
+#            elif sig_fl_calib.sig_c_config == 'quadratic':
+#                
+#                eps_c_fail =  (2.8 + 27. * (((98. - (f_ck +8.)) / 100.) ** 4.)) / 1000.   
+#                
+#            elif sig_fl_calib.sig_c_config == 'quadratic_2':   
+##                     
+#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8.))/100) ** 4.) / 1000.  
+
+
+#                
+            ##########################################################################
             
             eps_c_fail = 3.3/1000.
             eps_t_fail = sig_fl_calib.eps_t_fail
@@ -279,12 +301,12 @@ if __name__ == '__main__':
         
         #    all stress cases with classification of stress cases
         
-#            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C,eps_lo_arr_psc ])
-#            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C,eps_up_arr_psc ])
+            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C,eps_lo_arr_psc ])
+            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C,eps_up_arr_psc ])
         #    all stress cases without classification of stress cases    
-            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
-            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
-#            
+#            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
+#            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
+##            
             eps_lo_arr_psc = ([ eps_lo_arr_psc])
             eps_up_arr_psc = ([ eps_up_arr_psc])
         
@@ -444,8 +466,8 @@ if __name__ == '__main__':
      
 #        legend_list = [0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.] 
 #        legend_list = thickness_list 
-        legend_list = ['linear','cubic','fbm','bilinear']
-#        legend_list = ['bilinear','block','quadratic','quadratic_2']
+#        legend_list = ['linear','cubic','fbm','bilinear']
+        legend_list = ['bilinear','block','quadratic','quadratic_2']
 #        legend_list = n_layers_list 
 ###################################################################################
         p.legend( legend_list )
