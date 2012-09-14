@@ -14,7 +14,7 @@ from matplotlib.figure import \
     Figure
 
 from etsproxy.traits.ui.api import \
-    View, Item, Group, HSplit
+    View, Item, Group, HSplit, VGroup, HGroup
     
 from ecb_law import \
     ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
@@ -285,6 +285,36 @@ class ECBCrossSection(HasStrictTraits):
         sig_cj_arr = self.sig_cj_arr
         return sig_cj_arr * self.width * self.thickness / self.n_cj * 1000. 
 
+    #===========================================================================
+    # Stress resultants
+    #===========================================================================
+
+    N = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input')
+    @cached_property
+    def _get_N(self):
+        '''Get the resulting normal force.
+        '''
+        N_tk = sum(self.f_ti_arr)
+        N_ck = sum(self.f_cj_arr)
+        N_internal = N_ck + N_tk
+        return N_internal 
+
+    M = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input')
+    @cached_property
+    def _get_M(self):
+        M_tk = np.dot(self.f_ti_arr, self.z_ti_arr)
+        M_ck = np.dot(self.f_cj_arr, self.z_cj_arr)
+                  
+        M_internal_ = M_tk + M_ck
+
+        # moment evaluated with respect to the center line
+        #
+        M_internal = M_internal_ - self.N * self.thickness / 2.
+        
+        # return the internal stress resultants
+
+        return M_internal
+
     figure = Instance(Figure)
     def _figure_default(self):
         figure = Figure(facecolor = 'white')
@@ -354,31 +384,53 @@ class ECBCrossSection(HasStrictTraits):
         self.data_changed = True
 
     view = View(HSplit(Group(
-                Group(Item('thickness'),
+                HGroup(
+                Group(Item('thickness', springy = True),
                       Item('width'),
                       Item('n_layers'),
                       Item('n_rovings'),
                       Item('A_roving'),
                       label = 'Geometry',
+                      springy = True
                       ),
-                Group(Item('eps_up', label = 'Upper strain'),
+                Group(Item('eps_up', label = 'Upper strain', springy = True),
                       Item('eps_lo', label = 'Lower strain'),
-                      label = 'Strain'
+                      label = 'Strain',
+                      springy = True
                       ),
-                Group(Item('f_ck', label = 'Compressive strength'),
+                springy = True,
+                ),
+                HGroup(
+                Group(HGroup(
+                      Item('cc_law_type', show_label = False, springy = True),
+                      Item('cc_law', label = 'Edit', show_label = False, springy = True),
+                      springy = True
+                      ),
+                      Item('f_ck', label = 'Compressive strength'),
                       Item('n_cj', label = 'Discretization'),
-                      Item('cc_law_type', show_label = False),
-                      Item('@cc_law', show_label = False),
-                      label = 'Concrete'
+                      label = 'Concrete',
+                      springy = True
                       ),
-                Group(Item('ecbl_type', show_label = False),
-                      Item('ecbl', show_label = False),
-                      label = 'Reinforcement'
+                Group(HGroup(
+                      Item('ecbl_type', show_label = False, springy = True),
+                      Item('ecbl', label = 'Edit', show_label = False, springy = True),
+                      springy = True,
                       ),
+                      label = 'Reinforcement',
+                      springy = True
+                      ),
+                springy = True,
+                ),
                 Group(Item('s_tex_z', label = 'vertical spacing', style = 'readonly'),
                       label = 'Layout',
                       ),
-                             scrollable = True,
+                Group(
+                HGroup(Item('M', springy = True),
+                       Item('N', springy = True),
+                       ),
+                       label = 'Stress resultants'
+                       ),
+                scrollable = True,
                              ),
                 Group(Item('figure', editor = MPLFigureEditor(),
                            resizable = True, show_label = False),
