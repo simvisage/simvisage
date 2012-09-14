@@ -35,24 +35,6 @@ class ECBLCalib(HasTraits):
     #
 #    beta = Float(0.81, input = True)
 
-    #---------------------------------------------------------------
-    # material properties 
-    #-------------------------------------------------------------------
-
-    # ultimate textile stress measured in the tensile test [MPa]
-    #
-    sig_tex_u = Float(1216., sig_t_modified = True)
-    
-    # compressive strain at the top at rupture [-]
-    # (positive value is used)
-    # value measured at the experiment (with DMS)
-    # for 0: about 3.3
-    # for 90: about 3.0
-    # ultimate strain theoretically (Brockman): about 4.5
-    # NOTE: strain was meassured at a distance of 5 cm
-    #
-    eps_cu = Float(0.0033, sig_t_modified = True) # float value corresponds to 3 promile
-
     # rupture moment and normal force measured in the calibration experiment
     # (three point bending test)
     #
@@ -66,6 +48,11 @@ class ECBLCalib(HasTraits):
     cs = Instance(ECBCrossSection)
     
     ecbl = DelegatesTo('cs')
+
+    u0 = Property(Array(float), depends_on = '+tt_input, ecbl_modified')
+    @cached_property
+    def _get_u0(self):
+        return self.ecbl.u0
 
     def get_NM_internal(self, eps_lo, eps_up):
         '''
