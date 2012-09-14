@@ -99,19 +99,38 @@ if __name__ == '__main__':
     from mpl_toolkits.axes_grid.axislines import SubplotZero
     from matplotlib.ticker import MaxNLocator
     from matplotlib.ticker import AutoMinorLocator
-
-    fig = p.figure(1)
-    fig.set_facecolor('w')
-
-    ax = SubplotZero(fig, 111, axisbg = 'w')
-    fig.add_subplot(ax)
-
-    for direction in ["xzero", "yzero"]:
+#    
+#    fig = p.figure(1)
+#    fig.set_facecolor('w')
+#
+#    ax = SubplotZero(fig, 111, axisbg = 'w')
+#    fig.add_subplot(ax)
+#
+#    for direction in ["xzero", "yzero"]:
 #        ax.axis[direction].set_axisline_style("-|>")
-        ax.axis[direction].set_visible(True)
-
-    for direction in ["left", "right", "bottom", "top"]:
-        ax.axis[direction].set_visible(False)
+#        ax.axis[direction].set_visible(True)
+#
+#    for direction in ["left", "right", "bottom", "top"]:
+#        ax.axis[direction].set_visible(False)
+    fig = p.figure()   
+    fig.set_facecolor('w')
+    ax = fig.add_subplot(1,1,1)
+    ax.set_title('')
+    ax.spines['left'].set_position(('data',0))
+    ax.spines['right'].set_color('none')
+    ax.spines['bottom'].set_position(('data',0))
+    ax.spines['top'].set_color('none')
+    ax.spines['left'].set_smart_bounds(True)
+    ax.spines['bottom'].set_smart_bounds(True)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    
+#    for direction in ["xzero", "yzero"]:
+#        ax.spines[direction].set_axisline_style("-|>")
+#        ax.spines[direction].set_visible(True)
+#
+#    for direction in ["left", "right", "bottom", "top"]:
+#        ax.spines[direction].set_visible(False)
 
     nu_list = []
     mu_list = []
@@ -179,7 +198,7 @@ if __name__ == '__main__':
 #        # possible options: 'bilinear','block','quadratic'
 #        #
 #                
-        for  sig_c_config in ['bilinear','block','quadratic', 'quadratic_2']:   
+        for  sig_c_config in ['bilinear','block','quadratic']:   
             sig_fl_calib.sig_c_config = sig_c_config
             sig_fl_calib.calib_config = 'cubic'
             sig_fl_calib.calib_sig_t_mfn()
@@ -250,27 +269,8 @@ if __name__ == '__main__':
                 eps_compression = -0.002
             
             ##########################################################################
-          #    eps_fail for different concrete laws
-            
-#            if sig_fl_calib.sig_c_config == 'block':
-#                
-#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8)) / 100) ** 4.) / 1000. 
-#                
-#            elif sig_fl_calib.sig_c_config == 'bilinear':
-#                
-#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8.))/ 100.) ** 4.) / 1000.
-#                
-#            elif sig_fl_calib.sig_c_config == 'quadratic':
-#                
-#                eps_c_fail =  (2.8 + 27. * (((98. - (f_ck +8.)) / 100.) ** 4.)) / 1000.   
-#                
-#            elif sig_fl_calib.sig_c_config == 'quadratic_2':   
-##                     
-#                eps_c_fail =  (2.6 + 35. * ((90. - (f_ck + 8.))/100) ** 4.) / 1000.  
-
-
-#                
-            ##########################################################################
+       
+          
             
             eps_c_fail = 3.3/1000.
             eps_t_fail = sig_fl_calib.eps_t_fail
@@ -302,12 +302,13 @@ if __name__ == '__main__':
         
         #    all stress cases with classification of stress cases
         
-            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C,eps_lo_arr_psc ])
-            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C,eps_up_arr_psc ])
+#            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C,eps_lo_arr_psc ])
+#            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C,eps_up_arr_psc ])
         #    all stress cases without classification of stress cases    
-#            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
-#            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
+            eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
+            eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
 ##            
+            psc = 'True'
             eps_lo_arr_psc = ([ eps_lo_arr_psc])
             eps_up_arr_psc = ([ eps_up_arr_psc])
         
@@ -366,99 +367,111 @@ if __name__ == '__main__':
             mu_list.append( mu_arr )
             rho_list.append( rho_tex )
             
+    
+            if psc=='True':
+                p.plot (mu_arr_psc, nu_arr_psc, 'k--',
+                                       color='black', 
+                                      linewidth=2.0)
 #    
-#            if t == 0.06 and n == 12:
-#                
-#                if sig_fl_calib.calib_config =='linear':
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--', 
-#                            #color='blue', 
-#                            linewidth=2.0)
-#                elif sig_fl_calib.calib_config == 'cubic':  
-#                    p.plot(mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='red', 
-#                            linewidth=2.0)
-#                    
-#                elif sig_fl_calib.calib_config == 'bilinear':  
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='purple', 
-#                            linewidth=2.0)
-#                    
-#                elif sig_fl_calib.calib_config == 'fbm':  
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='turquoise', 
-#                            linewidth=2.0)
-#                         
-#            else:
-#                
-#                if sig_fl_calib.calib_config =='linear':
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--', 
-#                            #color='blue', 
-#                            linewidth=1.0)
-#                elif sig_fl_calib.calib_config == 'cubic':  
-#                    p.plot(mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='red', 
-#                            linewidth=1.0)
-#                    
-#                elif sig_fl_calib.calib_config == 'bilinear':  
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='purple', 
-#                            linewidth=1.0)
-#                    
-#                elif sig_fl_calib.calib_config == 'fbm':  
-#                    p.plot( mu_arr, nu_arr, #mu_arr_psc, nu_arr_psc, 'k--',
-#                            color='turquoise', 
-#                            linewidth=1.0)
-#    
-            # plot absolute values for N and M
-    #        
-            if t == 0.06 and n == 12 :
+            if t == 0.06 and n == 12:
+                
                 if sig_fl_calib.calib_config =='linear':
-                    p.plot( M_arr, N_arr, 
-                            color='green', 
+                    p.plot( mu_arr, nu_arr, 
+                            #color='blue', 
                             linewidth=2.0)
                 elif sig_fl_calib.calib_config == 'cubic':  
-                    p.plot( M_arr, N_arr, 
-                            #color='red', 
+                    p.plot(mu_arr, nu_arr, 
+                           # color='red', 
                             linewidth=2.0)
                     
                 elif sig_fl_calib.calib_config == 'bilinear':  
-                    p.plot( M_arr, N_arr, 
-                            #color='purple', 
+                    p.plot( mu_arr, nu_arr, 
+                            color='purple', 
                             linewidth=2.0)
                     
                 elif sig_fl_calib.calib_config == 'fbm':  
-                    p.plot( M_arr, N_arr, 
+                    p.plot( mu_arr, nu_arr, 
                             color='turquoise', 
                             linewidth=2.0)
-                       
+                         
             else:
+                
                 if sig_fl_calib.calib_config =='linear':
-                    p.plot( M_arr, N_arr, 
-                            color='green', 
+                    p.plot( mu_arr, nu_arr,  
+                            #color='blue', 
                             linewidth=1.0)
                 elif sig_fl_calib.calib_config == 'cubic':  
-                    p.plot( M_arr, N_arr, 
+                    p.plot(mu_arr, nu_arr, 
                             color='red', 
                             linewidth=1.0)
                     
                 elif sig_fl_calib.calib_config == 'bilinear':  
-                    p.plot( M_arr, N_arr, 
-                            color='purple', 
+                    p.plot( mu_arr, nu_arr, 
+                            color='purple',
                             linewidth=1.0)
                     
                 elif sig_fl_calib.calib_config == 'fbm':  
-                    p.plot( M_arr, N_arr, 
+                    p.plot( mu_arr, nu_arr, 
                             color='turquoise', 
                             linewidth=1.0)
-    
+    #    
+            # plot absolute values for N and M
+        #        
+#                if psc=='True':
+#                 p.plot (M_arr_psc, N_arr_psc, 'k--',
+#                                       color='black', 
+#                                      linewidth=2.0)
+#                if t == 0.06 and n == 12 :
+##                    
+#                    if sig_fl_calib.calib_config =='linear':
+#                        p.plot( M_arr, N_arr, 
+#                                color='green', 
+#                                linewidth=2.0)
+#                    elif sig_fl_calib.calib_config == 'cubic':  
+#                        p.plot( M_arr, N_arr,
+#                                color='blue',  
+#                                linewidth=2.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'bilinear':  
+#                        p.plot( M_arr, N_arr, 
+#                                #color='purple', 
+#                                linewidth=2.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'fbm':  
+#                        p.plot( M_arr, N_arr,
+#                                color='turquoise', 
+#                                linewidth=2.0)
+#             
+#                           
+#                           
+#                else:
+#                    if sig_fl_calib.calib_config =='linear':
+#                        p.plot( M_arr, N_arr,
+#                                color='green', 
+#                                linewidth=1.0)
+#                    elif sig_fl_calib.calib_config == 'cubic':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='red', 
+#                                linewidth=1.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'bilinear':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='purple', 
+#                                linewidth=1.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'fbm':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='turquoise', 
+#                                linewidth=1.0)
         
+            
         
         
         ######### @todo: format plot and axes (legend, grid, font etc.) #########
     
         ### GRID
         #
-        p.grid(b=None, which='both')
+        p.grid(b=None, which='major')
     
     
         
@@ -468,19 +481,18 @@ if __name__ == '__main__':
 #        legend_list = [0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.] 
 #        legend_list = thickness_list 
 #        legend_list = ['linear','cubic','fbm','bilinear']
-        legend_list = ['bilinear','block','quadratic','quadratic_2']
+        legend_list = ['bilinear','block','quadratic']
 #        legend_list = n_layers_list 
 ###################################################################################
-        p.legend( legend_list )
-    #    legend( (l2, l4), ('oscillatory', 'damped'), 'upper right', shadow=True)
+        p.legend( legend_list, 'lower right', shadow=True )
+        
     
     
         ### TICKS
         #
-        p.axis([0, 8, 250 ,-900])
-    #    p.axis([0, 0.2, 0.5 ,-1.2])
-    
-        #p.xticks(0.5*np.arange(12))
+    #    p.axis([0, 8, 250 ,-900])
+        p.axis([0, 0.15, 0.5 ,-1.25])
+        #p.xticks(0.5*np.arange(1.2))
     #    ax.set_xticks([0., 1., 2., 3., 4., 5., 6.])
     #    ax.set_ylim(ax.get_ylim()[::-1])
         
@@ -488,8 +500,9 @@ if __name__ == '__main__':
         ax.yaxis.set_major_locator(MaxNLocator(10))
         minorLocator   = AutoMinorLocator()
         ax.xaxis.set_minor_locator(minorLocator)
-    #    p.tick_params(axis='both',which='major',direction='out', length=15, width=2, colors='black')
-    #    p.tick_params(axis='both',which='minor',direction='in', length=100, width=1, colors='black')
+
+        ax.tick_params(axis='both',which='major',direction='out', length=6, width=2, colors='black')
+        ax.tick_params(axis='both',which='minor',direction='out', length=0, width=0, colors='black')
     
     
         ### TITEL
@@ -497,21 +510,13 @@ if __name__ == '__main__':
     #    p.title(r'$\nu$ -$\mu$ Interaction Diagram ',fontsize=22,
     #                                verticalalignment='baseline',
     #                                horizontalalignment = 'center')
-        #p.title('Interaction Diagram M/N')
-    #    p.xlabel('moment [kNm]')
-    #    p.ylabel('normal force [kN]')
-    
+
         
         ### LABELS
-        #
-        #p.xlabel(r'$\mu$',fontsize='20',
-    #             verticalalignment = 'top',
-    #             horizontalalignment = 'left')
-        #p.ylabel(r'$\nu$ ', fontsize= 20)
-    #    from matplotlib import rcParams
-    #    rcParams['text.usetex']=True
-    #    rcParams['text.latex.unicode']=True
-    #    p.xlabel(r"\textbf{$\mu$}")
-    #  p.ylabel(r\textbf{$\nu$}")
         
+        p.xlabel(r'$\mu$',fontsize='20',
+                 verticalalignment = 'top',
+                 horizontalalignment = 'left')
+        p.ylabel(r'$\nu$ ', fontsize= 20)
+
         p.show()
