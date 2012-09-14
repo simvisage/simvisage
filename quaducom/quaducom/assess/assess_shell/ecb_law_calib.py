@@ -54,35 +54,6 @@ class ECBLCalib(HasTraits):
     def _get_u0(self):
         return self.ecbl.u0
 
-    def get_NM_internal(self, eps_lo, eps_up):
-        '''
-        NOTE: eps_t (=tensile strain at the bottom [MPa]) is the search parameter
-        to be found iteratively!
-        '''
-        # all stress cases refer to a stress configuration in which M is positive 
-        #(maximum eps_c at the top, maximum eps_t at the bottom of the cross-section 
-        #
-        #print '------------- iteration: %g ----------------------------' % (self.n)
-        
-        self.cs.set(eps_lo = eps_lo, eps_up = eps_up)
-        self.ecbl.eps_tex_u = self.cs.eps_ti_arr[0]
-        
-        N_tk = sum(self.cs.f_ti_arr)
-        M_tk = np.dot(self.cs.f_ti_arr, self.cs.z_ti_arr)
-
-        N_ck = sum(self.cs.f_cj_arr)
-        M_ck = np.dot(self.cs.f_cj_arr, self.cs.z_cj_arr)
-                  
-        N_internal = -N_ck + N_tk
-        M_internal_ = M_tk - M_ck
-
-        # moment evaluated with respect to the center line
-        #
-        M_internal = M_internal_ - N_internal * self.cs.thickness / 2.
-        
-        # return the internal stress resultants
-        return N_internal, M_internal
-
     # iteration counter
     #
     n = 0
@@ -94,9 +65,10 @@ class ECBLCalib(HasTraits):
         self.n += 1
         # set iteration counter
         #
+        self.cs.set(eps_lo = u[0], eps_up = self.eps_cu)        
         self.ecbl.set_cparams(*u)
-        N_internal, M_internal = self.get_NM_internal(eps_lo = u[0],
-                                                      eps_up = self.eps_cu)
+        N_internal = self.cs.N
+        M_internal = self.cs.M
 
         M_external = math.fabs(self.Mu)
         N_external = self.Nu
@@ -145,38 +117,6 @@ class ECBLCalib(HasTraits):
         self.ecbl.set_cparams(*self.u_sol)
         return self.ecbl.mfn
 
-    #===========================================================================
-    # Postprocessing for plotting
-    #===========================================================================
-    def get_sig_comp_i_arr(self):
-        '''tensile stress at the height of each reinforcement layer [MPa]:
-        '''
-        
-        f_ti_arr = self.get_f_ti_arr(eps_ti_arr)
-        f_ci_arr = self.get_f_ci_arr(eps_ci_arr)
-        return (f_ti_arr - f_ci_arr) / self.cs.width / self.cs.s_tex_z / 1000.
-
-    def get_sig_max(self):
-        return np.max(self.get_sig_comp_i_arr())
-
-    def plot_sig_comp_i(self):
-        '''plot calibrated effective crack bridge law
-        '''
-        # graph shows sig_comp at the height of the textile layer in [MPa] 
-        zz_t_arr = self.cs.zz_ti_arr
-        sig_comp_i_arr = self.get_sig_comp_i_arr()
-        p.bar(zz_t_arr, sig_comp_i_arr, 0.02 * self.cs.thickness, align = 'center')
-        zz_c_arr, sig_c_arr = self.get_sig_c_arr(self.u_sol[0])
-        p.plot(zz_c_arr, -sig_c_arr, color = 'red')
-
-    def plot_sig_c_mfn(self):
-        '''plot concrete law
-        '''
-        # graph shows sig_c in [MPa] 
-        eps_c_arr = self.sig_c_mfn.xdata
-        sig_c_arr = self.sig_c_mfn.ydata
-        p.plot(eps_c_arr, sig_c_arr)
-
 if __name__ == '__main__':
 
     #------------------------------------------------
@@ -203,21 +143,7 @@ if __name__ == '__main__':
                            # value per m: M = 5*3.49
                            #
                            Mu = 3.49,
-                       
-                           # values for experiment beam with width = 0.20 m
-                           #
-                           cs = ECBCrossSection(
-                                                width = 0.20,
-                                                n_roving = 23.,
-                                                ),
-                           ecbl_type = 'linear',
-
-                           # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
-                           #
-#                              sig_c_config = 'block'       #cubic:   #eps_tu 0.0137706348812      
-#                              sig_c_config = 'bilinear'              #eps_tu 0.0142981075345
-                          sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
-                          )
+                       )
 
     do = 'plot_ecbl'
 
