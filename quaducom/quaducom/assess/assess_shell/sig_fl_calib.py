@@ -15,6 +15,8 @@ from etsproxy.traits.ui.api import \
 from etsproxy.traits.ui.menu import \
     Action, CloseAction, HelpAction, Menu, \
     MenuBar, NoButtons, Separator, ToolBar
+    
+from math import exp, log
 
 import numpy as np
 
@@ -42,6 +44,8 @@ class SigFlCalib(HasTraits):
     #
 #    beta = Float(0.81, input = True)
 
+#   form parameter for bilinear cbl
+    xd = Float(0.25, sig_c_modified = True)
     #---------------------------------------------------------------
     # material properties 
     #-------------------------------------------------------------------
@@ -226,23 +230,32 @@ class SigFlCalib(HasTraits):
 #            var_b = ( sig_fail**2 + 2. * var_a * sig_fail ) / eps_fail
             sig_tex_arr = -abs(var_a) + np.sqrt(abs(var_a)**2. + var_b * eps_arr) 
                 
+        elif self.calib_config == 'bilinear':         
         # full plastic cb-law 
-        elif self.calib_config == 'plastic':
-            E_yarn = abs(var_a)
+    
             eps_fail = eps_t_i_arr[0]
-            sig_fail = E_yarn * eps_t_i_arr[0]
-            eps_arr = np.hstack([0., 0.01 * eps_fail, eps_fail ])
-            sig_tex_arr = np.hstack([0., 0.99 * sig_fail, sig_fail])
-            print 'E_yarn', E_yarn
+            sig_tex_u = self.sig_tex_fail
+            xd = 0#self.xd
+            eps_arr = np.hstack([0.,  xd * eps_fail, eps_fail ])  # integral is the same as for cubic and fbm
+            #eps_arr = np.hstack([0.,  0.00000000000000000001*eps_fail, eps_fail ])  # bilinear
+            #eps_arr = np.hstack([0.,  0.999999999999999999*eps_fail, eps_fail ])   # linear    very sensitive with regard to the number of NAchkommastellen 
+            sig_tex_arr = np.hstack([0., var_a * sig_tex_u, sig_tex_u])
             
-        # linear cb-law up to reaching the rupture strain, behaves plastic afterwards
-        elif self.calib_config == 'bilinear':
-            E_yarn = abs(var_a)
-            sig_fail = self.sig_tex_fail
-            eps_fail = sig_fail / E_yarn
-            eps_arr = np.array([0., eps_fail, 2.*eps_fail ])
-            sig_tex_arr = np.array([0., sig_fail, sig_fail ])
-            print 'E_yarn', E_yarn
+            
+              
+        elif self.calib_config == 'fbm':             
+            m = var_a
+            eps_fail = eps_t_i_arr[0]
+            sig_tex_u = self.sig_tex_fail
+            eps_arr = np.linspace(0, eps_fail, num = 100.)
+            sig_tex_arr = (sig_tex_u / eps_fail / exp(-pow(exp(-log(m) / m), 1.0 * m)) * 
+                           eps_arr * np.exp(-np.power(eps_arr / eps_fail * exp(-log(m) / m), 1.0 * m)))     
+            
+
+  
+       
+
+ 
             
         # quadratic cb-law up to reaching the rupture strain, behaves plastic afterwards
         elif self.calib_config == 'quadratic':
@@ -311,16 +324,9 @@ class SigFlCalib(HasTraits):
             var_b = -(sig_fail + 2. * var_a * eps_fail ** 3.) / eps_fail ** 2. 
             
             var_c = -3. * var_a * eps_fail ** 2. - 2. * var_b * eps_fail 
-            #for horizontal tangent at 1.5 eps_fail
-            #var_b = -( sig_fail + 5.75 * var_a * eps_fail**3.) / (2. * eps_fail**2.) 
-            
-            #var_c = -3. * var_a * (1.5 * eps_fail) ** 2. - 2. * var_b * (1.5 *eps_fail)
-            #for horizontal tangent at 3 eps_fail
-            #var_b = -( sig_fail + 26 * var_a * eps_fail**3.) / (5. * eps_fail**2.) 
-            
-            #var_c = -3. * var_a * (3 * eps_fail) ** 2. - 2. * var_b * (3 *eps_fail)
-            sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c * eps_arr 
-        
+         
+            sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c * eps_arr  
+
             
         print'eps_t1', eps_t_i_arr[0]
         
@@ -507,7 +513,7 @@ class SigFlCalib(HasTraits):
         '''
         print 'sig_c: block'
         #(for standard concrete)
-        f_ck = self.f_ck + 8. 
+        f_ck = self.f_ck + 8.  
         if f_ck <= 50:
             lamda = 0.8
             eta = 1.0  
@@ -518,9 +524,10 @@ class SigFlCalib(HasTraits):
             eta = 1.0 - (f_ck / 50.) / 200.
         # factor [-] to calculate the height of the compressive zone  
             lamda = 0.8 - (f_ck - 50.) / 400.
+            
             eps_cu3 = (2.6 + 35. * ((90. - f_ck) / 100) ** 4.) / 1000. 
             
-        xdata = np.hstack([0., (1. - lamda) * eps_cu3 - 0.00001, (1 - lamda) * eps_cu3, eps_cu3 ]) 
+        xdata = np.hstack([0., (1. - lamda) * eps_cu3 - 0.00000000001, (1 - lamda) * eps_cu3, eps_cu3 ]) 
         ydata = np.hstack([0., 0., eta * (f_ck), eta * (f_ck), ])
        
         return MFnLineArray(xdata = xdata, ydata = ydata)   
@@ -536,14 +543,16 @@ class SigFlCalib(HasTraits):
         '''
         print 'sig_c: bilinear'
         #(for standard concrete)
-        f_ck = self.f_ck + 8.  
+        f_ck = self.f_ck+ 8.   
         if f_ck <= 50.:
             eps_c3 = 0.00175
             eps_cu3 = 0.0035
         #(for high strength concrete)
         else :
-            eps_c3 = (1.75 + 0.55 * (f_ck - 50.) / 40.) / 1000.
-            eps_cu3 = (2.6 + 35 * (90 - f_ck) ** 4.) / 1000.      
+            eps_c3  = (1.75 + 0.55 * ((f_ck - 50.) / 40.)) / 1000.
+            print 'eps_c3', eps_c3
+            eps_cu3 = (2.6 + 35. * ((90. - f_ck)/ 100.) ** 4.) / 1000.
+            print 'eps_cu3', eps_cu3      
         # concrete law with limit for eps_c
        
         xdata = np.hstack([0., eps_c3, eps_cu3])
@@ -551,6 +560,30 @@ class SigFlCalib(HasTraits):
         
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
+    sig_c_mfn_quadratic_2 = Property(depends_on = '+sig_c_modified')
+    @cached_property
+    def _get_sig_c_mfn_quadratic_2(self):
+        '''quadratic_2 stress-strain-diagram of the concrete
+        '''
+        print 'sig_c: quadratic_2' #parabola-rectangle-diagram
+        #(for standard concrete)
+        f_ck = self.f_ck + 8.  
+        if f_ck <= 50.:
+            eps_c2 = 0.002
+            eps_cu2 = 0.0035
+            n = 2
+        #(for high strength concrete)
+        else :
+            eps_c2 = (2. + 0.085 * (f_ck - 50)**0.53) / 1000.
+            eps_cu2 = (2.6 + 35. * ((90. - f_ck) /100.) ** 4.) / 1000.  
+            n = 1.4 + 23.4 * ((90. - f_ck ) /100.)**4.    
+        # concrete law with limit for eps_c
+        eps_c_arr = np.linspace(0., eps_c2, num = 100.) 
+        sig_c_arr = f_ck*(1-(1-(eps_c_arr/eps_c2)** n))
+        xdata = np.hstack ([eps_c_arr, eps_cu2]) 
+        ydata = np.hstack ([sig_c_arr, f_ck])  
+        
+        return MFnLineArray(xdata = xdata, ydata = ydata)
 
     #-----------------------------
     # for quadratic stress-strain-diagram of the concrete
@@ -562,7 +595,7 @@ class SigFlCalib(HasTraits):
         '''
         print 'sig_c: quadratic'
         # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
-        f_cm = self.f_ck + 8 
+        f_cm = self.f_ck + 8.  
         E_tan = 22. * (f_cm / 10) ** 0.3 * 1000.
 #        print 'E_tan', E_tan
         eps_c1 = min(0.7 * f_cm ** 0.31, 2.8) / 1000. #EC2
@@ -592,7 +625,8 @@ class SigFlCalib(HasTraits):
 
     sig_c_config = Trait('quadratic', {'quadratic' : 'sig_c_mfn_quadratic',
                                       'bilinear'  : 'sig_c_mfn_bilinear',
-                                      'block'     : 'sig_c_mfn_block'
+                                      'block'     : 'sig_c_mfn_block',
+                                      'quadratic_2' : 'sig_c_mfn_quadratic_2'
                                       }, sig_c_modified = True)
 
     sig_c_mfn = Property(depends_on = '+sig_c_modified')
@@ -836,12 +870,15 @@ class SigFlCalib(HasTraits):
 
                            'plastic'  : ('calib_layer_response',
                                               np.array([ 0.014, 50000. ])),
-                           'bilinear' : ('calib_layer_response',
-                                              np.array([ 0.010, 50000. ])),
+                           
                            'quadratic': ('calib_layer_response',
                                               np.array([ 0.010, 50000.])),
                            'quadratic_monoton': ('calib_layer_response',
                                               np.array([ 0.016, 0.016])),
+                            'fbm':               ('calib_layer_response',
+                                              np.array([ 0.014, 0.5])),
+                            'bilinear':       ('calib_layer_response',
+                                              np.array([ 0.014, 50000.])),
                            'quadratic_TT': ('calib_layer_response',
                                               np.array([ 0.010, -900000.])),
                             'quadratic_eps_max': ('calib_layer_response',
@@ -906,7 +943,19 @@ class SigFlCalib(HasTraits):
         sig_c_arr = self.sig_c_mfn.ydata
         p.plot(eps_arr, sig_c_arr)
         p.show()
-        
+    
+    def plot_ecbl_mfn_( self ):
+        '''plot ecbl law
+        '''
+        import pylab as p
+        print "'plot_sig_c_mfn' called"
+        # graph shows sig_c in [MPa] 
+        eps_arr = self.sig_t_mfn.xdata
+        #print 'eps_arr', eps_arr
+        sig_t_arr = self.sig_t_mfn.ydata
+        #print 'sig_c_arr', sig_c_arr
+        p.plot(eps_arr, sig_t_arr )
+        p.show()    
 
     def eval_N_M(self, eps_lo, eps_up):
         '''evaluate the normal force and bending moment for given strains at the top and bottom
@@ -964,10 +1013,13 @@ if __name__ == '__main__':
                                #
                                width = 0.20,
                                n_roving = 23.,
-
+                               
+                               # form parameter for bilinear cbl
+                               xd = 0.25,
+                               
                                # define shape of the crack-bridge law ('linear', 'bilinear' , 'quadratic','root3''root1','root2','cubic')
                                #
-                                calib_config = 'root3',
+#                                calib_config = 'root3',
 #                               calib_config = 'quadratic',
 #                               calib_config = 'linear',  
 #                              calib_config = 'quadratic_eps_max', # with k_penalty= 1.1; 1216 at eps_fail;with k_penalty= 1.05; 1216 at eps_fail
@@ -975,12 +1027,13 @@ if __name__ == '__main__':
 #                                calib_config = 'quadratic_TT',  
 #                               calib_config = 'plastic', 
 #                               calib_config = 'cubic',
-
-                               # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
+#                               calib_config = 'fbm',
+                               calib_config = 'fbm',
+#                               # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
 #                              sig_c_config = 'block'       #cubic:   #eps_t_fail 0.0137706348812      
-#                              sig_c_config = 'bilinear'              #eps_t_fail 0.0142981075345
-                              sig_c_config = 'quadratic'             #eps_t_fail 0.0137279096658
+                             sig_c_config = 'quadratic'              #eps_t_fail 0.0142981075345
+                             # sig_c_config = 'quadratic_2'             #eps_t_fail 0.0137279096658
                               
                               )
 
@@ -998,15 +1051,16 @@ if __name__ == '__main__':
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
     max_sig = sig_fl_calib.get_sig_max( u_sol )     
-#    print 'u_sol', u_sol
+    print 'u_sol', u_sol
 #    print 'eps_c_fail', sig_fl_calib.eps_c_fail
 #    print 'eps_t_fail', sig_fl_calib.eps_t_fail
 #    print 'max_sig', max_sig
 
-
+    ### plot tension law [MPa]:
+    #sig_fl_calib.plot_ecbl_mfn_()
     ### plot concrete law [MPa]:
     #
-#    sig_fl_calib.plot_sig_c_mfn()
+    sig_fl_calib.plot_sig_c_mfn()
 
     
     ### plot composite stress over the cross section [MPa]:

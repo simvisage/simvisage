@@ -95,6 +95,5 @@ if __name__ == '__main__':
 
     } 
 
-    migration_table = {'enthought.' : ''}
 
     migrate_classes(migration_table)

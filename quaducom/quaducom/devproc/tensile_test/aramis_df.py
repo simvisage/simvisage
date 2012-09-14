@@ -74,6 +74,8 @@ class CrackTracer(HasTraits):
 #    def _integ_radius_default(self):
 #        return ceil( float( self.n_px_f / self.n_px_a )
     integ_radius = Int(7)
+    
+    home_dir = os.path.expanduser('~')
 
     #===============================================================================
     # Read data
@@ -89,12 +91,12 @@ class CrackTracer(HasTraits):
         return os.path.join(simdb.exdata_dir, 'tensile_tests',
                             'dog_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4', 'ARAMIS',
                             'Probe-1-Ausschnitt-Xf15a1-Yf5a4')
-    
-    input_list = Property(Array(float), depends_on = 'data_dir')
+    file_name='C:\\Praktikum_Massivbau\ARAMIS\Christian_Schmitz\ARAMIS_Daten\Probe-1-kurz\P1-s0-10-16-22-Xf19a1-Yf5a4-Stufe-0-3.txt'    
+    input_list = Property(Array(float), depends_on = 'file_name')
     @cached_property
     def _get_input_list(self):
         
-        fn_list = os.listdir(self.data_dir)
+        fn_list = os.listdir(self.file_name)
 
         # remove hidden directory files from the file name list 
         if '.directory' in fn_list :

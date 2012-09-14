@@ -1,0 +1,189 @@
+'''
+Created on 05.05.2012
+
+@author: Christian Schmitz
+'''
+'''
+Created on Apr 25, 2012
+
+@author: rch
+'''
+
+import numpy as np
+import enthought.mayavi.mlab as m
+#
+from matresdev.db.simdb import \
+   SimDB
+#
+import os.path
+#
+## Access to the toplevel directory of the database
+##
+simdb = SimDB()
+
+#file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
+#                       'doge_bone', '2012-04-12_TT-12c-6cm-0-TU_SH4',
+#                       'ARAMIS', 'V1', 'TT-V1-Stufe-0-428.txt')
+
+
+home_dir = os.path.expanduser('~')
+print 'home_dir', home_dir
+
+file_name = os.path.join(home_dir, 'uni', '6-Semester','Praktikum', 'Praktikum_Massivbau','ARAMIS','V1','TT-V1-Stufe-0-300.txt')
+print 'file_name', file_name
+
+#file_name = os.path.join('C:\\','Praktikum_Massivbau','ARAMIS','V1','TT-V1TT-V1-Stufe-0-300.txt')
+#file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
+#file_name='C:\\Praktikum_Massivbau\ARAMIS\Probe-1-Ausschnitt-Xf15a1-Yf5a4\P1-s458-Xf15a1-Yf5a4-Ausschnitt-Stufe-0-5.txt'
+#file_name='C:\\Praktikum_Massivbau\ARAMIS\Christian_Schmitz\ARAMIS_Daten\Probe-1-kurz\P1-s0-10-16-22-Xf19a1-Yf5a4-Stufe-0-3.txt'
+#file_name= 'C:\\Praktikum_Massivbau\ARAMIS\Christian_Schmitz\ARAMIS_Daten\Probe-1-Ausschnitt-Xf15a1-Yf5a4\P1-s458-Xf15a1-Yf5a4-Ausschnitt-Stufe-0-1.txt'
+file_name= 'C:\\Praktikum_Massivbau\ARAMIS\Christian_Schmitz\ARAMIS_Daten\Probe-1-kurz\P1-s20-f5-a3-Stufe-0-14.txt'
+input_arr = np.loadtxt(file_name,
+                    skiprows = 14,
+                    usecols = [0, 1, 2, 3, 4, 5, 6, 7]  #???
+    )
+
+select_idx = np.where(input_arr[:, 4] < -50.0)[0] #??? WIeos [0]---> da wo es war ist rictiger wert sonst nullen
+
+
+data_arr = input_arr[ select_idx, :]  #WIeso [selcect_idx, :]
+
+
+x_idx = np.array(data_arr[:, 0], dtype = int)
+y_idx = np.array(data_arr[:, 1], dtype = int)
+
+
+
+x_min, x_max = np.min(x_idx), np.max(x_idx)
+y_min, y_max = np.min(y_idx), np.max(y_idx)
+
+n_x = x_max - x_min
+n_y = y_max - y_min
+
+print 'n_x', n_x
+print 'n_y', n_y
+
+n_data = data_arr.shape[1] - 2
+
+
+
+
+daf = np.zeros((n_x + 1, n_y + 1, n_data), dtype = float) #Wieso n_data (6 Ebenen nebeneinander mit den Zahlen?
+
+select_idx_arr = (x_idx - x_min, y_idx - y_min, slice(None)) # slice?'
+daf[select_idx_arr] = data_arr[:, 2:] #facette einzeln auswaehlbar
+
+#construct the mask for elements to be ignored
+#mask_idx_array = np.zeros((n_x + 1, n_y + 1), dtype = bool)
+#mask_idx_array[:, :] = True
+#mask_idx_array[(x_idx - x_min, y_idx - y_min)] = False #Sinn
+#print 'mask_idx_array.sum()',mask_idx_array.sum()
+
+
+#Koordinatentransformatiom:
+#average
+#x_vec=np.average(np.array([daf[-1,:,0]-daf[0,:,0],[daf[-1,:,1]-daf[0,:,1],[daf[-1,:,2]-daf[0,:,2]]))
+#y_vec=np.average(np.array([daf[:,-1,0]-daf[:,0,0],[daf[:,-1,1]-daf[:,0,1],[daf[0,-1,2]-daf[:,0,2]]))
+daf_neu=np.copy(daf)
+x_vec_=(daf[-1,11,:3])-(daf[0,11,:3])
+print'x_vec_', x_vec_
+x_vec_normed = x_vec_ /np.math.sqrt(np.dot(x_vec_,x_vec_))                        
+print 'x_vec_normed', x_vec_normed
+y_vec_=daf[11,-1,:3]-daf[11,0,:3]
+y_vec_normed = y_vec_ /np.math.sqrt(np.dot(y_vec_,y_vec_))        
+                    
+z_vec_normed= np.cross(x_vec_normed, y_vec_normed)
+
+x = np.array([1,0,0])
+y = np.array([0,1,0])
+z = np.array([0,0,1])
+cos_xx_ = np.dot(x_vec_normed,x)
+angle_xx_ = np.arccos(cos_xx_)
+print 'angle_xx_',angle_xx_ 
+cos_yx_ = np.dot(x_vec_normed,y)
+angle_yx_ = np.arccos(cos_yx_)
+print 'angle_yx_',angle_yx_ 
+cos_zx_ = np.dot(x_vec_normed,z)
+angle_zx_ = np.arccos(cos_zx_)
+print 'angle_zx_',angle_zx_ 
+cos_xy_ = np.dot(y_vec_normed,x)
+angle_xy_ = np.arccos(cos_xy_)
+print 'angle_xy_',angle_xy_ 
+cos_yy_ = np.dot(y_vec_normed,y)
+angle_yy_ = np.arccos(cos_yy_)
+print 'angle_yy_',angle_yy_ 
+cos_zy_ = np.dot(y_vec_normed,z)
+angle_zy_ = np.arccos(cos_zy_)
+print 'angle_zy_',angle_zy_ 
+cos_xz_ = np.dot(z_vec_normed,x)
+angle_xz_ = np.arccos(cos_xz_)
+print 'angle_xz_',angle_xz_ 
+cos_yz_ = np.dot(z_vec_normed,y)
+angle_yz_ = np.arccos(cos_yz_)
+print 'angle_yz_',angle_yz_ 
+cos_zz_ = np.dot(z_vec_normed,z)
+angle_zz_ = np.arccos(cos_zz_) 
+print 'angle_zz_',angle_zz_
+#
+#
+#
+#
+daf_neu[:,:,0]= daf_neu[:,:,0]*np.cos(angle_xx_)+daf_neu[:,:,1]*np.cos(angle_yx_)+daf_neu[:,:,2]*np.cos(angle_zx_)
+
+daf_neu[:,:,1]= daf_neu[:,:,0]*np.cos(angle_xy_)+daf_neu[:,:,1]*np.cos(angle_yy_)+daf_neu[:,:,2]*np.cos(angle_zy_)
+
+daf_neu[:,:,2]= daf_neu[:,:,0]*np.cos(angle_xz_)+daf_neu[:,:,1]*np.cos(angle_yz_)+daf_neu[:,:,2]*np.cos(angle_zz_)
+
+#Translation:
+daf_neu[:,:,0]=daf_neu[:,:,0]-daf[0,0,0]
+daf_neu[:,:,1]=daf_neu[:,:,1]-daf[0,0,1]
+daf_neu[:,:,2]=daf_neu[:,:,2]-daf[0,0,2]
+
+
+
+#vec_x= np.average(daf[-1,:,0])-np.average(daf[0,:,0])
+#vec_y= np.average(daf[-1,:,1])-np.average(daf[0,:,1])
+#vec_z=np.average(daf[-1,:,2])-np.average(daf[0,:,2])
+#
+#print 'vec_x'
+#print vec_x
+#print 'vec_y' 
+#print vec_y
+#
+#daf_neu=np.copy(daf)
+
+
+
+##Drehung um die z-Achse:
+#daf_neu[:,:,0]=daf_neu[:,:,0]*np.cos(winkel_xy)-np.sin(winkel_xy)*daf_neu[:,:,1]
+#daf_neu[:,:,1]=daf_neu[:,:,0]*np.sin(winkel_xy)+np.cos(winkel_xy)*daf_neu[:,:,1]
+#
+##Drehung um die y-Achse:
+#
+#daf_neu[:,:,0]=daf_neu[:,:,0]*np.cos(winkel_yz)+np.sin(winkel_yz)*daf_neu[:,:,2]
+#daf_neu[:,:,2]=-daf_neu[:,:,0]*np.sin(winkel_yz)+np.sin(winkel_yz)*daf_neu[:,:,2]
+#
+##Drehung um die x-Achse:
+#daf_neu[:,:,1]=daf_neu[:,:,1]*np.cos(winkel_xy)-np.sin(winkel_xy)*daf_neu[:,:,2]
+#daf_neu[:,:,2]=daf_neu[:,:,1]*np.sin( winkel_yz)+np.cos( winkel_yz)*daf_neu[:,:,2]
+
+
+
+
+#qargs = [ daf[:, :, i, np.newaxis] for i in range(0, 6)]
+#m.quiver3d(*qargs)
+#s = m.points3d(daf[:, :, 0],             daf[:, :, 1],
+#             daf[:, :, 2],
+#            daf[:, :, 3], scale_mode = 'none',scale_factor =3.5, mode='cube')
+
+s = m.points3d(daf_neu[:, :, 0],             
+               daf_neu[:, :, 1],
+               daf_neu[:, :, 2],
+               daf_neu[:, :, 3], 
+               scale_mode = 'none',
+               scale_factor = 3.5, 
+               mode = 'cube')
+
+m.axes()
+
+m.show()
