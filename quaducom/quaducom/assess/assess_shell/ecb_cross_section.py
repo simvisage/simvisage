@@ -14,7 +14,7 @@ from matplotlib.figure import \
     Figure
 
 from etsproxy.traits.ui.api import \
-    View, Item, Group
+    View, Item, Group, HSplit
     
 from ecb_law import \
     ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
@@ -101,8 +101,7 @@ class ECBCrossSection(HasTraits):
 
     eps_up = Float(0.0033, eps_input = True)
     eps_lo = Float(-0.0172, eps_input = True)
-    
-    
+        
     #===========================================================================
     # Discretization conform to the tex layers
     #===========================================================================
@@ -301,7 +300,8 @@ class ECBCrossSection(HasTraits):
         self.data_changed = True
 
 
-    view = View(Group(Item('thickness'),
+    view = View(HSplit(Group(
+                Group(Item('thickness'),
                       Item('width'),
                       Item('n_layers'),
                       Item('n_rovings'),
@@ -315,16 +315,17 @@ class ECBCrossSection(HasTraits):
                 Group(Item('s_tex_z', label = 'vertical spacing', style = 'readonly'),
                       label = 'Layout',
                       ),
+                             ),
                 Group(Item('figure', editor = MPLFigureEditor(),
                            resizable = True, show_label = False),
                       id = 'simexdb.plot_sheet',
                       label = 'plot sheet',
                       dock = 'tab',
                       ),
+                       ),
                 resizable = True,
                 buttons = ['OK', 'Cancel'])
     
 if __name__ == '__main__':
     ecs = ECBCrossSection()
     ecs.configure_traits()
-    print ecs.z_ti_arr
