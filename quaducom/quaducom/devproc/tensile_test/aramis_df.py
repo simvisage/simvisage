@@ -438,7 +438,7 @@ class CrackTracer(HasTraits):
     @cached_property    
     def _get_x_arr_avg(self):
         # use average to eliminate errors in measuring of single points (yields a 1d-array)
-        return np.ones( self.n_y_t ) * np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
+        return np.ones(self.n_y_t) * np.average(self.data_t[self.w_detect_step, :, :, 0], axis = 1)
 
     x_idx_arr = Property
     @cached_property    
@@ -455,7 +455,7 @@ class CrackTracer(HasTraits):
     @cached_property    
     def _get_y_arr_avg(self):
         # use average to eliminate errors in measuring of single points (yields a 1d-array)
-        return np.ones( self.n_y_t ) * np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
+        return np.ones(self.n_y_t) * np.average(self.data_t[self.w_detect_step, :, :, 1], axis = 0)
 
     y_idx_arr = Property
     @cached_property    

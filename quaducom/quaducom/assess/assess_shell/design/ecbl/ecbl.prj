@@ -1,6 +1,6 @@
 format 74
 "ecbl"
-  revision 1
+  revision 2
   modified_by 77 "rch"
 
 
@@ -53,7 +53,7 @@ format 74
     package_name_in_tab default show_context default show_opaque_action_definition default auto_label_position default write_flow_label_horizontally default draw_all_relations default shadow default
     show_infonote default drawing_language default show_stereotype_properties default
     classdiagram 128077 "effective_crack_bridge"
-      draw_all_relations default hide_attributes default hide_operations default hide_getset_operations default show_members_full_definition default show_members_visibility default show_members_stereotype default show_members_context default show_members_multiplicity default show_members_initialization default show_attribute_modifiers default member_max_width 0 show_parameter_dir default show_parameter_name default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default show_relation_modifiers default show_relation_visibility default show_infonote default shadow default show_stereotype_properties default
+      draw_all_relations no hide_attributes default hide_operations default hide_getset_operations default show_members_full_definition default show_members_visibility default show_members_stereotype default show_members_context default show_members_multiplicity default show_members_initialization default show_attribute_modifiers default member_max_width 0 show_parameter_dir default show_parameter_name default package_name_in_tab default class_drawing_mode default drawing_language default show_context_mode default auto_label_position default show_relation_modifiers default show_relation_visibility default show_infonote default shadow default show_stereotype_properties default
       comment "Calibration of an Effective Crack Bridge Law"
       size A4
     end
@@ -70,27 +70,6 @@ ${docstring}${members}
       explicit_switch_type ""
       
       comment "Calibrator of the effective crack bridge law"
-      attribute 128077 "ecbl_mfn"
-	private explicit_type ""
-	cpp_decl ""
-	java_decl ""
-	php_decl ""
-	python_decl "${comment}${self}${name} = ${value}
-"
-	idl_decl ""
-	comment "identified parameters of the crack bridge law. 
-"
-      end
-
-      classrelation 128077 // <unidirectional association>
-	relation 128077 --->
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 128077 // <unidirectional association>
-	  b parent class_ref 128205 // ECBLaw
-      end
-
       classrelation 128333 // <unidirectional association>
 	relation 128333 --->
 	  a role_name "" private
@@ -109,14 +88,6 @@ ${docstring}${members}
 	  b parent class_ref 128461 // ECBCrossSection
       end
 
-      classrelation 128589 // <unidirectional association>
-	relation 128589 --->
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 128589 // <unidirectional association>
-	  b parent class_ref 128589 // CCLaw
-      end
     end
 
     class 128205 "ECBLaw"
@@ -131,6 +102,15 @@ ${docstring}${members}
       explicit_switch_type ""
       
       comment "Effective crack bridge law"
+      attribute 134989 "ecbl_mfn"
+	derived private explicit_type "Function"
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
     end
 
     class 128333 "ECBLawMxN"
@@ -144,15 +124,6 @@ ${docstring}${members}
       idl_decl ""
       explicit_switch_type ""
       
-      classrelation 128205 // <unidirectional association>
-	relation 128205 --->
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 128205 // <unidirectional association>
-	  b parent class_ref 128077 // ECBLawCalib
-      end
-
       attribute 128205 "mn_diagram"
 	private explicit_type ""
 	cpp_decl ""
@@ -162,6 +133,15 @@ ${docstring}${members}
 "
 	idl_decl ""
 	comment "resulting MN diagram"
+      end
+
+      classrelation 135245 // <unidirectional association>
+	relation 135245 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 135245 // <unidirectional association>
+	  b parent class_ref 128461 // ECBCrossSection
       end
     end
 
@@ -176,6 +156,43 @@ ${docstring}${members}
       idl_decl ""
       explicit_switch_type ""
       
+      classrelation 135373 // <unidirectional association>
+	relation 135373 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 135373 // <unidirectional association>
+	  b parent class_ref 128589 // CCLaw
+      end
+
+      classrelation 135501 // <unidirectional association>
+	relation 135501 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 135501 // <unidirectional association>
+	  b parent class_ref 128205 // ECBLaw
+      end
+
+      attribute 134733 "eps_up"
+	private explicit_type "float"
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      attribute 134861 "eps_lo"
+	private explicit_type "float"
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
     end
 
     class 128589 "CCLaw"
@@ -189,6 +206,15 @@ ${docstring}${members}
       idl_decl ""
       explicit_switch_type ""
       
+      attribute 135117 "cc_mfn"
+	derived private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
     end
 
     class 128717 "ECBLawLinear"

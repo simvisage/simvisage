@@ -1,12 +1,15 @@
-window_sizes 1276 997 337 933 773 144
+window_sizes 1276 838 337 933 614 144
 diagrams
   active  classdiagram_ref 128077 // effective_crack_bridge
     746 618 100 4 0 0
 end
 show_stereotypes
-selected attribute_ref 128205 // mn_diagram
+selected attribute_ref 135117 // cc_mfn
 open
   class_ref 128077 // ECBLawCalib
+  class_ref 128205 // ECBLaw
   class_ref 128333 // ECBLawMxN
+  class_ref 128461 // ECBCrossSection
+  class_ref 128589 // CCLaw
 end
 end
