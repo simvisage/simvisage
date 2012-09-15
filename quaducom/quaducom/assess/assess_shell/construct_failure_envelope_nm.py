@@ -24,6 +24,8 @@ from sig_fl_calib import SigFlCalib
 
 import pylab as p
 
+import Image
+
 
 
 if __name__ == '__main__':
@@ -125,9 +127,30 @@ if __name__ == '__main__':
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     
+#    ##### for image
+#    
+#    im = Image.open('C:\\Users\Christian Schmitz\Desktop\Dehnungsverteilung_Interaktionsdiagramm.png')
+#    height = im.size[1]
+#
+#    # We need a float array between 0-1, rather than
+#    # a uint8 array between 0-255
+#    im = np.array(im).astype(np.float) / 255
+#
+#    fig = p.figure()
+#
+#    # With newer (1.0) versions of matplotlib, you can 
+#    # use the "zorder" kwarg to make the image overlay
+#    # the plot, rather than hide behind it... (e.g. zorder=10)
+#    fig.figimage(im, 0, fig.bbox.ymax - height)
+#
+#    # (Saving with the same dpi as the screen default to
+#    #  avoid displacing the logo image)    
+#    fig.savefig('C:\\Users\Christian Schmitz\Desktop\Dehnungsverteilung_Interaktionsdiagramm.png', dpi=80)
+
+    
 #    for direction in ["xzero", "yzero"]:
-#        ax.spines[direction].set_axisline_style("-|>")
-#        ax.spines[direction].set_visible(True)
+#        ax.axis[direction].set_axisline_style("-|>")
+#        ax.axis[direction].set_visible(True)
 #
 #    for direction in ["left", "right", "bottom", "top"]:
 #        ax.spines[direction].set_visible(False)
