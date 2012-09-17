@@ -5,7 +5,8 @@ Created on Aug 23, 2012
 '''
 
 from etsproxy.traits.api import \
-    HasStrictTraits, List, Float, Property, cached_property, Str
+    HasStrictTraits, List, Float, Property, \
+    WeakRef, cached_property, Str, on_trait_change
     
 import numpy as np
 
@@ -21,13 +22,19 @@ class ECBLBase(HasStrictTraits):
     # names of calibrated parameters
     cnames = List(Str)
     
+    cs = WeakRef
+    
+    @on_trait_change('+input')
+    def _notify_cs(self):
+        self.cs.ecbl_modified = True
+    
     def set_cparams(self, *args):
         for name, value in zip(self.cnames, args):
             setattr(self, name, value)
+        self.cs.ecbl_modified = True
 
     def __call__(self, *args):
-        self.set_cparams(*args)
-        return self.eps_tex_arr, self.sig_tex_arr
+        return self.mfn.get_value(args)
 
     arr = Property()
     def _get_arr(self):
@@ -47,7 +54,7 @@ class ECBLLinear(ECBLBase):
     
     eps_tex_u = Float(0.01, input = True)
     E_tex = Float(80000, input = True)
-    sig_tex_u = Float
+    sig_tex_u = Float(input = True)
     u0 = List([ 0.01, 80000. ])
 
     cnames = ['eps_tex_u', 'E_tex']
@@ -67,13 +74,13 @@ class ECBLLinear(ECBLBase):
 class ECBLFBM(ECBLBase):
     '''Effective crack bridge Law based on fiber-bundle-model.'''
     
-    sig_tex_u = Float(1250, input = True)
+    sig_tex_u = Float(1216, input = True)
     eps_tex_u = Float(0.014, input = True)
     m = Float(0.5, input = True)
 
     cnames = ['eps_tex_u', 'm']
         
-    u0 = List([0.014, 0.5 ])
+    u0 = List([0.01266923, 0.5 ])
         
     eps_tex_arr = Property(depends_on = '+input')
     @cached_property

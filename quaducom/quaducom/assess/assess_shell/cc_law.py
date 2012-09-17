@@ -105,3 +105,12 @@ class CCLawQuadratic(CCLawBase):
         ydata = sig_c_arr
         
         return MFnLineArray(xdata = xdata, ydata = ydata)
+    
+    
+if __name__ == '__main__':
+    cc_law = CCLawQuadratic()
+    
+    print cc_law.mfn.get_value(-0.00000001)
+    import pylab as p
+    cc_law.mfn.plot(p)
+    p.show()

@@ -1,6 +1,12 @@
 '''
 Created on Sep 4, 2012
 
+@todo: define views for ecbl and cc_law
+@todo: introduce the dock feature for the views
+@todo: classify the state changes and provide examples.
+@todo: perform the calibration using ecbl_calib
+
+
 @author: rch
 '''
 from etsproxy.traits.api import \
@@ -79,6 +85,15 @@ class ECBCrossSection(HasStrictTraits):
 
 
     #===========================================================================
+    # State management
+    #===========================================================================
+    modified = Event
+    @on_trait_change('+geo_input, +cc_input,+tt_input, +eps_input, ecbl_modified')
+    def _set_cs_modified(self):
+        self.modified = True
+    
+
+    #===========================================================================
     # Distribution of reinforcement
     #===========================================================================
 
@@ -105,15 +120,15 @@ class ECBCrossSection(HasStrictTraits):
     
     # number of subdivisions of the compressive zone
     #
-    n_cj = Int(200, auto_set = False, enter_set = True,
+    n_cj = Int(20, auto_set = False, enter_set = True,
                  cc_input = True, eps_input = True)
 
     #===========================================================================
     # Strain state
     #===========================================================================
 
-    eps_up = Float(0.0033, auto_set = False, enter_set = True, eps_input = True)
-    eps_lo = Float(-0.0172, auto_set = False, enter_set = True, eps_input = True)
+    eps_up = Float(-0.0033, auto_set = False, enter_set = True, eps_input = True)
+    eps_lo = Float(0.0140, auto_set = False, enter_set = True, eps_input = True)
         
     #===========================================================================
     # Discretization conform to the tex layers
@@ -145,12 +160,20 @@ class ECBCrossSection(HasStrictTraits):
     eps_ti_arr = Property(depends_on = '+eps_input,+geo_input')
     @cached_property
     def _get_eps_ti_arr(self):
-        return (-np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0     
+        return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0  
+    
+    def convert_eps_tex_u_2_lo(self, eps_tex_u):
+        eps_up = self.eps_up
+        return eps_up + (eps_tex_u - eps_up) / self.z_ti_arr[0] * self.thickness
+    
+    def convert_eps_lo_2_tex_u(self, eps_lo):
+        eps_up = self.eps_up
+        return (eps_up + (eps_lo - eps_up) / self.thickness * self.z_ti_arr[0])
     
     eps_ci_arr = Property(depends_on = '+eps_input,+geo_input')
     @cached_property
     def _get_eps_ci_arr(self):
-        return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0  
+        return (-np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0     
 
     eps_cj_arr = Property(depends_on = '+eps_input,+geo_input,n_cj')    
     @cached_property
@@ -163,14 +186,14 @@ class ECBCrossSection(HasStrictTraits):
         #
         eps_j_arr = (self.eps_up + (self.eps_lo - self.eps_up) * self.z_cj_arr / 
                      self.thickness)        
-        return (np.fabs(eps_j_arr) + eps_j_arr) / 2.0  
+        return (-np.fabs(eps_j_arr) + eps_j_arr) / 2.0  
 
     z_cj_arr = Property(depends_on = '+eps_input,+geo_input,n_cj')
     @cached_property
     def _get_z_cj_arr(self):
         '''Get the discretizaton of the  compressive zone
         '''
-        return np.linspace(0, self.thickness, self.n_cj)
+        return np.linspace(0, self.x, self.n_cj)
 
     # distance of reinforcement layers from the bottom 
     #
@@ -211,15 +234,12 @@ class ECBCrossSection(HasStrictTraits):
                                   bilinear = ECBLBilinear),
                       tt_input = True)
     
-    ecbl = Property(Instance(ECBLBase), depends_on = 'ecbl_type, +tt_input')
+    ecbl = Property(Instance(ECBLBase), depends_on = '+tt_input')
     @cached_property
     def _get_ecbl(self):
-        return self.ecbl_type_(sig_tex_u = self.sig_tex_u)
+        return self.ecbl_type_(sig_tex_u = self.sig_tex_u, cs = self)
 
     ecbl_modified = Event
-    @on_trait_change('ecbl.+input')
-    def _set_ecbl_modified(self):
-        self.ecbl_modified = True
     
     ecbl_tex_mfn = Property(depends_on = '+tt_input, ecbl_modified')
     @cached_property
@@ -270,18 +290,17 @@ class ECBCrossSection(HasStrictTraits):
         '''Compressive stress in the compresive zone 'x' for each layer i.
         '''
         sig_ci_arr = self.sig_c_mfn_vct()
-        return sig_ci_arr * self.width * self.s_tex_z * 1000.
+        return sig_ci_arr * self.width * self.s_tex_z * 1000.0
 
     #===========================================================================
     # Fine discretization of the compressive zone
     #===========================================================================
     sig_cj_arr = Property
     def _get_sig_cj_arr(self):
-        return self.sig_c_mfn_vct(self.eps_cj_arr)
+        return -self.sig_c_mfn_vct(-self.eps_cj_arr)
 
     f_cj_arr = Property
     def _get_f_cj_arr(self):
-
         sig_cj_arr = self.sig_cj_arr
         return sig_cj_arr * self.width * self.thickness / self.n_cj * 1000. 
 
@@ -289,22 +308,23 @@ class ECBCrossSection(HasStrictTraits):
     # Stress resultants
     #===========================================================================
 
-    N = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input')
+    N = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input, ecbl_modified')
     @cached_property
     def _get_N(self):
         '''Get the resulting normal force.
         '''
         N_tk = sum(self.f_ti_arr)
-        N_ck = sum(self.f_cj_arr)
+        N_ck = np.trapz(self.sig_cj_arr * self.width, self.z_cj_arr) * 1000.0
+        
         N_internal = N_ck + N_tk
         return N_internal 
 
-    M = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input')
+    M = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input, ecbl_modified')
     @cached_property
     def _get_M(self):
         M_tk = np.dot(self.f_ti_arr, self.z_ti_arr)
-        M_ck = np.dot(self.f_cj_arr, self.z_cj_arr)
-                  
+        M_ck = np.trapz(self.sig_cj_arr * self.width * self.z_cj_arr, self.z_cj_arr) * 1000.0
+
         M_internal_ = M_tk + M_ck
 
         # moment evaluated with respect to the center line
@@ -339,12 +359,12 @@ class ECBCrossSection(HasStrictTraits):
 
         # eps cj
         ec = np.hstack([self.eps_cj_arr] + [0, 0])
-        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness]) 
+        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ]) 
         ax.fill(ec, zz, color = 'blue')
 
         # reinforcement layers
-        eps_range = np.array([min(0.0, self.eps_lo),
-                              max(0.0, self.eps_up)], dtype = 'float')
+        eps_range = np.array([max(0.0, self.eps_lo),
+                              min(0.0, self.eps_up)], dtype = 'float')
         z_ti_arr = np.ones_like(eps_range)[:, None] * self.z_ti_arr[None, :]
         ax.plot(eps_range, z_ti_arr, 'k--', color = 'black')
         
@@ -366,10 +386,10 @@ class ECBCrossSection(HasStrictTraits):
 
         # f cj
         f_c = self.width * np.hstack([self.sig_cj_arr] + [0, 0])
-        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness]) 
+        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ]) 
         ax.fill(f_c, zz, color = 'blue')
 
-        f_range = [np.min(self.f_ti_arr), np.max(f_c)]        
+        f_range = [np.max(self.f_ti_arr), np.min(f_c)]        
         # neutral axis
         ax.plot(f_range, [d, d], 'k--', color = 'green', lw = 2)
         
@@ -425,8 +445,8 @@ class ECBCrossSection(HasStrictTraits):
                       label = 'Layout',
                       ),
                 Group(
-                HGroup(Item('M', springy = True),
-                       Item('N', springy = True),
+                HGroup(Item('M', springy = True, style = 'readonly'),
+                       Item('N', springy = True, style = 'readonly'),
                        ),
                        label = 'Stress resultants'
                        ),
@@ -440,7 +460,7 @@ class ECBCrossSection(HasStrictTraits):
                       ),
                        ),
                 width = 0.8,
-                height = 0.5,
+                height = 0.8,
                 resizable = True,
                 buttons = ['OK', 'Cancel'])
     
@@ -455,5 +475,23 @@ if __name__ == '__main__':
                            ecbl_type = 'fbm',
                            cc_law_type = 'quadratic'
                            )
+
+    print 'initial'
+    ecs.eps_up = -0.0033
+    ecs.eps_lo = 0.014
+
+    print 'z_cj'
+    print ecs.z_cj_arr
+    print ecs.eps_cj_arr
+    print 'x', ecs.x
+    
+    eps_tex_u = ecs.convert_eps_lo_2_tex_u(0.014)
+    print 'eps_tex_u', eps_tex_u
+    eps_lo = ecs.convert_eps_tex_u_2_lo(eps_tex_u)
+    print 'eps_lo', eps_lo
+
+    print 'M', ecs.M
+    print 'N', ecs.N
+    
     ecs.replot()
     ecs.configure_traits()

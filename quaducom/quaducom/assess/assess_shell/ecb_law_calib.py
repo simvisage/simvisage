@@ -22,19 +22,6 @@ simdb = SimDB()
 
 class ECBLCalib(HasTraits):
 
-    #---------------------------------------------------------------
-    # material properties textile reinforcement
-    #-------------------------------------------------------------------
-
-    # security factor 'gamma_tex' for the textile reinforcement
-    #
-#    gamma_tex = Float(1.5, input = True)
-
-    # reduction factor to drive the characteristic value from mean value
-    # of the experiment (EN DIN 1990)
-    #
-#    beta = Float(0.81, input = True)
-
     # rupture moment and normal force measured in the calibration experiment
     # (three point bending test)
     #
@@ -46,13 +33,18 @@ class ECBLCalib(HasTraits):
     #===========================================================================
 
     cs = Instance(ECBCrossSection)
-    
+    def _cs_default(self):
+        return ECBCrossSection()
+
+    ecbl_type = DelegatesTo('cs')
     ecbl = DelegatesTo('cs')
 
-    u0 = Property(Array(float), depends_on = '+tt_input, ecbl_modified')
+    u0 = Property(Array(float), depends_on = 'cs.modified')
     @cached_property
     def _get_u0(self):
-        return self.ecbl.u0
+        u0 = self.ecbl.u0
+        eps_lo = self.cs.convert_eps_tex_u_2_lo(u0[0])
+        return np.array([eps_lo, u0[1] ], dtype = 'float')
 
     # iteration counter
     #
@@ -62,33 +54,26 @@ class ECBLCalib(HasTraits):
         N_c (=compressive force of the compressive zone of the concrete) 
         N_t (=total tensile force of the reinforcement layers) 
         '''
+
+        print '--------------------iteration', self.n, '------------------------'
         self.n += 1
         # set iteration counter
         #
-        self.cs.set(eps_lo = u[0], eps_up = self.eps_cu)        
-        self.ecbl.set_cparams(*u)
+        self.cs.set(eps_lo = u[0], eps_up = -self.eps_cu)   
+        eps_tex_u = self.cs.convert_eps_lo_2_tex_u(u[0])
+        self.cs.ecbl.set_cparams(eps_tex_u, u[1])
+        
         N_internal = self.cs.N
         M_internal = self.cs.M
-
-        M_external = math.fabs(self.Mu)
-        N_external = self.Nu
         
-        d_N = N_internal - N_external
-        d_M = M_internal - M_external
+        d_N = N_internal - self.Nu
+        d_M = M_internal - self.Mu
 
         return np.array([ d_N, d_M ], dtype = float)
 
-    def get_lack_of_fit_dN(self, eps_tu, var_a):
-        fn = np.vectorize(lambda eps_tu, var_a : self.get_lack_of_fit([eps_tu, var_a])[0])
-        return fn(eps_tu, var_a) 
-
-    def get_lack_of_fit_dM(self, eps_tu, var_a):
-        fn = np.vectorize(lambda eps_tu, var_a : self.get_lack_of_fit([eps_tu, var_a])[1])
-        return fn(eps_tu, var_a) 
-
     # solution vector returned by 'fit_response'
     #
-    u_sol = Property(Array(Float), depends_on = '+config_modified, ecbl_modified')
+    u_sol = Property(Array(Float), depends_on = 'cs.modified')
     @cached_property
     def _get_u_sol(self):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -111,7 +96,7 @@ class ECBLCalib(HasTraits):
     #===========================================================================
     # Calibrated ecbl_mfn
     #===========================================================================
-    ecbl_mfn = Property(depends_on = '+config_modified, ecbl_modified')
+    ecbl_mfn = Property(depends_on = 'cs.modified')
     @cached_property
     def _get_ecbl_mfn(self):
         self.ecbl.set_cparams(*self.u_sol)
@@ -130,7 +115,7 @@ if __name__ == '__main__':
     print '\n'
     p.plot([0, 0], [0, 2.4e3])
     
-    ecbl_calib = ECBLCalib(# mean concrete strength after 9 days
+    ec = ECBLCalib(# mean concrete strength after 9 days
                            # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
                            f_ck = 55.7,
@@ -147,27 +132,45 @@ if __name__ == '__main__':
 
     do = 'plot_ecbl'
 
-    if do == 'plot_ecbl':
+    if do == 'debug':
+        
+        print ec.u0[0]
+        ec.cs.set(eps_lo = ec.u0[0], eps_up = -ec.eps_cu)   
+        eps_tex_u = ec.cs.convert_eps_lo_2_tex_u(ec.u0[0])
+        print 'eps_tex_u', eps_tex_u
+        ec.ecbl.set_cparams(eps_tex_u, ec.u0[1])
+        
+        print 'N'
+        print ec.cs.N
+
+        print 'M'
+        print ec.cs.M
+        
+        ec.ecbl_mfn
+                        
+    elif do == 'plot_ecbl':
         for sig_tex_u, color in zip([1200, 1300, 1400], ['red', 'green', 'blue', 'black', 'orange', 'brown']):
+        #for sig_tex_u, color in zip([1216], ['red']):
 
-            for ecbl_type in ['linear', 'cubic', 'fbm']:
-            #for ecbl_type in ['fbm']:
+            #for ecbl_type in ['linear', 'cubic', 'fbm']:
+            for ecbl_type in ['cubic']:
                 print 'CALIB TYPE', ecbl_type
-                ecbl_calib.n = 0
-                ecbl_calib.ecbl_type = ecbl_type
-                ecbl_calib.ecbl.sig_tex_u = sig_tex_u
-                ecbl_calib.ecbl_mfn.plot(p, color = color, linewidth = 8)
-                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
-                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+                ec.n = 0
+                ec.cs.ecbl_type = ecbl_type
+                ec.ecbl.sig_tex_u = sig_tex_u
+                ec.get_lack_of_fit(ec.u0)
+                ec.ecbl_mfn.plot(p, color = color, linewidth = 8)
+                print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
+                print 'INTEG', ec.ecbl_mfn.integ_value
 
-            ecbl_calib.ecbl_type = 'bilinear'
-            ecbl_calib.ecbl.sig_tex_u = sig_tex_u
-            for eps_el_fraction in [0.999]: # np.linspace(0.25, 0.99999, 4):
-                ecbl_calib.n = 0
-                ecbl_calib.ecbl.eps_el_fraction = eps_el_fraction
-                ecbl_calib.ecbl_mfn.plot(p, color = color)
-                print 'E_yarn', ecbl_calib.ecbl_mfn.get_diff(0.00001)
-                print 'INTEG', ecbl_calib.ecbl_mfn.integ_value
+            ec.ecbl_type = 'bilinear'
+            ec.ecbl.sig_tex_u = sig_tex_u
+            for eps_el_fraction in np.linspace(0.25, 0.99999, 4):
+                ec.n = 0
+                ec.ecbl.eps_el_fraction = eps_el_fraction
+                ec.ecbl_mfn.plot(p, color = color)
+                print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
+                print 'INTEG', ec.ecbl_mfn.integ_value
         p.plot([0.0, 0.01], [0.0, 2400], color = 'black')
             
     elif do == 'plot_cs_state':    
@@ -177,15 +180,15 @@ if __name__ == '__main__':
     #    sig_fl_calib.plot_ecb_law(u_sol)
     #
         ### plot concrete law
-        ecbl_calib.plot_sig_c_mfn()
+        ec.plot_sig_c_mfn()
     #    p.subplot(1, 2, 2)
-        ecbl_calib.plot_sig_comp_i()
+        ec.plot_sig_comp_i()
     #
     elif do == 'plot_MN_grid':
     
         u_grid = np.ogrid[0.01:0.02:30j, 0.1:2.0:30j]
-        N_grid = ecbl_calib.get_lack_of_fit_dN(u_grid[0], u_grid[1])
-        M_grid = ecbl_calib.get_lack_of_fit_dM(u_grid[0], u_grid[1])
+        N_grid = ec.get_lack_of_fit_dN(u_grid[0], u_grid[1])
+        M_grid = ec.get_lack_of_fit_dM(u_grid[0], u_grid[1])
         ones = np.ones_like(N_grid)
         p.subplot(2, 2, 3)
         p.pcolor(u_grid[0] * ones, u_grid[1] * ones, N_grid)
