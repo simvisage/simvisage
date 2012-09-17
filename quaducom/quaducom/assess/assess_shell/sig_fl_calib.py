@@ -45,7 +45,7 @@ class SigFlCalib(HasTraits):
 #    beta = Float(0.81, input = True)
 
 #   form parameter for bilinear cbl
-    xd = Float(0.25, sig_c_modified = True)
+    xd = Float(0., sig_c_modified = True)
     #---------------------------------------------------------------
     # material properties 
     #-------------------------------------------------------------------
@@ -235,7 +235,7 @@ class SigFlCalib(HasTraits):
     
             eps_fail = eps_t_i_arr[0]
             sig_tex_u = self.sig_tex_fail
-            xd = 0#self.xd
+            xd = self.xd
             eps_arr = np.hstack([0.,  xd * eps_fail, eps_fail ])  # integral is the same as for cubic and fbm
             #eps_arr = np.hstack([0.,  0.00000000000000000001*eps_fail, eps_fail ])  # bilinear
             #eps_arr = np.hstack([0.,  0.999999999999999999*eps_fail, eps_fail ])   # linear    very sensitive with regard to the number of NAchkommastellen 
@@ -1015,7 +1015,7 @@ if __name__ == '__main__':
                                n_roving = 23.,
                                
                                # form parameter for bilinear cbl
-                               xd = 0.25,
+                               xd = 0.,
                                
                                # define shape of the crack-bridge law ('linear', 'bilinear' , 'quadratic','root3''root1','root2','cubic')
                                #
