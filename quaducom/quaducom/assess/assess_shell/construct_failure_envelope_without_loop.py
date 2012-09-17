@@ -64,7 +64,7 @@ if __name__ == '__main__':
 #                               calib_config = 'quadratic_monoton', 
 #                               calib_config = 'quadratic_TT',  
 #                               calib_config = 'plastic', 
-                               calib_config = 'cubic',
+                               calib_config = 'fbm',
 
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
@@ -153,18 +153,16 @@ if __name__ == '__main__':
     eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
 
 # plot stress cases
-    
-    eps_lo_arr_psc = np.array  ([ 0.,          0., 0.,    eps_t_fail, 0. ,eps_t_fail, 0.])
-    eps_up_arr_psc = np.array  ([ 0., -eps_c_fail, 0.,   -eps_c_fail, 0. ,        0., 0.])
+               
+    eps_lo_arr_psc = np.array  ([ 0., 0., 0., eps_t_fail, 0. , eps_t_fail, 0.])
+    eps_up_arr_psc = np.array  ([ 0., -eps_c_fail, 0., -eps_c_fail, 0. , 0., 0.])
 
-#    all stress cases with classification of stress cases
-
-#    eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C,eps_lo_arr_psc ])
-#    eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C,eps_up_arr_psc ])
 #    all stress cases without classification of stress cases    
     eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
     eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
     
+    
+    psc= 'True'
     eps_lo_arr_psc = ([ eps_lo_arr_psc])
     eps_up_arr_psc = ([ eps_up_arr_psc])
 #    mainly tension
@@ -197,19 +195,46 @@ if __name__ == '__main__':
     from matplotlib.ticker import MaxNLocator
     from matplotlib.ticker import AutoMinorLocator
 
-    fig = p.figure(1)
+    fig = p.figure()   
     fig.set_facecolor('w')
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title('')
+    ax.spines['left'].set_position(('data', 0))
+    ax.spines['right'].set_color('none')
+    ax.spines['bottom'].set_position(('data', 0))
+    ax.spines['top'].set_color('none')
+    ax.spines['left'].set_smart_bounds(True)
+    ax.spines['bottom'].set_smart_bounds(True)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    
+#    ##### for image
+#    
+#    im = Image.open('C:\\Users\Christian Schmitz\Desktop\Dehnungsverteilung_Interaktionsdiagramm.png')
+#    height = im.size[1]
+#
+#    # We need a float array between 0-1, rather than
+#    # a uint8 array between 0-255
+#    im = np.array(im).astype(np.float) / 255
+#
+#    fig = p.figure()
+#
+#    # With newer (1.0) versions of matplotlib, you can 
+#    # use the "zorder" kwarg to make the image overlay
+#    # the plot, rather than hide behind it... (e.g. zorder=10)
+#    fig.figimage(im, 0, fig.bbox.ymax - height)
+#
+#    # (Saving with the same dpi as the screen default to
+#    #  avoid displacing the logo image)    
+#    fig.savefig('C:\\Users\Christian Schmitz\Desktop\Dehnungsverteilung_Interaktionsdiagramm.png', dpi=80)
 
-    ax = SubplotZero(fig, 111, axisbg='w')
-    fig.add_subplot( ax )
-
-    for direction in ["xzero", "yzero"]:
+    
+#    for direction in ["xzero", "yzero"]:
 #        ax.axis[direction].set_axisline_style("-|>")
-        ax.axis[direction].set_visible(True)
-
-    for direction in ["left", "right", "bottom", "top"]:
-        ax.axis[direction].set_visible(False)
-
+#        ax.axis[direction].set_visible(True)
+#
+#    for direction in ["left", "right", "bottom", "top"]:
+#        ax.spines[direction].set_visible(False)
     nu_list = []
     mu_list = []
     N_list = []
@@ -235,17 +260,17 @@ if __name__ == '__main__':
     #
 #    n_layers_list  = [   12]
 #    thickness_list = [ 0.06]
-#    n_layers_list  = [   4,    8,    12,   16,   20]
-#    thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
-#    zip_list = zip( n_layers_list, thickness_list  )
-#    legend_list = n_layers_list 
+    n_layers_list  = [   4,    8,    12,   16,   20]
+    thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
+    zip_list = zip( n_layers_list, thickness_list  )
+    legend_list = n_layers_list 
 #    
     # constant 'rho_tex':
     
-    n_layers_list  = [  6,    8,    12,   18,   24]
-    thickness_list = [0.03, 0.04,  0.06, 0.09, 0.12]
-    zip_list = zip( n_layers_list, thickness_list  )
-    legend_list = n_layers_list 
+#    n_layers_list  = [  6,    8,    12,   18,   24]
+#    thickness_list = [0.03, 0.04,  0.06, 0.09, 0.12]
+#    zip_list = zip( n_layers_list, thickness_list  )
+#    legend_list = n_layers_list 
 
     # varying layers for two different heights':
     # use plot with M,N instead of nu,mu !
@@ -265,6 +290,9 @@ if __name__ == '__main__':
         #
         eval_N_M_vectorized = np.frompyfunc( sig_fl_calib.eval_N_M, 2, 2 )
         N_arr, M_arr = eval_N_M_vectorized( eps_lo_arr, eps_up_arr )
+        N_arr_psc, M_arr_psc = eval_N_M_vectorized(eps_lo_arr_psc, eps_up_arr_psc)
+       
+            
         #
         # @todo: check which value to be used for normalization if sig_c = parabolic is used
         # NOTE that for this case f_cm  is used not f_ck; NOTE that for pure compression eps = 2E-3 is used
@@ -273,6 +301,9 @@ if __name__ == '__main__':
         #
         c1 = 1000. * t* b * f_ck
         c2 = 1000. * t**2. * b * f_ck 
+        
+        nu_arr_psc = N_arr_psc / np.array([ c1 ]) 
+        mu_arr_psc = M_arr_psc / np.array([ c2 ])
         #
         # @todo: why does an error occure when multiplying an array by a float value (caused by vectorized)
         nu_arr = N_arr / np.array([ c1 ]) 
@@ -298,28 +329,140 @@ if __name__ == '__main__':
 #        stress_case_1_arr = [(mu_arr, nu_arr),(0.,0.)] 
 ######
 #
-        if t == 0.06 and n == 12:
-                p.plot( mu_arr, nu_arr,
-                        color='blue', 
-                        linewidth=2.0)
-        else:
-                p.plot( mu_arr, nu_arr )
-        # plot absolute values for N and M
-#        
-#        if t == 0.06 and n == 12:
-#            p.plot( M_arr, N_arr,
-#                    color='blue', 
-#                    linewidth=2.0)
-#        else:
-#            p.plot( M_arr, N_arr )
+            #############################################
+            #plot nu-mu-interaction
+            
+#            if psc == 'True' and sig_fl_calib.calib_config == 'fbm':
+#                    p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
+#                                                    color= 'turquoise',
+#                                                  linewidth = 2.0)
+#            if psc == 'True' and sig_fl_calib.calib_config == 'cubic':
+#                    p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
+#                                                    color= 'red',
+#                                                  linewidth = 2.0)       
+#            if psc == 'True' and sig_fl_calib.calib_config == 'linear':
+#                    p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
+#                                                    color= 'green',
+#                                                  linewidth = 2.0)
+#            if psc == 'True' and sig_fl_calib.calib_config == 'bilinear':
+#                    p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
+#                                                    color= 'purple',
+#                                                  linewidth = 2.0) 
+
+########################### distinction of stress cases all black
+#
+#        if psc == 'True':
+#                    p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
+#                                                    color= 'black',
+#                                                  linewidth = 1.0)            
+############################
     
+        if t == 0.06 and n == 12:
+                
+                if sig_fl_calib.calib_config == 'linear':
+                    p.plot(mu_arr, nu_arr,label='linear',
+                            #color='green', 
+                            linewidth = 2.0)
+                elif sig_fl_calib.calib_config == 'cubic':  
+                    p.plot(mu_arr, nu_arr,label='cubic',
+                            #color='red', 
+                            linewidth = 2.0)
+                    
+                elif sig_fl_calib.calib_config == 'bilinear':  
+                    p.plot(mu_arr, nu_arr,label='bilinear',
+                            #color = 'purple',
+                            linewidth = 2.0)
+                    
+                elif sig_fl_calib.calib_config == 'fbm':  
+                    p.plot(mu_arr, nu_arr,label='fbm',
+                            color = 'yellow',
+                            linewidth = 1.0)
+                         
+        else:
+                
+                if sig_fl_calib.calib_config == 'linear':
+                    p.plot(mu_arr, nu_arr,label='linear',
+                            #color='green', 
+                            linewidth = 1.0)
+                elif sig_fl_calib.calib_config == 'cubic':  
+                    p.plot(mu_arr, nu_arr,label='cubic',
+                            #color = 'red',
+                            linewidth = 1.0)
+                    
+                elif sig_fl_calib.calib_config == 'bilinear':  
+                    p.plot(mu_arr, nu_arr,label='bilinear',
+                            #color = 'purple',
+                            linewidth = 1.0)
+                    
+                elif sig_fl_calib.calib_config == 'fbm':  
+                    p.plot(mu_arr, nu_arr,label='fbm',
+                            #color = 'turquoise',
+                            linewidth = 1.0)
+#                    
+                        
+   
+                    
+    #    
+            # plot absolute values for N and M
+        #        
+#        if psc == 'True':
+#                        p.plot (M_arr_psc[0, :], N_arr_psc[0, :], 'k--',
+#                                                          color = 'black',
+#                                                          linewidth = 2.0)
+
+#        if t == 0.06 and n == 12 :
+##                    
+#                    if sig_fl_calib.calib_config =='linear':
+#                        p.plot( M_arr, N_arr,
+#                                label = 'linear' ,
+#                                color='green', 
+#                                linewidth=2.0)
+#                    elif sig_fl_calib.calib_config == 'cubic':  
+#                        p.plot( M_arr, N_arr,
+#                                label= 'cubic',
+#                                color='red',  
+#                                linewidth=2.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'bilinear':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='purple',
+#                                label= 'bilinear', 
+#                                linewidth=2.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'fbm':  
+#                        p.plot( M_arr, N_arr,
+#                                label= 'fbm',
+#                                color='turquoise', 
+#                                linewidth=2.0)
+#             
+#                           
+#                           
+#        else:
+#                    if sig_fl_calib.calib_config =='linear':
+#                        p.plot( M_arr, N_arr,
+#                                color='green', 
+#                                linewidth=1.0)
+#                    elif sig_fl_calib.calib_config == 'cubic':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='red', 
+#                                linewidth=1.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'bilinear':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='purple', 
+#                                linewidth=1.0)
+#                        
+#                    elif sig_fl_calib.calib_config == 'fbm':  
+#                        p.plot( M_arr, N_arr, 
+#                                color='turquoise', 
+#                                linewidth=1.0)
     
     
     ######### @todo: format plot and axes (legend, grid, font etc.) #########
 
     ### GRID
     #
-    p.grid(b=None, which='both')
+    p.grid(b=None, which='major')
 
 
     ### LEGEND
@@ -329,20 +472,24 @@ if __name__ == '__main__':
 
 
     ### TICKS
-    #
-#    p.axis([0, 6, 250 ,-700])
-#    p.axis([0, 0.2, 0.5 ,-1.2])
-
-    #p.xticks(0.5*np.arange(12))
-#    ax.set_xticks([0., 1., 2., 3., 4., 5., 6.])
-    ax.set_ylim(ax.get_ylim()[::-1])
+   
+    # nu-mu-interaction
+    p.axis([0, 0.15, 0.5 , -1.25])
+    ax.set_xticks([0., 0.015, 0.03, 0.045, 0.06, 0.075, 0.09,0.105,0.12,0.135,0.15])
+    ax.set_yticks([0.4,0.2,0.,-0.2,-0.4,-0.6,-0.8,-1,-1.2])
     
+    # n-m-interaction
+    
+#    p.axis([0, 8, 250 ,-900])
+#    p.xticks([0.,0.8,1.6,2.4,3.2,4.,4.8,5.6,6.4])
+#    p.yticks([300.,150.,0.,-150.,-300.,-450.,-600.,-750.])
+
     ax.xaxis.set_major_locator(MaxNLocator(10))
     ax.yaxis.set_major_locator(MaxNLocator(10))
     minorLocator   = AutoMinorLocator()
     ax.xaxis.set_minor_locator(minorLocator)
-#    p.tick_params(axis='both',which='major',direction='out', length=15, width=2, colors='black')
-#    p.tick_params(axis='both',which='minor',direction='in', length=100, width=1, colors='black')
+    ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
+    ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
 
 
     ### TITEL
@@ -357,15 +504,10 @@ if __name__ == '__main__':
     
     ### LABELS
     #
-    #p.xlabel(r'$\mu$',fontsize='20',
-#             verticalalignment = 'top',
-#             horizontalalignment = 'left')
-    #p.ylabel(r'$\nu$ ', fontsize= 20)
-#    from matplotlib import rcParams
-#    rcParams['text.usetex']=True
-#    rcParams['text.latex.unicode']=True
-#    p.xlabel(r"\textbf{$\mu$}")
- #  p.ylabel(r\textbf{$\nu$}")
-    
+    p.xlabel(r'$\mu$', fontsize = '20',
+                 verticalalignment = 'top',
+                 horizontalalignment = 'left')
+    p.ylabel(r'$\nu$ ', fontsize = '20')
+
     p.show()
     
