@@ -163,14 +163,14 @@ if __name__ == '__main__':
                 print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
                 print 'INTEG', ec.ecbl_mfn.integ_value
 
-            ec.ecbl_type = 'bilinear'
-            ec.ecbl.sig_tex_u = sig_tex_u
-            for eps_el_fraction in np.linspace(0.25, 0.99999, 4):
-                ec.n = 0
-                ec.ecbl.eps_el_fraction = eps_el_fraction
-                ec.ecbl_mfn.plot(p, color = color)
-                print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
-                print 'INTEG', ec.ecbl_mfn.integ_value
+#            ec.ecbl_type = 'bilinear'
+#            ec.ecbl.sig_tex_u = sig_tex_u
+#            for eps_el_fraction in np.linspace(0.25, 0.99999, 4):
+#                ec.n = 0
+#                ec.ecbl.eps_el_fraction = eps_el_fraction
+#                ec.ecbl_mfn.plot(p, color = color)
+#                print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
+#                print 'INTEG', ec.ecbl_mfn.integ_value
         p.plot([0.0, 0.01], [0.0, 2400], color = 'black')
             
     elif do == 'plot_cs_state':    

@@ -5,18 +5,32 @@ Created on Aug 23, 2012
 '''
 
 from etsproxy.traits.api import \
-    HasTraits, Float, Property, cached_property
+    HasStrictTraits, Float, Property, cached_property, WeakRef
     
 import numpy as np
 
 from mathkit.mfn import MFnLineArray
 
-class CCLawBase(HasTraits):
+class CCLawBase(HasStrictTraits):
     '''Base class for concrete constitutive laws.'''
     # characteristic compressive stress [MPa]
     #
-    f_ck = Float(60.0, sig_c_modified = True)
+    f_ck = Float(60.0, input = True)
 
+    cs = WeakRef
+    
+    def __init__(self, *args, **kw):
+        super(HasStrictTraits, self).__init__(*args, **kw)
+        self.on_trait_change(self._notify_cs, '+input')
+
+    def _notify_cs(self):
+        if self.cs:
+            self.cs.cc_modified = True
+
+    mfn_vct = Property()
+    def _get_mfn_vct(self):
+        return np.vectorize(self.mfn.get_value)
+            
 class CCLawBlock(CCLawBase):
     '''Effective crack bridge Law with linear elastic response.'''
     
@@ -24,7 +38,7 @@ class CCLawBlock(CCLawBase):
     # 
     # for simplified constant stress-strain-diagram of the concrete (EC2)
     #-----------------------------
-    mfn = Property(depends_on = '+sig_c_modified')
+    mfn = Property(depends_on = '+input')
     @cached_property
     def _get_mfn(self):
         '''simplified constant stress-strain-diagram of the concrete (EC2)
@@ -53,7 +67,7 @@ class CCLawLinear(CCLawBase):
     #-----------------------------
     # for bilinear stress-strain-diagram of the concrete (EC2)
     #-----------------------------
-    mfn = Property(depends_on = '+sig_c_modified')
+    mfn = Property(depends_on = '+input')
     @cached_property
     def _get_mfn(self):
         '''bilinear stress-strain-diagram of the concrete
@@ -77,7 +91,7 @@ class CCLawLinear(CCLawBase):
 class CCLawQuadratic(CCLawBase):
     '''Effective crack bridge Law using a cubic polynomial.'''
     
-    mfn = Property(depends_on = '+sig_c_modified')
+    mfn = Property(depends_on = '+input')
     @cached_property
     def _get_mfn(self):
         '''quadratic stress-strain-diagram of the concrete

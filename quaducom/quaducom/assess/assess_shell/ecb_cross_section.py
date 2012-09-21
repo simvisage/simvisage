@@ -10,8 +10,8 @@ Created on Sep 4, 2012
 @author: rch
 '''
 from etsproxy.traits.api import \
-    HasStrictTraits, Float, Property, cached_property, Int, Array, \
-    Trait, Event, on_trait_change, Instance
+    HasStrictTraits, Float, Property, cached_property, Int, \
+    Trait, Event, on_trait_change, Instance, Button
     
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
@@ -88,11 +88,10 @@ class ECBCrossSection(HasStrictTraits):
     # State management
     #===========================================================================
     modified = Event
-    @on_trait_change('+geo_input, +cc_input,+tt_input, +eps_input, ecbl_modified')
+    @on_trait_change('+geo_input, cc_modified,+tt_input, +eps_input, tt_modified')
     def _set_cs_modified(self):
         self.modified = True
     
-
     #===========================================================================
     # Distribution of reinforcement
     #===========================================================================
@@ -210,20 +209,21 @@ class ECBCrossSection(HasStrictTraits):
                                          quadratic = CCLawQuadratic),
                         cc_input = True)
     
-    cc_law = Property(Instance(CCLawBase), depends_on = 'cc_law_type')
+    cc_law = Property(Instance(CCLawBase), depends_on = '+cc_input')
     @cached_property
     def _get_cc_law(self):
         '''Construct the compressive concrete law'''
-        return self.cc_law_type_(f_ck = self.f_ck)
+        return self.cc_law_type_(f_ck = self.f_ck, cs = self)
 
-    sig_c_mfn = Property(depends_on = '+cc_input')
-    def _get_sig_c_mfn(self):
-        return self.cc_law.mfn
+    cc_modified = Event
 
-    sig_c_mfn_vct = Property(depends_on = '+cc_input')
+    #===========================================================================
+    # Fine discretization of the compressive zone
+    #===========================================================================
+    sig_cj_arr = Property(depends_on = '+eps_input, +cc_input, cc_modified')
     @cached_property
-    def _get_sig_c_mfn_vct(self):
-        return np.vectorize(self.sig_c_mfn.get_value)
+    def _get_sig_cj_arr(self):
+        return -self.cc_law.mfn_vct(-self.eps_cj_arr)
 
     #===========================================================================
     # Effective crack bridge law
@@ -239,30 +239,10 @@ class ECBCrossSection(HasStrictTraits):
     def _get_ecbl(self):
         return self.ecbl_type_(sig_tex_u = self.sig_tex_u, cs = self)
 
-    ecbl_modified = Event
+    tt_modified = Event
     
-    ecbl_tex_mfn = Property(depends_on = '+tt_input, ecbl_modified')
-    @cached_property
-    def _get_ecbl_tex_arr(self):
-        '''Get the arrays sigma - epsilon defining the crack bridge law.
-        '''
-        return self.ecbl.arr
-    
-    ecbl_tex_mfn = Property(depends_on = '+tt_input, ecbl_modified')
-    @cached_property
-    def _get_ecbl_tex_mfn(self):
-        '''Get the callable function for effective crack brige law.
-        '''
-        return self.ecbl.mfn
-
-    ecbl_tex_mfn_vct = Property(depends_on = '+tt_input, ecbl_modified')
-    @cached_property
-    def _get_ecbl_tex_mfn_vct(self):
-        '''Get the callable function for effective crack brige law.
-        '''
-        return self.ecbl.mfn_vct
-
-    sig_ti_arr = Property
+    sig_ti_arr = Property(depends_on = '+eps_input, +tt_input, tt_modified')
+    @cached_property    
     def _get_sig_ti_arr(self):
         '''force at the height of each reinforcement layer [kN]:
         '''
@@ -271,7 +251,8 @@ class ECBCrossSection(HasStrictTraits):
     #===========================================================================
     # Layer conform discretization of the tensile zone
     #===========================================================================
-    f_ti_arr = Property
+    f_ti_arr = Property(depends_on = '+eps_input, +tt_input, tt_modified')
+    @cached_property
     def _get_f_ti_arr(self):
         '''force at the height of each reinforcement layer [kN]:
         '''
@@ -283,32 +264,10 @@ class ECBCrossSection(HasStrictTraits):
         return sig_ti_arr * n_rovings * A_roving / 1000. 
 
     #===========================================================================
-    # Discretization of the compressive zone - tex layer conform
-    #===========================================================================
-    f_ci_arr = Property
-    def _get_f_ci_arr(self):
-        '''Compressive stress in the compresive zone 'x' for each layer i.
-        '''
-        sig_ci_arr = self.sig_c_mfn_vct()
-        return sig_ci_arr * self.width * self.s_tex_z * 1000.0
-
-    #===========================================================================
-    # Fine discretization of the compressive zone
-    #===========================================================================
-    sig_cj_arr = Property
-    def _get_sig_cj_arr(self):
-        return -self.sig_c_mfn_vct(-self.eps_cj_arr)
-
-    f_cj_arr = Property
-    def _get_f_cj_arr(self):
-        sig_cj_arr = self.sig_cj_arr
-        return sig_cj_arr * self.width * self.thickness / self.n_cj * 1000. 
-
-    #===========================================================================
     # Stress resultants
     #===========================================================================
 
-    N = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input, ecbl_modified')
+    N = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input, cc_modified, tt_modified')
     @cached_property
     def _get_N(self):
         '''Get the resulting normal force.
@@ -319,7 +278,7 @@ class ECBCrossSection(HasStrictTraits):
         N_internal = N_ck + N_tk
         return N_internal 
 
-    M = Property(depends_on = '+geo_input,+eps_input,+tt_input,+cc_input, ecbl_modified')
+    M = Property(depends_on = '+geo_input,+eps_input,+tt_input, +cc_input, cc_modified, tt_modified')
     @cached_property
     def _get_M(self):
         M_tk = np.dot(self.f_ti_arr, self.z_ti_arr)
@@ -343,8 +302,8 @@ class ECBCrossSection(HasStrictTraits):
 
     data_changed = Event
     
-    @on_trait_change('+geo_input,+eps_input,+tt_input,+cc_input')
-    def replot(self):
+    replot = Button
+    def _replot_fired(self):
         
         d = self.thickness - self.x
 
@@ -452,7 +411,8 @@ class ECBCrossSection(HasStrictTraits):
                        ),
                 scrollable = True,
                              ),
-                Group(Item('figure', editor = MPLFigureEditor(),
+                Group(Item('replot', show_label = False),
+                      Item('figure', editor = MPLFigureEditor(),
                            resizable = True, show_label = False),
                       id = 'simexdb.plot_sheet',
                       label = 'plot sheet',
@@ -493,5 +453,4 @@ if __name__ == '__main__':
     print 'M', ecs.M
     print 'N', ecs.N
     
-    ecs.replot()
     ecs.configure_traits()

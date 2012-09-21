@@ -15,9 +15,23 @@ class ECBLMNDiagram(HasTraits):
 
     # calibrator supplying the effective material law
     calib = Instance(ECBLCalib)
+    def _calib_default(self):
+        return ECBLCalib()
     
     # cross section
     cs = DelegatesTo('calib')
+
+    ecbl = DelegatesTo('cs')
+    
+    eps_min = Property()
+    def _get_eps_min(self):
+        return self.ecbl.eps_tex_u
+    
+    eps_max = Property()
+    def _get_eps_max(self):
+        return self.cs.eps_c_u
+    
+    
 
     def _get_eps_f(self, eps_lo, eps_up):
         '''EVALUATION for bending case: using the calibrated constitutive law of the layer
@@ -176,4 +190,6 @@ if __name__ == '__main__':
                   sig_c_config = 'quadratic'             #eps_tu 0.0137279096658                              
                   )
                      
-    ECBLMNDiagram(calib = c)
+    mn = ECBLMNDiagram(calib = c)
+    
+    
