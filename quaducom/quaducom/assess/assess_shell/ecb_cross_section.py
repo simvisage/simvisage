@@ -67,22 +67,14 @@ class ECBCrossSection(HasStrictTraits):
 
     f_ck = Float(55.7, auto_set = False, enter_set = True,
                  cc_input = True)
+
+    eps_c_u = Float(0.0033, auto_set = False, enter_set = True,
+                    cc_input = True)
+ 
     # ultimate textile stress measured in the tensile test [MPa]
     #
     sig_tex_u = Float(1216., auto_set = False, enter_set = True,
                       tt_input = True)
-    
-    # compressive strain at the top at rupture [-]
-    # (positive value is used)
-    # value measured at the experiment (with DMS)
-    # for 0: about 3.3
-    # for 90: about 3.0
-    # ultimate strain theoretically (Brockman): about 4.5
-    # NOTE: strain was meassured at a distance of 5 cm
-    #
-    eps_cu = Float(0.0033, auto_set = False, enter_set = True,
-                   cc_input = True) # float value corresponds to 3 promile
-
 
     #===========================================================================
     # State management
@@ -153,8 +145,12 @@ class ECBCrossSection(HasStrictTraits):
     def _get_x(self):
         # heights of the compressive zone:
         #
-        return (abs(self.eps_up) / (abs(self.eps_up - self.eps_lo)) * 
-                 self.thickness)
+        if self.eps_up == self.eps_lo:
+            return (abs(self.eps_up) / (abs(self.eps_up - self.eps_lo * 1e-9)) * 
+                     self.thickness)
+        else:
+            return (abs(self.eps_up) / (abs(self.eps_up - self.eps_lo)) * 
+                     self.thickness)
     
     eps_ti_arr = Property(depends_on = '+eps_input,+geo_input')
     @cached_property
@@ -192,7 +188,14 @@ class ECBCrossSection(HasStrictTraits):
     def _get_z_cj_arr(self):
         '''Get the discretizaton of the  compressive zone
         '''
-        return np.linspace(0, self.x, self.n_cj)
+        if self.eps_up <= 0:
+            zx = min(self.thickness, self.x)
+            return np.linspace(0, zx, self.n_cj)
+        elif self.eps_lo <= 0:
+            return np.linspace(self.x, self.thickness, self.n_cj)
+        else:
+            return np.array([0], dtype = 'f')
+            
 
     # distance of reinforcement layers from the bottom 
     #
@@ -213,13 +216,10 @@ class ECBCrossSection(HasStrictTraits):
     @cached_property
     def _get_cc_law(self):
         '''Construct the compressive concrete law'''
-        return self.cc_law_type_(f_ck = self.f_ck, cs = self)
+        return self.cc_law_type_(f_ck = self.f_ck, eps_c_u = self.eps_c_u, cs = self)
 
     cc_modified = Event
 
-    #===========================================================================
-    # Fine discretization of the compressive zone
-    #===========================================================================
     sig_cj_arr = Property(depends_on = '+eps_input, +cc_input, cc_modified')
     @cached_property
     def _get_sig_cj_arr(self):
@@ -420,7 +420,7 @@ class ECBCrossSection(HasStrictTraits):
                       ),
                        ),
                 width = 0.8,
-                height = 0.8,
+                height = 0.5,
                 resizable = True,
                 buttons = ['OK', 'Cancel'])
     
@@ -429,9 +429,6 @@ if __name__ == '__main__':
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
                            f_ck = 55.7,
 
-                           # measured strain at bending test rupture (0-dir)
-                           #
-                           eps_cu = 3.3 / 1000.,
                            ecbl_type = 'fbm',
                            cc_law_type = 'quadratic'
                            )
