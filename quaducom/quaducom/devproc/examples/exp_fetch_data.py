@@ -23,6 +23,11 @@ if __name__ == '__main__':
                      '2012-04-12_TT-12c-6cm-0-TU_SH4',
                      'TT-12c-6cm-0-TU-SH4-V1.DAT')
 
+    from quaducom.devproc.tensile_test.dog_bone.exp_tt_db import ExpTTDB
+    
+    print ExpTTDB.db.instances.keys()
+    print ExpTTDB.db['TT-12c-6cm-0-TU-SH1-V3']
+    
     # construct the experiment
     tt = ExRun(data_file = test_file)
 
