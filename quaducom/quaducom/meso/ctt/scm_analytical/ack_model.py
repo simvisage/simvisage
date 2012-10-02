@@ -12,17 +12,21 @@ from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from scipy.integrate import odeint
 import pickle
 
-class Ack(Material):
+def H(self, x):
+    return x > 0
+
+class ACK(Material):
+    '''blah eps_c, eps_f, eps_m, sigma_c, sigma_m, sigma_f'''
     
     nd = Int(100)
+    max_sigma = Float
     
     sigma_arr = Property(Array, depends_on='sigma,nd')
     def _get_sigma_arr(self):
         return np.linspace(1e-10, sigma, self.nd)
     
     
-    def H(self, x):
-        return np.sign(np.sign(x) + 1.)
+
     
     #Ack functions
   
@@ -50,7 +54,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sigma = 10.
     sigma_0 = 5.
-    a = Ack(sigma=sigma)
+    a = ACK(max_sigma=sigma)
     #Em=
     #Ef=
     #Vf=
