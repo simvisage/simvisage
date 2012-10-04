@@ -21,7 +21,6 @@ class ACK( Material ):
     plot range:                       sigma_plot [N/mm^2]
     '''
     
-    nd = Int( 10 )
     sigma_plot = Float
     sigma_m_u = Float
     
@@ -78,7 +77,14 @@ if __name__ == '__main__':
     #Em=
     #Ef=
     #nd
-    a = ACK( sigma_plot = sigma_plot, sigma_m_u = sigma_m_u, Vf = Vf )
+    a = ACK(sigma_max=20.,
+            V_f=0.2,
+            E_f=200e3,
+            E_m=25e3,
+            tau=3.0,
+            sigma_mu=5.0)
+    
+    a.plot_diagram()
     
     def dplot():
         eps, sigma = a.d()
