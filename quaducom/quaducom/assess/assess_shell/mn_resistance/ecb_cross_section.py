@@ -11,7 +11,7 @@ Created on Sep 4, 2012
 '''
 from etsproxy.traits.api import \
     HasStrictTraits, Float, Property, cached_property, Int, \
-    Trait, Event, on_trait_change, Instance, Button
+    Trait, Event, on_trait_change, Instance, Button, Callable
     
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
@@ -76,13 +76,16 @@ class ECBCrossSection(HasStrictTraits):
     sig_tex_u = Float(1216., auto_set = False, enter_set = True,
                       tt_input = True)
 
+    notify_change = Callable
     #===========================================================================
     # State management
     #===========================================================================
     modified = Event
-    @on_trait_change('+geo_input, cc_modified,+tt_input, +eps_input, tt_modified')
+    @on_trait_change('+geo_input,+cc_input,+tt_input,+eps_input,cc_modified,tt_modified')
     def _set_cs_modified(self):
         self.modified = True
+        if self.notify_change:
+            self.notify_change()
     
     #===========================================================================
     # Distribution of reinforcement
@@ -225,6 +228,10 @@ class ECBCrossSection(HasStrictTraits):
     def _get_sig_cj_arr(self):
         return -self.cc_law.mfn_vct(-self.eps_cj_arr)
 
+    f_cj_arr = Property(depends_on = '+eps_input, +cc_input, cc_modified')
+    @cached_property
+    def _get_f_cj_arr(self):
+        return self.width * self.sig_cj_arr
     #===========================================================================
     # Effective crack bridge law
     #===========================================================================
@@ -309,26 +316,35 @@ class ECBCrossSection(HasStrictTraits):
 
         self.figure.clear()
         ax = self.figure.add_subplot(1, 2, 1)        
-        
+
+        self.plot_eps(ax)
+    
+        ax = self.figure.add_subplot(1, 2, 2)        
+    
+        self.plot_sig(ax)
+        self.data_changed = True
+
+    def plot_eps(self, ax):        
         #ax = self.figure.gca()
         
+        d = self.thickness
         # eps ti
-        ax.plot([self.eps_lo, self.eps_up], [0, self.thickness], color = 'black')
-        ax.hlines(self.zz_ti_arr, [0], self.eps_ti_arr, lw = 4, color = 'red')
+        ax.plot([-self.eps_lo, -self.eps_up], [0, self.thickness], color = 'black')
+        ax.hlines(self.zz_ti_arr, [0], -self.eps_ti_arr, lw = 4, color = 'red')
 
         # eps cj
         ec = np.hstack([self.eps_cj_arr] + [0, 0])
         zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ]) 
-        ax.fill(ec, zz, color = 'blue')
+        ax.fill(-ec, zz, color = 'blue')
 
         # reinforcement layers
         eps_range = np.array([max(0.0, self.eps_lo),
                               min(0.0, self.eps_up)], dtype = 'float')
         z_ti_arr = np.ones_like(eps_range)[:, None] * self.z_ti_arr[None, :]
-        ax.plot(eps_range, z_ti_arr, 'k--', color = 'black')
+        ax.plot(-eps_range, z_ti_arr, 'k--', color = 'black')
         
         # neutral axis
-        ax.plot(eps_range, [d, d], 'k--', color = 'green', lw = 2)
+        ax.plot(-eps_range, [d, d], 'k--', color = 'green', lw = 2)
         
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
@@ -338,19 +354,20 @@ class ECBCrossSection(HasStrictTraits):
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
-        ax = self.figure.add_subplot(1, 2, 2)        
-
+    def plot_sig(self, ax):
+        
+        d = self.thickness
         # f ti
-        ax.hlines(self.zz_ti_arr, [0], self.f_ti_arr, lw = 4, color = 'red')
+        ax.hlines(self.zz_ti_arr, [0], -self.f_ti_arr, lw = 4, color = 'red')
 
         # f cj
-        f_c = self.width * np.hstack([self.sig_cj_arr] + [0, 0])
+        f_c = np.hstack([self.f_cj_arr] + [0, 0])
         zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ]) 
-        ax.fill(f_c, zz, color = 'blue')
+        ax.fill(-f_c, zz, color = 'blue')
 
-        f_range = [np.max(self.f_ti_arr), np.min(f_c)]        
+        f_range = np.array([np.max(self.f_ti_arr), np.min(f_c)], dtype = 'float_')        
         # neutral axis
-        ax.plot(f_range, [d, d], 'k--', color = 'green', lw = 2)
+        ax.plot(-f_range, [d, d], 'k--', color = 'green', lw = 2)
         
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
@@ -360,8 +377,6 @@ class ECBCrossSection(HasStrictTraits):
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
         
-        self.data_changed = True
-
     view = View(HSplit(Group(
                 HGroup(
                 Group(Item('thickness', springy = True),

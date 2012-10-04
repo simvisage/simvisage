@@ -9,7 +9,7 @@ from etsproxy.traits.api import \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Color, Bool, DelegatesTo, Callable
-
+    
 from etsproxy.util.home_directory import \
     get_home_directory
 
@@ -41,17 +41,15 @@ import os.path
 
 from ls_table import \
     LSTable, ULS, SLS
-
-from matresdev.db.simdb import \
-    SimDB
-
-# Access to the top level directory of the database
-#
-simdb = SimDB()
-
+    
+from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+    
 class LC(HasTraits):
     '''Loading case class
     '''
+
+    reader = WeakRef
+
     # name of the file containing the stress resultants
     #
     file_name = Str(input = True)
@@ -119,75 +117,12 @@ class LC(HasTraits):
     def _gamma_unf_SLS_default(self):
         return 1.00
 
-    def _read_state_data(self, file_name):
-        '''to read the stb-stress resultants save the xls-worksheet 
-        to a csv-file using ';' as filed delimiter and ' ' (blank)
-        as text delimiter.
-        '''
-        print '*** read state data from file: %s ***' % (file_name)
-
-        # get the column headings defined in the second row 
-        # of the csv soliciotations input file
-        # column_headings = array(["Nr.","Punkt","X","Y","Z","mx","my","mxy","vx","vy","nx","ny","nxy"])
-        #
-        file = open(file_name, 'r')
-        lines = file.readlines()
-        column_headings = lines[1].split(';')
-        # remove '\n' from last string element in list
-        #
-        column_headings[-1] = column_headings[-1][:-1]
-        column_headings_arr = array(column_headings)
-
-        elem_no_idx = where('Nr.' == column_headings_arr)[0]
-        X_idx = where('X' == column_headings_arr)[0]
-        Y_idx = where('Y' == column_headings_arr)[0]
-        Z_idx = where('Z' == column_headings_arr)[0]
-        mx_idx = where('mx' == column_headings_arr)[0]
-        my_idx = where('my' == column_headings_arr)[0]
-        mxy_idx = where('mxy' == column_headings_arr)[0]
-        nx_idx = where('nx' == column_headings_arr)[0]
-        ny_idx = where('ny' == column_headings_arr)[0]
-        nxy_idx = where('nxy' == column_headings_arr)[0]
-
-        file.close()
-
-        # define arrays containing the information from the raw input file
-        #
-        input_arr = loadtxt(file_name , delimiter = ';', skiprows = 2)
-
-        # element number:
-        #
-        elem_no = input_arr[:, elem_no_idx]
-
-        # coordinates [m]:
-        #
-        X = input_arr[:, X_idx]
-        Y = input_arr[:, Y_idx]
-        Z = input_arr[:, Z_idx]
-
-        # moments [kNm/m]
-        #
-        mx = input_arr[:, mx_idx]
-        my = input_arr[:, my_idx]
-        mxy = input_arr[:, mxy_idx]
-
-        # normal forces [kN/m]:
-        #
-        nx = input_arr[:, nx_idx]
-        ny = input_arr[:, ny_idx]
-        nxy = input_arr[:, nxy_idx]
-
-        return { 'elem_no' : elem_no, 'X' : X, 'Y' : Y, 'Z' : Z,
-                 'mx' : mx, 'my' : my, 'mxy' : mxy,
-                 'nx' : nx, 'ny' : ny, 'nxy' : nxy,
-               }
-
     # original state data (before filtering)
     #
     state_data_orig = Property(Dict, depends_on = 'file_name')
     @cached_property
     def _get_state_data_orig(self):
-        return self._read_state_data(self.file_name)
+        return self.reader.read_state_data(self.file_name)
 
     # state data (after filtering)
     #
@@ -254,6 +189,12 @@ class LCCTable(HasTraits):
                 {'ULS' : ULS,
                  'SLS' : SLS })
 
+    # manager of input files with state and geometry data 
+    # 
+    reader = Instance(LCCReader)
+    def _reader_default(self):
+        return LCCReaderRFEM(lcc_table = self)
+
     # lcc-instance for the view 
     #
     lcc = Instance(LCC)
@@ -274,6 +215,7 @@ class LCCTable(HasTraits):
         self.lc_list_ = value
     def _get_lc_list(self):
         for lc in self.lc_list_:
+            lc.reader = self.reader
             if lc.data_filter != self.data_filter:
                 lc.data_filter = self.data_filter
         return self.lc_list_
@@ -306,9 +248,9 @@ class LCCTable(HasTraits):
             # check internal LC-consitency: 
             # (compare coords-values of first LC with all other LC's in 'lc_list')
             #
-            if not all(lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
-                not all(lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
-                not all(lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
+            if not all(self.lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
+                not all(self.lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
+                not all(self.lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
                 raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
                         % (self.lc_list[0].name, lc.name)
                 return False
@@ -656,51 +598,6 @@ class LCCTable(HasTraits):
     def _get_geo_data_file(self):
         return os.path.join(self.data_dir, 'thickness.csv')
 
-    def _read_geo_data(self, file_name):
-        '''to read the stb - thickness save the xls - worksheet
-        to a csv - file using ';' as filed delimiter and ' ' ( blank )
-        as text delimiter.
-        '''
-        print '*** read geo data from file: %s ***' % (file_name)
-
-
-        # coordinates [m]:
-        # (NOTE: corrds are taken from the state data file of the first loading case) 
-
-        # the column headings are defined in the first/second row 
-        # of the csv thickness input file
-        # Flaeche;;;Material;Dicke;;Exzentrizitaet;Integrierte Objekte;;;
-
-        # (NOTE: the headings contain non-ascii characters. Therefore the
-        #       column indices can not be derived using the 'where'-method.)
-
-        # read the float data:
-        #
-        input_arr = loadtxt(file_name, usecols = (0, 5), delimiter = ';', skiprows = 2)
-        elem_no_idx = 0
-        thickness_idx = 1
-
-        # element number:
-        # (NOTE: column array must be of shape (n_elems, 1)
-        #
-        elem_no = input_arr[:, elem_no_idx][:, None]
-
-        # element thickness [mm]:
-        # (NOTE: column array must be of shape (n_elems, 1)
-        #
-        thickness = input_arr[:, thickness_idx][:, None]
-
-        # coordinates [m]:
-        # (NOTE: corrds are taken from the state data file of the first loading case) 
-        #
-        X = self.lc_list[0].state_data_orig['X']
-        Y = self.lc_list[0].state_data_orig['Y']
-        Z = self.lc_list[0].state_data_orig['Z']
-
-        return  {'elem_no':elem_no,
-                 'X':X, 'Y':Y, 'Z':Z,
-                 'thickness':thickness }
-
     #------------------------------------------
     # get thickness data:
     #------------------------------------------
@@ -710,7 +607,7 @@ class LCCTable(HasTraits):
     geo_data_orig = Property(Dict, depends_on = 'geo_data_file')
     @cached_property
     def _get_geo_data_orig(self):
-        return self._read_geo_data(self.geo_data_file)
+        return self.reader.read_geo_data(self.geo_data_file)
 
     # parameter that defines for which z-coordinate values
     # the read in data is not evaluated (filtered out)
@@ -782,9 +679,82 @@ class LCCTable(HasTraits):
 
         return lcc_list
 
+    def plot(self):
 
-
-
+        #----------------------------------------
+        # script to get the maximum number of reinforcement ('n_tex')
+        # at all given coordinate points for all possible loading
+        # case combinations:
+        #----------------------------------------
+        # set option to "True" for surrounding 
+        # evaluation of necessary layers "n_tex"
+        # needed for all loading cases
+        #
+        plot_n_tex_all_lcc = True
+    #    plot_n_tex_all_lcc = False
+    
+        if plot_n_tex_all_lcc == True:
+    
+            print 'lct.combi_arr', self.combi_arr
+    
+            # get the list of all loading case combinations:
+            #
+            lcc_list = self.lcc_list
+    
+            #----------------------------------------------
+            # run trough all loading case combinations:
+            #----------------------------------------------
+    
+            n_tex_list = []
+            for lcc in lcc_list:
+    
+                # get the ls_table object and retrieve its 'ls_class'
+                # (= LSTable_ULS-object)
+                #
+                ls_class = lcc.ls_table.ls_class
+    
+                # get 'n_tex'-column array 
+                #
+                n_tex = ls_class.n_tex
+    #            n_tex = ls_class.n_tex_up
+    #            n_tex = ls_class.n_tex_lo
+                n_tex_list.append(n_tex)
+    
+            # stack the list to an array in order to use ndmax-function
+            #
+            n_tex_arr = hstack(n_tex_list)
+    
+            #----------------------------------------------
+            # get the overall maximum values:
+            #----------------------------------------------
+    
+            n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
+    
+            #----------------------------------------------
+            # plot
+            #----------------------------------------------
+            #
+            X = lcc_list[0].ls_table.X[:, 0]
+            Y = lcc_list[0].ls_table.Y[:, 0]
+            Z = lcc_list[0].ls_table.Z[:, 0]
+            plot_col = n_tex_max[:, 0]
+    
+            # if n_tex is negative plot 0 instead:
+            #
+            plot_col = where(plot_col < 0, 0, plot_col)
+    
+            mlab.figure(figure = "SFB532Demo",
+                         bgcolor = (1.0, 1.0, 1.0),
+                         fgcolor = (0.0, 0.0, 0.0))
+    
+            mlab.points3d(X, Y, (-1.0) * Z, plot_col,
+                           colormap = "YlOrBr",
+                           mode = "cube",
+                           scale_factor = 0.10)
+    
+            mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
+    
+            mlab.show()
 
     # ------------------------------------------------------------
     # View 
@@ -806,7 +776,6 @@ class LCCTable(HasTraits):
                       height = 1.0,
                       width = 1.0
                       )
-
 
 class LCCTableULS(LCCTable):
     '''LCCTable for ultimate limit state
@@ -836,7 +805,6 @@ class LCCTableULS(LCCTable):
     @cached_property
     def _get_psi_lead_arr(self):
         return ones(len(self.lc_list))
-
 
 class LCCTableSLS(LCCTable):
     '''LCCTable for serviceability limit state
@@ -900,336 +868,3 @@ class LCCTableSLS(LCCTable):
     def _get_psi_non_lead_arr(self):
         return self.psi_non_lead_dict[ self.combination_SLS ]
 
-
-if __name__ == '__main__':
-
-    #---------------------------------------------
-    # 2 shells: 
-    # new geometry with new loading cases plus waterfilling
-    #---------------------------------------------
-
-    data_dir = os.path.join(simdb.simdb_dir,
-                             'simdata', 'input_data_mushroof_stb',
-                             'ZiE_state_data_2shells_delta_h_865mm_2011-08-16')
-
-    #------------------------
-    # define loading cases:
-    #------------------------
-    # NOTE:
-    #
-    #---------------------------------------------------------
-    # "staendige und voruebergehende Bemessungssitauation":
-    #---------------------------------------------------------
-    lc_list = [
-                 # LC1:
-                 # own weight:
-                 #
-                 LC(name = 'g', category = 'dead-load',
-                     file_name = os.path.join(data_dir, 'LC1.csv'),
-                     ),
-
-                 # LC2:
-                 # s_sym:
-                 #
-                 LC(name = 's_sym', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC2.csv'),
-                     exclusive_to = ['s_asym', 'WF'],
-                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC3:
-                 # s_asym:
-                 #
-                 LC(name = 's_asym', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC3.csv'),
-                     exclusive_to = ['s_sym', 'WF'],
-                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC4:
-                 # w_neg:
-                 #
-                 LC(name = 'w_neg', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC4.csv'),
-                     exclusive_to = ['w_pos', 'w_asym', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC5:
-                 # w_pos:
-                 #
-                 LC(name = 'w_pos', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC5.csv'),
-                     exclusive_to = ['w_neg', 'w_asym', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC6:
-                 # w_asym:
-                 #
-                 LC(name = 'w_asym', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC6.csv'),
-                     exclusive_to = ['w_pos', 'w_neg', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC7:
-                 # w_int: Bauzustand
-                 #
-                 LC(name = 'w_int', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC7.csv'),
-                     exclusive_to = ['w_pos', 'w_neg', 'w_asym', 'WF', 'T_shrinkage'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-
-                 # LC8: 
-                 # 1 kN man load (corner):
-                 #
-                 LC(name = 'Q_corner', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC8.csv'),
-                     exclusive_to = ['Q_edge', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0),
-
-                 # LC9: 
-                 # 1 kN man load (edge, center):
-                 #
-                 LC(name = 'Q_edge', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC9.csv'),
-                     exclusive_to = ['Q_corner', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0),
-
-                 # LC10:
-                 # temperature (sommer):
-                 #
-                 LC(name = 'T_pos', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC10.csv'),
-                     exclusive_to = ['T_neg', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0),
-
-                 # LC11:
-                 # temperature (winter):
-                 #
-                 LC(name = 'T_neg', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC11.csv'),
-                     exclusive_to = ['T_pos', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0),
-
-                 # LC12:
-                 # shrinkage:
-                 # combination coefficients taken from case 'general imposed load'
-                 # 
-                 LC(name = 'T_shrinkage', category = 'imposed-load',
-                     file_name = os.path.join(data_dir, 'LC12.csv'),
-                     exclusive_to = ['WF'], psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5),
-               ]
-
-
-    #---------------------------------------------------------
-    # "aussergewoehnliche Bemessungssitauation":
-    #---------------------------------------------------------
-    #
-#    lc_list = [
-#                 # LC1:
-#                 # own weight:
-#                 #
-#                 LC( name = 'g', category = 'dead-load',
-#                     file_name = os.path.join( data_dir, 'LC1.csv' ),
-#                     gamma_unf = 1.00
-#                     ),
-#
-#                 # LC4:
-#                 # w_neg:
-#                 #
-#                 LC( name = 'w_neg', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC4.csv' ),
-#                     exclusive_to = ['w_pos', 'w_asym', ],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0      # = psi_2
-#                     ),
-#
-#                 # LC5:
-#                 # w_pos:
-#                 #
-#                 LC( name = 'w_pos', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC5.csv' ),
-#                     exclusive_to = ['w_neg', 'w_asym'],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0      # = psi_2
-#                     ),
-#
-#                 # LC6:
-#                 # w_asym:
-#                 #
-#                 LC( name = 'w_asym', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC6.csv' ),
-#                     exclusive_to = ['w_pos', 'w_neg'],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0      # = psi_2
-#                     ),
-#
-#                 # LC10:
-#                 # temperature (sommer):
-#                 #
-#                 LC( name = 'T_pos', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC10.csv' ),
-#                     exclusive_to = ['T_neg'],
-#                     gamma_unf = 0.6, # = psi_0
-#                     psi_0 = 0.5 / 0.6 # = psi_1
-#                     ),
-#
-#                 # LC11:
-#                 # temperature (winter):
-#                 #
-#                 LC( name = 'T_neg', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC11.csv' ),
-#                     exclusive_to = ['T_pos'],
-#                     gamma_unf = 0.7, # = psi_1
-#                     psi_0 = 0.5 / 0.7 # = psi_2
-#                     ),
-#
-#                 # LC12:
-#                 # shrinkage:
-#                 # combination coefficients taken from case 'general imposed load'
-#                 # 
-#                 LC( name = 'T_shrinkage', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC12.csv' ),
-#                     gamma_unf = 0.8, # = psi_0
-#                     psi_0 = 0.7 / 0.8 # = psi_1
-#                     ),
-#
-#                 # LC13:
-#                 # water filling:
-#                 #
-#                 LC( name = 'WF', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC13.csv' ),
-#                     gamma_unf = 1.00,
-#                     psi_0 = 1.0 ),
-
-#                 # LC14_1-2:
-#                 # earth quake:
-#                 #
-#                 LC( name = 'EQ_1-2', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC14_1-2.csv' ),
-#                     gamma_unf = 1.00,
-#                     exclusive_to = ['EQ_3-4'],
-#                     psi_0 = 1.0 ),
-
-#                 # LC14_3-4:
-#                 # earth quake:
-#                 #
-#                 LC( name = 'EQ_3-4', category = 'imposed-load',
-#                     file_name = os.path.join( data_dir, 'LC14_3-4.csv' ),
-#                     gamma_unf = 1.00,
-#                     exclusive_to = ['EQ_1-2'],
-#                     psi_0 = 1.0 ),
-#
-#               ]
-
-#--------------------------------------------------------
-
-
-    lct = LCCTableULS(data_dir = data_dir,
-                       lc_list = lc_list,
-
-                       # remove only the lowest point = connection shell/column
-                       # as this is a singularity of the FE-shell-model
-                       #
-#                       cut_z_fraction = 0.01,
-#                       cut_z_fraction = 0.05, # corresponds to 50cm x 50cm
-#                       cut_z_fraction = 0.10, # corresponds to 75cm x 75cm
-                       cut_z_fraction = 0.15, # corresponds to 100cm x 100cm
-                       show_lc_characteristic = False
-                        )
-
-#    lct = LCCTableSLS( data_dir = data_dir,
-#                       lc_list = lc_list,
-#                       cut_z_fraction = 0.2,
-#                       combination_SLS = 'rare',
-##                       combination_SLS = 'freq',
-##                       combination_SLS = 'perm',
-##                       show_lc_characteristic = True
-#                        )
-
-
-#    lct.configure_traits()
-
-    #----------------------------------------
-    # script to get the maximum number of reinforcement ('n_tex')
-    # at all given coordinate points for all possible loading
-    # case combinations:
-    #----------------------------------------
-    # set option to "True" for surrounding 
-    # evaluation of necessary layers "n_tex"
-    # needed for all loading cases
-    #
-    plot_n_tex_all_lcc = True
-#    plot_n_tex_all_lcc = False
-
-    if plot_n_tex_all_lcc == True:
-
-        print 'lct.combi_arr', lct.combi_arr
-
-        # get the list of all loading case combinations:
-        #
-        lcc_list = lct.lcc_list
-
-        #----------------------------------------------
-        # run trough all loading case combinations:
-        #----------------------------------------------
-
-        n_tex_list = []
-        for lcc in lcc_list:
-
-            # get the ls_table object and retrieve its 'ls_class'
-            # (= LSTable_ULS-object)
-            #
-            ls_class = lcc.ls_table.ls_class
-
-            # get 'n_tex'-column array 
-            #
-            n_tex = ls_class.n_tex
-#            n_tex = ls_class.n_tex_up
-#            n_tex = ls_class.n_tex_lo
-            n_tex_list.append(n_tex)
-
-
-        # stack the list to an array in order to use ndmax-function
-        #
-        n_tex_arr = hstack(n_tex_list)
-
-        #----------------------------------------------
-        # get the overall maximum values:
-        #----------------------------------------------
-
-        n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
-
-        #----------------------------------------------
-        # plot
-        #----------------------------------------------
-        #
-        X = lcc_list[0].ls_table.X[:, 0]
-        Y = lcc_list[0].ls_table.Y[:, 0]
-        Z = lcc_list[0].ls_table.Z[:, 0]
-        plot_col = n_tex_max[:, 0]
-
-        # if n_tex is negative plot 0 instead:
-        #
-        plot_col = where(plot_col < 0, 0, plot_col)
-
-        mlab.figure(figure = "SFB532Demo",
-                     bgcolor = (1.0, 1.0, 1.0),
-                     fgcolor = (0.0, 0.0, 0.0))
-
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                       colormap = "YlOrBr",
-                       mode = "cube",
-                       scale_factor = 0.10)
-
-        mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
-
-        mlab.show()
-
-
-
-#    print 'lc_arr', lct.lc_arr
-#    print 'lc_list[0].sr_arr.shape[0]', lct.lc_list[0].sr_arr.shape[0]
-#    print 'lc_arr.shape', lct.lc_arr.shape
-#    print 'combi_arr', lct.combi_arr
-#    print 'combi_arr.shape', lct.combi_arr.shape
-#    print 'lcc_arr', lct.lcc_arr

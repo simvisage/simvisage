@@ -6,9 +6,8 @@ Created on Jun 23, 2010
 
 from etsproxy.traits.api import \
     Float, Instance, Array, Property, cached_property, \
-    HasStrictTraits, DelegatesTo, Int
+    HasStrictTraits, DelegatesTo, Int, Event, Callable
 
-import math
 import numpy as np
 import pylab as p
 
@@ -34,7 +33,7 @@ class ECBLCalib(HasStrictTraits):
 
     cs = Instance(ECBCrossSection)
     def _cs_default(self):
-        return ECBCrossSection()
+        return ECBCrossSection(notify_change = self._set_modified)
 
     ecbl_type = DelegatesTo('cs')
     ecbl = DelegatesTo('cs')
@@ -42,9 +41,20 @@ class ECBLCalib(HasStrictTraits):
     cc_law = DelegatesTo('cs')
     width = DelegatesTo('cs')
     f_ck = DelegatesTo('cs')
+    eps_c_u = DelegatesTo('cs')
     n_rovings = DelegatesTo('cs')
     n_layers = DelegatesTo('cs')
 
+    notify_change = Callable(None)
+    
+    modified = Event
+    def _set_modified(self):
+        self.modified = True
+        print 'CALIB:set_modifeid'
+        if self.notify_change != None:
+            print 'CALIB:notify_change'
+            self.notify_change()
+    
     u0 = Property(Array(float), depends_on = 'cs.modified')
     @cached_property
     def _get_u0(self):
@@ -103,9 +113,10 @@ class ECBLCalib(HasStrictTraits):
     # Calibrated ecbl_mfn
     #===========================================================================
 
-    calibrated_ecbl = Property(depends_on = 'cs.modified')
+    calibrated_ecbl = Property(depends_on = 'modified')
     @cached_property
     def _get_calibrated_ecbl(self):
+        print 'NEW CALIBRATION'
         self.ecbl.set_cparams(*self.u_sol)
         return self.ecbl
     
