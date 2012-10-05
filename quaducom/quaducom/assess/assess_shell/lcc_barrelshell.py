@@ -6,16 +6,15 @@ if __name__ == '__main__':
 
     from matresdev.db.simdb import \
         SimDB
-    
+
     import os
-    
+
     from lcc_table import LCCTableULS, LC
-    
+
     # Access to the top level directory of the database
     #
     simdb = SimDB()
 
-    
     #---------------------------------------------
     # 2 shells: 
     # new geometry with new loading cases plus waterfilling
