@@ -1,8 +1,10 @@
 from material import Material
 from etsproxy.traits.api import Float
 
+
 def H(x):
     return x >= 0
+
 
 class ACK(Material):
     '''
@@ -48,13 +50,13 @@ class ACK(Material):
         eps_list = [0, self.eps_1(sigma_cu)
                     , self.eps_2(sigma_cu), self.eps_3(self.sigma_max)]
         sigma_list = [0, sigma_cu, sigma_cu, self.sigma_max]
-        
+
         ''''''
         test_eps = [0, self.sigma_max / self.Ef / self.Vf]
         test_sigma = [0, self.sigma_max]
         plt.plot(test_eps, test_sigma)
         ''''''
-        
+
         plt.plot(eps_list, sigma_list)
         plt.ylabel('$\sigma_c$ in [MPa]', fontsize=16)
         plt.xlabel('$\epsilon_c$ in [-]', fontsize=16)
@@ -64,7 +66,7 @@ class ACK(Material):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     a = ACK(sigma_max=30.,
-            Vf=0.9,
+            Vf=0.99,
             E_f=200e3,
             E_m=30e3,
             sigma_mu=5.0)
