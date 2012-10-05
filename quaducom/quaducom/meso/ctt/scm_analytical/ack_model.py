@@ -6,7 +6,7 @@ def H(x):
     return x >= 0
 
 
-class ACK(Material):
+class ACK(HasTraits):
     '''
     ACK model with one matrix breaking strain all over the specimen
 
@@ -22,12 +22,13 @@ class ACK(Material):
     plot range:                       sigma_max [MPa]
     '''
 
+    material = Instance(Material)
     sigma_max = Float
     sigma_mu = Float
 
     def eps_1(self, sigma):
         #sigma<sigma_mu
-        eps_c = self.sigma_mu / self.Em
+        eps_c = self.sigma_mu / self.material.Em
         return eps_c
 
     def eps_2(self, sigma):
@@ -65,10 +66,10 @@ class ACK(Material):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    a = ACK(sigma_max=30.,
-            Vf=0.99,
-            E_f=200e3,
-            E_m=30e3,
+    material = Material(V_f=0.99,
+                        E_f=100e3,
+                        E_m=30e3,)
+    a = ACK(sigma_max=1000.,
             sigma_mu=5.0)
 
     a.plot_diagram()
