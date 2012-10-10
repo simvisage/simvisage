@@ -3,6 +3,8 @@
 
 if __name__ == '__main__':
 
+    from etsproxy.mayavi import \
+        mlab
 
     from matresdev.db.simdb import \
         SimDB
@@ -21,8 +23,7 @@ if __name__ == '__main__':
     #---------------------------------------------
 
     data_dir = os.path.join(simdb.simdb_dir,
-                            'simdata', 'input_data_mushroof_stb',
-                            'ZiE_state_data_2shells_delta_h_865mm_2011-08-16')
+                            'simdata', 'input_data_barrelshell')
 
     #------------------------
     # define loading cases:
@@ -34,151 +35,23 @@ if __name__ == '__main__':
     #---------------------------------------------------------
     lc_list = [
                  # LC1:
-                 LC(name = 'g', category = 'dead-load', file_name = 'LC1.csv'
+                 LC(name = 'g', category = 'dead-load', file_name = 'LC1.txt'
                     ),
                  # LC2:
-                 LC(name = 's_sym', category = 'imposed-load', file_name = 'LC2.csv',
-                    exclusive_to = ['s_asym', 'WF'],
-                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-                 # LC3:
-                 LC(name = 's_asym', category = 'imposed-load', file_name = 'LC3.csv',
-                    exclusive_to = ['s_sym', 'WF'],
-                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-                 # LC4:
-                 LC(name = 'w_neg', category = 'imposed-load', file_name = 'LC4.csv',
-                     exclusive_to = ['w_pos', 'w_asym', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-                 # LC5:
-                 LC(name = 'w_pos', category = 'imposed-load', file_name = 'LC5.csv',
-                     exclusive_to = ['w_neg', 'w_asym', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-                 # LC6:
-                 # w_asym:
-                 #
-                 LC(name = 'w_asym', category = 'imposed-load', file_name = 'LC6.csv',
-                     exclusive_to = ['w_pos', 'w_neg', 'w_int', 'WF'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
-                     ),
-                 # LC7:
-                 LC(name = 'w_int', category = 'imposed-load', file_name = 'LC7.csv',
-                     exclusive_to = ['w_pos', 'w_neg', 'w_asym', 'WF', 'T_shrinkage'],
-                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0,
-                     comment = 'Bauzustand'
-                     ),
-                 # LC8: 
-                 LC(name = 'Q_corner', category = 'imposed-load', file_name = 'LC8.csv',
-                    exclusive_to = ['Q_edge', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0,
-                    comment = '1 kN man load (corner)'
+                 LC(name = 'snow', category = 'imposed-load', file_name = 'LC2.txt'
                     ),
-                 # LC9: 
-                 LC(name = 'Q_edge', category = 'imposed-load', file_name = 'LC9.csv',
-                     exclusive_to = ['Q_corner', 'WF'], psi_0 = 0.0, psi_1 = 0.0, psi_2 = 0.0,
-                     comment = '1 kN man load (edge, center)'
-                     ),
-                 # LC10:
-                 LC(name = 'T_pos', category = 'imposed-load', file_name = 'LC10.csv',
-                     exclusive_to = ['T_neg', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0,
-                     comment = 'temperature (sommer)'
-                     ),
-                 # LC11:
-                 LC(name = 'T_neg', category = 'imposed-load', file_name = 'LC11.csv',
-                     exclusive_to = ['T_pos', 'WF'], psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0,
-                     comment = 'temperature (winter)'
-                     ),
-                 # LC12:
-                 LC(name = 'T_shrinkage', category = 'imposed-load', file_name = 'LC12.csv',
-                     exclusive_to = ['WF'], psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
-                     comment = 'shrinkage, combination coefficients taken from case "general imposed load"'
-                     ),
                ]
 
 #    #---------------------------------------------------------
 #    # "aussergewoehnliche Bemessungssitauation":
 #    #---------------------------------------------------------
 #    #
-#    lc_list = [
-#                 # LC1:
-#                 LC(name = 'g', category = 'dead-load',
-#                     file_name = 'LC1.csv' ,
-#                     gamma_unf = 1.00,
-#                     comment = 'dead weight',
-#                     ),
-#                 # LC4:
-#                 LC(name = 'w_neg', category = 'imposed-load',
-#                     file_name = 'LC4.csv' ,
-#                     exclusive_to = ['w_pos', 'w_asym', ],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0, # = psi_2
-#                     ),
-#                 # LC5:
-#                 LC(name = 'w_pos', category = 'imposed-load',
-#                     file_name = 'LC5.csv',
-#                     exclusive_to = ['w_neg', 'w_asym'],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0      # = psi_2
-#                     ),
-#                 # LC6:
-#                 LC(name = 'w_asym', category = 'imposed-load',
-#                     file_name = 'LC6.csv',
-#                     exclusive_to = ['w_pos', 'w_neg'],
-#                     gamma_unf = 0.2, # = psi_1
-#                     psi_0 = 0.0      # = psi_2
-#                     ),
-#                 # LC10:
-#                 LC(name = 'T_pos', category = 'imposed-load',
-#                     file_name = 'LC10.csv',
-#                     exclusive_to = ['T_neg'],
-#                     gamma_unf = 0.6, # = psi_0
-#                     psi_0 = 0.5 / 0.6 # = psi_1
-#                     ),
-#                 # LC11:
-#                 LC(name = 'T_neg', category = 'imposed-load',
-#                     file_name = 'LC11.csv',
-#                     exclusive_to = ['T_pos'],
-#                     gamma_unf = 0.7, # = psi_1
-#                     psi_0 = 0.5 / 0.7, # = psi_2
-#                     comment = 'temperature (winter)'
-#                     ),
-#                 # LC12:
-#                 LC(name = 'T_shrinkage', category = 'imposed-load',
-#                     file_name = 'LC12.csv',
-#                     gamma_unf = 0.8, # = psi_0
-#                     psi_0 = 0.7 / 0.8, # = psi_1
-#                     comment = 'shrinkage: combination coefficients taken from case "general imposed load"'
-#                     ),
-#                 # LC13:
-#                 LC(name = 'WF', category = 'imposed-load',
-#                     file_name = 'LC13.csv',
-#                     gamma_unf = 1.00,
-#                     psi_0 = 1.0,
-#                     comment = 'water filling'
-#                     ),
-#                 # LC14_1-2:
-#                 LC(name = 'EQ_1-2', category = 'imposed-load',
-#                    file_name = 'LC14_1-2.csv',
-#                    gamma_unf = 1.00,
-#                    exclusive_to = ['EQ_3-4'],
-#                    psi_0 = 1.0,
-#                    comment = 'earth quake'
-#                    ),
-#                 # LC14_3-4:
-#                 LC(name = 'EQ_3-4', category = 'imposed-load',
-#                    file_name = 'LC14_3-4.csv',
-#                    gamma_unf = 1.00,
-#                    exclusive_to = ['EQ_1-2'],
-#                    psi_0 = 1.0,
-#                    comment = 'earthquake'
-#                    ),
-#               ]
 
 #--------------------------------------------------------
 
 
     lct = LCCTableULS(data_dir = data_dir,
+                      reader_type = 'InfoCAD',
                        lc_list = lc_list,
 
                        # remove only the lowest point = connection shell/column
@@ -191,8 +64,17 @@ if __name__ == '__main__':
                        show_lc_characteristic = False
                         )
 
-    lct.plot()
 
+    mlab.figure(figure = "SFB532Demo",
+                 bgcolor = (1.0, 1.0, 1.0),
+                 fgcolor = (0.0, 0.0, 0.0))
+
+    lct.plot_geo(mlab)
+
+    lct.plot_sr(mlab)
+
+
+    mlab.show()
 #    lct = LCCTableSLS( data_dir = data_dir,
 #                       lc_list = lc_list,
 #                       cut_z_fraction = 0.2,

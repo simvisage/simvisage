@@ -1,21 +1,38 @@
 
-
+import numpy as np
 
 if __name__ == '__main__':
 
 
     from matresdev.db.simdb import \
         SimDB
-    
+
     import os
-    
+
     from lcc_table import LCCTableULS, LC
-    
+
+    # remove only the lowest point = connection shell/column
+    # as this is a singularity of the FE-shell-model
+    #
+    #                       cut_z_fraction = 0.01,
+    #                       cut_z_fraction = 0.05, # corresponds to 50cm x 50cm
+    #                       cut_z_fraction = 0.10, # corresponds to 75cm x 75cm
+    cut_z_fraction = 0.15, # corresponds to 100cm x 100cm
+
+    def remove_midpoints(lcc_table, arr):
+        # remove the center points of the shells 
+        Zp = np.fabs(lcc_table.geo_data_orig['Z'])
+        max_Z = max(Zp)
+        min_Z = min(Zp)
+        h = max_Z - min_Z
+        z_active_idx = np.where(Zp >= (min_Z + cut_z_fraction * h))[0]
+        return arr[ z_active_idx ]
+
     # Access to the top level directory of the database
     #
     simdb = SimDB()
 
-    
+
     #---------------------------------------------
     # 2 shells: 
     # new geometry with new loading cases plus waterfilling
@@ -180,23 +197,17 @@ if __name__ == '__main__':
 
 
     lct = LCCTableULS(data_dir = data_dir,
+                      data_filter = remove_midpoints,
                        lc_list = lc_list,
 
-                       # remove only the lowest point = connection shell/column
-                       # as this is a singularity of the FE-shell-model
-                       #
-#                       cut_z_fraction = 0.01,
-#                       cut_z_fraction = 0.05, # corresponds to 50cm x 50cm
-#                       cut_z_fraction = 0.10, # corresponds to 75cm x 75cm
-                       cut_z_fraction = 0.15, # corresponds to 100cm x 100cm
                        show_lc_characteristic = False
                         )
 
     lct.plot()
 
 #    lct = LCCTableSLS( data_dir = data_dir,
+#                      data_filter = remove_midpoints,
 #                       lc_list = lc_list,
-#                       cut_z_fraction = 0.2,
 #                       combination_SLS = 'rare',
 ##                       combination_SLS = 'freq',
 ##                       combination_SLS = 'perm',

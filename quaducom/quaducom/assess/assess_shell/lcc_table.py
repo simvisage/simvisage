@@ -8,8 +8,9 @@ from etsproxy.traits.api import \
     HasTraits, Directory, List, Int, Float, Any, Enum, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Color, Bool, DelegatesTo, Callable
-    
+    Dict, Button, Color, Bool, DelegatesTo, Callable, \
+    Trait
+
 from etsproxy.util.home_directory import \
     get_home_directory
 
@@ -41,14 +42,16 @@ import os.path
 
 from ls_table import \
     LSTable, ULS, SLS
-    
+
 from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
-    
+
 class LC(HasTraits):
     '''Loading case class
     '''
 
     reader = WeakRef
+
+    lcc_table = WeakRef
 
     # name of the file containing the stress resultants
     #
@@ -57,8 +60,6 @@ class LC(HasTraits):
     # data filter (used to hide unwanted values, e.g. high sigularities etc.) 
     #
     data_filter = Callable(input = True)
-    def _data_filter_default(self):
-        return lambda x: x    #  - do nothing by default
 
     # name of the loading case
     #
@@ -131,14 +132,14 @@ class LC(HasTraits):
     def _get_state_data_dict(self):
         d = {}
         for k, arr in self.state_data_orig.items():
-            d[k] = self.data_filter(arr)
+            d[k] = self.data_filter(self.lcc_table, arr)
         return d
 
     sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
 
     sr_arr = Property(Array)
     def _get_sr_arr(self):
-        '''return the stress resultants of the loading case 
+        '''return the stress resultants of the loading case
         as stack of all sr-column arrays.
         '''
         sd_dict = self.state_data_dict
@@ -191,9 +192,13 @@ class LCCTable(HasTraits):
 
     # manager of input files with state and geometry data 
     # 
-    reader = Instance(LCCReader)
-    def _reader_default(self):
-        return LCCReaderRFEM(lcc_table = self)
+    reader_type = Trait('RFEM', dict(RFEM = LCCReaderRFEM,
+                                      InfoCAD = LCCReaderInfoCAD))
+
+    reader = Property(Instance(LCCReader), depends_on = 'reader_type')
+    @cached_property
+    def _get_reader(self):
+        return self.reader_type_(lcc_table = self)
 
     # lcc-instance for the view 
     #
@@ -216,6 +221,7 @@ class LCCTable(HasTraits):
     def _get_lc_list(self):
         for lc in self.lc_list_:
             lc.reader = self.reader
+            lc.lcc_table = self
             if lc.data_filter != self.data_filter:
                 lc.data_filter = self.data_filter
         return self.lc_list_
@@ -244,28 +250,7 @@ class LCCTable(HasTraits):
         ''' check input files for consitency:
         '''
 
-        for lc in self.lc_list:
-            # check internal LC-consitency: 
-            # (compare coords-values of first LC with all other LC's in 'lc_list')
-            #
-            if not all(self.lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
-                not all(self.lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
-                not all(self.lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
-                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % (self.lc_list[0].name, lc.name)
-                return False
-
-            # check external consistency:
-            # (compare 'elem_no' in 'thickness.csv' and in all loading-cases 
-            # input files (e.g. 'LC1.csv') defined in 'lc_list')
-            #
-            if not all(self.geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % (self.lc_list[0].name, lc.name)
-                return False
-
-        print '*** input files checked for consistency (OK) ***'
-        return True
+        return self.reader.check_for_consistency(self.lc_list, self.geo_data_dict)
 
     #-------------------------------
     # lc_arr
@@ -308,10 +293,10 @@ class LCCTable(HasTraits):
         Get all possible permutations of the security factors
         without changing the order of the loading cases.
         The method corresponds to the build-in function 'itertools.product'.
-        Instead of returning a generator object a list of all 
-        possible permutations is returned. As argument a list of list 
-        needs to be defined. In the original version of 'itertools.product' 
-        the function takes a tuple as argument ("*args"). 
+        Instead of returning a generator object a list of all
+        possible permutations is returned. As argument a list of list
+        needs to be defined. In the original version of 'itertools.product'
+        the function takes a tuple as argument ("*args").
         """
         pools = map(tuple, args) #within original version args defined as *args
         result = [[]]
@@ -344,7 +329,7 @@ class LCCTable(HasTraits):
     # This yields an array of shape ( n_lc, )
     #
     def _get_psi_arr(self, psi_key):
-        '''psi_key must be defined as: 
+        '''psi_key must be defined as:
         'psi_0', 'psi_1', or 'psi_2'
         Returns an 1d-array of shape ( n_lc, )
         '''
@@ -381,9 +366,9 @@ class LCCTable(HasTraits):
         This yields an array of shape ( n_lcc, n_lc )
 
         Properties defined in the subclasses 'LCCTableULS', 'LCCTableSLS':
-        - 'gamma_list' = list of security factors (gamma) 
-        - 'psi_lead' = combination factors (psi) of the leading imposed load 
-        - 'psi_non_lead' = combination factors (psi) of the non-leading imposed loads 
+        - 'gamma_list' = list of security factors (gamma)
+        - 'psi_lead' = combination factors (psi) of the leading imposed load
+        - 'psi_non_lead' = combination factors (psi) of the non-leading imposed loads
         '''
         # printouts:
         #
@@ -616,26 +601,16 @@ class LCCTable(HasTraits):
 
     # construct a filter 
     #
-    data_filter = Property(Callable, depends_on = 'geo_data_file, +filter')
-    def _get_data_filter(self):
-
-        def remove_midpoints(arr):
-            # remove the center points of the shells 
-            Zp = fabs(self.geo_data_orig['Z'])
-            max_Z = max(Zp)
-            min_Z = min(Zp)
-            h = max_Z - min_Z
-            z_active_idx = where(Zp >= (min_Z + self.cut_z_fraction * h))[0]
-            return arr[ z_active_idx ]
-
-        return remove_midpoints
+    data_filter = Callable
+    def _data_filter_default(self):
+        return lambda lcc_table, x: x    #  - do nothing by default
 
     geo_data_dict = Property(Dict, depends_on = 'geo_data_file, +filter')
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
         for k, arr in self.geo_data_orig.items():
-            d[ k ] = self.data_filter(arr)
+            d[ k ] = self.data_filter(self, arr)
         return d
 
     #-------------------------------
@@ -679,6 +654,22 @@ class LCCTable(HasTraits):
 
         return lcc_list
 
+    def plot_geo(self, mlab):
+
+        self.reader.plot_mesh(mlab, self.geo_data_dict)
+
+    def plot_sr(self, mlab, lc = 0, sr = 0):
+        lc = self.lc_arr[lc]
+        print 'lc', lc[:, sr]
+
+        gd = self.geo_data_dict
+        print 'lc', lc.shape
+        print 'gd', gd['X'].shape
+        mlab.points3d(gd['X'], gd['Y'], gd['Z'], lc[:, sr],
+                       #colormap = "YlOrBr",
+                       mode = "cube",
+                       scale_factor = 0.1)
+
     def plot(self):
 
         #----------------------------------------
@@ -692,44 +683,42 @@ class LCCTable(HasTraits):
         #
         plot_n_tex_all_lcc = True
     #    plot_n_tex_all_lcc = False
-    
+
         if plot_n_tex_all_lcc == True:
-    
-            print 'lct.combi_arr', self.combi_arr
-    
+
             # get the list of all loading case combinations:
             #
             lcc_list = self.lcc_list
-    
+
             #----------------------------------------------
             # run trough all loading case combinations:
             #----------------------------------------------
-    
+
             n_tex_list = []
             for lcc in lcc_list:
-    
+
                 # get the ls_table object and retrieve its 'ls_class'
                 # (= LSTable_ULS-object)
                 #
                 ls_class = lcc.ls_table.ls_class
-    
+
                 # get 'n_tex'-column array 
                 #
                 n_tex = ls_class.n_tex
     #            n_tex = ls_class.n_tex_up
     #            n_tex = ls_class.n_tex_lo
                 n_tex_list.append(n_tex)
-    
+
             # stack the list to an array in order to use ndmax-function
             #
             n_tex_arr = hstack(n_tex_list)
-    
+
             #----------------------------------------------
             # get the overall maximum values:
             #----------------------------------------------
-    
+
             n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
-    
+
             #----------------------------------------------
             # plot
             #----------------------------------------------
@@ -738,22 +727,22 @@ class LCCTable(HasTraits):
             Y = lcc_list[0].ls_table.Y[:, 0]
             Z = lcc_list[0].ls_table.Z[:, 0]
             plot_col = n_tex_max[:, 0]
-    
+
             # if n_tex is negative plot 0 instead:
             #
             plot_col = where(plot_col < 0, 0, plot_col)
-    
+
             mlab.figure(figure = "SFB532Demo",
                          bgcolor = (1.0, 1.0, 1.0),
                          fgcolor = (0.0, 0.0, 0.0))
-    
+
             mlab.points3d(X, Y, (-1.0) * Z, plot_col,
                            colormap = "YlOrBr",
                            mode = "cube",
                            scale_factor = 0.10)
-    
+
             mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
-    
+
             mlab.show()
 
     # ------------------------------------------------------------

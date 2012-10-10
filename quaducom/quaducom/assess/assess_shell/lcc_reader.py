@@ -3,6 +3,9 @@ from etsproxy.traits.api import \
     HasTraits, Directory, \
     Property, WeakRef
 
+from numpy import array, random
+from tvtk.api import tvtk
+
 import os
 
 import numpy as np
@@ -22,6 +25,9 @@ class LCCReader(HasTraits):
             return self.lcc_table.data_dir
     def _set_data_dir(self, data_dir):
         self._dd = data_dir
+
+    def check_for_consistency(self, lc_list, geo_data_dict):
+        return True
 
     lcc_table = WeakRef
 
@@ -139,11 +145,38 @@ class LCCReaderRFEM(LCCReader):
                  'X':X, 'Y':Y, 'Z':Z,
                  'thickness':thickness }
 
+    def check_for_consistency(self, lc_list, geo_data_dict):
+
+        for lc in lc_list:
+            # check internal LC-consitency: 
+            # (compare coords-values of first LC with all other LC's in 'lc_list')
+            #
+            if not all(lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
+                not all(lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
+                not all(lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
+                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                        % (self.lc_list[0].name, lc.name)
+                return False
+
+            # check external consistency:
+            # (compare 'elem_no' in 'thickness.csv' and in all loading-cases 
+            # input files (e.g. 'LC1.csv') defined in 'lc_list')
+            #
+            if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
+                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                        % (lc_list[0].name, lc.name)
+                return False
+
+        print '*** input files checked for consistency (OK) ***'
+        return True
+
 class LCCReaderInfoCAD(LCCReader):
 
     def read_state_data(self, f_name):
 
-        file_name = os.path.join(self.data_dir, 'state_data', f_name)
+        file_name = os.path.join(self.data_dir, 'state_data',
+                                 'Flaechenschnittgroesen',
+                                 'Schalenmitte', f_name)
 
         print '*** read state data from file: %s ***' % (file_name)
 
@@ -157,22 +190,22 @@ class LCCReaderInfoCAD(LCCReader):
 
         # moments [kNm/m]
         #
-        mx = input_arr[:, mx_idx]
-        my = input_arr[:, my_idx]
-        mxy = input_arr[:, mxy_idx]
+        mx = input_arr[:, [mx_idx]]
+        my = input_arr[:, [my_idx]]
+        mxy = input_arr[:, [mxy_idx]]
 
         # normal forces [kN/m]:
         #
-        nx = input_arr[:, nx_idx]
-        ny = input_arr[:, ny_idx]
-        nxy = input_arr[:, nxy_idx]
+        nx = input_arr[:, [nx_idx]]
+        ny = input_arr[:, [ny_idx]]
+        nxy = input_arr[:, [nxy_idx]]
 
         return { 'elem_no' : elem_no,
                  'mx' : mx, 'my' : my, 'mxy' : mxy,
                  'nx' : nx, 'ny' : ny, 'nxy' : nxy,
                }
 
-    def read_geo_data(self):
+    def read_geo_data(self, file):
         '''to read the stb - thickness save the xls - worksheet
         to a csv - file using ';' as filed delimiter and ' ' ( blank )
         as text delimiter.
@@ -180,7 +213,7 @@ class LCCReaderInfoCAD(LCCReader):
         geo_dir = os.path.join(self.data_dir, 'geo_data')
         node_file = os.path.join(geo_dir, 'Knotenkoordinaten.txt')
         elem_file = os.path.join(geo_dir, 'Elementbeschreibung.txt')
-#        thic_file = os.path.join(geo_dir, 'Querschnittswerte.txt')
+        thic_file = os.path.join(geo_dir, 'Querschnittswerte.txt')
 
         node_arr = np.loadtxt(node_file)
 
@@ -192,8 +225,8 @@ class LCCReaderInfoCAD(LCCReader):
 
         elem_file_ = open(elem_file, 'r')
         lines = elem_file_.readlines()
-
         line_arr = np.array(lines)
+        elem_file_.close()
 
         t_line_arr = line_arr[t_idx]
         q_line_arr = line_arr[q_idx]
@@ -204,13 +237,14 @@ class LCCReaderInfoCAD(LCCReader):
         t_elems = np.loadtxt(t_str, usecols = (0, 2, 3, 4, 5), dtype = int)
         q_elems = np.loadtxt(q_str, usecols = (0, 2, 3, 4, 5, 6), dtype = int)
 
-        t_elem_node_map = t_elems[:, 1:] - 1
-        q_elem_node_map = q_elems[:, 1:] - 1
+        t_elem_node_map = t_elems[:, 1:-1] - 1
+        q_elem_node_map = q_elems[:, 1:-1] - 1
+        t_thickness_idx = t_elems[:, -1] - 1
+        print t_thickness_idx
+        q_thickness_idx = q_elems[:, -1] - 1
 
         node_idx = np.array(node_arr[:, 0] - 1, dtype = 'int')
         node_X = node_arr[:, 1:][node_idx]
-
-        print 'shape', node_X.shape
 
         t_elem_node_X = node_X[ t_elem_node_map ]
         q_elem_node_X = node_X[ q_elem_node_map ]
@@ -220,21 +254,59 @@ class LCCReaderInfoCAD(LCCReader):
 
         n_X = np.zeros((len(line_arr), 3), dtype = 'float')
 
-        print t_idx.shape
-        print n_X.shape
-        print t_elem_X.shape
-
         n_X[t_idx, :] = t_elem_X
         n_X[q_idx, :] = q_elem_X
 
         X, Y, Z = n_X.T
 
-        #thickness = thic_arr[elem_arr[:, 6]]
+        thic_file_ = open(thic_file, 'r')
+        lines = thic_file_.readlines()
+        line_arr = np.array(lines)
+        thic_file_.close()
+
+        idx_list = []
+        d_list = []
+        nr_lines = range(0, len(lines), 2)
+        for line in line_arr[nr_lines]:
+            nr, idx_str, id, d_str = line.split()
+            idx = int(idx_str)
+            d = float(d_str.split('=')[1])
+            idx_list.append(idx)
+            d_list.append(d)
+
+        d_arr = np.array(d_list, dtype = 'f')
+        d_arr = d_arr[np.array(idx_list, dtype = 'int_') - 1]
+
+        thickness_arr = np.zeros((elem_line_arr.shape[0],), dtype = 'f')
+        thickness_arr[t_idx] = d_arr[ t_thickness_idx ]
+        thickness_arr[q_idx] = d_arr[ q_thickness_idx ]
+
+        print thickness_arr
 
         return  {'elem_no':elem_no_arr,
                  'X':X, 'Y':Y, 'Z':Z,
-                 #'thickness':thickness 
+                 'node_X' : node_X,
+                 't_elem_node_map' : t_elem_node_map,
+                 'q_elem_node_map' : q_elem_node_map,
+                 'thickness':thickness_arr
                  }
+
+    def plot_mesh(self, mlab, geo):
+
+        # The numpy array data.
+
+        points = geo['node_X']
+        triangles = geo['t_elem_node_map']
+        quads = geo['q_elem_node_map']
+        #scalars = random.random(points.shape)
+
+        # The TVTK dataset.
+        qmesh = tvtk.PolyData(points = points, polys = quads)
+        mlab.pipeline.surface(qmesh, representation = 'wireframe')
+
+        # The TVTK dataset.
+        tmesh = tvtk.PolyData(points = points, polys = triangles)
+        mlab.pipeline.surface(tmesh, representation = 'wireframe')
 
 if __name__ == '__main__':
 
@@ -262,15 +334,18 @@ if __name__ == '__main__':
 
     r = LCCReaderInfoCAD(data_dir = data_dir)
 
-    gd = r.read_geo_data()
+    gd = r.read_geo_data('')
 
     mlab.figure(figure = "SFB532Demo",
                  bgcolor = (1.0, 1.0, 1.0),
                  fgcolor = (0.0, 0.0, 0.0))
 
-    mlab.points3d(gd['X'], gd['Y'], -gd['Z'], 0.5 * np.ones_like(gd['Z']),
+    r.plot_mesh(mlab, gd)
+
+    mlab.points3d(gd['X'], gd['Y'], gd['Z'], gd['thickness'],
                    #colormap = "YlOrBr",
                    mode = "cube",
-                   scale_factor = 0.10)
+                   scale_factor = 1.0)
+
 
     mlab.show()
