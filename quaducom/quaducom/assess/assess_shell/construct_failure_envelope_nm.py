@@ -102,8 +102,8 @@ if __name__ == '__main__':
     ax.spines['right'].set_color('none')
     ax.spines['bottom'].set_position(('data', 0))
     ax.spines['top'].set_color('none')
-    ax.spines['left'].set_smart_bounds(True)
-    ax.spines['bottom'].set_smart_bounds(True)
+#    ax.spines['left'].set_smart_bounds(True)
+#    ax.spines['bottom'].set_smart_bounds(True)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     
@@ -159,8 +159,8 @@ if __name__ == '__main__':
 
     # constant 'thickness':
     #
-#    n_layers_list = [   12]
-#    thickness_list = [ 0.06]
+    n_layers_list = [   12]
+    thickness_list = [ 0.06]
 #    n_layers_list  = [   4,    8,    12,   16,   20]
 #    thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
     zip_list = zip(n_layers_list, thickness_list)
@@ -190,24 +190,24 @@ if __name__ == '__main__':
        #  possible options: 'linear','cubic','fbm','bilinear'
         
       
-        for  calib_config in [ 'fbm']:   
-           
-            sig_fl_calib.calib_config = calib_config
-            sig_fl_calib.calib_sig_t_mfn()
-            u_sol = sig_fl_calib.u_sol
-            max_sig = sig_fl_calib.get_sig_max( u_sol )     
+#        for  calib_config in [ 'linear','cubic','fbm','bilinear']:   
+#           
+#            sig_fl_calib.calib_config = calib_config
+#            sig_fl_calib.calib_sig_t_mfn()
+#            u_sol = sig_fl_calib.u_sol
+#            max_sig = sig_fl_calib.get_sig_max( u_sol )     
 ##            
 ####################################################################################            
 #        #
 #        # decide which interaction diagram depending on cclaw shall be plottet
 #        # possible options: 'bilinear','block','quadratic'
 #        
-#                
-#        for  sig_c_config in ['bilinear', 'block', 'quadratic']:   
-#            sig_fl_calib.sig_c_config = sig_c_config
-#            sig_fl_calib.calib_config = 'fbm'
-#            sig_fl_calib.calib_sig_t_mfn()
-#            u_sol = sig_fl_calib.u_sol
+                
+        for  sig_c_config in ['quadratic_2', 'quadratic']:   
+            sig_fl_calib.sig_c_config = sig_c_config
+            sig_fl_calib.calib_config = 'fbm'
+            sig_fl_calib.calib_sig_t_mfn()
+            u_sol = sig_fl_calib.u_sol
           
 #        
 ###################################################################################   
@@ -552,8 +552,8 @@ if __name__ == '__main__':
 #        minorLocator = AutoMinorLocator()
 #        ax.xaxis.set_minor_locator(minorLocator)
 
-        ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
-        ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
+#        ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
+#        ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
     
     
         ### TITEL

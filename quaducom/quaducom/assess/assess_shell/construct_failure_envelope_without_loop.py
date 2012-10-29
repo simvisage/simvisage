@@ -64,7 +64,8 @@ if __name__ == '__main__':
 #                               calib_config = 'quadratic_monoton', 
 #                               calib_config = 'quadratic_TT',  
 #                               calib_config = 'plastic', 
-                               calib_config = 'fbm',
+#                               calib_config = 'fbm',
+                               calib_config = 'voss',
 
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     print 'eps_c_fail', sig_fl_calib.eps_c_fail
     print 'eps_t_fail', sig_fl_calib.eps_t_fail
     print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
-#    sig_fl_calib.plot_sig_t_mfn( u_sol )
+    sig_fl_calib.plot_sig_t_mfn( u_sol )
     
     
     #------------------------------------------------
@@ -123,8 +124,13 @@ if __name__ == '__main__':
     elif sig_fl_calib.sig_c_config== 'block':   
         
         eps_compression = -0.002
-                
-    eps_c_fail = 3.3/1000.
+         
+    # experiment       
+    eps_c_fail =  3.3/1000.
+    
+    # stress fitted using voss
+    eps_c_fail = u_sol[1]
+    
     eps_t_fail = sig_fl_calib.eps_t_fail
     print'eps_t_fail ',eps_t_fail
     # mainly tension
@@ -157,11 +163,6 @@ if __name__ == '__main__':
     eps_lo_arr_psc = np.array  ([ 0., 0., 0., eps_t_fail, 0. , eps_t_fail, 0.])
     eps_up_arr_psc = np.array  ([ 0., -eps_c_fail, 0., -eps_c_fail, 0. , 0., 0.])
 
-#    all stress cases without classification of stress cases    
-    eps_lo_arr = np.hstack([ eps_lo_arr_A1,eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
-    eps_up_arr = np.hstack([ eps_up_arr_A1,eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
-    
-    
     psc= 'True'
     eps_lo_arr_psc = ([ eps_lo_arr_psc])
     eps_up_arr_psc = ([ eps_up_arr_psc])
@@ -203,8 +204,8 @@ if __name__ == '__main__':
     ax.spines['right'].set_color('none')
     ax.spines['bottom'].set_position(('data', 0))
     ax.spines['top'].set_color('none')
-    ax.spines['left'].set_smart_bounds(True)
-    ax.spines['bottom'].set_smart_bounds(True)
+#    ax.spines['left'].set_smart_bounds(True)
+#    ax.spines['bottom'].set_smart_bounds(True)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     
@@ -488,8 +489,8 @@ if __name__ == '__main__':
     ax.yaxis.set_major_locator(MaxNLocator(10))
     minorLocator   = AutoMinorLocator()
     ax.xaxis.set_minor_locator(minorLocator)
-    ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
-    ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
+#    ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
+#    ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
 
 
     ### TITEL
