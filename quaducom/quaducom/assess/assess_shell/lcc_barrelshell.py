@@ -53,14 +53,6 @@ if __name__ == '__main__':
     lct = LCCTableULS(data_dir = data_dir,
                       reader_type = 'InfoCAD',
                        lc_list = lc_list,
-
-                       # remove only the lowest point = connection shell/column
-                       # as this is a singularity of the FE-shell-model
-                       #
-#                       cut_z_fraction = 0.01,
-#                       cut_z_fraction = 0.05, # corresponds to 50cm x 50cm
-#                       cut_z_fraction = 0.10, # corresponds to 75cm x 75cm
-                       cut_z_fraction = 0.15, # corresponds to 100cm x 100cm
                        show_lc_characteristic = False
                         )
 

@@ -81,9 +81,9 @@ class SimTTBC(IBVModel):
     buttstrap_ne_x = Int(7, input = True,
                           label = 'number of elements in buttstrap in x-direction')
 
-    buttstrap_max_thickness = Int(0.04, input = True,
+    buttstrap_max_thickness = Float(0.04, input = True,
                                   label = 'maximum thickness of the buttstrap')
-    buttstrap_min_thickness = Int(0.04, input = True,
+    buttstrap_min_thickness = Float(0.04, input = True,
                                   label = 'mimnimum thickness of the buttstrsp')
 
     #===========================================================================
@@ -235,8 +235,8 @@ class SimTTBC(IBVModel):
             h_max = self.buttstrap_max_thickness
             h_min = self.buttstrap_min_thickness
             y *= (h_max - (h_max - h_min) / self.buttstrap_length * x)
-            y_offset = (self.specimen_thickness + 
-                        self.friction_thickness + 
+            y_offset = (self.specimen_thickness +
+                        self.friction_thickness +
                         self.elastomer_thickness)
             points[:, 0], points[:, 1] = x, y + y_offset
             return points
@@ -252,8 +252,8 @@ class SimTTBC(IBVModel):
             x *= self.buttstrap_length
             x -= self.buttstrap_length
             y *= self.buttstrap_max_thickness
-            y_offset = (self.specimen_thickness + 
-                        self.friction_thickness + 
+            y_offset = (self.specimen_thickness +
+                        self.friction_thickness +
                         self.elastomer_thickness)
             points[:, 0], points[:, 1] = x, y + y_offset
             return points
@@ -543,7 +543,7 @@ class SimTTBC(IBVModel):
 
 if __name__ == '__main__':
 
-    sim_model = SimTTBC()
+    sim_model = SimTTBC(buttstrap_min_thickness = 0.01)
 
     do = 'ui'
 
