@@ -126,7 +126,7 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     Vf = 0.0103
-    tau = RV('uniform', loc=0.02, scale=.2)
+    tau = RV('weibull_min', shape=1.5, scale=.2)
     Ef = 200e3
     Em = 25e3
     l = RV('uniform', scale=20., loc=2.)
@@ -135,17 +135,17 @@ if __name__ == '__main__':
     phi = 1.
     Pf = RV('uniform', scale=1., loc=0.)
     m = 5.0
-    s0 = 0.02
+    s0 = 0.017
 
-    length = 5000.
-    nx = 5000
+    length = 2000.
+    nx = 2000
     random_field = RandomField(seed=True,
-                               lacor=4.,
+                               lacor=10.,
                                 xgrid=np.linspace(0., length, 1000),
                                 nsim=1,
                                 loc=.0,
-                                shape=7.5,
-                                scale=7.8,
+                                shape=15.,
+                                scale=6.,
                                 non_negative_check=True,
                                 distribution='Weibull'
                                )
@@ -188,10 +188,10 @@ if __name__ == '__main__':
               cb_randomization=rand,
               cb_type='mean',
               load_sigma_c_min=.1,
-              load_sigma_c_max=204.,
+              load_sigma_c_max=18.,
               load_n_sigma_c=200,
               n_w=60,
-              n_x=101,
+              n_x=81,
               n_BC=4
               )
 

@@ -322,7 +322,7 @@ class SCM(HasTraits):
             new_cb.crack_load_sigma_c = q_min - self.load_sigma_c_max / 1000.
             self.sigma_c_crack.append(q_min - self.load_sigma_c_max / 1000.)
             if len(self.cracks_list) is not 0:
-                self.cracks_list.append(copy.deepcopy(self.cracks_list[-1])
+                self.cracks_list.append(copy.copy(self.cracks_list[-1])
                                         + [new_cb])
             else:
                 self.cracks_list.append([new_cb])
