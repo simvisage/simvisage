@@ -143,7 +143,7 @@ class CBEMClampedFiberStress(RF):
         w1 = e1*(l+Lmax/2.)+(e1+e1*Lmin/Lmax)*Lmin/2.
         
         # debonding completed at both sides, response becomes linear elastic
-        q2 = self.linel(w , l, T, Kf, Km, V_f, Lmax, Lmin)
+        q2 = self.linel(w, l, T, Kf, Km, V_f, Lmax, Lmin)
 
         # cut out definition ranges 
         q0 = H(w) * (q0 + 1e-15) * H(w0 - w)
@@ -152,7 +152,6 @@ class CBEMClampedFiberStress(RF):
         
         #add all parts
         q = q0 + q1 + q2
-
         # include breaking strain
         q = q * H(E_f * xi - q)
         return q

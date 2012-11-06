@@ -4,13 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>etsproxy</project>
-		<project>ibvpy</project>
-		<project>matresdev</project>
-		<project>quaducom</project>
-		<project>rostar</project>
-		<project>simdb</project>
-		<project>stats</project>
-		<project>util</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
