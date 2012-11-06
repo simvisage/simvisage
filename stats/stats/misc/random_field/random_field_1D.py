@@ -30,12 +30,17 @@ class RandomField(HasTraits):
     shape = Float(10., auto_set = False, enter_set = True,
                   desc = 'shape for 3 params weibull', modified = True)
     scale = Float(5., auto_set = False, enter_set = True,
-                   desc = 'scale for 3 params weibull', modified = True)
+                   desc = 'scale at total length L for 3 params weibull', modified = True)
     loc = Float(1., auto_set = False, enter_set = True,
                    desc = 'location for 3 params weibull', modified = True)
 
     xgrid = Array
     distribution = Enum('Gauss', 'Weibull', modified = True)
+
+    scale_gridpoints = Property(depends_on='scale, lacor, xgrid')
+    @cached_property
+    def _get_scale_gridpoints(self):
+        return self.scale * (self.xgrid[-1] / self.lacor) ** (1. / self.shape)
 
     non_negative_check = False
     reevaluate = Event
@@ -63,7 +68,7 @@ class RandomField(HasTraits):
     @cached_property
     def _get_random_field(self):
         if self.seed == True:
-            np.random.seed(10)
+            np.random.seed(1540)
         '''simulates the Gaussian random field'''
         #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
@@ -84,7 +89,7 @@ class RandomField(HasTraits):
         elif self.distribution == 'Weibull':
             # setting Weibull params
             Pf = norm().cdf(ydata)
-            scaled_ydata = weibull_min(self.shape, scale = self.scale, loc = self.loc).ppf(Pf)
+            scaled_ydata = weibull_min(self.shape, scale = self.scale_gridpoints, loc = self.loc).ppf(Pf)
         self.reevaluate = False
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
@@ -95,7 +100,7 @@ class RandomField(HasTraits):
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = RandomField(lacor = 6. , xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
+    rf = RandomField(lacor = 6., xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
     x = rf.xgrid
     rf.distribution = 'Weibull'
     rf.loc = .0

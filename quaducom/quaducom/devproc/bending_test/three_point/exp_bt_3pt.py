@@ -145,8 +145,7 @@ class ExpBT3PT(ExType):
 
     ccs = Instance(CompositeCrossSection)
     def _ccs_default(self):
-        '''default settings correspond to 
-        setup '7u_MAG-07-03_PZ-0708-1'
+        '''default settings
         '''
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
@@ -156,8 +155,8 @@ class ExpBT3PT(ExType):
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'                                           
 #        orientation_fn_key = '90_0'
-        n_layers = 12
-        s_tex_z = 0.060 / (n_layers + 1)
+        n_layers = 6
+        s_tex_z = 0.020 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list = [
                             plain_concrete(s_tex_z * 0.5),
@@ -220,7 +219,7 @@ class ExpBT3PT(ExType):
         ''' Set the names and units of the measured data.
         '''
         names = ['w', 'eps_c', 'F']
-        units = ['mm', '%', 'kN']
+        units = ['mm', '1*E-3', 'kN']
         return names, units
 
 #    mfn_elastomer = Instance( MFnLineArray )
@@ -264,7 +263,7 @@ class ExpBT3PT(ExType):
         #
         self.w = -1.0 * self.w
 
-        # substract the deformation of the elastomer cushion between the cylinder
+        # subtract the deformation of the elastomer cushion between the cylinder
         # 
         self.w = self.w - displacement_elastomer_vectorized(self.F)
 
@@ -276,6 +275,7 @@ class ExpBT3PT(ExType):
 
     plot_templates = {'force / deflection (center)'          : '_plot_force_deflection_center',
                       'smoothed force / deflection (center)' : '_plot_smoothed_force_deflection_center',
+                      'force_epsc' : '_plot_force_epsc'
                      }
 
     default_plot_template = 'force / deflection (center)'
@@ -286,6 +286,20 @@ class ExpBT3PT(ExType):
         # NOTE: processed data returns positive values for force and displacement
         #
         xdata = self.w
+        ydata = self.F
+
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        axes.plot(xdata, ydata
+                       # color = c, linewidth = w, linestyle = s 
+                       )
+
+    def _plot_force_epsc(self, axes):
+        xkey = 'compressive strain [1*E-3]'
+        ykey = 'force [kN]'
+        # NOTE: processed data returns positive values for force and displacement
+        #
+        xdata = self.eps_c
         ydata = self.F
 
         axes.set_xlabel('%s' % (xkey,))

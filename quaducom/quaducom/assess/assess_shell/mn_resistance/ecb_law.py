@@ -24,14 +24,17 @@ class ECBLBase(HasStrictTraits):
     
     cs = WeakRef
     
-    @on_trait_change('+input')
+    def __init__(self, *args, **kw):
+        super(HasStrictTraits, self).__init__(*args, **kw)
+        self.on_trait_change(self._notify_cs, '+input')
+
     def _notify_cs(self):
-        self.cs.ecbl_modified = True
+        self.cs.tt_modified = True
     
     def set_cparams(self, *args):
         for name, value in zip(self.cnames, args):
             setattr(self, name, value)
-        self.cs.ecbl_modified = True
+        self._notify_cs()
 
     def __call__(self, *args):
         return self.mfn.get_value(args)

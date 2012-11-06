@@ -71,7 +71,15 @@ ConcreteMixture.db = SimDBClassExt(
                                            # function for the evolution unknown
                                            get_E_m_time = lambda t: 31000.,
                                            nu = 0.2
-                                           )}
+                                           ),
+                'barrelshell' : ConcreteMixture( 
+                                           E_m28 = 28700.,
+                                           # function for the evolution derived based on only 
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time = lambda t: 3682. * log( t + 0.012 ) + 16429.,
+                                           nu = 0.25
+                                           ),
+                                           }
             )
 
 if __name__ == '__main__':

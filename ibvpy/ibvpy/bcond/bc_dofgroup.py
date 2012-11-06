@@ -147,6 +147,7 @@ class BCDofGroup(HasTraits):
 
     def _get_mvpoints(self):
         ## blow up
+        print 'dof_X', self.dof_X
         return array(self.dof_X, dtype = 'float_')
 
     def _get_labels(self):
