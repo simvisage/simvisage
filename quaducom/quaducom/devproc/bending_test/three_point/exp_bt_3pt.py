@@ -275,7 +275,7 @@ class ExpBT3PT(ExType):
 
     plot_templates = {'force / deflection (center)'          : '_plot_force_deflection_center',
                       'smoothed force / deflection (center)' : '_plot_smoothed_force_deflection_center',
-                      'force_epsc' : '_plot_force_epsc'
+                      'force_epsc' : '_plot_force_eps_c'
                      }
 
     default_plot_template = 'force / deflection (center)'
@@ -294,7 +294,7 @@ class ExpBT3PT(ExType):
                        # color = c, linewidth = w, linestyle = s 
                        )
 
-    def _plot_force_epsc(self, axes):
+    def _plot_force_eps_c(self, axes):
         xkey = 'compressive strain [1*E-3]'
         ykey = 'force [kN]'
         # NOTE: processed data returns positive values for force and displacement
