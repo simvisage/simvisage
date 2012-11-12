@@ -20,15 +20,6 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_law import \
-    ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
-
-from constitutive_law import \
-    ConstitutiveLawModelView
-
-from cc_law import \
-    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic
-
 from ecb_cross_section_geo import ECBCrossSectionGeo
 
 import numpy as np
@@ -101,7 +92,7 @@ class ECBCrossSectionState(HasStrictTraits):
     #===========================================================================
     modified = Event
     @on_trait_change('+eps_input,cs_geo.modified')
-    def _set_cs_modified(self):
+    def set_modified(self):
         self.modified = True
         if self.notify_change:
             self.notify_change()
@@ -117,7 +108,7 @@ class ECBCrossSectionState(HasStrictTraits):
     # Discretization conform to the tex layers
     #===========================================================================
 
-    eps_i_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input')
+    eps_i_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_eps_i_arr(self):
         '''CALIBRATION: derive the unknown constitutive law of the layer
@@ -132,7 +123,7 @@ class ECBCrossSectionState(HasStrictTraits):
         #
         return self.eps_up + (self.eps_lo - self.eps_up) * self.z_ti_arr / thickness
 
-    x = Property(depends_on = '+eps_input,cs_geo.+geo_input')
+    x = Property(depends_on = 'modified')
     @cached_property
     def _get_x(self):
         # heights of the compressive zone:
@@ -144,7 +135,7 @@ class ECBCrossSectionState(HasStrictTraits):
             return (abs(self.eps_up) / (abs(self.eps_up - self.eps_lo)) *
                      self.thickness)
 
-    eps_ti_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input')
+    eps_ti_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_eps_ti_arr(self):
         return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
@@ -157,12 +148,12 @@ class ECBCrossSectionState(HasStrictTraits):
         eps_up = self.eps_up
         return (eps_up + (eps_lo - eps_up) / self.thickness * self.z_ti_arr[0])
 
-    eps_ci_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input')
+    eps_ci_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_eps_ci_arr(self):
         return (-np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
 
-    eps_cj_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input,cs_geo.n_cj')
+    eps_cj_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_eps_cj_arr(self):
         '''get compressive strain at each integration layer of the compressive zone [-]:
@@ -187,7 +178,7 @@ class ECBCrossSectionState(HasStrictTraits):
     def _get_n_cj(self):
         return self.cs_geo.n_cj
 
-    z_cj_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input,cs_geo.n_cj')
+    z_cj_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_z_cj_arr(self):
         '''Get the discretizaton of the  compressive zone
@@ -203,7 +194,7 @@ class ECBCrossSectionState(HasStrictTraits):
 
     # distance of reinforcement layers from the bottom 
     #
-    zz_cj_arr = Property(depends_on = '+eps_input,cs_geo.+geo_input,cs_geo.n_cj')
+    zz_cj_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_zz_cj_arr(self):
         return self.thickness - self.z_cj_arr
@@ -216,12 +207,12 @@ class ECBCrossSectionState(HasStrictTraits):
         '''Construct the compressive concrete law'''
         return self.cs_geo.cc_law
 
-    sig_cj_arr = Property(depends_on = '+eps_input, cs_geo.+cc_input, cs_geo.cc_modified')
+    sig_cj_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_sig_cj_arr(self):
         return -self.cc_law.mfn_vct(-self.eps_cj_arr)
 
-    f_cj_arr = Property(depends_on = '+eps_input, cs_geo.+cc_input, cs_geo.cc_modified')
+    f_cj_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_f_cj_arr(self):
         return self.width * self.sig_cj_arr
@@ -232,7 +223,7 @@ class ECBCrossSectionState(HasStrictTraits):
     def _get_ecb_law(self):
         return self.cs_geo.ecb_law
 
-    sig_ti_arr = Property(depends_on = '+eps_input, cs_geo.+geo_input, cs_geo.+tt_input, cs_geo.tt_modified')
+    sig_ti_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_sig_ti_arr(self):
         '''force at the height of each reinforcement layer [kN]:
@@ -242,13 +233,11 @@ class ECBCrossSectionState(HasStrictTraits):
     #===========================================================================
     # Layer conform discretization of the tensile zone
     #===========================================================================
-    f_ti_arr = Property(depends_on = '+eps_input, cs_geo.+geo_input, cs_geo.+tt_input, cs_geo.tt_modified')
+    f_ti_arr = Property(depends_on = 'modified')
     @cached_property
     def _get_f_ti_arr(self):
         '''force at the height of each reinforcement layer [kN]:
         '''
-        # tensile force of one reinforced composite layer [kN]:
-        #
         sig_ti_arr = self.sig_ti_arr
         n_rovings = self.n_rovings
         A_roving = self.A_roving
@@ -258,7 +247,7 @@ class ECBCrossSectionState(HasStrictTraits):
     # Stress resultants
     #===========================================================================
 
-    N = Property(depends_on = '+eps_input,cs_geo.+geo_input,cs_geo.+tt_input,cs_geo.+cc_input, cs_geo.cc_modified, cs_geo.tt_modified')
+    N = Property(depends_on = 'modified')
     @cached_property
     def _get_N(self):
         '''Get the resulting normal force.
@@ -269,7 +258,7 @@ class ECBCrossSectionState(HasStrictTraits):
         N_internal = N_ck + N_tk
         return N_internal
 
-    M = Property(depends_on = '+eps_input,cs_geo.+geo_input,cs_geo.+tt_input,cs_geo.+cc_input, cs_geo.cc_modified, cs_geo.tt_modified')
+    M = Property(depends_on = 'modified')
     @cached_property
     def _get_M(self):
         M_tk = np.dot(self.f_ti_arr, self.z_ti_arr)
@@ -295,25 +284,27 @@ class ECBCrossSectionState(HasStrictTraits):
 
     replot = Button
     def _replot_fired(self):
+        self.plot(self.figure)
+        self.data_changed = True
+
+    def plot(self, figure, eps_range = None, f_range = None):
 
         d = self.thickness - self.x
 
-        self.figure.clear()
-        ax = self.figure.add_subplot(2, 2, 1)
-        self.plot_eps(ax)
+        figure.clear()
+        ax = figure.add_subplot(2, 2, 1)
+        self.plot_eps(ax, eps_range)
 
-        ax = self.figure.add_subplot(2, 2, 2)
-        self.plot_sig(ax)
+        ax = figure.add_subplot(2, 2, 2)
+        self.plot_sig(ax, f_range)
 
-        ax = self.figure.add_subplot(2, 2, 3)
+        ax = figure.add_subplot(2, 2, 3)
         self.cc_law.plot(ax)
 
-        ax = self.figure.add_subplot(2, 2, 4)
+        ax = figure.add_subplot(2, 2, 4)
         self.ecb_law.plot(ax)
 
-        self.data_changed = True
-
-    def plot_eps(self, ax):
+    def plot_eps(self, ax, eps_range = None):
         #ax = self.figure.gca()
 
         d = self.thickness
@@ -327,13 +318,20 @@ class ECBCrossSectionState(HasStrictTraits):
         ax.fill(-ec, zz, color = 'blue')
 
         # reinforcement layers
-        eps_range = np.array([max(0.0, self.eps_lo),
-                              min(0.0, self.eps_up)], dtype = 'float')
+        if eps_range == None:
+            eps_range = np.array([-max(0.0, self.eps_lo),
+                                  - min(0.0, self.eps_up)], dtype = 'float')
+        else:
+            ax.set_xlim(eps_range)
+
+        eps_range = np.asarray(eps_range)
+
         z_ti_arr = np.ones_like(eps_range)[:, None] * self.z_ti_arr[None, :]
-        ax.plot(-eps_range, z_ti_arr, 'k--', color = 'black')
+        ax.plot(eps_range, z_ti_arr, 'k--', color = 'black')
 
         # neutral axis
-        ax.plot(-eps_range, [d, d], 'k--', color = 'green', lw = 2)
+        x = self.x
+        ax.plot(eps_range, [d - x, d - x], 'k--', color = 'green', lw = 2)
 
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
@@ -343,7 +341,7 @@ class ECBCrossSectionState(HasStrictTraits):
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
-    def plot_sig(self, ax):
+    def plot_sig(self, ax, f_range = None):
 
         d = self.thickness
         # f ti
@@ -352,11 +350,26 @@ class ECBCrossSectionState(HasStrictTraits):
         # f cj
         f_c = np.hstack([self.f_cj_arr] + [0, 0])
         zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ])
+
         ax.fill(-f_c, zz, color = 'blue')
 
-        f_range = np.array([np.max(self.f_ti_arr), np.min(f_c)], dtype = 'float_')
+        # reinforcement layers
+        if f_range == None:
+            f_range = np.array([-np.max(self.f_ti_arr), -np.min(f_c)], dtype = 'float_')
+        else:
+            f_orig_range = np.array([-np.max(self.f_ti_arr), -np.min(f_c)], dtype = 'float_')
+            print 'orig f_range', f_orig_range
+            f_range = np.asarray(f_range)
+            print 'supplied f_range', f_range
+
+        ax.set_xlim(f_range)
+
+        z_ti_arr = np.ones_like(f_range)[:, None] * self.z_ti_arr[None, :]
+        ax.plot(f_range, z_ti_arr, 'k--', color = 'black')
+
         # neutral axis
-        ax.plot(-f_range, [d, d], 'k--', color = 'green', lw = 2)
+        x = self.x
+        ax.plot(f_range, [d - x, d - x], 'k--', color = 'green', lw = 2)
 
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')

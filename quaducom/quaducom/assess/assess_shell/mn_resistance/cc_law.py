@@ -79,7 +79,7 @@ class CCLawLinear(CCLawBase):
         '''
         #(for standard concrete)
         f_ck = self.f_ck + 8.
-        if f_ck <= self.high_strengh_lvel:
+        if f_ck <= self.high_strength_level:
             eps_c3 = 0.00175
             eps_cu3 = self.eps_c_u
         #(for high strength concrete)
@@ -91,6 +91,24 @@ class CCLawLinear(CCLawBase):
         xdata = np.hstack([0., eps_c3, eps_cu3])
         ydata = np.hstack([0., (f_ck), (f_ck)])
 
+        return MFnLineArray(xdata = xdata, ydata = ydata)
+
+class CCLawBilinear(CCLawBase):
+    '''Effective crack bridge Law based on fiber-bundle-model.'''
+    #-----------------------------
+    # for bilinear stress-strain-diagram of the concrete (EC2)
+    #-----------------------------
+    mfn = Property(depends_on = '+input')
+
+    E_c = Float(28e+3, enter_set = True, auto_set = False)
+    @cached_property
+    def _get_mfn(self):
+        '''bilinear stress-strain-diagram of the concrete
+        '''
+        #(for standard concrete)
+        eps_c3 = self.f_ck / self.E_c
+        xdata = np.array([0.0, eps_c3, self.eps_c_u])
+        ydata = np.array([0.0, self.f_ck, self.f_ck])
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
 class CCLawQuadratic(CCLawBase):
@@ -124,12 +142,15 @@ class CCLawQuadratic(CCLawBase):
         xdata = eps_arr
         ydata = sig_c_arr
 
+        print 'cc', xdata
+        print 'cc', ydata
         return MFnLineArray(xdata = xdata, ydata = ydata)
 
 
 if __name__ == '__main__':
     from constitutive_law import ConstitutiveLawModelView
-    cc_law = CCLawQuadratic()
+    #cc_law = CCLawQuadratic(f_ck = 40.0, eps_c_u = 0.004)
+    cc_law = CCLawBilinear(f_ck = 55, eps_c_u = 0.004)
 
     ew = ConstitutiveLawModelView(model = cc_law)
     ew.configure_traits()

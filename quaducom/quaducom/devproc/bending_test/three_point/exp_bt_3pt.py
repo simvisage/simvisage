@@ -105,7 +105,7 @@ simdb = SimDB()
 
 #class ExpBendingTestThreePoint(ExType):
 class ExpBT3PT(ExType):
-    '''Experiment: Bending Test Three Point 
+    '''Experiment: Bending Test Three Point
     '''
 #    label = Str('three point bending test')
 
@@ -192,7 +192,7 @@ class ExpBT3PT(ExType):
     #--------------------------------------------------------------------------------
 
     def _read_data_array(self):
-        ''' Read the experiment data. 
+        ''' Read the experiment data.
         '''
         if exists(self.data_file):
 
@@ -218,8 +218,8 @@ class ExpBT3PT(ExType):
     def _get_names_and_units(self):
         ''' Set the names and units of the measured data.
         '''
-        names = ['w', 'eps_c', 'F']
-        units = ['mm', '1*E-3', 'kN']
+        names = ['w', 'eps_c_raw', 'F_raw']
+        units = ['mm', '1*E-3', 'N']
         return names, units
 
 #    mfn_elastomer = Instance( MFnLineArray )
@@ -234,58 +234,82 @@ class ExpBT3PT(ExType):
 #    def elastomer_force_default( self ):
 #        return frompyfunc( self.mfn_elastomer.get_value, 2, 1 )
 
-    def process_source_data(self):
-        '''read in the measured data from file and assign
-        attributes after array processing.        
-        '''
-        super(ExpBT3PT, self).process_source_data()
+    F = Property(Array('float_'), depends_on = 'input_change')
+    @cached_property
+    def _get_F(self):
+        # convert data from 'N' to 'kN' and change sign
+        #
+        return -0.001 * self.F_raw
 
+    eps_c = Property(Array('float_'), depends_on = 'input_change')
+    @cached_property
+    def _get_eps_c(self):
+        # convert the promile values to dimensionless
+        #
+        return 0.001 * self.eps_c_raw
+
+    elastomer_law = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_elastomer_law(self):
 
         elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE', 'elastomer_f-w.raw')
         _data_array_elastomer = loadtxt_bending(elastomer_path)
 
         # force [kN]:
         #
-        xdata = -0.001 * _data_array_elastomer[:, 2].flatten()
+        F_elastomer = -0.001 * _data_array_elastomer[:, 2].flatten()
 
         # displacement [mm]:
         #
-        ydata = -1.0 * _data_array_elastomer[:, 0].flatten()
+        w_elastomer = -1.0 * _data_array_elastomer[:, 0].flatten()
 
-        mfn_displacement_elastomer = MFnLineArray(xdata = xdata, ydata = ydata)
-        displacement_elastomer_vectorized = frompyfunc(mfn_displacement_elastomer.get_value, 1, 1)
+        mfn_displacement_elastomer = MFnLineArray(xdata = F_elastomer, ydata = w_elastomer)
+        return frompyfunc(mfn_displacement_elastomer.get_value, 1, 1)
 
-        # convert data from 'N' to 'kN' and change sign
-        #
-        self.F = -0.001 * self.F
-
-        # change sign in positive values for vertical displacement [mm]
-        #
-        self.w = -1.0 * self.w
-
+    w_wo_elast = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_w_wo_elast(self):
         # subtract the deformation of the elastomer cushion between the cylinder
         # 
-        self.w = self.w - displacement_elastomer_vectorized(self.F)
+        # change sign in positive values for vertical displacement [mm]
+        #
+        w = -1.0 * self.w
+        return w - self.elastomer_law(self.F)
+
+    M_kNm = Property(Array('float_'), depends_on = 'input_change')
+    @cached_property
+    def _get_M_kNm(self):
+        return self.F * self.length / 4.0
 
 
+    def process_source_data(self):
+        '''read in the measured data from file and assign
+        attributes after array processing.
+        '''
+        super(ExpBT3PT, self).process_source_data()
+
+        # access the derived arrays to initiate their processing
+        self.M_kNm
+        self.w_wo_elast
 
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection (center)'          : '_plot_force_deflection_center',
-                      'smoothed force / deflection (center)' : '_plot_smoothed_force_deflection_center',
-                      'force_epsc' : '_plot_force_eps_c'
+    plot_templates = {'force / deflection'          : '_plot_force_deflection',
+                      'smoothed force / deflection' : '_plot_smoothed_force_deflection',
+                      'moment / eps_c' : '_plot_moment_eps_c',
+                      'smoothed moment / eps_c' : '_plot_smoothed_moment_eps_c'
                      }
 
-    default_plot_template = 'force / deflection (center)'
+    default_plot_template = 'force / deflection'
 
-    def _plot_force_deflection_center(self, axes):
+    def _plot_force_deflection(self, axes):
         xkey = 'deflection [mm]'
         ykey = 'force [kN]'
         # NOTE: processed data returns positive values for force and displacement
         #
-        xdata = self.w
+        xdata = self.w_wo_elast
         ydata = self.F
 
         axes.set_xlabel('%s' % (xkey,))
@@ -294,13 +318,13 @@ class ExpBT3PT(ExType):
                        # color = c, linewidth = w, linestyle = s 
                        )
 
-    def _plot_force_eps_c(self, axes):
+    def _plot_moment_eps_c(self, axes):
         xkey = 'compressive strain [1*E-3]'
-        ykey = 'force [kN]'
+        ykey = 'moment [kNm]'
         # NOTE: processed data returns positive values for force and displacement
         #
         xdata = self.eps_c
-        ydata = self.F
+        ydata = self.M_kNm
 
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
@@ -310,16 +334,13 @@ class ExpBT3PT(ExType):
 
     n_fit_window_fraction = Float(0.1)
 
-    def _plot_smoothed_force_deflection_center(self, axes):
+    def _plot_smoothed_force_deflection(self, axes):
 
         # get the index of the maximum stress
         max_force_idx = argmax(self.F)
         # get only the ascending branch of the response curve
         f_asc = self.F[:max_force_idx + 1]
-        w_asc = self.w[:max_force_idx + 1]
-
-        f_max = f_asc[-1]
-        w_max = w_asc[-1]
+        w_asc = self.w_wo_elast[:max_force_idx + 1]
 
         n_points = int(self.n_fit_window_fraction * len(w_asc))
         f_smooth = smooth(f_asc, n_points, 'flat')
@@ -333,6 +354,30 @@ class ExpBT3PT(ExType):
 
         #axes.plot( w0_lin, f0_lin, color = 'black' )
 
+    M_eps_c_smoothed = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_M_eps_c_smoothed(self):
+        # get the index of the maximum stress
+        max_idx = argmax(self.M_kNm)
+        # get only the ascending branch of the response curve
+        m_asc = self.M_kNm[:max_idx + 1]
+        eps_c_asc = self.eps_c[:max_idx + 1]
+
+        n_points = int(self.n_fit_window_fraction * len(eps_c_asc))
+        m_smoothed = smooth(m_asc, n_points, 'flat')
+        eps_c_smoothed = smooth(eps_c_asc, n_points, 'flat')
+        return m_smoothed, eps_c_smoothed
+
+    eps_c_smoothed = Property
+    def _get_eps_c_smoothed(self):
+        return self.M_eps_c_smoothed[1]
+
+    M_smoothed = Property
+    def _get_M_smoothed(self):
+        return self.M_eps_c_smoothed[0]
+
+    def _plot_smoothed_moment_eps_c(self, axes):
+        axes.plot(self.eps_c_smoothed, self.M_smoothed, color = 'blue', linewidth = 2)
 
     #--------------------------------------------------------------------------------
     # view
