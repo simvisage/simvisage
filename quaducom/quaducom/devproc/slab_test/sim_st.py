@@ -449,12 +449,12 @@ if __name__ == '__main__':
 
     if do == 'validation':
 
-        from promod.exdb.ex_run import ExRun
+        from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
         # PT-12c-6cm-TU
-        path = join( simdb.exdata_dir, 'plate_tests', '2011-12-15_PT-12c-6cm-TU' )
-        tests = [ 'PT-12c-6cm-TU.DAT' ]
+        path = join( simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU' )
+        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
 
         # PT-9a
 #        path = join( simdb.exdata_dir, 'plate_tests', 'PT-9a' )
