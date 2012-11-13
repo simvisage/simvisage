@@ -1060,7 +1060,7 @@ if __name__ == '__main__':
     #sig_fl_calib.plot_ecbl_mfn_()
     ### plot concrete law [MPa]:
     #
-    sig_fl_calib.plot_sig_c_mfn()
+#    sig_fl_calib.plot_sig_c_mfn()
 
     
     ### plot composite stress over the cross section [MPa]:

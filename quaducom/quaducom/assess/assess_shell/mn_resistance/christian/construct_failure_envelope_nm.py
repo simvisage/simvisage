@@ -102,8 +102,8 @@ if __name__ == '__main__':
     ax.spines['right'].set_color('none')
     ax.spines['bottom'].set_position(('data', 0))
     ax.spines['top'].set_color('none')
-    ax.spines['left'].set_smart_bounds(True)
-    ax.spines['bottom'].set_smart_bounds(True)
+#    ax.spines['left'].set_smart_bounds(True)
+#    ax.spines['bottom'].set_smart_bounds(True)
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
     
@@ -159,8 +159,8 @@ if __name__ == '__main__':
 
     # constant 'thickness':
     #
-#    n_layers_list = [   12]
-#    thickness_list = [ 0.06]
+    n_layers_list = [   12]
+    thickness_list = [ 0.06]
 #    n_layers_list  = [   4,    8,    12,   16,   20]
 #    thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
     zip_list = zip(n_layers_list, thickness_list)
@@ -552,8 +552,8 @@ if __name__ == '__main__':
 #        minorLocator = AutoMinorLocator()
 #        ax.xaxis.set_minor_locator(minorLocator)
 
-        ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
-        ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
+#        ax.tick_params(axis = 'both', which = 'major', direction = 'out', length = 6, width = 2, colors = 'black')
+#        ax.tick_params(axis = 'both', which = 'minor', direction = 'out', length = 0, width = 0, colors = 'black')
     
     
         ### TITEL
