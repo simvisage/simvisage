@@ -860,6 +860,7 @@ class ULS(LS):
             alpha_up[ bool_arr ] = self.alpha_sig_up[ bool_arr ]
             sig_comp_Ed_up[ bool_arr ] = self.sig1_up[ bool_arr ]
             k_fl_NM_up[ bool_arr ] = 1.0
+            
             f_t_sig_up[ bool_arr ] = self.sig1_up[ bool_arr ] * self.thickness[ bool_arr ] * 1000.
 
             # bending case with tension:
@@ -1473,8 +1474,8 @@ class LSTable(HasTraits):
 
     thickness = Property(Array)
     def _get_thickness(self):
-        '''element thickness (units changed form [mm] to [m])'''
-        return self.geo_data['thickness'] / 1000.
+        '''element thickness [m])'''
+        return self.geo_data['thickness']
 
     # state data: stress resultants 
     # 
