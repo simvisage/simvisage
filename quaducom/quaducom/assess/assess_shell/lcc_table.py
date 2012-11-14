@@ -193,7 +193,7 @@ class LCCTable(HasTraits):
     # manager of input files with state and geometry data 
     # 
     reader_type = Trait('RFEM', dict(RFEM = LCCReaderRFEM,
-                                      InfoCAD = LCCReaderInfoCAD))
+                                     InfoCAD = LCCReaderInfoCAD))
 
     reader = Property(Instance(LCCReader), depends_on = 'reader_type')
     @cached_property
@@ -670,8 +670,9 @@ class LCCTable(HasTraits):
                        mode = "cube",
                        scale_factor = 0.1)
 
-    def plot(self):
-
+    def plot_n_tex(self, title = None):
+        '''plot number of textile reinforcement 'n_tex' for all loading case combinations
+        '''
         #----------------------------------------
         # script to get the maximum number of reinforcement ('n_tex')
         # at all given coordinate points for all possible loading
@@ -680,70 +681,65 @@ class LCCTable(HasTraits):
         # set option to "True" for surrounding 
         # evaluation of necessary layers "n_tex"
         # needed for all loading cases
+
+        # get the list of all loading case combinations:
         #
-        plot_n_tex_all_lcc = True
-    #    plot_n_tex_all_lcc = False
+        lcc_list = self.lcc_list
 
-        if plot_n_tex_all_lcc == True:
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
 
-            # get the list of all loading case combinations:
+        n_tex_list = []
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
             #
-            lcc_list = self.lcc_list
+            ls_class = lcc.ls_table.ls_class
 
-            #----------------------------------------------
-            # run trough all loading case combinations:
-            #----------------------------------------------
-
-            n_tex_list = []
-            for lcc in lcc_list:
-
-                # get the ls_table object and retrieve its 'ls_class'
-                # (= LSTable_ULS-object)
-                #
-                ls_class = lcc.ls_table.ls_class
-
-                # get 'n_tex'-column array 
-                #
-                n_tex = ls_class.n_tex
-    #            n_tex = ls_class.n_tex_up
-    #            n_tex = ls_class.n_tex_lo
-                n_tex_list.append(n_tex)
-
-            # stack the list to an array in order to use ndmax-function
+            # get 'n_tex'-column array 
             #
-            n_tex_arr = hstack(n_tex_list)
+            n_tex = ls_class.n_tex
+#            n_tex = ls_class.n_tex_up
+#            n_tex = ls_class.n_tex_lo
+            n_tex_list.append(n_tex)
 
-            #----------------------------------------------
-            # get the overall maximum values:
-            #----------------------------------------------
+        # stack the list to an array in order to use ndmax-function
+        #
+        n_tex_arr = hstack(n_tex_list)
 
-            n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
+        #----------------------------------------------
+        # get the overall maximum values:
+        #----------------------------------------------
 
-            #----------------------------------------------
-            # plot
-            #----------------------------------------------
-            #
-            X = lcc_list[0].ls_table.X[:, 0]
-            Y = lcc_list[0].ls_table.Y[:, 0]
-            Z = lcc_list[0].ls_table.Z[:, 0]
-            plot_col = n_tex_max[:, 0]
+        n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
 
-            # if n_tex is negative plot 0 instead:
-            #
-            plot_col = where(plot_col < 0, 0, plot_col)
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        X = lcc_list[0].ls_table.X[:, 0]
+        Y = lcc_list[0].ls_table.Y[:, 0]
+        Z = lcc_list[0].ls_table.Z[:, 0]
+        plot_col = n_tex_max[:, 0]
 
-            mlab.figure(figure = "SFB532Demo",
-                         bgcolor = (1.0, 1.0, 1.0),
-                         fgcolor = (0.0, 0.0, 0.0))
+        # if n_tex is negative plot 0 instead:
+        #
+        plot_col = where(plot_col < 0, 0, plot_col)
 
-            mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                           colormap = "YlOrBr",
-                           mode = "cube",
-                           scale_factor = 0.10)
+        mlab.figure(figure = title,
+                     bgcolor = (1.0, 1.0, 1.0),
+                     fgcolor = (0.0, 0.0, 0.0))
 
-            mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
+        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
+                       colormap = "YlOrBr",
+                       mode = "cube",
+                       scale_factor = 0.10)
 
-            mlab.show()
+        mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
+
+        mlab.show()
 
     # ------------------------------------------------------------
     # View 
