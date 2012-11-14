@@ -4,7 +4,7 @@ from etsproxy.traits.api import \
     Property, WeakRef
 
 from numpy import array, random
-from tvtk.api import tvtk
+#from tvtk.api import tvtk
 
 import os
 
@@ -133,6 +133,9 @@ class LCCReaderRFEM(LCCReader):
         # (NOTE: column np.array must be of shape (n_elems, 1)
         #
         thickness = input_arr[:, thickness_idx][:, None]
+        
+        # convert thickness to [m]
+        thickness = thickness / 1000.
 
         # coordinates [m]:
         # (NOTE: corrds are taken from the state data file of the first loading case) 
@@ -170,13 +173,18 @@ class LCCReaderRFEM(LCCReader):
         print '*** input files checked for consistency (OK) ***'
         return True
 
+def convert_str2float(str):
+    return float(str)
+
+convert_str2float_vect = np.vectorize(convert_str2float)
+
 class LCCReaderInfoCAD(LCCReader):
 
     def read_state_data(self, f_name):
 
         file_name = os.path.join(self.data_dir, 'state_data',
-                                 'Flaechenschnittgroesen',
-                                 'Schalenmitte', f_name)
+                                 'Flaechenschnittgroessen',
+                                 'Schwerpunkt', f_name)
 
         print '*** read state data from file: %s ***' % (file_name)
 
@@ -186,8 +194,8 @@ class LCCReaderInfoCAD(LCCReader):
 
         # element number:
         #
-        elem_no = input_arr[:, elem_no_idx]
-
+        elem_no = input_arr[:, [elem_no_idx]]
+        
         # moments [kNm/m]
         #
         mx = input_arr[:, [mx_idx]]
@@ -206,14 +214,17 @@ class LCCReaderInfoCAD(LCCReader):
                }
 
     def read_geo_data(self, file):
-        '''to read the stb - thickness save the xls - worksheet
-        to a csv - file using ';' as filed delimiter and ' ' ( blank )
-        as text delimiter.
+        '''to read the thickness file exported from InfoCAD
+        using 'tab' as filed delimiter.
         '''
         geo_dir = os.path.join(self.data_dir, 'geo_data')
         node_file = os.path.join(geo_dir, 'Knotenkoordinaten.txt')
         elem_file = os.path.join(geo_dir, 'Elementbeschreibung.txt')
         thic_file = os.path.join(geo_dir, 'Querschnittswerte.txt')
+
+        print '*** read geo data from node file: %s ***' % (node_file)
+        print '*** read geo data from elem file: %s ***' % (elem_file)
+        print '*** read geo data from thic files: %s ***' % (thic_file)
 
         node_arr = np.loadtxt(node_file)
 
@@ -261,7 +272,9 @@ class LCCReaderInfoCAD(LCCReader):
 
         thic_file_ = open(thic_file, 'r')
         lines = thic_file_.readlines()
+        print 'lines', lines
         line_arr = np.array(lines)
+        print 'line_arr', line_arr
         thic_file_.close()
 
         idx_list = []
@@ -282,6 +295,19 @@ class LCCReaderInfoCAD(LCCReader):
         thickness_arr[q_idx] = d_arr[ q_thickness_idx ]
 
         print thickness_arr
+        
+        # convert strings entries to floats
+        #
+        elem_no_arr = convert_str2float_vect( elem_no_arr )
+
+        # convert 1d-arrays to 2d-column arrays
+        #
+        elem_no_arr = elem_no_arr[:,np.newaxis]
+
+        X = X[:,np.newaxis]
+        Y = Y[:,np.newaxis]
+        Z = Z[:,np.newaxis]
+        thickness_arr = thickness_arr[:,np.newaxis]
 
         return  {'elem_no':elem_no_arr,
                  'X':X, 'Y':Y, 'Z':Z,
@@ -308,6 +334,33 @@ class LCCReaderInfoCAD(LCCReader):
         tmesh = tvtk.PolyData(points = points, polys = triangles)
         mlab.pipeline.surface(tmesh, representation = 'wireframe')
 
+    def check_for_consistency(self, lc_list, geo_data_dict):
+        pass
+#        print 'lc_list', lc_list
+#        for lc in lc_list:
+#            # check internal LC-consitency: 
+#            # (compare coords-values of first LC with all other LC's in 'lc_list')
+#            #
+#            print "lc_list[0].geo_data_dict['X']", lc_list[0].geo_data_dict['X']
+#            if not all(lc_list[0].geo_data_dict['X'] == lc.geo_data_dict['X']) and \
+#                not all(lc_list[0].geo_data_dict['Y'] == lc.geo_data_dict['Y']) and \
+#                not all(lc_list[0].geo_data_dict['Z'] == lc.geo_data_dict['Z']):
+#                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+#                        % (self.lc_list[0].name, lc.name)
+#                return False
+#
+#            # check external consistency:
+#            # (compare 'elem_no' in 'thickness.csv' and in all loading-cases 
+#            # input files (e.g. 'LC1.csv') defined in 'lc_list')
+#            #
+#            if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
+#                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+#                        % (lc_list[0].name, lc.name)
+#                return False
+#
+#        print '*** input files checked for consistency (OK) ***'
+#        return True
+
 if __name__ == '__main__':
 
     from matresdev.db.simdb import \
@@ -330,22 +383,28 @@ if __name__ == '__main__':
     #---------------------------------------------
 
     data_dir = os.path.join(simdb.simdb_dir,
-                            'simdata', 'input_data_barrelshell')
+                            'simdata',
+                            'input_data_barrelshell',
+                            '2cm'
+#                            '3cm'
+#                            '3-4cm'
+                            )
 
     r = LCCReaderInfoCAD(data_dir = data_dir)
-
-    gd = r.read_geo_data('')
 
     mlab.figure(figure = "SFB532Demo",
                  bgcolor = (1.0, 1.0, 1.0),
                  fgcolor = (0.0, 0.0, 0.0))
 
-    r.plot_mesh(mlab, gd)
+    gd = r.read_geo_data('')
+#    r.plot_mesh(mlab, gd)
 
-    mlab.points3d(gd['X'], gd['Y'], gd['Z'], gd['thickness'],
+    sd = r.read_state_data('LC1.txt')
+
+#    mlab.points3d(gd['X'], gd['Y'], gd['Z'], gd['thickness'],
+    mlab.points3d(gd['X'], gd['Y'], gd['Z'], sd['mx'],
                    #colormap = "YlOrBr",
                    mode = "cube",
                    scale_factor = 1.0)
-
 
     mlab.show()
