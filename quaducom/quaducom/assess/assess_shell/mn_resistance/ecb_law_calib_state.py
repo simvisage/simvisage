@@ -72,10 +72,10 @@ class ECBLCalibState(HasStrictTraits):
     @cached_property
     def _get_u0(self):
         u0 = self.cs_state.ecb_law.u0
-        self.cs_state.set(eps_up = -self.cs_geo.eps_c_u)
+        eps_up = self.cs_geo.cc_law.eps_c_u
+        self.cs_state.set(eps_up = -eps_up)
         eps_lo = self.cs_state.convert_eps_tex_u_2_lo(u0[0])
-        print self.cs_state.eps_up
-        eps_lo = self.cs_state.convert_eps_tex_u_2_lo(0.01)
+        print 'eps_up', self.cs_state.eps_up
         print 'eps_lo', eps_lo
         return np.array([eps_lo, u0[1] ], dtype = 'float')
 
@@ -92,9 +92,14 @@ class ECBLCalibState(HasStrictTraits):
         self.n += 1
         # set iteration counter
         #
-        self.cs_state.set(eps_lo = u[0], eps_up = -self.cs_geo.eps_c_u)
+        eps_up = -self.cs_geo.cc_law.eps_c_u
+        eps_lo = u[0]
+        self.cs_state.set(eps_lo = u[0], eps_up = -self.cs_geo.cc_law.eps_c_u)
 
         eps_tex_u = self.cs_state.convert_eps_lo_2_tex_u(u[0])
+
+        print 'eps_up', eps_up
+        print 'eps_lo', eps_lo
 
         print 'u', eps_tex_u, u[1] / eps_tex_u
         self.cs_geo.ecb_law.set_cparams(eps_tex_u, u[1])
@@ -219,28 +224,36 @@ if __name__ == '__main__':
                    # mean concrete strength after 9 days
                    # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                    # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
-                   f_ck = 70.0,
+                   cc_law_params = dict(bilinear = dict(eps_c_u = 0.0033,
+                                                        f_ck = 55.7,
+                                                        E_c = 29e+3),
+                                        quadratic = dict(eps_c_u = 0.0033,
+                                                        f_ck = 55.7,
+                                                        ),
+                                        constant = dict(eps_c_u = 0.0033,
+                                                        f_ck = 55.7,
+                                                        )
+                                        ),
 
-                   thickness = 0.02,
+                   thickness = 0.06,
 
-                   width = 0.10,
+                   width = 0.2,
 
-                   n_layers = 6,
+                   n_layers = 12,
 
-                   n_rovings = 11,
+                   n_rovings = 23,
                    # measured strain at bending test rupture (0-dir)
                    #
-                   eps_c_u = 4.0 / 1000.,
 
-                   cc_law_type = 'bilinear',
-                   ecb_law_type = 'linear'
+                   cc_law_type = 'constant',
+                   ecb_law_type = 'fbm'
                    )
 
     ec = ECBLCalibState(cs_geo = cs_geo,
                    # measured value in bending test [kNm]
                    # value per m: M = 5*3.49
                    #
-                   Mu = 0.38,
+                   Mu = 3.49,
                    )
 
     u_sol = ec.u_sol
