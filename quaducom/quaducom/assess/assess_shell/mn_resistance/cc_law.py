@@ -23,6 +23,7 @@ class CCLawBase(CLBase):
     #
     f_ck = Float(60.0, input = True)
     eps_c_u = Float(0.0033, input = True)
+    E_c = Float(28e+3, enter_set = True, auto_set = False)
 
     high_strength_level = Float(50.0, enter_set = True, auto_set = False, input = True)
 
@@ -100,7 +101,6 @@ class CCLawBilinear(CCLawBase):
     #-----------------------------
     mfn = Property(depends_on = '+input')
 
-    E_c = Float(28e+3, enter_set = True, auto_set = False)
     @cached_property
     def _get_mfn(self):
         '''bilinear stress-strain-diagram of the concrete

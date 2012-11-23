@@ -68,7 +68,13 @@ class ECBLCalib(HasStrictTraits):
     @cached_property
     def _get_u0(self):
         u0 = self.ecb_law.u0
+        #eps_up = u0[1]
+        eps_up = -self.cs.eps_c_u
         eps_lo = self.cs.convert_eps_tex_u_2_lo(u0[0])
+
+        print 'eps_up', eps_up
+        print 'eps_lo', eps_lo
+
         return np.array([eps_lo, u0[1] ], dtype = 'float')
 
     # iteration counter
@@ -84,10 +90,18 @@ class ECBLCalib(HasStrictTraits):
         self.n += 1
         # set iteration counter
         #
-        self.cs.set(eps_lo = u[0], eps_up = -self.cs.eps_c_u)
+        eps_up = -self.cs.eps_c_u
+        eps_lo = u[0]
+
+        self.cs.set(eps_lo = eps_lo, eps_up = eps_up)
+
+        print 'eps_up', eps_up
+        print 'eps_lo', eps_lo
 
         eps_tex_u = self.cs.convert_eps_lo_2_tex_u(u[0])
         self.cs.ecb_law.set_cparams(eps_tex_u, u[1])
+
+        print 'u', eps_tex_u, u[1] / eps_tex_u
 
         N_internal = self.cs.N
         M_internal = self.cs.M
@@ -95,6 +109,7 @@ class ECBLCalib(HasStrictTraits):
         d_N = N_internal - self.Nu
         d_M = M_internal - self.Mu
 
+        print 'R', d_M, d_N
         return np.array([ d_N, d_M ], dtype = float)
 
     # solution vector returned by 'fit_response'
