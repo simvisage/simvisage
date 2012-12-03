@@ -29,18 +29,22 @@ from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
     PhiFnGeneralExtended, \
     PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear
 
-from mushroof import SFBMushRoofModel
+from quaducom.apps.sfbdemonstrator.fe_model.mush_roof_model import \
+    MushRoofModel
+    
+from quaducom.apps.sfbdemonstrator.fe_model.mr_quarter import \
+    MRquarter
 
-from promod.matdb.trc.ccs_unit_cell import \
+from matresdev.db.matdb.trc.ccs_unit_cell import \
     CCSUnitCell, DamageFunctionEntry
 
 from mathkit.mfn.mfn_line.mfn_line import \
     MFnLineArray
 
-from promod.simdb import \
+from matresdev.db.simdb import \
     SimDB
 
-from promod.simdb.simdb_class import \
+from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
 from ibvpy.api import \
@@ -53,7 +57,7 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-class SFBMushRoofModelNonLin( SFBMushRoofModel ):
+class MushRoofModelNonLin( MRquarter ):
     '''Overload the nonlinear model.
     '''
 
@@ -171,47 +175,36 @@ class SFBMushRoofModelNonLin( SFBMushRoofModel ):
 
 if __name__ == '__main__':
 
-    sim_model = SFBMushRoofModelNonLin( n_dofs_xy = 10, shape_z = 3,
-                                        ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
-                                        calibration_test = 'TT11-10a-average',
-                                        age = 28 )
+    sim_model = MushRoofModelNonLin( n_dofs_xy = 8, shape_z = 2,
+                                     ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
+                                     calibration_test = 'TT11-10a-average',
+                                     age = 28 )
 
     do = 'ui'
 
+    if do == 'ui':
+        from ibvpy.plugins.ibvpy_app import IBVPyApp
+        app = IBVPyApp( ibv_resource = sim_model )
+        app.main()
+
     if do == 'eval':
-
         sim_model.tloop.eval()
-
         import pylab as p
-
         sim_model.f_w_diagram_center.refresh()
         file_path = 'f_w_diagram.pickle'
         file = open( pickle_file_path, 'w' )
         dump( sim_model.f_w_diagram.trace, file )
         file.close()
-
         sim_model.f_w_diagram.trace.mpl_plot( p, color = 'red' )
-
         p.show()
 
     elif do == 'show_last':
-
         from promod.exdb.ex_run import ExRun
         import pylab as p
-
         pickle_path = 'pickle_files'
-
-        ### shape ###:
-
-        # plate elem(12,12,4); w=0.08; step = 0.05; KMAX = 20, tol = 0.001
         file_path = 'f_w_diagram.pickle'
         file = open( pickle_file_path, 'r' )
         trace = load( file )
         p.plot( trace.xdata, trace.ydata, color = 'blue' )
 
 
-    if do == 'ui':
-
-        from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp( ibv_resource = sim_model )
-        app.main()

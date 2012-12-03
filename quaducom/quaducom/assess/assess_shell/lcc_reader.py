@@ -4,7 +4,7 @@ from etsproxy.traits.api import \
     Property, WeakRef
 
 from numpy import array, random
-#from tvtk.api import tvtk
+from etsproxy.tvtk.api import tvtk
 
 import os
 
@@ -173,10 +173,6 @@ class LCCReaderRFEM(LCCReader):
         print '*** input files checked for consistency (OK) ***'
         return True
 
-def convert_str2float(str):
-    return float(str)
-
-convert_str2float_vect = np.vectorize(convert_str2float)
 
 class LCCReaderInfoCAD(LCCReader):
 
@@ -208,9 +204,29 @@ class LCCReaderInfoCAD(LCCReader):
         ny = input_arr[:, [ny_idx]]
         nxy = input_arr[:, [nxy_idx]]
 
+        file_name = os.path.join(self.data_dir, 'state_data',
+                                 'Knotendeformationen',
+                                 f_name)
+
+        print '*** read deformation data from file: %s ***' % (file_name)
+
+        input_arr = np.loadtxt(file_name)
+
+        node_no_idx, ux_idx, uy_idx, uz_idx, phix_idx, phiy_idx, phiz_idx = range(0, 7)
+
+        ux = input_arr[:, [ux_idx]]
+        uy = input_arr[:, [uy_idx]]
+        uz = input_arr[:, [uz_idx]]
+
+        # deformations [m] (arranged as array with 3 columns)
+        #
+        node_U = input_arr[:, [ux_idx, uy_idx, uz_idx]]
+
         return { 'elem_no' : elem_no,
                  'mx' : mx, 'my' : my, 'mxy' : mxy,
                  'nx' : nx, 'ny' : ny, 'nxy' : nxy,
+                 'ux' : ux, 'uy' : uy, 'uz' : uz,
+                 'node_U' : node_U
                }
 
     def read_geo_data(self, file):
@@ -251,7 +267,6 @@ class LCCReaderInfoCAD(LCCReader):
         t_elem_node_map = t_elems[:, 1:-1] - 1
         q_elem_node_map = q_elems[:, 1:-1] - 1
         t_thickness_idx = t_elems[:, -1] - 1
-        print t_thickness_idx
         q_thickness_idx = q_elems[:, -1] - 1
 
         node_idx = np.array(node_arr[:, 0] - 1, dtype = 'int')
@@ -272,9 +287,7 @@ class LCCReaderInfoCAD(LCCReader):
 
         thic_file_ = open(thic_file, 'r')
         lines = thic_file_.readlines()
-        print 'lines', lines
         line_arr = np.array(lines)
-        print 'line_arr', line_arr
         thic_file_.close()
 
         idx_list = []
@@ -294,11 +307,9 @@ class LCCReaderInfoCAD(LCCReader):
         thickness_arr[t_idx] = d_arr[ t_thickness_idx ]
         thickness_arr[q_idx] = d_arr[ q_thickness_idx ]
 
-        print thickness_arr
-        
         # convert strings entries to floats
         #
-        elem_no_arr = convert_str2float_vect( elem_no_arr )
+        elem_no_arr = array( elem_no_arr, dtype = float )
 
         # convert 1d-arrays to 2d-column arrays
         #
@@ -314,14 +325,14 @@ class LCCReaderInfoCAD(LCCReader):
                  'node_X' : node_X,
                  't_elem_node_map' : t_elem_node_map,
                  'q_elem_node_map' : q_elem_node_map,
+                 't_idx' : t_idx,
+                 'q_idx' : q_idx,
                  'thickness':thickness_arr
                  }
 
     def plot_mesh(self, mlab, geo):
 
-        # The numpy array data.
-
-        points = geo['node_X']
+        points = geo['node_X'] 
         triangles = geo['t_elem_node_map']
         quads = geo['q_elem_node_map']
         #scalars = random.random(points.shape)
@@ -334,32 +345,113 @@ class LCCReaderInfoCAD(LCCReader):
         tmesh = tvtk.PolyData(points = points, polys = triangles)
         mlab.pipeline.surface(tmesh, representation = 'wireframe')
 
+    def plot_deformed_mesh(self, mlab, geo_data, state_data = {'node_U' : array([0., 0., 0.])}, warp_factor = 1.0):
+        '''plot the deformed mesh based on the nodal displacement defined in 'state_data'
+        '''
+        points = geo_data['node_X'] 
+        node_U = state_data['node_U']
+        print 'node_U', node_U
+
+        node_U_warped = node_U * warp_factor 
+        points += node_U_warped
+
+        triangles = geo_data['t_elem_node_map']
+        quads = geo_data['q_elem_node_map']
+
+        # The TVTK dataset.
+        qmesh = tvtk.PolyData(points = points, polys = quads)
+        mlab.pipeline.surface(qmesh, representation = 'wireframe')
+
+        # The TVTK dataset.
+        tmesh = tvtk.PolyData(points = points, polys = triangles)
+        mlab.pipeline.surface(tmesh, representation = 'wireframe')
+
+    def plot_sd(self, mlab, geo_data, sd_key, state_data = {'node_U' : array([0., 0., 0.])}, warp_factor = 1.0):
+        '''plot the chosen state data defined by 'sd_key' at the center of gravity of the elements
+        together with the element mesh; 'warp_factor' can be used to warp the deformation state in the plot.
+        '''
+        gd = geo_data
+        sd = state_data
+        print 'sd', sd.keys()
+        print 'warp_factor', warp_factor
+
+        # plot the deformed geometry (as mesh)
+        #
+        self.plot_deformed_mesh(mlab, gd, state_data = sd, warp_factor = warp_factor)
+
+        # get mapping from 'geo_data'
+        #
+        t_elem_node_map = gd['t_elem_node_map']
+        q_elem_node_map = gd['q_elem_node_map']
+        t_idx = gd['t_idx']
+        q_idx = gd['q_idx']
+        
+        # nodal displacement 
+        #
+        node_U = sd['node_U']
+        print 'node_U', node_U
+
+        # average element displacement (unordered)
+        #
+        t_elem_node_U = node_U[ t_elem_node_map ]
+        q_elem_node_U = node_U[ q_elem_node_map ]
+        t_elem_U = np.average(t_elem_node_U, axis = 1)
+        q_elem_U = np.average(q_elem_node_U, axis = 1)
+    
+        # element displacement (ordered in ascending element number)
+        #
+        elem_U = np.zeros((len(t_elem_U)+len(q_elem_U), 3), dtype = 'float')
+        elem_U[t_idx, :] = t_elem_U
+        elem_U[q_idx, :] = q_elem_U
+    
+        # element coordinates of the undeformed shape 
+        # (2d column arrays)
+        #
+        X = gd['X']
+        Y = gd['Y']
+        Z = gd['Z']
+    
+        # average element deformations 
+        #
+        ux_elem = elem_U[:,0,None]
+        uy_elem = elem_U[:,1,None]
+        uz_elem = elem_U[:,2,None]
+    
+        # element coordinates of the deformed state 
+        # considering the specified warp factor 
+        #
+        X_def = X + ux_elem * warp_factor
+        Y_def = Y + uy_elem * warp_factor
+        Z_def = Z + uz_elem * warp_factor
+        
+        # plot state data in the deformed geometry  
+        #
+        mlab.points3d(X_def, Y_def, Z_def, sd[sd_key],
+                      mode = "cube")
+
+
+    
     def check_for_consistency(self, lc_list, geo_data_dict):
-        pass
-#        print 'lc_list', lc_list
-#        for lc in lc_list:
-#            # check internal LC-consitency: 
-#            # (compare coords-values of first LC with all other LC's in 'lc_list')
-#            #
-#            print "lc_list[0].geo_data_dict['X']", lc_list[0].geo_data_dict['X']
-#            if not all(lc_list[0].geo_data_dict['X'] == lc.geo_data_dict['X']) and \
-#                not all(lc_list[0].geo_data_dict['Y'] == lc.geo_data_dict['Y']) and \
-#                not all(lc_list[0].geo_data_dict['Z'] == lc.geo_data_dict['Z']):
-#                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-#                        % (self.lc_list[0].name, lc.name)
-#                return False
-#
-#            # check external consistency:
-#            # (compare 'elem_no' in 'thickness.csv' and in all loading-cases 
-#            # input files (e.g. 'LC1.csv') defined in 'lc_list')
-#            #
-#            if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-#                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-#                        % (lc_list[0].name, lc.name)
-#                return False
-#
-#        print '*** input files checked for consistency (OK) ***'
-#        return True
+        for lc in lc_list:
+            # check internal LC-consitency: 
+            # (compare elem_no of first LC with all other LC's in 'lc_list')
+            #
+            if not all(lc_list[0].state_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
+                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for internal consistency!" \
+                        % (self.lc_list[0].name, lc.name)
+                return False
+
+            # check external consistency:
+            # (compare 'elem_no' in 'geo_data' and 'elem_no' in state data of all loading-cases 
+            # input files (e.g. 'LC1.txt') defined in 'lc_list')
+            #
+            if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
+                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for external consistency!" \
+                        % (lc_list[0].name, lc.name)
+                return False
+
+        print '*** input files checked for consistency (OK) ***'
+        return True
 
 if __name__ == '__main__':
 
@@ -393,18 +485,98 @@ if __name__ == '__main__':
     r = LCCReaderInfoCAD(data_dir = data_dir)
 
     mlab.figure(figure = "SFB532Demo",
-                 bgcolor = (1.0, 1.0, 1.0),
-                 fgcolor = (0.0, 0.0, 0.0))
+                bgcolor = (1.0, 1.0, 1.0),
+                fgcolor = (0.0, 0.0, 0.0))
 
+    # get 'geo_data' and 'state_data'
+    #
     gd = r.read_geo_data('')
-#    r.plot_mesh(mlab, gd)
-
     sd = r.read_state_data('LC1.txt')
 
-#    mlab.points3d(gd['X'], gd['Y'], gd['Z'], gd['thickness'],
-    mlab.points3d(gd['X'], gd['Y'], gd['Z'], sd['mx'],
-                   #colormap = "YlOrBr",
-                   mode = "cube",
-                   scale_factor = 1.0)
+    # plot the undeformed geometry (as mesh)
+    #
+#    r.plot_mesh(mlab, gd)
 
+    # plot the deformed geometry (as mesh)
+    #
+#    r.plot_deformed_mesh(mlab, gd, sd, warp_factor = 1000.)
+
+    # plot state data in the deformed geometry (as mesh)
+    #
+#    r.plot_sd(mlab, gd, 'mx', state_data = sd, warp_factor = 1000.)
+
+    
+    # get mapping from 'geo_data'
+    #
+    t_elem_node_map = gd['t_elem_node_map']
+    q_elem_node_map = gd['q_elem_node_map']
+    t_idx = gd['t_idx']
+    q_idx = gd['q_idx']
+#    print 't_elem_node_map',t_elem_node_map.shape
+#    print 'q_elem_node_map',q_elem_node_map.shape
+
+    
+    # nodal displacement 
+    #
+    node_U = sd['node_U']
+    
+    t_elem_node_U = node_U[ t_elem_node_map ]
+    q_elem_node_U = node_U[ q_elem_node_map ]
+    
+    t_elem_U = np.average(t_elem_node_U, axis = 1)
+    q_elem_U = np.average(q_elem_node_U, axis = 1)
+
+    # element displacement (ordered)
+    #
+    elem_U = np.zeros((len(t_elem_U)+len(q_elem_U), 3), dtype = 'float')
+    
+    elem_U[t_idx, :] = t_elem_U
+    elem_U[q_idx, :] = q_elem_U
+
+    # plot the deformed geometry (as mesh)
+    #
+    warp_factor = 2000.
+    r.plot_deformed_mesh(mlab, gd, sd, warp_factor = warp_factor)
+
+    node_X = gd['node_X'] 
+
+    # element coordinates of the undeformed shape 
+    # (2d column arrays)
+    #
+    X = gd['X']
+    Y = gd['Y']
+    Z = gd['Z']
+
+    # element coordinates of the deformed shape  
+    # considering 'warp_factor' 
+    #
+    ux_elem = elem_U[:,0,None]
+    uy_elem = elem_U[:,1,None]
+    uz_elem = elem_U[:,2,None]
+
+    # deformed element coordinates with 
+    # increase deformation by warp factor 
+    #
+    X_def = X + ux_elem * warp_factor
+    Y_def = Y + uy_elem * warp_factor
+    Z_def = Z + uz_elem * warp_factor
+    
+    # plot state data in the deformed geometry  
+    #
+    points_pipeline = mlab.points3d(X_def, Y_def, Z_def, sd['mx'],
+                                    mode = "cube",
+                                    scale_factor = 0.2,
+                                    scale_mode = 'none')
+    src = points_pipeline.mlab_source
+    warp = src.vectors = np.hstack([ux_elem, Y_def, 2.0 + 2*Z + uz_elem])
     mlab.show()
+
+    #-------
+    #@todo: use mayavi functionality using pipeline!
+#    src = points_pipeline.mlab_source
+#    warp = src.vectors = elem_U
+#    mlab.show_pipeline()
+#    glyph.glyph.glyph.vector_mode = 'use_normal'
+#    engine.add_filter(<enthought.mayavi.filters.warp_vector.WarpVector object at 0x8dc35f0>, vtk_data_source2)
+#    enthought.mayavi.modules.glyph.Glyph
+

@@ -59,9 +59,9 @@ class CLBase(HasStrictTraits):
 
     def plot(self, ax, **kw):
         ax.plot(*self.arr, **kw)
-        ax.autoscale(tight = True)
-        ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-        ax.tick_params(direction = 'out', length = 2, width = 4)
+#        ax.autoscale(tight = True)
+#        ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+#        ax.tick_params(direction = 'out', length = 2, width = 4)
         ax.ticklabel_format(axis = 'x', style = 'sci')
 
     def default_traits_view(self):

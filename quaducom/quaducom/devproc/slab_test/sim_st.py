@@ -37,7 +37,8 @@ from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnGeneralExtended, \
-    PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear
+    PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear,\
+    PhiFnGeneralExtendedExp
 
 from mathkit.geo.geo_ndgrid import \
     GeoNDGrid
@@ -50,6 +51,8 @@ from mathkit.mfn.mfn_line.mfn_line import \
 
 from numpy import \
     sin, cos, c_, arange, hstack, array, max, frompyfunc, linspace
+
+import numpy as np
 
 from time import time
 from os.path import join
@@ -97,8 +100,8 @@ class SimST( IBVModel ):
                       ps_levels = ( 8, 12, 3 ) )
 
     # discretization in z-direction:
-    shape_z = Int( 2, input = True,
-                      ps_levels = ( 1, 3, 3 ) )
+    shape_z = Int( 4, input = True,
+                      ps_levels = ( 2, 3, 3 ) )
 
     #-----------------
     # geometry:
@@ -326,7 +329,7 @@ class SimST( IBVModel ):
 
                        RESETMAX = 0,
                        debug = False,
-                       tline = TLine( min = 0.0, step = 0.025, max = 0.775 ) )
+                       tline = TLine( min = 0.0, step = 0.05, max = 1.0 ) )
 
         return tloop
 
@@ -342,14 +345,15 @@ class SimST( IBVModel ):
 class SimSTDB( SimST ):
 
     # vary the failure strain in PhiFnGeneralExtended:
-    factor_eps_fail = Float( 2.0, input = True,
+    factor_eps_fail = Float( 1.4, input = True,
                              ps_levels = ( 1.0, 1.2, 3 ) )
 
     #-----------------
     # composite cross section unit cell:
     #-----------------
     #
-    ccs_unit_cell_key = Enum( CCSUnitCell.db.keys(),
+    ccs_unit_cell_key = Enum( 'FIL-10-09_2D-05-11_0.00462_all0',
+                              CCSUnitCell.db.keys(),
                               simdb = True, input = True,
                               auto_set = False, enter_set = True )
 
@@ -369,8 +373,7 @@ class SimSTDB( SimST ):
         # This is necessary to avoid an ValueError at setup  
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
-    calibration_test = Str( input = True
-                            )
+    calibration_test = Str( input = True )
     def _calibration_test_default( self ):
         # return the material model key of the first DamageFunctionEntry
         # This is necessary to avoid an ValueError at setup  
@@ -386,12 +389,14 @@ class SimSTDB( SimST ):
     # phi function extended:
     #-----------------
     #
-    phi_fn = Property( Instance( PhiFnGeneralExtended ),
+    phi_fn = Property( Instance( PhiFnGeneralExtendedExp ),
                        depends_on = 'input_change,+ps_levels' )
     @cached_property
     def _get_phi_fn( self ):
-        return PhiFnGeneralExtended( mfn = self.damage_function,
-                                     factor_eps_fail = self.factor_eps_fail )
+        return PhiFnGeneralExtendedExp( mfn = self.damage_function )
+#        return PhiFnStrainHardening()
+#        return PhiFnGeneralExtended( mfn = self.damage_function,
+#                                     factor_eps_fail = self.factor_eps_fail )
 
     #----------------------------------------------------------------------------------
     # mats_eval
@@ -421,26 +426,44 @@ class SimSTDB( SimST ):
 
 if __name__ == '__main__':
 
-#    sim_model = SimSTDB( ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
-##                                calibration_test = 'TT11-10a-average',
+#                                ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
+#                                calibration_test = 'TT11-10a-average',
 #                                calibration_test = 'TT11-10a-V2',
 #                                age = 28 )
 
+    # s_tex,z = 4.62 mm corresponds to: n_tex = 12; h = 60 mm
+    #
     sim_model = SimSTDB( ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                                calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
-                                age = 27 )
+                         #calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
+                         age = 27 )
 
+    print 'sim_model.ccs_unit_cell_key', sim_model.ccs_unit_cell_key
+    print 'sim_model.damage_function', sim_model.damage_function
+    
+    # plot the used 'phi_fn'
+    #
+    import pylab as p
+    mfn = sim_model.damage_function
+    eps_last = sim_model.damage_function.xdata[-1]
+    print 'eps_last', eps_last
+#    mfn.mpl_plot(p)
+#    sim_model.phi_fn.mfn.mpl_plot(p)
+    phi_fn_vect = np.vectorize( sim_model.phi_fn.get_value )
+    xdata = np.linspace(0., eps_last*5., 50)
+    ydata = phi_fn_vect( xdata )
+    p.plot(xdata, ydata)
+    p.show()
 
-
-
-#    do = 'ui'
+    do = 'ui'
 #    do = 'pstudy'
-    do = 'validation'
+#    do = 'validation'
 #    do = 'show_last_results'
 
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp( ibv_resource = sim_model )
+        sim_model.tloop.eval()
         app.main()
 
     if do == 'pstudy':
@@ -448,7 +471,6 @@ if __name__ == '__main__':
         sim_ps.configure_traits()
 
     if do == 'validation':
-
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
@@ -473,7 +495,7 @@ if __name__ == '__main__':
 
         sim_model.f_w_diagram_center.refresh()
         pickle_path = 'pickle_files'
-        file_name = 'f_w_diagram_SH1F-V1_nelems10-10-2.pickle'
+        file_name = 'f_w_diagram_SH1F-V1_nelems10-10-4.pickle'
         pickle_file_path = join( pickle_path, file_name )
         file = open( pickle_file_path, 'w' )
         dump( sim_model.f_w_diagram_center.trace, file )
@@ -483,12 +505,13 @@ if __name__ == '__main__':
         p.show()
 
     if do == 'show_last_results':
-        from promod.exdb.ex_run import ExRun
+        from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
         pickle_path = 'pickle_files'
 
-        file_name = 'f_w_diagram_SH1F-V1_step0-05_KMAX100_tol0-01_nelems8-8-3.pickle'
+        file_name = 'f_w_diagram_SH1F-V1_nelems10-10-4.pickle'
+#        file_name = 'f_w_diagram_SH1F-V1_step0-05_KMAX100_tol0-01_nelems8-8-3.pickle'
         pickle_file_path = join( pickle_path, file_name )
         file = open( pickle_file_path, 'r' )
         trace = load( file )
@@ -651,8 +674,8 @@ if __name__ == '__main__':
 #        tests = [ 'PT10-10a.DAT', 'PT11-10a.DAT' , 'PT12-10a.DAT' ]
 #        tests = [ 'PT10-10a.DAT' ]
 
-        path = join( simdb.exdata_dir, 'plate_tests', '2011-12-15_PT-12c-6cm-TU' )
-        tests = [ 'PT-12c-6cm-TU.DAT' ]
+        path = join( simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU' )
+        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
 
         for t in tests:
             ex_path = join( path, t )

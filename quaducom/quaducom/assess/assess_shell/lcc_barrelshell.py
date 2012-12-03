@@ -82,9 +82,9 @@ if __name__ == '__main__':
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
 
-#                 #----------------------------------------------------------------------
-#                 # man load (1 KN)
-#                 #----------------------------------------------------------------------
+                 #----------------------------------------------------------------------
+                 # man load (1 KN)
+                 #----------------------------------------------------------------------
 #                 # LC8:
 #                 LC(name = 'Q_hinten_mitte', category = 'imposed-load', file_name = 'LC8.txt',
 #                    exclusive_to = ['Q_feld_li', 'Q_feld_mitte', 'Q_feld_re', 'Q_vorne_mitte'],
@@ -110,38 +110,38 @@ if __name__ == '__main__':
 #                    exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_feld_re'],
 #                    psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
 #                    ),
-#                    
-#                 #----------------------------------------------------------------------
-#                 # temperature 
-#                 #----------------------------------------------------------------------
-#                 # LC13:
-#                 LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
-#                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
-#                    ),
-#                 # LC14:
-#                 LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
-#                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
-#                    ),
-#                 # LC15:
-#                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
-#                    ),
-#                 # LC16:
-#                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
-#                    ),
                     
-#                 #----------------------------------------------------------------------
-#                 # shrinkage 
-#                 #----------------------------------------------------------------------
-#                 # LC17:
-#                 LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
-#                    psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
-#                    ),
+                 #----------------------------------------------------------------------
+                 # temperature 
+                 #----------------------------------------------------------------------
+                 # LC13:
+                 LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
+                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
+                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
+                    ),
+                 # LC14:
+                 LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
+                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
+                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
+                    ),
+                 # LC15:
+                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
+                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
+                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
+                    ),
+                 # LC16:
+                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
+                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
+                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
+                    ),
+                    
+                 #----------------------------------------------------------------------
+                 # shrinkage 
+                 #----------------------------------------------------------------------
+                 # LC17:
+                 LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
+                    psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
+                    ),
 
                  #----------------------------------------------------------------------
                  # wind load 
@@ -174,11 +174,11 @@ if __name__ == '__main__':
     lct = LCCTableULS(data_dir = data_dir,
                       reader_type = 'InfoCAD',
                       lc_list = lc_list,
-                      show_lc_characteristic = False
+                      show_lc_characteristic = True
                       )
 
-#    lct.configure_traits()
-    lct.plot_n_tex()
+    lct.configure_traits()
+#    lct.plot_n_tex()
 
 #    mlab.figure(figure = "barrelshell",
 #                 bgcolor = (1.0, 1.0, 1.0),

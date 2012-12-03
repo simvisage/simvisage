@@ -507,7 +507,7 @@ class ULS(LS):
     print 'NOTE: f_Rtex_0 = f_Rtex_90 = set to %g kN/m !' % (f_Rtex_0)
 
     # sig_Rd,0,Biegung = 7.95 MPa
-    k_fl = 7.95 / 6.87
+    k_fl = 1.4#7.95 / 6.87
     print 'NOTE: k_fl = set to %g [-] !' % (k_fl)
 
     # ------------------------------------------------------------

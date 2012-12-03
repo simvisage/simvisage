@@ -22,16 +22,28 @@ MUSHROOF - Demostrator SFB532
 '''
 from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
-    Int, List, Bool, HasTraits
+    Int, List, Bool, HasTraits, Enum, Str
 
 from ibvpy.api import \
     TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
     TLine, BCDof, BCDofGroup, BCSlice, IBVModel
 
-
 from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
     MATS3DElastic
 
+from ibvpy.mats.mats2D5.mats2D5_cmdm.mats2D5_cmdm import \
+    MATS2D5MicroplaneDamage
+
+from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
+    IPhiFn, PhiFnGeneralExtended, \
+    PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear,\
+    PhiFnGeneralExtendedLinear
+
+from ibvpy.api import \
+    TStepper as TS, TLoop, TLine, \
+    IBVModel, DOTSEval, \
+    RTraceGraph, RTraceDomainListField, \
+    BCDof, BCDofGroup, BCSlice
 
 from ibvpy.fets.fets_eval import \
     FETSEval
@@ -41,6 +53,8 @@ from ibvpy.fets.fets3D.fets3D8h20u import \
     FETS3D8H20U
 from ibvpy.fets.fets3D.fets3D8h27u import \
     FETS3D8H27U
+from ibvpy.fets.fets2D5.fets2D58h20u import \
+    FETS2D58H20U
 from ibvpy.fets.fets2D5.fets2D58h20u import \
     FETS2D58H20U
 from ibvpy.mesh.fe_grid import \
@@ -68,13 +82,33 @@ from hp_shell import HPShell
 
 from mush_roof_model import MushRoofModel
 
+from simiter.sim_pstudy import \
+    SimPStudy, SimOut, ISimModel
+
+from matresdev.db.exdb.ex_run_view import \
+    ExRunView
+
+from matresdev.db.matdb.trc.ccs_unit_cell import \
+    CCSUnitCell, DamageFunctionEntry
+
+from matresdev.db.simdb import \
+    SimDB
+
+from matresdev.db.simdb.simdb_class import \
+    SimDBClass, SimDBClassExt
+
+simdb = SimDB()
+
+from pickle import dump, load
+
+
 
 class MRquarter(MushRoofModel):
 
     implements(ISimModel)
     mushroof_part = 'quarter'
 
-    n_elems_xy_quarter = Int(4, ps_levels = [3, 15, 5])
+    n_elems_xy_quarter = Int(8, ps_levels = [3, 15, 5])
     n_elems_z = Int(2, ps_levels = [1, 4, 2])
 
     #----------------------------------------------------
@@ -83,13 +117,14 @@ class MRquarter(MushRoofModel):
     vtk_r = Float(1.0)
     #default roof
     fe_roof = Instance(FETSEval,
-                        ps_levels = ['fe_linear',
-                                     'fe2d5_quad_serendipity',
+                        ps_levels = ['fe2d5_quad_serendipity',
                                      'fe_quad_serendipity',
+                                     'fe_linear',
                                      'fe_quad_lagrange' ] ,
                                      depends_on = '+initial_strain_roof, +initial_strain_col, +vtk_r')
     def _fe_roof_default(self):
-        fets = self.fe_quad_serendipity
+        fets = self.fe2d5_quad_serendipity
+#        fets = self.fe_quad_serendipity
         fets.vtk_r *= self.vtk_r
         return fets
 
@@ -99,12 +134,31 @@ class MRquarter(MushRoofModel):
     fe_grid_roof = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
     def _get_fe_grid_roof(self):
-        return FEGrid(coord_min = (0.0, 0.0, 0.0),
+        return FEGrid( coord_min = (0.0, 0.0, 0.0),
                        coord_max = (1.0, 1.0, 1.0),
                        geo_transform = self.hp_shell,
                        shape = (self.n_elems_xy, self.n_elems_xy, self.n_elems_z),
-                       fets_eval = self.fe_quad_serendipity)
+                       fets_eval = self.fe2d5_quad_serendipity)
+#                       fets_eval = self.fe_roof)
+#                       fets_eval = self.fe_quad_serendipity)
 
+    mats_roof = Property( Instance( MATS2D5MicroplaneDamage), depends_on = '+input' )
+#    mats_roof = Property( Instance( MATS3DElastic), depends_on = '+input' )
+    @cached_property
+    def _get_mats_roof( self ):
+#        return MATS3DElastic( E = self.E_roof, nu = self.nu )
+        return MATS2D5MicroplaneDamage( 
+                                E = self.E_c,
+                                nu = self.nu,
+                                n_mp = 30,
+                                symmetrization = 'sum-type',
+                                model_version = 'compliance',
+                                phi_fn = self.phi_fn )
+
+    fe2d5_quad_serendipity = Property(Instance(FETSEval, transient = True), depends_on = '+input')
+    def _get_fe2d5_quad_serendipity(self):
+        return FETS2D58H20U(mats_eval = self.mats_roof)
+    
     fe_quad_serendipity = Property(Instance(FETSEval, transient = True), depends_on = '+input')
     def _get_fe_quad_serendipity(self):
         return FETS3D8H20U(mats_eval = self.mats_roof)
@@ -115,7 +169,7 @@ class MRquarter(MushRoofModel):
     hp_shell = Property(Instance(HPShell) , depends_on = '+ps_levels, +input')
     @cached_property
     def _get_hp_shell(self):
-        return HPShell(length_xy_quarter = self.length_xy_quarter / self.shrink_factor ,
+        return HPShell( length_xy_quarter = self.length_xy_quarter / self.shrink_factor ,
                         length_z = self.length_z / self.shrink_factor,
                         n_elems_xy_quarter = self.n_elems_xy_quarter,
                         n_elems_z = self.n_elems_z,
@@ -134,9 +188,11 @@ class MRquarter(MushRoofModel):
         '''
         U = self.tloop.eval()
         u_center_top_z = U[ self.center_top_dof ][0, 0, 2]
-        max_princ_stress = max(self.max_princ_stress._get_field_data().flatten())
-        return array([ u_center_top_z, max_princ_stress ],
-                        dtype = 'float_')
+        print 'u_center_top_z', u_center_top_z
+        return array([ u_center_top_z], dtype = 'float_')
+#        max_princ_stress = max(self.max_princ_stress._get_field_data().flatten())
+#        return array([ u_center_top_z, max_princ_stress ],
+#                        dtype = 'float_')
 
     def get_sim_outputs(self):
         '''
@@ -201,14 +257,14 @@ class MRquarter(MushRoofModel):
                               slice = whole_domain),
 
                      # LC2: additional dead-load
-#                     BCSlice( var = 'f', value = additional_dead_load, dims = [2],
-#                              integ_domain = 'global',
-#                              slice = upper_surface ),
-#
-#                     # LC3: snow load         
-#                     BCSlice( var = 'f', value = surface_load_s, dims = [2],
-#                              integ_domain = 'global',
-#                              slice = upper_surface ),
+                     BCSlice( var = 'f', value = additional_dead_load, dims = [2],
+                              integ_domain = 'global',
+                              slice = upper_surface ),
+
+                     # LC3: snow load         
+                     BCSlice( var = 'f', value = surface_load_s, dims = [2],
+                              integ_domain = 'global',
+                              slice = upper_surface ),
 #
 #                     # LC3: wind
 #                     BCSlice( var = 'f', value = surface_load_w, dims = [2],
@@ -218,8 +274,6 @@ class MRquarter(MushRoofModel):
 
         bc_symplane_yz = BCSlice(var = 'u', value = 0.  , dims = [0], slice = domain[0, :, :, 0, :, :])
         bc_symplane_xz = BCSlice(var = 'u', value = 0.  , dims = [1], slice = domain[:, 0, :, :, 0, :])
-
-
         bc_support_000 = BCSlice(var = 'u', value = 0.  , dims = [2], slice = domain[0, 0, 0, :, : , 0])
 
 #        bc_column = [
@@ -251,31 +305,118 @@ class MRquarter(MushRoofModel):
         ts = TS(sdomain = [domain],
                  dof_resultants = True,
                  bcond_list = [ bc_symplane_yz,
-                                 bc_symplane_xz,
-                               bc_support_000] + force_bc,
+                                bc_symplane_xz,
+                                bc_support_000] + force_bc,
                  rtrace_list = rtrace_list
                )
 
         # Add the time-loop control
-        tloop = TLoop(tstepper = ts,
+        tloop = TLoop( tstepper = ts,
                        tolerance = 1e-4,
-                       tline = self.tline)
-
+                       tline = TLine( min = 0.0, step = 0.1, max = 1.0 ))
         return tloop
 
-if __name__ == '__main__':
+class MRquarterDB( MRquarter ):
+    '''get 'phi_fn' as calibrated by the fitter and stored in the DB
+    '''
 
-    sim_model = MRquarter(n_elems_xy_quarter = 10,
-                          n_elems_z = 1,
-                          shrink_factor = 1.0
-                          )
+    # vary the failure strain in PhiFnGeneralExtended:
+    factor_eps_fail = Float( 1.4, input = True,
+                             ps_levels = ( 1.0, 1.2, 3 ) )
+
+    #-----------------
+    # composite cross section unit cell:
+    #-----------------
+    #
+    ccs_unit_cell_key = Enum( 'FIL-10-09_2D-05-11_0.00462_all0',
+                              CCSUnitCell.db.keys(),
+                              simdb = True, input = True,
+                              auto_set = False, enter_set = True )
+
+    ccs_unit_cell_ref = Property( Instance( SimDBClass ),
+                                  depends_on = 'ccs_unit_cell_key' )
+    @cached_property
+    def _get_ccs_unit_cell_ref( self ):
+        return CCSUnitCell.db[ self.ccs_unit_cell_key ]
+
+    #-----------------
+    # damage function:
+    #-----------------
+    #
+    material_model = Str( input = True )
+    def _material_model_default( self ):
+        # return the material model key of the first DamageFunctionEntry
+        # This is necessary to avoid an ValueError at setup  
+        return self.ccs_unit_cell_ref.damage_function_list[0].material_model
+
+    calibration_test = Str( input = True )
+    def _calibration_test_default( self ):
+        # return the material model key of the first DamageFunctionEntry
+        # This is necessary to avoid an ValueError at setup  
+        return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
+
+    damage_function = Property( Instance( MFnLineArray ),
+                                depends_on = 'input_change' )
+    @cached_property
+    def _get_damage_function( self ):
+        return self.ccs_unit_cell_ref.get_param( self.material_model, self.calibration_test )
+
+    #-----------------
+    # phi function extended:
+    #-----------------
+    #
+    phi_fn = Property( Instance( PhiFnGeneralExtended ),
+                       depends_on = 'input_change,+ps_levels' )
+    @cached_property
+    def _get_phi_fn( self ):
+        return PhiFnGeneralExtendedLinear( mfn = self.damage_function,
+                                     factor_eps_fail = self.factor_eps_fail )
+#        return PhiFnGeneralExtended( mfn = self.damage_function,
+#                                     factor_eps_fail = self.factor_eps_fail )
+
+    #----------------------------------------------------------------------------------
+    # mats_eval
+    #----------------------------------------------------------------------------------
+
+    # age of the plate at the time of testing
+    # NOTE: that the same phi-function is used independent of age. This assumes a 
+    # an afine/proportional damage evolution for different ages. 
+    #
+    age = Int( 28, #input = True
+                )
+
+    # composite E-modulus 
+    #
+    E_c = Property( Float, depends_on = 'input_change' )
+    @cached_property
+    def _get_E_c( self ):
+        return self.ccs_unit_cell_ref.get_E_c_time( self.age )
+
+    # Poisson's ratio 
+    #
+    nu = Property( Float, depends_on = 'input_change' )
+    @cached_property
+    def _get_nu( self ):
+        return self.ccs_unit_cell_ref.nu
+
+
+
+if __name__ == '__main__':
+    sim_model = MRquarterDB( ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+                             calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+                             age = 27,
+                             n_elems_xy_quarter = 10,
+                             n_elems_z = 1,
+                            )
     #sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
 #    sim_model.fe_grid_column.inactive_elems = list( interior_elems )
 
     do = 'ui'
+#    do = 'eval'
 
     if do == 'eval':
+#        sim_model.tloop.eval()
         print 'eval', sim_model.peval()
 
     if do == 'ui':
