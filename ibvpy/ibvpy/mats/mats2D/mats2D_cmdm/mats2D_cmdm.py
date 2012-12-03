@@ -227,5 +227,5 @@ if __name__ == '__main__':
     D4 = m._get_elasticity_tensors()
     print 'D4', D4
 
-    #m.configure_traits( view = 'traits_view' )
+    m.configure_traits( view = 'traits_view' )
 

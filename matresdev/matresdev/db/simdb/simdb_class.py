@@ -187,7 +187,12 @@ class SimDBClassExt(HasTraits):
             if self.verbose == 'io':
                 print '%s.db: reading %s' % (self.klass.__name__, key)
             
-            instances[ key ] = pickle.load(obj_file)
+            try:
+                instances[ key ] = pickle.load(obj_file)
+            except ImportError, e:
+                print 'file name %s' % obj_file
+                raise ImportError, e
+            
             # let the object know its key
             instances[ key ].key = key
             obj_file.close()

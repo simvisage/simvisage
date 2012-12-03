@@ -37,7 +37,7 @@ from ibvpy.core.tloop import TLoop, TLine
 from ibvpy.core.scontext import SContext
 from ibvpy.core.tstepper import TStepper
 
-from promod.exdb.ex_run import ExRun
+from matresdev.db.exdb.ex_run import ExRun
 
 data_file_editor = FileEditor(filter = ['*.DAT'])
 
@@ -417,7 +417,7 @@ class MATSCalibDamageFn(MATSExplore):
                 print '### step', n   , '###'
                 print '### current time:', current_time
             self.run_one_step()
-            print '#',
+            print '(g%)' %(n)
 
         self.fitted_phi_fn.changed = True
         mats_eval = self.dim.mats_eval.__class__.__name__
@@ -528,8 +528,8 @@ def run():
     print 'normals', mats_eval._MPN
     print 'weights', mats_eval._MPW
 
-    fitter = MATSCalibDamageFn(n_steps = 50,
-                                KMAX = 200,
+    fitter = MATSCalibDamageFn( n_steps = 100,
+                                KMAX = 300,
                                 tolerance = 5e-4, #0.01,
                                 RESETMAX = 0,
                                 dim = MATS2DExplore(
@@ -572,10 +572,16 @@ def run():
 
         test_file = join(simdb.exdata_dir,
                               'tensile_tests',
+                              'dog_bone',
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
-                              '2012-01-09_TT-12c-6cm-TU-SH1',
-                              'TT-12c-6cm-TU-SH1F-V3.DAT')
+
+#                              '2012-01-09_TT-12c-6cm-0-TU_SH1',
+#                              'TT-12c-6cm-TU-SH1F-V3.DAT')
+
+                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+
 
         ex_run = ExRun(data_file = test_file)
 
@@ -583,6 +589,9 @@ def run():
         # in the experiment data base and use this in mats_eval.
         #
         E_c = ex_run.ex_type.E_c
+        print 'E_c', E_c 
+        E_c = 33127.
+        print 'E_c', E_c 
         nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
 
         fitter.ex_run = ex_run

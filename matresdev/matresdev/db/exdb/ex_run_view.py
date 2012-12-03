@@ -357,7 +357,7 @@ if __name__ == '__main__':
 
 
 
-    ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'ZiE_2011-06-08_TT-12c-6cm-90-TU',
+    ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-06-10_TT-12c-6cm-90-TU_ZiE',
                             'TT-12c-6cm-90-TU-V1.DAT')
 
 #    ex_path = os.path.join( simdb.exdata_dir, 'plate_tests', 'PT-6a-ibac',

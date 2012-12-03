@@ -218,6 +218,42 @@ class PhiFnGeneralExtended(PhiFnGeneral):
         '''plot the extended phi function'''
         return self.mfn.xdata[0], self.mfn.xdata[-1] * self.factor_eps_fail * 1.1
 
+
+class PhiFnGeneralExtendedExp(PhiFnGeneral):
+
+    implements(IPhiFn)
+
+    Dfp = Float(0.4, desc = 'residual integrity',
+                enter_set = True, auto_set = False)
+    Efp_frac = Float(0.2, desc = 'Efp factor',
+                enter_set = True, auto_set = False)
+
+    def get_value(self, e_max, *c_list):
+        '''
+        Evaluate the integrity of a particular microplane.
+        Overload the 'get_value' method of 'PhiFnGeneral'
+        and add an additional linear drop to zero after 
+        failure strain has been reached. 
+        '''
+        eps_last = self.mfn.xdata[-1]
+        phi_last = self.mfn.ydata[-1]
+
+        if e_max <= eps_last:
+            return super(PhiFnGeneralExtendedExp, self).get_value( e_max )
+        else:
+            # exponential softening with residual integrity after rupture strain in the tensile test has been reached
+            Dfp = self.Dfp
+            Epp = eps_last
+            Efp = self.Efp_frac*eps_last        
+            return phi_last * ((1 - Dfp) * sqrt(Epp / e_max * exp(-(e_max - Epp) / Efp)) + Dfp )
+
+    def get_plot_range(self):
+        '''plot the extended phi function'''
+        return self.mfn.xdata[0], self.mfn.xdata[-1]
+
+
+
+
 #--------------------------------------------------------------------------------------
 # Damage function with stain softening for MDM
 #--------------------------------------------------------------------------------------
@@ -563,6 +599,7 @@ class PhiFnStrainHardening(PhiFnBase):
                         resizable = True,
                         width = 800, height = 400)
 
+
 class PhiFnStrainHardeningBezier(PhiFnBase):
     '''Fitted polynomial'''
 
@@ -644,7 +681,8 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
 
 if __name__ == '__main__':
     #phi_fn = PhiFnStrainSoftening( Epp = 0.2, Efp = 0.6 )
-    phi_fn = PhiFnStrainHardening(Epp = 0.2, Efp = 0.6, Dfp = 0.2, Elimit = 4.0)
-    phi_fn = PhiFnStrainHardeningBezier()
+    phi_fn = PhiFnGeneralExtendedExp()
+#    phi_fn = PhiFnStrainHardening(Epp = 0.2, Efp = 0.6, Dfp = 0.2, Elimit = 4.0)
+#    phi_fn = PhiFnStrainHardeningBezier()
     #phi_fn = PhiFnStrainHardeningLinear()
     phi_fn.configure_traits()
