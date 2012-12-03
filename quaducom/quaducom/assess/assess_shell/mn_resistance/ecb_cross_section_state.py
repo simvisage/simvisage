@@ -336,8 +336,8 @@ class ECBCrossSectionState(HasStrictTraits):
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
         ax.spines['top'].set_color('none')
-        ax.spines['left'].set_smart_bounds(True)
-        ax.spines['bottom'].set_smart_bounds(True)
+#        ax.spines['left'].set_smart_bounds(True)
+#        ax.spines['bottom'].set_smart_bounds(True)
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
@@ -374,8 +374,8 @@ class ECBCrossSectionState(HasStrictTraits):
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
         ax.spines['top'].set_color('none')
-        ax.spines['left'].set_smart_bounds(True)
-        ax.spines['bottom'].set_smart_bounds(True)
+#        ax.spines['left'].set_smart_bounds(True)
+#        ax.spines['bottom'].set_smart_bounds(True)
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
@@ -414,7 +414,7 @@ class ECBCrossSectionState(HasStrictTraits):
 if __name__ == '__main__':
     cs_geo = ECBCrossSectionGeo(# 7d: f_ck,cube = 62 Mecs.    csPa; f_ck,cyl = 62/1.2=52
                                  # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
-                                 f_ck = 55.7,
+#                                 f_ck = 55.7,
                                  ecb_law_type = 'fbm',
                                  cc_law_type = 'quadratic'
                                  )
