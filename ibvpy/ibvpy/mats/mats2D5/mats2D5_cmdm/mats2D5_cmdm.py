@@ -97,11 +97,12 @@ class MATS2D5MicroplaneDamage(MATS3DMicroplaneDamage):
         carr_list = [self.varpars[key].polar_fn_vectorized(self.alpha_list)
                      for key in self.phi_fn.identify_parameters() ]
         # vectorize the damage function evaluation
-        n_arr = 1 + len(carr_list) - 1
+        n_arr = 1 + len(carr_list)
         phi_fn_vectorized = np.frompyfunc(self.phi_fn.get_value, n_arr, 1)
         # damage parameter for each microplane
         phi_arr = np.zeros_like(e_max_arr)
-        phi_arr[:-1] = phi_fn_vectorized(e_max_arr[:-1], *carr_list[:-1])
+        carr_list = [ carr[:-1] for  carr in carr_list ]
+        phi_arr[:-1] = phi_fn_vectorized(e_max_arr[:-1], *carr_list)
         phi_arr[-1] = 1.0
         return phi_arr
     #---------------------------------------------------------------------------------
