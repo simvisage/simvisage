@@ -1,0 +1,5 @@
+.directory
+*.pyc
+.pydevproject
+*.o
+*.so

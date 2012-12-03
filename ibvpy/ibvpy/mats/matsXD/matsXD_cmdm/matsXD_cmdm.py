@@ -410,7 +410,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         elif self.symmetrization == 'sum-type':
             return (self._get_beta_tns_sum_type, self._get_M_tns_sum_type)
         else:
-            raise TraitError, 'Bad symmetrization tag'
+            raise ValueError, 'Bad symmetrization tag'
 
     #-----------------------------------------------------------------------------------------------------
     # Evaluation - get the corrector and predictor
