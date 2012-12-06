@@ -223,7 +223,7 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
 
     implements(IPhiFn)
 
-    Dfp = Float(0.4, desc = 'residual integrity',
+    Dfp = Float(0.0, desc = 'residual integrity',
                 enter_set = True, auto_set = False)
     Efp_frac = Float(0.2, desc = 'Efp factor',
                 enter_set = True, auto_set = False)
