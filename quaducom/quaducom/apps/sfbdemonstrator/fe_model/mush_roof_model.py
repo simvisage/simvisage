@@ -275,6 +275,12 @@ class MushRoofModel( IBVModel ):
                                       var = 'u', warp = True,
                                       record_on = 'update', )
 
+    damage = Property( Instance( RTraceDomainListField ), depends_on = '+ps_levels, +input' )
+    @cached_property
+    def _get_damage( self ):
+        return RTraceDomainListField( name = 'Damage' ,
+                                      var = 'omega_mtx', idx = 0, warp = True,
+                                      record_on = 'update' ),
 
     # sorting force of slice by number of dofs internal forces
     #
