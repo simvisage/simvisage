@@ -24,10 +24,6 @@ from etsproxy.traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits, Enum, Str
 
-from ibvpy.api import \
-    TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-    TLine, BCDof, BCDofGroup, BCSlice, IBVModel
-
 from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
     MATS3DElastic
 
@@ -37,7 +33,7 @@ from ibvpy.mats.mats2D5.mats2D5_cmdm.mats2D5_cmdm import \
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnGeneralExtended, \
     PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear,\
-    PhiFnGeneralExtendedLinear
+    PhiFnGeneralExtendedExp
 
 from ibvpy.api import \
     TStepper as TS, TLoop, TLine, \
@@ -108,13 +104,14 @@ class MRquarter(MushRoofModel):
     implements(ISimModel)
     mushroof_part = 'quarter'
 
-    n_elems_xy_quarter = Int(8, ps_levels = [3, 15, 5])
+    n_elems_xy_quarter = Int(6, ps_levels = [3, 15, 5])
     n_elems_z = Int(2, ps_levels = [1, 4, 2])
 
     #----------------------------------------------------
     # elements
     #----------------------------------------------------
-    vtk_r = Float(1.0)
+    vtk_r = Float(0.9)
+
     #default roof
     fe_roof = Instance(FETSEval,
                         ps_levels = ['fe2d5_quad_serendipity',
@@ -208,11 +205,13 @@ class MRquarter(MushRoofModel):
 
     rtrace_list = List
     def _rtrace_list_default(self):
-        return [  self.max_princ_stress, self.sig_app, self.u]
+        return [  self.max_princ_stress, self.sig_app, self.u, self.damage ]
 
     #----------------------------------------------------
     # time loop
     #----------------------------------------------------
+
+    lambda_factor = Float(1.0)
 
     tloop = Property(depends_on = '+ps_levels, +input')
     @cached_property
@@ -221,25 +220,26 @@ class MRquarter(MushRoofModel):
 
         self.center_top_dof = domain[-1, -1, -1, -1, -1, -1].dofs
 
+        lambda_factor = self.lambda_factor
+        
         #----------------------------------------------------
         # loading and boundaries
         #----------------------------------------------------
 
-
         #--- LC1: dead load
         # g = 22.4 kN/m^3 
         # orientation: global z-direction; 
-        material_density_roof = -22.4e-3    # [MN/m^3]
+        material_density_roof = -22.4e-3 * lambda_factor    # [MN/m^3]
 
         #--- LC2 additional dead load 
         # gA = 0,20 kN/m^2 
         # orientation: global z-direction (following the curved structure); 
-        additional_dead_load = -0.20e-3 # [MN/m^2]
+        additional_dead_load = -0.20e-3  * lambda_factor    # [MN/m^2]
 
         #--- LC3 snow
         # s = 0,79 kN/m^2 
         # orientation: global z-direction (projection); 
-        surface_load_s = -0.85e-3 # [MN/m^2]
+        surface_load_s = -0.85e-3  * lambda_factor          # [MN/m^2]
 
         #--- LC4 wind (pressure) 
         # w = 0,13 kN/m^2 
@@ -296,9 +296,9 @@ class MRquarter(MushRoofModel):
         w_z = domain[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
 
         self.f_w_diagram = RTraceGraph(name = 'load - corner deflection',
-                                           var_x = 'U_k', idx_x = w_z,
-                                           var_y = 'time', idx_y = 0,
-                                           record_on = 'update')
+                                       var_x = 'U_k', idx_x = w_z,
+                                       var_y = 'time', idx_y = 0,
+                                       record_on = 'update')
 
         rtrace_list = [ self.f_w_diagram ] + self.rtrace_list
 
@@ -369,8 +369,7 @@ class MRquarterDB( MRquarter ):
                        depends_on = 'input_change,+ps_levels' )
     @cached_property
     def _get_phi_fn( self ):
-        return PhiFnGeneralExtendedLinear( mfn = self.damage_function,
-                                     factor_eps_fail = self.factor_eps_fail )
+        return PhiFnGeneralExtendedExp( mfn = self.damage_function )
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
 
@@ -403,10 +402,12 @@ class MRquarterDB( MRquarter ):
 
 if __name__ == '__main__':
     sim_model = MRquarterDB( ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                             calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+#                             calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+                             calibration_test = 'TT-12c-6cm-TU-SH2F-V3',
                              age = 27,
-                             n_elems_xy_quarter = 10,
-                             n_elems_z = 1,
+                             lambda_factor = 2.,
+                             n_elems_xy_quarter = 6,
+                             n_elems_z = 2,
                             )
     #sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
@@ -420,14 +421,13 @@ if __name__ == '__main__':
         print 'eval', sim_model.peval()
 
     if do == 'ui':
-
-        sim_model.peval()
+        sim_model.tloop.eval()
+#        sim_model.peval()
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
         app.main()
 
     elif do == 'ps':
-
         sim_ps = SimPStudy(sim_model = sim_model)
         sim_ps.configure_traits()
 
