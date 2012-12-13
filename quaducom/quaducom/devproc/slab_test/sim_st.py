@@ -134,16 +134,18 @@ class SimST(IBVModel):
     # NOTE: that the same phi-function is used independent of age. This assumes a 
     # an afine/proportional damage evolution for different ages. 
     #
-    age = Int(28, #input = True
-                )
+    age = Int(28, auto_set = False, enter_set = True, input = True)
 
     # composite E-modulus 
     #
-    E_c = Float(28e5, input = True)
+    E_c = Float(28e5, auto_set = False, enter_set = True, input = True)
 
     # Poisson's ratio 
     #
-    nu = Float(0.2, input = True)
+    nu = Float(0.2, auto_set = False, enter_set = True, input = True)
+
+    tstep = Float(0.05, auto_set = False, enter_set = True, input = True)
+
 
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
@@ -152,9 +154,6 @@ class SimST(IBVModel):
                           depends_on = 'input_change')
     @cached_property
     def _get_mats_eval(self):
-        return MATS3DElastic(E = self.E_c,
-                      nu = self.nu)
-
         mats_eval = MATS2D5MicroplaneDamage(
                                 E = self.E_c,
                                 nu = self.nu,
@@ -214,8 +213,6 @@ class SimST(IBVModel):
         u_center_top_z = U[ self.center_top_dofs ][0, 0, 2]
         return array([ u_center_top_z, F_max ],
                         dtype = 'float_')
-
-    tstep = Float(0.05, auto_set = False, enter_set = True)
 
     fe_domain = Property(depends_on = '+ps_levels, +input')
     @cached_property
@@ -403,6 +400,7 @@ class SimST(IBVModel):
                               ]
                 )
 
+        print 'tstep', self.tstep
         # Add the time-loop control
         tloop = TLoop(tstepper = ts,
 
@@ -423,7 +421,7 @@ class SimST(IBVModel):
 
                        RESETMAX = 0,
                        debug = False,
-                       tline = TLine(min = 0.0, step = self.tstep, max = 0.1)) #1.0))
+                       tline = TLine(min = 0.0, step = 0.1, max = 1.0))
 
         return tloop
 
