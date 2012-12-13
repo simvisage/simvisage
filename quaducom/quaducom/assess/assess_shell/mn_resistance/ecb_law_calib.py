@@ -95,13 +95,8 @@ class ECBLCalib(HasStrictTraits):
 
         self.cs.set(eps_lo = eps_lo, eps_up = eps_up)
 
-        print 'eps_up', eps_up
-        print 'eps_lo', eps_lo
-
         eps_tex_u = self.cs.convert_eps_lo_2_tex_u(u[0])
         self.cs.ecb_law.set_cparams(eps_tex_u, u[1])
-
-        print 'u', eps_tex_u, u[1] / eps_tex_u
 
         N_internal = self.cs.N
         M_internal = self.cs.M
@@ -109,7 +104,6 @@ class ECBLCalib(HasStrictTraits):
         d_N = N_internal - self.Nu
         d_M = M_internal - self.Mu
 
-        print 'R', d_M, d_N
         return np.array([ d_N, d_M ], dtype = float)
 
     # solution vector returned by 'fit_response'

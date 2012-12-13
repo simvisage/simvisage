@@ -30,8 +30,12 @@ class ECBLLinear(ECBLBase):
 
     eps_tex_u = Float(0.01, enter_set = True, auto_set = False, input = True)
     E_tex = Float(80000, enter_set = True, auto_set = False, input = True)
-    sig_tex_u = Float(enter_set = True, auto_set = False, input = True)
     u0 = List([ 0.01, 80000. ], enter_set = True, auto_set = False)
+
+    sig_tex_u = Property(depends_on = '+input')
+    @cached_property
+    def _get_sig_tex_u(self):
+        return self.E_tex * self.eps_tex_u
 
     cnames = ['eps_tex_u', 'E_tex']
 

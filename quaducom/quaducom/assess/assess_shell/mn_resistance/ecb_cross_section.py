@@ -28,7 +28,7 @@ from constitutive_law import \
     ConstitutiveLawModelView
 
 from cc_law import \
-    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic
+    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic, CCLawQuad
 
 import numpy as np
 
@@ -214,7 +214,8 @@ class ECBCrossSection(HasStrictTraits):
     #===========================================================================
     cc_law_type = Trait('constant', dict(constant = CCLawBlock,
                                          linear = CCLawLinear,
-                                         quadratic = CCLawQuadratic),
+                                         quadratic = CCLawQuadratic,
+                                         quad = CCLawQuad),
                         cc_input = True)
 
     cc_law = Property(Instance(CCLawBase), depends_on = '+cc_input')

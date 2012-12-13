@@ -124,8 +124,6 @@ class ECBLCalibHist(HasStrictTraits):
         for k, (state, eps_c) in enumerate(zip(self.cs_states, self.eps_c_arr)):
             state.eps_up = eps_c
             eps_lo = state.convert_eps_tex_u_2_lo(eps_arr[k + 1])
-            print 'eps_up', eps_c
-            print 'eps_lo', eps_lo
             state.eps_lo = eps_lo
 
         #self.cs_geo.ecb_law.set_cparams(eps_tex_u, c_params)
@@ -321,10 +319,10 @@ if __name__ == '__main__':
     eps_c_M_vct_fn = np.vectorize(eps_c_M_fn.get_value)
     M_max = M[-1]
     eps_c_max = np.min(eps_c)
-    n_states = 1
+    n_states = 4
 
     #M_arr = np.linspace(0, M_max, n_states + 1)[1:]
-    cf = np.linspace(1.0, 1.0, n_states)
+    cf = np.linspace(0.8, 1.0, n_states)
     print 'cf', cf
     M_arr = cf * M_max
     eps_c_arr = eps_c_M_vct_fn(M_arr)
@@ -346,7 +344,7 @@ if __name__ == '__main__':
                    n_rovings = 11,
 
                    cc_law_params = dict(bilinear = dict(eps_c_u = -eps_c_max,
-                                                        f_ck = 88.0,
+                                                        f_ck = 75.7,
                                                         E_c = 29e+3)
                                         ),
 

@@ -28,7 +28,7 @@ from constitutive_law import \
     ConstitutiveLawModelView
 
 from cc_law import \
-    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic, CCLawBilinear
+    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic, CCLawBilinear, CCLawQuad
 
 import numpy as np
 
@@ -110,7 +110,8 @@ class ECBCrossSectionGeo(HasStrictTraits):
     cc_law_type = Trait('constant', dict(constant = CCLawBlock,
                                          linear = CCLawLinear,
                                          bilinear = CCLawBilinear,
-                                         quadratic = CCLawQuadratic),
+                                         quadratic = CCLawQuadratic,
+                                         quad = CCLawQuad),
                         cc_input = True)
 
     cc_law_params = Dict
