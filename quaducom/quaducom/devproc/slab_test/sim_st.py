@@ -137,8 +137,12 @@ class SimST(IBVModel):
     age = Int(28, auto_set = False, enter_set = True, input = True)
 
     # composite E-modulus 
-    #
-    E_c = Float(28e5, auto_set = False, enter_set = True, input = True)
+    # 28 GPa = 28000 [MPa] 
+    E_c = Float(28e3, auto_set = False, enter_set = True, input = True)
+
+    # composite E-modulus 
+    # 210 GPa = 210000 [MPa] 
+    E_s = Float(210e3, auto_set = False, enter_set = True, input = True)
 
     # Poisson's ratio 
     #
@@ -177,7 +181,14 @@ class SimST(IBVModel):
         E_elast = sig / max_eps
         print 'effective elastomer E_modulus', E_elast
         return MATS3DElastic(E = E_elast,
-                              nu = 0.4)
+                              nu = 0.2)
+
+    supprt_mats = Property(Instance(MATS3DElastic),
+                                   depends_on = 'input_change')
+    @cached_property
+    def _get_supprt_mats(self):
+        return MATS3DElastic(E = self.E_s,
+                              nu = 0.2)
 
 
     #-----------------
@@ -199,6 +210,14 @@ class SimST(IBVModel):
     @cached_property
     def _get_elstmr_fets(self):
         return FETS2D58H20U(mats_eval = self.elstmr_mats)
+
+    # use quadratic serendipity elements
+    #
+    supprt_fets = Property(Instance(FETSEval),
+                             depends_on = 'input_change')
+    @cached_property
+    def _get_supprt_fets(self):
+        return FETS2D58H20U(mats_eval = self.supprt_mats)
 
     def peval(self):
         '''
@@ -256,6 +275,25 @@ class SimST(IBVModel):
                       shape = (1, 1, 1),
                       fets_eval = self.elstmr_fets)
 
+    supprt_fe_level = Property(depends_on = '+ps_levels, +input')
+    def _get_supprt_fe_level(self):
+        return  FERefinementGrid(name = 'elastomer patch',
+                                 fets_eval = self.supprt_fets,
+                                 domain = self.fe_domain)
+
+    supprt_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_supprt_fe_grid(self):
+        # coordinates adapt to discretization
+        supprt_min = 0
+        supprt_max = self.elem_length_xy
+        z_max = self.thickness * 0.1
+        return FEGrid(coord_min = (supprt_min, supprt_min, -z_max),
+                      coord_max = (supprt_max, supprt_max, 0),
+                      level = self.supprt_fe_level,
+                      shape = (1, 1, 1),
+                      fets_eval = self.supprt_fets)
+
     tloop = Property(depends_on = 'input_change')
     @cached_property
     def _get_tloop(self):
@@ -263,6 +301,7 @@ class SimST(IBVModel):
         #fets_eval.mats_eval.nu = self.nu
         elstmr = self.elstmr_fe_grid
         specmn = self.specmn_fe_grid
+        supprt = self.supprt_fe_grid
 
         self.fe_domain.n_dofs
 
@@ -286,7 +325,19 @@ class SimST(IBVModel):
         #--------------------------------------------------------------
         bc_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = specmn[-1, :, :, -1, :, :])
         bc_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = specmn[:, -1, :, :, -1, :])
-        bc_support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
+
+        bc_supprt_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = supprt[0, :, :, 0, :, :])
+        bc_supprt_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = supprt[:, 0, :, :, 0, :])
+        link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
+                             slice = specmn[0, 0, 0, :, :, 0],
+                             link_slice = supprt[0, 0, -1, :, :, -1],
+                             link_dims = [2],
+                             link_coeffs = [1.])
+
+        #--------------------------------------------------------------
+        # boundary conditions for the symmetry and the single support
+        #--------------------------------------------------------------
+        support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, 0, 0, 0])
 
         #--------------------------------------------------------------
         # loading
@@ -337,17 +388,26 @@ class SimST(IBVModel):
         # force-displacement-diagram 
         # 
         center_dof = self.center_top_dofs[0, 0, 2]
+        # center_top_line_dofs
+        #
+        ctl_dofs = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
+
+        # force-displacement-diagram 
+        # 
         self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - reaction 2',
                                        var_x = 'U_k'  , idx_x = center_dof,
-                                       var_y = 'F_int', idx_y = 2,
+                                       # elastomer load
+                                       var_y = 'F_int', idx_y_arr = ctl_dofs,
                                        record_on = 'update',
                                        transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       transform_y = '4 * 1000 * y')
+                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
+                                       #
+                                       transform_y = '4000. * y')
 
         center_edge_dof = self.center_edge_top_dofs[0, 0, 2]
         self.f_w_diagram_center_edge = RTraceGraph(name = 'displacement (center/edge) - reaction 2',
                                                    var_x = 'U_k'  , idx_x = center_edge_dof,
-                                                   var_y = 'F_int', idx_y = 2,
+                                                   var_y = 'F_int', idx_y_arr = ctl_dofs,
                                                    record_on = 'update',
                                                    transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
                                                    transform_y = '4 * 1000 * y')
@@ -355,15 +415,17 @@ class SimST(IBVModel):
         edge_dof = self.edge_top_dofs[0, 0, 2]
         self.f_w_diagram_edge = RTraceGraph(name = 'displacement (edge) - reaction 2',
                                             var_x = 'U_k'  , idx_x = edge_dof,
-                                            var_y = 'F_int', idx_y = 2,
+                                            var_y = 'F_int', idx_y_arr = ctl_dofs,
                                             record_on = 'update',
                                             transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
                                             transform_y = '4 * 1000 * y')
 
         ts = TS(
                 sdomain = self.fe_domain,
-                bcond_list = [bc_symplane_yz, bc_symplane_xz, bc_support_000,
+                bcond_list = [bc_symplane_yz, bc_symplane_xz,
                               bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp,
+                              link_sp_sp_z, bc_supprt_symplane_yz, bc_supprt_symplane_xz,
+                              support_000,
                                # var 1:
                                bc_el_w,
 #                               bc_center_w,
@@ -421,7 +483,7 @@ class SimST(IBVModel):
 
                        RESETMAX = 0,
                        debug = False,
-                       tline = TLine(min = 0.0, step = 0.1, max = 1.0))
+                       tline = TLine(min = 0.0, step = self.tstep, max = 1.0))
 
         return tloop
 
