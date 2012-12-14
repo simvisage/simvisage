@@ -96,11 +96,11 @@ class SimST( IBVModel ):
     #-----------------
     #
     # discretization in x,y-direction:
-    shape_xy = Int( 10, input = True,
+    shape_xy = Int( 5, input = True,
                       ps_levels = ( 8, 12, 3 ) )
 
     # discretization in z-direction:
-    shape_z = Int( 4, input = True,
+    shape_z = Int( 2, input = True,
                       ps_levels = ( 2, 3, 3 ) )
 
     #-----------------
@@ -433,8 +433,15 @@ if __name__ == '__main__':
 
     # s_tex,z = 4.62 mm corresponds to: n_tex = 12; h = 60 mm
     #
-    sim_model = SimSTDB( ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                         #calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+    sim_model = SimSTDB( 
+                       
+#                         ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
+#                         calibration_test = 'TT11-10a-average',
+#                         #calibration_test = 'TT11-10a-V2',
+#                         age = 28 )
+
+                         ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+#                         #calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
                          calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
                          age = 27 )
 
@@ -450,7 +457,7 @@ if __name__ == '__main__':
 #    mfn.mpl_plot(p)
 #    sim_model.phi_fn.mfn.mpl_plot(p)
     phi_fn_vect = np.vectorize( sim_model.phi_fn.get_value )
-    xdata = np.linspace(0., eps_last*5., 50)
+    xdata = np.linspace(0., eps_last*1.1, 400)
     ydata = phi_fn_vect( xdata )
     p.plot(xdata, ydata)
     p.show()
