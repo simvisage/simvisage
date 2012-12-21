@@ -54,6 +54,8 @@ from numpy import \
 
 import numpy as np
 
+import scipy as sp
+
 from time import time
 from os.path import join
 
@@ -99,7 +101,29 @@ class SimBS(IBVModel):
     shape_xy = Int(10, input = True,
                       ps_levels = (8, 12, 3))
 
-    # discretization in z-direction:
+    # discretization in y-direction (length - direction):
+    #
+#    shape_L1 = Int(10, input = True,
+#                      ps_levels = (8, 12, 3))
+#    shape_L2 = Int(10, input = True,
+#                      ps_levels = (8, 12, 3))
+#
+#    shape_l = Property(Float, depends_on = 'shape_L1, shape_L2')
+#    @cached_property
+#    def _get_shape_l(self):
+#        return self.shape_L1 + self.shape_L2
+
+    shape_l = Int(20, input = True)
+    
+    
+    # discretization in arc-direction 
+    # (use aquidistant spacing along the arc):
+    #
+    shape_s = Int(10, input = True,
+                      ps_levels = (8, 12, 3))
+
+
+    # discretization in z-direction (thickness direction):
     shape_z = Int(4, input = True,
                       ps_levels = (2, 3, 3))
 
@@ -107,11 +131,20 @@ class SimBS(IBVModel):
     # geometry:
     #-----------------
     #
-    # edge length of the quadratic plate (entire length without symmetry)
-    # length = 1.25m - 2*0.05m supports
-    length = Float(1.15, input = True)
 
-    thickness = Float(0.06, input = True)
+    # length_x 
+    #
+    length = Float(2.20, input = True)
+
+    # length_y 
+    # (= half arc width due to symmetry) 
+    width = Float(1.07, input = True)
+    
+    # length_z 
+    #
+    arc_height = Float(0.50, input = True)
+
+    thickness = Float(0.02, input = True)
 
     elem_length_xy = Property(Float, depends_on = 'shape_xy, length')
     @cached_property
@@ -247,11 +280,69 @@ class SimBS(IBVModel):
     specmn_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
     def _get_specmn_fe_grid(self):
-        # only a quarter of the plate is simulated due to symmetry:
-        # only a quarter of the plate is simulated due to symmetry:
+        # only a quarter of the barrel_shell is simulated due to symmetry:
+
+        def geo_barrel_shell(pts):
+            print '*** geo_barrel_shell called ***' 
+            
+            x_, y_, z_ = pts.T
+            print 'x_', x_.shape
+ 
+            L = 2.2
+            b = 1.07
+            f = 0.5
+            t = 0.1
+
+#            L = self.lenght
+            print 'L', L
+            # NOTE: b = half of the arc width (due to symmetry)
+#            b = self.width
+            print 'b', b
+#            f = self.arc_height
+            print 'f', f
+
+            # arc radius:
+            # 
+            R = f / 2. + b**2 / (2.*f)
+            print 'R', R
+            
+            # arc angle [rad]
+            x = R - f
+            beta = sp.arctan(b/(x))
+            print 'beta_rad', beta
+            
+            # arc length (one half due to symmetry)
+#            s = R * beta
+#            s_elem_lenght = s / self.shape_s
+            
+#            t = self.thickness
+
+            y = y_ * L
+            x = (R - z_ * t) * np.sin( x_ * beta )
+            z = (R - z_ * t) * np.cos( x_ * beta )
+
+
+            #----------------------
+            # @todo: this is not yet working properly
+            # rounded length
+            Lr = 0.50
+            # straight length
+            L1 = 1.7
+
+            yr = L1 + Lr / f * z          
+            
+            idx_r = np.where( y_ > L1/L )[0]
+            
+            y[ idx_r ] -= (y_[ idx_r ]-L1/L) / (1-L1/L) * yr[ idx_r ]
+            #----------------------
+
+            pts = c_[x, y, z]
+            return pts
+
         fe_grid = FEGrid(coord_max = (1, 1, 1),
-                         shape = (self.shape_xy, self.shape_xy, self.shape_z),
+                         shape = (self.shape_s, self.shape_l, self.shape_z),
                          level = self.specmn_fe_level,
+                         geo_transform = geo_barrel_shell,
                          fets_eval = self.specmn_fets)
 
         return fe_grid
@@ -289,25 +380,11 @@ class SimBS(IBVModel):
         supprt_max = self.elem_length_xy
         z_max = self.thickness * 0.1
 
-        def tappered_support(pts):
-            x_, y_, z_ = pts.T
-            dx = np.max(x_) - np.min(y_)
-            dy = np.max(y_) - np.min(y_)
-            dz = np.max(z_) - np.min(z_)
-
-            dz2 = dz / 2 / 2 / 2
-            dz4 = dz / 6 / 2 / 2
-
-            dz_red = (dz2 * x_ / dx + dz2 * y_ / dy - dz4 * x_ / dx * y_ / dy)
-
-            pts = c_[x_, y_, z_ + dz_red]
-            return pts
-
         return FEGrid(coord_min = (0, 0, 0),
                       coord_max = (1, 1, 1),
                       level = self.supprt_fe_level,
                       shape = (1, 1, 1),
-                      #geo_transform = tappered_support,
+#                      geo_transform = tappered_supprt,
                       fets_eval = self.supprt_fets)
 
     tloop = Property(depends_on = 'input_change')
