@@ -112,7 +112,7 @@ class ExpTTDB(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    width = Float(0.140, unit = 'm', input = True, table_field = True,
+    width = Float(0.100, unit = 'm', input = True, table_field = True,
                            auto_set = False, enter_set = True)
     gauge_length = Float(0.550, unit = 'm', input = True, table_field = True,
                            auto_set = False, enter_set = True)
@@ -133,21 +133,22 @@ class ExpTTDB(ExType):
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
-        fabric_layout_key = 'MAG-07-03'
+#        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
 #        fabric_layout_key2 = 'C-Grid-C50'
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
-#        fabric_layout_key = '2D-05-11'
-        concrete_mixture_key = 'PZ-0708-1'
+        fabric_layout_key = '2D-05-11'
+#        concrete_mixture_key = 'PZ-0708-1'
+        concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'FIL-10-09'
-#        orientation_fn_key = 'all0'
+        orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
-        orientation_fn_key = '90_0'
-        n_layers = 3
-        thickness = 0.01
+#        orientation_fn_key = '90_0'
+        n_layers = 8
+        thickness = 0.02
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection (

@@ -243,6 +243,9 @@ class PolarDiscr(HasTraits):
         integ_phi_fn_vectorized = frompyfunc(self.phi_fn.get_integ, n_arr, 1)
         return self.E * integ_phi_fn_vectorized(e_max_arr, *carr_list)
 
+
+
+
     polar_fn_group = Group(
                         Group(
                            Item('n_mp@', width = 200),

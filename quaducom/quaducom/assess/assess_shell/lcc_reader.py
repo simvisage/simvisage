@@ -100,6 +100,10 @@ class LCCReaderRFEM(LCCReader):
                  'nx' : nx, 'ny' : ny, 'nxy' : nxy,
                }
 
+    # stress resultants to be multiplied within the LCC combinations
+    #
+    sr_columns = ['mx', 'my', 'mxy', 'nx', 'ny', 'nxy']
+
     def read_geo_data(self, file_name):
         '''to read the stb - thickness save the xls - worksheet
         to a csv - file using ';' as filed delimiter and ' ' ( blank )
@@ -147,6 +151,31 @@ class LCCReaderRFEM(LCCReader):
         return  {'elem_no':elem_no,
                  'X':X, 'Y':Y, 'Z':Z,
                  'thickness':thickness }
+
+    def plot_col(self, mlab, plot_col, geo_data, state_data, warp_factor = 1.):
+        '''
+        plot the chosen plot_col array at the center of gravity of the elements;
+        method is used by 'ls_table' to plot the selected plot variable
+        NOTE: if RFEM-Reader is used no values for the deformed state are read in yet
+        '''
+        gd = geo_data
+
+        # element coordinates of the undeformed shape 
+        # (2d column arrays)
+        #
+        X = gd['X'].flatten()
+        Y = gd['Y'].flatten()
+        # switch orientation of the z-axis
+        Z = (-1.0) * gd['Z'].flatten()
+
+        # plot state data in the deformed geometry  
+        #
+        mlab.points3d(X, Y, Z, plot_col,
+                           colormap = "YlOrBr",
+                           mode = "cube",
+                           scale_mode = 'none',
+                           scale_factor = 0.15)
+
 
     def check_for_consistency(self, lc_list, geo_data_dict):
 
@@ -218,16 +247,58 @@ class LCCReaderInfoCAD(LCCReader):
         uy = input_arr[:, [uy_idx]]
         uz = input_arr[:, [uz_idx]]
 
-        # deformations [m] (arranged as array with 3 columns)
+        # nodal displacements [m] (arranged as array with 3 columns)
         #
         node_U = input_arr[:, [ux_idx, uy_idx, uz_idx]]
+
+        #-----------
+        # get the element displacement at the center of gravity
+        # the calculation based on the nodal displacement needs the information stored in 'geo_data'
+        #-----------
+
+        # the path to the 'geo_data' files is specified specifically in the definition of 'read_geo_data'
+        gd = self.read_geo_data( f_name )
+
+        # get mapping from 'geo_data'
+        #
+        t_elem_node_map = gd['t_elem_node_map']
+        q_elem_node_map = gd['q_elem_node_map']
+        t_idx = gd['t_idx']
+        q_idx = gd['q_idx']
+        
+        # average element displacements (unordered)
+        #
+        t_elem_node_U = node_U[ t_elem_node_map ]
+        q_elem_node_U = node_U[ q_elem_node_map ]
+        t_elem_U = np.average(t_elem_node_U, axis = 1)
+        q_elem_U = np.average(q_elem_node_U, axis = 1)
+    
+        # average element displacements (ordered in ascending element number)
+        #
+        elem_U = np.zeros((len(t_elem_U)+len(q_elem_U), 3), dtype = 'float')
+        elem_U[t_idx, :] = t_elem_U
+        elem_U[q_idx, :] = q_elem_U
+    
+        # average element displacements stored in 1d column arrays
+        #
+        ux_elem = elem_U[:,0,None]
+        uy_elem = elem_U[:,1,None]
+        uz_elem = elem_U[:,2,None]
 
         return { 'elem_no' : elem_no,
                  'mx' : mx, 'my' : my, 'mxy' : mxy,
                  'nx' : nx, 'ny' : ny, 'nxy' : nxy,
                  'ux' : ux, 'uy' : uy, 'uz' : uz,
-                 'node_U' : node_U
+                 'node_U' : node_U,
+                 #-------------------
+                 'ux_elem' : ux_elem,
+                 'uy_elem' : uy_elem,
+                 'uz_elem' : uz_elem
                }
+
+    # stress resultants to be multiplied within the LCC combinations
+    #
+    sr_columns = ['mx', 'my', 'mxy', 'nx', 'ny', 'nxy', 'ux_elem', 'uy_elem', 'uz_elem']
 
     def read_geo_data(self, file):
         '''to read the thickness file exported from InfoCAD
@@ -350,7 +421,6 @@ class LCCReaderInfoCAD(LCCReader):
         '''
         points = geo_data['node_X'] 
         node_U = state_data['node_U']
-        print 'node_U', node_U
 
         node_U_warped = node_U * warp_factor 
         points += node_U_warped
@@ -372,8 +442,6 @@ class LCCReaderInfoCAD(LCCReader):
         '''
         gd = geo_data
         sd = state_data
-        print 'sd', sd.keys()
-        print 'warp_factor', warp_factor
 
         # plot the deformed geometry (as mesh)
         #
@@ -389,7 +457,6 @@ class LCCReaderInfoCAD(LCCReader):
         # nodal displacement 
         #
         node_U = sd['node_U']
-        print 'node_U', node_U
 
         # average element displacement (unordered)
         #
@@ -429,7 +496,49 @@ class LCCReaderInfoCAD(LCCReader):
         mlab.points3d(X_def, Y_def, Z_def, sd[sd_key],
                       mode = "cube")
 
+    def plot_col(self, mlab, plot_col, geo_data,  
+                 state_data = {'ux_elem' : array([[0.], [0.], [0.]]),
+                               'uy_elem' : array([[0.], [0.], [0.]]), 
+                               'uz_elem' : array([[0.], [0.], [0.]])}, 
+                 warp_factor = 1.0):
+        '''
+        plot the chosen plot_col array at the center of gravity of the elements;
+        method is used by 'ls_table' to plot the selected plot variable
+        ('warp_factor' can be used to warp the deformation state in the plot).
+        '''
+        gd = geo_data
+        sd = state_data
 
+        # element coordinates of the undeformed shape 
+        # (2d column arrays)
+        #
+        X = gd['X']
+        Y = gd['Y']
+        Z = gd['Z']
+    
+        # average element deformations 
+        #
+        ux_elem = sd['ux_elem']
+        uy_elem = sd['uy_elem']
+        uz_elem = sd['uz_elem']
+    
+        # element coordinates of the deformed state 
+        # considering the specified warp factor 
+        #
+        X_def = X + ux_elem * warp_factor
+        Y_def = Y + uy_elem * warp_factor
+        Z_def = Z + uz_elem * warp_factor
+        
+        X_def = X_def.flatten()
+        Y_def = Y_def.flatten()
+        Z_def = Z_def.flatten()
+
+        # plot state data in the deformed geometry  
+        #
+        mlab.points3d(X_def, Y_def, Z_def, plot_col,
+                      mode = "cube",
+                      scale_mode = 'none',
+                      scale_factor = 0.10)
     
     def check_for_consistency(self, lc_list, geo_data_dict):
         for lc in lc_list:
@@ -452,6 +561,69 @@ class LCCReaderInfoCAD(LCCReader):
 
         print '*** input files checked for consistency (OK) ***'
         return True
+
+class LCCReaderInfoCADRxyz(LCCReader):
+
+    def read_state_data(self, f_name):
+
+        file_name = os.path.join(self.data_dir, 'state_data',\
+                                 'Auflagerreaktionen',\
+                                 f_name)
+
+        print '*** read state data from file: %s ***' % (file_name)
+
+        input_arr = np.loadtxt(file_name)
+
+        node_no_idx, Rx_idx, Ry_idx, Rz_idx, Mx_idx, My_idx, Mz_idx = range(0, 7)
+
+        # node number:
+        #
+        node_no = input_arr[:, [node_no_idx]]
+
+        # forces [kN]:
+        #
+        Rx = input_arr[:, [Rx_idx]]
+        Ry = input_arr[:, [Ry_idx]]
+        Rz = input_arr[:, [Rz_idx]]
+
+        # moments [kNm]
+        #
+        Mx = input_arr[:, [Mx_idx]]
+        My = input_arr[:, [My_idx]]
+        Mz = input_arr[:, [Mz_idx]]
+
+        return { 'node_no' : node_no,
+                 'Rx' : Rx, 'Ry' : Ry, 'Rz' : Rz,
+                 'Mx' : Mx, 'My' : My, 'Mz' : Mz }
+
+    def read_geo_data(self, f_name):
+        '''read the thickness file exported from InfoCAD
+        using 'tab' as filed delimiter.
+        '''
+        sd = self.read_state_data( f_name )
+        node_no = sd['node_no']
+        
+        geo_dir = os.path.join(self.data_dir, 'geo_data')
+        node_file = os.path.join(geo_dir, 'Knotenkoordinaten.txt')
+        print '*** read support node file: %s ***' % (node_file)
+        node_arr = np.loadtxt(node_file)
+
+        idx_spprt_nodes = [ np.where( node_arr[:,0] == node_no[i] )[0] for i in range( node_no.shape[0] ) ]
+        print 'idx_spprt_nodes', idx_spprt_nodes
+        X_spprt = node_arr[ idx_spprt_nodes, 1 ]
+        Y_spprt = node_arr[ idx_spprt_nodes, 2 ]
+        Z_spprt = node_arr[ idx_spprt_nodes, 3 ]
+        
+        sd['X_spprt'] = X_spprt
+        sd['Y_spprt'] = Y_spprt
+        sd['Z_spprt'] = Z_spprt
+        return sd
+
+    
+    def check_for_consistency(self, lc_list, geo_data_dict):
+        pass
+
+
 
 if __name__ == '__main__':
 
@@ -482,7 +654,7 @@ if __name__ == '__main__':
 #                            '3-4cm'
                             )
 
-    r = LCCReaderInfoCAD(data_dir = data_dir)
+    r = LCCReaderInfoCADRxyz(data_dir = data_dir)
 
     mlab.figure(figure = "SFB532Demo",
                 bgcolor = (1.0, 1.0, 1.0),
@@ -490,7 +662,7 @@ if __name__ == '__main__':
 
     # get 'geo_data' and 'state_data'
     #
-    gd = r.read_geo_data('')
+#    gd = r.read_geo_data('')
     sd = r.read_state_data('LC1.txt')
 
     # plot the undeformed geometry (as mesh)
@@ -506,70 +678,71 @@ if __name__ == '__main__':
 #    r.plot_sd(mlab, gd, 'mx', state_data = sd, warp_factor = 1000.)
 
     
-    # get mapping from 'geo_data'
-    #
-    t_elem_node_map = gd['t_elem_node_map']
-    q_elem_node_map = gd['q_elem_node_map']
-    t_idx = gd['t_idx']
-    q_idx = gd['q_idx']
-#    print 't_elem_node_map',t_elem_node_map.shape
-#    print 'q_elem_node_map',q_elem_node_map.shape
+#    # get mapping from 'geo_data'
+#    #
+#    t_elem_node_map = gd['t_elem_node_map']
+#    q_elem_node_map = gd['q_elem_node_map']
+#    t_idx = gd['t_idx']
+#    q_idx = gd['q_idx']
+##    print 't_elem_node_map',t_elem_node_map.shape
+##    print 'q_elem_node_map',q_elem_node_map.shape
+#
+#    
+#    # nodal displacement 
+#    #
+#    node_U = sd['node_U']
+#    
+#    t_elem_node_U = node_U[ t_elem_node_map ]
+#    q_elem_node_U = node_U[ q_elem_node_map ]
+#    
+#    t_elem_U = np.average(t_elem_node_U, axis = 1)
+#    q_elem_U = np.average(q_elem_node_U, axis = 1)
+#
+#    # element displacement (ordered)
+#    #
+#    elem_U = np.zeros((len(t_elem_U)+len(q_elem_U), 3), dtype = 'float')
+#    
+#    elem_U[t_idx, :] = t_elem_U
+#    elem_U[q_idx, :] = q_elem_U
+#
+#    # plot the deformed geometry (as mesh)
+#    #
+#    warp_factor = 2000.
+#    r.plot_deformed_mesh(mlab, gd, sd, warp_factor = warp_factor)
+#
+#    node_X = gd['node_X'] 
+#
+#    # element coordinates of the undeformed shape 
+#    # (2d column arrays)
+#    #
+#    X = gd['X']
+#    Y = gd['Y']
+#    Z = gd['Z']
+#
+#    # element coordinates of the deformed shape  
+#    # considering 'warp_factor' 
+#    #
+#    ux_elem = elem_U[:,0,None]
+#    uy_elem = elem_U[:,1,None]
+#    uz_elem = elem_U[:,2,None]
+#
+#    # deformed element coordinates with 
+#    # increase deformation by warp factor 
+#    #
+#    X_def = X + ux_elem * warp_factor
+#    Y_def = Y + uy_elem * warp_factor
+#    Z_def = Z + uz_elem * warp_factor
+#    
+#    # plot state data in the deformed geometry  
+#    #
+#    points_pipeline = mlab.points3d(X_def, Y_def, Z_def, sd['mx'],
+#                                    mode = "cube",
+#                                    scale_factor = 0.2,
+#                                    scale_mode = 'none')
+##    src = points_pipeline.mlab_source
+##    warp = src.vectors = np.hstack([ux_elem, Y_def, 2.0 + 2*Z + uz_elem])
 
-    
-    # nodal displacement 
-    #
-    node_U = sd['node_U']
-    
-    t_elem_node_U = node_U[ t_elem_node_map ]
-    q_elem_node_U = node_U[ q_elem_node_map ]
-    
-    t_elem_U = np.average(t_elem_node_U, axis = 1)
-    q_elem_U = np.average(q_elem_node_U, axis = 1)
-
-    # element displacement (ordered)
-    #
-    elem_U = np.zeros((len(t_elem_U)+len(q_elem_U), 3), dtype = 'float')
-    
-    elem_U[t_idx, :] = t_elem_U
-    elem_U[q_idx, :] = q_elem_U
-
-    # plot the deformed geometry (as mesh)
-    #
-    warp_factor = 2000.
-    r.plot_deformed_mesh(mlab, gd, sd, warp_factor = warp_factor)
-
-    node_X = gd['node_X'] 
-
-    # element coordinates of the undeformed shape 
-    # (2d column arrays)
-    #
-    X = gd['X']
-    Y = gd['Y']
-    Z = gd['Z']
-
-    # element coordinates of the deformed shape  
-    # considering 'warp_factor' 
-    #
-    ux_elem = elem_U[:,0,None]
-    uy_elem = elem_U[:,1,None]
-    uz_elem = elem_U[:,2,None]
-
-    # deformed element coordinates with 
-    # increase deformation by warp factor 
-    #
-    X_def = X + ux_elem * warp_factor
-    Y_def = Y + uy_elem * warp_factor
-    Z_def = Z + uz_elem * warp_factor
-    
-    # plot state data in the deformed geometry  
-    #
-    points_pipeline = mlab.points3d(X_def, Y_def, Z_def, sd['mx'],
-                                    mode = "cube",
-                                    scale_factor = 0.2,
-                                    scale_mode = 'none')
-    src = points_pipeline.mlab_source
-    warp = src.vectors = np.hstack([ux_elem, Y_def, 2.0 + 2*Z + uz_elem])
-    mlab.show()
+#    mlab.show()
 
     #-------
     #@todo: use mayavi functionality using pipeline!

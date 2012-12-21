@@ -62,7 +62,7 @@ class ECBLCalibState(HasStrictTraits):
     notify_change = Callable(None)
 
     modified = Event
-    @on_trait_change('Mu, Nu')
+    @on_trait_change('+input')
     def set_modified(self):
         self.modified = True
         if self.notify_change != None:
@@ -72,11 +72,9 @@ class ECBLCalibState(HasStrictTraits):
     @cached_property
     def _get_u0(self):
         u0 = self.cs_state.ecb_law.u0
-        eps_up = self.cs_geo.cc_law.eps_c_u
-        self.cs_state.set(eps_up = -eps_up)
+        eps_up = -self.cs_geo.cc_law.eps_c_u
+        self.cs_state.set(eps_up = eps_up)
         eps_lo = self.cs_state.convert_eps_tex_u_2_lo(u0[0])
-        print 'eps_up', self.cs_state.eps_up
-        print 'eps_lo', eps_lo
         return np.array([eps_lo, u0[1] ], dtype = 'float')
 
     # iteration counter
@@ -94,14 +92,10 @@ class ECBLCalibState(HasStrictTraits):
         #
         eps_up = -self.cs_geo.cc_law.eps_c_u
         eps_lo = u[0]
-        self.cs_state.set(eps_lo = u[0], eps_up = -self.cs_geo.cc_law.eps_c_u)
+        self.cs_state.set(eps_lo = eps_lo, eps_up = eps_up)
 
         eps_tex_u = self.cs_state.convert_eps_lo_2_tex_u(u[0])
 
-        print 'eps_up', eps_up
-        print 'eps_lo', eps_lo
-
-        print 'u', eps_tex_u, u[1] / eps_tex_u
         self.cs_geo.ecb_law.set_cparams(eps_tex_u, u[1])
 
         N_internal = self.cs_state.N
@@ -110,7 +104,6 @@ class ECBLCalibState(HasStrictTraits):
         d_N = N_internal - self.Nu
         d_M = M_internal - self.Mu
 
-        print 'R', d_M, d_N
         return np.array([ d_M, d_N ], dtype = float)
 
     # solution vector returned by 'fit_response'
@@ -151,6 +144,55 @@ class ECBLCalibState(HasStrictTraits):
                 buttons = ['OK', 'Cancel']
                 )
 
+class ECBLCalibStateVoss(ECBLCalibState):
+
+    def _get_u0(self):
+        u0 = self.cs_state.ecb_law.u0
+        eps_up = -self.cs_geo.cc_law.eps_c_u
+        self.cs_state.set(eps_up = eps_up)
+        eps_lo = self.cs_state.convert_eps_tex_u_2_lo(u0[0])
+        return np.array([eps_lo, eps_up ], dtype = 'float')
+
+    E_tex = Float(100000.0, enter_set = True, auto_set = False, input = True)
+    # iteration counter
+    #
+    def get_lack_of_fit(self, u):
+        '''Return the difference between 'N_external' and 'N_internal' as well as 'M_external' and 'M_internal'
+        N_c (=compressive force of the compressive zone of the concrete)
+        N_t (=total tensile force of the reinforcement layers)
+        '''
+
+        print '--------------------iteration', self.n, '------------------------'
+        self.n += 1
+        # set iteration counter
+        #
+        eps_up = u[1]
+        eps_lo = u[0]
+
+        self.cs_state.set(eps_lo = eps_lo, eps_up = eps_up)
+
+        eps_tex_u = self.cs_state.convert_eps_lo_2_tex_u(eps_lo)
+
+        self.cs_geo.ecb_law.set_cparams(eps_tex_u, self.E_tex)
+
+        N_internal = self.cs_state.N
+        M_internal = self.cs_state.M
+
+        d_N = N_internal - self.Nu
+        d_M = M_internal - self.Mu
+
+        return np.array([ d_M, d_N ], dtype = float)
+
+    calibrated_ecb_law = Property(depends_on = 'modified')
+    @cached_property
+    def _get_calibrated_ecb_law(self):
+        print 'NEW CALIBRATION'
+        self.cs_geo.ecb_law.set_cparams(*self.u_sol)
+        eps_lo, eps_up = self.u_sol
+        eps_tex_u = self.cs_state.convert_eps_lo_2_tex_u(eps_lo)
+        self.cs_geo.ecb_law.set_cparams(eps_tex_u, self.E_tex)
+        return self.cs_geo.ecb_law
+
 class ECBLCalibStateModelView(ModelView):
     '''Model in a viewable window.
     '''
@@ -187,7 +229,7 @@ class ECBLCalibStateModelView(ModelView):
         return self.model.calibrated_ecb_law
 
     view = View(HSplit(VGroup(
-                       Item('cs', label = 'Cross section', show_label = False),
+                       Item('cs_state', label = 'Cross section', show_label = False),
                        Item('model@', show_label = False),
                        Item('calibrated_ecb_law@', show_label = False, resizable = True),
                        ),
@@ -230,35 +272,62 @@ if __name__ == '__main__':
                                         quadratic = dict(eps_c_u = 0.0033,
                                                         f_ck = 55.7,
                                                         ),
+                                        quad = dict(eps_c_u = 0.0033,
+                                                        f_ck = 65.7,
+                                                        E_c = 29e+3
+                                                        ),
                                         constant = dict(eps_c_u = 0.0033,
                                                         f_ck = 55.7,
                                                         )
                                         ),
 
-                   thickness = 0.06,
+                   thickness = 0.02,
 
-                   width = 0.2,
+                   width = 0.1,
 
-                   n_layers = 12,
+                   n_layers = 6,
 
-                   n_rovings = 23,
+                   n_rovings = 11,
                    # measured strain at bending test rupture (0-dir)
                    #
 
-                   cc_law_type = 'constant',
-                   ecb_law_type = 'fbm'
+                   cc_law_type = 'quad',
+                   ecb_law_type = 'linear'
                    )
 
-    ec = ECBLCalibState(cs_geo = cs_geo,
+    ec = ECBLCalibStateVoss(cs_geo = cs_geo,
                    # measured value in bending test [kNm]
                    # value per m: M = 5*3.49
                    #
-                   Mu = 3.49,
+                   Mu = 0.32 # 3.49,
                    )
 
-    u_sol = ec.u_sol
-    print 'u_sol', u_sol
-    eps_tex = ec.cs_state.convert_eps_lo_2_tex_u(u_sol[0])
-    print 'sig_max', u_sol[1] * eps_tex
     ecw = ECBLCalibStateModelView(model = ec)
+
+    E_tex_arr = np.linspace(90000, 240000, 6)
+    f_c_arr = np.linspace(55, 85, 6)
+    colors = ['red', 'green', 'blue', 'orange', 'black', 'magenta', 'yellow']
+
+    for f_c, color in zip(f_c_arr, colors):
+        ec.cs_geo.cc_law.f_ck = f_c
+        sig_tex_u_list = []
+        eps_c_list = []
+        for E_tex in E_tex_arr:
+            print 'CALIBRATE FOR E_tex', E_tex
+            ec.E_tex = E_tex
+            ec.n = 0
+            ec.u_sol
+            sig_tex_u = ec.calibrated_ecb_law.sig_arr[-1]
+            eps_c_u = ec.u_sol[1]
+            print 'sig_tex_u', sig_tex_u
+            sig_tex_u_list.append(sig_tex_u)
+            eps_c_list.append(eps_c_u)
+
+        sig_tex_u_arr = np.array(sig_tex_u_list, dtype = 'f')
+        eps_c_arr = np.array(eps_c_list, dtype = 'f')
+        p.plot(E_tex_arr, sig_tex_u_arr, color = color, label = 'f_ck = %g' % f_c)
+
+    p.legend(loc = 3)
+    p.show()
+
     ecw.configure_traits()

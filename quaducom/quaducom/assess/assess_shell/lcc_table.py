@@ -135,8 +135,18 @@ class LC(HasTraits):
             d[k] = self.data_filter(self.lcc_table, arr)
         return d
 
-    sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
-
+    sr_columns = Property(List)
+    def _get_sr_columns(self):
+        '''return the list of the stress resultants to be use within the combinations of LCC.
+        '''
+        # if LCCTableReaderInfoCAD is used: 
+        # use displacement stored in 'state_data' within 'plot_col' method of the reader
+        # sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy', 'ux_elem', 'uy_elem', 'uz_elem'])
+        # if LCCTableReaderRFEM is used: 
+        # no displacement is available yet
+        # sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
+        return self.reader.sr_columns
+    
     sr_arr = Property(Array)
     def _get_sr_arr(self):
         '''return the stress resultants of the loading case
@@ -145,6 +155,20 @@ class LC(HasTraits):
         sd_dict = self.state_data_dict
         return hstack([ sd_dict[ sr_key ] for sr_key in self.sr_columns ])
 
+#    # deformation data
+#    #
+#    u_data_dict = Property(Dict)
+#    @cached_property
+#    def _get_u_data_dict(self):
+#        return self.reader.read_u_data(self.file_name)
+#
+#    u_arr = Property(Array)
+#    def _get_u_arr(self):
+#        '''return the element deformation of the loading case
+#        as stack of all u-column arrays.
+#        '''
+#        u_dict = self.u_data_dict
+#        return hstack([ u_dict[ u_key ] for u_key in u_dict.keys() ])
 
 class LCC(HasTraits):
 
@@ -641,7 +665,10 @@ class LCCTable(HasTraits):
             lcc = LCC(#lcc_table = self,
                        factors = combi_arr[ i_lcc, : ],
                        lcc_id = i_lcc,
-                       ls_table = LSTable(geo_data = self.geo_data_dict,
+                       # changes necessary to destinguish plotting functionallity defined in 'ls_table' 
+                       # e.i. plot deformation when 'LCCReaderInfoCAD' is used 
+                       ls_table = LSTable( reader = self.reader,
+                                           geo_data = self.geo_data_dict,
                                            state_data = state_data_dict,
                                            ls = self.ls)
                        )
@@ -655,16 +682,11 @@ class LCCTable(HasTraits):
         return lcc_list
 
     def plot_geo(self, mlab):
-
         self.reader.plot_mesh(mlab, self.geo_data_dict)
 
     def plot_sr(self, mlab, lc = 0, sr = 0):
         lc = self.lc_arr[lc]
-        print 'lc', lc[:, sr]
-
         gd = self.geo_data_dict
-        print 'lc', lc.shape
-        print 'gd', gd['X'].shape
         mlab.points3d(gd['X'], gd['Y'], gd['Z'], lc[:, sr],
                        #colormap = "YlOrBr",
                        mode = "cube",

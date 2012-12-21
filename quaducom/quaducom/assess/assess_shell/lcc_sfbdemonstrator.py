@@ -203,7 +203,8 @@ if __name__ == '__main__':
                        show_lc_characteristic = False
                         )
 
-    lct.plot()
+#    lct.plot_n_tex()
+    lct.configure_traits()
 
 #    lct = LCCTableSLS( data_dir = data_dir,
 #                      data_filter = remove_midpoints,
@@ -215,7 +216,6 @@ if __name__ == '__main__':
 #                        )
 
 
-#    lct.configure_traits()
 
 
 #    print 'lc_arr', lct.lc_arr
