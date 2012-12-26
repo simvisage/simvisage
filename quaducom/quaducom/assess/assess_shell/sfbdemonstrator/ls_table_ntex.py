@@ -46,7 +46,7 @@ from math import pi
 from string import split
 import os
 
-from scipy.io import read_array
+#from scipy.io import read_array
 
 
 DIRLIST = ['x', 'y']
@@ -757,6 +757,7 @@ class ULS( LS ):
             alpha[ bool_arr ] = self.alpha_sig_up[ bool_arr ]
             k_fl_NM[ bool_arr ] = 1.0 + ( self.k_fl - 1.0 ) * \
                                  ( 1.0 - ( sig_b[ bool_arr ] - abs( self.sig1_lo[ bool_arr] ) ) / self.sig1_up[ bool_arr ] )
+
             f_t_sig[ bool_arr ] = self.sig1_up[ bool_arr ] * self.D_elem[ bool_arr ] * 1000. / k_fl_NM[ bool_arr ]
 
             # bending with tension at the upper side 

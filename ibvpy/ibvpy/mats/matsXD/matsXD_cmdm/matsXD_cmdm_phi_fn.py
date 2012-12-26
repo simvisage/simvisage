@@ -225,14 +225,14 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
 
     Dfp = Float(0.0, desc = 'residual integrity',
                 enter_set = True, auto_set = False)
-    Efp_frac = Float(0.2, desc = 'Efp factor',
+    Efp_frac = Float(0.05, desc = 'Efp factor',
                 enter_set = True, auto_set = False)
 
     def get_value(self, e_max, *c_list):
         '''
         Evaluate the integrity of a particular microplane.
         Overload the 'get_value' method of 'PhiFnGeneral'
-        and add an additional linear drop to zero after 
+        and add an exponential softening branch after 
         failure strain has been reached. 
         '''
         eps_last = self.mfn.xdata[-1]

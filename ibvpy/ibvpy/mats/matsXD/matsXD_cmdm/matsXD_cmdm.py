@@ -581,7 +581,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         phi_pdc_mtx = zeros([self.n_dim, self.n_dim])
         for i in range(self.n_dim):
             phi_pdc_mtx[i, i] = phi_eig_value_real[i]
-        return array([ phi_pdc_mtx[0, 0] ])
+        # return the minimum value of the eigenvalues of the integrity tensor 
+        # (= values of integrity in the principle direction)
+        # 
+        return array([ max(phi_pdc_mtx) ])
+#        return array([ phi_pdc_mtx[0, 0] ])
 
     # ------------------------------------------
     # SUBSIDARY METHODS used only for the response tracer:
@@ -866,6 +870,31 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
         return fracture_energy
 
+    def Xget_fracture_energy(self, sctx, eps_app_eng, *args, **kw):
+        '''
+        Get the macroscopic fracture energy as a weighted sum of all mircoplane contributions
+        '''
+        e_vct_arr, s_vct_arr = self._get_e_s_vct_arr( sctx, eps_app_eng )
+
+        ### N: normal components
+        # integral under the stress-strain curve
+        E_tN = trapz( e_app_vct_arr[:,0], s_app_vct_arr[:,0] )
+        # area of the stored elastic energy  
+        U_tN = 0.5 * _ydata_integ[-1] * _xdata_emax[-1]
+#        print 'E_t', E_t
+#        print 'U_t', U_t        
+#        print 'E_t - U_t', E_t - U_t
+        return E_t - U_t
+
+        
+        
+        e_max_arr = self._get_state_variables(sctx, eps_app_eng)
+        fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
+        fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
+        return fracture_energy
+
+
+
     #    def get_e_x_arr(self, sctx, eps_app_eng):
 #        e_app_vct_arr   = self._get_e_vct_arr( sctx, eps_app_eng )
 #        return e_app_vct_arr[:,0]
@@ -899,6 +928,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # sum of contributions from all microplanes
         # sum over the first dimension (over the microplanes)
         omega_mtx = omega_mtx_arr.sum(0)
+        
         return omega_mtx
 ###
 

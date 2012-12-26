@@ -51,7 +51,7 @@ from math import pi
 from string import split
 import os
 
-from scipy.io import read_array
+#from scipy.io import read_array
 
 from matresdev.db.simdb import \
     SimDB

@@ -21,6 +21,7 @@ from etsproxy.traits.ui.api import \
 from etsproxy.mayavi import \
     mlab
 
+import numpy as np
 #from etsproxy.mayavi.mlab import \
 #    colorbar, show, points3d
 #
@@ -46,6 +47,7 @@ from math import pi
 from string import split
 import os
 
+from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
 
 class LSArrayAdapter (TabularAdapter):
 
@@ -115,7 +117,7 @@ class LS(HasTraits):
     #-------------------------------
 
     state_columns = List([
-#                           'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
+                           'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
 #                           'sigx_lo', 'sigy_lo', 'sigxy_lo', 
                            'sig1_lo', 'sig1_up_sig_lo', 'alpha_sig_lo',
                            'm_sig_lo', 'n_sig_lo',
@@ -296,31 +298,41 @@ class LS(HasTraits):
     #---------------------------------
     # plot outputs in mlab-window 
     #---------------------------------
+    warp_factor = Float(1000., input = True)
 
     plot_column = Enum(values = 'columns')
     plot = Button
     def _plot_fired(self):
-        X = self.ls_table.X[:, 0]
-        Y = self.ls_table.Y[:, 0]
-        Z = self.ls_table.Z[:, 0]
-        plot_col = getattr(self, self.plot_column)[:, 0]
-
+        
+        plot_col = getattr(self, self.plot_column).flatten()
         if self.plot_column == 'n_tex':
             plot_col = where(plot_col < 0, 0, plot_col)
-
+        
         mlab.figure(figure = "SFB532Demo",
                      bgcolor = (1.0, 1.0, 1.0),
                      fgcolor = (0.0, 0.0, 0.0))
 
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-#                       colormap = "gist_rainbow",
-#                       colormap = "Reds",
-                       colormap = "YlOrBr",
-                       mode = "cube",
-                       scale_factor = 0.15)
+        gd = self.ls_table.geo_data
+        sd = self.ls_table.state_data
+
+        r = self.ls_table.reader
+        # use plotting function defined by the specific LCCTableReader
+        # extract global coordinates ('X','Y','Z') from 'geo_data' and 
+        # global displacements ('ux_elem','uy_elem','uz_elem') from 'state_data'
+        # if this information is available (distinguished by the specific Reader) 
+        r.plot_col(mlab, plot_col, gd, state_data = sd, warp_factor = self.warp_factor)
+
+        # @tod: add the support forces together with the deformed shell
+#            R = LCCReaderInfoCADRxyz()
+#            gd_spprt = R.read_geo_data('')
+#            print 'X_spprt', gd_spprt[ 'X_spprt' ]
+#            x, y, z = np.array([0.,1.]), np.array([0.,1.]), np.array([0.,1.])
+#            u = np.array([1.,1.])
+#            v = np.array([1.,1.])
+#            w = np.array([1.,1.])
+#            mlab.quiver3d(x, y, z, u, v, w, line_width=3, scale_factor=1)
 
         mlab.scalarbar(title = self.plot_column, orientation = 'vertical')
-
         mlab.show
 
 
@@ -347,6 +359,7 @@ class LS(HasTraits):
                                 Item('show_ls_columns', label = 'show ls'),
                                 Item('plot_column'),
                                 Item('plot'),
+                                Item('warp_factor')
                               ),
                      )
 
@@ -493,21 +506,24 @@ class ULS(LS):
     # F_Rd,0 = 86.6 kN / 1.5 = 57.7 kN # design value
     # sig_Rd,0,Zug = 57.7 / 14cm / 6cm = 6.87 MPa
     #
-    sig_comp_0_Rd = Float(6.87)
-
+#    sig_comp_0_Rd = Float(6.87)
+    sig_comp_0_Rd = Float(10., input = True)
+    
     # tensile composite strength in 90-direction [MPa]
     # use value of the 0-direction as conservative simplification:
     #
-    sig_comp_90_Rd = Float(6.87)
+    sig_comp_90_Rd = Float(10., input = True)
 
     # tensile strength of the textile reinforcement [kN/m]
     # --> f_Rtex,0 = 6.87 MPa / 10. * 100cm * 6 cm / 12 layers = 34.3 kN/m
     #
-    f_Rtex_0 = f_Rtex_90 = 34.3
+#    f_Rtex_0 = f_Rtex_90 = 34.3
+    # --> f_Rtex,0 = 10.0 MPa / 10. * 100cm * 6 cm / 12 layers = 33.33 kN/m
+    f_Rtex_0 = f_Rtex_90 = 33.3 
     print 'NOTE: f_Rtex_0 = f_Rtex_90 = set to %g kN/m !' % (f_Rtex_0)
 
     # sig_Rd,0,Biegung = 7.95 MPa
-    k_fl = 1.4#7.95 / 6.87
+    k_fl = 1.5#7.95 / 6.87
     print 'NOTE: k_fl = set to %g [-] !' % (k_fl)
 
     # ------------------------------------------------------------
@@ -688,35 +704,16 @@ class ULS(LS):
         #
         cond_lo_cb = cond_s1l_le_0 * cond_su_ge_0
 
-
         #----------------------------------------        
         # check if all elements are classified in one of the cases
         # 'bending, compression, tension' for the upper and the lower side
         # sum of all conditions must be equal to n_elems * 2 (for upper and lower side)
         #----------------------------------------        
-#        
-#        print 'self.sig1_lo.shape[0]', self.sig1_lo.shape[0]
-#
-#        print 'cond_lo_t', self.sig1_lo[cond_lo_t].shape[0]
-#        print 'cond_lo_tb_t', self.sig1_lo[cond_lo_tb_t].shape[0]
-#        print 'cond_lo_tb_c', self.sig1_lo[cond_lo_tb_c].shape[0]
-#        print 'cond_lo_tb', self.sig1_lo[cond_lo_tb].shape[0]
-#        print 'cond_lo_c', self.sig1_lo[cond_lo_c].shape[0]
-#        print 'cond_lo_cb', self.sig1_lo[cond_lo_cb].shape[0]
-#
-#        print 'cond_up_t', self.sig1_lo[cond_up_t].shape[0]
-#        print 'cond_up_tb_t', self.sig1_lo[cond_up_tb_t].shape[0]
-#        print 'cond_up_tb_c', self.sig1_lo[cond_up_tb_c].shape[0]
-#        print 'cond_up_tb', self.sig1_lo[cond_up_tb].shape[0]
-#        print 'cond_up_c', self.sig1_lo[cond_up_c].shape[0]
-#        print 'cond_up_cb', self.sig1_lo[cond_up_cb].shape[0]
-#
 #        print 'sum_lo', \
 #                      self.sig1_lo[cond_lo_t].shape[0] + \
 #                      self.sig1_lo[cond_lo_tb].shape[0] + \
 #                      self.sig1_lo[cond_lo_c].shape[0] + \
 #                      self.sig1_lo[cond_lo_cb].shape[0]
-#
 #        print 'sum_up', \
 #                      self.sig1_lo[cond_up_t].shape[0] + \
 #                      self.sig1_lo[cond_up_tb].shape[0] + \
@@ -834,11 +831,6 @@ class ULS(LS):
         #
         if self.eval_mode == 'princ_sig_level_1':
 
-            # NOTE: this evaluation mode has been used for the evaluation of 'n_tex' 
-            # as described in the 'ZiE'. Note that in the evaluation of the principle 
-            # stresses at the upper side a wrong variable has been used (had a minor effect) 
-            # 
-
             print "NOTE: the principle tensile stresses are used to evaluate 'n_tex'"
             # resulting tensile force of the composite cross section[kN]
             # the entire (!) cross section is used!
@@ -870,8 +862,11 @@ class ULS(LS):
             alpha_up[ bool_arr ] = self.alpha_sig_up[ bool_arr ]
             sig_comp_Ed_up[ bool_arr ] = self.sig1_up[ bool_arr ]
             sig_b = (abs(self.sig1_up) + abs(self.sig1_lo_sig_up)) / 2
+#            k_fl_NM_up[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
+#                                 (1.0 - (sig_b[ bool_arr ] - abs(self.sig1_lo_sig_up[ bool_arr])) / self.sig1_up[ bool_arr ])
+            # replace former formulae with (shorter version):
             k_fl_NM_up[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
-                                 (1.0 - (sig_b[ bool_arr ] - abs(self.sig1_lo_sig_up[ bool_arr])) / self.sig1_up[ bool_arr ])
+                                 ( sig_b[ bool_arr ] / self.sig1_up[ bool_arr ])
             f_t_sig_up[ bool_arr ] = self.sig1_up[ bool_arr ] * self.thickness[ bool_arr ] * 1000.
 
             # bending case with compression:
@@ -923,8 +918,11 @@ class ULS(LS):
             alpha_lo[ bool_arr ] = self.alpha_sig_lo[ bool_arr ]
             sig_comp_Ed_lo[ bool_arr ] = self.sig1_lo[ bool_arr ]
             sig_b = (abs(self.sig1_lo) + abs(self.sig1_up_sig_lo)) / 2
+#            k_fl_NM_lo[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
+#                                 (1.0 - (sig_b[ bool_arr ] - abs(self.sig1_up_sig_lo[ bool_arr])) / self.sig1_lo[ bool_arr ])
+            # replace former formulae with (shorter version):
             k_fl_NM_lo[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
-                                 (1.0 - (sig_b[ bool_arr ] - abs(self.sig1_up_sig_lo[ bool_arr])) / self.sig1_lo[ bool_arr ])
+                                 ( sig_b[ bool_arr ] / self.sig1_lo[ bool_arr ])
             f_t_sig_lo[ bool_arr ] = self.sig1_lo[ bool_arr ] * self.thickness[ bool_arr ] * 1000.
 
             # bending case with compression:

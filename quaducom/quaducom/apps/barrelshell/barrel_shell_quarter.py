@@ -54,6 +54,8 @@ from numpy import \
 
 import numpy as np
 
+import scipy as sp
+
 from time import time
 from os.path import join
 
@@ -105,7 +107,29 @@ class SimBS(IBVModel):
     shape_y = Int(5, input = True,
                       ps_levels = (8, 12, 3))
 
-    # discretization in z-direction:
+    # discretization in y-direction (length - direction):
+    #
+#    shape_L1 = Int(10, input = True,
+#                      ps_levels = (8, 12, 3))
+#    shape_L2 = Int(10, input = True,
+#                      ps_levels = (8, 12, 3))
+#
+#    shape_l = Property(Float, depends_on = 'shape_L1, shape_L2')
+#    @cached_property
+#    def _get_shape_l(self):
+#        return self.shape_L1 + self.shape_L2
+
+    shape_l = Int(20, input = True)
+
+
+    # discretization in arc-direction 
+    # (use aquidistant spacing along the arc):
+    #
+    shape_s = Int(10, input = True,
+                      ps_levels = (8, 12, 3))
+
+
+    # discretization in z-direction (thickness direction):
     shape_z = Int(4, input = True,
                       ps_levels = (2, 3, 3))
 
@@ -113,11 +137,20 @@ class SimBS(IBVModel):
     # geometry:
     #-----------------
     #
-    # edge length of the quadratic plate (entire length without symmetry)
-    # length = 1.25m - 2*0.05m supports
-    length = Float(1.15, input = True)
 
-    thickness = Float(0.06, input = True)
+    # length_x 
+    #
+    length = Float(2.20, input = True)
+
+    # length_y 
+    # (= half arc width due to symmetry) 
+    width = Float(1.07, input = True)
+
+    # length_z 
+    #
+    arc_height = Float(0.50, input = True)
+
+    thickness = Float(0.02, input = True)
 
     elem_length_x = Property(Float, depends_on = 'shape_x, shape_y, length')
     @cached_property
@@ -268,14 +301,6 @@ class SimBS(IBVModel):
     specmn_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
     def _get_specmn_fe_grid(self):
-        # only a quarter of the plate is simulated due to symmetry:
-        # only a quarter of the plate is simulated due to symmetry:
-        def t(pts):
-            x_, y_, z_ = pts.T
-            pts = c_[10 * x_, 10 * y_, z_]
-            print 'pts', pts
-            return pts
-
         fe_grid = FEGrid(coord_max = (1, 1, 1),
                          shape = (self.shape_x,
                                   self.shape_y,

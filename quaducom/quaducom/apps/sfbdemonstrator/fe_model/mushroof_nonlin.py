@@ -175,7 +175,7 @@ class MushRoofModelNonLin( MRquarter ):
 
 if __name__ == '__main__':
 
-    sim_model = MushRoofModelNonLin( n_dofs_xy = 8, shape_z = 2,
+    sim_model = MushRoofModelNonLin( n_dofs_xy = 4, shape_z = 1,
                                      ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
                                      calibration_test = 'TT11-10a-average',
                                      age = 28 )
@@ -183,6 +183,7 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'ui':
+        sim_model.tloop.eval()
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp( ibv_resource = sim_model )
         app.main()

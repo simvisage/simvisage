@@ -96,12 +96,12 @@ class SimST(IBVModel):
     #-----------------
     #
     # discretization in x,y-direction:
-    shape_xy = Int(10, input = True,
-                      ps_levels = (8, 12, 3))
+    shape_xy = Int( 5, input = True,
+                      ps_levels = ( 8, 12, 3 ) )
 
     # discretization in z-direction:
-    shape_z = Int(4, input = True,
-                      ps_levels = (2, 3, 3))
+    shape_z = Int( 2, input = True,
+                      ps_levels = ( 2, 3, 3 ) )
 
     #-----------------
     # geometry:
@@ -625,10 +625,10 @@ if __name__ == '__main__':
     print 'eps_last', eps_last
 #    mfn.mpl_plot(p)
 #    sim_model.phi_fn.mfn.mpl_plot(p)
-    phi_fn_vect = np.vectorize(sim_model.phi_fn.get_value)
-    xdata = np.linspace(0., eps_last * 5., 50)
-    ydata = phi_fn_vect(xdata)
-    p.plot(xdata, ydata)
+    phi_fn_vect = np.vectorize( sim_model.phi_fn.get_value )
+    xdata = np.linspace(0., eps_last*1.1, 400)
+    ydata = phi_fn_vect( xdata )
+#    p.plot(xdata, ydata)
     #p.show()
 
     do = 'ui'
