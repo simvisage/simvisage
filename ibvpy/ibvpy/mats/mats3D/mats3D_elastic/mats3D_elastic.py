@@ -58,6 +58,8 @@ class MATS3DElastic(MATS3DEval):
 
     def get_D_el(self, E, nu):
         D_mtx = zeros((6, 6), dtype = 'float_')
+        print 'E', E
+        print 'nu', nu
         D_mtx[0, 0] = E / (1 + nu) + E * nu / (1 + nu) / (1 - 2 * nu);
         D_mtx[0, 1] = E * nu / (1 + nu) / (1 - 2 * nu);
         D_mtx[0, 2] = E * nu / (1 + nu) / (1 - 2 * nu);

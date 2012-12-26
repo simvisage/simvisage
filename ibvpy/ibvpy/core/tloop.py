@@ -55,13 +55,13 @@ if LOGGING_ON:
 class TLine(HasTraits):
     '''
     Time line for the control parameter.
-    
+
     This class sets the time-range of the computation - the start and stop time.
     val is the value of the current time.
-    
-    TODO - the info page including the number of load steps 
+
+    TODO - the info page including the number of load steps
     and estimated computation time.
-    
+
     TODO - the slide bar is not read-only. How to include a real progress bar?
     '''
     min = Float(0.0)
@@ -146,10 +146,10 @@ from warnings import warn
 
 class TLoop(IBVResource):
     ''' Time loop management.
-    
-    This class implements the generic time-stepping scheme. It can be 
+
+    This class implements the generic time-stepping scheme. It can be
     configured using an adaptive strategy to serve for wide class
-    of time-stepping algorithms.  
+    of time-stepping algorithms.
     '''
     # service specifiers - used to link the service to this object
     service_class = 'ibvpy.plugins.tloop_service.TLoopService'
@@ -439,7 +439,7 @@ class TLoop(IBVResource):
 
                 if abort_tloop:
                     # ultimate failure exit the calculation
-                    #self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
+                    self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
                     break
 
                 if LOGGING_ON:
@@ -474,6 +474,7 @@ class TLoop(IBVResource):
             if abort_tloop:
                 # ultimate failure exit the calculation
                 print 'ABORT tloop TRUE'
+                self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
                 break
 
             if adap.ehandler_needed(): # explicit adaptations 
@@ -536,7 +537,7 @@ class TLoop(IBVResource):
         '''
         After the equilibrium is found, first fill the responce tracers for
         equilibrium and then set the update state on (sets the global flag
-        in  tstepper) 
+        in  tstepper)
         '''
         self.U_n = np.copy(self.U_k)
 
