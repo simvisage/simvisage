@@ -214,7 +214,7 @@ class ExpBT3PT(ExType):
 
                 file_name = file_split[0] + '.raw'
                 if not os.path.exists(file_name):
-                    raise IOException, 'file %s does not exist' % file_name
+                    raise IOError, 'file %s does not exist' % file_name
 
             _data_array = loadtxt_bending(file_name)
 
