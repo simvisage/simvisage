@@ -222,8 +222,10 @@ class ExpBT3PT(ExType):
 
             file_name = file_split[0] + '.ASC'
             if not os.path.exists(file_name):
-                print 'NOTE: no data from displacement gauge is available; use machine displacement as value for center deflection'
+                print 'NOTE: no data from displacement gauge is available (no .ASC file); use machine displacement as value for center deflection'
                 self.flag_dat_file = 'false'
+            else: 
+                print 'NOTE: data from displacement gauge for center deflection is available (stored in .ASC-file)!'
 
             self.data_array = _data_array
 
@@ -272,24 +274,12 @@ class ExpBT3PT(ExType):
     w_wo_elast = Property(depends_on = 'input_change')
     @cached_property
     def _get_w_wo_elast(self):
-        # if data from a displacement gauge at center deflection is available
-        # use this information (data is stored in a separate .ASC file.
-        # note that the number of lines and the time channel (=first column) in
-        # both files do NOT correspond as the measuring files are initiated at 
-        # different computers at different times. THerefore it is necessary to
-        # interpolate / generate an displacement array with a corresponding 
-        # number of rows as for the force array 
-        # 
-        if self.flag_dat_file == 'true':
-            return self.Fw_asc(self.F)
-        
-        if self.flag_dat_file == 'false':
-            # use the machine displacement for the center displacement:
-            # subtract the deformation of the elastomer cushion between the cylinder
-            # and change sign in positive values for vertical displacement [mm]
-            #
-            w = -1.0 * self.w_raw
-            return w - self.elastomer_law(self.F)
+        # use the machine displacement for the center displacement:
+        # subtract the deformation of the elastomer cushion between the cylinder
+        # and change sign in positive values for vertical displacement [mm]
+        #
+        w = -1.0 * self.w_raw
+        return w - self.elastomer_law(self.F)
 
     M_kNm = Property(Array('float_'), depends_on = 'input_change')
     @cached_property
@@ -299,30 +289,34 @@ class ExpBT3PT(ExType):
     Fw_asc = Property(depends_on = 'input_change')
     @cached_property
     def _get_Fw_asc(self):
-        print 'NOTE: data from displacement gauge for center deflection is available (stored in .ASC-file)!'
         # if data from displacement gauge is available (stored in .ASC file use this data for center displacement
         #
         # change the file name dat with asc  
         file_split = self.data_file.split('.')
         file_name = file_split[0] + '.ASC'
-        _data_array_Fw = np.loadtxt(file_name,
+        return np.loadtxt(file_name,
                             delimiter = ';',
                             usecols = [1,2])
-
+    
+    F_asc = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_F_asc(self):
         # force [kN] stored in the .ASC-file:
         #
-        F_asc = _data_array_Fw[:, 0].flatten()
+        F_asc = self.Fw_asc[:, 0].flatten()
         # change sign to positive value  
         F_asc *= -1.
+        return F_asc
 
+    w_asc = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_w_asc(self):
         # displacement [mm] stored in the .ASC-file:
         #
-        w_asc = _data_array_Fw[:, 1].flatten()
+        w_asc = self.Fw_asc[:, 1].flatten()
         # change sign to positive value for deflection 
         w_asc *= -1.
-
-        mfn_Fw = MFnLineArray(xdata = F_asc, ydata = w_asc)
-        return np.frompyfunc(mfn_Fw.get_value, 1, 1)
+        return w_asc
 
 
     def process_source_data(self):
@@ -334,28 +328,28 @@ class ExpBT3PT(ExType):
         # access the derived arrays to initiate their processing
         self.M_kNm
         self.w_wo_elast
+        # only if separate ASC.-file with force-displacement data from displacement gauge is available
+        if self.flag_dat_file == 'true':
+            print 'XXX', self.flag_dat_file
+            self.F_asc
+            self.w_asc
 
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection'          : '_plot_force_deflection',
+    plot_templates = {'force / deflection (machine displacement)' : '_plot_force_deflection_machine_displ',
+                      'force / deflection (displacement gauge)' : '_plot_force_deflection_gauge_displ',
                       'smoothed force / deflection' : '_plot_smoothed_force_deflection',
                       'moment / eps_c' : '_plot_moment_eps_c',
                       'smoothed moment / eps_c' : '_plot_smoothed_moment_eps_c'
                      }
 
-    default_plot_template = 'force / deflection'
+    default_plot_template = 'force / deflection (displacement gauge)'
 
-    def _plot_force_deflection(self, axes):
+    def _plot_force_deflection_machine_displ(self, axes):
         xkey = 'deflection [mm]'
         ykey = 'force [kN]'
-        # NOTE: processed data returns positive values for force and displacement
-        #
-#        if self.flag_dat_file == 'false':
-#            xdata = self.w_wo_elast
-#        else:
-#            xdata = self.w_dat
 
         xdata = self.w_wo_elast
         ydata = self.F
@@ -365,6 +359,20 @@ class ExpBT3PT(ExType):
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
+
+    def _plot_force_deflection_gauge_displ(self, axes):
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+
+        xdata = self.w_asc
+        ydata = self.F_asc
+
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        axes.plot(xdata, ydata
+                       # color = c, linewidth = w, linestyle = s 
+                       )
+
 
     def _plot_moment_eps_c(self, axes):
         xkey = 'compressive strain [1*E-3]'
