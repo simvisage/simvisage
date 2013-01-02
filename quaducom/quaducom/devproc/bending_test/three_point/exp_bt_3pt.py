@@ -49,6 +49,8 @@ import csv
 
 from numpy import array, fabs, where, copy, ones, argsort
 
+import numpy as np
+
 from numpy import \
     loadtxt, argmax, polyfit, poly1d, frompyfunc, dot
 
@@ -126,17 +128,17 @@ class ExpBT3PT(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    length = Float(1.15, unit = 'm', input = True, table_field = True,
+    length = Float(0.42, unit = 'm', input = True, table_field = True,
                            auto_set = False, enter_set = True)
-    width = Float(0.2, unit = 'm', input = True, table_field = True,
+    width = Float(0.1, unit = 'm', input = True, table_field = True,
                            auto_set = False, enter_set = True)
-    thickness = Float(0.06, unit = 'm', input = True, table_field = True,
+    thickness = Float(0.02, unit = 'm', input = True, table_field = True,
                            auto_set = False, enter_set = True)
 
     # age of the concrete at the time of testing
-    age = Int(28, unit = 'd', input = True, table_field = True,
+    age = Int(43, unit = 'd', input = True, table_field = True,
                              auto_set = False, enter_set = True)
-    loading_rate = Float(3.0, unit = 'mm/min', input = True, table_field = True,
+    loading_rate = Float(4.0, unit = 'mm/min', input = True, table_field = True,
                             auto_set = False, enter_set = True)
 
     #--------------------------------------------------------------------------
@@ -149,13 +151,15 @@ class ExpBT3PT(ExType):
         '''
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
-        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-05-11'
+        fabric_layout_key = '2D-09-12'
 #        concrete_mixture_key = 'PZ-0708-1'
-        concrete_mixture_key = 'FIL-10-09'
-        orientation_fn_key = 'all0'
-#        orientation_fn_key = 'all90'                                           
+#        concrete_mixture_key = 'FIL-10-09'
+        concrete_mixture_key = 'barrelshell'
+#        orientation_fn_key = 'all0'
+        orientation_fn_key = 'all90'                                           
 #        orientation_fn_key = '90_0'
-        n_layers = 6
+        n_layers = 8
         s_tex_z = 0.020 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list = [
@@ -191,6 +195,11 @@ class ExpBT3PT(ExType):
     # define processing
     #--------------------------------------------------------------------------------
 
+    # flag distinguishes weather data from a displacement gauge is available
+    # stored in a separate ASC-file with a corresponding file name
+    # 
+    flag_dat_file = 'true'
+
     def _read_data_array(self):
         ''' Read the experiment data.
         '''
@@ -207,37 +216,31 @@ class ExpBT3PT(ExType):
                 if not os.path.exists(file_name):
                     raise IOException, 'file %s does not exist' % file_name
 
-            print 'file_name', file_name
-
             _data_array = loadtxt_bending(file_name)
 
+            print 'file_name', file_name
+
+            file_name = file_split[0] + '.ASC'
+            if not os.path.exists(file_name):
+                print 'NOTE: no data from displacement gauge is available; use machine displacement as value for center deflection'
+                self.flag_dat_file = 'false'
+
             self.data_array = _data_array
+
 
     names_and_units = Property
     @cached_property
     def _get_names_and_units(self):
         ''' Set the names and units of the measured data.
         '''
-        names = ['w', 'eps_c_raw', 'F_raw']
+        names = ['w_raw', 'eps_c_raw', 'F_raw']
         units = ['mm', '1*E-3', 'N']
         return names, units
-
-#    mfn_elastomer = Instance( MFnLineArray )
-#    def _mfn_elastomer_default( self ):
-#        elastomer_path = os.path.join( simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'elastomer_f-w.raw' )
-#        # loadtxt_bending returns an array with three columns: 
-#        # 0: deformation; 1: eps_c; 2: force
-#        _data_array_elastomer = loadtxt_bending( elastomer_path )
-#        return MFnLineArray( xdata = _data_array_elastomer[:, 0], ydata = _data_array_elastomer[:, 2] )
-#
-#    elastomer_force = Callable
-#    def elastomer_force_default( self ):
-#        return frompyfunc( self.mfn_elastomer.get_value, 2, 1 )
 
     F = Property(Array('float_'), depends_on = 'input_change')
     @cached_property
     def _get_F(self):
-        # convert data from 'N' to 'kN' and change sign
+        # convert data in .raw-file from 'N' to 'kN' and change sign to positive value
         #
         return -0.001 * self.F_raw
 
@@ -269,17 +272,57 @@ class ExpBT3PT(ExType):
     w_wo_elast = Property(depends_on = 'input_change')
     @cached_property
     def _get_w_wo_elast(self):
-        # subtract the deformation of the elastomer cushion between the cylinder
+        # if data from a displacement gauge at center deflection is available
+        # use this information (data is stored in a separate .ASC file.
+        # note that the number of lines and the time channel (=first column) in
+        # both files do NOT correspond as the measuring files are initiated at 
+        # different computers at different times. THerefore it is necessary to
+        # interpolate / generate an displacement array with a corresponding 
+        # number of rows as for the force array 
         # 
-        # change sign in positive values for vertical displacement [mm]
-        #
-        w = -1.0 * self.w
-        return w - self.elastomer_law(self.F)
+        if self.flag_dat_file == 'true':
+            return self.Fw_asc(self.F)
+        
+        if self.flag_dat_file == 'false':
+            # use the machine displacement for the center displacement:
+            # subtract the deformation of the elastomer cushion between the cylinder
+            # and change sign in positive values for vertical displacement [mm]
+            #
+            w = -1.0 * self.w_raw
+            return w - self.elastomer_law(self.F)
 
     M_kNm = Property(Array('float_'), depends_on = 'input_change')
     @cached_property
     def _get_M_kNm(self):
         return self.F * self.length / 4.0
+
+    Fw_asc = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_Fw_asc(self):
+        print 'NOTE: data from displacement gauge for center deflection is available (stored in .ASC-file)!'
+        # if data from displacement gauge is available (stored in .ASC file use this data for center displacement
+        #
+        # change the file name dat with asc  
+        file_split = self.data_file.split('.')
+        file_name = file_split[0] + '.ASC'
+        _data_array_Fw = np.loadtxt(file_name,
+                            delimiter = ';',
+                            usecols = [1,2])
+
+        # force [kN] stored in the .ASC-file:
+        #
+        F_asc = _data_array_Fw[:, 0].flatten()
+        # change sign to positive value  
+        F_asc *= -1.
+
+        # displacement [mm] stored in the .ASC-file:
+        #
+        w_asc = _data_array_Fw[:, 1].flatten()
+        # change sign to positive value for deflection 
+        w_asc *= -1.
+
+        mfn_Fw = MFnLineArray(xdata = F_asc, ydata = w_asc)
+        return np.frompyfunc(mfn_Fw.get_value, 1, 1)
 
 
     def process_source_data(self):
@@ -309,6 +352,11 @@ class ExpBT3PT(ExType):
         ykey = 'force [kN]'
         # NOTE: processed data returns positive values for force and displacement
         #
+#        if self.flag_dat_file == 'false':
+#            xdata = self.w_wo_elast
+#        else:
+#            xdata = self.w_dat
+
         xdata = self.w_wo_elast
         ydata = self.F
 
@@ -335,12 +383,18 @@ class ExpBT3PT(ExType):
     n_fit_window_fraction = Float(0.1)
 
     def _plot_smoothed_force_deflection(self, axes):
+#        if self.flag_dat_file == 'false':
+#            w = self.w_wo_elast
+#        else:
+#            w = self.w_dat
+
+        w = self.w_wo_elast
 
         # get the index of the maximum stress
         max_force_idx = argmax(self.F)
         # get only the ascending branch of the response curve
         f_asc = self.F[:max_force_idx + 1]
-        w_asc = self.w_wo_elast[:max_force_idx + 1]
+        w_asc = w[:max_force_idx + 1]
 
         n_points = int(self.n_fit_window_fraction * len(w_asc))
         f_smooth = smooth(f_asc, n_points, 'flat')
