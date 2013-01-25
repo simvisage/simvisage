@@ -391,7 +391,8 @@ class SimBS(IBVModel):
         #--------------------------------------------------------------
         # boundary conditions for the symmetry and the single support
         #--------------------------------------------------------------
-        support_000 = BCSlice(var = 'u', value = 0., dims = [0, 2], slice = specmn[-1, support_elem, :, -1, 0, :])
+        support_slice = specmn[-1, support_elem, :, -1, 0, :]
+        support_000 = BCSlice(var = 'u', value = 0., dims = [0, 2], slice = support_slice)
 
         #--------------------------------------------------------------
         # loading
@@ -423,7 +424,7 @@ class SimBS(IBVModel):
         self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - reaction 2',
                                        var_x = 'U_k'  , idx_x = center_dof,
                                        # elastomer load
-                                       var_y = 'F_int', idx_y = center_dof,
+                                       var_y = 'F_int', idx_y_arr = support_slice.dofs[:, :, 2].flatten(),
                                        record_on = 'update',
                                        transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
@@ -453,8 +454,11 @@ class SimBS(IBVModel):
 #                                        record_on = 'update'),
                          RTraceDomainListField(name = 'Damage' ,
                                     var = 'omega_mtx', idx = 0, warp = True,
-                                    record_on = 'update')
-
+                                    record_on = 'update'),
+                       RTraceDomainListField(name = 'max principle stress' , idx = 0,
+                                      var = 'max_principle_sig', warp = True,
+#                                      position = 'int_pnts',
+                                      record_on = 'update',)
 #                             RTraceDomainListField(name = 'IStress' ,
 #                                            position = 'int_pnts',
 #                                            var = 'sig_app', idx = 0, 
