@@ -50,6 +50,8 @@ from etsproxy.traits.ui.tabular_adapter \
 from numpy import \
     array, where, argmax
 
+import numpy as np
+
 from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
@@ -118,7 +120,7 @@ class ExpTTDB(ExType):
                            auto_set = False, enter_set = True)
 
     # age of the concrete at the time of testing
-    age = Int(9, unit = 'd', input = True, table_field = True,
+    age = Int(21, unit = 'd', input = True, table_field = True,
                            auto_set = False, enter_set = True)
     loading_rate = Float(2.0, unit = 'mm/min', input = True, table_field = True,
                            auto_set = False, enter_set = True)
@@ -136,18 +138,19 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
 #        fabric_layout_key2 = 'C-Grid-C50'
-#        fabric_layout_key = '2D-14-10'
+#        fabric_layout_key1 = '2D-14-10'
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
         fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
         concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'FIL-10-09'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 8
+        n_layers = 6
         thickness = 0.02
 
         s_tex_z = thickness / (n_layers + 1)
@@ -249,7 +252,6 @@ class ExpTTDB(ExType):
             self.WA_HR -= self.WA_HR[0]
             self.WA_HR *= -1
 
-
     #-------------------------------------------------------------------------------
     # Get the strain and state arrays
     #-------------------------------------------------------------------------------
@@ -264,8 +266,23 @@ class ExpTTDB(ExType):
             eps_li = self.W10_li / (self.gauge_length * 1000.)  #[mm/mm]
             eps_re = self.W10_re / (self.gauge_length * 1000.)
             eps_vo = self.W10_vo / (self.gauge_length * 1000.)
+            
+            # NOTE: if only 2 displacement gauges are used instead of 3 (only 'WA_re' for front and 'WA_li' for back)
+            # below the average is performed as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
+            #
+            if np.average(eps_vo) < 0.0001:
+                print "only two displacement gauges have been used. Use average of 'eps_li' and 'eps_re'"
+                eps_vo = (eps_li + eps_re) 
+            if np.average(eps_re) < 0.0001:
+                print "only two displacement gauges have been used. Use average of 'eps_li' and 'eps_vo'"
+                eps_re = eps_li 
+            if np.average(eps_li) < 0.0001:
+                print "only two displacement gauges have been used. Use average of 'eps_re' and 'eps_vo'"
+                eps_li = eps_re 
+
             # average strains 
             eps_m = ((eps_li + eps_re) / 2. + eps_vo) / 2.
+
 
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             # measured strains 
