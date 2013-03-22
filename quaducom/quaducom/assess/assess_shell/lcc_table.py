@@ -757,6 +757,7 @@ class LCCTable(HasTraits):
         mlab.points3d(X, Y, (-1.0) * Z, plot_col,
                        colormap = "YlOrBr",
                        mode = "cube",
+                       scale_mode = 'none',
                        scale_factor = 0.10)
 
         mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
