@@ -73,12 +73,29 @@ ConcreteMixture.db = SimDBClassExt(
                                            nu = 0.2
                                            ),
                 'barrelshell' : ConcreteMixture( 
-                                           E_m28 = 28700.,
+                                           E_m28 = 28700., # @todo: approximation only 
                                            # function for the evolution derived based on only 
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
                                            get_E_m_time = lambda t: 3682. * log( t + 0.012 ) + 16429.,
                                            nu = 0.25
                                            ),
+                'shotcrete-4mm' : ConcreteMixture( 
+                                           E_m28 = 30000., # @todo: approximation only
+                                           # @todo: function for the evolution derived based on only 
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time = lambda t: 3682. * log( t + 0.012 ) + 16429.,
+                                           nu = 0.2 # @todo: approximation only
+                                           ),
+
+                'sto-100' : ConcreteMixture( 
+                                           E_m28 = 30000., # @todo: approximation only
+                                           # function for the evolution derived based on only 
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time = lambda t: 3682. * log( t + 0.012 ) + 16429.,
+                                           nu = 0.2 # @todo: approximation only
+                                           ),
+
+
                                            }
             )
 
