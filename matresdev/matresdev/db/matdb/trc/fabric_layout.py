@@ -213,7 +213,7 @@ FabricLayOut.db = SimDBClassExt(
                # 2 x 24 K in 0-direction                             
                # 2 x 24 K in 90-direction                             
                #
-               'C-Grid-C20' : FabricLayOut( 
+               'C-Grid-C50-25' : FabricLayOut( 
                                            a_tex_0 = 74.,
                                            a_tex_90 = 74.,
                                            E_tex_0 = 234500.,
