@@ -27,8 +27,8 @@ from etsproxy.traits.ui.api import \
     HGroup, Spring
 
 ## overload the 'get_label' method from 'Item' to display units in the label
-from util.traits.ui.item import \
-    Item
+#from util.traits.ui.item import \
+#    Item
 
 from etsproxy.traits.ui.table_column import \
     ObjectColumn
@@ -50,6 +50,8 @@ from numpy import array, fabs, where, copy, ones, argsort
 
 from numpy import \
     loadtxt, argmax, polyfit, poly1d, frompyfunc, dot
+
+import numpy as np
 
 from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
@@ -174,7 +176,7 @@ class ExpSH(ExType):
 
     # put this into the ironing procedure processor
     #
-    jump_rtol = Float(0.2,
+    jump_rtol = Float(1,
                       auto_set = False, enter_set = True,
                       ironing_param = True)
 
@@ -261,8 +263,6 @@ class ExpSH(ExType):
         #
         self._set_array_attribs()
 
-
-
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
@@ -273,9 +273,28 @@ class ExpSH(ExType):
                       'force / deflections' : '_plot_force_deflections',
                       'force / eps_t' : '_plot_force_eps_t',
                       'force / eps_c' : '_plot_force_eps_c',
+                      'force / w_elastomer' : '_plot_force_w_elastomer',
                       'time / deflections' : '_plot_time_deflections'
                      }
     default_plot_template = 'force / time'
+
+    def _plot_force_w_elastomer(self, axes):
+
+        xkey = 'displacement [mm]'
+        ykey = 'force [kN]'
+        W_vl = self.W_vl
+        W_vr = self.W_vr
+        W_hl = self.W_hl
+        W_hr = self.W_hr
+        force = self.Kraft
+
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        axes.plot(W_vl, force)
+        axes.plot(W_vr, force)
+        axes.plot(W_hl, force)
+        axes.plot(W_hr, force)
+
 
     def _plot_force_time(self, axes):
 
