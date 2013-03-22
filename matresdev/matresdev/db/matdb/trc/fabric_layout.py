@@ -207,7 +207,59 @@ FabricLayOut.db = SimDBClassExt(
                                            E_tex_90 = 234500.,
                                            s_tex_0 = 46.0,
                                            s_tex_90 = 41.0,
-                                           )
+                                           ),
+                         
+               # EP coated carbon textile
+               # 2 x 24 K in 0-direction                             
+               # 2 x 24 K in 90-direction                             
+               #
+               'C-Grid-C20' : FabricLayOut( 
+                                           a_tex_0 = 74.,
+                                           a_tex_90 = 74.,
+                                           E_tex_0 = 234500.,
+                                           E_tex_90 = 234500.,
+                                           s_tex_0 = 2.5,
+                                           s_tex_90 = 2.5, 
+                                           ),
+
+               # SBR coated carbon textile 
+               # 1 x 50K in 0-direction                             
+               # 1 x 50K in 90-direction                             
+               #
+               'Grid-600' : FabricLayOut( 
+                                           a_tex_0 = 170.,
+                                           a_tex_90 = 102.,
+                                           E_tex_0 = 1.,
+                                           E_tex_90 = 1.,
+                                           s_tex_0 = 10.,
+                                           s_tex_90 = 14., 
+                                           ),
+
+               # SBR coated carbon textile 
+               # 2 x 24K in 0-direction                             
+               # 2 x 24K in 90-direction                             
+               #
+               'FRA-CAR/SB' : FabricLayOut( 
+                                           a_tex_0 = 55.,
+                                           a_tex_90 = 46.,
+                                           E_tex_0 = 1.,
+                                           E_tex_90 = 1.,
+                                           s_tex_0 = 2.3,
+                                           s_tex_90 = 2.1, 
+                                           ),
+
+               # EP coated AR-glas textile 
+               #
+               'FRA-AR/EP' : FabricLayOut( 
+                                           a_tex_0 = 107.,
+                                           a_tex_90 = 134.,
+                                           E_tex_0 = 1.,
+                                           E_tex_90 = 1.,
+                                           s_tex_0 = 2.0,
+                                           s_tex_90 = 1.6,# average spacing for alternating arrangement of rovings (3/1/1) 
+                                           ),
+
+                         
              }
             )
 
