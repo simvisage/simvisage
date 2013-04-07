@@ -561,8 +561,13 @@ class ULS(LS):
     sig_comp_0_Rd = Float(10., input = True)
 
     # values for barrelshell on specimens with thickness 2 cm and width 10 cm
-    n_0_Rd = 41.1 / 0.1 # [kN/m]
-    m_0_Rd = (3.5 * 0.42 / 4. ) / 0.1 # [kNm/m]
+#    n_0_Rd = 41.1 / 0.1 * 0.84 / 1.5 # [kN/m]
+#    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+
+#    # values for barrelshell on specimens with thickness 2 cm and width 10 cm
+#    n_0_Rd = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
+#    m_0_Rd = (2.4 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+
     
     # tensile composite strength in 90-direction [MPa]
     # use value of the 0-direction as conservative simplification:
@@ -579,8 +584,9 @@ class ULS(LS):
     #-------------------------
     # bs (6 layers carbon):
     #-------------------------
+    # sig_comp,Rd = 40 kN / 0.1m *0.84 / 1.5 = 11.2 MPa
     # --> f_Rtex,0 = 11.2 MPa / 10.(MPa/kN/cm**2) * 100cm * 2 cm / 6 layers = 37.3 kN/m/layer
-    f_Rtex_0 = f_Rtex_90 = 37.3 
+    f_Rtex_0 = f_Rtex_90 = 37.3 # corresponds to sig_comp,Rd = 10 MPa
     k_fl = 1.46 # 29.8 MPa / 20.5 MPa
 
     #-------------------------
@@ -656,8 +662,8 @@ class ULS(LS):
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
     #
 #    eval_mode = 'massivbau'
-    eval_mode = 'princ_sig_level_1'
-#    eval_mode = 'eta_nm'
+#    eval_mode = 'princ_sig_level_1'
+    eval_mode = 'eta_nm'
 
 
     ls_values = Property(depends_on = '+input')
@@ -1031,7 +1037,7 @@ class ULS(LS):
         #-------------------------------------------------
         #
         if self.eval_mode == 'princ_sig_level_2':
-            print "NOTE: the principle tensile stresses are used to evaluate the priniclpe direction\
+            print "NOTE: the principle tensile stresses are used to evaluate the principle direction\
                    eta_ULS has been evaluated based on linear N-M-interaction (derived from test results)"
 
             n_sig_lo = self.n_sig_lo # [kN/m]
@@ -1172,12 +1178,12 @@ class ULS(LS):
             k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                          cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
 
-            eta_n_lo = self.n_sig_lo / n_Rd_lo
-            eta_m_lo = self.m_sig_lo / m_Rd_lo
-            eta_nm_lo = eta_n_lo + eta_m_lo
+            eta_n_lo = np.abs( self.n_sig_lo / n_Rd_lo )
+            eta_m_lo = np.abs( self.m_sig_lo / m_Rd_lo )
+            eta_nm_lo = eta_n_lo  + eta_m_lo
     
-            eta_n_up = self.n_sig_up / n_Rd_up
-            eta_m_up = self.m_sig_up / m_Rd_up
+            eta_n_up = np.abs( self.n_sig_up / n_Rd_up )
+            eta_m_up = np.abs( self.m_sig_up / m_Rd_up )
             eta_nm_up = eta_n_up + eta_m_up
     
             eta_nm_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis = 1)[:, None]
