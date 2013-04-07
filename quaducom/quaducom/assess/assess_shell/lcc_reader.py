@@ -538,9 +538,11 @@ class LCCReaderInfoCAD(LCCReader):
         mlab.points3d(X_def, Y_def, Z_def, plot_col,
                       mode = "cube",
                       scale_mode = 'none',
-                      scale_factor = 0.10)
+                      scale_factor = 0.05)
     
     def check_for_consistency(self, lc_list, geo_data_dict):
+        print '*** check for consistency ***'
+
         for lc in lc_list:
             # check internal LC-consitency: 
             # (compare elem_no of first LC with all other LC's in 'lc_list')
