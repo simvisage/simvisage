@@ -9,6 +9,8 @@ if __name__ == '__main__':
     from matresdev.db.simdb import \
         SimDB
 
+    import numpy as np
+
     import os
 
     from lcc_table import LCCTableULS, LC, LCCTableSLS
@@ -17,6 +19,49 @@ if __name__ == '__main__':
     #
     simdb = SimDB()
 
+    def remove_support_elems( lcc_table, arr ):
+        '''filter for barrel shell used to remove the elements 
+        in direct contact to the support nodes
+        ''' 
+        elem_no = lcc_table.geo_data_orig['elem_no']
+        # support elements for fine regular mesh (5cmx5cm-elements) 
+        # as stored in '2cm-feines-Netz'
+
+        # first row elements (direct contact to support node)
+        #
+        support_elems_list = [692, 693, 2324, 2325, 744, 745, 2376, 2377,\
+        # second row elements (= adjacent elements to first row elements)
+        #
+                              691, 694, 2323, 2326, 743, 746, 2375, 2378 ] 
+        cond_arr = np.array([elem_no != support_elem_number for support_elem_number in support_elems_list])
+        cond_elem_active = np.product( cond_arr, axis = 0 )
+
+#        X = lcc_table.geo_data_orig['X']
+#        Y = lcc_table.geo_data_orig['Y']
+#        elem_size = Y[1] - Y[2]                 
+#        print 'elem_size', elem_size
+#        cond_X1 = X < -1.03 + 2. * elem_size
+#        cond_X2 = X > 1.03 - 2. * elem_size
+#        cond_Y1a = Y > -0.40 - 2. * elem_size
+#        cond_Y1b = Y < -0.40 + 2. * elem_size
+#        cond_Y2a = Y > -3.00 - 2. * elem_size
+#        cond_Y2b = Y < -3.00 + 2. * elem_size
+#        cond_X = cond_X1 + cond_X2
+#        cond_Y = cond_Y1a * cond_Y1b + cond_Y2a * cond_Y2b
+#        cond_elem_active = np.where( 1 - cond_X * cond_Y )[0]
+
+        elem_active_idx = np.where( cond_elem_active )[0]
+        if np.all(arr == lcc_table.geo_data_orig['t_elem_node_map'] )\
+            or np.all(arr == lcc_table.geo_data_orig['q_elem_node_map']) \
+            or np.all(arr == lcc_table.geo_data_orig['t_idx'] )\
+            or np.all(arr == lcc_table.geo_data_orig['q_idx'] )\
+            or np.all(arr == lcc_table.lc_list[0].state_data_orig['ux'] )\
+            or np.all(arr == lcc_table.lc_list[0].state_data_orig['uy'] )\
+            or np.all(arr == lcc_table.lc_list[0].state_data_orig['uz'] )\
+            or np.all(arr == lcc_table.lc_list[0].state_data_orig['node_U']):
+            return arr
+        else:
+            return arr[elem_active_idx]
     #---------------------------------------------
     # 2 shells: 
     # new geometry with new loading cases plus waterfilling
@@ -25,8 +70,8 @@ if __name__ == '__main__':
     data_dir = os.path.join(simdb.simdb_dir,
                             'simdata', 
                             'input_data_barrelshell',
-#                            '2cm-feines-Netz', 
-                            '2cm-Elastomer', 
+                            '2cm-feines-Netz', 
+#                            '2cm-Elastomer', 
 #                            '2cm', 
 #                            '2cm-Zugausfall-komplett', 
 #                            '2cm-Zugausfall-vorne', 
@@ -133,26 +178,26 @@ if __name__ == '__main__':
                  # temperature 
                  #----------------------------------------------------------------------
 
-                 # LC13:
+#                 # LC13:
 #                 LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
 #                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
 #                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
 #                    ),
-                 # LC14:
+#                 # LC14:
 #                 LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
 #                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
 #                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
 #                    ),
-                 # LC15:
-                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
-                    ),
-                 # LC16:
-                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
-                    ),
+#                 # LC15:
+#                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
+#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
+#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
+#                    ),
+#                 # LC16:
+#                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
+#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
+#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
+#                    ),
                     
                  #----------------------------------------------------------------------
                  # shrinkage 
@@ -234,6 +279,7 @@ if __name__ == '__main__':
     if do == 'ULS':
         lct = LCCTableULS(data_dir = data_dir,
                           reader_type = 'InfoCAD',
+                          data_filter = remove_support_elems,
                           lc_list = lc_list,
                           show_lc_characteristic = True
                           )
