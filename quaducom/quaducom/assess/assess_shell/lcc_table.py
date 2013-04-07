@@ -127,12 +127,12 @@ class LC(HasTraits):
 
     # state data (after filtering)
     #
-    state_data_dict = Property(Dict, depends_on = 'file_name, data_filter')
+    state_data_dict = Property(Dict, depends_on = 'file_name, +filter')
     @cached_property
     def _get_state_data_dict(self):
         d = {}
         for k, arr in self.state_data_orig.items():
-            d[k] = self.data_filter(self.lcc_table, arr)
+            d[ k ] = self.data_filter(self.lcc_table, arr)
         return d
 
     sr_columns = Property(List)
@@ -625,7 +625,7 @@ class LCCTable(HasTraits):
 
     # construct a filter 
     #
-    data_filter = Callable
+    data_filter = Callable(filter = True)
     def _data_filter_default(self):
         return lambda lcc_table, x: x    #  - do nothing by default
 
@@ -665,7 +665,7 @@ class LCCTable(HasTraits):
             lcc = LCC(#lcc_table = self,
                        factors = combi_arr[ i_lcc, : ],
                        lcc_id = i_lcc,
-                       # changes necessary to destinguish plotting functionallity defined in 'ls_table' 
+                       # changes necessary to distinguish plotting functionality defined in 'ls_table' 
                        # e.i. plot deformation when 'LCCReaderInfoCAD' is used 
                        ls_table = LSTable( reader = self.reader,
                                            geo_data = self.geo_data_dict,
