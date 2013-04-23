@@ -104,17 +104,13 @@ class YMBDistrib(YMBHist):
 
 class YMB_RV(RV):
 
-    distrib = Instance(YMBDistrib)
-#     _distrib = Property(depends_on='distrib')
-#     @cached_property
-#     def _get__distr(self):
-#         return self.distrib
+    distr = Instance(YMBDistrib)
 
     def pdf(self, x):
-        return self.distrib.interp_pdf(x)
+        return self.distr.interp_pdf(x)
 
     def ppf(self, x):
-        return self.distrib.interp_ppf(x)
+        return self.distr.interp_ppf(x)
 
     def rvs(self, x):
         return self.distr.interp_ppf(random.random(x))

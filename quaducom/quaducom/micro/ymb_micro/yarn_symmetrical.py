@@ -7,10 +7,10 @@ with the same friction at both sides.
 @author: Q
 '''
 
-from enthought.traits.api import \
+from etsproxy.traits.api import \
     Bool, Float, Str, implements, Int, Instance, Event, on_trait_change
 
-from enthought.traits.ui.api import \
+from etsproxy.traits.ui.api import \
     View, Item, HSplit, VGroup
 
 from math import pi, e

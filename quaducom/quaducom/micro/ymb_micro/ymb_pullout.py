@@ -113,7 +113,7 @@ class YarnPullOut(HasTraits):
     def _redraw(self):
 
         s = SPIRRID(q=self.rf,
-                    sampling_type='MCS',
+                    sampling_type='LHS',
                     e_arr=self.e_arr,
                     n_int=self.n_G_ipts,
                     theta_vars=dict(tau_fr=2.6,
