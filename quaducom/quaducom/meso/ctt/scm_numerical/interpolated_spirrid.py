@@ -6,8 +6,8 @@ Created on Aug 17, 2011
 
 from etsproxy.traits.api import HasTraits, Property, cached_property, \
     Instance, Array, List, Float, Int, Dict
-from stats.spirrid.spirrid import SPIRRID
-from stats.spirrid.rv import RV
+from spirrid import SPIRRID
+from spirrid.rv import RV
 import numpy as np
 from scipy import ndimage
 import types
@@ -110,11 +110,11 @@ class RangeAdaption(HasTraits):
     n_x = Int
     n_BC = Int
 
-    tvar_dict = Property(Dict, depends_on='spirrid.tvars')
+    tvar_dict = Property(Dict, depends_on='spirrid.theta_vars')
 
     @cached_property
     def _get_tvar_dict(self):
-        tvar_dict = copy.deepcopy(self.spirrid.tvars)
+        tvar_dict = copy.deepcopy(self.spirrid.theta_vars)
         for key, value in zip(tvar_dict.keys(), tvar_dict.values()):
             if isinstance(value, RV):
                 tvar_dict[key] = value._distr.mean
@@ -132,10 +132,10 @@ class RangeAdaption(HasTraits):
 
     @cached_property
     def _get_load_sigma_f(self):
-        Vf = self.spirrid.tvars['V_f']
+        Vf = self.spirrid.theta_vars['V_f']
         return self.load_sigma_c / Vf
 
-    delta0 = Property(Float, depends_on='spirrid.tvars')
+    delta0 = Property(Float, depends_on='spirrid.theta_vars')
 
     @cached_property
     def _get_delta0(self):
@@ -208,10 +208,10 @@ class RangeAdaption(HasTraits):
         # 2) response peak is lower and lies within the given w range
         # 3) response peak is lower and lies beyond the given w range
         w_guess = self.w_guess(ll, lr)
-        self.spirrid.evars = dict(w=w_guess)
-        self.spirrid.tvars['x'] = 0.0
-        self.spirrid.tvars['Ll'] = ll
-        self.spirrid.tvars['Lr'] = lr
+        self.spirrid.eps_vars = dict(w=w_guess)
+        self.spirrid.theta_vars['x'] = 0.0
+        self.spirrid.theta_vars['Ll'] = ll
+        self.spirrid.theta_vars['Lr'] = lr
         sigma_f = self.spirrid.mu_q_arr
         # finding appropriate range for w
         load_sigma_f = self.load_sigma_f
@@ -227,9 +227,9 @@ class RangeAdaption(HasTraits):
         idxmax = np.argmax(sigma_opt)
         sigma_f_cutoff = sigma_opt[:idxmax + 1]
         w_cutoff = w_opt[:idxmax + 1]
-        del self.spirrid.tvars['x']
-        del self.spirrid.tvars['Ll']
-        del self.spirrid.tvars['Lr']
+        del self.spirrid.theta_vars['x']
+        del self.spirrid.theta_vars['Ll']
+        del self.spirrid.theta_vars['Lr']
         return w_cutoff, sigma_f_cutoff
 
     def adapt_w_higher_stress(self, sigma_f, load_sigma_f):
@@ -239,18 +239,18 @@ class RangeAdaption(HasTraits):
             float(np.argmax(sigma_f)) / float(len(sigma_f) - 1) < 0.9:
             # find the first nonzero value
             min_idx = np.where((sigma_f == sigma_f[0]) == False)[0][0] - 1
-            wmin = self.spirrid.evars['w'][min_idx]
+            wmin = self.spirrid.eps_vars['w'][min_idx]
             # find the closest higher value to the max applied stress
             idx_closest = arg_find_closest_higher(sigma_f, np.max(load_sigma_f))
-            wmax = self.spirrid.evars['w'][idx_closest]
-            #adapt the w range and evaluate spirrid with the adapted range
-            self.spirrid.evars = dict(w=np.linspace(wmin, wmax, self.n_w))
+            wmax = self.spirrid.eps_vars['w'][idx_closest]
+            # adapt the w range and evaluate spirrid with the adapted range
+            self.spirrid.eps_vars = dict(w=np.linspace(wmin, wmax, self.n_w))
             sigma_f = self.spirrid.mu_q_arr
             count += 1
             if count > 3:
                 raise ValueError('''got stuck in a loop adapting w
                 - try to change the w range''')
-        return self.spirrid.evars['w'], sigma_f
+        return self.spirrid.eps_vars['w'], sigma_f
 
     def adapt_w_lower_stress(self, sigma_f, load_sigma_f):
         # the peak is within the w range - stretch the w range
@@ -259,15 +259,15 @@ class RangeAdaption(HasTraits):
             while np.argmax(sigma_f) / float(len(sigma_f) - 1) < 0.9:
                 # find the first nonzero value
                 min_idx = np.where((sigma_f == sigma_f[0]) == False)[0][0] - 1
-                wmin = self.spirrid.evars['w'][min_idx]
-                wmax = self.spirrid.evars['w'][np.argmax(sigma_f)] * 1.05
-                self.spirrid.evars = dict(w=np.linspace(wmin, wmax, self.n_w))
+                wmin = self.spirrid.eps_vars['w'][min_idx]
+                wmax = self.spirrid.eps_vars['w'][np.argmax(sigma_f)] * 1.05
+                self.spirrid.eps_vars = dict(w=np.linspace(wmin, wmax, self.n_w))
                 sigma_f = self.spirrid.mu_q_arr
                 count += 1
                 if count > 3:
                     raise ValueError('''got stuck in a loop adapting w
                     - try to change the w range''')
-            return self.spirrid.evars['w'], sigma_f
+            return self.spirrid.eps_vars['w'], sigma_f
         # the peak is beyond the w range
         else:
             # stretch the w range until case 1) or 2) is attained
@@ -275,8 +275,8 @@ class RangeAdaption(HasTraits):
             while np.argmax(sigma_f) == len(sigma_f) - 1 and \
              np.max(sigma_f) < np.max(load_sigma_f):
                 factor = np.max(load_sigma_f) / np.max(sigma_f)
-                wmax = self.spirrid.evars['w'][-1] * factor * 1.2
-                self.spirrid.evars['w'] = np.linspace(0.0, wmax, self.n_w)
+                wmax = self.spirrid.eps_vars['w'][-1] * factor * 1.2
+                self.spirrid.eps_vars['w'] = np.linspace(0.0, wmax, self.n_w)
                 sigma_f = self.spirrid.mu_q_arr
                 count += 1
                 if count > 3:
@@ -300,10 +300,10 @@ class RangeAdaption(HasTraits):
 
     def adapt_x_range(self, wmax, x_init, ll, lr):
         ''' adapts the x range for a given crack opening '''
-        self.spirrid.tvars['w'] = wmax
-        self.spirrid.tvars['Ll'] = ll
-        self.spirrid.tvars['Lr'] = lr
-        self.spirrid.evars = dict(x=x_init)
+        self.spirrid.theta_vars['w'] = wmax
+        self.spirrid.theta_vars['Ll'] = ll
+        self.spirrid.theta_vars['Lr'] = lr
+        self.spirrid.eps_vars = dict(x=x_init)
         qx = self.spirrid.mu_q_arr
         x = x_init
         while np.min(qx) == np.max(qx) or \
@@ -312,17 +312,17 @@ class RangeAdaption(HasTraits):
             x = np.linspace(x[0] - 0.5 * self.delta0,
                             x[-1] + 0.5 * self.delta0,
                             self.n_x)
-            self.spirrid.evars['x'] = x
+            self.spirrid.eps_vars['x'] = x
             qx = self.spirrid.mu_q_arr
-        #look for the index in q_x_arr where the constant
-        #part changes to non linear stress profile
+        # look for the index in q_x_arr where the constant
+        # part changes to non linear stress profile
         idxs_const_x = np.where(qx == np.min(qx))[0]
         idx_const_x = np.max(idxs_const_x[len(idxs_const_x)
                                 / 2 - 2], idxs_const_x[0])
         x_opt = np.linspace(x[idx_const_x], -x[idx_const_x], self.n_x)
-        del self.spirrid.tvars['w']
-        del self.spirrid.tvars['Ll']
-        del self.spirrid.tvars['Lr']
+        del self.spirrid.theta_vars['w']
+        del self.spirrid.theta_vars['Ll']
+        del self.spirrid.theta_vars['Lr']
         return x_opt
 
 
@@ -335,8 +335,8 @@ class InterpolatedSPIRRID(HasTraits):
         axes_values = [sigma_f_cutoff, x_adapt]
         preinterp = NDIdxInterp(data=mu_w_x, axes_values=axes_values)
         # values to interpolate for
-        load_sigma_f = self.initial_evars[0]
-        x = self.initial_evars[1]
+        load_sigma_f = self.initial_eps_vars[0]
+        x = self.initial_eps_vars[1]
         interp_coords = [load_sigma_f, x]
         return preinterp(*interp_coords, mode='constant')
 
@@ -347,7 +347,7 @@ class InterpolatedSPIRRID(HasTraits):
         print 'evaluating mean response and adapting ranges...'
         spirrid_result = self.spirrid_result
         print 'complete'
-        axes_values = self.initial_evars
+        axes_values = self.initial_eps_vars
         ni = NDIdxInterp(data=spirrid_result, axes_values=axes_values)
         return ni
 
@@ -366,9 +366,9 @@ class InterpolatedSPIRRID(HasTraits):
                 w_opt, sigma_f_opt = self.adaption.adapt_w_range(ll, lr)
                 # adapt x range
                 x_opt = np.linspace(-ll, lr, self.adaption.n_x)
-                self.adaption.spirrid.evars = dict(w=w_opt, x=x_opt)
-                self.adaption.spirrid.tvars['Ll'] = ll
-                self.adaption.spirrid.tvars['Lr'] = lr
+                self.adaption.spirrid.eps_vars = dict(w=w_opt, x=x_opt)
+                self.adaption.spirrid.theta_vars['Ll'] = ll
+                self.adaption.spirrid.theta_vars['Lr'] = lr
                 # evaluate 2D (w,x) SPIRRID with adapted ranges x and w
                 mu_w_x = self.adaption.spirrid.mu_q_arr
                 # preinterpolate particular result for the given x and sigma ranges
@@ -377,21 +377,21 @@ class InterpolatedSPIRRID(HasTraits):
                 mask = np.where(self.adaption.load_sigma_f
                                 <= sigma_f_opt[-1], 1, np.NaN)[:, np.newaxis]
                 mu_w_x_interp = mu_w_x_interp * mask
-                #e_arr = orthogonalize([np.arange(len(w_opt)), np.arange(len(x_opt))])
-                #m.surf(e_arr[0], e_arr[1], mu_w_x * 0.05)
-                #m.surf(e_arr[0], e_arr[1], mu_w_x_interp * 0.05)
-                #m.show()
-                # store the particular result for BC ll and lr into the result array 
+                # eps_vars = orthogonalize([np.arange(len(w_opt)), np.arange(len(x_opt))])
+                # m.surf(eps_vars[0], eps_vars[1], mu_w_x * 0.05)
+                # m.surf(eps_vars[0], eps_vars[1], mu_w_x_interp * 0.05)
+                # m.show()
+                # store the particular result for BC ll and lr into the result array
                 result[:, :, i, j] = mu_w_x_interp
                 current_loop = i * len(Lr) + j + 1
                 print 'progress: %2.1f %%' % \
                 (current_loop / float(loops_tot) * 100.)
         return result
 
-    initial_evars = Property(List(Array))
+    initial_eps_vars = Property(List(Array))
 
     @cached_property
-    def _get_initial_evars(self):
+    def _get_initial_eps_vars(self):
         return [self.adaption.load_sigma_f,
                 self.adaption.x_init,
                 self.adaption.BC_range,
@@ -402,7 +402,7 @@ class InterpolatedSPIRRID(HasTraits):
         evaluation of force profile in the vicinity of a crack bridge
         '''
         args = list(args)
-        load_sigma_f = args[0] / self.adaption.spirrid.tvars['V_f']
+        load_sigma_f = args[0] / self.adaption.spirrid.theta_vars['V_f']
         # fiber stress
         args[0] = load_sigma_f
         self.load_sigma_f = load_sigma_f
@@ -420,7 +420,7 @@ if __name__ == '__main__':
     # filaments
     r = 0.00345
     V_f = 0.0103
-    tau = 0.1#RV('uniform', loc=0.02, scale=.2)
+    tau = 0.1  # RV('uniform', loc=0.02, scale=.2)
     E_f = 200e3
     E_m = 25e3
     l = RV('uniform', scale=20., loc=2.)
@@ -440,8 +440,8 @@ if __name__ == '__main__':
                        n_x=101,
                        n_BC=2,
                        spirrid=SPIRRID(q=rf,
-                                       sampling_type='PGrid',
-                                       tvars=dict(tau=tau,
+                                       sampling_type='LHS',
+                                       theta_vars=dict(tau=tau,
                                                   l=l,
                                                   E_f=E_f,
                                                   theta=theta,
@@ -464,8 +464,8 @@ if __name__ == '__main__':
                        n_x=101,
                        n_BC=2,
                        spirrid=SPIRRID(q=rf,
-                                       sampling_type='PGrid',
-                                       tvars=dict(tau=tau,
+                                       sampling_type='LHS',
+                                       theta_vars=dict(tau=tau,
                                                    l=l,
                                                    E_f=E_f,
                                                    theta=theta,
@@ -489,17 +489,17 @@ if __name__ == '__main__':
         Lr = 50.
         x = np.linspace(-Ll, Lr, 201)
 
-        e_arr = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
-        #mu_q_nisp = nisp(P, x, Ll, Lr)[0]
+        eps_vars = orthogonalize([np.arange(len(sigma)), np.arange(len(x))])
+        # mu_q_nisp = nisp(P, x, Ll, Lr)[0]
         mu_q_isp = isp(sigma, x, 1., 14.)
         mu_q_isp2 = isp(sigma, x, Ll, Lr)
 
 #        plt.plot(np.arange(len(sigma)), sigma/0.0103)
 #        plt.plot(np.arange(len(sigma)), np.max(mu_q_isp,axis = 0))
 #        plt.show()
-        #n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
-        mlab.surf(e_arr[0], e_arr[1], mu_q_isp / 10.)
-        mlab.surf(e_arr[0], e_arr[1], mu_q_isp2 / 10.)
+        # n_mu_q_arr = mu_q_nisp / np.max(np.fabs(mu_q_nisp))
+        mlab.surf(eps_vars[0], eps_vars[1], mu_q_isp / 10.)
+        mlab.surf(eps_vars[0], eps_vars[1], mu_q_isp2 / 10.)
         mlab.show()
 
-    #plot()
+    # plot()

@@ -6,13 +6,13 @@ Created on Jul 26, 2012
 
 from etsproxy.traits.api import \
     Instance, Array, List, cached_property, Property
+from matplotlib import pyplot as plt
 from etsproxy.traits.ui.api import ModelView
-from stats.spirrid.sampling import FunctionRandomization
-from stats.spirrid.rv import RV
+from spirrid.sampling import FunctionRandomization
+from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
-from matplotlib import pyplot as plt
-from quaducom.meso.ctt.scm_numerical.scm_model import SCM
+from quaducom.meso.ctt.scm_numerical_new.scm_model import SCM
 
 
 class SCMView(ModelView):
@@ -85,13 +85,13 @@ class SCMView(ModelView):
 
     @cached_property
     def _get_eps_m(self):
-        return self.model.sigma_m_x / self.model.cb_randomization.tvars['E_m']
+        return self.model.sigma_m_x / self.model.cb_randomization.theta_vars['E_m']
 
     sigma_f = Property(Array, depends_on='model.')
 
     @cached_property
     def _get_sigma_f(self):
-        V_f = self.model.cb_randomization.tvars['V_f']
+        V_f = self.model.cb_randomization.theta_vars['V_f']
         return (self.model.load_sigma_c[:, np.newaxis] -
                 self.model.sigma_m_x * (1. - V_f)) / V_f
 
@@ -99,7 +99,7 @@ class SCMView(ModelView):
 
     @cached_property
     def _get_eps_f(self):
-        return self.sigma_f / self.model.cb_randomization.tvars['E_f']
+        return self.sigma_f / self.model.cb_randomization.theta_vars['E_f']
 
     eps_sigma = Property(depends_on='model.')
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
 #    rf = CBEMClampedFiberStressSP()
 #    rand = FunctionRandomization(q=rf,
-#                                 tvars=dict(tau=tau,
+#                                 theta_vars=dict(tau=tau,
 #                                            l=l,
 #                                            E_f=Ef,
 #                                            theta=theta,
@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     rf = CBEMClampedFiberStressResidualSP()
     rand = FunctionRandomization(q=rf,
-                                 tvars=dict(tau=tau,
+                                 theta_vars=dict(tau=tau,
                                             l=l,
                                             E_f=Ef,
                                             theta=theta,
