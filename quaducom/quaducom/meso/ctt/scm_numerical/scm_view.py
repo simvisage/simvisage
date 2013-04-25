@@ -121,7 +121,7 @@ if __name__ == '__main__':
     from quaducom.micro.resp_func.cb_emtrx_clamped_fiber_stress_residual \
     import CBEMClampedFiberStressResidualSP
     from etsproxy.mayavi import mlab
-    from stats.spirrid import make_ogrid as orthogonalize
+    from spirrid import make_ogrid as orthogonalize
 
     # filaments
     r = 0.00345
