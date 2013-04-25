@@ -12,7 +12,7 @@ from spirrid.sampling import FunctionRandomization
 from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
-from quaducom.meso.ctt.scm_numerical_new.scm_model import SCM
+from quaducom.meso.ctt.scm_numerical.scm_model import SCM
 
 
 class SCMView(ModelView):
