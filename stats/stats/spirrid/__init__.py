@@ -1,3 +1,5 @@
+import warnings
+warnings.warn("This SPIRRID module is deprecated.", category=UserWarning, stacklevel=2)
 from i_rf import IRF
 from rf import RF
 from rv import RV

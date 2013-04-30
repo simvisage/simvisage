@@ -14,7 +14,8 @@
 from etsproxy.traits.api import \
     HasTraits, Instance, Int, Array, List, Callable, Interface, \
     implements, Trait, cached_property, Property, Float
-from stats.spirrid.spirrid import SPIRRID, FunctionRandomization, MonteCarlo
+from spirrid import SPIRRID
+from spirrid.sampling import FunctionRandomization, MonteCarlo
 from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
@@ -22,7 +23,6 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 import copy
-from matplotlib import pyplot as plt
 import numpy.ma as ma
 
 
@@ -53,19 +53,19 @@ class CB(HasTraits):
 
     @cached_property
     def _get_E_m(self):
-        return self.randomization.tvars['E_m']
+        return self.randomization.theta_vars['E_m']
 
     V_f = Property
 
     @cached_property
     def _get_V_f(self):
-        return self.randomization.tvars['V_f']
+        return self.randomization.theta_vars['V_f']
 
     E_f = Property
 
     @cached_property
     def _get_E_f(self):
-        return self.randomization.tvars['E_f']
+        return self.randomization.theta_vars['E_f']
 
     E_c = Property
 
@@ -137,7 +137,7 @@ class CBMeanFactory(CBMFactory):
 
     @cached_property
     def _get_spirrid(self):
-        args = self.randomization.trait_get(['q', 'evars', 'tvars'])
+        args = self.randomization.trait_get(['q', 'eps_vars', 'theta_vars'])
         return SPIRRID(**args)
 
     adaption = Instance(RangeAdaption)
@@ -210,7 +210,7 @@ class SCM(HasTraits):
     load_sigma_c = Property(depends_on='+load')
 
     def _get_load_sigma_c(self):
-        #applied external load in terms of composite stress
+        # applied external load in terms of composite stress
         return np.linspace(self.load_sigma_c_min,
                            self.load_sigma_c_max, self.load_n_sigma_c)
 
@@ -242,7 +242,7 @@ class SCM(HasTraits):
         cb_list = self.cracks_list[-1]
         crack_position = cb_list[-1].position
         cb_list = sorted(cb_list, key=attrgetter('position'))
-        #find idx of the new crack
+        # find idx of the new crack
         for i, crack in enumerate(cb_list):
             if crack.position == crack_position:
                 idx = i
@@ -289,9 +289,9 @@ class SCM(HasTraits):
             return [None]
 
     def sigma_m(self, load):
-        Em = self.cb_randomization.tvars['E_m']
-        Ef = self.cb_randomization.tvars['E_f']
-        Vf = self.cb_randomization.tvars['V_f']
+        Em = self.cb_randomization.theta_vars['E_m']
+        Ef = self.cb_randomization.theta_vars['E_f']
+        Vf = self.cb_randomization.theta_vars['V_f']
         Ec = Ef * Vf + Em * (1. - Vf)
         sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
         cb_load = self.cb_list(load)
@@ -334,7 +334,7 @@ class SCM(HasTraits):
                                           np.array([0.0]),
                                           cb.Ll, cb.Lr).flatten()
             mu_q_real = mu_q[np.isnan(mu_q) == False]
-            new_q_max = np.max(mu_q_real) * self.cb_randomization.tvars['V_f']
+            new_q_max = np.max(mu_q_real) * self.cb_randomization.theta_vars['V_f']
             if new_q_max < q_max:
                 q_max = new_q_max
             if float(crack_position) == last_pos:

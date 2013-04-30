@@ -20,10 +20,10 @@ from math import pi
 from numpy import \
     sign, sqrt, linspace, minimum, maximum
 
-from stats.spirrid.i_rf import \
+from spirrid.i_rf import \
     IRF
 
-from stats.spirrid.rf import \
+from spirrid.rf import \
     RF
 
 from matplotlib import pyplot as plt
@@ -115,7 +115,7 @@ class CBEMClampedFiber(RF):
 
     def linel(self, u, l, T, Kr, Km, L):
         P2 = (T * L ** 2 + 2 * u * Kr) / 2. / (L + l)
-        
+
         return P2
 
     def __call__(self, w, tau, l, A_r, E_f, E_m, A_m, theta, xi, phi, Ll, Lr, Nf):
@@ -151,7 +151,7 @@ class CBEMClampedFiber(RF):
         w0 = T * Lmin * ((2 * l0 + Lmin) * (Kr + Km) + Kr * Lmax) / (Km * Kr)
         # force at w0
         Q0 = Lmin * T * (Km + Kr) / (Km)
-        #print Q0
+        # print Q0
         # debonding from one side; the other side is clamped
         # equal to a one sided pullout with embedded length Lmax - Lmin and free length 2*Lmin + l
 
@@ -159,17 +159,17 @@ class CBEMClampedFiber(RF):
         l1 = 2 * Lmin + l
         L1 = Lmax - Lmin
         q1 = self.pullout(w - w0, l1, T, Kr, Km, L1) + Q0
-        
+
 
         # debonding completed at both sides, response becomes linear elastic
 
         # displacement at which the debonding is finished at both sides
         w1 = (L1 * T * (Kr + Km) * (L1 + l1)) / Kr / Km - T * L1 ** 2 / 2. / Kr
-        #print 'alt w0', w0, 'alt w1', w1 , 'alt w0+w1', w0 + w1
+        # print 'alt w0', w0, 'alt w1', w1 , 'alt w0+w1', w0 + w1
         q2 = self.linel(w - w0, l1, T, Kr, Km, L1) + Q0
-        #print self.linel(0, l1, T, Kr, Km, L1)
+        # print self.linel(0, l1, T, Kr, Km, L1)
 
-        # cut out definition ranges and add all parts 
+        # cut out definition ranges and add all parts
         q0 = H(w) * q0 * H(w0 - w)
         q1 = H(w - w0) * q1 * H(w1 + w0 - w)
         q2 = H(w - w1 - w0) * q2
@@ -178,7 +178,7 @@ class CBEMClampedFiber(RF):
 
         # include breaking strain
         q = q * H(Kr * xi - q)
-    
+
         return q
 
 class CBEMClampedFiberSP(CBEMClampedFiber):
@@ -204,7 +204,7 @@ class CBEMClampedFiberSP(CBEMClampedFiber):
 
         q = super(CBEMClampedFiberSP, self).__call__(w, tau, l, A_r, E_f, A_m, E_m, theta, xi, phi, Ll, Lr, Nf)
         q_x = q * H(l / 2. - abs(x)) + (q - T * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
-        #q_x = q_x * H(x + Ll) * H (Lr - x)
+        # q_x = q_x * H(x + Ll) * H (Lr - x)
         a = q * Km / (T * (Km + Kr))
         q_const = (q - T * a)
         q_x = maximum(q_x, q_const)
@@ -250,14 +250,14 @@ if __name__ == '__main__':
         print x
         q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
         print q
-        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
-        plt.xticks(fontsize = 14)
-        plt.yticks(fontsize = 14)
-        plt.legend(loc = 'best')
-        plt.ylim(0,60)
-        
+        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.legend(loc='best')
+        plt.ylim(0, 60)
+
     Pw()
-    #SP()
-    #SP2()
-    #plt.show()
+    # SP()
+    # SP2()
+    # plt.show()
 

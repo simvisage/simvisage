@@ -19,10 +19,10 @@ from etsproxy.traits.api import \
 
 from etsproxy.traits.ui.ui_traits import Image
 
-from stats.spirrid.i_rf import \
+from spirrid.i_rf import \
     IRF
 
-from stats.spirrid.rf import \
+from spirrid.rf import \
     RF
 
 import os
@@ -48,30 +48,30 @@ class Filament(RF):
     title = Str('brittle filament')
     image = Image('pics/cb_short_fiber.jpg')
 
-    xi = Float(0.017857, auto_set = False, enter_set = True,
-                distr = ['weibull_min', 'uniform'],
-                scale = 0.0178, shape = 4.0)
+    xi = Float(0.017857, auto_set=False, enter_set=True,
+                distr=['weibull_min', 'uniform'],
+                scale=0.0178, shape=4.0)
 
-    theta = Float(0.01, auto_set = False, enter_set = True,
-                   distr = ['uniform', 'norm'],
-                   loc = 0.01, scale = 0.001)
+    theta = Float(0.01, auto_set=False, enter_set=True,
+                   distr=['uniform', 'norm'],
+                   loc=0.01, scale=0.001)
 
-    lambd = Float(0.2, auto_set = False, enter_set = True,
-                   distr = ['uniform'],
-                   loc = 0.0, scale = 0.1)
+    lambd = Float(0.2, auto_set=False, enter_set=True,
+                   distr=['uniform'],
+                   loc=0.0, scale=0.1)
 
-    A = Float(5.30929158457e-10, auto_set = False, enter_set = True,
-               distr = ['weibull_min', 'uniform', 'norm'],
-               scale = 5.3e-10, shape = 8)
+    A = Float(5.30929158457e-10, auto_set=False, enter_set=True,
+               distr=['weibull_min', 'uniform', 'norm'],
+               scale=5.3e-10, shape=8)
 
-    E_mod = Float(70.0e9, auto_set = False, enter_set = True,
-                   distr = ['weibull_min', 'uniform', 'norm'],
-                   scale = 70e9, shape = 8)
+    E_mod = Float(70.0e9, auto_set=False, enter_set=True,
+                   distr=['weibull_min', 'uniform', 'norm'],
+                   scale=70e9, shape=8)
 
-    eps = Float(ctrl_range = (0, 0.05, 100), auto_set = False, enter_set = True)
+    eps = Float(ctrl_range=(0, 0.05, 100), auto_set=False, enter_set=True)
 
-    x_label = Str('strain', enter_set = True, auto_set = False)
-    y_label = Str('force [N]', enter_set = True, auto_set = False)
+    x_label = Str('strain', enter_set=True, auto_set=False)
+    y_label = Str('force [N]', enter_set=True, auto_set=False)
 
     C_code = '''
             double eps_ = ( eps - theta * ( 1 + lambd ) ) /
@@ -93,33 +93,33 @@ class Filament(RF):
         # NOTE: as each variable is an array oriented in different direction
         # the algebraic expressions (-+*/) perform broadcasting,. i.e. performing
         # the operation for all combinations of values. Thus, the resulgin eps
-        # is contains the value of local strain for any combination of 
-        # global strain, xi, theta and lambda 
+        # is contains the value of local strain for any combination of
+        # global strain, xi, theta and lambda
         #
 
         eps_ = (eps - theta * (1 + lambd)) / ((1 + theta) * (1 + lambd))
 
         # cut off all the negative strains due to delayed activation
-        # 
+        #
         eps_ *= Heaviside(eps_)
 
-        # broadcast eps also in the xi - dimension 
+        # broadcast eps also in the xi - dimension
         # (by multiplying with array containing ones with the same shape as xi )
         #
         eps_grid = eps_ * Heaviside(xi - eps_)
 
         # cut off all the realizations with strain greater than the critical one.
-        # 
+        #
         # eps_grid[ eps_grid >= xi ] = 0
 
         # transform it to the force
-        # 
+        #
         q_grid = E_mod * A * eps_grid
 
         return q_grid
 
 if __name__ == '__main__':
     q = Filament()
-    q.plot(plt, linewidth = 2, color = 'navy')
+    q.plot(plt, linewidth=2, color='navy')
     plt.show()
 

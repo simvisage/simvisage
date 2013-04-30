@@ -16,10 +16,10 @@ from etsproxy.traits.api import \
 
 import numpy as np
 
-from stats.spirrid.i_rf import \
+from spirrid.i_rf import \
     IRF
 
-from stats.spirrid.rf import \
+from spirrid.rf import \
     RF
 
 from matplotlib import pyplot as plt
@@ -100,14 +100,14 @@ class CBEMClampedFiberStressResidual(RF):
     C_code = Str('')
 
     def crackbridge(self, w, l, T, Kf, Km, V_f):
-        #Phase A : Both sides debonding .
+        # Phase A : Both sides debonding .
         Kc = Kf + Km
         c = Kc * T * l / 2.
         q0 = (np.sqrt(c ** 2 + w * Kf * Km * Kc * T) - c) / Km
         return q0 / V_f
 
     def pullout(self, w, l, T, Kf, Km, V_f, Lmin, Lmax):
-        #Phase B : Debonding of shorter side is finished
+        # Phase B : Debonding of shorter side is finished
         Kc = Kf + Km
         c = Kc * T * (Lmin + l)
         f = T ** 2 * Lmin ** 2 * Kc ** 2
@@ -115,16 +115,16 @@ class CBEMClampedFiberStressResidual(RF):
         return q1 / V_f
 
     def linel(self, w, l, T, Kf, Km, V_f, Lmax, Lmin):
-        #Phase C: Both sides debonded - linear elastic behavior.
+        # Phase C: Both sides debonded - linear elastic behavior.
         Kc = Kf + Km
         q2 = (2. * w * Kf * Km + T * Kc * (Lmin ** 2 + Lmax ** 2)) \
                 / (2. * Km * (Lmax + l + Lmin))
         return q2 / V_f
 
-    #reshaped parameters for the evaluation of L_bond_mean
+    # reshaped parameters for the evaluation of L_bond_mean
     params = List
 
-    #cached array of mean bonded lengths of broken filaments
+    # cached array of mean bonded lengths of broken filaments
     L_bond_mean = Property(depends_on='CB_params')
 
     @cached_property
@@ -137,7 +137,7 @@ class CBEMClampedFiberStressResidual(RF):
         of the mean remaining bonded lengths'''
         L_bond_x = np.abs(x_n) - l / 2.
         L_bond_x = L_bond_x * H(L_bond_x)
-        #initial guess for fsolve - solution for a bond free filament
+        # initial guess for fsolve - solution for a bond free filament
         q_init_guess = weibull_min(m, scale=s0).ppf(0.5) \
                                 * E_f * np.ones_like(q)
         left_side = np.log(1. - Pf) * s0 ** m
@@ -146,39 +146,39 @@ class CBEMClampedFiberStressResidual(RF):
                                V_f, E_f, E_m, theta, Pf, r, m, left_side),
                          xtol=0.01,
                          col_deriv=True)
-        #load q at filament breakage
+        # load q at filament breakage
         q_break = q_break.reshape(q_init_guess.shape)
         # evaluation of the mean bonded length - weighted mean of all
         # all possible bonded lengths
         eps_n0 = self.eps_n(q_break, tau, x_n, l, V_f, E_f, E_m, theta, r)
         CDF_n0 = weibull_min(m, scale=s0).cdf(eps_n0)
-        L_bond_mean = np.sum(CDF_n0 * L_bond_x, axis=-1) / (1e-15 +
-                            np.sum(CDF_n0, axis=-1))
+        L_bond_mean = np.sum(CDF_n0 * L_bond_x, axis= -1) / (1e-15 +
+                            np.sum(CDF_n0, axis= -1))
         return L_bond_mean
 
     def opt_q0(self, q0, q_shape, tau, x_n, l, V_f, E_f,
                E_m, theta, Pf, r, m, left_side):
         '''filament breaks are found by fsolve as roots of this function '''
         right = np.sum(self.eps_n(q0.reshape(q_shape), tau, x_n, l,
-                    V_f, E_f, E_m, theta, r) ** m, axis=-1)
+                    V_f, E_f, E_m, theta, r) ** m, axis= -1)
         value = left_side + right
         return value.flatten()
 
     def eps_n(self, q, tau, x_n, l, V_f, E_f, E_m, theta, r):
         '''evaluates the strain profiles along x_n'''
-        #stress in the free length
+        # stress in the free length
         l = l * (1 + theta)
         q_l = q * H(l / 2. - abs(x_n))
-        #stress in the part, where fiber transmits stress to the matrix
+        # stress in the part, where fiber transmits stress to the matrix
         Tf = 2. * tau / r
         q_e = (q - Tf * (abs(x_n) - l / 2.)) * H(abs(x_n) - l / 2.)
-        #far field stress
+        # far field stress
         E_c = E_m * (1 - V_f) + E_f * V_f
         q_const = q * V_f * E_f / E_c
-        #putting all parts together
+        # putting all parts together
         q_tau = q_l + q_e
         q_x = np.maximum(q_tau, q_const)
-        #cutting out the part, where broken filaments can be pulled out
+        # cutting out the part, where broken filaments can be pulled out
         eps_n = q_x / E_f * H(q_tau)
         return eps_n
 
@@ -186,7 +186,7 @@ class CBEMClampedFiberStressResidual(RF):
                   phi, Ll, Lr, V_f, r, s0, m):
         '''evaluates the filament breakage probabilities chain_sf
         and calls the method for evaluating the mean bonded length'''
-        #add another dimension (of x_n) to the parameters
+        # add another dimension (of x_n) to the parameters
         varlist = [q, tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m]
         reshaped = []
         for var in varlist:
@@ -200,11 +200,11 @@ class CBEMClampedFiberStressResidual(RF):
         CDF_n = weibull_min(m, scale=s0).cdf(eps_n)
         # survival probability of the whole system along x_n
         sf = 1 - CDF_n
-        chain_sf = sf.prod(axis=-1)
+        chain_sf = sf.prod(axis= -1)
         # store the parameters for evaluation of the breaking load
         self.params = [q, tau, x_n, l, E_f, E_m, theta, Pf,
                        phi, Ll, Lr, V_f, r, s0, m]
-        #residual bonded length
+        # residual bonded length
         L_bond_mean = self.L_bond_mean
         return chain_sf, L_bond_mean
 
@@ -215,14 +215,14 @@ class CBEMClampedFiberStressResidual(RF):
                  phi, Ll, Lr, V_f, r, s0, m):
         self.CB_params = (tau, l, E_f, E_m, theta, Pf,
                           phi, Ll, Lr, V_f, r, s0, m)
-        #assigning short and long embedded length
+        # assigning short and long embedded length
         Lmin = np.minimum(Ll, Lr)
         Lmax = np.maximum(Ll, Lr)
         Lmin = np.maximum(Lmin - l / 2., 1e-15)
         Lmax = np.maximum(Lmax - l / 2., 1e-15)
-        #maximum condition for free length
+        # maximum condition for free length
         l = np.minimum(l / 2., Lr) + np.minimum(l / 2., Ll)
-        #defining variables
+        # defining variables
         w = w - theta * l
         l = l * (1 + theta)
         w = H(w) * w
@@ -232,7 +232,7 @@ class CBEMClampedFiberStressResidual(RF):
         Kc = Km + Kf
 
         # double sided debonding
-        #q0 = self.crackbridge(w, l, T, Kr, Km, Lmin, Lmax)
+        # q0 = self.crackbridge(w, l, T, Kr, Km, Lmin, Lmax)
         q0 = self.crackbridge(w, l, T, Kf, Km, V_f)
 
         # displacement at which the debonding to the closer clamp is finished
@@ -253,7 +253,7 @@ class CBEMClampedFiberStressResidual(RF):
         q1 = H(w - w0) * q1 * H(w1 - w)
         q2 = H(w - w1) * q2
 
-        #add all parts
+        # add all parts
         q = q0 + q1 + q2
         # include breaking strain
         n = (Ll + Lr) / 10.
@@ -267,7 +267,7 @@ class CBEMClampedFiberStressResidual(RF):
         # create an array of strains along these parts
         chain_sf, L_bond_mean = self.fil_break(q, x_n, tau,
             l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
-        #print np.unravel_index(a.argmin(axis = -1), a.shape)
+        # print np.unravel_index(a.argmin(axis = -1), a.shape)
         surv = q * H(Pf - (1 - chain_sf))
         broken = L_bond_mean * T / V_f * H((1 - chain_sf) - Pf)
         q = surv + broken
@@ -294,18 +294,18 @@ class CBEMClampedFiberStressResidualSP(CBEMClampedFiberStressResidual):
             q = super(CBEMClampedFiberStressResidualSP, self).__call__(w,
                     tau, l, E_f, E_m, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
             self.q = q
-            #stress in the free length
+            # stress in the free length
             l = l * (1 + theta)
             q_l = q * H(l / 2 - abs(x))
-            #stress in the part, where fiber transmits stress to the matrix
+            # stress in the part, where fiber transmits stress to the matrix
             q_e = (q - Tf * (abs(x) - l / 2.)) * H(abs(x) - l / 2.)
-            #q_e = q_e * H(x + Ll) * H (Lr - x)
+            # q_e = q_e * H(x + Ll) * H (Lr - x)
 
-            #far field stress
+            # far field stress
             E_c = E_m * (1 - V_f) + E_f * V_f
             q_const = q * V_f * E_f / E_c
 
-            #putting all parts together
+            # putting all parts together
             q_x = q_l + q_e
             q_x = np.maximum(q_x, q_const)
             return q_x
@@ -351,7 +351,7 @@ if __name__ == '__main__':
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
         plt.title('Stress Along Filament at w = %.1f' % w)
-        #plt.legend(loc='best')
+        # plt.legend(loc='best')
         plt.ylim(0,)
 
 
