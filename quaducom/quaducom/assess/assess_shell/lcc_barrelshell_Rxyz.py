@@ -65,37 +65,37 @@ if __name__ == '__main__':
                  # LC2:
                  LC(name = 's_hinten', category = 'imposed-load', file_name = 'LC2.txt',
                     exclusive_to = ['s_feld', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC3:
                  LC(name = 's_feld', category = 'imposed-load', file_name = 'LC3.txt',
                     exclusive_to = ['s_hinten', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC4:
                  LC(name = 's_vorne', category = 'imposed-load', file_name = 'LC4.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
-                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC5:
                  LC(name = 's_links', category = 'imposed-load', file_name = 'LC5.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_vorne', 's_rechts', 's_komplett'],
-                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC6:
                  LC(name = 's_rechts', category = 'imposed-load', file_name = 'LC6.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
-                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC7:
                  LC(name = 's_komplett', category = 'imposed-load', file_name = 'LC7.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_vorne', 's_links', 's_rechts'],
-                    gamma_unf = 2.6, # = 1.5 * 1.4times increased snow load
+#                    gamma_unf = 2.6, # = 1.5 * 1.4times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
 
@@ -134,24 +134,24 @@ if __name__ == '__main__':
 
                  # LC13:
                  LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
-                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
+                    exclusive_to = ['T_N_pos'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
                     ),
                  # LC14:
                  LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
-                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
+                    exclusive_to = ['T_N_neg'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
                     ),
                  # LC15:
                  LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
+                    exclusive_to = ['T_uo_pos'],
+#                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
                     ),
                  # LC16:
                  LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
+                    exclusive_to = ['T_uo_neg'],
+#                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
                     ),
                     
@@ -205,25 +205,25 @@ if __name__ == '__main__':
                  # LC42:
                  LC(name = 'w_vonlinks_komplett', category = 'imposed-load', file_name = 'LC42.txt',
                     exclusive_to = ['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
+#                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC43:
                  LC(name = 'w_vonrechts_komplett', category = 'imposed-load', file_name = 'LC43.txt',
                     exclusive_to = ['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
+#                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC44:
                  LC(name = 'w_sog_komplett', category = 'imposed-load', file_name = 'LC44.txt',
                     exclusive_to = ['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
-                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
+#                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC45:
                  LC(name = 'w_druck_komplett', category = 'imposed-load', file_name = 'LC45.txt',
                     exclusive_to = ['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
-                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
+#                    gamma_unf = 2.1, # = 1.5 * 1.4times increased wind load
                     psi_0 = 0.6, psi_1 = 0.2, psi_2 = 0.0
                     ),                                        
                ]
