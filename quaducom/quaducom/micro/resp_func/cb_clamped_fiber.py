@@ -13,12 +13,12 @@
 # Created on Jun 14, 2010 by: rch
 
 from etsproxy.traits.api import Float, Str, implements
+from matplotlib import pyplot as plt
 from etsproxy.traits.ui.ui_traits import Image
 from math import pi
-from matplotlib import pyplot as plt
 from numpy import sqrt, linspace, minimum, maximum
-from stats.spirrid.i_rf import IRF
-from stats.spirrid.rf import RF
+from spirrid.i_rf import IRF
+from spirrid.rf import RF
 
 def H(x):
     return x >= 0
@@ -34,36 +34,36 @@ class CBClampedFiber(RF):
     title = Str('crack bridge - clamped fiber with constant friction')
     image = Image('pics/cb_short_fiber.jpg')
 
-    xi = Float(0.0179, auto_set = False, enter_set = True, input = True,
-                distr = ['weibull_min', 'uniform'])
+    xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
+                distr=['weibull_min', 'uniform'])
 
-    tau = Float(2.5, auto_set = False, enter_set = True, input = True,
-                distr = ['uniform', 'norm'])
+    tau = Float(2.5, auto_set=False, enter_set=True, input=True,
+                distr=['uniform', 'norm'])
 
-    l = Float(0.0, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'free length')
+    l = Float(0.0, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='free length')
 
-    D_f = Float(26e-3, auto_set = False, input = True,
-              enter_set = True, distr = ['uniform', 'weibull_min'])
+    D_f = Float(26e-3, auto_set=False, input=True,
+              enter_set=True, distr=['uniform', 'weibull_min'])
 
-    E_f = Float(72.0e3, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform'])
+    E_f = Float(72.0e3, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform'])
 
-    theta = Float(0.01, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'slack')
+    theta = Float(0.01, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='slack')
 
-    phi = Float(1., auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'bond quality')
+    phi = Float(1., auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='bond quality')
 
-    Ll = Float(1., auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'embedded length - left')
+    Ll = Float(1., auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='embedded length - left')
 
-    Lr = Float(.5, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'embedded length - right')
+    Lr = Float(.5, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='embedded length - right')
 
-    w = Float(auto_set = False, enter_set = True, input = True,
-               desc = 'crack width',
-               ctrl_range = (0, 0.01, 100))
+    w = Float(auto_set=False, enter_set=True, input=True,
+               desc='crack width',
+               ctrl_range=(0, 0.01, 100))
 
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
@@ -123,7 +123,7 @@ class CBClampedFiber(RF):
 
         # include breaking strain
         q = q * H(A * E_f * xi - q)
-        #return q0, q1, q2 * H( A * E_f * xi - q2 ), w0 + theta * l, w1 + theta * l
+        # return q0, q1, q2 * H( A * E_f * xi - q2 ), w0 + theta * l, w1 + theta * l
         return q
 
 class CBClampedFiberSP(CBClampedFiber):
@@ -132,8 +132,8 @@ class CBClampedFiberSP(CBClampedFiber):
     frictional interface to the matrix; clamped fiber end
     '''
 
-    x = Float(0.0, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'distance from crack')
+    x = Float(0.0, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='distance from crack')
 
     x_label = Str('position [mm]')
     y_label = Str('force [N]')
@@ -154,9 +154,9 @@ class CBClampedFiberSP(CBClampedFiber):
 if __name__ == '__main__':
 
     def Pw():
-        #from numpy import argwhere
+        # from numpy import argwhere
         q = CBClampedFiber()
-        q.plot(plt, linewidth = 2, color = 'navy')
+        q.plot(plt, linewidth=2, color='navy')
         plt.show()
     #    i1 = argwhere( w > q[3] )[0]
     #    i2 = argwhere( w > q[4] )[0]
@@ -179,11 +179,11 @@ if __name__ == '__main__':
         cbcsp = CBClampedFiberSP()
         x = linspace(-60, 30, 300)
         q = cbcsp(.9, x, .01, 3.5, 26e-3, 72e3, 0.0, .0179, 1., 40., 50.)
-        plt.plot(x, q, lw = 2, color = 'black', label = 'force along filament')
-        plt.xticks(fontsize = 14)
-        plt.yticks(fontsize = 14)
-        plt.legend(loc = 'best')
+        plt.plot(x, q, lw=2, color='black', label='force along filament')
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.legend(loc='best')
         plt.show()
 
     Pw()
-    #SP()
+    # SP()

@@ -22,10 +22,10 @@ from math import pi
 from numpy import \
     sign, sqrt, linspace
 
-from stats.spirrid.i_rf import \
+from spirrid.i_rf import \
     IRF
 
-from stats.spirrid.rf import \
+from spirrid.rf import \
     RF
 
 from matplotlib import pyplot as plt
@@ -45,29 +45,29 @@ class CBInfiniteFiber(RF):
 
     image = Image('pics/cb_short_fiber.jpg')
 
-    xi = Float(0.0179, auto_set = False, enter_set = True, input = True,
-                distr = ['weibull_min', 'uniform'])
+    xi = Float(0.0179, auto_set=False, enter_set=True, input=True,
+                distr=['weibull_min', 'uniform'])
 
-    tau = Float(2.5, auto_set = False, enter_set = True, input = True,
-                distr = ['uniform', 'norm'])
+    tau = Float(2.5, auto_set=False, enter_set=True, input=True,
+                distr=['uniform', 'norm'])
 
-    l = Float(0.5, auto_set = False, enter_set = True, input = True,
-              distr = ['uniform'], desc = 'free length')
+    l = Float(0.5, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'], desc='free length')
 
-    D_f = Float(26e-3, auto_set = False, input = True,
-              enter_set = True, distr = ['uniform', 'weibull_min'])
+    D_f = Float(26e-3, auto_set=False, input=True,
+              enter_set=True, distr=['uniform', 'weibull_min'])
 
-    E_f = Float(72.0e3, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform'])
+    E_f = Float(72.0e3, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform'])
 
-    theta = Float(0.01, auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'slack')
+    theta = Float(0.01, auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='slack')
 
-    phi = Float(1., auto_set = False, enter_set = True, input = True,
-                  distr = ['uniform', 'norm'], desc = 'bond quality')
+    phi = Float(1., auto_set=False, enter_set=True, input=True,
+                  distr=['uniform', 'norm'], desc='bond quality')
 
-    w = Float(auto_set = False, enter_set = True,
-               ctrl_range = (0.0, 0.1, 100))
+    w = Float(auto_set=False, enter_set=True,
+               ctrl_range=(0.0, 0.1, 100))
 
     x_label = Str('crack opening [mm]')
     y_label = Str('force [N]')
@@ -88,6 +88,6 @@ class CBInfiniteFiber(RF):
 
 if __name__ == '__main__':
     q = CBInfiniteFiber()
-    q.plot(plt, linewidth = 2, color = 'navy')
+    q.plot(plt, linewidth=2, color='navy')
     plt.show()
 
