@@ -326,9 +326,17 @@ class ULSRxyz(LS):
     # ULS: material parameters (Inputs)
     #--------------------------------------------------------
 
-    Rx_Rd = Float(1., input = True)
+    # shear Resistance
+    #
+    Rx_Rd = Float(5.3, input = True)
+
+    # pull-out Resistance
+    #
+    Rz_Rd = Float(4.8, input = True)
+
+    # (unused as Ry = 0. for all cases)
     Ry_Rd = Float(1., input = True)
-    Rz_Rd = Float(1., input = True)
+
     Mx_Rd = Float(1., input = True)
     My_Rd = Float(1., input = True)
     Mz_Rd = Float(1., input = True)
@@ -347,11 +355,34 @@ class ULSRxyz(LS):
         Rres = self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz
         Mres = self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz
         
-        # eta
+        # note: positive values of 'Rx' correspond to shear forces for the support screw
+        #       negative values are taken by the compression cushion at the support directly 
+        #       Therefore take only the positive part of support force 'Rx' into account
+        #       for the evaluation of 'eta_Rx'  
+        Rx_pos = ( abs( self.Rx ) + self.Rx ) / 2.
+
+        # eta pull-out
         #
-        eta_Rx = self.Rx / self. Rx_Rd
-        eta_Ry = self.Ry / self. Ry_Rd
-        eta_Rz = self.Rz / self. Rz_Rd
+        eta_Rx = Rx_pos / self. Rx_Rd
+
+        # note: negative values of 'Rz' correspond to pull-out forces for the support screw
+        #       positive values are taken by the compression cushion at the support directly 
+        #       Therefore take only the negative values of the support force 'Rz' into account
+        #       for the evaluation of 'eta_Rz'  
+        Rz_neg = ( abs( self.Rz ) - self.Rz ) / 2.
+        
+        # eta shear forces (independen of the 
+        #
+        eta_Rz = Rz_neg / self. Rz_Rd
+
+        # eta shear forces (unused as shear force in y-direction is always 0.)
+        #
+        eta_Ry = abs( self.Ry ) / self. Ry_Rd
+
+        # total eta for linear interaction:
+        #
+        eta_R_tot = eta_Rx + eta_Rz
+        
         eta_Mx = self.Mx / self. Mx_Rd
         eta_My = self.My / self. My_Rd
         eta_Mz = self.Mz / self. Mz_Rd
@@ -366,6 +397,7 @@ class ULSRxyz(LS):
                  'eta_Rx' : eta_Rx,
                  'eta_Ry' : eta_Ry,
                  'eta_Rz' : eta_Rz,
+                 'eta_R_tot' : eta_R_tot,
                  'eta_Mx' : eta_Mx,
                  'eta_My' : eta_My,
                  'eta_Mz' : eta_Mz,
@@ -375,17 +407,18 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
-#    assess_name = 'max_Rx'
-#    assess_name = 'min_Rx'# @todo: compare with pull-out resistance of the screw
+#    assess_name = 'max_Rx' # @todo: compare with pull-out resistance of the screw
+#    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
 #    assess_name = 'min_Ry'
-    assess_name = 'max_Rz'
+#    assess_name = 'max_Rz'
 #    assess_name = 'min_Rz' # @todo: compare with shear resistance of the screw
 #    assess_name = 'max_Rres'
+    assess_name = 'max_eta_R_tot'
 
     ls_columns = List(['Rx', 'Ry', 'Rz', 'Rres',
                        'Mx', 'My', 'Mz', 'Mres',
-                       'eta_Rx', 'eta_Ry', 'eta_Rz',
+                       'eta_Rx', 'eta_Ry', 'eta_Rz','eta_R_tot',
                        'eta_Mx', 'eta_My', 'eta_Mz'])
 
     Rres = Property(Array)
@@ -407,6 +440,10 @@ class ULSRxyz(LS):
     eta_Rz = Property(Array)
     def _get_eta_Rz(self):
         return self.ls_values['eta_Rz']
+
+    eta_R_tot = Property(Array)
+    def _get_eta_R_tot(self):
+        return self.ls_values['eta_R_tot']
 
     eta_Mx = Property(Array)
     def _get_eta_Mx(self):
@@ -460,6 +497,10 @@ class ULSRxyz(LS):
     def _get_max_Rres(self):
         return ndmax(self.Rres)
 
+    max_eta_R_tot = Property(depends_on = '+input')
+    @cached_property
+    def _get_max_eta_R_tot(self):
+        return ndmax(self.eta_R_tot)
 
     #-------------------------------
     # ls view
