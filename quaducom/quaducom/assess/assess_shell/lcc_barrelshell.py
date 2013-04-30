@@ -106,7 +106,7 @@ if __name__ == '__main__':
                  #----------------------------------------------------------------------
                  # dead load
                  #----------------------------------------------------------------------
-#                 # LC1:
+                 # LC1:
                  LC(name = 'g', category = 'dead-load', file_name = 'LC1.txt'
                     ),
 
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 #                    exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
 #                    psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
 #                    ),
-                 # LC11:
+#                 # LC11:
 #                 LC(name = 'Q_feld_re', category = 'imposed-load', file_name = 'LC11.txt',
 #                    exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
 #                    psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
@@ -202,14 +202,22 @@ if __name__ == '__main__':
                  #----------------------------------------------------------------------
                  # shrinkage 
                  #----------------------------------------------------------------------
-                 # LC17:
-                 LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
-                    psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
-                    ),
+#                 # LC17:
+#                 LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
+#                    psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
+#                    ),
 
                  #----------------------------------------------------------------------
                  # cable load (experimental test setup) 
                  #----------------------------------------------------------------------
+#                 LC(name = 'cable-FL-m3', category = 'imposed-load', file_name = 'LC22.txt',
+#                    # loading case only used for evaluation of experimental test setup 
+#                    # (estimation of load-bearing capacity)     
+#                    gamma_unf = 1000.0, gamma_fav = 1.0,
+#                    psi_0 = 1.0, 
+#                    ),
+
+
 #                 # LC18:
 #                 LC(name = 'cable-L-m0', category = 'imposed-load', file_name = 'LC18.txt',
 #                    # loading case only used for evaluation of experimental test setup 
@@ -219,12 +227,6 @@ if __name__ == '__main__':
 #                    ),
 
 #                 LC(name = 'cable-FL-m4', category = 'imposed-load', file_name = 'LC19.txt',
-#                    # loading case only used for evaluation of experimental test setup 
-#                    # (estimation of load-bearing capacity)     
-#                    gamma_unf = 1.0, gamma_fav = 1.0,
-#                    psi_0 = 1.0, 
-#                    ),
-#                 LC(name = 'cable-FL-m3', category = 'imposed-load', file_name = 'LC22.txt',
 #                    # loading case only used for evaluation of experimental test setup 
 #                    # (estimation of load-bearing capacity)     
 #                    gamma_unf = 1.0, gamma_fav = 1.0,
@@ -281,11 +283,12 @@ if __name__ == '__main__':
                           reader_type = 'InfoCAD',
                           data_filter = remove_support_elems,
                           lc_list = lc_list,
-                          show_lc_characteristic = True
+#                          show_lc_characteristic = True
                           )
 
-        lct.configure_traits()
+#        lct.configure_traits()
 #        lct.plot_n_tex()
+        lct.plot_assess_value()
 
 
     if do == 'SLS':
