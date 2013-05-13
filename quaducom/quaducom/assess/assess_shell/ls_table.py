@@ -601,24 +601,29 @@ class ULS(LS):
     sig_comp_90_Rd = sig_comp_0_Rd
 
     ### 'eval_mode = eta_nm' ###
+    # compressive strength
     #
+    n_0_Rdc = 65 * 0.1 * (100. * 2.) / 1.5 # [kN/m]  # 867 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
+
     # 6 layers carbon: experimental values for barrelshell on specimens with thickness 2 cm and width 10 cm
 #    n_0_Rdt = 41.1 / 0.1 # [kN/m] # 411 kN/m = tensile resistance as obtained in tensile test
-#    n_0_Rdc = 65 * 0.1 * (100. * 2.) # [kN/m]  # 1300 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
 #    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 # [kNm/m]
 #    print 'experimental values used for resistance values (no gamma)'
 
     # 6 layers carbon: design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
-    n_0_Rdc = 65 * 0.1 * (100. * 2.) / 1.5 # [kN/m]  # 867 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
-    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+
+    n_0_Rdt = 136 # [kN/m] # ZiE value
+    m_0_Rd = 1.13 # [kNm/m] # ZiE value
+    
+#    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
+#    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
 
 #    # 6 layers carbon: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-#    n_0_Rd = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
+#    n_0_Rdt = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
 #    m_0_Rd = (2.4 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
 
 #    # 6 layers AR-glas: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-#    n_0_Rd = 23.8 * 0.7 / 0.1 * 0.84 / 1.5 # [kN/m]
+#    n_0_Rdt = 23.8 * 0.7 / 0.1 * 0.84 / 1.5 # [kN/m]
 #    m_0_Rd = (1.3 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
 
     # assume the same strength in 90-direction (safe side); 
@@ -689,8 +694,8 @@ class ULS(LS):
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
     #
 #    eval_mode = 'massivbau'
-    eval_mode = 'princ_sig_level_1'
-#    eval_mode = 'eta_nm'
+#    eval_mode = 'princ_sig_level_1'
+    eval_mode = 'eta_nm'
 
 
     ls_values = Property(depends_on = '+input')
