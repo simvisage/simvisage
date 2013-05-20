@@ -764,6 +764,84 @@ class LCCTable(HasTraits):
 
         mlab.show()
 
+
+    def plot_assess_value(self, title = None):
+        '''plot the assess value for all loading case combinations
+        '''
+        #----------------------------------------
+        # script to get the maximum values of 'assess_value' 
+        # at all given coordinate points for all possible loading
+        # case combinations:
+        #----------------------------------------
+
+        # get the list of all loading case combinations:
+        #
+        lcc_list = self.lcc_list
+
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
+
+        assess_value_list = []
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
+            #
+            ls_class = lcc.ls_table.ls_class
+ 
+            # get 'assess_name'-column array 
+            #
+            assess_name = ls_class.assess_name
+            if assess_name == 'max_eta_nm_tot':
+                assess_value = getattr(ls_class, 'eta_nm_tot')
+            if assess_name == 'max_n_tex':
+                assess_value = getattr(ls_class, 'n_tex')
+            if assess_name == 'max_eta_tot':
+                assess_value = getattr(ls_class, 'eta_tot')
+            
+#            n_tex = ls_class.n_tex_up
+#            n_tex = ls_class.n_tex_lo
+            assess_value_list.append(assess_value)
+
+        # stack the list to an array in order to use ndmax-function
+        #
+        assess_value_arr = hstack(assess_value_list)
+        print 'assess_value_arr.shape', assess_value_arr.shape
+
+        #----------------------------------------------
+        # get the overall maximum values:
+        #----------------------------------------------
+
+        assess_value_max = ndmax(assess_value_arr, axis = 1)[:, None]
+
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        X = lcc_list[0].ls_table.X[:, 0]
+        Y = lcc_list[0].ls_table.Y[:, 0]
+        Z = lcc_list[0].ls_table.Z[:, 0]
+        plot_col = assess_value_max[:, 0]
+
+        # if n_tex is negative plot 0 instead:
+        #
+        plot_col = where(plot_col < 0, 0, plot_col)
+
+        mlab.figure(figure = title,
+                     bgcolor = (1.0, 1.0, 1.0),
+                     fgcolor = (0.0, 0.0, 0.0))
+
+        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
+                       colormap = "YlOrBr",
+                       mode = "cube",
+                       scale_mode = 'none',
+                       scale_factor = 0.10)
+
+        mlab.scalarbar(title = assess_name + ' (all LCs)', orientation = 'vertical')
+
+        mlab.show()
+
     # ------------------------------------------------------------
     # View 
     # ------------------------------------------------------------

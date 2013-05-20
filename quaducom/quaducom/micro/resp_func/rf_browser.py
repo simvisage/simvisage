@@ -3,7 +3,7 @@ Created on 06.05.2011
 
 @author: rrypl
 '''
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -30,7 +30,7 @@ from matplotlib.figure import Figure
 from numpy import \
     linspace, frompyfunc
 
-from stats.spirrid.rf import RF
+from spirrid.rf import RF
 from util.traits.either_type import EitherType
 from brittle_filament import Filament
 from cb_clamped_fiber import CBClampedFiber
@@ -46,7 +46,7 @@ class RFModelView(ModelView):
     def _model_default(self):
         return Filament()
 
-    resp_func = EitherType(names = ['brittle filament',
+    resp_func = EitherType(names=['brittle filament',
                                      'cb clamped fiber',
                                      'cb infinite fiber',
                                      'cb short fiber',
@@ -54,7 +54,7 @@ class RFModelView(ModelView):
                                      'po infinite fiber',
                                      'po short fiber'],
 
-                            klasses = [Filament,
+                            klasses=[Filament,
                                        CBClampedFiber,
                                        CBInfiniteFiber,
                                        CBShortFiber,
@@ -62,7 +62,7 @@ class RFModelView(ModelView):
                                        POInfiniteFiber,
                                        POShortFiber],
 
-                            config_change = True)
+                            config_change=True)
 
     def init(self, info):
         for name in self.model.param_keys:
@@ -70,19 +70,19 @@ class RFModelView(ModelView):
 
     def close(self, info, is_ok):
         for name in self.model.param_keys:
-            self.on_trait_change(self._redraw, 'model.' + name, remove = True)
+            self.on_trait_change(self._redraw, 'model.' + name, remove=True)
         return is_ok
 
     figure = Instance(Figure)
     def _figure_default(self):
-        figure = Figure(facecolor = 'white')
+        figure = Figure(facecolor='white')
         figure.add_axes([0.08, 0.13, 0.85, 0.74])
         return figure
 
     data_changed = Event(True)
 
-    max_x = Float(0.01, enter_set = True, auto_set = False, config_change = True)
-    n_points = Int(200, enter_set = True, auto_set = False, config_change = True)
+    max_x = Float(0.05, enter_set=True, auto_set=False, config_change=True)
+    n_points = Int(200, enter_set=True, auto_set=False, config_change=True)
 
     @on_trait_change('+config_change')
     def _redraw(self):
@@ -102,13 +102,14 @@ class RFModelView(ModelView):
         out_arr = fn(*args)
 
         axes.plot(in_arr, out_arr,
-                   linewidth = 2)
+                   linewidth=2)
 
         axes.set_xlabel(self.model.x_label)
         axes.set_ylabel(self.model.y_label)
-        axes.legend(loc = 'best')
+        axes.legend(loc='best')
 
         self.data_changed = True
+
     show = Button
     def _show_fired(self):
         self._redraw()
@@ -123,52 +124,52 @@ class RFModelView(ModelView):
         '''
         Generates the view from the param items.
         '''
-        #rf_param_items = [ Item( 'model.' + name, format_str = '%g' ) for name in self.model.param_keys ]
-        plot_param_items = [ Item('max_x' , label = 'max x value'),
-                            Item('n_points', label = 'No of plot points') ]
+        # rf_param_items = [ Item( 'model.' + name, format_str = '%g' ) for name in self.model.param_keys ]
+        plot_param_items = [ Item('max_x' , label='max x value'),
+                            Item('n_points', label='No of plot points') ]
         control_items = [
-                        Item('show', show_label = False),
-                        Item('clear', show_label = False),
+                        Item('show', show_label=False),
+                        Item('clear', show_label=False),
                         ]
 
-        view = View(HSplit(VGroup(Item('@resp_func', show_label = False), #*rf_param_items,
-                                     label = 'Function Parameters',
-                                     id = 'stats.spirrid.rf_model_view.rf_params',
-                                     scrollable = True
+        view = View(HSplit(VGroup(Item('@resp_func', show_label=False),  # *rf_param_items,
+                                     label='Function Parameters',
+                                     id='stats.spirrid.rf_model_view.rf_params',
+                                     scrollable=True
                                      ),
                              VGroup(*plot_param_items,
-                                     label = 'Plot Parameters',
-                                     id = 'stats.spirrid.rf_model_view.plot_params'
+                                     label='Plot Parameters',
+                                     id='stats.spirrid.rf_model_view.plot_params'
                                      ),
-                             VGroup(Item('model.comment', show_label = False,
-                                           style = 'readonly'),
-                                     label = 'comment',
-                                     id = 'stats.spirrid.rf_model_view.comment',
-                                     scrollable = True,
+                             VGroup(Item('model.comment', show_label=False,
+                                           style='readonly'),
+                                     label='comment',
+                                     id='stats.spirrid.rf_model_view.comment',
+                                     scrollable=True,
                                      ),
                              VGroup(
                                     HGroup(*control_items),
-                                    Item('figure', editor = MPLFigureEditor(),
-                                     resizable = True, show_label = False),
-                                     label = 'Plot',
-                                     id = 'stats.spirrid.rf_model_view.plot'
+                                    Item('figure', editor=MPLFigureEditor(),
+                                     resizable=True, show_label=False),
+                                     label='Plot',
+                                     id='stats.spirrid.rf_model_view.plot'
                                      ),
-                             dock = 'tab',
-                             id = 'stats.spirrid.rf_model_view.split'
+                             dock='tab',
+                             id='stats.spirrid.rf_model_view.split'
                              ),
-                    kind = 'live',
-                    resizable = True,
-                    dock = 'tab',
-                    buttons = [OKButton],
-                    id = 'stats.spirrid.rf_model_view'
+                    kind='live',
+                    resizable=True,
+                    dock='tab',
+                    buttons=[OKButton],
+                    id='stats.spirrid.rf_model_view'
                     )
         return view
 
 def run():
 
-    rf = RFModelView(model = Filament())
+    rf = RFModelView(model=Filament())
 
-    rf.configure_traits(kind = 'live')
+    rf.configure_traits(kind='live')
 
 if __name__ == '__main__':
     run()

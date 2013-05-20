@@ -21,7 +21,7 @@ import pylab as p
 from numpy import \
     linspace, frompyfunc
 
-from stats.spirrid.rf import RF
+from spirrid.rf import RF
 from brittle_filament import Filament
 from cb_clamped_fiber import CBClampedFiber
 from cb_infinite_fiber import CBInfiniteFiber
@@ -40,8 +40,8 @@ class WikiGen(HasTraits):
                      POInfiniteFiber,
                      POShortFiber])
 
-    max_x = Float(0.01, enter_set = True, auto_set = False, config_change = True)
-    n_points = Int(200, enter_set = True, auto_set = False, config_change = True)
+    max_x = Float(0.01, enter_set=True, auto_set=False, config_change=True)
+    n_points = Int(200, enter_set=True, auto_set=False, config_change=True)
 
     def export_wiki(self):
 
@@ -55,7 +55,7 @@ class WikiGen(HasTraits):
             qname = q.__class__.__name__
 
             p.figure()
-            q.plot(p, linewidth = 2, color = 'navy')
+            q.plot(p, linewidth=2, color='navy')
 
             fig_fname = os.path.join('wiki', qname + '.png')
             p.savefig(fig_fname)

@@ -98,7 +98,7 @@ class PhiFnBase(HasStrictTraits):
 
     def identify_parameters(self):
         '''
-        Extract the traits that are of type Float 
+        Extract the traits that are of type Float
         '''
         params = []
         for name, trait in self.traits().items():
@@ -107,7 +107,7 @@ class PhiFnBase(HasStrictTraits):
         return params
 
     def fit_params(self, *params):
-        '''Possiblity to adapt the microplane-related 
+        '''Possiblity to adapt the microplane-related
         material paramters based on the integral characteric specification.
         '''
         return
@@ -198,8 +198,8 @@ class PhiFnGeneralExtended(PhiFnGeneral):
         '''
         Evaluate the integrity of a particular microplane.
         Overload the 'get_value' method of 'PhiFnGeneral'
-        and add an additional constant level and a drop 
-        down to zero after failure strain has been reached. 
+        and add an additional constant level and a drop
+        down to zero after failure strain has been reached.
         '''
         eps_last = self.mfn.xdata[-1]
         phi_last = self.mfn.ydata[-1]
@@ -232,20 +232,20 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
         '''
         Evaluate the integrity of a particular microplane.
         Overload the 'get_value' method of 'PhiFnGeneral'
-        and add an exponential softening branch after 
-        failure strain has been reached. 
+        and add an exponential softening branch after
+        failure strain has been reached.
         '''
         eps_last = self.mfn.xdata[-1]
         phi_last = self.mfn.ydata[-1]
 
         if e_max <= eps_last:
-            return super(PhiFnGeneralExtendedExp, self).get_value( e_max )
+            return super(PhiFnGeneralExtendedExp, self).get_value(e_max)
         else:
             # exponential softening with residual integrity after rupture strain in the tensile test has been reached
             Dfp = self.Dfp
             Epp = eps_last
-            Efp = self.Efp_frac*eps_last        
-            return phi_last * ((1 - Dfp) * sqrt(Epp / e_max * exp(-(e_max - Epp) / Efp)) + Dfp )
+            Efp = self.Efp_frac * eps_last
+            return phi_last * ((1 - Dfp) * sqrt(Epp / e_max * exp(-(e_max - Epp) / Efp)) + Dfp)
 
     def get_plot_range(self):
         '''plot the extended phi function'''
@@ -299,12 +299,12 @@ class PhiFnStrainSoftening(PhiFnBase):
 
         gamma = (E * G_f) / (h * f_t ** 2)
         if gamma < 2.0:
-            print 'WARNING: elements to big -> refine, h should be at maximum only half of the characteristic length'
+            print 'WARNING: elements too big -> refine, h should be at maximum only half of the characteristic length'
             print 'in FIT PARAMS: gamma set to 2.0'
             gamma = 2.0
 
         Epp = f_t / ((E * (1 - md) ** 2) * (1.95 - 0.95 / (gamma - 1) ** (0.5)))
-        Efp = (G_f / ((1 - md) * h * E * Epp) + 
+        Efp = (G_f / ((1 - md) * h * E * Epp) +
                     (2.13 - 1.13 * md) * Epp) / (2.73 - md) - Epp
         self.Epp = Epp
         self.Efp = Efp
@@ -319,14 +319,14 @@ class PhiFnStrainSoftening(PhiFnBase):
 
     def get_integ(self, e_max, *c_list):
         '''
-        OBSOLETE method - was used for decoupled evaluation of fracture 
+        OBSOLETE method - was used for decoupled evaluation of fracture
         energy contribution of the microplane.
 
-        The method returns the value of the following integral: 
+        The method returns the value of the following integral:
         int( Phi(e_max~)**2 * e_max~, e_max~ = 0..e_max )
-        The value corresponds to the fracture energy of the considered microplane 
+        The value corresponds to the fracture energy of the considered microplane
         divided by E. (Note: For a damage function Phi(e_max) the microplane stress-strain curve
-        evaluates to s = Phi(e_max)*E*Phi(e_max)*e_max.) 
+        evaluates to s = Phi(e_max)*E*Phi(e_max)*e_max.)
         '''
         if len(c_list) == 0:
             c_list = [1., 1.]
@@ -466,14 +466,14 @@ class PhiFnStrainHardeningLinear(PhiFnBase):
         epsilon = e_max
 
         if epsilon < epsilon_1:
-            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f * 
-                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f * 
-                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho * 
-                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) / 
+            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f *
+                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f *
+                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho *
+                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) /
                 pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
         else:
-            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta * 
-                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) / 
+            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta *
+                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) /
                                   pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
 
 
@@ -530,14 +530,14 @@ class PhiFnStrainHardening(PhiFnBase):
 
     def get_integ(self, e_max, *c_list):
         '''
-        OBSOLETE method - was used for decoupled evaluation of fracture 
+        OBSOLETE method - was used for decoupled evaluation of fracture
         energy contribution of the microplane.
 
-        The method returns the value of the following integral: 
+        The method returns the value of the following integral:
         int( Phi(e_max~)**2 * e_max~, e_max~ = 0..e_max )
-        The value corresponds to the fracture energy of the considered microplane 
+        The value corresponds to the fracture energy of the considered microplane
         divided by E. (Note: For a damage function Phi(e_max) the microplane stress-strain curve
-        evaluates to s = Phi(e_max)*E*Phi(e_max)*e_max.) 
+        evaluates to s = Phi(e_max)*E*Phi(e_max)*e_max.)
         '''
         if len(c_list) == 0:
             c_list = [1., 1.]
@@ -636,24 +636,24 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
         elif epsilon_0 < epsilon and epsilon <= (epsilon_0 + epsilon_b):
             return 1 - omega_b / epsilon_b * (epsilon - epsilon_0)
         elif (epsilon_0 + epsilon_b) < epsilon and epsilon <= epsilon_0 + epsilon_b + epsilon_f:
-            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
+            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b), 2.0) * omega_b)
-            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
+            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b)) * (epsilon_b * omega_t - sqrt(
-                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * 
-                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + 
+                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 *
+                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b +
                 epsilon_f * omega_b * omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f
                 * omega_b * omega_b * epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b) * (omega_b
                 + omega_t))
-            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t * 
-                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 * 
-                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b * 
+            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t *
+                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 *
+                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b *
                 epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * epsilon_b
                  ), 2.0) / pow(2.0 * epsilon_b * omega_t - epsilon_f * omega_b, 2.0) * (omega_b + omega_f))
             MapleGenVar2 = MapleGenVar3 + MapleGenVar4

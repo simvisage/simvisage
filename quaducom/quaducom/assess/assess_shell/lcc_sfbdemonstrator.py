@@ -198,13 +198,13 @@ if __name__ == '__main__':
 
     lct = LCCTableULS(data_dir = data_dir,
                       data_filter = remove_midpoints,
-                       lc_list = lc_list,
+                      lc_list = lc_list,
+                      show_lc_characteristic = False
+                      )
 
-                       show_lc_characteristic = False
-                        )
-
+#    lct.configure_traits()
+    lct.plot_assess_value()
 #    lct.plot_n_tex()
-    lct.configure_traits()
 
 #    lct = LCCTableSLS( data_dir = data_dir,
 #                      data_filter = remove_midpoints,
