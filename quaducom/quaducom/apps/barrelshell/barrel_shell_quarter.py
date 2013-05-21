@@ -379,6 +379,7 @@ class SimBS(IBVModel):
         self.fe_domain.n_dofs
 
         self.center_top_dofs = specmn[0, 0, -1, 0, 0, -1].dofs
+        center_bottom_dofs = specmn[0, 0, 0, 0, 0, 0].dofs
 
         support_elem = self.shape_y - 4
 
@@ -398,15 +399,15 @@ class SimBS(IBVModel):
         # loading
         #--------------------------------------------------------------
         # w_max = center displacement:
-        w_max = -0.06 # [m]
+        w_max = -0.07 # [m]
 
         time_function = MFnLineArray(xdata = [0.0, 0.2, 0.4, 1.0], ydata = [0.0, 0.2, 0.75, 1.0])
 
         bc_el_w = BCSlice(var = 'u', value = w_max, dims = [2], #time_function = time_function.get_value,
                           slice = specmn[0, 0, 0, 0, 0, 0])
 
-        p_max = -0.004 / (0.2 * 0.2)
-        p_slice = specmn[:, 0, 0, :, :, 0]
+        p_max = -0.0042 / (0.2 * 0.2)
+        p_slice = specmn[:, 0, -1, :, :, -1]
         bc_el_w = BCSlice(var = 'f', value = p_max, dims = [2], integ_domain = 'local', #time_function = time_function.get_value,
                           slice = p_slice)
 
@@ -414,7 +415,7 @@ class SimBS(IBVModel):
         #--------------------------------------------------------------
         # ts 
         #--------------------------------------------------------------
-        center_dof = self.center_top_dofs[0, 0, 2]
+        center_dof = center_bottom_dofs[0, 0, 2]
         # center_top_line_dofs
         #
         #ctl_dofs = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
@@ -429,7 +430,7 @@ class SimBS(IBVModel):
                                        transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
-                                       transform_y = '-4 * 1000. * y')
+                                       transform_y = '-2 * 1000. * y')
 
         bcond_list = [bc_symplane_yz, bc_symplane_xz,
                       support_000,

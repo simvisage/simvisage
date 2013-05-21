@@ -328,11 +328,11 @@ class ULSRxyz(LS):
 
     # shear Resistance
     #
-    Rx_Rd = Float(5.3, input = True)
+    Rx_Rd = Float(5.1, input = True)
 
     # pull-out Resistance
     #
-    Rz_Rd = Float(4.8, input = True)
+    Rz_Rd = Float(4.6, input = True)
 
     # (unused as Ry = 0. for all cases)
     Ry_Rd = Float(1., input = True)
@@ -361,7 +361,7 @@ class ULSRxyz(LS):
         #       for the evaluation of 'eta_Rx'  
         Rx_pos = ( abs( self.Rx ) + self.Rx ) / 2.
 
-        # eta pull-out
+        # eta shear forces 
         #
         eta_Rx = Rx_pos / self. Rx_Rd
 
@@ -371,7 +371,7 @@ class ULSRxyz(LS):
         #       for the evaluation of 'eta_Rz'  
         Rz_neg = ( abs( self.Rz ) - self.Rz ) / 2.
         
-        # eta shear forces (independen of the 
+        # eta pull-out
         #
         eta_Rz = Rz_neg / self. Rz_Rd
 
@@ -407,14 +407,14 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
-#    assess_name = 'max_Rx' # @todo: compare with pull-out resistance of the screw
+    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
 #    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
 #    assess_name = 'min_Ry'
 #    assess_name = 'max_Rz'
-#    assess_name = 'min_Rz' # @todo: compare with shear resistance of the screw
+#    assess_name = 'min_Rz' # @todo: compare with pull-out resistance of the screw
 #    assess_name = 'max_Rres'
-    assess_name = 'max_eta_R_tot'
+#    assess_name = 'max_eta_R_tot'
 
     ls_columns = List(['Rx', 'Ry', 'Rz', 'Rres',
                        'Mx', 'My', 'Mz', 'Mres',

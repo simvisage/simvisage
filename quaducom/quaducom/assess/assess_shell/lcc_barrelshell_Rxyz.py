@@ -24,22 +24,8 @@ if __name__ == '__main__':
                             'simdata', 
                             'input_data_barrelshell',
                             '2cm-feines-Netz', 
-#                            '2cm', 
-#                            '2cm-Zugausfall-vorne', 
-#                            '2cm-Zugausfall-hinten', 
-#                            '2cm-Zugausfall-links', 
-#                            '2cm-Zugausfall-rechts'
-#                            '2cm-Zugausfall-hinten-links'
-#                            '2cm-Zugausfall-vorne-links'
-#                            '2cm-Zugausfall-vorne-rechts'
-#                            '2cm-Zugausfall-hinten-rechts'
-#                            '2cm-Zugausfall-nie-hinten-links'
-#                            '2cm-Zugausfall-nie-vorne-links'
-#                            '2cm-Zugausfall-nie-vorne-rechts'
-#                            '2cm-Zugausfall-nie-hinten-rechts'
-#                            '2cm-Zugausfall-hinten-links-vorne-rechts'
-#                            '2cm-Zugausfall-vorne-links-hinten-rechts'
-#                            '2cm-Zugausfall-komplett', 
+#                            '2cm-feines-Netz-EC1', 
+#                            '2cm' 
                              )
 
     #------------------------
@@ -65,31 +51,26 @@ if __name__ == '__main__':
                  # LC2:
                  LC(name = 's_hinten', category = 'imposed-load', file_name = 'LC2.txt',
                     exclusive_to = ['s_feld', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC3:
                  LC(name = 's_feld', category = 'imposed-load', file_name = 'LC3.txt',
                     exclusive_to = ['s_hinten', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC4:
                  LC(name = 's_vorne', category = 'imposed-load', file_name = 'LC4.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
-#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC5:
                  LC(name = 's_links', category = 'imposed-load', file_name = 'LC5.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_vorne', 's_rechts', 's_komplett'],
-#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC6:
                  LC(name = 's_rechts', category = 'imposed-load', file_name = 'LC6.txt',
                     exclusive_to = ['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
-#                    gamma_unf = 2.6, # = 1.5 * 1.7times increased snow load
                     psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
                     ),
                  # LC7:
@@ -134,24 +115,22 @@ if __name__ == '__main__':
 
                  # LC13:
                  LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
-                    exclusive_to = ['T_N_pos'],
+                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
                     ),
                  # LC14:
                  LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
-                    exclusive_to = ['T_N_neg'],
+                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
                     ),
                  # LC15:
                  LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-                    exclusive_to = ['T_uo_pos'],
-#                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
+                    exclusive_to = ['T_N_pos', 'T_N_neg', 'T_uo_pos'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
                     ),
                  # LC16:
                  LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-                    exclusive_to = ['T_uo_neg'],
-#                    gamma_unf = 6., # = 1.5 * 4times increased temperature load
+                    exclusive_to = ['T_N_pos', 'T_N_neg', 'T_uo_neg'],
                     psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
                     ),
                     
@@ -161,6 +140,7 @@ if __name__ == '__main__':
                  # LC17:
                  LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
                     psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
+                    gamma_unf = 2.25, # = 1.5 * 1.5 times increased shrinkage load (=150K) 
                     ),
 
                  #----------------------------------------------------------------------
@@ -228,9 +208,6 @@ if __name__ == '__main__':
                     ),                                        
                ]
 
-#    #---------------------------------------------------------
-#    # "aussergewoehnliche Bemessungssitauation":
-#    #---------------------------------------------------------
 
 #--------------------------------------------------------
 
