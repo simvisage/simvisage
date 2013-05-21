@@ -12,12 +12,12 @@ from spirrid.sampling import FunctionRandomization
 from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
-from quaducom.meso.ctt.scm_numerical.scm_model import SCM
+from quaducom.meso.scm.numerical.spirrid_implementation.scm_spirrid_model import SCMSpirrid
 
 
-class SCMView(ModelView):
+class SCMSpirridView(ModelView):
 
-    model = Instance(SCM)
+    model = Instance(SCMSpirrid)
 
     def crack_widths(self, sigma_c):
         # find the index of the nearest value in the load range
@@ -182,7 +182,7 @@ if __name__ == '__main__':
                                     n_int=20
                                     )
 
-    scm = SCM(length=length,
+    scm = SCMSpirrid(length=length,
               nx=nx,
               random_field=random_field,
               cb_randomization=rand,
@@ -195,7 +195,7 @@ if __name__ == '__main__':
               n_BC=4
               )
 
-    scm_view = SCMView(model=scm)
+    scm_view = SCMSpirridView(model=scm)
     scm_view.model.evaluate()
 
     def plot():

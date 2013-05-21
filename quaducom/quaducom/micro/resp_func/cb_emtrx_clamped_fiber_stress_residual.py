@@ -325,12 +325,12 @@ if __name__ == '__main__':
     phi = 1.
     Ll = 40.
     Lr = 20.
-    s0 = 10.02
+    s0 = 0.02
     m = 5.0
 
     def Pw():
         plt.figure()
-        w = np.linspace(0, 1, 50)
+        w = np.linspace(0, 1, 500)
         P = CBEMClampedFiberStressResidual()
         q = P(w, t, l, Ef, Em, theta, Pf, phi, Ll, Lr, V_f, r, s0, m)
         plt.plot(w, q, lw=2, ls='-', color='black', label='CB_emtrx_stress')
@@ -356,4 +356,5 @@ if __name__ == '__main__':
 
 
     Pw()
-    SP()
+    #SP()
+    plt.show()

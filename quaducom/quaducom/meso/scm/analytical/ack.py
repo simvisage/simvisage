@@ -3,26 +3,19 @@ from etsproxy.traits.api import HasTraits, Float, Instance
 
 
 def H(x):
-    return x >= 0
+    return x >= 0.0
 
 
 class ACK(HasTraits):
     '''
-    ACK model with one matrix breaking strain all over the specimen
-
-    material parameters
-
-    tension strength matrix:          sigma_mu[MPa]
-    E-Modulus matrix:                 E_m [MPa]
-    E-Modulus fibers:                 E_f [MPa]
-    reinforcement ratio:              V_f [-]
-
-    program parameters
-
-    plot range:                       sigma_max [MPa]
+    Stochastic cracking model due to Aveston, Cooper and Kelly
+    assumed deterministic matrix strength
     '''
 
     material = Instance(Material)
+    def _material_default(self):
+        return Material()
+
     sigma_max = Float
     sigma_mu = Float
 

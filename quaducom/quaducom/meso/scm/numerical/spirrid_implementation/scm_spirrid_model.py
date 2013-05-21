@@ -177,7 +177,7 @@ class CBRandomFactory(CBMFactory):
                   randomization=self.randomization)
 
 
-class SCM(HasTraits):
+class SCMSpirrid(HasTraits):
     '''Stochastic Cracking Model - compares matrix strength and stress,
     inserts new CS instances at positions, where the matrix strength
     is lower than the stress; evaluates stress-strain diagram
