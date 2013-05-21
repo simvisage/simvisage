@@ -11,6 +11,7 @@ from etsproxy.traits.ui.api import ModelView
 from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
+import copy
 from scm_interdependent_fibers_model import SCM
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
@@ -110,14 +111,13 @@ class SCMView(ModelView):
         eps = eps[np.isnan(eps) == False]
         if len(eps) != len(self.model.load_sigma_c):
             eps = list(eps) + [list(eps)[-1]]
-            sigma = self.model.load_sigma_c[:len(eps)]
+            sigma = copy.copy(self.model.load_sigma_c[:len(eps)])
             sigma[-1] = 0.0
             return eps, sigma
         else:
             return eps, self.model.load_sigma_c
 
 if __name__ == '__main__':
-    import time
     length = 1000.
     nx = 1000
     random_field = RandomField(seed=True,
@@ -172,15 +172,15 @@ if __name__ == '__main__':
         plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
         plt.legend(loc='best')
         plt.figure()
-        plt.plot(scm.load_sigma_c, scm_view.w_mean,
+        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean,
                  color='green', lw=2, label='mean crack width')
-        plt.plot(scm.load_sigma_c, scm_view.w_median,
+        plt.plot(scm_view.model.load_sigma_c, scm_view.w_median,
                  color='blue', lw=2, label='median crack width')
-        plt.plot(scm.load_sigma_c, scm_view.w_mean + scm_view.w_stdev,
+        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean + scm_view.w_stdev,
                  color='black', label='stdev')
-        plt.plot(scm.load_sigma_c, scm_view.w_mean - scm_view.w_stdev,
+        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean - scm_view.w_stdev,
                  color='black')
-        plt.plot(scm.load_sigma_c, scm_view.w_max,
+        plt.plot(scm_view.model.load_sigma_c, scm_view.w_max,
                  ls='dashed', color='red', label='max crack width')
         plt.legend(loc='best')
         plt.show()

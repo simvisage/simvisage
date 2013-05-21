@@ -272,13 +272,13 @@ if __name__ == '__main__':
                                  reinforcement_lst=[reinf],
                                  )
 
-    ccb_post = CompositeCrackBridgePostprocessor(model=model)
+    ccb_post = CompositeCrackBridgeView(model=model)
 
     scm = SCM(length=length,
               nx=nx,
               random_field=random_field,
-              E_m = 25e3,
-              reinforcement = reinf,
+              E_m=25e3,
+              reinforcement=reinf,
               load_sigma_c_min=.1,
               load_sigma_c_max=10.,
               load_n_sigma_c=200

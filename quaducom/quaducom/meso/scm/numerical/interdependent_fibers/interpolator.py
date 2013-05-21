@@ -8,7 +8,7 @@ the Interpolator2 class evaluates crack bridges along x and for a range of load 
 '''
 
 from etsproxy.traits.api import HasTraits, Property, cached_property, \
-    Instance, Array, List, Float, Int, Dict
+    Instance, Array, List, Float, Int
 import numpy as np
 from scipy import ndimage
 import types
