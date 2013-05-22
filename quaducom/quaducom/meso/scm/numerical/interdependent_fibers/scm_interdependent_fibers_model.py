@@ -231,10 +231,11 @@ class SCM(HasTraits):
                   cbi.position == float(crack_position)][0]
             sigc = cb.get_sigma_c_x(self.load_sigma_c).flatten()
             new_sigc_max = np.max(sigc[np.isnan(sigc) == False])
-#             plt.plot(self.x_arr, self.epsf_x(sigc_min))
-#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m)
-#             plt.plot(self.x_arr, self.matrix_strength / self.E_m)
-#             plt.show()
+#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
+#            plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)
+#            plt.ylim(0,0.0008)
+#            plt.show()
             if new_sigc_max < sigc_max:
                 sigc_max = new_sigc_max
             if float(crack_position) == last_pos:
@@ -247,8 +248,8 @@ class SCM(HasTraits):
         #print sigc_min, sigc_min / (self.reinforcement.E_f * self.reinforcement.V_f + self.E_m * (1. - self.reinforcement.V_f))
 
 if __name__ == '__main__':
-    length = 2000.
-    nx = 2000
+    length = 1000.
+    nx = 1000
     random_field = RandomField(seed=True,
                                lacor=10.,
                                 xgrid=np.linspace(0., length, 400),
@@ -261,10 +262,10 @@ if __name__ == '__main__':
                                )
 
     reinf = Reinforcement(r=0.01,
-                          tau=RV('uniform', loc=0.01, scale=.5),
-                          V_f=0.05,
+                          tau=RV('weibull_min', shape=1.5, scale=.03),
+                          V_f=0.1,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
+                          xi=WeibullFibers(shape=5., sV0=10.00618983207723),
                           n_int=50,
                           label='carbon')
 
@@ -280,7 +281,7 @@ if __name__ == '__main__':
               E_m=25e3,
               reinforcement=reinf,
               load_sigma_c_min=.1,
-              load_sigma_c_max=10.,
+              load_sigma_c_max=15.,
               load_n_sigma_c=200
               )
 
