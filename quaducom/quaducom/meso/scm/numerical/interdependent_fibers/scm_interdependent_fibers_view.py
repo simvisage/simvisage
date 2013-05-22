@@ -139,12 +139,6 @@ if __name__ == '__main__':
                           n_int=50,
                           label='carbon')
 
-    model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
-                                 )
-
-    ccb_post = CompositeCrackBridgeView(model=model)
-
     scm = SCM(length=length,
               nx=nx,
               random_field=random_field,

@@ -20,6 +20,7 @@ class WeibullFibers(HasTraits):
     '''class evaluating damage for Weibull fibers with linearly decreasing stress'''
     shape = Float(5.0)
     scale = Float(3e-3)
+    sV0 = Float
     V0 = 1.
 
     def weibull_fibers_Pf(self, epsy_arr, depsf, x_short, x_long, r_arr):

@@ -8,7 +8,7 @@ from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
 from math import e
 from numpy import dot, transpose, ones, array, eye, linspace, reshape
-from numpy.linalg import eig
+from numpy.linalg import eig, eigh
 from numpy.random import shuffle
 from scipy.linalg import toeplitz
 from scipy.stats import norm, weibull_min
@@ -61,10 +61,11 @@ class RandomField(HasTraits):
         #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         print 'evaluating eigenvalues for random field...'
         eigenvalues = eig(R)
+        print 'TODO: use eigh(eigvals=(lo,hi))'
         print 'complete'
         return eigenvalues
 
-    random_field = Property(Array , depends_on = '+modified, reevaluate')
+    random_field = Property(Array , depends_on='+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
         if self.seed == True:
@@ -100,14 +101,15 @@ class RandomField(HasTraits):
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = RandomField(lacor = 6., xgrid = linspace(0, 100., 300), mean = 4., stdev = 1.5)
+    rf = RandomField(lacor = 3., xgrid = linspace(0, 100., 500), mean = 0.02, stdev = .5)
     x = rf.xgrid
     rf.distribution = 'Weibull'
     rf.loc = .0
-    rf.shape = 10.
-    rf.scale = 5.
+    rf.shape = 8.
+    rf.scale = .02
     p.plot(x, rf.random_field, lw = 2, color = 'black', label = 'Weibull')
     rf.distribution = 'Gauss'
-    p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
+    #p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
     p.legend(loc = 'best')
+    p.ylim(0)
     p.show()
