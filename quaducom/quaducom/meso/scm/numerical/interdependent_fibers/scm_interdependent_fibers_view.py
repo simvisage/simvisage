@@ -43,9 +43,9 @@ class SCMView(ModelView):
             crack_widths = [np.trapz(e_rel[idx:idxs[i + 1]],
                             self.model.x_arr[idx:idxs[i + 1]])
                             for i, idx in enumerate(idxs[:-1])]
-            return np.array(crack_widths)
+            return np.array(crack_widths, ndmin=1)
         else:
-            return 0.0
+            return np.array(0.0, ndmin=1)
 
     eval_w = Property(List, depends_on='model')
     @cached_property
