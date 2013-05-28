@@ -65,8 +65,8 @@ class CompositeCrackBridgeView(ModelView):
         sigma_c_lst = []
         u_lst = []
         for w in w_arr:
-            ccb_view.model.w = w
-            sigma_c_lst.append(ccb_view.sigma_c)
+            self.model.w = w
+            sigma_c_lst.append(self.sigma_c)
             if u==True:
                 u_lst.append(self.u_evaluated)
         if u==True:
