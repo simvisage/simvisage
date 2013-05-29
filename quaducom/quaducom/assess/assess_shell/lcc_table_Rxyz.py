@@ -21,6 +21,8 @@ from etsproxy.traits.ui.api import \
 
 from etsproxy.mayavi import \
     mlab
+    
+import pylab as p
 
 from etsproxy.traits.ui.table_column import \
     ObjectColumn
@@ -37,6 +39,8 @@ from numpy import \
     copy, where, sum, \
     ones, fabs, identity, \
     max as ndmax, min as ndmin
+
+import numpy as np
 
 import os.path
 
@@ -691,6 +695,184 @@ class LCCTable(HasTraits):
 
     def plot_geo(self, mlab):
         self.reader.plot_mesh(mlab, self.geo_data_dict)
+
+
+    def plot_RxRz_interaction(self, show_tension_only = False, add_nm_Ed_arr_from_file = None, save_nm_Ed_arr_to_file = None):
+        '''plot the NV-reaction force interaction for all loading case combinations
+        '''
+
+        # get the list of all loading case combinations:
+        #
+        lcc_list = self.lcc_list
+
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
+
+        Rx_list = []
+        Rz_list = []
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
+            #
+            ls_class = lcc.ls_table.ls_class
+ 
+            # get n_Ed and m_Ed 
+            #
+            Rx = getattr(ls_class, 'Rx')
+            Rz = getattr(ls_class, 'Rz')
+            Rx_list.append( Rx )
+            Rz_list.append( Rz )
+
+        # stack the list to an array in order to use plot-function
+        #
+        Rx_arr = hstack( Rx_list )
+        Rz_arr = hstack( Rz_list )
+        print 'Rz_arr.shape', Rz_arr.shape
+
+        # get Rx_Rd, Rz_Rd 
+        #
+        Rx_Rd = getattr( ls_class, 'Rx_Rd' ) # shear resistance
+        Rz_Rd = getattr( ls_class, 'Rz_Rd' ) # pull-out resistance
+
+#        # save values to file in order to superpose them later
+#        #
+#        if save_nm_Ed_arr_to_file != None:
+#            print 'nm_Ed_arr saved to file %s' %( save_nm_Ed_arr_to_file )
+#            nm_Ed_arr = np.hstack([ n_Ed_arr, m_Ed_arr ])
+#            np.savetxt( save_nm_Ed_arr_to_file, nm_Ed_arr )
+#
+#        # add read in saved values to be superposed with currently read in values
+#        #
+#        if add_nm_Ed_arr_from_file != None:
+#            print 'superpose m_Ed_arr with values read in from file %s' %( add_nm_Ed_arr_from_file )
+#            nm_Ed_arr  = np.loadtxt( add_nm_Ed_arr_from_file )
+#            n_Ed_arr += nm_Ed_arr[:,0]
+#            m_Ed_arr += nm_Ed_arr[:,1]
+
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        p.figure(facecolor = 'white') # white background
+
+        p.plot(Rx_arr, Rz_arr, 'wo', markersize=3) # blue dots
+        print 'Rx_arr', Rx_arr
+        print 'Rz_arr', Rz_arr
+        x = np.array([0, Rx_Rd])
+        y1 = np.array([ -Rz_Rd, 0. ])
+
+        p.title('$RxRz$-Interaktionsdiagramm')
+    
+        ax = p.gca()
+#        ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#        ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+#        p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+
+        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+        p.grid(True)
+
+        ax.spines['left'].set_position(('data', 0))
+        ax.spines['right'].set_color('none')
+        ax.spines['bottom'].set_position(('data', 0))
+        ax.spines['top'].set_color('none')
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
+        p.xlabel('$R_{x,Ed}$ [kN]', fontsize=14)
+        p.ylabel('$R_{z,Ed}$ [kN]', fontsize=14)
+#        p.xlabel('                                    $R_{x,Ed}$ [kN]', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
+#        p.ylabel('$R_{z,Ed}$ [kN]                        ', fontsize=14, verticalalignment = 'top', horizontalalignment = 'left')
+
+        p.show()
+
+
+    def plot_eta_RxRz_interaction(self, show_tension_only = False, add_eta_nm_arr_from_file = None, save_eta_nm_arr_to_file = None):
+        '''plot the eta_nm-interaction for all loading case combinations
+        '''
+        print 'plot_eta_RxRz_interaction'
+
+        # get the list of all loading case combinations:
+        #
+        lcc_list = self.lcc_list
+
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
+
+        eta_Rx_list = []
+        eta_Rz_list = []
+
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
+            #
+            ls_class = lcc.ls_table.ls_class
+ 
+            # get 'eta_Rx' and 'eta_Rz' 
+            #
+            eta_Rx = getattr(ls_class, 'eta_Rx')
+            eta_Rz = getattr(ls_class, 'eta_Rz')
+            eta_Rx_list.append( eta_Rx )
+            eta_Rz_list.append( eta_Rz )
+
+        # stack the list to an array in order to use plot-function
+        #
+        eta_Rx_arr = hstack( eta_Rx_list )
+        eta_Rz_arr = hstack( eta_Rz_list )
+        print 'eta_Rx_arr.shape', eta_Rx_arr.shape
+
+#        # save values to file in order to superpose them later
+#        #
+#        if save_eta_nm_arr_to_file != None:
+#            print 'eta_nm_arr saved to file %s' %( save_eta_nm_arr_to_file )
+#            eta_nm_arr = np.vstack([ eta_n_arr, eta_m_arr ])
+#            np.savetxt( save_eta_nm_arr_to_file, eta_nm_arr )
+#
+#        # add read in saved values to be superposed with currently read in values
+#        #
+#        if add_eta_nm_arr_from_file != None:
+#            print 'superpose eta_nm_arr with values read in from file %s' %( add_eta_nm_arr_from_file )
+#            eta_nm_arr  = np.loadtxt( add_eta_nm_arr_from_file )
+#            eta_n_arr += eta_nm_arr[:,0]
+#            eta_m_arr += eta_nm_arr[:,1]
+
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        p.figure(facecolor = 'white') # white background
+
+        p.plot(eta_Rx_arr, eta_Rz_arr, 'wo', markersize=3) # blue dots
+        x = np.array([0, 1. ])
+        y1 = np.array([ -1., 0. ])
+        y2 = np.array([  1., 0. ])
+    
+        p.title('Ausnutzungsgrad $\eta$')
+
+        ax = p.gca()
+
+        ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+        ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+        p.axis([0., 1., 1., 0.]) # set plotting range for axis
+
+        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+        p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
+        p.grid(True)
+
+#        ax.spines['left'].set_position(('data', 0))
+#        ax.spines['right'].set_color('none')
+#        ax.spines['bottom'].set_position(('data', 0))
+#        ax.spines['top'].set_color('none')
+#        ax.xaxis.set_ticks_position('bottom')
+#        ax.yaxis.set_ticks_position('left')
+        p.xlabel('$\eta_{Rx}$ [-] (Abscherkraft)', fontsize=14)
+        p.ylabel('$\eta_{Rz}$ [-] (Auszugskraft)', fontsize=14)
+
+        p.show()
+
+
 
     # ------------------------------------------------------------
     # View 
