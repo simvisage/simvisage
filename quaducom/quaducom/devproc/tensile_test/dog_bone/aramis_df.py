@@ -33,6 +33,7 @@ file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
 
 home_dir = os.path.expanduser('~')
 print 'home_dir', home_dir
+file_name = os.path.join(home_dir, 'Trash', 'V3', 'TT-V3-Stufe-0-82.txt')
 
 #file_name = os.path.join(home_dir, 'uni', '6-Semester', 'Praktikum', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1-Stufe-0-300.txt')
 print 'file_name', file_name
@@ -40,8 +41,8 @@ print 'file_name', file_name
 #file_name = os.path.join('C:\\', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1TT-V1-Stufe-0-300.txt')
 #file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
 input_arr = np.loadtxt(file_name,
-                    skiprows = 14,
-                    usecols = [0, 1, 2, 3, 4, 8, 9, 10]
+                    skiprows=14,
+                    usecols=[0, 1, 2, 3, 4, 8, 9, 10]
     )
 
 print 'data', input_arr.shape
@@ -63,8 +64,8 @@ L_y = np.max(y_arr) - np.min(y_arr)
 print 'L_x', L_x
 print 'L_y', L_y
 
-x_idx = np.array(data_arr[:, 0], dtype = int)
-y_idx = np.array(data_arr[:, 1], dtype = int)
+x_idx = np.array(data_arr[:, 0], dtype=int)
+y_idx = np.array(data_arr[:, 1], dtype=int)
 
 # find the shape of the point grid
 # by taking aramis indices stored in
@@ -79,7 +80,7 @@ print 'n_x', n_x
 print 'n_y', n_y
 
 # construct the mask for elements to be ignored
-mask_idx_array = np.zeros((n_x + 1, n_y + 1), dtype = bool)
+mask_idx_array = np.zeros((n_x + 1, n_y + 1), dtype=bool)
 mask_idx_array[:, :] = True
 mask_idx_array[(x_idx - x_min, y_idx - y_min)] = False
 
@@ -90,12 +91,12 @@ n_values = data_arr.shape[1] - 2
 # define a three dimensional array
 # first two indices are grid indices, third
 # index selects one of the values associated with a point
-daf = np.zeros((n_x + 1, n_y + 1, n_values), dtype = float)
+daf = np.zeros((n_x + 1, n_y + 1, n_values), dtype=float)
 
 # define an array of indexes performing the mapping
 # from the data_arr into daf
 select_idx_arr = (x_idx - x_min, y_idx - y_min, slice(None))
-daf[select_idx_arr] = data_arr[:, 2:] 
+daf[select_idx_arr] = data_arr[:, 2:]
 
 
 
@@ -111,12 +112,12 @@ daf_new = np.copy(daf)
 x_vec_ = daf[-1, 10, :3] - daf[0, 10, :3]
 #print'x_vec_', x_vec_
 
-x_vec_normed = x_vec_ / np.math.sqrt(np.dot(x_vec_, x_vec_))                         
+x_vec_normed = x_vec_ / np.math.sqrt(np.dot(x_vec_, x_vec_))
 #print 'x_vec_normed', x_vec_normed
 
 y_vec_ = daf[10, -1, :3] - daf[10, 0, :3]
-y_vec_normed = y_vec_ / np.math.sqrt(np.dot(y_vec_, y_vec_))        
-                    
+y_vec_normed = y_vec_ / np.math.sqrt(np.dot(y_vec_, y_vec_))
+
 z_vec_normed = np.cross(x_vec_normed, y_vec_normed)
 
 x = np.array([1, 0, 0])
@@ -195,9 +196,9 @@ daf_new[:, :, 2] = daf_new[:, :, 2] - daf[0, 0, 2]
 
 
 ux_arr = daf[:, :, 3]
-ux_masked = ma.masked_array(ux_arr, mask = mask_idx_array)
+ux_masked = ma.masked_array(ux_arr, mask=mask_idx_array)
 
-ux_avg = ma.average(ux_masked, axis = 1)
+ux_avg = ma.average(ux_masked, axis=1)
 
 x_idx_zeros, y_idx_zeros = np.where(mask_idx_array)
 
@@ -218,39 +219,39 @@ integ_range = 2 * integ_radius
 d_x = L_x / float(n_x)
 
 d4_ux_arr = np.zeros_like(ux_arr)
-d4_ux_arr[integ_radius:-integ_radius, :] = (ux_arr[integ_range:, :] - 
+d4_ux_arr[integ_radius:-integ_radius, :] = (ux_arr[integ_range:, :] -
                                             ux_arr[:-integ_range, :])
 
 # cutoff the negative strains - noise
 d4_ux_arr[ d4_ux_arr < 0.0 ] = 0.0
-d4_ux_avg = np.average(d4_ux_arr, axis = 1)
+d4_ux_avg = np.average(d4_ux_arr, axis=1)
 
 dd44_ux_arr = np.zeros_like(ux_arr)
-dd44_ux_arr[integ_radius:-integ_radius, :] = (d4_ux_arr[integ_range:, :] - 
+dd44_ux_arr[integ_radius:-integ_radius, :] = (d4_ux_arr[integ_range:, :] -
                                                       d4_ux_arr[:-integ_range, :])
-dd44_ux_avg = np.average(dd44_ux_arr, axis = 1)
+dd44_ux_avg = np.average(dd44_ux_arr, axis=1)
 
 # third difference field
 ddd444_ux_arr = np.zeros_like(ux_arr)
-ddd444_ux_arr[integ_radius:-integ_radius, :] = (dd44_ux_arr[integ_range:, :] - 
+ddd444_ux_arr[integ_radius:-integ_radius, :] = (dd44_ux_arr[integ_range:, :] -
                                                         dd44_ux_arr[:-integ_range, :])
-ddd444_ux_avg = np.average(ddd444_ux_arr, axis = 1)
+ddd444_ux_avg = np.average(ddd444_ux_arr, axis=1)
 
 #crack_idx = ((ddd444_ux_avg[1:] * ddd444_ux_avg[:-1] < 0.0) * 
 #             (ddd444_ux_avg[1:] < ddd444_ux_avg[:-1])) 
 
-crack_idx_arr = ((dd44_ux_arr[1:, :] * dd44_ux_arr[:-1, :] < 0.0) * 
-                 ((ddd444_ux_arr[1:, :] + ddd444_ux_arr[:-1, :]) / 2.0 < -0.005)) 
+crack_idx_arr = ((dd44_ux_arr[1:, :] * dd44_ux_arr[:-1, :] < 0.0) *
+                 ((ddd444_ux_arr[1:, :] + ddd444_ux_arr[:-1, :]) / 2.0 < -0.005))
 
-crack_idx_avg = ((dd44_ux_avg[1:] * dd44_ux_avg[:-1] < 0.0) * 
-             ((ddd444_ux_avg[1:] + ddd444_ux_avg[:-1]) / 2.0 < -0.005)) 
+crack_idx_avg = ((dd44_ux_avg[1:] * dd44_ux_avg[:-1] < 0.0) *
+             ((ddd444_ux_avg[1:] + ddd444_ux_avg[:-1]) / 2.0 < -0.005))
 
 w_arr = d4_ux_arr[np.where(crack_idx_arr)]
-w_avg = np.max(d4_ux_arr[np.where(crack_idx_avg)], axis = 1)
+w_avg = np.max(d4_ux_arr[np.where(crack_idx_avg)], axis=1)
 
 print 'crack_openings', w_avg
 
-crack_avg = np.array(crack_idx_avg, dtype = float) * 0.2
+crack_avg = np.array(crack_idx_avg, dtype=float) * 0.2
 
 row_idx = (10, n_y - int(n_y / 2), n_y - 10)
 plot_row_idx = 10
@@ -261,31 +262,31 @@ x44_arr = daf[2 * integ_radius:-2 * integ_radius, plot_row_idx, 0]
 x444_arr = daf[3 * integ_radius:-3 * integ_radius, plot_row_idx, 0]
 xcrack = x444_arr[:-1] + d_x / 2.0
 
-idx_arr = np.arange(ux_arr.shape[0], dtype = int)
+idx_arr = np.arange(ux_arr.shape[0], dtype=int)
 
 p.figure()
 p.subplot(2, 2, 1)
 #p.plot(idx_arr, d4_ux_arr[:, row_idx], color = 'green')
-p.plot(idx_arr, d4_ux_avg, color = 'black')
-p.plot(idx_arr[:-1], crack_avg, color = 'magenta', linewidth = 4)
+p.plot(idx_arr, d4_ux_avg, color='black')
+p.plot(idx_arr[:-1], crack_avg, color='magenta', linewidth=4)
 
 p.subplot(2, 2, 3)
 #p.plot(idx_arr, dd44_ux_arr[:, row_idx], color = 'green')
-p.plot(idx_arr, dd44_ux_avg, color = 'black')
+p.plot(idx_arr, dd44_ux_avg, color='black')
 
 #p.plot(idx_arr, ddd444_ux_arr[:, row_idx], color = 'red')
-p.plot(idx_arr, ddd444_ux_avg, color = 'blue')
-p.plot(idx_arr[:-1], crack_avg, color = 'magenta', linewidth = 4)
+p.plot(idx_arr, ddd444_ux_avg, color='blue')
+p.plot(idx_arr[:-1], crack_avg, color='magenta', linewidth=4)
 
 p.subplot(2, 2, 2)
-p.plot(idx_arr, ux_arr[:, :], color = 'green')
-p.plot(idx_arr, ux_avg, color = 'red')
+p.plot(idx_arr, ux_arr[:, :], color='green')
+p.plot(idx_arr, ux_avg, color='red')
 
 #p.figure()
 #p.hist(w_avg)
 
 p.subplot(2, 2, 4)
-p.hist(w_arr, bins = 40)
+#p.hist(w_arr, bins=40)
 
 p.show()
 
