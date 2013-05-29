@@ -569,7 +569,7 @@ class ULS(LS):
     #
     # design values for SFB-demonstrator on specimens with thickness 6 cm and width 14 cm
 #    n_0_Rdt = 103.4 / 0.14 * 0.84 / 1.5 # [kN/m]     # 413,6 kN/m = tensile resistance as obtained in tensile test
-#    n_0_Rdc = 65 * 0.1 * (100. * 6.) / 1.5 # [kN/m]  # 2600 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
+#    n_Rdc = 65 * 0.1 * (100. * 6.) / 1.5 # [kN/m]  # 2600 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
 #    m_0_Rd = 3.5 / 0.14 * 0.84 / 1.5 # [kNm/m]
     
     #-------------------------
@@ -603,7 +603,7 @@ class ULS(LS):
     ### 'eval_mode = eta_nm' ###
     # compressive strength
     #
-    n_0_Rdc = 65 * 0.1 * (100. * 2.) / 1.5 # [kN/m]  # 867 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
+    n_Rdc = 65 * 0.1 * (100. * 2.) / 1.5 # [kN/m]  # 867 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
 
     # 6 layers carbon: experimental values for barrelshell on specimens with thickness 2 cm and width 10 cm
 #    n_0_Rdt = 41.1 / 0.1 # [kN/m] # 411 kN/m = tensile resistance as obtained in tensile test
@@ -612,8 +612,8 @@ class ULS(LS):
 
     # 6 layers carbon: design values for barrelshell on specimens with thickness 2 cm and width 10 cm
 
-    n_0_Rdt = 136 # [kN/m] # ZiE value
-    m_0_Rd = 1.13 # [kNm/m] # ZiE value
+    n_0_Rdt = 193 # [kN/m] # ZiE value 
+    m_0_Rd = 1.6 # [kNm/m] # ZiE value
     
 #    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
 #    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
@@ -629,7 +629,6 @@ class ULS(LS):
     # assume the same strength in 90-direction (safe side); 
     # simplification for deflection angle
     # 
-    n_90_Rdc = n_0_Rdc # [kN/m]
     n_90_Rdt = n_0_Rdt # [kN/m]
     m_90_Rd = m_0_Rd # [kNm/m]
 
@@ -691,11 +690,22 @@ class ULS(LS):
     def _get_n_sig_up(self):
         return self.ls_table.n_sig_up
 
+    #------------------------------------------------------------
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
+    #------------------------------------------------------------
     #
 #    eval_mode = 'massivbau'
 #    eval_mode = 'princ_sig_level_1'
     eval_mode = 'eta_nm'
+
+    #------------------------------------------------------------
+    # evaluation with conservative simplification for 'k_alpha'
+    #------------------------------------------------------------
+    # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are 
+    # multiplied with the highest reduction factor 'k_alpha = 0.707', independently
+    # of the true deflection angel 'beta_q' and 'beta_l'
+    #
+    min_k_alpha = True
 
 
     ls_values = Property(depends_on = '+input')
@@ -1155,19 +1165,21 @@ class ULS(LS):
                        self.n_90_Rdt * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
             n_Rdt_up = self.n_0_Rdt  * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                        self.n_90_Rdt * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-            n_Rdc_lo = self.n_0_Rdc  * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                       self.n_90_Rdc * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            n_Rdc_up = self.n_0_Rdc  * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                       self.n_90_Rdc * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
             m_Rd_lo = self.m_0_Rd  * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
                       self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
             m_Rd_up = self.m_0_Rd  * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                       self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-                      
+            n_Rdc = self.n_Rdc * np.ones_like( n_Rdt_lo )
+            
             k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
                          cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
             k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                          cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
+            if self.min_k_alpha == True:
+                n_Rdt_lo = n_Rdt_up = min( self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like( n_Rdt_lo )
+                m_Rd_lo = m_Rd_up = min( self.m_0_Rd, self.m_90_Rd ) * 0.707 * np.ones_like( m_Rd_lo )
+                print "'k_alpha = 0.707' minimum value of 'k_alpha' has been used to evaluate resistance"
 
 #            #---------------------------------------------------------
 #            # eliminate pure compression cases: 
@@ -1206,13 +1218,13 @@ class ULS(LS):
             cond_nsu_lt_0 = self.n_sig_up < 0. # compressive force in direction of principle stress at upper side 
             cond_nsl_lt_0 = self.n_sig_lo < 0. # compressive force in direction of principle stress at lower side 
 
-            # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
+            # compare imposed compressive normal force with 'n_Rdc' as obtained from compression test
             #
             bool_arr = cond_nsu_lt_0
-            eta_n_up[bool_arr] = np.abs( self.n_sig_up[bool_arr] ) / n_Rdc_up[bool_arr]
+            eta_n_up[bool_arr] = self.n_sig_up[bool_arr] / n_Rdc[bool_arr]
 
             bool_arr = cond_nsl_lt_0
-            eta_n_lo[bool_arr] = np.abs( self.n_sig_lo[bool_arr] )/ n_Rdc_lo[bool_arr]
+            eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdc[bool_arr]
 
             # get 'eta_m' based on imposed moment compared with moment resistence
             #
@@ -1235,8 +1247,6 @@ class ULS(LS):
                      'beta_q_lo':beta_q_lo_deg,
                      'n_Rdt_up':n_Rdt_up,
                      'n_Rdt_lo':n_Rdt_lo,
-                     'n_Rdc_up':n_Rdc_up,
-                     'n_Rdc_lo':n_Rdc_lo,
                      'm_Rd_up':m_Rd_up,
                      'm_Rd_lo':m_Rd_lo,
                      'eta_n_up':eta_n_up,
@@ -1341,7 +1351,6 @@ class ULS(LS):
         ls_columns = List(['beta_l_up', 'beta_q_up','k_alpha_up',
                            'beta_l_lo', 'beta_q_lo','k_alpha_lo',
                            'n_Rdt_up', 'n_Rdt_lo',
-                           'n_Rdc_up', 'n_Rdc_lo',
                            'm_Rd_up', 'm_Rd_lo',
                            'eta_n_up', 'eta_m_up', 'eta_nm_up', 
                            'eta_n_lo', 'eta_m_lo', 'eta_nm_lo', 
@@ -1399,14 +1408,6 @@ class ULS(LS):
     n_Rdt_lo = Property(Array)
     def _get_n_Rdt_lo(self):
         return self.ls_values['n_Rdt_lo']
-
-    n_Rdc_up = Property(Array)
-    def _get_n_Rdc_up(self):
-        return self.ls_values['n_Rdc_up']
-
-    n_Rdc_lo = Property(Array)
-    def _get_n_Rdc_lo(self):
-        return self.ls_values['n_Rdc_lo']
 
     m_Rd_up = Property(Array)
     def _get_m_Rd_up(self):
