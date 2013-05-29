@@ -350,6 +350,28 @@ class ULSRxyz(LS):
     def _get_ls_values(self):
         '''get the outputs for ULS
         '''
+        #---------------------------------------------------------
+        # conditions for case distinction
+        # (-- tension / compression reactions --) 
+        #---------------------------------------------------------
+        # @todo: use this in order to sort out the cases with compression
+        # up to now for cases with compression only the positive part is taken into account
+        # leading to eta=0 for this direction and a possible non-zero value in the other direction
+
+#        # reaction force tangential to the shell
+#        # 
+#        cond_Rx_ge_0 = self.Rx >= 0. # positive value corresponds to shear in the screw
+#        cond_Rx_le_0 = self.Rx <= 0. # negative value corresponds to compression
+#
+#        # reaction force radial to the shell
+#        # 
+#        cond_Rz_ge_0 = self.Rz >= 0. # positive value corresponds to compression
+#        cond_Rz_le_0 = self.Rz <= 0. # negative value corresponds to pull-out force in the screw
+
+        #---------------------------------------------------------
+        # resulting reaction forces and 'eta' 
+        #---------------------------------------------------------
+
         # evaluate resulting forces and moments
         #
         Rres = self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz
@@ -364,6 +386,7 @@ class ULSRxyz(LS):
         # eta shear forces 
         #
         eta_Rx = Rx_pos / self. Rx_Rd
+
 
         # note: negative values of 'Rz' correspond to pull-out forces for the support screw
         #       positive values are taken by the compression cushion at the support directly 
@@ -407,14 +430,14 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
-    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
+#    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
 #    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
 #    assess_name = 'min_Ry'
 #    assess_name = 'max_Rz'
 #    assess_name = 'min_Rz' # @todo: compare with pull-out resistance of the screw
 #    assess_name = 'max_Rres'
-#    assess_name = 'max_eta_R_tot'
+    assess_name = 'max_eta_R_tot'
 
     ls_columns = List(['Rx', 'Ry', 'Rz', 'Rres',
                        'Mx', 'My', 'Mz', 'Mres',
@@ -512,9 +535,9 @@ class ULSRxyz(LS):
                        VGroup(
                         HGroup(
                             VGroup(
-                                Item(name = 'Rx_Rd', label = 'resistance [kN]', style = 'readonly', format_str = "%.1f"),
-                                Item(name = 'Ry_Rd', label = 'resistance [kN]', style = 'readonly', format_str = "%.1f"),
-                                Item(name = 'Rz_Rd', label = 'resistance [kN]', style = 'readonly', format_str = "%.1f"),
+                                Item(name = 'Rx_Rd', label = 'resistance R_xd [kN]', style = 'readonly', format_str = "%.1f"),
+                                Item(name = 'Ry_Rd', label = 'resistance R_yd [kN]', style = 'readonly', format_str = "%.1f"),
+                                Item(name = 'Rz_Rd', label = 'resistance R_zd [kN]', style = 'readonly', format_str = "%.1f"),
                                 label = 'material properties (longitudinal)'
                                   )
                              ),
