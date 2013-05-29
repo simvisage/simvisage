@@ -22,6 +22,8 @@ from etsproxy.traits.ui.api import \
 from etsproxy.mayavi import \
     mlab
 
+import pylab as p
+
 from etsproxy.traits.ui.table_column import \
     ObjectColumn
 
@@ -30,6 +32,8 @@ from etsproxy.traits.ui.menu import \
 
 from etsproxy.traits.ui.tabular_adapter \
     import TabularAdapter
+
+import numpy as np
 
 from numpy import \
     array, loadtxt, ones_like, \
@@ -765,7 +769,7 @@ class LCCTable(HasTraits):
         mlab.show()
 
 
-    def plot_assess_value(self, title = None):
+    def plot_assess_value(self, title = None, add_assess_values_from_file = None, save_assess_values_to_file = None):
         '''plot the assess value for all loading case combinations
         '''
         #----------------------------------------
@@ -823,10 +827,24 @@ class LCCTable(HasTraits):
         Y = lcc_list[0].ls_table.Y[:, 0]
         Z = lcc_list[0].ls_table.Z[:, 0]
         plot_col = assess_value_max[:, 0]
-
-        # if n_tex is negative plot 0 instead:
+        
+        # save assess values to file in order to superpose them later
         #
-        plot_col = where(plot_col < 0, 0, plot_col)
+        if save_assess_values_to_file != None:
+            print 'assess_values saved to file %s' %( save_assess_values_to_file )
+            assess_value_arr = plot_col
+            np.savetxt( save_assess_values_to_file, assess_value_arr )
+
+        # add read in saved assess values to be superposed with currently read in assess values
+        #
+        if add_assess_values_from_file != None:
+            print 'superpose assess_value_arr with values read in from file %s' %( add_assess_values_from_file )
+            assess_value_arr = np.loadtxt( add_assess_values_from_file )
+            plot_col += assess_value_arr
+
+#        # if n_tex is negative plot 0 instead:
+#        #
+#        plot_col = where(plot_col < 0, 0, plot_col)
 
         mlab.figure(figure = title,
                      bgcolor = (1.0, 1.0, 1.0),
@@ -841,6 +859,223 @@ class LCCTable(HasTraits):
         mlab.scalarbar(title = assess_name + ' (all LCs)', orientation = 'vertical')
 
         mlab.show()
+
+
+    def plot_nm_interaction(self, show_tension_only = False, add_nm_Ed_arr_from_file = None, save_nm_Ed_arr_to_file = None):
+        '''plot the nm-interaction for all loading case combinations
+        '''
+
+        # get the list of all loading case combinations:
+        #
+        lcc_list = self.lcc_list
+
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
+
+        m_sig_lo_list = []
+        n_sig_lo_list = []
+        m_sig_up_list = []
+        n_sig_up_list = []
+        m_Ed_list = []
+        n_Ed_list = []
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
+            #
+            ls_class = lcc.ls_table.ls_class
+ 
+            # get n_Ed and m_Ed 
+            #
+            m_sig_lo = getattr(ls_class, 'm_sig_lo')
+            n_sig_lo = getattr(ls_class, 'n_sig_lo')
+            m_sig_lo_list.append(m_sig_lo)
+            n_sig_lo_list.append(n_sig_lo)
+
+            m_sig_up = getattr(ls_class, 'm_sig_up')
+            n_sig_up = getattr(ls_class, 'n_sig_up')
+            m_sig_lo_list.append(m_sig_up)
+            n_sig_lo_list.append(n_sig_up)
+
+            m_Ed_list = m_sig_lo_list + m_sig_up_list
+            n_Ed_list = n_sig_lo_list + n_sig_up_list
+
+        # stack the list to an array in order to use plot-function
+        #
+        m_Ed_arr = hstack(m_Ed_list)
+        n_Ed_arr = hstack(n_Ed_list)
+        print 'm_Ed_arr.shape', m_Ed_arr.shape
+
+        # get n_tRd, n_cRd, m_Rd 
+        #
+        m_0_Rd = getattr(ls_class, 'm_0_Rd') 
+        m_90_Rd = getattr(ls_class, 'm_90_Rd') 
+        n_0_Rdt = getattr(ls_class, 'n_0_Rdt') 
+        n_90_Rdt = getattr(ls_class, 'n_90_Rdt') 
+        n_Rdc = - getattr(ls_class, 'n_Rdc')
+
+        # use simplification with minimum value for k_alpha = 0.707 
+        # and lower resistance of 0- or 90-degree direction
+        #
+        m_Rd = min( m_0_Rd, m_90_Rd) * 0.707
+        n_Rdt = min( n_0_Rdt, n_90_Rdt) * 0.707
+
+#        # save values to file in order to superpose them later
+#        #
+#        if save_nm_Ed_arr_to_file != None:
+#            print 'nm_Ed_arr saved to file %s' %( save_nm_Ed_arr_to_file )
+#            nm_Ed_arr = np.hstack([ n_Ed_arr, m_Ed_arr ])
+#            np.savetxt( save_nm_Ed_arr_to_file, nm_Ed_arr )
+#
+#        # add read in saved values to be superposed with currently read in values
+#        #
+#        if add_nm_Ed_arr_from_file != None:
+#            print 'superpose m_Ed_arr with values read in from file %s' %( add_nm_Ed_arr_from_file )
+#            nm_Ed_arr  = np.loadtxt( add_nm_Ed_arr_from_file )
+#            n_Ed_arr += nm_Ed_arr[:,0]
+#            m_Ed_arr += nm_Ed_arr[:,1]
+
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        p.figure(facecolor = 'white') # white background
+
+        p.plot(m_Ed_arr, n_Ed_arr, 'wo', markersize=3) # blue dots
+        x = np.array([0, m_Rd])
+        y1 = np.array([ n_Rdc, 0. ])
+        y2 = np.array([ n_Rdt, 0. ])
+
+        p.title('$nm$-Interaktionsdiagramm')
+    
+        ax = p.gca()
+        if show_tension_only == False:
+            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+            ax.set_yticks([200., 0., -200, -400, -600, -800])
+            p.axis([0., 1.05 * m_Rd, 1.2 * n_Rdt, 1.03 * n_Rdc]) # set plotting range for axis
+
+        if show_tension_only == True:
+            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+            p.axis([0., 1.2, 140., 0.]) # set plotting range for axis
+
+        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+        p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
+        p.grid(True)
+
+#        ax.spines['left'].set_position(('data', 0))
+#        ax.spines['right'].set_color('none')
+#        ax.spines['bottom'].set_position(('data', 0))
+#        ax.spines['top'].set_color('none')
+#        ax.xaxis.set_ticks_position('bottom')
+#        ax.yaxis.set_ticks_position('left')
+        p.xlabel('$m_{Ed}$ [kNm/m]', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
+        p.ylabel('$n_{Ed}$ [kN/m]', fontsize=14)
+
+        p.show()
+
+
+    def plot_eta_nm_interaction(self, show_tension_only = False, add_eta_nm_arr_from_file = None, save_eta_nm_arr_to_file = None):
+        '''plot the eta_nm-interaction for all loading case combinations
+        '''
+
+        # get the list of all loading case combinations:
+        #
+        lcc_list = self.lcc_list
+
+        #----------------------------------------------
+        # run trough all loading case combinations:
+        #----------------------------------------------
+
+        eta_n_lo_list = []
+        eta_m_lo_list = []
+        eta_n_up_list = []
+        eta_m_up_list = []
+
+        for lcc in lcc_list:
+
+            # get the ls_table object and retrieve its 'ls_class'
+            # (= LSTable_ULS-object)
+            #
+            ls_class = lcc.ls_table.ls_class
+ 
+            # get 'eta_n' and 'eta_m' 
+            #
+            eta_n_lo = getattr(ls_class, 'eta_n_lo')
+            eta_m_lo = getattr(ls_class, 'eta_m_lo')
+            eta_n_lo_list.append( eta_n_lo )
+            eta_m_lo_list.append( eta_m_lo )
+
+            eta_n_up = getattr(ls_class, 'eta_n_up')
+            eta_m_up = getattr(ls_class, 'eta_m_up')
+            eta_n_up_list.append( eta_n_up )
+            eta_m_up_list.append( eta_m_up )
+
+            eta_n_list = eta_n_lo_list + eta_n_up_list
+            eta_m_list = eta_m_lo_list + eta_m_up_list
+
+        # stack the list to an array in order to use plot-function
+        #
+        eta_n_arr = hstack( eta_n_list )
+        eta_m_arr = hstack( eta_m_list )
+        print 'eta_n_arr.shape', eta_n_arr.shape
+
+#        # save values to file in order to superpose them later
+#        #
+#        if save_eta_nm_arr_to_file != None:
+#            print 'eta_nm_arr saved to file %s' %( save_eta_nm_arr_to_file )
+#            eta_nm_arr = np.vstack([ eta_n_arr, eta_m_arr ])
+#            np.savetxt( save_eta_nm_arr_to_file, eta_nm_arr )
+#
+#        # add read in saved values to be superposed with currently read in values
+#        #
+#        if add_eta_nm_arr_from_file != None:
+#            print 'superpose eta_nm_arr with values read in from file %s' %( add_eta_nm_arr_from_file )
+#            eta_nm_arr  = np.loadtxt( add_eta_nm_arr_from_file )
+#            eta_n_arr += eta_nm_arr[:,0]
+#            eta_m_arr += eta_nm_arr[:,1]
+
+        #----------------------------------------------
+        # plot
+        #----------------------------------------------
+        #
+        p.figure(facecolor = 'white') # white background
+
+        p.plot(eta_m_arr, eta_n_arr, 'wo', markersize=3) # blue dots
+        x = np.array([0, 1. ])
+        y1 = np.array([ -1., 0. ])
+        y2 = np.array([  1., 0. ])
+    
+        p.title('Ausnutzungsgrad $\eta_{nm}$')
+
+        ax = p.gca()
+
+        if show_tension_only == True:
+            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+            ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+            p.axis([0., 1., 1., 0.]) # set plotting range for axis
+
+        if show_tension_only == False:
+            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+            ax.set_yticks([1., 0.8, 0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8, -1.])
+            p.axis([0., 1., 1., -1.]) # set plotting range for axis
+        
+        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+        p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
+        p.grid(True)
+
+#        ax.spines['left'].set_position(('data', 0))
+#        ax.spines['right'].set_color('none')
+#        ax.spines['bottom'].set_position(('data', 0))
+#        ax.spines['top'].set_color('none')
+#        ax.xaxis.set_ticks_position('bottom')
+#        ax.yaxis.set_ticks_position('left')
+        p.xlabel('$\eta_m$ [-]', fontsize=14)
+        p.ylabel('$\eta_n$ [-]', fontsize=14)
+
+        p.show()
+
 
     # ------------------------------------------------------------
     # View 
