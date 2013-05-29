@@ -17,7 +17,7 @@ from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array
 from types import FloatType
 from reinforcement import Reinforcement, WeibullFibers
-from scipy.optimize import fsolve, broyden2
+from scipy.optimize import fsolve, broyden2, root
 import time as t
 from scipy.integrate import cumtrapz
 
@@ -295,17 +295,19 @@ class CompositeCrackBridge(HasTraits):
     damage = Property(depends_on='w, Ll, Lr, reinforcement+')
     @cached_property
     def _get_damage(self):
-        #ff = time.clock()
         if self.w == 0.:
             damage = np.zeros_like(self.sorted_depsf)
         else:
             #ff = t.clock()
             try:
-                damage = broyden2(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), maxiter=20)
+                damage = root(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), method='excitingmixing')
+                if np.any(damage.x < 0.0):
+                    raise ValueError
+                damage = damage.x
             except:
-                #print 'broyden2 does not converge fast enough: switched to fsolve for this step'
-                damage = fsolve(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf))
-            #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', time.clock() - ff, 'sec'
+                print 'fast opt method does not converge: switched to a slower, robust method for this step'
+                damage = fsolve(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), maxfev=10, xtol=0.5)
+            #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
         return damage
 
 if __name__ == '__main__':
