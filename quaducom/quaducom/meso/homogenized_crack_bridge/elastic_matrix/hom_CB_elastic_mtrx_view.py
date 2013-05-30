@@ -92,7 +92,7 @@ class CompositeCrackBridgeView(ModelView):
         #t = time.clock()
         result = minimize(minfunc, 0.001, options=dict(maxiter=5))
         #print time.clock() - t, 's'
-        return self.sigma_c, result.x
+        return self.sigma_c, float(result.x)
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
