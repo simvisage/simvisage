@@ -44,7 +44,8 @@ class CompositeCrackBridge(HasTraits):
         E_fibers = 0.0
         for reinf in self.reinforcement_lst:
             E_fibers += reinf.V_f * reinf.E_f
-        return self.E_m * (1. - self.V_f_tot) + E_fibers
+        E_c = self.E_m * (1. - self.V_f_tot) + E_fibers
+        return E_c * (1. + 1e-15)
 
     sorted_theta = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -184,6 +185,9 @@ class CompositeCrackBridge(HasTraits):
         return F
 
     def profile(self, iter_damage, Lmin, Lmax):
+        if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):
+            print 'heereee'
+            return np.ones_like(iter_damage) * 0.5, np.ones_like(self.sorted_depsf), np.ones_like(self.sorted_depsf)
         # matrix strain derivative with resp. to z as a function of T
         dems = self.dem_depsf_vect(self.sorted_depsf, iter_damage)
         # initial matrix strain derivative
@@ -298,15 +302,16 @@ class CompositeCrackBridge(HasTraits):
         if self.w == 0.:
             damage = np.zeros_like(self.sorted_depsf)
         else:
-            #ff = t.clock()
+            ff = t.clock()
             try:
-                damage = root(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), method='excitingmixing')
-                if np.any(damage.x < 0.0):
+                damage = root(self.damage_residuum, np.zeros_like(self.sorted_depsf), method='excitingmixing')
+                if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
                 damage = damage.x
             except:
                 print 'fast opt method does not converge: switched to a slower, robust method for this step'
-                damage = fsolve(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), maxfev=10, xtol=0.5)
+                damage = root(self.damage_residuum, np.zeros_like(self.sorted_depsf), method='krylov')
+                damage = damage.x
             #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
         return damage
 

@@ -11,7 +11,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
 from reinforcement import Reinforcement, WeibullFibers
-from scipy.optimize import brentq, minimize
+from scipy.optimize import brentq, minimize, fminbound
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import time
@@ -87,12 +87,17 @@ class CompositeCrackBridgeView(ModelView):
     @cached_property
     def _get_sigma_c_max(self):
         def minfunc(w):
-            self.model.w = float(w)
+            self.model.w = w
+            damage = self.model.damage
+            if np.sum(damage)/len(damage) > 0.9:
+                return w * 1e10
+            #plt.plot(w, self.sigma_c, 'ro')
             return - self.sigma_c
         #t = time.clock()
-        result = minimize(minfunc, 0.001, options=dict(maxiter=5))
+        w = fminbound(minfunc, 1e-10, 5.0, maxfun = 30)
+        #result = minimize(minfunc, 0.001, options=dict(maxiter=5))
         #print time.clock() - t, 's'
-        return self.sigma_c, float(result.x)
+        return self.sigma_c, w
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -209,10 +214,10 @@ if __name__ == '__main__':
                           n_int=50,
                           label='carbon')
 
-    reinf = Reinforcement(r=0.01,#RV('uniform', loc=.005, scale=.01),
-                      tau=0.1,#RV('uniform', loc=.001, scale=.2),
-                      V_f=0.333333333333, E_f=200e3, xi=WeibullFibers(shape=5., sV0=0.003),
-                      n_int=50)
+    reinf = Reinforcement(r=RV('uniform', loc=.005, scale=.01),
+                          tau=RV('uniform', loc=.05, scale=.1),
+                          xi=WeibullFibers(shape=20., sV0=0.003),
+                          V_f=0.3, E_f=200e3, n_int=40)
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
@@ -273,7 +278,7 @@ if __name__ == '__main__':
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
     #profile(0.025)
-    w = np.linspace(.0, 1., 100)
+    w = np.linspace(0.0, .6, 20)
     sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
