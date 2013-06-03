@@ -15,13 +15,22 @@ from etsproxy.traits.api import HasTraits, cached_property, \
 from types import FloatType
 from util.traits.either_type import EitherType
 from math import pi
+from scipy.special import gamma
+
+
+def H(x):
+    return x >= 0.0
 
 class WeibullFibers(HasTraits):
     '''class evaluating damage for Weibull fibers with linearly decreasing stress'''
     shape = Float(5.0)
-    scale = Float(3e-3)
     sV0 = Float
-    V0 = 1.
+    V0 = Float(1.)
+
+    def mean(self, depsf, r):
+        m = self.shape
+        s = (depsf * (m + 1) * self.sV0 ** m * self.V0 / 2 / pi / r **2)**(1./(m+1))
+        return s * gamma(1. + 1/(m+1.))
 
     def weibull_fibers_Pf(self, epsy_arr, depsf, x_short, x_long, r_arr):
         m = self.shape
@@ -30,7 +39,7 @@ class WeibullFibers(HasTraits):
         s = depsf * (m + 1) * self.sV0 ** m * self.V0 / pi / r_arr **2
         a0 = epsy_arr / depsf
         Pf = 1. - np.exp( - epsy_arr ** (m+1)/s * (2. - (1-x_short/a0)**(m+1) - (1-x_long/a0)**(m+1)) )
-        return Pf
+        return Pf * H(epsy_arr)
 
 class Reinforcement(HasTraits):
 

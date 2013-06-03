@@ -231,11 +231,11 @@ class SCM(HasTraits):
                   cbi.position == float(crack_position)][0]
             sigc = cb.get_sigma_c_x(self.load_sigma_c).flatten()
             new_sigc_max = np.max(sigc[np.isnan(sigc) == False])
-#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
-#            plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)
-#            plt.ylim(0,0.0008)
-#            plt.show()
+#             plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
+#             plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)
+#             plt.ylim(0,0.0008)
+#             plt.show()
             if new_sigc_max < sigc_max:
                 sigc_max = new_sigc_max
             if float(crack_position) == last_pos:

@@ -4,16 +4,18 @@ Created on 16.11.2012
 @author: Q
 '''
 from etsproxy.traits.ui.api import ModelView
-from etsproxy.traits.api import Instance, Property, cached_property, Array
+from etsproxy.traits.api import Instance, Property, cached_property, Array, Float
 from hom_CB_elastic_mtrx import CompositeCrackBridge
 from hom_CB_elastic_mtrx_py_loop import CompositeCrackBridgeLoop
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
 from reinforcement import Reinforcement, WeibullFibers
-from scipy.optimize import brentq, minimize
+from scipy.optimize import brentq, minimize, fminbound
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
+import time
+import scipy
 
 
 class CompositeCrackBridgeView(ModelView):
@@ -85,12 +87,17 @@ class CompositeCrackBridgeView(ModelView):
     @cached_property
     def _get_sigma_c_max(self):
         def minfunc(w):
-            self.model.w = float(w)
-            sig_c = self.sigma_c
-            plt.plot(self.model.w, sig_c, 'ro')
+            self.model.w = w
+            damage = self.model.damage
+            if np.sum(damage)/len(damage) > 0.9:
+                return w * 1e10
+            #plt.plot(w, self.sigma_c, 'ro')
             return - self.sigma_c
-        result = minimize(minfunc, 0.001, options = dict(maxiter = 5))
-        return self.sigma_c, result.x
+        #t = time.clock()
+        w = fminbound(minfunc, 1e-10, 5.0, maxfun = 30)
+        #result = minimize(minfunc, 0.001, options=dict(maxiter=5))
+        #print time.clock() - t, 's'
+        return self.sigma_c, w
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -206,21 +213,18 @@ if __name__ == '__main__':
                           xi=RV('weibull_min', shape=20., scale=0.02),
                           n_int=50,
                           label='carbon')
-    
-    reinf = Reinforcement(r=0.00345,
-                          tau=RV('weibull_min', shape=1.5, scale=.2),
-                          V_f=0.0103,
-                          E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
-                          n_int=50,
-                          label='carbon')
+
+    reinf = Reinforcement(r=RV('uniform', loc=.005, scale=.01),
+                          tau=RV('uniform', loc=.05, scale=.1),
+                          xi=WeibullFibers(shape=20., sV0=0.003),
+                          V_f=0.3, E_f=200e3, n_int=40)
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=15.8141487532,
-                                 Lr=75.0707437662) 
+                                 Ll=1000.,
+                                 Lr=1000.)
 
-    ccb_view = CompositeCrackBridgePostprocessor(model=model)
+    ccb_view = CompositeCrackBridgeView(model=model)
     #ccb_view.apply_load(1.)
 
     def profile(w):
@@ -273,8 +277,8 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    #profile(0.004)
-    w = np.linspace(.0, 1., 100)
+    #profile(0.025)
+    w = np.linspace(0.0, .6, 20)
     sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
