@@ -28,7 +28,7 @@ from etsproxy import ETS_BASENAME
 # GLOBALS
 logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # local imports
 from rtrace_plugin import RTracePlugin
