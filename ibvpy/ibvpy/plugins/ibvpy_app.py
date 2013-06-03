@@ -79,11 +79,11 @@ class IBVPyApp(HasTraits):
     """
 
     # The main envisage application.
-    application = Instance(ETS_BASENAME + 
+    application = Instance(ETS_BASENAME +
                            'envisage.ui.workbench.api.WorkbenchApplication')
 
     # The IBVPy Script instance.
-    script = Instance(ETS_BASENAME + 
+    script = Instance(ETS_BASENAME +
                       'mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
@@ -92,9 +92,9 @@ class IBVPyApp(HasTraits):
     ibv_resource = Instance('ibvpy.core.ibv_resource.IBVResource')
 
     # The logging mode.
-    log_mode = Int(logging.DEBUG, desc = 'the logging mode to use')
+    log_mode = Int(logging.DEBUG, desc='the logging mode to use')
 
-    def main(self, argv = None, plugins = None):
+    def main(self, argv=None, plugins=None):
         """The main application is created and launched here.
 
         Parameters
@@ -126,8 +126,8 @@ class IBVPyApp(HasTraits):
 
         # Create the application
         prefs = preference_manager.preferences
-        app = IBVPyWorkbenchApplication(plugins = plugins,
-                                         preferences = prefs)
+        app = IBVPyWorkbenchApplication(plugins=plugins,
+                                         preferences=prefs)
         self.application = app
 
         # Setup the logger.
@@ -138,7 +138,7 @@ class IBVPyApp(HasTraits):
 
     def setup_logger(self):
         """Setup logging for the application."""
-        mayavi_app.setup_logger(logger, 'ibvpy.log', mode = self.log_mode)
+        mayavi_app.setup_logger(logger, 'ibvpy.log', mode=self.log_mode)
 
     def parse_command_line(self, argv):
         """Parse command line options.
@@ -169,10 +169,10 @@ class IBVPyApp(HasTraits):
         app = self.application
         if self.ibv_resource:
             window = app.workbench.active_window
-            e = window.get_service(ETS_BASENAME + 
+            e = window.get_service(ETS_BASENAME +
                                    'mayavi.core.engine.Engine')
             print 'e', e
-            set_engine(e)            
+            set_engine(e)
             self.ibv_resource.bind_services(window)
             self.ibv_resource.register_mv_pipelines(e)
 
@@ -182,7 +182,7 @@ class IBVPyApp(HasTraits):
     @on_trait_change('application.gui:started')
     def _on_application_gui_started(self, obj, trait_name, old, new):
         """This is called as soon as  the Envisage GUI starts up.  The
-        method is responsible for setting our script instance.   
+        method is responsible for setting our script instance.
         """
         if trait_name != 'started' or not new:
             return
@@ -194,7 +194,7 @@ class IBVPyApp(HasTraits):
         # Call self.run from the GUI thread.
         app.gui.invoke_later(self.run)
 
-def main(argv = None):
+def main(argv=None):
     """Simple helper to start up the ibvpy application.  This returns
     the running application."""
     m = IBVPyApp()

@@ -20,7 +20,7 @@ from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring, Include
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm import \
-    MATSXDMicroplaneDamage, PhiFnGeneral, PhiFnStrainHardening
+    MATSXDMicroplaneDamage, PhiFnGeneral, PhiFnStrainSoftening, PhiFnStrainHardening
 
 import numpy as np
 
@@ -69,22 +69,22 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
     mfn_class = Class(MFnPolar)
 
     # get the normal vectors of the microplanes
-    _MPN = Property(depends_on = 'n_mp')
+    _MPN = Property(depends_on='n_mp')
     @cached_property
     def _get__MPN(self):
         return array([[ cos(alpha), sin(alpha)] for alpha in self.alpha_list ])
 
     # get the weights of the microplanes
-    _MPW = Property(depends_on = 'n_mp')
+    _MPW = Property(depends_on='n_mp')
     @cached_property
     def _get__MPW(self):
         return ones(self.n_mp) / self.n_mp * 2
 
-    elasticity_tensors = Property(depends_on = 'E, nu, stress_state')
+    elasticity_tensors = Property(depends_on='E, nu, stress_state')
     @cached_property
     def _get_elasticity_tensors(self):
         '''
-        Intialize the fourth order elasticity tensor 
+        Intialize the fourth order elasticity tensor
         for 3D or 2D plane strain or 2D plane stress
         '''
         # ----------------------------------------------------------------------------
@@ -182,28 +182,28 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         from ibvpy.mats.mats2D.mats2D_rtrace_cylinder import MATS2DRTraceCylinder
 
         # overload the default configuration
-        c['bcond_list' ] = [ BCDofProportional(max_strain = 0.006, alpha_rad = 0.0) ]
+        c['bcond_list' ] = [ BCDofProportional(max_strain=0.006, alpha_rad=0.0) ]
         c['rtrace_list' ] += [
-                              MATS2DRTraceCylinder(name = 'Laterne',
-                                      var_axis = 'time', idx_axis = 0,
-                                      var_surface = 'microplane_damage',
-                                      update_on = 'update'),
+                              MATS2DRTraceCylinder(name='Laterne',
+                                      var_axis='time', idx_axis=0,
+                                      var_surface='microplane_damage',
+                                      update_on='update'),
                         ]
 
-        c['tline'] = TLine(step = 0.02, max = 1)
+        c['tline'] = TLine(step=0.02, max=1)
         return c
 
     #---------------------------------------------------------------------------------
     # Dock-based view with its own id
     #---------------------------------------------------------------------------------
     traits_view = View(Include('polar_fn_group'),
-                        dock = 'tab',
-                        id = 'ibvpy.mats.mats3D.mats_2D_cmdm.MATS2D_cmdm',
-                        kind = 'modal',
-                        resizable = True,
-                        scrollable = True,
-                        width = 0.6, height = 0.8,
-                        buttons = ['OK', 'Cancel' ]
+                        dock='tab',
+                        id='ibvpy.mats.mats3D.mats_2D_cmdm.MATS2D_cmdm',
+                        kind='modal',
+                        resizable=True,
+                        scrollable=True,
+                        width=0.6, height=0.8,
+                        buttons=['OK', 'Cancel' ]
                         )
 
 class MATS1DMicroplaneDamage(MATS2DMicroplaneDamage):
@@ -213,13 +213,13 @@ class MATS1DMicroplaneDamage(MATS2DMicroplaneDamage):
     @cached_property
     def _get__MPN(self):
         # microplane normals:
-        return np.array([[1, 0], [0, 1]], dtype = 'f')
+        return np.array([[1, 0], [0, 1]], dtype='f')
 
     _MPW = Property
     @cached_property
     def _get__MPW(self):
         # microplane normals:
-        return np.array([1.0, 1.0], dtype = 'f')
+        return np.array([1.0, 1.0], dtype='f')
 
 
 if __name__ == '__main__':
@@ -227,5 +227,5 @@ if __name__ == '__main__':
     D4 = m._get_elasticity_tensors()
     print 'D4', D4
 
-    m.configure_traits( view = 'traits_view' )
+    m.configure_traits(view='traits_view')
 

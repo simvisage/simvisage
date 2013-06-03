@@ -37,10 +37,10 @@ class RTraceTableAdapter (TabularAdapter):
 # Tabular Editor Construction 
 #----------------------------------------------------------------------------------
 rtrace_editor = TabularEditor(
-    selected = 'current_rtrace',
-    adapter = RTraceTableAdapter(),
-    operations = [ 'move' ],
-    auto_update = True
+    selected='current_rtrace',
+    adapter=RTraceTableAdapter(),
+    operations=[ 'move' ],
+    auto_update=True
  )
 
 class RTraceMngr(IBVResource):
@@ -49,7 +49,7 @@ class RTraceMngr(IBVResource):
 
     The RTraceMngr can be associated with a data . It looks for an
     attribute rtracears = [RTrace( name = "var1", ... ), ... ]
-    and locates the specification of these variables 
+    and locates the specification of these variables
 
     The manager gathers all the RTrace specifications included in the
     object o. The RTraces can then be applied in ResponseView
@@ -73,18 +73,18 @@ class RTraceMngr(IBVResource):
 
     # List of response evaluators available in the current time stepper
     #
-    rte_dict = Property(Dict, depends_on = 'tstepper')
+    rte_dict = Property(Dict, depends_on='tstepper')
     def _get_rte_dict(self):
         return self.tstepper.rte_dict
 
     # List of response tracers specified in the input
     #
     rtrace_list = List(RTrace)
-    rtrace_bound_list = Property(List(RTrace), depends_on = 'rtrace_list')
+    rtrace_bound_list = Property(List(RTrace), depends_on='rtrace_list')
     @cached_property
     def _get_rtrace_bound_list(self):
         '''
-        Access the rtrace list after setting a backward reference 
+        Access the rtrace list after setting a backward reference
         from the individual traces.
         '''
         for rtrace in self.rtrace_list:
@@ -120,7 +120,7 @@ class RTraceMngr(IBVResource):
         if self.timer:
             self.timer.Stop()
 
-    def timer_tick(self, e = None):
+    def timer_tick(self, e=None):
         for rte in self.get_values():
             rte.timer_tick(e)
 
@@ -155,7 +155,7 @@ class RTraceMngr(IBVResource):
         for rte in self.get_values():
             rte.close()
 
-    def clear(self, e = None):
+    def clear(self, e=None):
         for rte in self.get_values():
             rte.clear()
 
@@ -167,9 +167,9 @@ class RTraceMngr(IBVResource):
 
     def register_mv_pipelines(self, e):
         '''Register the visualization pipelines in mayavi engine
-        
-        The method runs over the response traces and lets them add their pipeline 
-        components into the mayavi engine. 
+
+        The method runs over the response traces and lets them add their pipeline
+        components into the mayavi engine.
         '''
         for rtrace in self.rtrace_bound_list:
             rtrace.register_mv_pipelines(e)
@@ -187,29 +187,29 @@ class RTraceMngr(IBVResource):
 #            #    raise KeyError, 'warp field not found'
 
     trait_view = View(HSplit(
-                              Item('rtrace_bound_list', show_label = False,
-                                   editor = rtrace_editor),
-                              Item('current_rtrace', show_label = False,
-                                   style = 'custom', resizable = True),
+                              Item('rtrace_bound_list', show_label=False,
+                                   editor=rtrace_editor),
+                              Item('current_rtrace', show_label=False,
+                                   style='custom', resizable=True),
                               ),
-                        resizable = True,
-                        scrollable = True,
-                        height = 0.6, width = 0.6
+                        resizable=True,
+                        scrollable=True,
+                        height=0.6, width=0.6
                             )
 
 if __name__ == '__main__':
     from rtrace import RTraceGraph
-    rmgr = RTraceMngr(rtrace_list = [
-    RTraceGraph(name = 'rte x'),
-    RTraceGraph(name = 'rte 2'),
-    RTraceGraph(name = 'rte 3'),
-    RTraceGraph(name = 'rte 4'),
-    RTraceGraph(name = 'rte 5'),
-    RTraceGraph(name = 'rte 6'),
-    RTraceGraph(name = 'rte 7'),
-    RTraceGraph(name = 'rte 8'),
-    RTraceGraph(name = 'rte 8'),
-    RTraceGraph(name = 'rte 10'),
-    RTraceGraph(name = 'rte 11'),
+    rmgr = RTraceMngr(rtrace_list=[
+    RTraceGraph(name='rte x'),
+    RTraceGraph(name='rte 2'),
+    RTraceGraph(name='rte 3'),
+    RTraceGraph(name='rte 4'),
+    RTraceGraph(name='rte 5'),
+    RTraceGraph(name='rte 6'),
+    RTraceGraph(name='rte 7'),
+    RTraceGraph(name='rte 8'),
+    RTraceGraph(name='rte 8'),
+    RTraceGraph(name='rte 10'),
+    RTraceGraph(name='rte 11'),
     ])
     rmgr.configure_traits()
