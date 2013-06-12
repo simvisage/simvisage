@@ -16,7 +16,8 @@ from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array
 from types import FloatType
-from reinforcement import Reinforcement, WeibullFibers
+from reinforcement import Reinforcement, ContinuousFibers
+from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from scipy.optimize import fsolve, broyden2, root
 import time as t
 from scipy.integrate import cumtrapz
@@ -167,7 +168,7 @@ class CompositeCrackBridge(HasTraits):
             demsi = dems[mask]
             fi = 1. / (depsfi + demsi)
             F[mask] = np.hstack((np.array([0.0]), cumtrapz(fi, -depsfi)))
-            if i==0:
+            if i == 0:
                 C = 0.0
             else:
                 depsf0 = self.sorted_depsf[self.sorted_masks[i-1]]
@@ -186,7 +187,6 @@ class CompositeCrackBridge(HasTraits):
 
     def profile(self, iter_damage, Lmin, Lmax):
         if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):
-            print 'heereee'
             return np.ones_like(iter_damage) * 0.5, np.ones_like(self.sorted_depsf), np.ones_like(self.sorted_depsf)
         # matrix strain derivative with resp. to z as a function of T
         dems = self.dem_depsf_vect(self.sorted_depsf, iter_damage)
@@ -197,7 +197,7 @@ class CompositeCrackBridge(HasTraits):
         # integrated f(depsf) - see article
         F = self.F(dems, amin)
         # a(T) for double sided pullout
-        a1 = np.exp(F/2. + np.log(amin))
+        a1 = np.exp(F/2. + np.log(amin))# * mask_po + Le * inv_mask_po
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
             a = np.hstack((-Lmin, 0.0, Lmax))
@@ -318,41 +318,41 @@ class CompositeCrackBridge(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-    reinf1 = Reinforcement(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
-                          tau=RV('uniform', loc=1., scale=20.),
+    reinf1 = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
+                          tau=RV('uniform', loc=1., scale=1.),
                           V_f=0.2,
                           E_f=70e3,
-                          xi=RV('weibull_min', shape=5., scale=0.04),
-                          n_int=100,
+                          xi=100.,#RV('weibull_min', shape=50., scale=100.),
+                          n_int=5,
                           label='AR glass')
 
-    reinf2 = Reinforcement(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
-                          tau=RV('uniform', loc=.3, scale=.05),
+    reinf2 = ContinuousFibers(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
+                          tau=RV('uniform', loc=5., scale=1.),
                           V_f=0.1,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=5., scale=0.02),
-                          n_int=100,
+                          xi=100.,#WeibullFibers(shape=5., scale=100.02),
+                          n_int=5,
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1],
+                                 reinforcement_lst=[reinf1, reinf2],
                                  Ll=.7,
                                  Lr=1.,
                                  w=0.028)
 
-    reinf = Reinforcement(r=0.01,
-                          tau=RV('uniform', loc=0.01, scale=.5),
-                          V_f=0.05,
-                          E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
-                          n_int=50,
-                          label='carbon')
-
-    ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
-                                 Ll=4.,
-                                 Lr=87.,
-                                 w=0.004)
+#    reinf = ContinuousFibers(r=0.01,
+#                          tau=RV('uniform', loc=0.01, scale=.5),
+#                          V_f=0.05,
+#                          E_f=200e3,
+#                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
+#                          n_int=10,
+#                          label='carbon')
+#
+#    ccb = CompositeCrackBridge(E_m=25e3,
+#                                 reinforcement_lst=[reinf],
+#                                 Ll=4.,
+#                                 Lr=87.,
+#                                 w=0.004)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
@@ -360,5 +360,5 @@ if __name__ == '__main__':
     for i, depsf in enumerate(ccb.sorted_depsf):
         plt.plot(ccb._x_arr, np.maximum(ccb._epsf0_arr[i] - depsf*np.abs(ccb._x_arr),ccb._epsm_arr))
     plt.legend(loc='best')
-    plt.xlim(-5,109)
+    plt.xlim(-1,1)
     plt.show()
