@@ -70,12 +70,15 @@ class CompositeCrackBridge(HasTraits):
             nu_r_arr = np.hstack((nu_r_arr, reinf.nu_r))
             r_arr = np.hstack((r_arr, reinf.r_arr))
         argsort = np.argsort(depsf_arr)[::-1]
+        # sorting the masks for the evaluation of F
         idxs = np.array([])
         for i, reinf in enumerate(self.reinforcement_lst):
             idxs = np.hstack((idxs, i * np.ones_like(reinf.depsf_arr)))
         masks = []
         for i, reinf in enumerate(self.reinforcement_lst):
             masks.append((idxs == i)[argsort])
+        max_depsf = [np.max(reinf.depsf_arr) for reinf in self.reinforcement_lst]
+        masks = [masks[i] for i in np.argsort(max_depsf)[::-1]]
         return depsf_arr[argsort], V_f_arr[argsort], E_f_arr[argsort], \
                 xi_arr[argsort],  stat_weights_arr[argsort], \
                 nu_r_arr[argsort], masks, r_arr[argsort]
@@ -335,7 +338,7 @@ if __name__ == '__main__':
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
+                                 reinforcement_lst=[reinf2, reinf1],
                                  Ll=.7,
                                  Lr=1.,
                                  w=0.028)
