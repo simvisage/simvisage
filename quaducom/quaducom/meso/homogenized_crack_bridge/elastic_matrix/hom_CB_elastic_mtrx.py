@@ -307,13 +307,13 @@ class CompositeCrackBridge(HasTraits):
         else:
             ff = t.clock()
             try:
-                damage = root(self.damage_residuum, np.zeros_like(self.sorted_depsf), method='excitingmixing')
+                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*1e-10, method='excitingmixing')
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
                 damage = damage.x
             except:
                 print 'fast opt method does not converge: switched to a slower, robust method for this step'
-                damage = root(self.damage_residuum, np.zeros_like(self.sorted_depsf), method='krylov')
+                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*1e-10, method='krylov')
                 damage = damage.x
             #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
         return damage

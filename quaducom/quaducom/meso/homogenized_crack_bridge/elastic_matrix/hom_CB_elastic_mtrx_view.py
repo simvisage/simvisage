@@ -4,18 +4,16 @@ Created on 16.11.2012
 @author: Q
 '''
 from etsproxy.traits.ui.api import ModelView
-from etsproxy.traits.api import Instance, Property, cached_property, Array, Float
-from hom_CB_elastic_mtrx import CompositeCrackBridge
-from hom_CB_elastic_mtrx_py_loop import CompositeCrackBridgeLoop
+from etsproxy.traits.api import Instance, Property, cached_property, Array
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
-from reinforcement import Reinforcement, WeibullFibers
-from scipy.optimize import brentq, minimize, fminbound
+from scipy.optimize import brentq, fminbound
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import time
-import scipy
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_py_loop import CompositeCrackBridgeLoop
 
 
 class CompositeCrackBridgeView(ModelView):
@@ -69,9 +67,9 @@ class CompositeCrackBridgeView(ModelView):
         for w in w_arr:
             self.model.w = w
             sigma_c_lst.append(self.sigma_c)
-            if u==True:
+            if u == True:
                 u_lst.append(self.u_evaluated)
-        if u==True:
+        if u == True:
             return np.array(sigma_c_lst), np.array(u_lst)
         return np.array(sigma_c_lst)
 
@@ -198,7 +196,10 @@ class CompositeCrackBridgeView(ModelView):
 
 if __name__ == '__main__':
 
-    reinf1 = Reinforcement(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
+    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
+    from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
+    
+    reinf1 = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
                           tau=RV('uniform', loc=4., scale=2.),
                           V_f=0.2,
                           E_f=70e3,
@@ -206,7 +207,7 @@ if __name__ == '__main__':
                           n_int=50,
                           label='AR glass')
 
-    reinf2 = Reinforcement(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
+    reinf2 = ContinuousFibers(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
                           tau=RV('uniform', loc=.3, scale=.05),
                           V_f=0.1,
                           E_f=200e3,
@@ -214,7 +215,7 @@ if __name__ == '__main__':
                           n_int=50,
                           label='carbon')
 
-    reinf = Reinforcement(r=RV('uniform', loc=.005, scale=.01),
+    reinf = ContinuousFibers(r=RV('uniform', loc=.005, scale=.01),
                           tau=RV('uniform', loc=.05, scale=.1),
                           xi=WeibullFibers(shape=20., sV0=0.003),
                           V_f=0.3, E_f=200e3, n_int=40)
@@ -278,7 +279,7 @@ if __name__ == '__main__':
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
     #profile(0.025)
-    w = np.linspace(0.0, .6, 20)
+    w = np.linspace(0.0, .6, 100)
     sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
