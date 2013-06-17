@@ -27,12 +27,17 @@ class WeibullFibers(HasTraits):
         s = (depsf * (m + 1) * self.sV0 ** m * self.V0 / 2 / pi / r ** 2) ** (1. / (m + 1))
         return s * gamma(1. + 1 / (m + 1.))
 
-    def cdf(self, max_strain, strain_slope, shorter_boundary, longer_boundary, fiber_radius):
+    def weibull_fibers_cdf(self, max_strain, strain_slope,
+                           shorter_boundary, longer_boundary, fiber_radius):
         m = self.shape
-        x_short = np.hstack((shorter_boundary[1:], np.repeat(shorter_boundary[-1], len(max_strain)-len(shorter_boundary[1:]))))
-        x_long = np.hstack((longer_boundary[1:], np.repeat(longer_boundary[-1], len(max_strain)-len(longer_boundary[1:]))))
+        x_short = np.hstack((shorter_boundary[1:],
+                             np.repeat(shorter_boundary[-1],
+                            len(max_strain) - len(shorter_boundary[1:]))))
+        x_long = np.hstack((longer_boundary[1:],
+                            np.repeat(longer_boundary[-1],
+                                      len(max_strain) - len(longer_boundary[1:]))))
         s = strain_slope * (m + 1) * self.sV0 ** m * self.V0 / pi / fiber_radius ** 2
-        a0 = max_strain / strain_slope
+        a0 = max_strain / strain_slope + 1e-15
         Pf = 1. - np.exp(- max_strain ** (m + 1) / s *
             (2. - (1 - x_short / a0) ** (m + 1) - (1 - x_long / a0) ** (m + 1)))
         return Pf * H(max_strain)
