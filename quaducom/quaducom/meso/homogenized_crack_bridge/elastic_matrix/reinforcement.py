@@ -27,6 +27,7 @@ class Reinforcement(HasTraits):
     tau = EitherType(klasses=[FloatType, RV])
     n_int = Int
 
+
 class ContinuousFibers(Reinforcement):
     '''implements continuous reinforcement'''
     results = Property(depends_on='r, V_f, E_f, xi, tau, n_int')

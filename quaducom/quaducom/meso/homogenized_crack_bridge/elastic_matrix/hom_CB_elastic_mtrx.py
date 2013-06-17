@@ -137,14 +137,14 @@ class CompositeCrackBridge(HasTraits):
             elif isinstance(reinf.xi, RV):
                 methods.append(reinf.xi._distr.cdf)
             elif isinstance(reinf.xi, WeibullFibers):
-                methods.append(reinf.xi.weibull_fibers_Pf)
+                methods.append(reinf.xi.weibull_fibers_cdf)
         return methods, masks
 
     def vect_xi_cdf(self, epsy, x_short, x_long):
         Pf = np.zeros_like(self.sorted_depsf)
         methods, masks = self.sorted_xi_cdf
         for i, method in enumerate(methods):
-            if method.__name__ == 'weibull_fibers_Pf':
+            if method.__name__ == 'weibull_fibers_cdf':
                 Pf += method(epsy * masks[i], self.sorted_depsf,
                              x_short, x_long, self.sorted_r)
             else:
@@ -333,7 +333,7 @@ if __name__ == '__main__':
                           tau=RV('uniform', loc=5., scale=1.),
                           V_f=0.1,
                           E_f=200e3,
-                          xi=100.,#WeibullFibers(shape=5., scale=100.02),
+                          xi=WeibullFibers(shape=5., sV0=100.0),
                           n_int=5,
                           label='carbon')
 
