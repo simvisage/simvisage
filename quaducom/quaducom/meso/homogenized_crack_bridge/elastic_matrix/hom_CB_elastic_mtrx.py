@@ -16,7 +16,8 @@ from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array
 from types import FloatType
-from reinforcement import Reinforcement, WeibullFibers
+from reinforcement import Reinforcement, ContinuousFibers
+from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from scipy.optimize import fsolve, broyden2, root
 import time as t
 from scipy.integrate import cumtrapz
@@ -44,7 +45,8 @@ class CompositeCrackBridge(HasTraits):
         E_fibers = 0.0
         for reinf in self.reinforcement_lst:
             E_fibers += reinf.V_f * reinf.E_f
-        return self.E_m * (1. - self.V_f_tot) + E_fibers
+        E_c = self.E_m * (1. - self.V_f_tot) + E_fibers
+        return E_c * (1. + 1e-15)
 
     sorted_theta = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -68,12 +70,15 @@ class CompositeCrackBridge(HasTraits):
             nu_r_arr = np.hstack((nu_r_arr, reinf.nu_r))
             r_arr = np.hstack((r_arr, reinf.r_arr))
         argsort = np.argsort(depsf_arr)[::-1]
+        # sorting the masks for the evaluation of F
         idxs = np.array([])
         for i, reinf in enumerate(self.reinforcement_lst):
             idxs = np.hstack((idxs, i * np.ones_like(reinf.depsf_arr)))
         masks = []
         for i, reinf in enumerate(self.reinforcement_lst):
             masks.append((idxs == i)[argsort])
+        max_depsf = [np.max(reinf.depsf_arr) for reinf in self.reinforcement_lst]
+        masks = [masks[i] for i in np.argsort(max_depsf)[::-1]]
         return depsf_arr[argsort], V_f_arr[argsort], E_f_arr[argsort], \
                 xi_arr[argsort],  stat_weights_arr[argsort], \
                 nu_r_arr[argsort], masks, r_arr[argsort]
@@ -132,14 +137,14 @@ class CompositeCrackBridge(HasTraits):
             elif isinstance(reinf.xi, RV):
                 methods.append(reinf.xi._distr.cdf)
             elif isinstance(reinf.xi, WeibullFibers):
-                methods.append(reinf.xi.weibull_fibers_Pf)
+                methods.append(reinf.xi.weibull_fibers_cdf)
         return methods, masks
 
     def vect_xi_cdf(self, epsy, x_short, x_long):
         Pf = np.zeros_like(self.sorted_depsf)
         methods, masks = self.sorted_xi_cdf
         for i, method in enumerate(methods):
-            if method.__name__ == 'weibull_fibers_Pf':
+            if method.__name__ == 'weibull_fibers_cdf':
                 Pf += method(epsy * masks[i], self.sorted_depsf,
                              x_short, x_long, self.sorted_r)
             else:
@@ -166,7 +171,7 @@ class CompositeCrackBridge(HasTraits):
             demsi = dems[mask]
             fi = 1. / (depsfi + demsi)
             F[mask] = np.hstack((np.array([0.0]), cumtrapz(fi, -depsfi)))
-            if i==0:
+            if i == 0:
                 C = 0.0
             else:
                 depsf0 = self.sorted_depsf[self.sorted_masks[i-1]]
@@ -184,6 +189,8 @@ class CompositeCrackBridge(HasTraits):
         return F
 
     def profile(self, iter_damage, Lmin, Lmax):
+        if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):
+            return np.ones_like(iter_damage) * 0.5, np.ones_like(self.sorted_depsf), np.ones_like(self.sorted_depsf)
         # matrix strain derivative with resp. to z as a function of T
         dems = self.dem_depsf_vect(self.sorted_depsf, iter_damage)
         # initial matrix strain derivative
@@ -193,7 +200,7 @@ class CompositeCrackBridge(HasTraits):
         # integrated f(depsf) - see article
         F = self.F(dems, amin)
         # a(T) for double sided pullout
-        a1 = np.exp(F/2. + np.log(amin))
+        a1 = np.exp(F/2. + np.log(amin))# * mask_po + Le * inv_mask_po
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
             a = np.hstack((-Lmin, 0.0, Lmax))
@@ -298,56 +305,57 @@ class CompositeCrackBridge(HasTraits):
         if self.w == 0.:
             damage = np.zeros_like(self.sorted_depsf)
         else:
-            #ff = t.clock()
+            ff = t.clock()
             try:
-                damage = root(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), method='excitingmixing')
-                if np.any(damage.x < 0.0):
+                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*1e-10, method='excitingmixing')
+                if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
                 damage = damage.x
             except:
                 print 'fast opt method does not converge: switched to a slower, robust method for this step'
-                damage = fsolve(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf), maxfev=10, xtol=0.5)
+                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*1e-10, method='krylov')
+                damage = damage.x
             #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
         return damage
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-    reinf1 = Reinforcement(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
-                          tau=RV('uniform', loc=1., scale=20.),
+    reinf1 = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
+                          tau=RV('uniform', loc=1., scale=1.),
                           V_f=0.2,
                           E_f=70e3,
-                          xi=RV('weibull_min', shape=5., scale=0.04),
-                          n_int=100,
+                          xi=100.,#RV('weibull_min', shape=50., scale=100.),
+                          n_int=5,
                           label='AR glass')
 
-    reinf2 = Reinforcement(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
-                          tau=RV('uniform', loc=.3, scale=.05),
+    reinf2 = ContinuousFibers(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
+                          tau=RV('uniform', loc=5., scale=1.),
                           V_f=0.1,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=5., scale=0.02),
-                          n_int=100,
+                          xi=WeibullFibers(shape=5., sV0=100.0),
+                          n_int=5,
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1],
+                                 reinforcement_lst=[reinf2, reinf1],
                                  Ll=.7,
                                  Lr=1.,
                                  w=0.028)
 
-    reinf = Reinforcement(r=0.01,
-                          tau=RV('uniform', loc=0.01, scale=.5),
-                          V_f=0.05,
-                          E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
-                          n_int=50,
-                          label='carbon')
-
-    ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
-                                 Ll=4.,
-                                 Lr=87.,
-                                 w=0.004)
+#    reinf = ContinuousFibers(r=0.01,
+#                          tau=RV('uniform', loc=0.01, scale=.5),
+#                          V_f=0.05,
+#                          E_f=200e3,
+#                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
+#                          n_int=10,
+#                          label='carbon')
+#
+#    ccb = CompositeCrackBridge(E_m=25e3,
+#                                 reinforcement_lst=[reinf],
+#                                 Ll=4.,
+#                                 Lr=87.,
+#                                 w=0.004)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
@@ -355,5 +363,5 @@ if __name__ == '__main__':
     for i, depsf in enumerate(ccb.sorted_depsf):
         plt.plot(ccb._x_arr, np.maximum(ccb._epsf0_arr[i] - depsf*np.abs(ccb._x_arr),ccb._epsm_arr))
     plt.legend(loc='best')
-    plt.xlim(-5,109)
+    plt.xlim(-1,1)
     plt.show()
