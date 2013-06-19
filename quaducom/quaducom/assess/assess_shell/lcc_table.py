@@ -240,6 +240,10 @@ class LCCTable(HasTraits):
     #
     data_dir = Directory
 
+    # specify weather exact evaluation 'k_alpha' is to be used or a lower bound 'k_min_alpha = 0.707' as simplification instead
+    #
+    k_alpha_min = Bool( False )
+
     # list of load cases
     #
     lc_list_ = List(Instance(LC))
@@ -674,6 +678,7 @@ class LCCTable(HasTraits):
                        ls_table = LSTable( reader = self.reader,
                                            geo_data = self.geo_data_dict,
                                            state_data = state_data_dict,
+                                           k_alpha_min = self.k_alpha_min,
                                            ls = self.ls)
                        )
 
@@ -826,6 +831,8 @@ class LCCTable(HasTraits):
         X = lcc_list[0].ls_table.X[:, 0]
         Y = lcc_list[0].ls_table.Y[:, 0]
         Z = lcc_list[0].ls_table.Z[:, 0]
+        if self.reader_type == 'RFEM':
+            Z *= -1.0 
         plot_col = assess_value_max[:, 0]
         
         # save assess values to file in order to superpose them later
@@ -850,7 +857,7 @@ class LCCTable(HasTraits):
                      bgcolor = (1.0, 1.0, 1.0),
                      fgcolor = (0.0, 0.0, 0.0))
 
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
+        mlab.points3d(X, Y, Z, plot_col,
                        colormap = "YlOrBr",
                        mode = "cube",
                        scale_mode = 'none',
@@ -861,7 +868,7 @@ class LCCTable(HasTraits):
         mlab.show()
 
 
-    def plot_nm_interaction(self, show_tension_only = False, add_nm_Ed_arr_from_file = None, save_nm_Ed_arr_to_file = None):
+    def plot_nm_interaction(self, save_fig_to_file = None, show_tension_only = False, add_max_min_nm_from_file = None, save_max_min_nm_to_file = None):
         '''plot the nm-interaction for all loading case combinations
         '''
 
@@ -890,13 +897,64 @@ class LCCTable(HasTraits):
             #
             m_sig_lo = getattr(ls_class, 'm_sig_lo')
             n_sig_lo = getattr(ls_class, 'n_sig_lo')
-            m_sig_lo_list.append(m_sig_lo)
-            n_sig_lo_list.append(n_sig_lo)
-
             m_sig_up = getattr(ls_class, 'm_sig_up')
             n_sig_up = getattr(ls_class, 'n_sig_up')
-            m_sig_lo_list.append(m_sig_up)
-            n_sig_lo_list.append(n_sig_up)
+
+            # add read in saved values to be superposed with currently read in values
+            #
+            if add_max_min_nm_from_file != None:
+                max_min_nm_arr  = np.loadtxt( add_max_min_nm_from_file )
+                max_n_arr = max_min_nm_arr[:,0][:,None]
+                min_n_arr = max_min_nm_arr[:,1][:,None]
+                max_m_arr = max_min_nm_arr[:,2][:,None]
+                min_m_arr = max_min_nm_arr[:,3][:,None]
+    
+                # n_sig_lo
+                #
+                cond_n_sig_lo_ge_0 = n_sig_lo >= 0. # tensile normal force 
+                bool_arr = cond_n_sig_lo_ge_0
+                n_sig_lo[bool_arr] += max_n_arr[bool_arr]
+
+                cond_n_sig_lo_lt_0 = n_sig_lo < 0. # compressive normal force 
+                bool_arr = cond_n_sig_lo_lt_0
+                n_sig_lo[bool_arr] += min_n_arr[bool_arr]
+
+                # n_sig_up
+                #
+                cond_n_sig_up_ge_0 = n_sig_up >= 0. # tensile normal force 
+                bool_arr = cond_n_sig_up_ge_0
+                n_sig_up[bool_arr] += max_n_arr[bool_arr]
+                
+                cond_n_sig_up_lt_0 = n_sig_up < 0. # compressive normal force 
+                bool_arr = cond_n_sig_up_lt_0
+                n_sig_up[bool_arr] += min_n_arr[bool_arr]
+
+                # m_sig_lo
+                #
+                cond_m_sig_lo_ge_0 = m_sig_lo >= 0. # positive bending moment 
+                bool_arr = cond_m_sig_lo_ge_0
+                m_sig_lo[bool_arr] += max_m_arr[bool_arr]
+
+                cond_m_sig_lo_lt_0 = m_sig_lo < 0. # compressive normal force 
+                bool_arr = cond_m_sig_lo_lt_0
+                m_sig_lo[bool_arr] += min_m_arr[bool_arr]
+
+                # m_sig_up
+                #
+                cond_m_sig_up_ge_0 = m_sig_up >= 0. # positive bending moment 
+                bool_arr = cond_m_sig_up_ge_0
+                m_sig_up[bool_arr] += max_m_arr[bool_arr]
+
+                cond_m_sig_up_lt_0 = m_sig_up < 0. # compressive normal force 
+                bool_arr = cond_m_sig_up_lt_0
+                m_sig_up[bool_arr] += min_m_arr[bool_arr]
+
+            # NOTE: after the superposition only the absolute values of m_Ed are used for the plot
+            #
+            m_sig_lo_list.append( abs(m_sig_lo) )
+            m_sig_up_list.append( abs(m_sig_up) )
+            n_sig_lo_list.append( n_sig_lo )
+            n_sig_up_list.append( n_sig_up )
 
             m_Ed_list = m_sig_lo_list + m_sig_up_list
             n_Ed_list = n_sig_lo_list + n_sig_up_list
@@ -918,24 +976,41 @@ class LCCTable(HasTraits):
         # use simplification with minimum value for k_alpha = 0.707 
         # and lower resistance of 0- or 90-degree direction
         #
+        print 'simplification with k_alpha,min = 0.707 has been used for plot'
         m_Rd = min( m_0_Rd, m_90_Rd) * 0.707
         n_Rdt = min( n_0_Rdt, n_90_Rdt) * 0.707
 
-#        # save values to file in order to superpose them later
-#        #
-#        if save_nm_Ed_arr_to_file != None:
-#            print 'nm_Ed_arr saved to file %s' %( save_nm_Ed_arr_to_file )
-#            nm_Ed_arr = np.hstack([ n_Ed_arr, m_Ed_arr ])
-#            np.savetxt( save_nm_Ed_arr_to_file, nm_Ed_arr )
-#
-#        # add read in saved values to be superposed with currently read in values
-#        #
-#        if add_nm_Ed_arr_from_file != None:
-#            print 'superpose m_Ed_arr with values read in from file %s' %( add_nm_Ed_arr_from_file )
-#            nm_Ed_arr  = np.loadtxt( add_nm_Ed_arr_from_file )
-#            n_Ed_arr += nm_Ed_arr[:,0]
-#            m_Ed_arr += nm_Ed_arr[:,1]
+        # save min- and max-values to file in order to superpose them later
+        #
+        if save_max_min_nm_to_file != None:
+                
+            # get maximum values for superposition if n_Ed is a positive number or minimum if it is a negative number
+            
+            # (positive) tensile force
+            #
+            max_n_arr = np.max( n_Ed_arr, axis = 1) 
 
+            # (negative) compression force 
+            #
+            min_n_arr = np.min( n_Ed_arr, axis = 1) 
+
+            # positive bending moment
+            #
+            max_m_arr = np.max( m_Ed_arr, axis = 1 )
+
+            # negative bending moment
+            #
+            min_m_arr = np.min( m_Ed_arr, axis = 1 )
+
+            # stack as three column array
+            #
+            max_min_nm_arr = np.hstack([max_n_arr[:,None], min_n_arr[:,None], max_m_arr[:,None], min_m_arr[:,None]])
+
+            # save max and min values to file
+            #
+            np.savetxt( save_max_min_nm_to_file, max_min_nm_arr )
+            print 'max_min_nm_arr saved to file %s' %(save_max_min_nm_to_file)
+            
         #----------------------------------------------
         # plot
         #----------------------------------------------
@@ -947,7 +1022,7 @@ class LCCTable(HasTraits):
         y1 = np.array([ n_Rdc, 0. ])
         y2 = np.array([ n_Rdt, 0. ])
 
-        p.title('$nm$-Interaktionsdiagramm')
+#        p.title('$nm$-Interaktionsdiagramm')
     
         ax = p.gca()
         if show_tension_only == False:
@@ -973,10 +1048,16 @@ class LCCTable(HasTraits):
         p.xlabel('$m_{Ed}$ [kNm/m]', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
         p.ylabel('$n_{Ed}$ [kN/m]', fontsize=14)
 
+        # save figure as png-file
+        #
+        if save_fig_to_file != None:
+            print 'figure saved to file %s' %(save_fig_to_file)
+            p.savefig( save_fig_to_file, format='png' )
+        
         p.show()
 
-
-    def plot_eta_nm_interaction(self, show_tension_only = False, add_eta_nm_arr_from_file = None, save_eta_nm_arr_to_file = None):
+                                                                                     
+    def plot_eta_nm_interaction(self, save_fig_to_file = None, show_tension_only = False, save_max_min_eta_nm_to_file = None, add_max_min_eta_nm_from_file = None):
         '''plot the eta_nm-interaction for all loading case combinations
         '''
 
@@ -1002,39 +1083,106 @@ class LCCTable(HasTraits):
  
             # get 'eta_n' and 'eta_m' 
             #
-            eta_n_lo = getattr(ls_class, 'eta_n_lo')
             eta_m_lo = getattr(ls_class, 'eta_m_lo')
-            eta_n_lo_list.append( eta_n_lo )
-            eta_m_lo_list.append( eta_m_lo )
-
-            eta_n_up = getattr(ls_class, 'eta_n_up')
             eta_m_up = getattr(ls_class, 'eta_m_up')
+            eta_n_lo = getattr(ls_class, 'eta_n_lo')
+            eta_n_up = getattr(ls_class, 'eta_n_up')
+
+            # add read in saved values to be superposed with currently read in values
+            #
+            if add_max_min_eta_nm_from_file != None:
+                print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
+                max_min_eta_nm_arr  = np.loadtxt( add_max_min_eta_nm_from_file )
+                max_eta_n_arr = max_min_eta_nm_arr[:,0][:,None]
+                min_eta_n_arr = max_min_eta_nm_arr[:,1][:,None]
+                max_eta_m_arr = max_min_eta_nm_arr[:,2][:,None]
+                min_eta_m_arr = max_min_eta_nm_arr[:,3][:,None]
+    
+                # eta_n_lo
+                #
+                cond_eta_nlo_ge_0 = eta_n_lo >= 0. # eta caused by tensile normal force 
+                bool_arr = cond_eta_nlo_ge_0
+                eta_n_lo[bool_arr] += max_eta_n_arr[bool_arr]
+
+                cond_eta_nlo_lt_0 = eta_n_lo < 0. # eta caused by compressive normal force 
+                bool_arr = cond_eta_nlo_lt_0
+                eta_n_lo[bool_arr] += min_eta_n_arr[bool_arr]
+
+                # eta_n_up
+                #
+                cond_eta_nup_ge_0 = eta_n_up >= 0. # eta caused by tensile normal force 
+                bool_arr = cond_eta_nup_ge_0
+                eta_n_up[bool_arr] += max_eta_n_arr[bool_arr]
+                
+                cond_eta_nup_lt_0 = eta_n_up < 0. # eta caused by compressive normal force 
+                bool_arr = cond_eta_nup_lt_0
+                eta_n_up[bool_arr] += min_eta_n_arr[bool_arr]
+
+                # eta_m_lo
+                #
+                cond_eta_mlo_ge_0 = eta_m_lo >= 0. # eta caused by positive bending moment
+                bool_arr = cond_eta_mlo_ge_0
+                eta_m_lo[bool_arr] += max_eta_m_arr[bool_arr]
+
+                cond_eta_mlo_lt_0 = eta_m_lo < 0. # eta caused by negative bending moment
+                bool_arr = cond_eta_mlo_lt_0
+                eta_m_lo[bool_arr] += min_eta_m_arr[bool_arr]
+
+                # eta_m_up
+                #
+                cond_eta_mup_ge_0 = eta_m_up >= 0. # eta caused by positive bending moment
+                bool_arr = cond_eta_mup_ge_0
+                eta_m_up[bool_arr] += max_eta_m_arr[bool_arr]
+                
+                cond_eta_mup_lt_0 = eta_m_up < 0. # eta caused by negative bending moment
+                bool_arr = cond_eta_mup_lt_0
+                eta_m_up[bool_arr] += min_eta_m_arr[bool_arr]
+
+            eta_n_lo_list.append( eta_n_lo )
             eta_n_up_list.append( eta_n_up )
-            eta_m_up_list.append( eta_m_up )
+            
+            # NOTE: after superposition take only the absolute values for the plot
+            #
+            eta_m_lo_list.append( abs( eta_m_lo ))
+            eta_m_up_list.append( abs( eta_m_up ))
 
             eta_n_list = eta_n_lo_list + eta_n_up_list
             eta_m_list = eta_m_lo_list + eta_m_up_list
 
         # stack the list to an array in order to use plot-function
         #
-        eta_n_arr = hstack( eta_n_list )
-        eta_m_arr = hstack( eta_m_list )
+        eta_n_arr = np.hstack( eta_n_list )
+        eta_m_arr = np.hstack( eta_m_list )
         print 'eta_n_arr.shape', eta_n_arr.shape
 
-#        # save values to file in order to superpose them later
-#        #
-#        if save_eta_nm_arr_to_file != None:
-#            print 'eta_nm_arr saved to file %s' %( save_eta_nm_arr_to_file )
-#            eta_nm_arr = np.vstack([ eta_n_arr, eta_m_arr ])
-#            np.savetxt( save_eta_nm_arr_to_file, eta_nm_arr )
-#
-#        # add read in saved values to be superposed with currently read in values
-#        #
-#        if add_eta_nm_arr_from_file != None:
-#            print 'superpose eta_nm_arr with values read in from file %s' %( add_eta_nm_arr_from_file )
-#            eta_nm_arr  = np.loadtxt( add_eta_nm_arr_from_file )
-#            eta_n_arr += eta_nm_arr[:,0]
-#            eta_m_arr += eta_nm_arr[:,1]
+        # save max-values to file in order to superpose them later
+        #
+        if save_max_min_eta_nm_to_file != None:
+                
+            # get maximum values if eta_n is a positive number or minimum if it is a negative number
+            #
+            max_eta_n_arr = np.max( eta_n_arr, axis = 1) # eta caused by (positive) tensile force
+            
+            # eta caused by (negative) compression force 
+            #
+            min_eta_n_arr = np.min( eta_n_arr, axis = 1) 
+
+            # eta_m cause by a positive bending moment
+            #
+            max_eta_m_arr = np.max( eta_m_arr, axis = 1)
+
+            # eta_m cause by a negative bending moment
+            #
+            min_eta_m_arr = np.min( eta_m_arr, axis = 1)
+
+            # stack as four column array
+            #
+            max_min_eta_nm_arr = np.hstack([max_eta_n_arr[:,None], min_eta_n_arr[:,None], max_eta_m_arr[:,None], min_eta_m_arr[:,None]])
+            # save max values to file
+            #
+            np.savetxt( save_max_min_eta_nm_to_file, max_min_eta_nm_arr )
+            print 'max_min_eta_nm_arr saved to file %s' %(save_max_min_eta_nm_to_file)
+
 
         #----------------------------------------------
         # plot
@@ -1047,7 +1195,7 @@ class LCCTable(HasTraits):
         y1 = np.array([ -1., 0. ])
         y2 = np.array([  1., 0. ])
     
-        p.title('Ausnutzungsgrad $\eta_{nm}$')
+#        p.title('Ausnutzungsgrad $\eta_{nm}$')
 
         ax = p.gca()
 
@@ -1073,6 +1221,12 @@ class LCCTable(HasTraits):
 #        ax.yaxis.set_ticks_position('left')
         p.xlabel('$\eta_m$ [-]', fontsize=14)
         p.ylabel('$\eta_n$ [-]', fontsize=14)
+
+        # save figure as png-file
+        #
+        if save_fig_to_file != None:
+            print 'figure saved to file %s' %(save_fig_to_file)
+            p.savefig( save_fig_to_file, format='png' )
 
         p.show()
 
