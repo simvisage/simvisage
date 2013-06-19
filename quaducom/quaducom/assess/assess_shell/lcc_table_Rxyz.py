@@ -228,6 +228,10 @@ class LCCTable(HasTraits):
     #
     data_dir = Directory
 
+    # specify assess name of the parameter used to sort the rows in LCCTable in .configure_traits
+    #
+    assess_name = Str
+
     # list of load cases
     #
     lc_list_ = List(Instance(LC))
@@ -680,6 +684,7 @@ class LCCTable(HasTraits):
                        # changes concerning 'Rxyz': use LSTable for support force evaluation
                        ls_table = LSTableRxyz( reader = self.reader,
                                            reader_type = self.reader_type,
+                                           assess_name = self.assess_name,
                                            geo_data = self.geo_data_dict,
                                            state_data = state_data_dict,
                                            ls = self.ls)
@@ -696,9 +701,8 @@ class LCCTable(HasTraits):
     def plot_geo(self, mlab):
         self.reader.plot_mesh(mlab, self.geo_data_dict)
 
-
-    def plot_RxRz_interaction(self, show_tension_only = False, add_nm_Ed_arr_from_file = None, save_nm_Ed_arr_to_file = None):
-        '''plot the NV-reaction force interaction for all loading case combinations
+    def plot_RxRz_interaction(self, save_fig_to_file = None, show_tension_only = False, add_max_min_RxRz_from_file = None, save_max_min_RxRz_to_file = None):
+        '''plot the normal/shear-reaction forces as interaction diagram for all loading case combinations
         '''
 
         # get the list of all loading case combinations:
@@ -709,8 +713,8 @@ class LCCTable(HasTraits):
         # run trough all loading case combinations:
         #----------------------------------------------
 
-        Rx_list = []
-        Rz_list = []
+        Rx_Ed_list = [] # normal reaction force (tangential to the shell geometry)
+        Rz_Ed_list = [] # shear reaction force (radial to the shell geometry)
         for lcc in lcc_list:
 
             # get the ls_table object and retrieve its 'ls_class'
@@ -718,38 +722,85 @@ class LCCTable(HasTraits):
             #
             ls_class = lcc.ls_table.ls_class
  
-            # get n_Ed and m_Ed 
+            # get Rx_Ed and Rz_Ed 
             #
-            Rx = getattr(ls_class, 'Rx')
-            Rz = getattr(ls_class, 'Rz')
-            Rx_list.append( Rx )
-            Rz_list.append( Rz )
+            Rx_Ed = getattr(ls_class, 'Rx')
+            Rz_Ed = getattr(ls_class, 'Rz')
+            
+            # add read in saved values to be superposed with currently read in values
+            #
+            if add_max_min_RxRz_from_file != None:
+                max_min_RxRz_arr  = np.loadtxt( add_max_min_RxRz_from_file )
+                max_Rx_Ed_arr = max_min_RxRz_arr[:,0][:,None]
+                min_Rx_Ed_arr = max_min_RxRz_arr[:,1][:,None]
+                max_Rz_Ed_arr = max_min_RxRz_arr[:,2][:,None]
+                min_Rz_Ed_arr = max_min_RxRz_arr[:,3][:,None]
+    
+                # Rx_Ed
+                #
+                cond_Rx_Ed_ge_0 = Rx_Ed >= 0. # positive Rx value = shear force for the build-in srew 
+                bool_arr = cond_Rx_Ed_ge_0
+                Rx_Ed[bool_arr] += max_Rx_Ed_arr[bool_arr]
+
+                cond_Rx_Ed_lt_0 = Rx_Ed < 0. # negative Rx value = compressive force in tangential direction at support (normal force) 
+                bool_arr = cond_Rx_Ed_lt_0
+                Rx_Ed[bool_arr] += min_Rx_Ed_arr[bool_arr]
+
+                # Rz_Ed
+                #
+                cond_Rz_Ed_ge_0 = Rz_Ed >= 0. # positive Rz value = compressive force in radial direction at the support 
+                bool_arr = cond_Rz_Ed_ge_0
+                Rz_Ed[bool_arr] += max_Rz_Ed_arr[bool_arr]
+
+                cond_Rz_Ed_lt_0 = Rz_Ed < 0. # negative Rz value = pull-out force for the build-in srew 
+                bool_arr = cond_Rz_Ed_lt_0
+                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]            
+            
+            Rx_Ed_list.append( Rx_Ed )
+            Rz_Ed_list.append( Rz_Ed )
 
         # stack the list to an array in order to use plot-function
         #
-        Rx_arr = hstack( Rx_list )
-        Rz_arr = hstack( Rz_list )
-        print 'Rz_arr.shape', Rz_arr.shape
+        Rx_Ed_arr = hstack( Rx_Ed_list )
+        Rz_Ed_arr = hstack( Rz_Ed_list )
+        print 'Rz_Ed_arr.shape', Rz_Ed_arr.shape
 
         # get Rx_Rd, Rz_Rd 
         #
         Rx_Rd = getattr( ls_class, 'Rx_Rd' ) # shear resistance
         Rz_Rd = getattr( ls_class, 'Rz_Rd' ) # pull-out resistance
 
-#        # save values to file in order to superpose them later
-#        #
-#        if save_nm_Ed_arr_to_file != None:
-#            print 'nm_Ed_arr saved to file %s' %( save_nm_Ed_arr_to_file )
-#            nm_Ed_arr = np.hstack([ n_Ed_arr, m_Ed_arr ])
-#            np.savetxt( save_nm_Ed_arr_to_file, nm_Ed_arr )
-#
-#        # add read in saved values to be superposed with currently read in values
-#        #
-#        if add_nm_Ed_arr_from_file != None:
-#            print 'superpose m_Ed_arr with values read in from file %s' %( add_nm_Ed_arr_from_file )
-#            nm_Ed_arr  = np.loadtxt( add_nm_Ed_arr_from_file )
-#            n_Ed_arr += nm_Ed_arr[:,0]
-#            m_Ed_arr += nm_Ed_arr[:,1]
+        # save min- and max-values to file in order to superpose them later
+        #
+        if save_max_min_RxRz_to_file != None:
+                
+            # get maximum or minimum values for superposition depending on
+            # weather Rx or Rz are positive or negative values             
+            
+            # positive value for Rx
+            #
+            max_Rx_Ed_arr = np.max( Rx_Ed_arr, axis = 1) 
+
+            # negative value for Rx
+            #
+            min_Rx_Ed_arr = np.min( Rx_Ed_arr, axis = 1) 
+
+            # positive value for Rz
+            #
+            max_Rz_Ed_arr = np.max( Rz_Ed_arr, axis = 1) 
+
+            # negative value for Rz
+            #
+            min_Rz_Ed_arr = np.min( Rz_Ed_arr, axis = 1) 
+
+            # stack as four column array
+            #
+            max_min_RxRz_arr = np.hstack([max_Rx_Ed_arr[:,None], min_Rx_Ed_arr[:,None], max_Rz_Ed_arr[:,None], min_Rz_Ed_arr[:,None]])
+
+            # save max and min values to file
+            #
+            np.savetxt( save_max_min_RxRz_to_file, max_min_RxRz_arr )
+            print 'max_min_RxRz_arr saved to file %s' %(save_max_min_RxRz_to_file)
 
         #----------------------------------------------
         # plot
@@ -757,21 +808,26 @@ class LCCTable(HasTraits):
         #
         p.figure(facecolor = 'white') # white background
 
-        p.plot(Rx_arr, Rz_arr, 'wo', markersize=3) # blue dots
-        print 'Rx_arr', Rx_arr
-        print 'Rz_arr', Rz_arr
+        p.plot(Rx_Ed_arr, Rz_Ed_arr, 'wo', markersize=3) # blue dots
+        print 'Rx_Ed_arr', Rx_Ed_arr
+        print 'Rz_Ed_arr', Rz_Ed_arr
         x = np.array([0, Rx_Rd])
         y1 = np.array([ -Rz_Rd, 0. ])
 
-        p.title('$RxRz$-Interaktionsdiagramm')
+#        p.title('$RxRz$-Interaktionsdiagramm')
     
         ax = p.gca()
-#        ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
-#        ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
-#        p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+        if show_tension_only == False:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+#            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+            print 'show_tension_only == False'
 
-        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
-        p.grid(True)
+        if show_tension_only == True:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+            print 'show_tension_only == True'
 
         ax.spines['left'].set_position(('data', 0))
         ax.spines['right'].set_color('none')
@@ -779,18 +835,54 @@ class LCCTable(HasTraits):
         ax.spines['top'].set_color('none')
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
-        p.xlabel('$R_{x,Ed}$ [kN]', fontsize=14)
-        p.ylabel('$R_{z,Ed}$ [kN]', fontsize=14)
-#        p.xlabel('                                    $R_{x,Ed}$ [kN]', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
-#        p.ylabel('$R_{z,Ed}$ [kN]                        ', fontsize=14, verticalalignment = 'top', horizontalalignment = 'left')
 
+        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+        p.grid(True)
+
+#        ax.spines['left'].set_position(('data', 0))
+#        ax.spines['right'].set_color('none')
+#        ax.spines['bottom'].set_position(('data', 0))
+#        ax.spines['top'].set_color('none')
+#        ax.xaxis.set_ticks_position('bottom')
+#        ax.yaxis.set_ticks_position('left')
+        p.xlabel('$R_{x,Ed}$ [kN]                                             ', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
+        p.ylabel('$R_{z,Ed}$ [kN]                                                              ', fontsize=14)
+
+        # save figure as png-file
+        #
+        if save_fig_to_file != None:
+            print 'figure saved to file %s' %(save_fig_to_file)
+            p.savefig( save_fig_to_file, format='png' )
+        
         p.show()
+        
+#        ax = p.gca()
+##        ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+##        ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+##        p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+#
+#        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+#        p.grid(True)
+#
+#        ax.spines['left'].set_position(('data', 0))
+#        ax.spines['right'].set_color('none')
+#        ax.spines['bottom'].set_position(('data', 0))
+#        ax.spines['top'].set_color('none')
+#        ax.xaxis.set_ticks_position('bottom')
+#        ax.yaxis.set_ticks_position('left')
+#        p.xlabel('$R_{x,Ed}$ [kN]', fontsize=14)
+#        p.ylabel('$R_{z,Ed}$ [kN]', fontsize=14)
+#        p.show()
 
-
-    def plot_eta_RxRz_interaction(self, show_tension_only = False, add_eta_nm_arr_from_file = None, save_eta_nm_arr_to_file = None):
-        '''plot the eta_nm-interaction for all loading case combinations
+    #--------------------
+    # NEW eta-method#
+    #--------------------
+    #
+    def plot_eta_RxRz_interaction(self, show_tension_only = False, save_fig_to_file = None, add_max_min_RxRz_from_file = None):
+        '''plot the eta_RxRz-interaction for all loading case combinations
+        NOTE: the same superposition assumptions are made as used for method 'plot_RxRz_interaction'
         '''
-        print 'plot_eta_RxRz_interaction'
+        print 'plot_eta_RxRz_interaction; superposition based on max/min values of Rx and Rz'
 
         # get the list of all loading case combinations:
         #
@@ -799,7 +891,7 @@ class LCCTable(HasTraits):
         #----------------------------------------------
         # run trough all loading case combinations:
         #----------------------------------------------
-
+        
         eta_Rx_list = []
         eta_Rz_list = []
 
@@ -810,10 +902,73 @@ class LCCTable(HasTraits):
             #
             ls_class = lcc.ls_table.ls_class
  
-            # get 'eta_Rx' and 'eta_Rz' 
+            # get Rx_Ed and Rz_Ed 
             #
-            eta_Rx = getattr(ls_class, 'eta_Rx')
-            eta_Rz = getattr(ls_class, 'eta_Rz')
+            Rx_Ed = getattr(ls_class, 'Rx')
+            Rz_Ed = getattr(ls_class, 'Rz')
+
+            # get Rx_Rd and Rz_Rd 
+            #
+            Rx_Rd = getattr(ls_class, 'Rx_Rd')
+            Rz_Rd = getattr(ls_class, 'Rz_Rd')
+            
+            if add_max_min_RxRz_from_file == None:
+                # get 'eta_Rx' and 'eta_Rz' 
+                #
+                eta_Rx = getattr(ls_class, 'eta_Rx')
+                eta_Rz = getattr(ls_class, 'eta_Rz')
+ 
+            # add read in saved values to be superposed with currently read in values
+            #
+            else:
+                max_min_RxRz_arr  = np.loadtxt( add_max_min_RxRz_from_file )
+                max_Rx_Ed_arr = max_min_RxRz_arr[:,0][:,None]
+                min_Rx_Ed_arr = max_min_RxRz_arr[:,1][:,None]
+                max_Rz_Ed_arr = max_min_RxRz_arr[:,2][:,None]
+                min_Rz_Ed_arr = max_min_RxRz_arr[:,3][:,None]
+    
+                # Rx_Ed
+                #
+                cond_Rx_Ed_ge_0 = Rx_Ed >= 0. # positive Rx value = shear force for the build-in srew 
+                bool_arr = cond_Rx_Ed_ge_0
+                Rx_Ed[bool_arr] += max_Rx_Ed_arr[bool_arr]
+
+                cond_Rx_Ed_lt_0 = Rx_Ed < 0. # negative Rx value = compressive force in tangential direction at support (normal force) 
+                bool_arr = cond_Rx_Ed_lt_0
+                Rx_Ed[bool_arr] += min_Rx_Ed_arr[bool_arr]
+
+                # Rz_Ed
+                #
+                cond_Rz_Ed_ge_0 = Rz_Ed >= 0. # positive Rz value = compressive force in radial direction at the support 
+                bool_arr = cond_Rz_Ed_ge_0
+                Rz_Ed[bool_arr] += max_Rz_Ed_arr[bool_arr]
+
+                cond_Rz_Ed_lt_0 = Rz_Ed < 0. # negative Rz value = pull-out force for the build-in srew 
+                bool_arr = cond_Rz_Ed_lt_0
+                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]         
+                
+                
+                # note: positive values of 'Rx' correspond to shear forces for the support screw
+                #       negative values are taken by the compression cushion at the support directly 
+                #       Therefore take only the positive part of support force 'Rx' into account
+                #       for the evaluation of 'eta_Rx'  
+                Rx_pos = ( abs( Rx_Ed ) + Rx_Ed ) / 2.
+        
+                # eta shear forces 
+                #
+                eta_Rx = Rx_pos / Rx_Rd
+        
+        
+                # note: negative values of 'Rz' correspond to pull-out forces for the support screw
+                #       positive values are taken by the compression cushion at the support directly 
+                #       Therefore take only the negative values of the support force 'Rz' into account
+                #       for the evaluation of 'eta_Rz'  
+                Rz_neg = ( abs( Rz_Ed ) - Rz_Ed ) / 2.
+                
+                # eta pull-out
+                #
+                eta_Rz = Rz_neg / Rz_Rd
+            
             eta_Rx_list.append( eta_Rx )
             eta_Rz_list.append( eta_Rz )
 
@@ -822,21 +977,6 @@ class LCCTable(HasTraits):
         eta_Rx_arr = hstack( eta_Rx_list )
         eta_Rz_arr = hstack( eta_Rz_list )
         print 'eta_Rx_arr.shape', eta_Rx_arr.shape
-
-#        # save values to file in order to superpose them later
-#        #
-#        if save_eta_nm_arr_to_file != None:
-#            print 'eta_nm_arr saved to file %s' %( save_eta_nm_arr_to_file )
-#            eta_nm_arr = np.vstack([ eta_n_arr, eta_m_arr ])
-#            np.savetxt( save_eta_nm_arr_to_file, eta_nm_arr )
-#
-#        # add read in saved values to be superposed with currently read in values
-#        #
-#        if add_eta_nm_arr_from_file != None:
-#            print 'superpose eta_nm_arr with values read in from file %s' %( add_eta_nm_arr_from_file )
-#            eta_nm_arr  = np.loadtxt( add_eta_nm_arr_from_file )
-#            eta_n_arr += eta_nm_arr[:,0]
-#            eta_m_arr += eta_nm_arr[:,1]
 
         #----------------------------------------------
         # plot
@@ -849,13 +989,21 @@ class LCCTable(HasTraits):
         y1 = np.array([ -1., 0. ])
         y2 = np.array([  1., 0. ])
     
-        p.title('Ausnutzungsgrad $\eta$')
+#        p.title('Ausnutzungsgrad $\eta$')
 
         ax = p.gca()
+        if show_tension_only == False:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+#            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+            print 'show_tension_only == False'
 
-        ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
-        ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
-        p.axis([0., 1., 1., 0.]) # set plotting range for axis
+        if show_tension_only == True:
+            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+            ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+            p.axis([0., 1., 1., 0.]) # set plotting range for axis
+
+            print 'show_tension_only == True'
 
         p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
         p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
@@ -870,7 +1018,163 @@ class LCCTable(HasTraits):
         p.xlabel('$\eta_{Rx}$ [-] (Abscherkraft)', fontsize=14)
         p.ylabel('$\eta_{Rz}$ [-] (Auszugskraft)', fontsize=14)
 
+        # save figure as png-file
+        #
+        if save_fig_to_file != None:
+            print 'figure saved to file %s' %(save_fig_to_file)
+            p.savefig( save_fig_to_file, format='png' )
+
         p.show()
+
+
+        #@todo: this method superposes the eta_Rx and eta_Rz values too konservatively as inconsistend pairs are considered
+        # that means that independently of the sign for Rx or Rz resulting from LC1-14 the most conservative eta of all temperature loading cases
+        # is used. This corresponds to a translation of the obtained values for LC1-14 by a fixed horizontal and vertical shift.
+        # a more realistic superposition needs to consider the signs of the (dominant) values obtained from LS1-14 and enlarge the eta-value only if the
+        # resulting force of LC1-14 affects the in-build srew at all.   
+        #
+#    def plot_eta_RxRz_interaction(self, show_tension_only = False, save_fig_to_file = None, save_max_min_eta_RxRz_to_file = None, add_max_min_eta_RxRz_from_file = None):
+#        '''plot the eta_RxRz-interaction for all loading case combinations
+#        '''
+#        print 'plot_eta_RxRz_interaction'
+#
+#        # get the list of all loading case combinations:
+#        #
+#        lcc_list = self.lcc_list
+#
+#        #----------------------------------------------
+#        # run trough all loading case combinations:
+#        #----------------------------------------------
+#
+#        eta_Rx_list = []
+#        eta_Rz_list = []
+#
+#        for lcc in lcc_list:
+#
+#            # get the ls_table object and retrieve its 'ls_class'
+#            # (= LSTable_ULS-object)
+#            #
+#            ls_class = lcc.ls_table.ls_class
+# 
+#            # get 'eta_Rx' and 'eta_Rz' 
+#            #
+#            eta_Rx = getattr(ls_class, 'eta_Rx')
+#            eta_Rz = getattr(ls_class, 'eta_Rz')
+#            
+#            # add read in saved values to be superposed with currently read in values
+#            #
+#            if add_max_min_eta_RxRz_from_file != None:
+#                print "superpose max values for 'eta_Rx' and 'eta_Rz' with currently loaded values"
+#                max_min_eta_RxRz_arr  = np.loadtxt( add_max_min_eta_RxRz_from_file )
+#                max_eta_Rx_arr = max_min_eta_RxRz_arr[:,0][:,None]
+#                min_eta_Rx_arr = max_min_eta_RxRz_arr[:,1][:,None]
+#                max_eta_Rz_arr = max_min_eta_RxRz_arr[:,2][:,None]
+#                min_eta_Rz_arr = max_min_eta_RxRz_arr[:,3][:,None]
+#    
+#                # eta_Rx
+#                #
+#                cond_eta_Rx_ge_0 = eta_Rx >= 0. # eta caused by positive Rx reaction 
+#                bool_arr = cond_eta_Rx_ge_0
+#                eta_Rx[bool_arr] += max_eta_Rx_arr[bool_arr]
+#
+#                cond_eta_Rx_lt_0 = eta_Rx < 0. # eta caused by negative Rx reaction 
+#                bool_arr = cond_eta_Rx_lt_0
+#                eta_Rx[bool_arr] += min_eta_Rx_arr[bool_arr]
+#
+#                # eta_Rz
+#                #
+#                cond_eta_Rz_ge_0 = eta_Rz >= 0. # eta caused by positive Rz reaction 
+#                bool_arr = cond_eta_Rz_ge_0
+#                eta_Rz[bool_arr] += max_eta_Rz_arr[bool_arr]
+#
+#                cond_eta_Rz_lt_0 = eta_Rz < 0. # eta caused by negative Rz reaction 
+#                bool_arr = cond_eta_Rz_lt_0
+#                eta_Rz[bool_arr] += min_eta_Rz_arr[bool_arr]
+#            
+#            eta_Rx_list.append( eta_Rx )
+#            eta_Rz_list.append( eta_Rz )
+#
+#        # stack the list to an array in order to use plot-function
+#        #
+#        eta_Rx_arr = hstack( eta_Rx_list )
+#        eta_Rz_arr = hstack( eta_Rz_list )
+#        print 'eta_Rx_arr.shape', eta_Rx_arr.shape
+#
+#        # save max-values to file in order to superpose them later
+#        #
+#        if save_max_min_eta_RxRz_to_file != None:
+#                
+#            # get maximum values if eta_Rx is a positive value or minimum if it is a negative value
+#            #
+#            max_eta_Rx_arr = np.max( eta_Rx_arr, axis = 1) # eta caused by positive reaction force
+#            
+#            # eta_Rx caused by negative reaction force 
+#            #
+#            min_eta_Rx_arr = np.min( eta_Rx_arr, axis = 1) 
+#
+#            # eta_Rz cause by a positive reaction force
+#            #
+#            max_eta_Rz_arr = np.max( eta_Rz_arr, axis = 1)
+#
+#            # eta_Rz cause by a negative reaction force
+#            #
+#            min_eta_Rz_arr = np.min( eta_Rz_arr, axis = 1)
+#
+#            # stack two column array
+#            #
+#            max_min_eta_RxRz_arr = np.hstack([max_eta_Rx_arr[:,None], min_eta_Rx_arr[:,None], max_eta_Rz_arr[:,None], min_eta_Rz_arr[:,None]])
+#            # save max values to file
+#            #
+#            np.savetxt( save_max_min_eta_RxRz_to_file, max_min_eta_RxRz_arr )
+#            print 'max_min_eta_RxRz_arr saved to file %s' %(save_max_min_eta_RxRz_to_file)
+#
+#        #----------------------------------------------
+#        # plot
+#        #----------------------------------------------
+#        #
+#        p.figure(facecolor = 'white') # white background
+#
+#        p.plot(eta_Rx_arr, eta_Rz_arr, 'wo', markersize=3) # blue dots
+#        x = np.array([0, 1. ])
+#        y1 = np.array([ -1., 0. ])
+#        y2 = np.array([  1., 0. ])
+#    
+##        p.title('Ausnutzungsgrad $\eta$')
+#
+#        ax = p.gca()
+#        if show_tension_only == False:
+##            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+##            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+##            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+#            print 'show_tension_only == False'
+#
+#        if show_tension_only == True:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+#            ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
+#            p.axis([0., 1., 1., 0.]) # set plotting range for axis
+#
+#            print 'show_tension_only == True'
+#
+#        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+#        p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
+#        p.grid(True)
+#
+##        ax.spines['left'].set_position(('data', 0))
+##        ax.spines['right'].set_color('none')
+##        ax.spines['bottom'].set_position(('data', 0))
+##        ax.spines['top'].set_color('none')
+##        ax.xaxis.set_ticks_position('bottom')
+##        ax.yaxis.set_ticks_position('left')
+#        p.xlabel('$\eta_{Rx}$ [-] (Abscherkraft)', fontsize=14)
+#        p.ylabel('$\eta_{Rz}$ [-] (Auszugskraft)', fontsize=14)
+#
+#        # save figure as png-file
+#        #
+#        if save_fig_to_file != None:
+#            print 'figure saved to file %s' %(save_fig_to_file)
+#            p.savefig( save_fig_to_file, format='png' )
+#
+#        p.show()
 
 
 
