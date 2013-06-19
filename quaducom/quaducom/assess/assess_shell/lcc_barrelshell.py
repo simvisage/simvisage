@@ -270,7 +270,11 @@ if __name__ == '__main__':
 
     if do == 'dimensioning':
 
-        lc_list = [
+        # NOTE: 'lc_list_Q' contains all imposed loading cases (except for temperature)
+        # the loading cases for temperature are evaluated separately (see 'lc_list_T' below)
+        # and superposed later  
+        #
+        lc_list_Q = [
 
                  #----------------------------------------------------------------------
                  # dead load
@@ -360,30 +364,35 @@ if __name__ == '__main__':
                     psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
                     ),
                     
+               ]
+
+
+        lc_list_T = [
+
                  #----------------------------------------------------------------------
                  # temperature (superpose separately = corresponds to conservatively setting psi_0 = 1.0)
                  #----------------------------------------------------------------------
 
-#                 # LC15:
-#                 LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC15.txt',
-#                    exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
-#                    ),
-#                 # LC16:
-#                 LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC16.txt',
-#                    exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
-#                    ),
-#                 # LC17:
-#                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC17.txt',
-#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
-#                    ),
-#                 # LC18:
-#                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC18.txt',
-#                    exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-#                    psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
-#                    ),
+                 # LC15:
+                 LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC15.txt',
+                    exclusive_to = ['T_N_neg', 'T_uo_pos', 'T_uo_neg'],
+                    psi_0 = 1.0, psi_1 = 0.5, psi_2 = 0.0                 
+                    ),
+                 # LC16:
+                 LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC16.txt',
+                    exclusive_to = ['T_N_pos', 'T_uo_pos', 'T_uo_neg'],
+                    psi_0 = 1.0, psi_1 = 0.5, psi_2 = 0.0              
+                    ),
+                 # LC17:
+                 LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC17.txt',
+                    exclusive_to = ['T_N_pos', 'T_N_neg', 'T_uo_neg'],
+                    psi_0 = 1.0, psi_1 = 0.5, psi_2 = 0.0                   
+                    ),
+                 # LC18:
+                 LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC18.txt',
+                    exclusive_to = ['T_N_pos', 'T_N_neg', 'T_uo_pos'],
+                    psi_0 = 1.0, psi_1 = 0.5, psi_2 = 0.0                    
+                    ),
 
                ]
 
@@ -393,52 +402,66 @@ if __name__ == '__main__':
     do = 'ULS'
 
     if do == 'ULS':
-        lct = LCCTableULS(data_dir = data_dir,
+
+        # LCCTable for imposed loads (without temperature)
+        #
+        lct_Q = LCCTableULS(data_dir = data_dir,
                           reader_type = 'InfoCAD',
                           data_filter = remove_support_elems,
-                          lc_list = lc_list,
+                          lc_list = lc_list_Q,
+                          k_alpha_min = True, # simplification: use the minimum value for k_alpha on the resistance side  
+#                          show_lc_characteristic = True
+                          )
+
+        # LCCTable for temperature loading cases only
+        #
+        lct_T = LCCTableULS(data_dir = data_dir,
+                          reader_type = 'InfoCAD',
+                          data_filter = remove_support_elems,
+                          lc_list = lc_list_T,
+                          k_alpha_min = True, # simplification: use the minimum value for k_alpha on the resistance side  
 #                          show_lc_characteristic = True
                           )
         
+        #--------------------------------------------------------------
         # 'combi_arr': array with indices of all loading case combinations
+        #--------------------------------------------------------------
         #
-        print 'lct.combi_arr', lct.combi_arr.shape 
+        print 'lct_Q.combi_arr', lct_Q.combi_arr.shape 
 #        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------
         # brows the loading case combinations within an interactive table view
         #--------------------------------------------------------------
-#        lct.configure_traits()
+#        lct_Q.configure_traits()
+#        lct_T.configure_traits()
 
         #--------------------------------------------------------------
-        # plot of structure with color indictaion of material usage 'eta_nm' (Ausnutzungsgrad) 
+        # nm-interaction plot (normal force - bending moment) 
+        #--------------------------------------------------------------
+        #
+        lct_T.plot_nm_interaction( save_max_min_nm_to_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC15-18')
+        lct_Q.plot_nm_interaction( save_fig_to_file = 'nm_interaction_LC1-14' )
+        lct_Q.plot_nm_interaction( add_max_min_nm_from_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC1-18' )
+        lct_Q.plot_nm_interaction( show_tension_only = True )
+
+        #--------------------------------------------------------------
+        # interaction plot of material usage 'eta_nm' (Ausnutzungsgrad) 
+        #--------------------------------------------------------------
+        #
+#        lct_T.plot_eta_nm_interaction( save_max_min_eta_nm_to_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC15-18' )
+#        lct_Q.plot_eta_nm_interaction( save_fig_to_file = 'eta_nm_interaction_LC1-14')
+#        lct_Q.plot_eta_nm_interaction( add_max_min_eta_nm_from_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC1-18')
+#        lct_Q.plot_eta_nm_interaction( show_tension_only = True )
+
+        #--------------------------------------------------------------
+        # plot of structure with color indication of material usage 'eta_nm' (Ausnutzungsgrad) 
         # (surrounding values of all loading cases) 
         #--------------------------------------------------------------
         #
-#        lct.plot_assess_value()
-#        lct.plot_assess_value(add_assess_values_from_file = None, save_assess_values_to_file = None)
-#        lct.plot_assess_value(save_assess_values_to_file = 'eta_nm_tot_only_temp_LCs')
-#        lct.plot_assess_value(save_assess_values_to_file = 'eta_nm_tot_LC1-14')
-#        lct.plot_assess_value(add_assess_values_from_file = 'eta_nm_tot_only_temp_LCs')
+#        lct_T.plot_assess_value( save_assess_values_to_file = 'eta_nm_tot_LC15-18' )
+#        lct_Q.plot_assess_value( add_assess_values_from_file = 'eta_nm_tot_LC15-18' )
 
-        #--------------------------------------------------------------
-        # interaction plot of material usage 'eta_nm' (Ausnutzungsgrad) 
-        #--------------------------------------------------------------
-        #
-#        lct.plot_nm_interaction( show_tension_only = True )
-#        lct.plot_nm_interaction( save_nm_Ed_arr_to_file = 'nm_Ed_arr_LC15-18')
-#        lct.plot_nm_interaction( save_nm_Ed_arr_to_file = 'nm_Ed_arr_LC1-14')
-
-        # @todo: superposition not possible
-#        lct.plot_nm_interaction( add_nm_Ed_arr_from_file = 'nm_Ed_arr_LC1-14')
-
-        #--------------------------------------------------------------
-        # interaction plot of material usage 'eta_nm' (Ausnutzungsgrad) 
-        #--------------------------------------------------------------
-        #
-        lct.plot_eta_nm_interaction( show_tension_only = True)
-#        lct.plot_eta_nm_interaction( save_eta_nm_arr_to_file = 'eta_nm_arr_LC15-18')
-#        lct.plot_eta_nm_interaction( add_eta_nm_arr_from_file = 'eta_nm_arr_LC15-18')
 
 
     if do == 'SLS':
@@ -457,6 +480,7 @@ if __name__ == '__main__':
                            combination_SLS = 'freq',
     #                       combination_SLS = 'perm',
                             )
+        
         lct.configure_traits()
 
 
