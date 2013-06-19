@@ -249,11 +249,11 @@ class LS(HasTraits):
         mlab.scalarbar(title = self.plot_column, orientation = 'vertical')
         mlab.show
 
-
-
     # name of the trait that is used to assess the evaluated design
     #
-    assess_name = Str('')
+    assess_name = Property(Str)
+    def _get_assess_name(self):
+        return self.ls_table.assess_name
 
     #-------------------------------
     # ls group
@@ -328,13 +328,14 @@ class ULSRxyz(LS):
 
     # shear Resistance
     #
-    Rx_Rd = Float(5.1, input = True)
+    Rx_Rd = Float(5.3, input = True)
 
     # pull-out Resistance
     #
-    Rz_Rd = Float(4.6, input = True)
+    Rz_Rd = Float(4.8, input = True)
 
     # (unused as Ry = 0. for all cases)
+    #
     Ry_Rd = Float(1., input = True)
 
     Mx_Rd = Float(1., input = True)
@@ -374,8 +375,8 @@ class ULSRxyz(LS):
 
         # evaluate resulting forces and moments
         #
-        Rres = self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz
-        Mres = self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz
+        Rres = sqrt( self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz )
+        Mres = sqrt( self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz )
         
         # note: positive values of 'Rx' correspond to shear forces for the support screw
         #       negative values are taken by the compression cushion at the support directly 
@@ -430,6 +431,8 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
+    # NOTE: the definition of ls_table.assess_name is given in constructor of 'LCCTable'
+    #
 #    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
 #    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
@@ -437,7 +440,7 @@ class ULSRxyz(LS):
 #    assess_name = 'max_Rz'
 #    assess_name = 'min_Rz' # @todo: compare with pull-out resistance of the screw
 #    assess_name = 'max_Rres'
-    assess_name = 'max_eta_R_tot'
+#    assess_name = 'max_eta_R_tot'
 
     ls_columns = List(['Rx', 'Ry', 'Rz', 'Rres',
                        'Mx', 'My', 'Mz', 'Mres',
@@ -539,6 +542,10 @@ class ULSRxyz(LS):
                                 Item(name = 'Ry_Rd', label = 'resistance R_yd [kN]', style = 'readonly', format_str = "%.1f"),
                                 Item(name = 'Rz_Rd', label = 'resistance R_zd [kN]', style = 'readonly', format_str = "%.1f"),
                                 label = 'material properties (longitudinal)'
+                                  ),
+                            VGroup(
+                                Item(name = 'assess_name', label = 'assess_name', style = 'readonly', format_str = "%s"),
+                                label = 'sort rows according to'
                                   )
                              ),
 
@@ -613,10 +620,12 @@ class LSTableRxyz(HasTraits):
         ls_class = self.ls_
         return ls_class(ls_table = self)
 
+    assess_name = Str
+
     assess_value = Property
     def _get_assess_value(self):
         ls = self.ls_class
-        return getattr(ls, ls.assess_name)
+        return getattr(ls, self.assess_name)
 
     traits_view = View(Tabbed(
                             Item('ls_class@' , label = "ls", show_label = False),
