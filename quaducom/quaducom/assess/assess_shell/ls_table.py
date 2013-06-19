@@ -581,10 +581,10 @@ class ULS(LS):
     # 6 layers carbon:
     # sig_comp,Rd = 40 kN / 0.1m *0.84 / 1.5 = 11.2 MPa
     # --> f_Rtex,0 = 11.2 MPa / 10.(MPa/kN/cm**2) * 100cm * 2 cm / 6 layers = 37.3 kN/m/layer
-    f_Rtex_0 = f_Rtex_90 = 37.3 # corresponds to sig_comp,Rd = 10 MPa
-    k_fl = 1.46 # 29.8 MPa / 20.5 MPa
-    print 'NOTE: f_Rtex_0 = f_Rtex_90 = set to %g kN/m !' % (f_Rtex_0)
-    print 'NOTE: k_fl = set to %g [-] !' % (k_fl)
+#    f_Rtex_0 = f_Rtex_90 = 37.3 # corresponds to sig_comp,Rd = 10 MPa
+#    k_fl = 1.46 # 29.8 MPa / 20.5 MPa
+#    print 'NOTE: f_Rtex_0 = f_Rtex_90 = set to %g kN/m !' % (f_Rtex_0)
+#    print 'NOTE: k_fl = set to %g [-] !' % (k_fl)
 
     # 6 layers AR-glas:
     # --> f_Rtex,0 = 5.8 MPa / 10.(MPa/kN/cm**2) * 100cm * 2 cm / 6 layers = 19.3 kN/m/layer
@@ -601,9 +601,11 @@ class ULS(LS):
     sig_comp_90_Rd = sig_comp_0_Rd
 
     ### 'eval_mode = eta_nm' ###
-    # compressive strength
+    # compressive strength 
+    # take pure concrete values (design values) 
+    # f_cd = 38 MPa
     #
-    n_Rdc = 65 * 0.1 * (100. * 2.) / 1.5 # [kN/m]  # 867 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
+    n_Rdc = 750. # = 38 * 0.1 * (100. * 2.) = 506.7 kN/m 
 
     # 6 layers carbon: experimental values for barrelshell on specimens with thickness 2 cm and width 10 cm
 #    n_0_Rdt = 41.1 / 0.1 # [kN/m] # 411 kN/m = tensile resistance as obtained in tensile test
@@ -611,9 +613,10 @@ class ULS(LS):
 #    print 'experimental values used for resistance values (no gamma)'
 
     # 6 layers carbon: design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-
-    n_0_Rdt = 193 # [kN/m] # ZiE value 
-    m_0_Rd = 1.6 # [kNm/m] # ZiE value
+    # factor k_alpha_min is used if flag is set to True
+    #
+    n_0_Rdt = 223. # [kN/m] # ZiE value 
+    m_0_Rd = 1.7 # [kNm/m] # ZiE value
     
 #    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
 #    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
@@ -631,7 +634,6 @@ class ULS(LS):
     # 
     n_90_Rdt = n_0_Rdt # [kN/m]
     m_90_Rd = m_0_Rd # [kNm/m]
-
 
     # ------------------------------------------------------------
     # ULS - derived params:
@@ -697,16 +699,6 @@ class ULS(LS):
 #    eval_mode = 'massivbau'
 #    eval_mode = 'princ_sig_level_1'
     eval_mode = 'eta_nm'
-
-    #------------------------------------------------------------
-    # evaluation with conservative simplification for 'k_alpha'
-    #------------------------------------------------------------
-    # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are 
-    # multiplied with the highest reduction factor 'k_alpha = 0.707', independently
-    # of the true deflection angel 'beta_q' and 'beta_l'
-    #
-    min_k_alpha = True
-
 
     ls_values = Property(depends_on = '+input')
     @cached_property
@@ -820,11 +812,10 @@ class ULS(LS):
         #
         cond_lo_cb = cond_s1l_le_0 * cond_su_ge_0
 
-        #----------------------------------------        
         # check if all elements are classified in one of the cases
         # 'bending, compression, tension' for the upper and the lower side
         # sum of all conditions must be equal to n_elems * 2 (for upper and lower side)
-        #----------------------------------------        
+        #
 #        print 'sum_lo', \
 #                      self.sig1_lo[cond_lo_t].shape[0] + \
 #                      self.sig1_lo[cond_lo_tb].shape[0] + \
@@ -836,25 +827,48 @@ class ULS(LS):
 #                      self.sig1_lo[cond_up_c].shape[0] + \
 #                      self.sig1_lo[cond_up_cb].shape[0]
 
-        #---------------------------------------------------------
-        # initialize arrays to be filled by case distinction:
-        #---------------------------------------------------------
-        #
-        f_t_sig_up = zeros_like (self.sig1_up) # [kN/m]
-        f_t_sig_lo = zeros_like (self.sig1_up) # [kN/m]
-        k_fl_NM_up = ones_like (self.sig1_up) # [-]
-        k_fl_NM_lo = ones_like (self.sig1_up) # [-]
+        #------------------------------------------------------------
+        # get angel of deflection of the textile reinforcement
+        #------------------------------------------------------------
+        # angel of deflection of the textile reinforcement 
+        # distinguished between longitudinal (l) and transversal (q) direction,
+        # i.e. 0- and 90-direction of the textile
+
+        alpha_up = self.alpha_sig_up
+        alpha_lo = self.alpha_sig_lo
+
+        beta_l_up_deg = abs(alpha_up)         # [degree]   
+        beta_q_up_deg = 90. - abs(alpha_up)   # [degree]   
+        beta_l_up = beta_l_up_deg * pi / 180. # [rad] 
+        beta_q_up = beta_q_up_deg * pi / 180. # [rad]
+
+        beta_l_lo_deg = abs(alpha_lo)         # [degree]   
+        beta_q_lo_deg = 90 - abs(alpha_lo)    # [degree]   
+        beta_l_lo = beta_l_lo_deg * pi / 180. # [rad] 
+        beta_q_lo = beta_q_lo_deg * pi / 180. # [rad]
+
 
         #-------------------------------------------------
         # VAR 1:use simplified reinforced concrete approach
         #-------------------------------------------------
         if self.eval_mode == 'massivbau':
 
-            m_Eds = zeros_like (self.sig1_up) # [kNm/m]
-            e = zeros_like (self.sig1_up) # [m]
+            print 'eval_mode == "massivbau"'
 
             zs = self.zs
             z = self.z
+
+            #---------------------------------------------------------
+            # initialize arrays to be filled by case distinction:
+            #---------------------------------------------------------
+            #
+            f_t_sig_up = zeros_like (self.sig1_up) # [kN/m]
+            f_t_sig_lo = zeros_like (self.sig1_up) # [kN/m]
+            k_fl_NM_up = ones_like (self.sig1_up) # [-]
+            k_fl_NM_lo = ones_like (self.sig1_up) # [-]
+
+            m_Eds = zeros_like (self.sig1_up) # [kNm/m]
+            e = zeros_like (self.sig1_up) # [m]
 
             #---------------------------------------------------------
             # tension upper side (sig1_up > 0):
@@ -926,6 +940,45 @@ class ULS(LS):
             bool_arr = cond_lo_cb
             f_t_sig_lo[ bool_arr ] = 0.
 
+            #---------------------------------------------------------
+            # resulting strength of the bi-directional textile considering the 
+            # deflection of the reinforcement in the loading direction
+            # per reinforcement layer
+            #---------------------------------------------------------
+            #
+            f_Rtex_0 = self.f_Rtex_0  # [kN/m/layer]
+            f_Rtex_90 = self.f_Rtex_90
+            f_Rtex_lo = f_Rtex_0 * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+                        f_Rtex_90 * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
+            f_Rtex_up = f_Rtex_0 * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+                        f_Rtex_90 * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
+            #------------------------------------------------------------
+            # necessary number of reinforcement layers
+            #------------------------------------------------------------
+            # for the entire cross section (use symmetric arrangement of the upper and
+            # lower reinforcement layers
+            #
+            n_tex_up = f_t_sig_up / f_Rtex_up
+            n_tex_lo = f_t_sig_lo / f_Rtex_lo
+            n_tex = 2 * ndmax(hstack([ n_tex_up, n_tex_lo]), axis = 1)[:, None]
+
+            #------------------------------------------------------------
+            # construct a dictionary containing the return values
+            #------------------------------------------------------------
+            return { 'e':e, 'm_Eds':m_Eds,
+                     'cond_up_tb' : cond_up_tb * 1.0,
+                     'cond_lo_tb' : cond_lo_tb * 1.0,
+                     'f_t_sig_up' : f_t_sig_up,
+                     'f_t_sig_lo' : f_t_sig_lo,
+                     'beta_l_up':beta_l_up_deg, 'beta_q_up':beta_q_up_deg,
+                     'beta_l_lo':beta_l_lo_deg, 'beta_q_lo':beta_q_lo_deg,
+                     'f_Rtex_up':f_Rtex_up,
+                     'f_Rtex_lo':f_Rtex_lo,
+                     'n_tex_up':n_tex_up,
+                     'n_tex_lo':n_tex_lo,
+                     'n_tex':n_tex}
+
 
         #-------------------------------------------------
         # VAR 2:use principal stresses to calculate the resulting tensile force
@@ -934,18 +987,22 @@ class ULS(LS):
         if self.eval_mode == 'princ_sig_level_1':
 
             print "NOTE: the principle tensile stresses are used to evaluate 'n_tex'"
-            # resulting tensile force of the composite cross section[kN]
-            # the entire (!) cross section is used!
-            # as the maximum value of the tensile stresses at the top or the bottom 
+            # conservative evaluated based on a resulting tensile force of the composite cross section[kN/m]
+            # derived from the maximum value of the tensile stresses at the top or the bottom of the cross section 
             # i.e. sig1_max = min( 0, max( self.sig1_up, self.sig1_lo ) )
-
-            ###-----------------------------------------------------------------------------------------------------------
-            ### dimensioning ###
-            ###-----------------------------------------------------------------------------------------------------------
 
             # evaluation for upper side:
             #
             sig_comp_Ed_up = self.sig1_up
+            
+            #---------------------------------------------------------
+            # initialize arrays to be filled by case distinction:
+            #---------------------------------------------------------
+            #
+            f_t_sig_up = zeros_like (self.sig1_up) # [kN/m]
+            f_t_sig_lo = zeros_like (self.sig1_up) # [kN/m]
+            k_fl_NM_up = ones_like (self.sig1_up) # [-]
+            k_fl_NM_lo = ones_like (self.sig1_up) # [-]
 
             #---------------------------------------------------------
             # tension upper side (sig1_up > 0):
@@ -1033,70 +1090,9 @@ class ULS(LS):
             k_fl_NM_lo[ bool_arr ] = 1.
             f_t_sig_lo[ bool_arr ] = 0.
 
-        #------------------------------------------------------------
-        # get angel of deflection of the textile reinforcement
-        #------------------------------------------------------------
-        # angel of deflection of the textile reinforcement 
-        # distinguished between longitudinal (l) and transversal (q) direction
-        print "NOTE: deflection angle is used to evaluate 'n_tex'"
-
-        alpha_up = self.alpha_sig_up
-        alpha_lo = self.alpha_sig_lo
-
-        beta_l_up_deg = abs(alpha_up) # [degree]   
-        beta_q_up_deg = 90. - abs(alpha_up)      # [degree]   
-        beta_l_up = beta_l_up_deg * pi / 180. # [rad] 
-        beta_q_up = beta_q_up_deg * pi / 180. # [rad]
-
-        beta_l_lo_deg = 90 - abs(alpha_lo) # [degree]   
-        beta_q_lo_deg = abs(alpha_lo)      # [degree]   
-        beta_l_lo = beta_l_lo_deg * pi / 180. # [rad] 
-        beta_q_lo = beta_q_lo_deg * pi / 180. # [rad]
-
-        # eval_mode = 'massivbau' or eval_mode = 'princ_sig_level_1'
-        #------------------------------------------------------------
-        # resulting strength of the bi-directional textile considering the 
-        # deflection of the reinforcement in the loading direction
-        # per reinforcement layer
-        #------------------------------------------------------------
-        #
-        f_Rtex_0 = self.f_Rtex_0  # [kN/m/layer]
-        f_Rtex_90 = self.f_Rtex_90
-        f_Rtex_lo = f_Rtex_0 * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                    f_Rtex_90 * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-        f_Rtex_up = f_Rtex_0 * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                    f_Rtex_90 * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-
-        #------------------------------------------------------------
-        # construct a dictionary containing the return values
-        #------------------------------------------------------------
-
-        if self.eval_mode == 'massivbau':
-
-            # necessary number of reinforcement layers
-            # for the entire cross section (use symmetric arrangement of the upper and
-            # lower reinforcement layers
-            #
-            n_tex_up = f_t_sig_up / f_Rtex_up
-            n_tex_lo = f_t_sig_lo / f_Rtex_lo
-            n_tex = 2 * ndmax(hstack([ n_tex_up, n_tex_lo]), axis = 1)[:, None]
-
-            return { 'e':e, 'm_Eds':m_Eds,
-                     'cond_up_tb' : cond_up_tb * 1.0,
-                     'cond_lo_tb' : cond_lo_tb * 1.0,
-                     'f_t_sig_up' : f_t_sig_up,
-                     'f_t_sig_lo' : f_t_sig_lo,
-                     'beta_l_up':beta_l_up_deg, 'beta_q_up':beta_q_up_deg,
-                     'beta_l_lo':beta_l_lo_deg, 'beta_q_lo':beta_q_lo_deg,
-                     'f_Rtex_up':f_Rtex_up,
-                     'f_Rtex_lo':f_Rtex_lo,
-                     'n_tex_up':n_tex_up,
-                     'n_tex_lo':n_tex_lo,
-                     'n_tex':n_tex}
-
-
-        if self.eval_mode == 'princ_sig_level_1':
-
+            #---------------------------------------------------------
+            # composite resitance stress
+            #---------------------------------------------------------
             # @todo: check for general case 
             # NOTE: needs information about the orientation of the reinforcement
             # works here only because of the simplification that the same resistance of the textile in 0- and 90-direction is assumed
@@ -1108,14 +1104,31 @@ class ULS(LS):
             sig_comp_Rd_up = self.sig_comp_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                              self.sig_comp_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
 
+            #---------------------------------------------------------
             # ratio of the imposed stresses and the composite resistance
+            #---------------------------------------------------------
             # NOTE: resistance is increased by factor 'k_fl_NM' if a bending case is evaluated
             #
             eta_comp_up = sig_comp_Ed_up / (sig_comp_Rd_up * k_fl_NM_up)
             eta_comp_lo = sig_comp_Ed_lo / (sig_comp_Rd_lo * k_fl_NM_lo)
             eta_comp = ndmax(hstack([ eta_comp_up, eta_comp_lo]), axis = 1)[:, None]
 
+            #---------------------------------------------------------
+            # resulting strength of the bi-directional textile considering the 
+            # deflection of the reinforcement in the loading direction
+            # per reinforcement layer
+            #---------------------------------------------------------
+            #
+            f_Rtex_0 = self.f_Rtex_0  # [kN/m/layer]
+            f_Rtex_90 = self.f_Rtex_90
+            f_Rtex_lo = f_Rtex_0 * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+                        f_Rtex_90 * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
+            f_Rtex_up = f_Rtex_0 * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+                        f_Rtex_90 * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
+            #---------------------------------------------------------
             # necessary number of reinforcement layers
+            #---------------------------------------------------------
             # for the cases that stresses at the upper or lower face are taken into account
             # for the evaluation of the necessary number of reinforcement layers. 'n_tex' is the
             # maximum of the upper and lower face evaluation. 
@@ -1128,6 +1141,9 @@ class ULS(LS):
             #
             n_tex = ndmax(hstack([ n_tex_up, n_tex_lo]), axis = 1)[:, None]
 
+            #------------------------------------------------------------
+            # construct a dictionary containing the return values
+            #------------------------------------------------------------
             return {
                      'cond_up_tb' : cond_up_tb * 1.0,
                      'cond_lo_tb' : cond_lo_tb * 1.0,
@@ -1148,6 +1164,7 @@ class ULS(LS):
                      'n_tex_lo':n_tex_lo,
                      'n_tex':n_tex}
 
+
         if self.eval_mode == 'eta_nm':
             
             #-------------------------------------------------
@@ -1156,7 +1173,7 @@ class ULS(LS):
             #-------------------------------------------------
             #
             print "NOTE: the principle tensile stresses are used to evaluate the deflection angle"
-            print "'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
+            print "      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
 
             # simplification of the transformation formula only valid for assumption of
             # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
@@ -1176,25 +1193,18 @@ class ULS(LS):
             k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                          cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
 
-            if self.min_k_alpha == True:
+            if self.ls_table.k_alpha_min == True:
+                print "minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values"
+                # NOTE: conservative simplification: k_alpha_min = 0.707 used
+                #
                 n_Rdt_lo = n_Rdt_up = min( self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like( n_Rdt_lo )
                 m_Rd_lo = m_Rd_up = min( self.m_0_Rd, self.m_90_Rd ) * 0.707 * np.ones_like( m_Rd_lo )
-                print "'k_alpha = 0.707' minimum value of 'k_alpha' has been used to evaluate resistance"
 
-#            #---------------------------------------------------------
-#            # eliminate pure compression cases: 
-#            #---------------------------------------------------------
-#            # higher compressive stress at upper side:
-#            bool_arr = cond_up_c
-#            self.n_sig_up[ bool_arr ] = 0.
-#            # higher compressive stress at lower side:
-#            bool_arr = cond_lo_c
-#            self.n_sig_lo[ bool_arr ] = 0.
-
+            #----------------------------------------        
+            # caluclate eta_nm
             #----------------------------------------        
             # destinguish the sign of the normal force
-            #----------------------------------------        
-
+            
             # initialize arrays to be filled based on case distinction
             #
             eta_n_up = np.zeros_like(self.n_sig_up)
@@ -1228,20 +1238,24 @@ class ULS(LS):
 
             # get 'eta_m' based on imposed moment compared with moment resistence
             #
-            eta_m_lo = np.abs( self.m_sig_lo ) / m_Rd_lo
-            eta_m_up = np.abs( self.m_sig_up ) / m_Rd_up
+            eta_m_lo = self.m_sig_lo / m_Rd_lo
+            eta_m_up = self.m_sig_up / m_Rd_up
 
             # get total 'eta_mn' based on imposed normal force and moment
+            # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
+            # NOTE: if eta_m is negative (caused by a negative moment) take the absolute value
             #
-            eta_nm_lo = eta_n_lo + eta_m_lo
-            eta_nm_up = eta_n_up + eta_m_up
+            eta_nm_lo = np.abs( eta_n_lo ) + np.abs( eta_m_lo )
+            eta_nm_up = np.abs( eta_n_up ) + np.abs( eta_m_up )
     
             # get maximum 'eta_mn' of both principle directions of upper and lower side
             #
             eta_nm_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis = 1)[:, None]
 
-            return {
-                     'beta_l_up':beta_l_up_deg, 
+            #------------------------------------------------------------
+            # construct a dictionary containing the return values
+            #------------------------------------------------------------
+            return { 'beta_l_up':beta_l_up_deg, 
                      'beta_q_up':beta_q_up_deg,
                      'beta_l_lo':beta_l_lo_deg, 
                      'beta_q_lo':beta_q_lo_deg,
@@ -1284,6 +1298,12 @@ class ULS(LS):
         m_Eds = Property(Array)
         def _get_m_Eds(self):
             return self.ls_values['m_Eds']
+
+        # specify the material properties for the view:
+        #
+        plot_item_mpl = Item(name = 'f_Rtex_0', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style = 'readonly', format_str = "%.1f")
+        plot_item_mpt = Item(name = 'f_Rtex_90', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style = 'readonly', format_str = "%.1f")
+
 
     elif eval_mode == 'princ_sig_level_1':
 
@@ -1336,6 +1356,15 @@ class ULS(LS):
         def _get_eta_comp(self):
             return self.ls_values['eta_comp']
 
+        # specify the material properties for the view:
+        #
+        plot_item_mpl = Item(name = 'f_Rtex_0', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'sig_comp_0_Rd', label = 'composit tensile strength [MPa]:  sig_comp_0_Rd ', style = 'readonly', format_str = "%.1f")
+
+        plot_item_mpt = Item(name = 'f_Rtex_90', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'sig_comp_90_Rd', label = 'composit tensile strength [MPa]:  sig_comp_90_Rd ', style = 'readonly', format_str = "%.1f")
+
+
     elif eval_mode == 'eta_nm':
 
         # choose the assess parameter used for sorting
@@ -1355,6 +1384,16 @@ class ULS(LS):
                            'eta_n_up', 'eta_m_up', 'eta_nm_up', 
                            'eta_n_lo', 'eta_m_lo', 'eta_nm_lo', 
                            'eta_nm_tot'])
+        
+        # specify the material properties for the view:
+        #
+        plot_item_mpl = Item(name = 'n_0_Rdt', label = 'normal tensile strength [kN/m]:  n_0_Rdt ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'n_Rdc', label = 'normal compressive strength [kN/m]:  n_0_Rdc ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'm_0_Rd', label = 'bending strength [kNm/m]:  m_0_Rd ', style = 'readonly', format_str = "%.1f")
+    
+        plot_item_mpt = Item(name = 'n_90_Rdt', label = 'normal tensile strength [kN/m]:  n_90_Rd ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'n_Rdc', label = 'normal compressive strength [kN/m]:  n_0_Rdc ', style = 'readonly', format_str = "%.1f"),\
+                        Item(name = 'm_90_Rd', label = 'bending strength [kNm/m]:  m_90_Rd ', style = 'readonly', format_str = "%.1f")
 
     beta_l_up = Property(Array)
     def _get_beta_l_up(self):
@@ -1473,17 +1512,14 @@ class ULS(LS):
                        VGroup(
                         HGroup(
                             VGroup(
-                                Item(name = 'sig_comp_0_Rd', label = 'composit tensile strength [MPa]:  sig_comp_0_Rd ', style = 'readonly', format_str = "%.1f"),
-                                Item(name = 'f_Rtex_0', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style = 'readonly', format_str = "%.1f"),
-                                label = 'material properties (longitudinal)'
+                                plot_item_mpl,
+                                label = 'material Properties (longitudinal)'
                                   ),
                             VGroup(
-                                Item(name = 'sig_comp_90_Rd', label = 'composit tensile strength [MPa]:  sig_comp_90_Rd ', style = 'readonly', format_str = "%.1f"),
-                                Item(name = 'f_Rtex_90', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style = 'readonly', format_str = "%.1f"),
+                                plot_item_mpt,
                                 label = 'material Properties (transversal)'
                                   ),
-                             ),
-
+                              ),
                         VGroup(
                             Include('ls_group'),
                             Item('ls_array', show_label = False,
@@ -1506,6 +1542,15 @@ class LSTable(HasTraits):
     # geo data: coordinates and element thickness
     # 
     geo_data = Dict
+
+    #------------------------------------------------------------
+    # evaluation with conservative simplification for 'k_alpha'
+    #------------------------------------------------------------
+    # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are 
+    # multiplied with the highest reduction factor 'k_alpha = 0.707', independently
+    # of the true deflection angel 'beta_q' and 'beta_l'
+    #
+    k_alpha_min = Bool(False)
 
     elem_no = Property(Array)
     def _get_elem_no(self):
@@ -1611,9 +1656,9 @@ class LSTable(HasTraits):
         alpha_sig_up = pi / 2. * ones_like(sig1_up)
 
         # from mechanic formula book (cf. also InfoCAD manual)
-        bool = sig2_up != sigx_up
+        bool_arr = sig2_up != sigx_up
 
-        alpha_sig_up[ bool ] = arctan(sigxy_up[ bool ] / (sig2_up[ bool ] - sigx_up[ bool ]))
+        alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
@@ -1644,8 +1689,8 @@ class LSTable(HasTraits):
         alpha_sig_lo = pi / 2. * ones_like(sig1_lo)
 
         # from mechanic formula book (cf. also InfoCAD manual)
-        bool = sig2_lo != sigx_lo
-        alpha_sig_lo[ bool ] = arctan(sigxy_lo[ bool ] / (sig2_lo[ bool ] - sigx_lo[ bool ]))
+        bool_arr = sig2_lo != sigx_lo
+        alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
 
         # RFEM-manual (NOTE that manual contains typing error!) 
         # the formula as given below yields the same results then the used mechanic formula
