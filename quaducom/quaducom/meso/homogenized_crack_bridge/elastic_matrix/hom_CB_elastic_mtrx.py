@@ -151,7 +151,7 @@ class CompositeCrackBridge(HasTraits):
                 Pf += method(epsy * masks[i])
         return Pf
 
-    def dem_depsf_vect(self, depsf, damage):
+    def dem_depsf_vect(self, damage):
         '''evaluates the deps_m given deps_f
         at that point and the damage array'''
         Kf = self.sorted_V_f * self.sorted_nu_r * \
@@ -184,15 +184,13 @@ class CompositeCrackBridge(HasTraits):
                 amin_i = np.sqrt(a1**2 + p/q*a1**2)
                 C = np.log(amin_i/amin)
             F[mask] += 2 * C
-        #plt.plot(-self.sorted_depsf, F)
-        #plt.show()
         return F
 
     def profile(self, iter_damage, Lmin, Lmax):
         if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):
             return np.ones_like(iter_damage) * 0.5, np.ones_like(self.sorted_depsf), np.ones_like(self.sorted_depsf)
         # matrix strain derivative with resp. to z as a function of T
-        dems = self.dem_depsf_vect(self.sorted_depsf, iter_damage)
+        dems = self.dem_depsf_vect(iter_damage)
         # initial matrix strain derivative
         init_dem = dems[0]
         # debonded length of fibers with Tmax
