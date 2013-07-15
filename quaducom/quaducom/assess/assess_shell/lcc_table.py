@@ -775,7 +775,7 @@ class LCCTable(HasTraits):
 
 
     def plot_assess_value(self, title = None, add_assess_values_from_file = None, save_assess_values_to_file = None):
-        '''plot the assess value for all loading case combinations
+        '''plot-3d the assess value for all loading case combinations as structure plot with color legend
         '''
         #----------------------------------------
         # script to get the maximum values of 'assess_value' 
@@ -895,10 +895,10 @@ class LCCTable(HasTraits):
  
             # get n_Ed and m_Ed 
             #
-            m_sig_lo = getattr(ls_class, 'm_sig_lo')
-            n_sig_lo = getattr(ls_class, 'n_sig_lo')
-            m_sig_up = getattr(ls_class, 'm_sig_up')
-            n_sig_up = getattr(ls_class, 'n_sig_up')
+            m_sig_lo = np.copy(getattr(ls_class, 'm_sig_lo'))
+            n_sig_lo = np.copy(getattr(ls_class, 'n_sig_lo'))
+            m_sig_up = np.copy(getattr(ls_class, 'm_sig_up'))
+            n_sig_up = np.copy(getattr(ls_class, 'n_sig_up'))
 
             # add read in saved values to be superposed with currently read in values
             #
@@ -1083,10 +1083,10 @@ class LCCTable(HasTraits):
  
             # get 'eta_n' and 'eta_m' 
             #
-            eta_m_lo = getattr(ls_class, 'eta_m_lo')
-            eta_m_up = getattr(ls_class, 'eta_m_up')
-            eta_n_lo = getattr(ls_class, 'eta_n_lo')
-            eta_n_up = getattr(ls_class, 'eta_n_up')
+            eta_m_lo = np.copy(getattr(ls_class, 'eta_m_lo'))
+            eta_m_up = np.copy(getattr(ls_class, 'eta_m_up'))
+            eta_n_lo = np.copy(getattr(ls_class, 'eta_n_lo'))
+            eta_n_up = np.copy(getattr(ls_class, 'eta_n_up'))
 
             # add read in saved values to be superposed with currently read in values
             #
