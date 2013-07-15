@@ -431,27 +431,21 @@ if __name__ == '__main__':
 #        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------
-        # brows the loading case combinations within an interactive table view
-        #--------------------------------------------------------------
-#        lct_Q.configure_traits()
-#        lct_T.configure_traits()
-
-        #--------------------------------------------------------------
         # nm-interaction plot (normal force - bending moment) 
         #--------------------------------------------------------------
         #
         lct_T.plot_nm_interaction( save_max_min_nm_to_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC15-18')
         lct_Q.plot_nm_interaction( save_fig_to_file = 'nm_interaction_LC1-14' )
         lct_Q.plot_nm_interaction( add_max_min_nm_from_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC1-18' )
-        lct_Q.plot_nm_interaction( show_tension_only = True )
+#        lct_Q.plot_nm_interaction( show_tension_only = True )
 
         #--------------------------------------------------------------
         # interaction plot of material usage 'eta_nm' (Ausnutzungsgrad) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_eta_nm_interaction( save_max_min_eta_nm_to_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC15-18' )
-#        lct_Q.plot_eta_nm_interaction( save_fig_to_file = 'eta_nm_interaction_LC1-14')
-#        lct_Q.plot_eta_nm_interaction( add_max_min_eta_nm_from_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC1-18')
+        lct_T.plot_eta_nm_interaction( save_max_min_eta_nm_to_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC15-18' )
+        lct_Q.plot_eta_nm_interaction( save_fig_to_file = 'eta_nm_interaction_LC1-14')
+        lct_Q.plot_eta_nm_interaction( add_max_min_eta_nm_from_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC1-18')
 #        lct_Q.plot_eta_nm_interaction( show_tension_only = True )
 
         #--------------------------------------------------------------
@@ -459,8 +453,14 @@ if __name__ == '__main__':
         # (surrounding values of all loading cases) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_assess_value( save_assess_values_to_file = 'eta_nm_tot_LC15-18' )
-#        lct_Q.plot_assess_value( add_assess_values_from_file = 'eta_nm_tot_LC15-18' )
+        lct_T.plot_assess_value( save_assess_values_to_file = 'eta_nm_tot_LC15-18' )
+        lct_Q.plot_assess_value( add_assess_values_from_file = 'eta_nm_tot_LC15-18' )
+
+        #--------------------------------------------------------------
+        # brows the loading case combinations within an interactive table view
+        #--------------------------------------------------------------
+#        lct_Q.configure_traits()
+#        lct_T.configure_traits()
 
 
 
