@@ -136,7 +136,7 @@ class ExpBT3PT(ExType):
                            auto_set = False, enter_set = True)
 
     # age of the concrete at the time of testing
-    age = Int(43, unit = 'd', input = True, table_field = True,
+    age = Int(33, unit = 'd', input = True, table_field = True,
                              auto_set = False, enter_set = True)
     loading_rate = Float(4.0, unit = 'mm/min', input = True, table_field = True,
                             auto_set = False, enter_set = True)
@@ -151,15 +151,15 @@ class ExpBT3PT(ExType):
         '''
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
-#        fabric_layout_key = '2D-05-11'
-        fabric_layout_key = '2D-09-12'
+        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-09-12'
 #        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'FIL-10-09'
         concrete_mixture_key = 'barrelshell'
-#        orientation_fn_key = 'all0'
-        orientation_fn_key = 'all90'                                           
+        orientation_fn_key = 'all0'
+#        orientation_fn_key = 'all90'                                           
 #        orientation_fn_key = '90_0'
-        n_layers = 8
+        n_layers = 6
         s_tex_z = 0.020 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list = [
