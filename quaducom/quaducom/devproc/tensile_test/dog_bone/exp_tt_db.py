@@ -120,7 +120,7 @@ class ExpTTDB(ExType):
                            auto_set = False, enter_set = True)
 
     # age of the concrete at the time of testing
-    age = Int(13, unit = 'd', input = True, table_field = True,
+    age = Int(26, unit = 'd', input = True, table_field = True,
                            auto_set = False, enter_set = True)
     loading_rate = Float(2.0, unit = 'mm/min', input = True, table_field = True,
                            auto_set = False, enter_set = True)
@@ -144,8 +144,10 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-04-11'
 #        fabric_layout_key = 'FRA-AR/EP'
 #        fabric_layout_key = 'Grid-600'
-#        fabric_layout_key = '2D-15-10'
-        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-15-10' 
+        fabric_layout_key = '2D-05-11' # carbon tissue binding
+#        fabric_layout_key = '2D-09-12' # AR-glas tissue binding
+
 #        concrete_mixture_key = 'PZ-0708-1'
         concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'flowstone'
@@ -274,16 +276,16 @@ class ExpTTDB(ExType):
             # NOTE: if only 2 displacement gauges are used instead of 3 (only 'WA_re' for front and 'WA_li' for back)
             # below the average is performed as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
             #
-            if np.average(eps_vo) < 0.0001:
-                print "only two displacement gauges have been used. Use average of 'eps_li' and 'eps_re'"
-                eps_vo = (eps_li + eps_re) 
             if np.average(eps_re) < 0.0001:
-                print "only two displacement gauges have been used. Use average of 'eps_li' and 'eps_vo'"
+                print "displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead"
                 eps_re = eps_li 
             if np.average(eps_li) < 0.0001:
-                print "only two displacement gauges have been used. Use average of 'eps_re' and 'eps_vo'"
+                print "displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead"
                 eps_li = eps_re 
-
+            if np.average(eps_vo) < 0.0001:
+                print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
+                eps_vo = (eps_li + eps_re) 
+                
             # average strains 
             eps_m = ((eps_li + eps_re) / 2. + eps_vo) / 2.
 
