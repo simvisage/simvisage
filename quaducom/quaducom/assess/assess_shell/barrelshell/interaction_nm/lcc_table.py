@@ -59,36 +59,36 @@ class LC(HasTraits):
 
     # name of the file containing the stress resultants
     #
-    file_name = Str(input=True)
+    file_name = Str(input = True)
 
     # data filter (used to hide unwanted values, e.g. high sigularities etc.) 
     #
-    data_filter = Callable(input=True)
+    data_filter = Callable(input = True)
 
     # name of the loading case
     #
-    name = Str(input=True)
+    name = Str(input = True)
 
     # category of the loading case
     #
-    category = Enum('dead-load', 'additional dead-load', 'imposed-load', input=True)
+    category = Enum('dead-load', 'additional dead-load', 'imposed-load', input = True)
 
     # list of keys specifying the names of the loading cases 
     # that can not exist at the same time, i.e. which are exclusive to each other
     # 
-    exclusive_to = List(Str, input=True)
+    exclusive_to = List(Str, input = True)
     def _exclusive_to_default(self):
         return []
 
     # combination factors (need to be defined in case of imposed loads)
     # 
-    psi_0 = Float(input=True)
-    psi_1 = Float(input=True)
-    psi_2 = Float(input=True)
+    psi_0 = Float(input = True)
+    psi_1 = Float(input = True)
+    psi_2 = Float(input = True)
 
     # security factors ULS
     #
-    gamma_fav = Float(input=True)
+    gamma_fav = Float(input = True)
     def _gamma_fav_default(self):
         if self.category == 'dead-load':
             return 1.00
@@ -97,7 +97,7 @@ class LC(HasTraits):
         if self.category == 'imposed-load':
             return 0.00
 
-    gamma_unf = Float(input=True)
+    gamma_unf = Float(input = True)
     def _gamma_unf_default(self):
         if self.category == 'dead-load':
             return 1.35
@@ -110,7 +110,7 @@ class LC(HasTraits):
     # (used to distinguish combinations where imposed-loads
     # or additional-dead-loads are favorable or unfavorable.) 
     #
-    gamma_fav_SLS = Float(input=True)
+    gamma_fav_SLS = Float(input = True)
     def _gamma_fav_SLS_default(self):
         if self.category == 'dead-load':
             return 1.00
@@ -118,20 +118,20 @@ class LC(HasTraits):
              self.category == 'imposed-load':
             return 0.00
 
-    gamma_unf_SLS = Float(input=True)
+    gamma_unf_SLS = Float(input = True)
     def _gamma_unf_SLS_default(self):
         return 1.00
 
     # original state data (before filtering)
     #
-    state_data_orig = Property(Dict, depends_on='file_name')
+    state_data_orig = Property(Dict, depends_on = 'file_name')
     @cached_property
     def _get_state_data_orig(self):
         return self.reader.read_state_data(self.file_name)
 
     # state data (after filtering)
     #
-    state_data_dict = Property(Dict, depends_on='file_name, +filter')
+    state_data_dict = Property(Dict, depends_on = 'file_name, +filter')
     @cached_property
     def _get_state_data_dict(self):
         d = {}
@@ -150,7 +150,7 @@ class LC(HasTraits):
         # no displacement is available yet
         # sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
         return self.reader.sr_columns
-
+    
     sr_arr = Property(Array)
     def _get_sr_arr(self):
         '''return the stress resultants of the loading case
@@ -186,24 +186,24 @@ class LCC(HasTraits):
     def _get_assess_value(self):
         return self.ls_table.assess_value
 
-    traits_view = View(Item('ls_table@', show_label=False),
-                        resizable=True,
-                        scrollable=True
+    traits_view = View(Item('ls_table@', show_label = False),
+                        resizable = True,
+                        scrollable = True
                         )
 
 # The definition of the demo TableEditor:
 lcc_list_editor = TableEditor(
-    columns_name='lcc_table_columns',
-    editable=False,
-    selection_mode='row',
-    selected='object.lcc',
-    show_toolbar=True,
-    auto_add=False,
-    configurable=True,
-    sortable=True,
-    reorderable=False,
-    sort_model=False,
-    auto_size=False,
+    columns_name = 'lcc_table_columns',
+    editable = False,
+    selection_mode = 'row',
+    selected = 'object.lcc',
+    show_toolbar = True,
+    auto_add = False,
+    configurable = True,
+    sortable = True,
+    reorderable = False,
+    sort_model = False,
+    auto_size = False,
     )
 
 class LCCTable(HasTraits):
@@ -220,13 +220,13 @@ class LCCTable(HasTraits):
 
     # manager of input files with state and geometry data 
     # 
-    reader_type = Trait('RFEM', dict(RFEM=LCCReaderRFEM,
-                                     InfoCAD=LCCReaderInfoCAD))
+    reader_type = Trait('RFEM', dict(RFEM = LCCReaderRFEM,
+                                     InfoCAD = LCCReaderInfoCAD))
 
-    reader = Property(Instance(LCCReader), depends_on='reader_type')
+    reader = Property(Instance(LCCReader), depends_on = 'reader_type')
     @cached_property
     def _get_reader(self):
-        return self.reader_type_(lcc_table=self)
+        return self.reader_type_(lcc_table = self)
 
     # lcc-instance for the view 
     #
@@ -247,7 +247,7 @@ class LCCTable(HasTraits):
     # list of load cases
     #
     lc_list_ = List(Instance(LC))
-    lc_list = Property(List, depends_on='+filter')
+    lc_list = Property(List, depends_on = '+filter')
     def _set_lc_list(self, value):
         self.lc_list_ = value
     def _get_lc_list(self):
@@ -258,16 +258,14 @@ class LCCTable(HasTraits):
                 lc.data_filter = self.data_filter
         return self.lc_list_
 
-    lcc_table_columns = Property(depends_on='lc_list_, +filter')
-    @cached_property
+    lcc_table_columns = Property(depends_on = 'lc_list_, +filter')
     def _get_lcc_table_columns(self):
-        return [ ObjectColumn(label='Id', name='lcc_id') ] + \
-               [ ObjectColumn(label=lc.name, name=lc.name)
+        return [ ObjectColumn(label = 'Id', name = 'lcc_id') ] + \
+               [ ObjectColumn(label = lc.name, name = lc.name)
                 for idx, lc in enumerate(self.lc_list) ] + \
-                [ ObjectColumn(label='assess_value', name='assess_value') ]
+                [ ObjectColumn(label = 'assess_value', name = 'assess_value') ]
 
-    sr_columns = Property(List(Str), depends_on='lc_list_, +filter')
-    @cached_property
+    sr_columns = Property(List(Str), depends_on = 'lc_list_, +filter')
     def _get_sr_columns(self):
         '''derive the order of the stress resultants
         from the first element in 'lc_list'. The internal
@@ -291,7 +289,6 @@ class LCCTable(HasTraits):
     #-------------------------------
 
     lc_arr = Property(Array)
-    @cached_property
     def _get_lc_arr(self):
         '''stack stress resultants arrays of all loading cases together.
         This yields an array of shape ( n_lc, n_elems, n_sr )
@@ -346,7 +343,7 @@ class LCCTable(HasTraits):
     # list of indices of the position of the imposed loads in 'lc_list'
     #
 #    imposed_idx_list = Property( List, depends_on = 'lc_list_, lc_list_.+input' )
-    imposed_idx_list = Property(List, depends_on='lc_list_')
+    imposed_idx_list = Property(List, depends_on = 'lc_list_')
     @cached_property
     def _get_imposed_idx_list(self):
         '''list of indices for the imposed loads
@@ -378,11 +375,11 @@ class LCCTable(HasTraits):
             psi_value = getattr(self.lc_list[ imposed_idx ], psi_key)
             psi_list[ imposed_idx ] = psi_value
 
-        return array(psi_list, dtype='float_')
+        return array(psi_list, dtype = 'float_')
 
     # list containing names of the loading cases
     #
-    lc_name_list = Property(List, depends_on='lc_list_')
+    lc_name_list = Property(List, depends_on = 'lc_list_')
     @cached_property
     def _get_lc_name_list(self):
         '''list of names of all loading cases
@@ -393,7 +390,7 @@ class LCCTable(HasTraits):
 
     # combination array:
     #
-    combi_arr = Property(Array, depends_on='lc_list_, combination_SLS')
+    combi_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
     @cached_property
     def _get_combi_arr(self):
         '''array containing the security and combination factors
@@ -475,7 +472,7 @@ class LCCTable(HasTraits):
             # get combinations with all!! imposed = 0 
             #
             lcc_all_imposed_zero = where((combi_arr[:, self.imposed_idx_list] == 0)
-                                          .all(axis=1))
+                                          .all(axis = 1))
 
             # add to combinations
             #
@@ -527,7 +524,7 @@ class LCCTable(HasTraits):
             #              ...  ...  ...
             #
             mask_arr = where(combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0)
-            true_combi = where(sum(mask_arr, axis=1) <= 1.0)
+            true_combi = where(sum(mask_arr, axis = 1) <= 1.0)
             combi_arr_psi_exclusive = combi_arr_psi_exclusive[ true_combi ]
 
         #---------------------------------------------------------------
@@ -547,7 +544,7 @@ class LCCTable(HasTraits):
             # If this is not the case for any row the combination is added to 'unique'.
             # Broadcasting is used for the bool evaluation:
             #
-            if (row == combi_arr_psi_exclusive_unique).all(axis=1.0).any() == False:
+            if (row == combi_arr_psi_exclusive_unique).all(axis = 1.0).any() == False:
                 combi_arr_psi_exclusive_unique = vstack((combi_arr_psi_exclusive_unique, row))
 
         # if option is set to 'True' the loading case combination table 
@@ -563,7 +560,7 @@ class LCCTable(HasTraits):
     # lcc_arr 
     #-------------------------------
 
-    lcc_arr = Property(Array, depends_on='lc_list_')
+    lcc_arr = Property(Array, depends_on = 'lc_list_')
     @cached_property
     def _get_lcc_arr(self):
         '''Array of all loading case combinations following the
@@ -589,7 +586,7 @@ class LCCTable(HasTraits):
         # an array of all loading case combinations.
         # This yields an array of shape ( n_lcc, n_elem, n_sr ) 
         #
-        lcc_arr = sum(lc_combi_arr, axis=1)
+        lcc_arr = sum(lc_combi_arr, axis = 1)
 
         return lcc_arr
 
@@ -602,8 +599,8 @@ class LCCTable(HasTraits):
         '''
         lcc_arr = self.lcc_arr
 
-        min_arr = ndmin(lcc_arr, axis=0)
-        max_arr = ndmax(lcc_arr, axis=0)
+        min_arr = ndmin(lcc_arr, axis = 0)
+        max_arr = ndmax(lcc_arr, axis = 0)
 
         return min_arr, max_arr
 
@@ -624,7 +621,7 @@ class LCCTable(HasTraits):
 
     # coordinates and element thickness read from file:
     # 
-    geo_data_orig = Property(Dict, depends_on='geo_data_file')
+    geo_data_orig = Property(Dict, depends_on = 'geo_data_file')
     @cached_property
     def _get_geo_data_orig(self):
         return self.reader.read_geo_data(self.geo_data_file)
@@ -632,15 +629,15 @@ class LCCTable(HasTraits):
     # parameter that defines for which z-coordinate values
     # the read in data is not evaluated (filtered out)
     # 
-    cut_z_fraction = Float(0.0, filter=True)
+    cut_z_fraction = Float(0.0, filter = True)
 
     # construct a filter 
     #
-    data_filter = Callable(filter=True)
+    data_filter = Callable(filter = True)
     def _data_filter_default(self):
         return lambda lcc_table, x: x    #  - do nothing by default
 
-    geo_data_dict = Property(Dict, depends_on='geo_data_file, +filter')
+    geo_data_dict = Property(Dict, depends_on = 'geo_data_file, +filter')
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
@@ -652,19 +649,15 @@ class LCCTable(HasTraits):
     # lcc_lists 
     #-------------------------------
 
-    lcc_list = Property(List, depends_on='lc_list_')
+    lcc_list = Property(List, depends_on = 'lc_list_')
     @cached_property
     def _get_lcc_list(self):
         '''list of loading case combinations (instances of LCC)
         '''
-        print '################### constructing lcc_list ##################'
-
         combi_arr = self.combi_arr
         lcc_arr = self.lcc_arr
         sr_columns = self.sr_columns
         n_lcc = self.n_lcc
-
-        print '################### arrays accessed ##################'
 
         # return a dictionary of the stress resultants
         # this is used by LSTable to determine the stress 
@@ -677,25 +670,16 @@ class LCCTable(HasTraits):
             for i_sr, name in enumerate(sr_columns):
                 state_data_dict[ name ] = lcc_arr[ i_lcc, :, i_sr ][:, None]
 
-            print '################### lcc %s ##################' % str(i_lcc)
-
             lcc = LCC(#lcc_table = self,
-                       factors=combi_arr[ i_lcc, : ],
-                       lcc_id=i_lcc,
+                       factors = combi_arr[ i_lcc, : ],
+                       lcc_id = i_lcc,
                        # changes necessary to distinguish plotting functionality defined in 'ls_table' 
                        # e.i. plot deformation when 'LCCReaderInfoCAD' is used 
-<<<<<<< HEAD
-                       ls_table=LSTable(reader=self.reader,
-                                           geo_data=self.geo_data_dict,
-                                           state_data=state_data_dict,
-                                           ls=self.ls)
-=======
                        ls_table = LSTable( reader = self.reader,
                                            geo_data = self.geo_data_dict,
                                            state_data = state_data_dict,
                                            k_alpha_min = self.k_alpha_min,
                                            ls = self.ls)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
                        )
 
             for idx, lc in enumerate(self.lc_list):
@@ -704,22 +688,20 @@ class LCCTable(HasTraits):
 
             lcc_list.append(lcc)
 
-        print '################### returining lcc_list ##################'
-
         return lcc_list
 
     def plot_geo(self, mlab):
         self.reader.plot_mesh(mlab, self.geo_data_dict)
 
-    def plot_sr(self, mlab, lc=0, sr=0):
+    def plot_sr(self, mlab, lc = 0, sr = 0):
         lc = self.lc_arr[lc]
         gd = self.geo_data_dict
         mlab.points3d(gd['X'], gd['Y'], gd['Z'], lc[:, sr],
                        #colormap = "YlOrBr",
-                       mode="cube",
-                       scale_factor=0.1)
+                       mode = "cube",
+                       scale_factor = 0.1)
 
-    def plot_n_tex(self, title=None):
+    def plot_n_tex(self, title = None):
         '''plot number of textile reinforcement 'n_tex' for all loading case combinations
         '''
         #----------------------------------------
@@ -762,7 +744,7 @@ class LCCTable(HasTraits):
         # get the overall maximum values:
         #----------------------------------------------
 
-        n_tex_max = ndmax(n_tex_arr, axis=1)[:, None]
+        n_tex_max = ndmax(n_tex_arr, axis = 1)[:, None]
 
         #----------------------------------------------
         # plot
@@ -777,31 +759,24 @@ class LCCTable(HasTraits):
         #
         plot_col = where(plot_col < 0, 0, plot_col)
 
-        mlab.figure(figure=title,
-                     bgcolor=(1.0, 1.0, 1.0),
-                     fgcolor=(0.0, 0.0, 0.0))
+        mlab.figure(figure = title,
+                     bgcolor = (1.0, 1.0, 1.0),
+                     fgcolor = (0.0, 0.0, 0.0))
 
         mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                       colormap="YlOrBr",
-                       mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
+                       colormap = "YlOrBr",
+                       mode = "cube",
+                       scale_mode = 'none',
+                       scale_factor = 0.10)
 
-        mlab.scalarbar(title='n_tex (all LCs)', orientation='vertical')
+        mlab.scalarbar(title = 'n_tex (all LCs)', orientation = 'vertical')
 
         mlab.show()
 
-<<<<<<< HEAD
-    def plot_assess_value(self, title=None):
-        '''plot the assess value for all loading case combinations
-=======
 
     def plot_assess_value(self, title = None, add_assess_values_from_file = None, save_assess_values_to_file = None):
-        '''plot-3d the assess value for all loading case combinations as structure plot with color legend
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+        '''plot the assess value for all loading case combinations
         '''
-        print '################### plotting assess_value ##################'
-
         #----------------------------------------
         # script to get the maximum values of 'assess_value' 
         # at all given coordinate points for all possible loading
@@ -823,7 +798,7 @@ class LCCTable(HasTraits):
             # (= LSTable_ULS-object)
             #
             ls_class = lcc.ls_table.ls_class
-
+ 
             # get 'assess_name'-column array 
             #
             assess_name = ls_class.assess_name
@@ -833,7 +808,7 @@ class LCCTable(HasTraits):
                 assess_value = getattr(ls_class, 'n_tex')
             if assess_name == 'max_eta_tot':
                 assess_value = getattr(ls_class, 'eta_tot')
-
+            
 #            n_tex = ls_class.n_tex_up
 #            n_tex = ls_class.n_tex_lo
             assess_value_list.append(assess_value)
@@ -847,7 +822,7 @@ class LCCTable(HasTraits):
         # get the overall maximum values:
         #----------------------------------------------
 
-        assess_value_max = ndmax(assess_value_arr, axis=1)[:, None]
+        assess_value_max = ndmax(assess_value_arr, axis = 1)[:, None]
 
         #----------------------------------------------
         # plot
@@ -878,25 +853,17 @@ class LCCTable(HasTraits):
 #        #
 #        plot_col = where(plot_col < 0, 0, plot_col)
 
-        mlab.figure(figure=title,
-                     bgcolor=(1.0, 1.0, 1.0),
-                     fgcolor=(0.0, 0.0, 0.0))
+        mlab.figure(figure = title,
+                     bgcolor = (1.0, 1.0, 1.0),
+                     fgcolor = (0.0, 0.0, 0.0))
 
-<<<<<<< HEAD
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                       colormap="YlOrBr",
-                       mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
-=======
         mlab.points3d(X, Y, Z, plot_col,
                        colormap = "YlOrBr",
                        mode = "cube",
                        scale_mode = 'none',
                        scale_factor = 0.10)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
-        mlab.scalarbar(title=assess_name + ' (all LCs)', orientation='vertical')
+        mlab.scalarbar(title = assess_name + ' (all LCs)', orientation = 'vertical')
 
         mlab.show()
 
@@ -1271,18 +1238,18 @@ class LCCTable(HasTraits):
     traits_view = View(VGroup(
 
                         Item('geo_data_file',
-                              label='Evaluated input file for thicknesses ',
-                               style='readonly', emphasized=True),
+                              label = 'Evaluated input file for thicknesses ',
+                               style = 'readonly', emphasized = True),
                         VSplit(
-                                    Item('lcc_list', editor=lcc_list_editor,
-                                          show_label=False),
-                                    Item('lcc@', show_label=False),
+                                    Item('lcc_list', editor = lcc_list_editor,
+                                          show_label = False),
+                                    Item('lcc@', show_label = False),
                                     ),
                         ),
-                      resizable=True,
-                      scrollable=True,
-                      height=1.0,
-                      width=1.0
+                      resizable = True,
+                      scrollable = True,
+                      height = 1.0,
+                      width = 1.0
                       )
 
 class LCCTableULS(LCCTable):
@@ -1296,7 +1263,7 @@ class LCCTableULS(LCCTable):
 
     # 'gamma' - safety factors
     #
-    gamma_list = Property(List, depends_on='lc_list_')
+    gamma_list = Property(List, depends_on = 'lc_list_')
     @cached_property
     def _get_gamma_list(self):
         return [[ lc.gamma_fav, lc.gamma_unf ] for lc in self.lc_list ]
@@ -1304,12 +1271,12 @@ class LCCTableULS(LCCTable):
     # 'psi' - combination factors (psi) for leading
     # and non leading load cases
     #
-    psi_non_lead_arr = Property(Array, depends_on='lc_list_')
+    psi_non_lead_arr = Property(Array, depends_on = 'lc_list_')
     @cached_property
     def _get_psi_non_lead_arr(self):
         return self._get_psi_arr('psi_0')
 
-    psi_lead_arr = Property(Array, depends_on='lc_list_')
+    psi_lead_arr = Property(Array, depends_on = 'lc_list_')
     @cached_property
     def _get_psi_lead_arr(self):
         return ones(len(self.lc_list))
@@ -1332,7 +1299,7 @@ class LCCTableSLS(LCCTable):
 
     # 'gamma' - safety factors
     #
-    gamma_list = Property(List, depends_on='lc_list_')
+    gamma_list = Property(List, depends_on = 'lc_list_')
     @cached_property
     def _get_gamma_list(self):
 
@@ -1366,12 +1333,12 @@ class LCCTableSLS(LCCTable):
     # combination factors (psi) for leading
     # and non leading load cases
     #
-    psi_lead_arr = Property(Array, depends_on='lc_list_, combination_SLS')
+    psi_lead_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
     @cached_property
     def _get_psi_lead_arr(self):
         return self.psi_lead_dict[ self.combination_SLS ]
 
-    psi_non_lead_arr = Property(Array, depends_on='lc_list_, combination_SLS')
+    psi_non_lead_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
     @cached_property
     def _get_psi_non_lead_arr(self):
         return self.psi_non_lead_dict[ self.combination_SLS ]

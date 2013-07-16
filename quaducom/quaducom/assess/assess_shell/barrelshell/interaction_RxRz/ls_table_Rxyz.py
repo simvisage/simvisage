@@ -140,7 +140,7 @@ class LS(HasTraits):
     # all columns associated with the limit state including the corresponding
     # stress resultants
     #
-    columns = Property(List, depends_on='show_geo_columns, show_state_columns, show_ls_columns')
+    columns = Property(List, depends_on = 'show_geo_columns, show_state_columns, show_ls_columns')
     @cached_property
     def _get_columns(self):
         columns = []
@@ -158,7 +158,7 @@ class LS(HasTraits):
 
     # select column used for sorting the data in selected sorting order 
     #
-    sort_column = Enum(values='columns')
+    sort_column = Enum(values = 'columns')
     def _sort_column_default(self):
         return self.columns[-1]
 
@@ -171,11 +171,11 @@ class LS(HasTraits):
 
     # get the maximum value of the chosen column
     #
-    max_in_column = Enum(values='columns')
+    max_in_column = Enum(values = 'columns')
     def _max_in_column_default(self):
         return self.columns[-1]
 
-    max_value = Property(depends_on='max_in_column')
+    max_value = Property(depends_on = 'max_in_column')
     def _get_max_value(self):
         col = getattr(self, self.max_in_column)[:, 0]
         return max(col)
@@ -185,11 +185,11 @@ class LS(HasTraits):
     # the selected variable 'max_in_column' in all (!) sheets
     #-------------------------------------------------------
 
-    max_value_all = Property(depends_on='max_in_column')
+    max_value_all = Property(depends_on = 'max_in_column')
     def _get_max_value_all(self):
         return self.ls_table.max_value_and_case[ self.max_in_column ]['max_value']
 
-    max_case = Property(depends_on='max_in_column')
+    max_case = Property(depends_on = 'max_in_column')
     def _get_max_case(self):
         return self.ls_table.max_value_and_case[ self.max_in_column ]['max_case']
 
@@ -199,7 +199,7 @@ class LS(HasTraits):
 
     # stack columns together for table used by TabularEditor
     #
-    ls_array = Property(Array, depends_on='sort_column, sort_order, \
+    ls_array = Property(Array, depends_on = 'sort_column, sort_order, \
                                               show_geo_columns, \
                                               show_state_columns, \
                                               show_ls_columns')
@@ -225,28 +225,28 @@ class LS(HasTraits):
     #---------------------------------
     # plot outputs in mlab-window 
     #---------------------------------
-    warp_factor = Float(1000., input=True)
+    warp_factor = Float(1000., input = True)
 
-    plot_column = Enum(values='columns')
+    plot_column = Enum(values = 'columns')
     plot = Button
     def _plot_fired(self):
-
+        
         plot_col = getattr(self, self.plot_column)[:, 0]
-
-        mlab.figure(figure="SFB532Demo",
-                     bgcolor=(1.0, 1.0, 1.0),
-                     fgcolor=(0.0, 0.0, 0.0))
+        
+        mlab.figure(figure = "SFB532Demo",
+                     bgcolor = (1.0, 1.0, 1.0),
+                     fgcolor = (0.0, 0.0, 0.0))
 
         gd = self.ls_table.geo_data
         sd = self.ls_table.state_data
 
         if self.plot_column == 'n_tex':
             plot_col = where(plot_col < 0, 0, plot_col)
-
+        
         r = self.ls_table.reader
-        r.plot_col(mlab, plot_col, gd, state_data=sd, warp_factor=self.warp_factor)
+        r.plot_col(mlab, plot_col, gd, state_data = sd, warp_factor = self.warp_factor)
 
-        mlab.scalarbar(title=self.plot_column, orientation='vertical')
+        mlab.scalarbar(title = self.plot_column, orientation = 'vertical')
         mlab.show
 
     # name of the trait that is used to assess the evaluated design
@@ -264,13 +264,13 @@ class LS(HasTraits):
     ls_group = VGroup(
                         HGroup(#Item( 'assess_name' ),
                                 Item('max_in_column'),
-                                Item('max_value', style='readonly', format_str='%6.2f'),
+                                Item('max_value', style = 'readonly', format_str = '%6.2f'),
                               ),
                         HGroup(Item('sort_column'),
                                 Item('sort_order'),
-                                Item('show_geo_columns', label='show geo'),
-                                Item('show_state_columns', label='show state'),
-                                Item('show_ls_columns', label='show ls'),
+                                Item('show_geo_columns', label = 'show geo'),
+                                Item('show_state_columns', label = 'show state'),
+                                Item('show_ls_columns', label = 'show ls'),
                                 Item('plot_column'),
                                 Item('plot'),
                                 Item('warp_factor')
@@ -288,7 +288,7 @@ class SLSRxyz(LS):
 
     ls_columns = List([])
 
-    ls_values = Property(depends_on='+input')
+    ls_values = Property(depends_on = '+input')
     @cached_property
     def _get_ls_values(self):
         '''get the outputs for SLS
@@ -303,19 +303,19 @@ class SLSRxyz(LS):
     # @todo: the dynamic selection of the columns to be displayed 
     # does not work in connection with the LSArrayAdapter 
     traits_view = View(VGroup(
-                            HGroup(Item(name='', label=''),
-                                   Item(name='', label='')
+                            HGroup(Item(name = '', label = ''),
+                                   Item(name = '', label = '')
                                    ),
                             VGroup(
                                 Include('ls_group'),
-                                Item('ls_array', show_label=False,
-                                      editor=TabularEditor(adapter=LSArrayAdapter()))
+                                Item('ls_array', show_label = False,
+                                      editor = TabularEditor(adapter = LSArrayAdapter()))
                                   ),
                               ),
-                      resizable=True,
-                      scrollable=True,
-                      height=1000,
-                      width=1100
+                      resizable = True,
+                      scrollable = True,
+                      height = 1000,
+                      width = 1100
                       )
 
 class ULSRxyz(LS):
@@ -328,37 +328,25 @@ class ULSRxyz(LS):
 
     # shear Resistance
     #
-<<<<<<< HEAD
-    Rx_Rd = Float(5.1, input=True)
-=======
     Rx_Rd = Float(5.3, input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
     # pull-out Resistance
     #
-<<<<<<< HEAD
-    Rz_Rd = Float(4.6, input=True)
-=======
     Rz_Rd = Float(4.8, input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
     # (unused as Ry = 0. for all cases)
-<<<<<<< HEAD
-    Ry_Rd = Float(1., input=True)
-=======
     #
     Ry_Rd = Float(1., input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
-    Mx_Rd = Float(1., input=True)
-    My_Rd = Float(1., input=True)
-    Mz_Rd = Float(1., input=True)
-
+    Mx_Rd = Float(1., input = True)
+    My_Rd = Float(1., input = True)
+    Mz_Rd = Float(1., input = True)
+    
     # ------------------------------------------------------------
     # ULS: outputs
     # ------------------------------------------------------------
 
-    ls_values = Property(depends_on='+input')
+    ls_values = Property(depends_on = '+input')
     @cached_property
     def _get_ls_values(self):
         '''get the outputs for ULS
@@ -387,20 +375,14 @@ class ULSRxyz(LS):
 
         # evaluate resulting forces and moments
         #
-<<<<<<< HEAD
-        Rres = self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz
-        Mres = self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz
-
-=======
         Rres = sqrt( self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz )
         Mres = sqrt( self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz )
         
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
         # note: positive values of 'Rx' correspond to shear forces for the support screw
         #       negative values are taken by the compression cushion at the support directly 
         #       Therefore take only the positive part of support force 'Rx' into account
         #       for the evaluation of 'eta_Rx'  
-        Rx_pos = (abs(self.Rx) + self.Rx) / 2.
+        Rx_pos = ( abs( self.Rx ) + self.Rx ) / 2.
 
         # eta shear forces 
         #
@@ -411,20 +393,20 @@ class ULSRxyz(LS):
         #       positive values are taken by the compression cushion at the support directly 
         #       Therefore take only the negative values of the support force 'Rz' into account
         #       for the evaluation of 'eta_Rz'  
-        Rz_neg = (abs(self.Rz) - self.Rz) / 2.
-
+        Rz_neg = ( abs( self.Rz ) - self.Rz ) / 2.
+        
         # eta pull-out
         #
         eta_Rz = Rz_neg / self. Rz_Rd
 
         # eta shear forces (unused as shear force in y-direction is always 0.)
         #
-        eta_Ry = abs(self.Ry) / self. Ry_Rd
+        eta_Ry = abs( self.Ry ) / self. Ry_Rd
 
         # total eta for linear interaction:
         #
         eta_R_tot = eta_Rx + eta_Rz
-
+        
         eta_Mx = self.Mx / self. Mx_Rd
         eta_My = self.My / self. My_Rd
         eta_Mz = self.Mz / self. Mz_Rd
@@ -433,7 +415,7 @@ class ULSRxyz(LS):
         # construct a dictionary containing the return values
         #------------------------------------------------------------
 
-        return {
+        return {    
                  'Rres' : Rres,
                  'Mres' : Mres,
                  'eta_Rx' : eta_Rx,
@@ -449,11 +431,8 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
-<<<<<<< HEAD
-=======
     # NOTE: the definition of ls_table.assess_name is given in constructor of 'LCCTable'
     #
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 #    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
 #    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
@@ -461,11 +440,11 @@ class ULSRxyz(LS):
 #    assess_name = 'max_Rz'
 #    assess_name = 'min_Rz' # @todo: compare with pull-out resistance of the screw
 #    assess_name = 'max_Rres'
-    assess_name = 'max_eta_R_tot'
+#    assess_name = 'max_eta_R_tot'
 
     ls_columns = List(['Rx', 'Ry', 'Rz', 'Rres',
                        'Mx', 'My', 'Mz', 'Mres',
-                       'eta_Rx', 'eta_Ry', 'eta_Rz', 'eta_R_tot',
+                       'eta_Rx', 'eta_Ry', 'eta_Rz','eta_R_tot',
                        'eta_Mx', 'eta_My', 'eta_Mz'])
 
     Rres = Property(Array)
@@ -475,7 +454,7 @@ class ULSRxyz(LS):
     Mres = Property(Array)
     def _get_Mres(self):
         return self.ls_values['Mres']
-
+    
     eta_Rx = Property(Array)
     def _get_eta_Rx(self):
         return self.ls_values['eta_Rx']
@@ -509,42 +488,42 @@ class ULSRxyz(LS):
     # defined by the property name 'assess_name'
     #-------------------------------------------------
 
-    max_Rx = Property(depends_on='+input')
+    max_Rx = Property(depends_on = '+input')
     @cached_property
     def _get_max_Rx(self):
         return np.max(self.Rx)
 
-    min_Rx = Property(depends_on='+input')
+    min_Rx = Property(depends_on = '+input')
     @cached_property
     def _get_min_Rx(self):
         return np.min(self.Rx)
 
-    max_Ry = Property(depends_on='+input')
+    max_Ry = Property(depends_on = '+input')
     @cached_property
     def _get_max_Ry(self):
         return np.max(self.Ry)
 
-    min_Ry = Property(depends_on='+input')
+    min_Ry = Property(depends_on = '+input')
     @cached_property
     def _get_min_Ry(self):
         return np.min(self.Ry)
 
-    max_Rz = Property(depends_on='+input')
+    max_Rz = Property(depends_on = '+input')
     @cached_property
     def _get_max_Rz(self):
         return np.max(self.Rz)
 
-    min_Rz = Property(depends_on='+input')
+    min_Rz = Property(depends_on = '+input')
     @cached_property
     def _get_min_Rz(self):
         return np.min(self.Rz)
 
-    max_Rres = Property(depends_on='+input')
+    max_Rres = Property(depends_on = '+input')
     @cached_property
     def _get_max_Rres(self):
         return ndmax(self.Rres)
 
-    max_eta_R_tot = Property(depends_on='+input')
+    max_eta_R_tot = Property(depends_on = '+input')
     @cached_property
     def _get_max_eta_R_tot(self):
         return ndmax(self.eta_R_tot)
@@ -559,12 +538,6 @@ class ULSRxyz(LS):
                        VGroup(
                         HGroup(
                             VGroup(
-<<<<<<< HEAD
-                                Item(name='Rx_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                Item(name='Ry_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                Item(name='Rz_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                label='material properties (longitudinal)'
-=======
                                 Item(name = 'Rx_Rd', label = 'resistance R_xd [kN]', style = 'readonly', format_str = "%.1f"),
                                 Item(name = 'Ry_Rd', label = 'resistance R_yd [kN]', style = 'readonly', format_str = "%.1f"),
                                 Item(name = 'Rz_Rd', label = 'resistance R_zd [kN]', style = 'readonly', format_str = "%.1f"),
@@ -573,20 +546,19 @@ class ULSRxyz(LS):
                             VGroup(
                                 Item(name = 'assess_name', label = 'assess_name', style = 'readonly', format_str = "%s"),
                                 label = 'sort rows according to'
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
                                   )
                              ),
 
                         VGroup(
                             Include('ls_group'),
-                            Item('ls_array', show_label=False,
-                                  editor=TabularEditor(adapter=LSArrayAdapter()))
+                            Item('ls_array', show_label = False,
+                                  editor = TabularEditor(adapter = LSArrayAdapter()))
                               ),
                             ),
-                      resizable=True,
-                      scrollable=True,
-                      height=1000,
-                      width=1100
+                      resizable = True,
+                      scrollable = True,
+                      height = 1000,
+                      width = 1100
                       )
 
 LSLIST = [ SLSRxyz, ULSRxyz ]
@@ -608,7 +580,7 @@ class LSTableRxyz(HasTraits):
     # state data: stress resultants 
     # 
     state_data = Dict
-
+    
     Rx = Property(Array)
     def _get_Rx(self):
         return self.state_data['Rx']
@@ -646,7 +618,7 @@ class LSTableRxyz(HasTraits):
         '''ls instances, e.g. ULS()
         '''
         ls_class = self.ls_
-        return ls_class(ls_table=self)
+        return ls_class(ls_table = self)
 
     assess_name = Str
 
@@ -656,13 +628,13 @@ class LSTableRxyz(HasTraits):
         return getattr(ls, self.assess_name)
 
     traits_view = View(Tabbed(
-                            Item('ls_class@' , label="ls", show_label=False),
-                            scrollable=False,
+                            Item('ls_class@' , label = "ls", show_label = False),
+                            scrollable = False,
                          ),
-                      resizable=True,
-                      scrollable=True,
-                      height=1000,
-                      width=1100
+                      resizable = True,
+                      scrollable = True,
+                      height = 1000,
+                      width = 1100
                       )
 
 

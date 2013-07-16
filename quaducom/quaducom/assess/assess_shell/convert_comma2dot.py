@@ -20,7 +20,8 @@ if __name__ == '__main__':
 
     dir_list = [
 #                            '2cm-feines-Netz', 
-                            '2cm-Elastomer', 
+#                            '2cm-Elastomer', 
+                            '2cm-feines-Netz-EC1', 
 #                            '2cm', 
 #                            '2cm-Zugausfall-komplett', 
 #                            '2cm-Zugausfall-vorne', 

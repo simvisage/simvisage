@@ -24,9 +24,12 @@ if __name__ == '__main__':
     # define directory:
     #------------------------
 
-#    do = 'predimensioning'
     do = 'dimensioning'
+#    do = 'dimensioning'
 
+
+    # Vorstatik
+    #
     if do == 'predimensioning':
         data_dir = os.path.join(simdb.simdb_dir,
                                 'simdata', 
@@ -34,6 +37,8 @@ if __name__ == '__main__':
                                 '2cm-feines-Netz', 
                                 )
 
+    # Bemessung
+    #
     if do == 'dimensioning':
         data_dir = os.path.join(simdb.simdb_dir,
                                 'simdata', 
@@ -127,26 +132,26 @@ if __name__ == '__main__':
                      # temperature 
                      #----------------------------------------------------------------------
     
-#                     # LC13:
-#                     LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
-#                        exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
-#                        ),
-#                     # LC14:
-#                     LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
-#                        exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
-#                        ),
-#                     # LC15:
-#                     LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-#                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
-#                        ),
-#                     # LC16:
-#                     LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-#                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
-#                        ),
+                     # LC13:
+                     LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
+                        exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
+                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                 
+                        ),
+                     # LC14:
+                     LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
+                        exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
+                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0              
+                        ),
+                     # LC15:
+                     LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
+                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
+                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                   
+                        ),
+                     # LC16:
+                     LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
+                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
+                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0                    
+                        ),
                         
                      #----------------------------------------------------------------------
                      # shrinkage 
@@ -155,44 +160,6 @@ if __name__ == '__main__':
                      LC(name = 'T_schwinden', category = 'imposed-load', file_name = 'LC17.txt',
                         psi_0 = 0.8, psi_1 = 0.7, psi_2 = 0.5,
                         ),
-    
-                     #----------------------------------------------------------------------
-                     # cable load (experimental test setup) 
-                     #----------------------------------------------------------------------
-    #                 LC(name = 'cable-FL-m3', category = 'imposed-load', file_name = 'LC22.txt',
-    #                    # loading case only used for evaluation of experimental test setup 
-    #                    # (estimation of load-bearing capacity)     
-    #                    gamma_unf = 1000.0, gamma_fav = 1.0,
-    #                    psi_0 = 1.0, 
-    #                    ),
-    
-    
-    #                 # LC18:
-    #                 LC(name = 'cable-L-m0', category = 'imposed-load', file_name = 'LC18.txt',
-    #                    # loading case only used for evaluation of experimental test setup 
-    #                    # (estimation of load-bearing capacity)     
-    #                    gamma_unf = 1.0, gamma_fav = 1.0,
-    #                    psi_0 = 1.0, 
-    #                    ),
-    
-    #                 LC(name = 'cable-FL-m4', category = 'imposed-load', file_name = 'LC19.txt',
-    #                    # loading case only used for evaluation of experimental test setup 
-    #                    # (estimation of load-bearing capacity)     
-    #                    gamma_unf = 1.0, gamma_fav = 1.0,
-    #                    psi_0 = 1.0, 
-    #                    ),
-    #                 LC(name = 'cable-FL-m2', category = 'imposed-load', file_name = 'LC21.txt',
-    #                    # loading case only used for evaluation of experimental test setup 
-    #                    # (estimation of load-bearing capacity)     
-    #                    gamma_unf = 1.0, gamma_fav = 1.0,
-    #                    psi_0 = 1.0, 
-    #                    ),
-    #                 LC(name = 'cable-FL-m0', category = 'imposed-load', file_name = 'LC20.txt',
-    #                    # loading case only used for evaluation of experimental test setup 
-    #                    # (estimation of load-bearing capacity)     
-    #                    gamma_unf = 1.0, gamma_fav = 1.0,
-    #                    psi_0 = 1.0, 
-    #                    ),
     
                      #----------------------------------------------------------------------
                      # wind load 
@@ -349,22 +316,37 @@ if __name__ == '__main__':
                     ),
                     ]
 
-
 #--------------------------------------------------------------
 
-    do = 'ULS'
+#    assess_name = 'max_Ry' # all values evaluate to zero
+#    assess_name = 'min_Ry' # all values evaluate to zero
+#    assess_name = 'max_Rres'
 
-    if do == 'ULS':
+    if do == 'predimensioning':
+        #-----------------------------------
+        # investigate the following 4 cases:
+        #-----------------------------------
+        assess_name = 'max_Rx' # max tension in tangential direction: compare with shear resistance of the screw
+#        assess_name = 'min_Rx' # max compression in tangential direction: compare with f_cd
+#        assess_name = 'max_Rz' # max compression in radial direction_ compare with f_cd 
+#        assess_name = 'min_Rz' # max tension in radial direction: compare with pull-out resistance of the screw
 
-#        assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
-#        assess_name = 'min_Rx'
-#        assess_name = 'max_Ry'
-#        assess_name = 'min_Ry'
-#        assess_name = 'max_Rz'
-#        assess_name = 'min_Rz' # @todo: compare with pull-out resistance of the screw
-#        assess_name = 'max_Rres'
-        assess_name = 'max_eta_R_tot'
+        # LCCTable for imposed loads with temperature)
+        #
+        lct = LCCTableULS(data_dir = data_dir,
+                            reader_type = 'InfoCADRxyz',  
+                            lc_list = lc_list,
+                            assess_name = assess_name,
+#                            show_lc_characteristic = True
+                           )
 
+        lct.configure_traits()
+        # @todo: export the table values from the GUI
+    
+    if do == 'dimensioning':
+
+        assess_name = 'max_eta_R_tot' 
+        
         # LCCTable for imposed loads (without temperature)
         #
         lct_Q = LCCTableULS(data_dir = data_dir,
@@ -388,7 +370,7 @@ if __name__ == '__main__':
         #--------------------------------------------------------------
         #
         print 'lct_Q.combi_arr', lct_Q.combi_arr.shape 
-#        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter = ';')
+        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------
         # brows the loading case combinations within an interactive table view
@@ -400,19 +382,15 @@ if __name__ == '__main__':
         # RxRz-interaction plot (tangential reaction force - radial reaction force) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_RxRz_interaction( save_max_min_RxRz_to_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC15-18')
-#        lct_Q.plot_RxRz_interaction( save_fig_to_file = 'RxRz_interaction_LC1-14' )
-#        lct_Q.plot_RxRz_interaction( add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC1-18' )
+        lct_T.plot_RxRz_interaction( save_max_min_RxRz_to_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC15-18')
+        lct_Q.plot_RxRz_interaction( save_fig_to_file = 'RxRz_interaction_LC1-14' )
+        lct_Q.plot_RxRz_interaction( add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC1-18' )
 #        lct_Q.plot_RxRz_interaction( show_tension_only = True )
 
         #--------------------------------------------------------------
         # interaction plot of build-in screw usage 'eta_RxRz' (Ausnutzungsgrad) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC15-18' )
-#        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC1-14')
-#        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'eta_RxRz_interaction_LC1-18')
-
-
-
-
+        lct_T.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC15-18' )
+        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC1-14')
+        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'eta_RxRz_interaction_LC1-18')
