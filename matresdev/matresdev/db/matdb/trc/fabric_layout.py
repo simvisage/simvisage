@@ -170,7 +170,7 @@ FabricLayOut.db = SimDBClassExt(
                                            ),
 
                # AR-glass tissue binding (barrel shell)
-               # carbon textile / tissue binding ("Tuch") 
+               # tissue binding ("Tuch") 
                # 1 x 1200 tex in 0-direction (1v1l): 8.3 mm                            
                # 1 x 1200 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
                #
