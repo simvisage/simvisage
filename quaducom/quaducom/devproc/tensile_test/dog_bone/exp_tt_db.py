@@ -114,16 +114,16 @@ class ExpTTDB(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    width = Float(0.100, unit = 'm', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
-    gauge_length = Float(0.25, unit = 'm', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
+    width = Float(0.100, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
+    gauge_length = Float(0.550, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
-    age = Int(26, unit = 'd', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
-    loading_rate = Float(2.0, unit = 'mm/min', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
+    age = Int(21, unit='d', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
+    loading_rate = Float(2.0, unit='mm/min', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
     # composite cross section
@@ -131,7 +131,7 @@ class ExpTTDB(ExType):
 
     ccs = Instance(CompositeCrossSection)
     def _ccs_default(self):
-        '''default settings correspond to 
+        '''default settings correspond to
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
@@ -142,36 +142,30 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
-#        fabric_layout_key = 'FRA-AR/EP'
-#        fabric_layout_key = 'Grid-600'
-#        fabric_layout_key = '2D-15-10' 
-        fabric_layout_key = '2D-05-11' # carbon tissue binding
-#        fabric_layout_key = '2D-09-12' # AR-glas tissue binding
-
+        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
         concrete_mixture_key = 'barrelshell'
-#        concrete_mixture_key = 'flowstone'
-#        concrete_mixture_key = 'shotcrete-4mm'
 #        concrete_mixture_key = 'FIL-10-09'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
         n_layers = 6
-        thickness = 0.020
+        thickness = 0.02
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection (
-                    fabric_layup_list = [
+                    fabric_layup_list=[
                             plain_concrete(s_tex_z * 0.5),
                             FabricLayUp (
-                                   n_layers = n_layers,
-                                   orientation_fn_key = orientation_fn_key,
-                                   s_tex_z = s_tex_z,
-                                   fabric_layout_key = fabric_layout_key
+                                   n_layers=n_layers,
+                                   orientation_fn_key=orientation_fn_key,
+                                   s_tex_z=s_tex_z,
+                                   fabric_layout_key=fabric_layout_key
                                    ),
                             plain_concrete(s_tex_z * 0.5)
                                         ],
-                    concrete_mixture_key = concrete_mixture_key
+                    concrete_mixture_key=concrete_mixture_key
                     )
         return ccs
 
@@ -191,28 +185,28 @@ class ExpTTDB(ExType):
     #--------------------------------------------------------------------------
 
     # E-modulus of the composite at the time of testing 
-    E_c = Property(Float, unit = 'MPa', depends_on = 'input_change', table_field = True)
+    E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     @cached_property
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
     # cross-sectional-area of the composite 
-    A_c = Property(Float, unit = 'm^2', depends_on = 'input_change')
+    A_c = Property(Float, unit='m^2', depends_on='input_change')
     @cached_property
     def _get_A_c(self):
         return self.width * self.ccs.thickness
 
     # total cross-sectional-area of the textile reinforcement 
-    A_tex = Property(Float, unit = 'mm^2', depends_on = 'input_change')
+    A_tex = Property(Float, unit='mm^2', depends_on='input_change')
     @cached_property
     def _get_A_tex(self):
         return self.ccs.a_tex * self.width
 
     # E-modulus of the composite after 28 days
-    E_c28 = DelegatesTo('ccs', listenable = False)
+    E_c28 = DelegatesTo('ccs', listenable=False)
 
     # reinforcement ration of the composite 
-    rho_c = DelegatesTo('ccs', listenable = False)
+    rho_c = DelegatesTo('ccs', listenable=False)
 
     #--------------------------------------------------------------------------------
     # define processing
@@ -220,7 +214,7 @@ class ExpTTDB(ExType):
 
     def process_source_data(self):
         '''read in the measured data from file and assign
-        attributes after array processing.        
+        attributes after array processing.
         If necessary modify the assigned data, e.i. change
         the sign or specify an offset for the specific test setup.
         '''
@@ -261,8 +255,8 @@ class ExpTTDB(ExType):
     #-------------------------------------------------------------------------------
     # Get the strain and state arrays
     #-------------------------------------------------------------------------------
-    eps = Property(Array('float_'), output = True,
-                    depends_on = 'input_change')
+    eps = Property(Array('float_'), output=True,
+                    depends_on='input_change')
     @cached_property
     def _get_eps(self):
         print 'CALCULATING STRAINS'
@@ -272,20 +266,20 @@ class ExpTTDB(ExType):
             eps_li = self.W10_li / (self.gauge_length * 1000.)  #[mm/mm]
             eps_re = self.W10_re / (self.gauge_length * 1000.)
             eps_vo = self.W10_vo / (self.gauge_length * 1000.)
-            
+
             # NOTE: if only 2 displacement gauges are used instead of 3 (only 'WA_re' for front and 'WA_li' for back)
             # below the average is performed as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
             #
             if np.average(eps_re) < 0.0001:
                 print "displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead"
-                eps_re = eps_li 
+                eps_re = eps_li
             if np.average(eps_li) < 0.0001:
                 print "displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead"
-                eps_li = eps_re 
+                eps_li = eps_re
             if np.average(eps_vo) < 0.0001:
                 print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
-                eps_vo = (eps_li + eps_re) 
-                
+                eps_vo = (eps_li + eps_re)
+
             # average strains 
             eps_m = ((eps_li + eps_re) / 2. + eps_vo) / 2.
 
@@ -300,8 +294,8 @@ class ExpTTDB(ExType):
         min_eps = min(eps_m[:10])
         return eps_m - min_eps
 
-    sig_c = Property(Array('float_'), output = True,
-                      depends_on = 'input_change')
+    sig_c = Property(Array('float_'), output=True,
+                      depends_on='input_change')
     @cached_property
     def _get_sig_c(self):
         print 'CALCULATING COMPOSITE STRESS'
@@ -314,7 +308,7 @@ class ExpTTDB(ExType):
         return sig_c
 
     sig_tex = Property(Array('float_'),
-                        output = True, depends_on = 'input_change')
+                        output=True, depends_on='input_change')
     @cached_property
     def _get_sig_tex(self):
         # measured force: 
@@ -328,7 +322,7 @@ class ExpTTDB(ExType):
     #-------------------------------------------------------------------------------
     # Get the maximum stress index to cut off the descending part of the curves
     #-------------------------------------------------------------------------------
-    max_stress_idx = Property(Int, depends_on = 'input_change')
+    max_stress_idx = Property(Int, depends_on='input_change')
     @cached_property
     def _get_max_stress_idx(self):
         return argmax(self.sig_c)
@@ -336,17 +330,17 @@ class ExpTTDB(ExType):
     #-------------------------------------------------------------------------------
     # Get only the ascending branch of the response curve
     #-------------------------------------------------------------------------------
-    eps_asc = Property(Array('float_'), depends_on = 'input_change')
+    eps_asc = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_eps_asc(self):
         return self.eps[:self.max_stress_idx + 1]
 
-    sig_c_asc = Property(Array('float_'), depends_on = 'input_change')
+    sig_c_asc = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_sig_c_asc(self):
         return self.sig_c[:self.max_stress_idx + 1]
 
-    sig_tex_asc = Property(Array('float_'), depends_on = 'input_change')
+    sig_tex_asc = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_sig_tex_asc(self):
         return self.sig_tex[:self.max_stress_idx + 1]
@@ -354,20 +348,20 @@ class ExpTTDB(ExType):
     #-------------------------------------------------------------------------------
     # Get maximum values of the variables
     #-------------------------------------------------------------------------------
-    eps_max = Property(Float, depends_on = 'input_change',
-                            output = True, table_field = True, unit = 'MPa')
+    eps_max = Property(Float, depends_on='input_change',
+                            output=True, table_field=True, unit='MPa')
     @cached_property
     def _get_eps_max(self):
         return self.eps_asc[-1]
 
-    sig_c_max = Property(Float, depends_on = 'input_change',
-                            output = True, table_field = True, unit = 'MPa')
+    sig_c_max = Property(Float, depends_on='input_change',
+                            output=True, table_field=True, unit='MPa')
     @cached_property
     def _get_sig_c_max(self):
         return self.sig_c_asc[-1]
 
-    sig_tex_max = Property(Float, depends_on = 'input_change',
-                            output = True, table_field = True, unit = '-')
+    sig_tex_max = Property(Float, depends_on='input_change',
+                            output=True, table_field=True, unit='-')
     @cached_property
     def _get_sig_tex_max(self):
         return self.sig_tex_asc[-1]
@@ -385,14 +379,14 @@ class ExpTTDB(ExType):
     #-------------------------------------------------------------------------------
     # Smoothed variables
     #-------------------------------------------------------------------------------
-    eps_smooth = Property(Array('float_'), output = True,
-                            depends_on = 'input_change')
+    eps_smooth = Property(Array('float_'), output=True,
+                            depends_on='input_change')
     @cached_property
     def _get_eps_smooth(self):
         return smooth(self.eps_asc, self.n_points, 'flat')
 
-    sig_c_smooth = Property(Array('float_'), output = True,
-                            depends_on = 'input_change')
+    sig_c_smooth = Property(Array('float_'), output=True,
+                            depends_on='input_change')
     @cached_property
     def _get_sig_c_smooth(self):
         print 'COMPUTING SMOOTHED COMPOSITE STRESS'
@@ -402,8 +396,8 @@ class ExpTTDB(ExType):
         sig_c_smooth[ cut_sig ] = sig_lin[ cut_sig ]
         return sig_c_smooth
 
-    sig_tex_smooth = Property(Array('float_'), output = True,
-                            depends_on = 'input_change')
+    sig_tex_smooth = Property(Array('float_'), output=True,
+                            depends_on='input_change')
     @cached_property
     def _get_sig_tex_smooth(self):
         return smooth(self.sig_tex_asc, self.n_points, 'flat')
@@ -441,14 +435,14 @@ class ExpTTDB(ExType):
         axes.set_xlabel('eps_asc [-]')
         axes.set_ylabel('sig_c_smooth [MPa]')
 
-        axes.plot(self.eps_asc, self.sig_c_asc, color = 'green'
+        axes.plot(self.eps_asc, self.sig_c_asc, color='green'
                        # color = c, linewidth = w, linestyle = s 
                        )
-        sig_lin = array([0, self.sig_c_max], dtype = 'float_')
-        eps_lin = array([0, self.sig_c_max / self.E_c ], dtype = 'float_')
-        axes.plot(eps_lin, sig_lin, color = 'red')
+        sig_lin = array([0, self.sig_c_max], dtype='float_')
+        eps_lin = array([0, self.sig_c_max / self.E_c ], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='red')
 
-        axes.plot(self.eps_smooth, self.sig_c_smooth, color = 'blue', linewidth = 2
+        axes.plot(self.eps_smooth, self.sig_c_smooth, color='blue', linewidth=2
                        # color = c, linewidth = w, linestyle = s 
                        )
 
@@ -478,7 +472,7 @@ class ExpTTDB(ExType):
                        # color = c, linewidth = w, linestyle = s 
                        )
 
-        eps_lin = array([0, self.eps_smooth[-1]], dtype = 'float_')
+        eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex * eps_lin
         # plot the textile secant stiffness at fracture state 
         axes.plot(eps_lin, sig_lin
@@ -507,26 +501,26 @@ class ExpTTDB(ExType):
 
     traits_view = View(VSplit(
                          HSplit(Group(
-                                  Item('width'       , format_str = "%.3f"),
-                                  Item('gauge_length', format_str = "%.3f"),
-                                  springy = True,
-                                  label = 'geometry',
-                                  id = 'matresdev.db.exdb.ex_composite_tensile_test.geometry',
-                                  dock = 'tab',
+                                  Item('width'       , format_str="%.3f"),
+                                  Item('gauge_length', format_str="%.3f"),
+                                  springy=True,
+                                  label='geometry',
+                                  id='matresdev.db.exdb.ex_composite_tensile_test.geometry',
+                                  dock='tab',
                                   ),
                                Group(
                                   Item('loading_rate'),
                                   Item('age'),
-                                  springy = True,
-                                  label = 'loading rate and age',
-                                  id = 'matresdev.db.exdb.ex_composite_tensile_test.loading',
-                                  dock = 'tab',),
-                                  id = 'matresdev.db.exdb.ex_composite_tensile_test.xxx',
-                                  dock = 'tab',
+                                  springy=True,
+                                  label='loading rate and age',
+                                  id='matresdev.db.exdb.ex_composite_tensile_test.loading',
+                                  dock='tab',),
+                                  id='matresdev.db.exdb.ex_composite_tensile_test.xxx',
+                                  dock='tab',
                              ),
                             Group(
-                                  Item('ccs@', resizable = True, show_label = False),
-                                  label = 'composite cross section'
+                                  Item('ccs@', resizable=True, show_label=False),
+                                  label='composite cross section'
                                   ),
 #                               label = 'input variables',
 #                               id = 'matresdev.db.exdb.ex_composite_tensile_test.vgroup.inputs',
@@ -534,42 +528,42 @@ class ExpTTDB(ExType):
 #                               scrollable = True,
 #                               ),
                          Group(
-                               Item('E_c', visible_when = 'derived_data_available',
-                                                style = 'readonly', show_label = True , format_str = "%.0f"),
-                               Item('sig_c_max', visible_when = 'derived_data_available',
-                                                style = 'readonly', emphasized = True , format_str = "%.2f"),
-                               Item('sig_tex_max', visible_when = 'derived_data_available',
-                                                style = 'readonly', emphasized = True , format_str = "%.2f"),
-                               Item('eps_max', visible_when = 'derived_data_available',
-                                                style = 'readonly', emphasized = True , format_str = "%.4f"),
-                               label = 'output characteristics',
-                               id = 'matresdev.db.exdb.ex_composite_tensile_test.vgroup.outputs',
-                               dock = 'tab',
-                               scrollable = True,
+                               Item('E_c', visible_when='derived_data_available',
+                                                style='readonly', show_label=True , format_str="%.0f"),
+                               Item('sig_c_max', visible_when='derived_data_available',
+                                                style='readonly', emphasized=True , format_str="%.2f"),
+                               Item('sig_tex_max', visible_when='derived_data_available',
+                                                style='readonly', emphasized=True , format_str="%.2f"),
+                               Item('eps_max', visible_when='derived_data_available',
+                                                style='readonly', emphasized=True , format_str="%.4f"),
+                               label='output characteristics',
+                               id='matresdev.db.exdb.ex_composite_tensile_test.vgroup.outputs',
+                               dock='tab',
+                               scrollable=True,
                                ),
-                         scrollable = True,
-                         id = 'matresdev.db.exdb.ex_composite_tensile_test.vgroup',
-                         dock = 'tab',
+                         scrollable=True,
+                         id='matresdev.db.exdb.ex_composite_tensile_test.vgroup',
+                         dock='tab',
                          ),
-                         id = 'matresdev.db.exdb.ex_composite_tensile_test',
-                         dock = 'tab',
-                         scrollable = True,
-                         resizable = True,
-                         height = 0.8,
-                         width = 0.5,
+                         id='matresdev.db.exdb.ex_composite_tensile_test',
+                         dock='tab',
+                         scrollable=True,
+                         resizable=True,
+                         height=0.8,
+                         width=0.5,
                          )
 
-ExpTTDB.db = ExRunClassExt(klass = ExpTTDB)
+ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
 #--------------------------------------------------------------    
 
 if __name__ == '__main__':
-    
-    ExpTTDB.add_class_trait('production_date', Date(input = True, table_field = True,))
+
+    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
     for inst in ExpTTDB.db.inst_list:
         print inst.key
-        print inst.add_trait('production_date', Date('14/9/2011', input = True, table_field = True,))
+        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
         print inst.production_date
         inst.save()
-        
+
     ExpTTDB.db.configure_traits()
