@@ -107,8 +107,8 @@ class MATS1DDamageWithFlaw( MATS1DDamage ):
 class BarStrainLocalization( IBVModel ):
     '''Model assembling the components for studying the restrained crack localization.
     '''
-    shape = Int( 10, desc = 'Number of finite elements',
-                   ps_levsls = ( 10, 40, 4 ),
+    shape = Int(10, desc='Number of finite elements',
+                   ps_levsls=(10, 40, 4),
                    input = True )
 
     length = Float( 1, desc = 'Length of the simulated region',
@@ -118,7 +118,7 @@ class BarStrainLocalization( IBVModel ):
 
     flaw_position = Float( 0.5, input = True )
 
-    flaw_radius = Float( 0.1, input = True )
+    flaw_radius = Float(0.1, input=True)
 
     reduction_factor = Float( 0.9, input = True )
 
@@ -393,8 +393,8 @@ if __name__ == '__main__':
         avg_radius_list = [0.1]
         legend_list = [ 'radius = %.2f' % radius for radius in avg_radius_list ]
 
-        shape = 31
-        n_steps = 15
+        shape = 51
+        n_steps = 50
         length = 1
         flaw_radius = length / float( shape ) / 2.0
 
