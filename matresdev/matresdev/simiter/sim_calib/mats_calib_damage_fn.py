@@ -504,6 +504,9 @@ class MATSCalibDamageFn(MATSExplore):
         phi_trial_list_n = [[1.]] + self.phi_trial_list_n 
         sig_trial_list_n = [[0.]] + self.sig_trial_list_n  
 
+        xrange = 7. # plotting range for strain [mm/m]
+        yrange = 18. # plotting range for stress [MPa]
+
         for n in range(self.n_steps):
             for i in range(len(phi_trial_list_n[n+1])):
                 x = np.array([step_list[n], step_list[n+1]])
@@ -519,16 +522,16 @@ class MATSCalibDamageFn(MATSExplore):
                 p.plot(eps, sig_trail, color = 'k', linewidth = 1)
                 p.xlabel('strain [1E3]', fontproperties=font)
                 p.ylabel('stress [MPa]', fontproperties=font)
-                p.axis([0, 6, 0., 15.], fontproperties=font)
+                p.axis([0, xrange, 0., yrange], fontproperties=font)
     
                 # format ticks for plot
                 #
                 locs,labels = p.xticks()
                 p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-                p.xlabel(r'strain $\varepsilon$[1E3]', fontproperties=font)
+                p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
                 locs,labels = p.yticks()
                 p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-                p.ylabel('stress $\sigma$[MPa]', fontproperties=font)
+                p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
             
                 #--------------------------------------
                 # phi_trail
@@ -543,10 +546,10 @@ class MATSCalibDamageFn(MATSExplore):
                 # format ticks for plot
                 #
                 p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-                p.axis([0, 6., 0., 1.])
+                p.axis([0, xrange, 0., 1.])
                 locs,labels = p.xticks()
                 p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-                p.xlabel(r'strain $\varepsilon$[1E3]', fontproperties=font)
+                p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
                 locs,labels = p.yticks()
                 p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
                 p.ylabel('integrity $\phi$ [-]', fontproperties=font)
@@ -562,13 +565,13 @@ class MATSCalibDamageFn(MATSExplore):
         p.plot(eps, sig_target, color = 'black', linewidth = 1)
         # format ticks for plot
         #
-        p.axis([0, 6., 0., 15.])
+        p.axis([0, xrange, 0., yrange])
         locs,labels = p.xticks()
         p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-        p.xlabel(r'strain $\varepsilon$[1E3]', fontproperties=font)
+        p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
         locs,labels = p.yticks()
         p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-        p.ylabel('stress $\sigma$[MPa]', fontproperties=font)
+        p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
 
         #--------------------------------------
         # phi_trail (final)
@@ -583,10 +586,10 @@ class MATSCalibDamageFn(MATSExplore):
         # format ticks for plot
         #
         p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-        p.axis([0, 6., 0., 1.])
+        p.axis([0, xrange, 0., 1.])
         locs,labels = p.xticks()
         p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-        p.xlabel(r'strain $\varepsilon$[1E3]', fontproperties=font)
+        p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
         locs,labels = p.yticks()
         p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
         p.ylabel('integrity $\phi$ [-]', fontproperties=font)
@@ -748,7 +751,7 @@ def run():
 #                              'TT11-10a-average.DAT' )
 
                               '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                              'TT-12c-6cm-0-TU-SH2F-V1.DAT')
+                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
 
