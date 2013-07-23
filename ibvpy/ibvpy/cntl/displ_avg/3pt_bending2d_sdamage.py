@@ -35,62 +35,62 @@ from rt_nonlocal_averaging import \
 def app():
     avg_radius = 0.03
 
-    md = MATS2DScalarDamage( E = 20.0e3,
-                            nu = 0.2,
-                            epsilon_0 = 1.0e-4,
-                            epsilon_f = 8.0e-4,
+    md = MATS2DScalarDamage(E=20.0e3,
+                            nu=0.2,
+                            epsilon_0=1.0e-4,
+                            epsilon_f=8.0e-4,
                             #epsilon_f = 12.0e-4, #test doubling the e_f
-                            stress_state = "plane_strain",
-                            stiffness = "secant",
+                            stress_state="plane_strain",
+                            stiffness="secant",
                             #stiffness  = "algorithmic",
-                            strain_norm = Rankine() )
+                            strain_norm=Rankine())
 
 
 #    me = MATS2DElastic( E = 20.0e3,
 #                       nu = 0.2,
 #                       stress_state = "plane_strain" )
 
-    fets_eval = FETS2D4Q( mats_eval = md )#, ngp_r = 3, ngp_s = 3)                                               
+    fets_eval = FETS2D4Q(mats_eval=md)#, ngp_r = 3, ngp_s = 3)                                               
 
     n_el_x = 60
     # Discretization
-    fe_grid = FEGrid( coord_max = ( .6, .15, 0. ),
-                      shape = ( n_el_x, 15 ),
-                      fets_eval = fets_eval )
+    fe_grid = FEGrid(coord_max=(.6, .15, 0.),
+                      shape=(n_el_x, 15),
+                      fets_eval=fets_eval)
 
-    mf = MFnLineArray( xdata = array( [0, 1, 2, 7, 8 , 28] ),
-                       ydata = array( [0, 3., 3.2, 3.3, 3.32, 3.72 ] ) )
+    mf = MFnLineArray(xdata=array([0, 1, 2, 7, 8 , 28]),
+                       ydata=array([0, 3., 3.2, 3.3, 3.32, 3.72 ]))
 
     #averaging function
-    avg_processor = RTNonlocalAvg( avg_fn = QuarticAF( radius = avg_radius,
-                                                       correction = True ) )
+    avg_processor = RTNonlocalAvg(avg_fn=QuarticAF(radius=avg_radius,
+                                                       correction=True))
 
-    ts = TS( sdomain = fe_grid,
-             u_processor = avg_processor,
-             bcond_list = [
+    ts = TS(sdomain=fe_grid,
+             u_processor=avg_processor,
+             bcond_list=[
                         # constraint for all left dofs in y-direction:
-                        BCSlice( var = 'u', slice = fe_grid[0, 0, 0, 0], dims = [0, 1], value = 0. ),
-                        BCSlice( var = 'u', slice = fe_grid[-1, 0, -1, 0], dims = [1], value = 0. ),
-                        BCSlice( var = 'u', slice = fe_grid[n_el_x / 2, -1, 0, -1], dims = [1],
-                                time_function = mf.get_value,
-                                value = -2.0e-5 ),
+                        BCSlice(var='u', slice=fe_grid[0, 0, 0, 0], dims=[0, 1], value=0.),
+                        BCSlice(var='u', slice=fe_grid[-1, 0, -1, 0], dims=[1], value=0.),
+                        BCSlice(var='u', slice=fe_grid[n_el_x / 2, -1, 0, -1], dims=[1],
+                                time_function=mf.get_value,
+                                value= -2.0e-5),
                         ],
-             rtrace_list = [
+             rtrace_list=[
     #                        RTraceGraph(name = 'Fi,right over u_right (iteration)' ,
     #                                  var_y = 'F_int', idx_y = right_dof,
     #                                  var_x = 'U_k', idx_x = right_dof,
     #                                  record_on = 'update'),
-                            RTraceDomainListField( name = 'Deformation' ,
-                                           var = 'eps_app', idx = 0,
-                                           record_on = 'update' ),
-                            RTraceDomainListField( name = 'Displacement' ,
-                                           var = 'u', idx = 1,
-                                           record_on = 'update',
-                                           warp = True ),
-                            RTraceDomainListField( name = 'Damage' ,
-                                           var = 'omega', idx = 0,
-                                           record_on = 'update',
-                                           warp = True ),
+                            RTraceDomainListField(name='Deformation' ,
+                                           var='eps_app', idx=0,
+                                           record_on='update'),
+                            RTraceDomainListField(name='Displacement' ,
+                                           var='u', idx=1,
+                                           record_on='update',
+                                           warp=True),
+                            RTraceDomainListField(name='Damage' ,
+                                           var='omega', idx=0,
+                                           record_on='update',
+                                           warp=True),
     #                         RTraceDomainField(name = 'Stress' ,
     #                                        var = 'sig', idx = 0,
     #                                        record_on = 'update'),
@@ -102,16 +102,16 @@ def app():
 
     # Add the time-loop control
     #
-    tl = TLoop( tstepper = ts,
-                tolerance = 5.0e-5,
-                KMAX = 25,
-                tline = TLine( min = 0.0, step = .25, max = 100.0 ) )
+    tl = TLoop(tstepper=ts,
+                tolerance=5.0e-4,
+                KMAX=100,
+                tline=TLine(min=0.0, step=.25, max=10.0))
     tl.eval()
     # Put the whole stuff into the simulation-framework to map the
     # individual pieces of definition into the user interface.
     #
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    ibvpy_app = IBVPyApp( ibv_resource = ts )
+    ibvpy_app = IBVPyApp(ibv_resource=ts)
     ibvpy_app.main()
 
 if __name__ == '__main__':

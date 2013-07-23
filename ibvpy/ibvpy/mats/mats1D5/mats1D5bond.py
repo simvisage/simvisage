@@ -42,45 +42,45 @@ class MATS1D5Bond(MATSEval):
     implements(IMATSEval)
 
     Ef = Float(1., #34e+3,
-                 label = "E",
-                 desc = "Young's Modulus Fiber",
-                 auto_set = False, enter_set = True)
+                 label="E",
+                 desc="Young's Modulus Fiber",
+                 auto_set=False, enter_set=True)
     Af = Float(1., #34e+3,
-                 label = "A",
-                 desc = "Cross Section Fiber",
-                 auto_set = False, enter_set = True)
+                 label="A",
+                 desc="Cross Section Fiber",
+                 auto_set=False, enter_set=True)
     Em = Float(1., #34e+3,
-                 label = "E",
-                 desc = "Young's Modulus Matrix",
-                 auto_set = False, enter_set = True)
+                 label="E",
+                 desc="Young's Modulus Matrix",
+                 auto_set=False, enter_set=True)
     Am = Float(1., #34e+3,
-                 label = "A",
-                 desc = "Cross Section Matrix",
-                 auto_set = False, enter_set = True)
+                 label="A",
+                 desc="Cross Section Matrix",
+                 auto_set=False, enter_set=True)
     G = Float(1., #34e+3,
-                 label = "G",
-                 desc = "Shear Stiffness",
-                 auto_set = False, enter_set = True)
-    bond_fn = Trait(MFnLineArray(ydata = [0, 1]),
-                     label = "Bond",
-                     desc = "Bond Function",
-                     auto_set = False)
+                 label="G",
+                 desc="Shear Stiffness",
+                 auto_set=False, enter_set=True)
+    bond_fn = Trait(MFnLineArray(ydata=[0, 1]),
+                     label="Bond",
+                     desc="Bond Function",
+                     auto_set=False)
 
     traits_view = View(Item('Ef'),
                         Item('Af'),
                         Item('Em'),
                         Item('Am'),
                         Item('G'),
-                        Item('bond_fn', editor = mpl_matplotlib_editor),
-                        resizable = True,
-                        scrollable = True,
-                        height = 0.5,
-                        width = 0.5,
-                        buttons = ['OK', 'Cancel']
+                        Item('bond_fn', editor=mpl_matplotlib_editor),
+                        resizable=True,
+                        scrollable=True,
+                        height=0.5,
+                        width=0.5,
+                        buttons=['OK', 'Cancel']
                         )
 
     def _bond_fn_default(self):
-        return MFnLineArray(xdata = [0., 1.], ydata = [0., 1.])
+        return MFnLineArray(xdata=[0., 1.], ydata=[0., 1.])
 
     # This event can be used by the clients to trigger an action upon
     # the completed reconfiguration of the material model
@@ -153,7 +153,7 @@ class MATS1D5Bond(MATSEval):
     # Subsidiary methods realizing configurable features
     #---------------------------------------------------------------------------------------------
 
-    def get_sig_app(self, sctx, eps_app_eng):
+    def get_sig_app(self, sctx, eps_app_eng, *args, **kw):
         # @TODO
         # the stress calculation is performed twice - it might be
         # cached.

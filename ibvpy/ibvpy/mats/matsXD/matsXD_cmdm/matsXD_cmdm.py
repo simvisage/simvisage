@@ -71,43 +71,43 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     symmetrization = Enum("product-type", "sum-type")
 
     regularization = Bool(False,
-                           desc = 'Flag to use the element length projection'
+                           desc='Flag to use the element length projection'
                            ' in the direction of principle strains',
-                           enter_set = True,
-                           auto_set = False)
+                           enter_set=True,
+                           auto_set=False)
 
     elastic_debug = Bool(False,
-                          desc = 'Switch to elastic behavior - used for debugging',
-                          auto_set = False)
+                          desc='Switch to elastic behavior - used for debugging',
+                          auto_set=False)
 
     double_constraint = Bool(False,
-                              desc = 'Use double constraint to evaluate microplane elastic and fracture energy (Option effects only the response tracers)',
-                              auto_set = False)
+                              desc='Use double constraint to evaluate microplane elastic and fracture energy (Option effects only the response tracers)',
+                              auto_set=False)
 
     #---------------------------------------------------------------------------------------------
     # View specification
     #---------------------------------------------------------------------------------------------
 
-    config_param_vgroup = Group(Item('model_version', style = 'custom'),
-                               Item('stress_state', style = 'custom'),
-                               Item('symmetrization', style = 'custom'),
+    config_param_vgroup = Group(Item('model_version', style='custom'),
+                               Item('stress_state', style='custom'),
+                               Item('symmetrization', style='custom'),
                                Item('elastic_debug@'),
                                Item('double_constraint@'),
-                               Spring(resizable = True),
-                               label = 'Configuration parameters',
-                               show_border = True,
-                               dock = 'tab',
-                               id = 'ibvpy.mats.matsXD.MATSXD_cmdm.config',
+                               Spring(resizable=True),
+                               label='Configuration parameters',
+                               show_border=True,
+                               dock='tab',
+                               id='ibvpy.mats.matsXD.MATSXD_cmdm.config',
                                )
 
     traits_view = View(Include('polar_fn_group'),
-                        dock = 'tab',
-                        id = 'ibvpy.mats.matsXD.MATSXD_cmdm',
-                        kind = 'modal',
-                        resizable = True,
-                        scrollable = True,
-                        width = 0.6, height = 0.8,
-                        buttons = ['OK', 'Cancel' ]
+                        dock='tab',
+                        id='ibvpy.mats.matsXD.MATSXD_cmdm',
+                        kind='modal',
+                        resizable=True,
+                        scrollable=True,
+                        width=0.6, height=0.8,
+                        buttons=['OK', 'Cancel' ]
                         )
 
     #-----------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # -----------------------------------------------------------------------------------------------------
     # Get the 3x3-elasticity and compliance matrix (used only for elastic debug)
     # -----------------------------------------------------------------------------------------------------
-    D2_e = Property(depends_on = 'stress_state, E, nu')
+    D2_e = Property(depends_on='stress_state, E, nu')
     @cached_property
     def _get_D2_e(self):
         return self.elasticity_tensors[2]
@@ -156,7 +156,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # the array of microplane normals is implemented 
     # in the dimension-specific subclasses.
     #
-    _MPNN = Property(depends_on = 'n_mp')
+    _MPNN = Property(depends_on='n_mp')
     @cached_property
     def _get__MPNN(self):
         # dyadic product of the microplane normals
@@ -168,11 +168,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     #-----------------------------------------------------------------------------------------------------
     def _get_e_vct_arr(self, eps_eng):
         '''
-        Projects the strain tensor onto the microplanes and returns a list of 
-        microplane strain vectors. Method is used both by stiffness and 
+        Projects the strain tensor onto the microplanes and returns a list of
+        microplane strain vectors. Method is used both by stiffness and
         compliance version to derive the list 'phi_arr' or 'psi_arr'!
-        In case of the compliance version the kinematic constraint is not 
-        assumed in the derivation of the formula for the damage compliance 
+        In case of the compliance version the kinematic constraint is not
+        assumed in the derivation of the formula for the damage compliance
         tensor 'C_mdm', e.g. the construction of the damage effect tensor 'M4'.
         '''
         # Switch from engineering notation to tensor notation for the apparent strains
@@ -186,7 +186,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def _get_e_equiv_arr(self, e_vct_arr):
         '''
-        Returns a list of the microplane equivalent strains 
+        Returns a list of the microplane equivalent strains
         based on the list of microplane strain vectors
         '''
         # magnitude of the normal strain vector for each microplane
@@ -209,7 +209,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def _get_e_max(self, e_equiv_arr, e_max_arr):
         '''
-        Compares the equivalent microplane strain of a single microplane with the 
+        Compares the equivalent microplane strain of a single microplane with the
         maximum strain reached in the loading history for the entire array
         '''
         bool_e_max = e_equiv_arr >= e_max_arr
@@ -226,8 +226,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def _get_state_variables(self, sctx, eps_app_eng):
         '''
-        Compares the list of current equivalent microplane strains with 
-        the values in the state array and returns the higher values 
+        Compares the list of current equivalent microplane strains with
+        the values in the state array and returns the higher values
         '''
         e_vct_arr = self._get_e_vct_arr(eps_app_eng)
         e_equiv_arr = self._get_e_equiv_arr(e_vct_arr)
@@ -284,7 +284,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         phi_eig_value_real = array([ pe.real for pe in phi_eig_value])
         # transform phi_mtx to PDC:
         # (assure that besides the diagonal the entries are exactly zero)
-        phi_pdc_mtx = zeros((n_dim, n_dim), dtype = float)
+        phi_pdc_mtx = zeros((n_dim, n_dim), dtype=float)
         for i in range(n_dim):
             phi_pdc_mtx[i, i] = phi_eig_value_real[i]
         # w_mtx = tensorial square root of the second order damage tensor:
@@ -340,7 +340,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         psi_eig_value_real = array([ pe.real for pe in psi_eig_value])
         # transform phi_mtx to PDC:
         # (assure that besides the diagonal the entries are exactly zero)
-        psi_pdc_mtx = zeros((n_dim, n_dim), dtype = float)
+        psi_pdc_mtx = zeros((n_dim, n_dim), dtype=float)
         for i in range(n_dim):
             psi_pdc_mtx[i, i] = psi_eig_value_real[i]
         # second order damage effect tensor:
@@ -392,11 +392,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # the traits _get_beta_tns and _get_M_tns are are reset
     # depending on the selected type of symmetrization.
 
-    _get_beta_tns = Callable(transient = True)
+    _get_beta_tns = Callable(transient=True)
     def __get_beta_tns_default(self):
         return self._get_damage_eval_methods()[0]
 
-    _get_M_tns = Callable(transient = True)
+    _get_M_tns = Callable(transient=True)
     def __get_M_tns_default(self):
         return self._get_damage_eval_methods()[1]
 
@@ -415,7 +415,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     #-----------------------------------------------------------------------------------------------------
     # Evaluation - get the corrector and predictor
     #-----------------------------------------------------------------------------------------------------
-    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg = None):
+    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg=None):
         '''
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain
@@ -532,7 +532,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def update_state(self, sctx, eps_app_eng):
         '''
-        Update state method is called upon an accepted time-step. 
+        Update state method is called upon an accepted time-step.
         Here just set the flag on to make the update afterwards in the method itself.
         '''
         print 'in update-state'
@@ -544,7 +544,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     def get_eps_app_v3d(self, sctx, eps_app_eng):
         return eps_app_eng
 
-    def get_sig_app_v3d(self, sctx, eps_app_eng):
+    def get_sig_app_v3d(self, sctx, eps_app_eng, *args, **kw):
         # @TODO
         # the stress calculation is performed twice - it might be
         # cached. But not in the spatial integration scheme.
@@ -554,7 +554,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     def get_eps_app(self, sctx, eps_app_eng):
         return self.map_eps_eng_to_mtx(eps_app_eng)
 
-    def get_sig_app(self, sctx, eps_app_eng):
+    def get_sig_app(self, sctx, eps_app_eng, *args, **kw):
         # @TODO
         # the stress calculation is performed twice - it might be
         # cached. But not in the spatial integration scheme.
@@ -599,7 +599,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         '''
         Projects the stress tensor onto the microplanes and
         returns a list of microplane strain vectors.
-        (Subsidary method for '_get_e_s_vct_arr'.) 
+        (Subsidary method for '_get_e_s_vct_arr'.)
         '''
         # Switch from engineering notation to tensor notation for the apparent strains
         sig_mtx = self.map_sig_eng_to_mtx(sig_eng)
@@ -614,8 +614,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def _get_s_equiv_arr(self, s_vct_arr):
         '''
-        Get microplane equivalent stress. 
-        (Subsidary method for '_get_e_s_equiv_arr'.) 
+        Get microplane equivalent stress.
+        (Subsidary method for '_get_e_s_equiv_arr'.)
         '''
         # The same method is used to calculate the equivalent stresses
         # and the equivalent strains
@@ -626,7 +626,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def _get_e_N_arr(self, e_vct_arr):
         '''
-        Returns a list of the microplane normal strains (scalar) 
+        Returns a list of the microplane normal strains (scalar)
         based on the list of microplane strain vectors
         (Subsidary method for '_get_e_s_N_arr'.) '''
         # magnitude of the normal strain vector for each microplane
@@ -649,7 +649,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         '''
         Returns a list of the microplane shear strains (scalar)
         based on the list of microplane strain vectors
-        (Subsidary method for '_get_e_s_T_arr'.) 
+        (Subsidary method for '_get_e_s_T_arr'.)
         '''
         # magnitude of the normal strain vector for each microplane
         e_N_arr = self._get_e_N_arr(e_vct_arr)
@@ -675,7 +675,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # -------------------------------------------------------------    
     def _get_e_s_vct_arr(self, sctx, eps_app_eng):
         '''
-        Returns two arrays containing the microplane strain and stress vectors 
+        Returns two arrays containing the microplane strain and stress vectors
         either assuming a double constraint or consistently derived based on the specified model version
         '''
         #----------------------------------------------------------------------------
@@ -683,10 +683,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         #----------------------------------------------------------------------------
         if self.double_constraint:
             '''
-            Return a pair of microplane stress and strain vectors based on the 
+            Return a pair of microplane stress and strain vectors based on the
             double constrain, i.e kinematic AND static constraint !
             The connection between the apparent strain and stress tensor is established
-            with D_mdm based on the chosen model version (e.g. stiffness or compliance) 
+            with D_mdm based on the chosen model version (e.g. stiffness or compliance)
             '''
             # microplane strain vectors obtained by projection (kinematic constraint):
             e_app_vct_arr = self._get_e_vct_arr(eps_app_eng)
@@ -700,7 +700,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # CONSISTENTLY DERIVED pair of microplane strain and stress vectors
         #----------------------------------------------------------------------------
         '''
-        Returns two arrays containing the microplane strain and stress vectors 
+        Returns two arrays containing the microplane strain and stress vectors
         consistently derived based on the specified model version, i.e. either 'stiffness' or 'compliance'
         '''
         #-------------------
@@ -798,7 +798,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # N: normal microplane strain and stresses:
     def _get_e_s_N_arr(self, sctx, eps_app_eng):
         '''
-        Returns two arrays containing the corresponding normal 
+        Returns two arrays containing the corresponding normal
         microplane strains and stress components.
         '''
         e_app_vct_arr, s_app_vct_arr = self._get_e_s_vct_arr(sctx, eps_app_eng)
@@ -810,14 +810,14 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def get_e_N_arr(self, sctx, eps_app_eng):
         '''
-        Return a list of normal microplane strains components. 
+        Return a list of normal microplane strains components.
         '''
         e_N_arr, s_N_arr = self._get_e_s_N_arr(sctx, eps_app_eng)
         return e_N_arr
 
     def get_s_N_arr(self, sctx, eps_app_eng):
         '''
-        Return a list of normal microplane stresses components. 
+        Return a list of normal microplane stresses components.
         '''
         e_N_arr, s_N_arr = self._get_e_s_N_arr(sctx, eps_app_eng)
         return s_N_arr
@@ -825,8 +825,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # T: tangential microplane strain and stresses:
     def _get_e_s_T_arr(self, sctx, eps_app_eng):
         '''
-        Returns two arrays containing the corresponding tangential 
-        microplane strains and stress components. 
+        Returns two arrays containing the corresponding tangential
+        microplane strains and stress components.
         '''
         e_app_vct_arr, s_app_vct_arr = self._get_e_s_vct_arr(sctx, eps_app_eng)
         # shear strain for each microplane
@@ -837,14 +837,14 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def get_e_T_arr(self, sctx, eps_app_eng):
         '''
-        Return a list of tangential microplane strains components. 
+        Return a list of tangential microplane strains components.
         '''
         e_T_arr, s_T_arr = self._get_e_s_T_arr(sctx, eps_app_eng)
         return e_T_arr
 
     def get_s_T_arr(self, sctx, eps_app_eng):
         '''
-        Return a list of tangential microplane stresses components. 
+        Return a list of tangential microplane stresses components.
         '''
         e_T_arr, s_T_arr = self._get_e_s_T_arr(sctx, eps_app_eng)
         return s_T_arr
@@ -874,11 +874,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         '''
         Get the macroscopic fracture energy as a weighted sum of all mircoplane contributions
         '''
-        e_vct_arr, s_vct_arr = self._get_e_s_vct_arr( sctx, eps_app_eng )
+        e_vct_arr, s_vct_arr = self._get_e_s_vct_arr(sctx, eps_app_eng)
 
         ### N: normal components
         # integral under the stress-strain curve
-        E_tN = trapz( e_app_vct_arr[:,0], s_app_vct_arr[:,0] )
+        E_tN = trapz(e_app_vct_arr[:, 0], s_app_vct_arr[:, 0])
         # area of the stored elastic energy  
         U_tN = 0.5 * _ydata_integ[-1] * _xdata_emax[-1]
 #        print 'E_t', E_t
@@ -886,8 +886,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'E_t - U_t', E_t - U_t
         return E_t - U_t
 
-        
-        
+
+
         e_max_arr = self._get_state_variables(sctx, eps_app_eng)
         fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
         fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
@@ -914,7 +914,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'e_equiv_arr:  ', e_equiv_arr
         return e_equiv_arr
 
-    def get_omega_mtx(self, sctx, eps_app_eng):
+    def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):
         '''
         Returns the 2nd order damage tensor 'phi_mtx'
         '''
@@ -928,7 +928,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # sum of contributions from all microplanes
         # sum over the first dimension (over the microplanes)
         omega_mtx = omega_mtx_arr.sum(0)
-        
+
         return omega_mtx
 ###
 
@@ -946,24 +946,24 @@ class MATSXDMicroplaneDamage(PolarDiscr):
                  'phi_mtx'                  : self.get_phi_mtx,
                  'omega_mtx'                : self.get_omega_mtx,
                  'phi_pdc'                  : self.get_phi_pdc,
-                 'microplane_damage'        : RTraceEval(eval = self.get_microplane_integrity,
-                                                          ts = self),
+                 'microplane_damage'        : RTraceEval(eval=self.get_microplane_integrity,
+                                                          ts=self),
 
-                 'e_equiv_arr' : RTraceEval(eval = self.get_e_equiv_arr,
-                                             ts = self),
-                 's_equiv_arr' : RTraceEval(eval = self.get_s_equiv_arr,
-                                             ts = self),
-                 'e_N_arr'     : RTraceEval(eval = self.get_e_N_arr,
-                                             ts = self),
-                 's_N_arr'     : RTraceEval(eval = self.get_s_N_arr,
-                                             ts = self),
-                 'e_T_arr'     : RTraceEval(eval = self.get_e_T_arr,
-                                             ts = self),
-                 's_T_arr'     : RTraceEval(eval = self.get_s_T_arr,
-                                             ts = self),
+                 'e_equiv_arr' : RTraceEval(eval=self.get_e_equiv_arr,
+                                             ts=self),
+                 's_equiv_arr' : RTraceEval(eval=self.get_s_equiv_arr,
+                                             ts=self),
+                 'e_N_arr'     : RTraceEval(eval=self.get_e_N_arr,
+                                             ts=self),
+                 's_N_arr'     : RTraceEval(eval=self.get_s_N_arr,
+                                             ts=self),
+                 'e_T_arr'     : RTraceEval(eval=self.get_e_T_arr,
+                                             ts=self),
+                 's_T_arr'     : RTraceEval(eval=self.get_s_T_arr,
+                                             ts=self),
 
-                 'equiv_projection'         : RTraceEval(eval = self.get_e_equiv_projection,
-                                                          ts = self),
+                 'equiv_projection'         : RTraceEval(eval=self.get_e_equiv_projection,
+                                                          ts=self),
                  'fracture_energy_arr'      : self.get_fracture_energy_arr,
                  'fracture_energy'          : self.get_fracture_energy
                  }
@@ -986,55 +986,55 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             MATS2DMicroplaneDamageTraceEtmac, MATS2DMicroplaneDamageTraceUtmac
 
         c['rtrace_list'] += [
-               RTraceGraph(name = 'time - microplane damage',
-                           var_x = 'time', idx_x = 0,
-                           var_y = 'microplane_damage', idx_y = 0,
-                           update_on = 'update'),
+               RTraceGraph(name='time - microplane damage',
+                           var_x='time', idx_x=0,
+                           var_y='microplane_damage', idx_y=0,
+                           update_on='update'),
 
                # e_equiv, s_equiv
-               RTraceGraph(name = 'e_equiv - s_equiv',
-                           var_x = 'e_equiv_arr', idx_x = 0,
-                           var_y = 's_equiv_arr', idx_y = 0,
-                           update_on = 'update'),
+               RTraceGraph(name='e_equiv - s_equiv',
+                           var_x='e_equiv_arr', idx_x=0,
+                           var_y='s_equiv_arr', idx_y=0,
+                           update_on='update'),
 
                # e_N, s_N:            
-               RTraceGraph(name = 'e_N - s_N',
-                           var_x = 'e_N_arr', idx_x = 0,
-                           var_y = 's_N_arr', idx_y = 0,
-                           update_on = 'update'),
+               RTraceGraph(name='e_N - s_N',
+                           var_x='e_N_arr', idx_x=0,
+                           var_y='s_N_arr', idx_y=0,
+                           update_on='update'),
 
                # e_T, s_T:            
-               RTraceGraph(name = 'e_T - s_T',
-                           var_x = 'e_T_arr', idx_x = 0,
-                           var_y = 's_T_arr', idx_y = 0,
-                           update_on = 'update'),
+               RTraceGraph(name='e_T - s_T',
+                           var_x='e_T_arr', idx_x=0,
+                           var_y='s_T_arr', idx_y=0,
+                           update_on='update'),
 
-               RTraceArraySnapshot(name = 'equiv_projection',
-                                   var = 'equiv_projection',
-                                   record_on = 'update'),
+               RTraceArraySnapshot(name='equiv_projection',
+                                   var='equiv_projection',
+                                   record_on='update'),
 
-               RTraceArraySnapshot(name = 'microplane damage',
-                                   var = 'microplane_damage',
-                                   record_on = 'update'),
+               RTraceArraySnapshot(name='microplane damage',
+                                   var='microplane_damage',
+                                   record_on='update'),
 
-               RTraceArraySnapshot(name = 'e_equiv',
-                                   var = 'e_equiv_arr',
-                                   record_on = 'update'),
-               RTraceArraySnapshot(name = 's_equiv',
-                                   var = 's_equiv_arr',
-                                   record_on = 'update'),
-               RTraceArraySnapshot(name = 'e_N',
-                                   var = 'e_N_arr',
-                                   record_on = 'update'),
-               RTraceArraySnapshot(name = 's_N',
-                                   var = 's_N_arr',
-                                   record_on = 'update'),
-               RTraceArraySnapshot(name = 'e_T',
-                                   var = 'e_T_arr',
-                                   record_on = 'update'),
-               RTraceArraySnapshot(name = 's_T',
-                                   var = 's_T_arr',
-                                   record_on = 'update'),
+               RTraceArraySnapshot(name='e_equiv',
+                                   var='e_equiv_arr',
+                                   record_on='update'),
+               RTraceArraySnapshot(name='s_equiv',
+                                   var='s_equiv_arr',
+                                   record_on='update'),
+               RTraceArraySnapshot(name='e_N',
+                                   var='e_N_arr',
+                                   record_on='update'),
+               RTraceArraySnapshot(name='s_N',
+                                   var='s_N_arr',
+                                   record_on='update'),
+               RTraceArraySnapshot(name='e_T',
+                                   var='e_T_arr',
+                                   record_on='update'),
+               RTraceArraySnapshot(name='s_T',
+                                   var='s_T_arr',
+                                   record_on='update'),
 
 #                                       # G_f_mic: microplane fracture energy:
 #                                       MATS2DMicroplaneDamageTraceGfmic(name = 'G_f_mic_equiv',
@@ -1078,21 +1078,21 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
                # direction 11:                  
                # G_f_mac: macroscopic fracture energy:
-               MATS2DMicroplaneDamageTraceGfmac(name = 'G_f_mac_11',
+               MATS2DMicroplaneDamageTraceGfmac(name='G_f_mac_11',
 
-                                                var_x = 'eps_app', idx_x = 0,
-                                                var_y = 'sig_app', idx_y = 0,
-                                                update_on = 'update'),
+                                                var_x='eps_app', idx_x=0,
+                                                var_y='sig_app', idx_y=0,
+                                                update_on='update'),
                # E_t_mac: macroscopic total energy:
-               MATS2DMicroplaneDamageTraceEtmac(name = 'E_t_mac_11',
-                                                var_x = 'eps_app', idx_x = 0,
-                                                var_y = 'sig_app', idx_y = 0,
-                                                update_on = 'update'),
+               MATS2DMicroplaneDamageTraceEtmac(name='E_t_mac_11',
+                                                var_x='eps_app', idx_x=0,
+                                                var_y='sig_app', idx_y=0,
+                                                update_on='update'),
                # U_t_mac: macroscopic elastic energy:
-               MATS2DMicroplaneDamageTraceUtmac(name = 'U_t_mac_11',
-                                                var_x = 'eps_app', idx_x = 0,
-                                                var_y = 'sig_app', idx_y = 0,
-                                                update_on = 'update'),
+               MATS2DMicroplaneDamageTraceUtmac(name='U_t_mac_11',
+                                                var_x='eps_app', idx_x=0,
+                                                var_y='sig_app', idx_y=0,
+                                                update_on='update'),
 
 #                                       # direction 22:
 #                                       # G_f_mac: macroscopic fracture energy:
@@ -1139,10 +1139,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #                          var_y = 'fracture_energy', idx_y = 0,
 #                          record_on = 'update' ),
 #                                     ###
-               RTraceGraph(name = 'time - sig_norm',
-                           var_x = 'time', idx_x = 0,
-                           var_y = 'sig_norm', idx_y = 0,
-                           record_on = 'update'),
+               RTraceGraph(name='time - sig_norm',
+                           var_x='time', idx_x=0,
+                           var_y='sig_norm', idx_y=0,
+                           record_on='update'),
 #                                       RTraceGraph(name = 'time - phi_pdc',
 #                                                   var_x = 'time', idx_x = 0,
 #                                                   var_y = 'phi_pdc', idx_y = 0,
