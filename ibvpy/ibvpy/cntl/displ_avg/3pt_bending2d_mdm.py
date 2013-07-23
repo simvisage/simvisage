@@ -63,9 +63,9 @@ def app():
 #                       nu = 0.2,
 #                       stress_state = "plane_strain" )
 
-    fets_eval = FETS2D4Q8U(mats_eval=mdm)#, ngp_r = 3, ngp_s = 3)                                               
+    fets_eval = FETS2D4Q(mats_eval=mdm)#, ngp_r = 3, ngp_s = 3)                                               
 
-    n_el_x = 60
+    n_el_x = 20 # 60
     # Discretization
     fe_grid = FEGrid(coord_max=(.6, .15, 0.),
                       shape=(n_el_x, n_el_x / 4),
