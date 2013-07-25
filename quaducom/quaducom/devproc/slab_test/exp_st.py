@@ -284,26 +284,41 @@ class ExpST(ExType):
 
     n_fit_window_fraction = Float(0.1)
 
+    max_force_idx = Property(Int)
+    def _get_max_force_idx(self):
+        '''get the index of the maximum force'''
+        return argmax(-self.Kraft)
+
+    f_asc = Property(Array)
+    def _get_f_asc(self):
+        '''get only the ascending branch of the response curve'''
+        return -self.Kraft[:self.max_force_idx + 1]
+        
+    w_asc = Property(Array)
+    def _get_w_asc(self):
+        '''get only the ascending branch of the response curve'''
+        return -self.WA_M[:self.max_force_idx + 1]
+
+    n_points = Property(Int)
+    def _get_n_points(self):
+        return int(self.n_fit_window_fraction * len(self.w_asc))
+        
+    f_smooth = Property()
+    def _get_f_smooth(self):
+        return smooth(self.f_asc, self.n_points, 'flat')
+
+    w_smooth = Property()
+    def _get_w_smooth(self):
+        return smooth(self.w_asc, self.n_points, 'flat')
+
+#    def _plot_smoothed_force_deflection_center(self):
+
+
     def _plot_smoothed_force_deflection_center(self, axes):
-
-        # get the index of the maximum stress
-        max_force_idx = argmax(-self.Kraft)
-        # get only the ascending branch of the response curve
-        f_asc = -self.Kraft[:max_force_idx + 1]
-        w_asc = -self.WA_M[:max_force_idx + 1]
-
-        f_max = f_asc[-1]
-        w_max = w_asc[-1]
-
-        n_points = int(self.n_fit_window_fraction * len(w_asc))
-        f_smooth = smooth(f_asc, n_points, 'flat')
-        w_smooth = smooth(w_asc, n_points, 'flat')
-
-        axes.plot(w_smooth, f_smooth, color = 'blue', linewidth = 2)
-
-        secant_stiffness_w10 = (f_smooth[10] - f_smooth[0]) / (w_smooth[10] - w_smooth[0])
-        w0_lin = array([0.0, w_smooth[10] ], dtype = 'float_')
-        f0_lin = array([0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_')
+        axes.plot(self.w_smooth, self.f_smooth, color = 'blue', linewidth = 2)
+#        secant_stiffness_w10 = (f_smooth[10] - f_smooth[0]) / (w_smooth[10] - w_smooth[0])
+#        w0_lin = array([0.0, w_smooth[10] ], dtype = 'float_')
+#        f0_lin = array([0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_')
 
         #axes.plot( w0_lin, f0_lin, color = 'black' )
 

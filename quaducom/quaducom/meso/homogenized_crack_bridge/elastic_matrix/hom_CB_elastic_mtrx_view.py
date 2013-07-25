@@ -286,9 +286,9 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    #profile(1.0)
-    w = np.linspace(0.0, 5.6, 100)
-    sigma_c_w(w)
+    profile(1.0)
+    #w = np.linspace(0.0, 5.6, 100)
+    #sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)

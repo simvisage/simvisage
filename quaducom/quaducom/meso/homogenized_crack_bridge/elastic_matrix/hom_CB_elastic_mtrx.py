@@ -230,7 +230,7 @@ class CompositeCrackBridge(HasTraits):
             # some fibers are debonded up to Lmin, some are not
             # boundary condition position
             idx1 = np.sum(a1 <= Lmin)
-            print 'a1', a1
+            print a1
             # a(T) for one sided pullout
             # first debonded length amin for one sided PO
             depsfLmin = self.sorted_depsf[idx1]

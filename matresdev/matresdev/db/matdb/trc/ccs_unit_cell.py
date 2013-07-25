@@ -227,8 +227,8 @@ class CCSUnitCell(SimDBClass):
         print 'new function added'
 
     def get_param(self, material_model, calibration_test):
-        print 'damage_function_list[0].calibration_test', self.damage_function_list[0].calibration_test
-        print 'damage_function_list[0].material_model', self.damage_function_list[0].material_model
+        print 'material_model', material_model
+        print 'calibration_test', calibration_test
         for mp_entry in self.damage_function_list:
             if (mp_entry.material_model == material_model and
                  mp_entry.calibration_test == calibration_test):
