@@ -13,7 +13,8 @@ from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
 import copy
 from scm_interdependent_fibers_model import SCM
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, WeibullFibers
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
+from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 
@@ -131,12 +132,12 @@ if __name__ == '__main__':
                                 distribution='Weibull'
                                )
 
-    reinf = Reinforcement(r=0.00345,
-                          tau=RV('weibull_min', shape=1.5, scale=.2),
+    reinf = ContinuousFibers(r=0.00345,
+                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
                           V_f=0.0103,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
-                          n_int=50,
+                          xi=WeibullFibers(shape=4.3, sV0=0.00295),
+                          n_int=200,
                           label='carbon')
 
     scm = SCM(length=length,

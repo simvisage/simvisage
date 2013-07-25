@@ -11,7 +11,7 @@ can be used by the composite crack bridge model.
 import numpy as np
 from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
-    Float, Property, Int, Str
+    Float, Property, Int, Str, on_trait_change
 from types import FloatType
 from util.traits.either_type import EitherType
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
@@ -26,6 +26,12 @@ class Reinforcement(HasTraits):
     xi = EitherType(klasses=[FloatType, RV, WeibullFibers])
     tau = EitherType(klasses=[FloatType, RV])
     n_int = Int
+
+    @on_trait_change('n_int')
+    def check(self):
+        if self.n_int < 50:
+            print 'Warning: integration with', self.n_int, 'points might not be precise enough.'
+            print 'A minimum of 50 integration points is recommended'
 
 
 class ContinuousFibers(Reinforcement):

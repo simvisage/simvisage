@@ -218,12 +218,20 @@ if __name__ == '__main__':
     reinf = ContinuousFibers(r=RV('uniform', loc=.005, scale=.01),
                           tau=RV('uniform', loc=.05, scale=.1),
                           xi=WeibullFibers(shape=20., sV0=0.003),
-                          V_f=0.3, E_f=200e3, n_int=40)
+                          V_f=0.3, E_f=200e3, n_int=50)
+
+    reinf = ContinuousFibers(r=0.00345,
+                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
+                          V_f=0.00103,
+                          E_f=170e3,
+                          xi=WeibullFibers(shape=4.3, sV0=0.00295),
+                          n_int=200,
+                          label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1000.,
-                                 Lr=1000.)
+                                 Ll=2000.,
+                                 Lr=2000.)
 
     ccb_view = CompositeCrackBridgeView(model=model)
     #ccb_view.apply_load(1.)
@@ -239,7 +247,7 @@ if __name__ == '__main__':
         sigma_c_arr, u_arr = ccb_view.sigma_c_arr(w_arr, u=True)
         plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
         plt.ylabel('$\sigma_c$ [MPa]')
         plt.legend(loc='best')
@@ -278,8 +286,8 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    #profile(0.025)
-    w = np.linspace(0.0, .6, 100)
+    #profile(1.0)
+    w = np.linspace(0.0, 5.6, 100)
     sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)

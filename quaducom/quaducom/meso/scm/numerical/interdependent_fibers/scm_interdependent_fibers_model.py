@@ -26,7 +26,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 import copy
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, WeibullFibers
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
+from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 from spirrid.rv import RV
@@ -231,11 +232,11 @@ class SCM(HasTraits):
                   cbi.position == float(crack_position)][0]
             sigc = cb.get_sigma_c_x(self.load_sigma_c).flatten()
             new_sigc_max = np.max(sigc[np.isnan(sigc) == False])
-#             plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
-#             plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)
-#             plt.ylim(0,0.0008)
-#             plt.show()
+#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
+#            plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)
+#            plt.ylim(0,0.0008)
+#            plt.show()
             if new_sigc_max < sigc_max:
                 sigc_max = new_sigc_max
             if float(crack_position) == last_pos:
@@ -261,12 +262,20 @@ if __name__ == '__main__':
                                 distribution='Weibull'
                                )
 
-    reinf = Reinforcement(r=0.01,
+    reinf = ContinuousFibers(r=0.01,
                           tau=RV('weibull_min', shape=1.5, scale=.03),
                           V_f=0.1,
                           E_f=200e3,
                           xi=WeibullFibers(shape=5., sV0=10.00618983207723),
                           n_int=50,
+                          label='carbon')
+
+    reinf = ContinuousFibers(r=0.00345,
+                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
+                          V_f=0.0103,
+                          E_f=200e3,
+                          xi=WeibullFibers(shape=4.3, sV0=0.00295),
+                          n_int=200,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
