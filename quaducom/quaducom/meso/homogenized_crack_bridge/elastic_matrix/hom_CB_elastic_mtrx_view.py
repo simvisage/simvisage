@@ -110,6 +110,19 @@ class CompositeCrackBridgeView(ModelView):
             sigma_c.append(self.sigma_c)
         return epsm, mu_epsf, np.array(sigma_c)
 
+    def w_x_res(self, w_arr):
+        epsm = np.zeros((len(w_arr), len(self.x_arr) - 2))
+        mu_epsf = np.zeros((len(w_arr), len(self.x_arr) - 2))
+        x = np.zeros((len(w_arr), len(self.x_arr) - 2))
+        sigma_c = np.zeros((len(w_arr), len(self.x_arr) - 2))
+        for i, w in enumerate(w_arr):
+            self.model.w = w
+            epsm[i,:] = self.epsm_arr[1:-1]
+            mu_epsf[i,:] = self.mu_epsf_arr[1:-1]
+            x[i,:] = self.x_arr[1:-1]
+            sigma_c[i,:] = self.sigma_c
+        return epsm, mu_epsf, x, sigma_c
+
     def apply_load(self, sigma):
         def residuum(w):
             self.model.w = float(w)
@@ -221,17 +234,17 @@ if __name__ == '__main__':
                           V_f=0.3, E_f=200e3, n_int=50)
 
     reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
-                          V_f=0.00103,
-                          E_f=170e3,
-                          xi=WeibullFibers(shape=4.3, sV0=0.00295),
+                          tau=RV('uniform', loc=0.0, scale=.04),
+                          V_f=0.0103,
+                          E_f=200e3,
+                          xi=WeibullFibers(shape=4.3, sV0=10.00295),
                           n_int=200,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=2000.,
-                                 Lr=2000.)
+                                 Ll=53.,
+                                 Lr=200.)
 
     ccb_view = CompositeCrackBridgeView(model=model)
     #ccb_view.apply_load(1.)
@@ -287,7 +300,7 @@ if __name__ == '__main__':
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
     profile(1.0)
-    #w = np.linspace(0.0, 5.6, 100)
+    #w = np.linspace(0.0, 1., 100)
     #sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)

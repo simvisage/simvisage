@@ -133,10 +133,10 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
+                          tau=RV('uniform', loc=0.0, scale=.04),
                           V_f=0.0103,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=4.3, sV0=0.00295),
+                          xi=WeibullFibers(shape=4.3, sV0=10.00295),
                           n_int=200,
                           label='carbon')
 
@@ -161,11 +161,11 @@ if __name__ == '__main__':
         plt.legend(loc='best')
         plt.xlabel('composite strain [-]')
         plt.ylabel('composite stress [MPa]')
-        plt.figure()
-        plt.hist(scm_view.crack_widths(16.), bins=20, label='load = 20 MPa')
-        plt.hist(scm_view.crack_widths(13.), bins=20, label='load = 15 MPa')
-        plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
-        plt.legend(loc='best')
+#         plt.figure()
+#         plt.hist(scm_view.crack_widths(16.), bins=20, label='load = 20 MPa')
+#         plt.hist(scm_view.crack_widths(13.), bins=20, label='load = 15 MPa')
+#         plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
+#         plt.legend(loc='best')
         plt.figure()
         plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean,
                  color='green', lw=2, label='mean crack width')
