@@ -110,7 +110,7 @@ class CompositeCrackBridgeView(ModelView):
             sigma_c.append(self.sigma_c)
         return epsm, mu_epsf, np.array(sigma_c)
 
-    def w_x_res(self, w_arr, ll, lr):
+    def w_x_res(self, w_arr, ll, lr, maxBC):
         self.model.Ll = ll
         self.model.Lr = lr
         epsm = np.array([])
@@ -119,10 +119,10 @@ class CompositeCrackBridgeView(ModelView):
         sigma_c = np.array([])
         for i, w in enumerate(w_arr):
             self.model.w = w
-            epsm = np.hstack((epsm, self.epsm_arr))
-            mu_epsf = np.hstack((mu_epsf, self.mu_epsf_arr))
-            x = np.hstack((x, self.x_arr))
-            sigma_c = np.hstack((sigma_c, np.ones_like(self.x_arr) * self.sigma_c))
+            epsm = np.hstack((epsm, self.epsm_arr[0], self.epsm_arr, self.epsm_arr[-1]))
+            mu_epsf = np.hstack((mu_epsf, self.mu_epsf_arr[0], self.mu_epsf_arr, self.mu_epsf_arr[-1]))
+            x = np.hstack((x, -maxBC, self.x_arr, maxBC))
+            sigma_c = np.hstack((sigma_c, np.ones(len(self.x_arr) + 2) * self.sigma_c))
         return sigma_c, x, mu_epsf, epsm
 
     def apply_load(self, sigma):

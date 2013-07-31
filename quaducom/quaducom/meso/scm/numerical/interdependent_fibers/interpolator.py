@@ -272,7 +272,7 @@ class Interpolator(HasTraits):
                     sigma_c_max, wmax = self.max_sigma_w(lmin, lmax)
                     w_arr = np.linspace(0.0, wmax, self.n_w)
 
-                    mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax)
+                    mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax, self.BC_range[-1])
                     mask = np.where(mu_sigma_c <= sigma_c_max, 1, np.NaN)
                     epsm = epsm * mask
                     mu_epsf = mu_epsf * mask
@@ -310,54 +310,124 @@ class Interpolator(HasTraits):
         Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
         Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
 
+        # weight factors for the 4 combinations
         Wminminmaxmin = Wminmin * Wmaxmin
-        Wminminmaxmax = Wminmin * Wmaxmax
         Wminmaxmaxmin = Wminmax * Wmaxmin
+        Wminminmaxmax = Wminmin * Wmaxmax
         Wminmaxmaxmax = Wminmax * Wmaxmax
 
         mask_minminmaxmin = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmin) == 1
-        RES_minminmaxmin = self.result_values[1][mask_minminmaxmin]
+        values_minminmaxmin = self.result_values[1][mask_minminmaxmin]
+        pts_minminmaxmin = self.result_values[0][2:,mask_minminmaxmin]
 
-        points = self.result_values[0][2:,mask_minminmaxmin]
-
-        print points.T.shape, self.result_values[1][mask_minminmaxmin].shape, points_x_sigma_c.shape
-        interp_minminmaxmin = griddata(points.T,
-                                       self.result_values[1][mask_minminmaxmin],
+        interp_minminmaxmin_lin = griddata(pts_minminmaxmin.T,
+                                       values_minminmaxmin,
                                        points_x_sigma_c, method='linear')
-        print interp_minminmaxmin
-        len(self.result_values[1][self.result_values[0][0]==self.BC_range[2]])
-        if Lmin < self.BC_range[0]:
-            lmin = self.BC_range[0]
-        elif Lmin > self.BC_range[0] and Lmin < self.BC_range[-1]:
-            L1 = Lmin - self.BC_range[np.argwhere(Lmin > self.BC_range)[-1]]
-            L2 = self.BC_range[np.argwhere(Lmin < self.BC_range)[0]] - Lmin
-            weight_min1 = L1 / diffs[np.argwhere(Lmin > self.BC_range)[-1]]
-            weight_min2 = L2 / diffs[np.argwhere(Lmin > self.BC_range)[-1]]
-        else:
-            raise ValueError
         
-        L2 = self.BC_range[np.argwhere(Lmin < self.BC_range)[0]] - Lmin
-        F2 = L2/diffs[np.argwhere(Lmin > self.BC_range)[-1]]
-        
-        print F2
-        
-        idxs_min = np.argwhere(self.BC_range < Lmin)
-        if len(idxs_min) == 0:
-            lmin = self.BC_range[0]
-        else:
-            lmin = self.BC_range[idxs_min[-1]]
-        idxs_max = np.argwhere(self.BC_range > Lmax)
-        if len(idxs_max) == 0:
-            lmax = self.BC_range[0]
-        else:
-            lmax = self.BC_range[idxs_min[-1]]
-        return griddata(self.result_values[0].T, self.result_values[1], points_x_sigma_c, method='nearest')
+        values_minminmaxmin = np.nan_to_num(interp_minminmaxmin_lin)
+ 
+        mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
+        values_minmaxmaxmin = self.result_values[1][mask_minmaxmaxmin]
+        pts_minmaxmaxmin = self.result_values[0][2:,mask_minmaxmaxmin]
 
-    def interpolator_epsm(self, points):
-        return griddata(self.result_values[0], self.result_values[2], points, method='linear')
+        interp_minmaxmaxmin_lin = griddata(pts_minmaxmaxmin.T,
+                                       values_minmaxmaxmin,
+                                       points_x_sigma_c, method='linear')
+        
+        values_minmaxmaxmin = np.nan_to_num(interp_minmaxmaxmin_lin)
+        
+        mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minminmaxmax = self.result_values[1][mask_minminmaxmax]
+        pts_minminmaxmax = self.result_values[0][2:,mask_minminmaxmax]
+
+        interp_minminmaxmax_lin = griddata(pts_minminmaxmax.T,
+                                       values_minminmaxmax,
+                                       points_x_sigma_c, method='linear')
+        
+        values_minminmaxmax = np.nan_to_num(interp_minminmaxmax_lin)
+        
+        mask_minmaxmaxmax = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minmaxmaxmax = self.result_values[1][mask_minmaxmaxmax]
+        pts_minmaxmaxmax = self.result_values[0][2:,mask_minmaxmaxmax]
+
+        interp_minmaxmaxmax_lin = griddata(pts_minmaxmaxmax.T,
+                                       values_minmaxmaxmax,
+                                       points_x_sigma_c, method='linear')
+
+        values_minmaxmaxmax = np.nan_to_num(interp_minmaxmaxmax_lin)
+       
+        return Wminminmaxmin * values_minminmaxmin + Wminmaxmaxmin * values_minmaxmaxmin + Wminminmaxmax * values_minminmaxmax + Wminmaxmaxmax * values_minmaxmaxmax
+
+    def interpolator_epsm(self, Ll, Lr, points_x_sigma_c):
+        Lmin = min(Ll, Lr)
+        Lmax = max(Ll, Lr)
+        # interpolation between the BCs
+        diffs = np.diff(self.BC_range)
+        idx_Lminmin = np.argwhere(Lmin > self.BC_range)[-1]
+        idx_Lminmax = np.argwhere(Lmin < self.BC_range)[0]
+        idx_Lmaxmin = np.argwhere(Lmax > self.BC_range)[-1]
+        idx_Lmaxmax = np.argwhere(Lmax < self.BC_range)[0]
+
+        Lminmin = self.BC_range[idx_Lminmin]
+        Lminmax = self.BC_range[idx_Lminmax]
+        Lmaxmin = self.BC_range[idx_Lmaxmin]
+        Lmaxmax = self.BC_range[idx_Lmaxmax]
+
+        Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
+        Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
+
+        Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
+        Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
+
+        # weight factors for the 4 combinations
+        Wminminmaxmin = Wminmin * Wmaxmin
+        Wminmaxmaxmin = Wminmax * Wmaxmin
+        Wminminmaxmax = Wminmin * Wmaxmax
+        Wminmaxmaxmax = Wminmax * Wmaxmax
+
+        mask_minminmaxmin = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmin) == 1
+        values_minminmaxmin = self.result_values[2][mask_minminmaxmin]
+        pts_minminmaxmin = self.result_values[0][2:,mask_minminmaxmin]
+
+        interp_minminmaxmin_lin = griddata(pts_minminmaxmin.T,
+                                       values_minminmaxmin,
+                                       points_x_sigma_c, method='linear')
+        
+        values_minminmaxmin = np.nan_to_num(interp_minminmaxmin_lin)
+ 
+        mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
+        values_minmaxmaxmin = self.result_values[2][mask_minmaxmaxmin]
+        pts_minmaxmaxmin = self.result_values[0][2:,mask_minmaxmaxmin]
+
+        interp_minmaxmaxmin_lin = griddata(pts_minmaxmaxmin.T,
+                                       values_minmaxmaxmin,
+                                       points_x_sigma_c, method='linear')
+        
+        values_minmaxmaxmin = np.nan_to_num(interp_minmaxmaxmin_lin)
+        
+        mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minminmaxmax = self.result_values[2][mask_minminmaxmax]
+        pts_minminmaxmax = self.result_values[0][2:,mask_minminmaxmax]
+
+        interp_minminmaxmax_lin = griddata(pts_minminmaxmax.T,
+                                       values_minminmaxmax,
+                                       points_x_sigma_c, method='linear')
+        
+        values_minminmaxmax = np.nan_to_num(interp_minminmaxmax_lin)
+        
+        mask_minmaxmaxmax = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minmaxmaxmax = self.result_values[2][mask_minmaxmaxmax]
+        pts_minmaxmaxmax = self.result_values[0][2:,mask_minmaxmaxmax]
+
+        interp_minmaxmaxmax_lin = griddata(pts_minmaxmaxmax.T,
+                                       values_minmaxmaxmax,
+                                       points_x_sigma_c, method='linear')
+
+        values_minmaxmaxmax = np.nan_to_num(interp_minmaxmaxmax_lin)
+       
+        return Wminminmaxmin * values_minminmaxmin + Wminmaxmaxmin * values_minmaxmaxmin + Wminminmaxmax * values_minminmaxmax + Wminmaxmaxmax * values_minmaxmaxmax
 
 if __name__ == '__main__':
-    from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.002, scale=0.002),
@@ -371,17 +441,16 @@ if __name__ == '__main__':
 
     ir = Interpolator(CB_model=CB_model,
                              load_sigma_c_arr=np.linspace(0.0, 25., 50),
-                             n_w=10,
+                             n_w=50,
                              n_BC=3,
-                             n_x=20,
+                             n_x=200,
                              length=500.
                              )
     pts = np.array([[0.0, 10.0]]) * np.ones((30,1))
-    pts[:,0] = np.linspace(-20., 20, 30)
-    print pts
+    pts[:,0] = np.linspace(-5.5, 6.5, 30)
 
-    epsf = ir.interpolator_mu_epsf(1.5, 2.5, pts)
-    plt.plot(np.linspace(-20., 20, 300), epsf)
+    epsf = ir.interpolator_epsm(5.5, 6.5, pts)
+    plt.plot(np.linspace(-5.5, 6.5, 30), epsf)
     plt.show()
 
     def plot():
