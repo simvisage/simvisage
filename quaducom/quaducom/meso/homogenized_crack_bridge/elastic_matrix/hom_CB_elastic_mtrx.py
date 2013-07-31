@@ -18,10 +18,9 @@ from etsproxy.traits.api import HasTraits, cached_property, \
 from types import FloatType
 from reinforcement import Reinforcement, ContinuousFibers
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
-from scipy.optimize import fsolve, broyden2, root
+from scipy.optimize import root
 import time as t
 from scipy.integrate import cumtrapz
-from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
 
 class CompositeCrackBridge(HasTraits):
@@ -204,6 +203,7 @@ class CompositeCrackBridge(HasTraits):
             em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
             epsf0 = (self.sorted_depsf/2. * (Lmin**2 + Lmax**2) +
                      self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
+
         elif Lmin < a1[0] and Lmax >= a1[0]:
             # all fibers debonded up to Lmin but not up to Lmax
             amin = -Lmin + np.sqrt(2 * Lmin**2 + 2*self.w / (self.sorted_depsf[0] + init_dem))
@@ -327,27 +327,20 @@ class CompositeCrackBridge(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-#    reinf1 = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
-#                          tau=RV('uniform', loc=1., scale=1.),
-#                          V_f=0.2,
-#                          E_f=70e3,
-#                          xi=100.,#RV('weibull_min', shape=50., scale=100.),
-#                          n_int=5,
-#                          label='AR glass')
 
     reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('piecewise_uniform', shape=0.0, scale=1.0),
-                          V_f=0.00103,
-                          E_f=170e3,
-                          xi=WeibullFibers(shape=4.3, sV0=10.00295),
-                          n_int=50,
+                          tau=RV('uniform', loc=0.01, scale=0.1),
+                          V_f=0.0111,
+                          E_f=180e3,
+                          xi=WeibullFibers(shape=4., sV0=0.0025),
+                          n_int=100,
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=200,
-                                 Lr=40.,
-                                 w=1.0)
+                                 Ll=1.,
+                                 Lr=1.,
+                                 w=1e-15)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')

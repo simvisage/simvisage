@@ -110,18 +110,20 @@ class CompositeCrackBridgeView(ModelView):
             sigma_c.append(self.sigma_c)
         return epsm, mu_epsf, np.array(sigma_c)
 
-    def w_x_res(self, w_arr):
-        epsm = np.zeros((len(w_arr), len(self.x_arr) - 2))
-        mu_epsf = np.zeros((len(w_arr), len(self.x_arr) - 2))
-        x = np.zeros((len(w_arr), len(self.x_arr) - 2))
-        sigma_c = np.zeros((len(w_arr), len(self.x_arr) - 2))
+    def w_x_res(self, w_arr, ll, lr):
+        self.model.Ll = ll
+        self.model.Lr = lr
+        epsm = np.array([])
+        mu_epsf = np.array([])
+        x = np.array([])
+        sigma_c = np.array([])
         for i, w in enumerate(w_arr):
             self.model.w = w
-            epsm[i,:] = self.epsm_arr[1:-1]
-            mu_epsf[i,:] = self.mu_epsf_arr[1:-1]
-            x[i,:] = self.x_arr[1:-1]
-            sigma_c[i,:] = self.sigma_c
-        return epsm, mu_epsf, x, sigma_c
+            epsm = np.hstack((epsm, self.epsm_arr))
+            mu_epsf = np.hstack((mu_epsf, self.mu_epsf_arr))
+            x = np.hstack((x, self.x_arr))
+            sigma_c = np.hstack((sigma_c, np.ones_like(self.x_arr) * self.sigma_c))
+        return sigma_c, x, mu_epsf, epsm
 
     def apply_load(self, sigma):
         def residuum(w):
@@ -234,17 +236,17 @@ if __name__ == '__main__':
                           V_f=0.3, E_f=200e3, n_int=50)
 
     reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('uniform', loc=0.0, scale=.04),
+                          tau=RV('uniform', loc=0.0, scale=.02),
                           V_f=0.0103,
-                          E_f=200e3,
-                          xi=WeibullFibers(shape=4.3, sV0=10.00295),
+                          E_f=180e3,
+                          xi=WeibullFibers(shape=4.5, sV0=0.0025),
                           n_int=200,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=53.,
-                                 Lr=200.)
+                                 Ll=1000.,
+                                 Lr=1000.)
 
     ccb_view = CompositeCrackBridgeView(model=model)
     #ccb_view.apply_load(1.)
@@ -299,9 +301,9 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    profile(1.0)
-    #w = np.linspace(0.0, 1., 100)
-    #sigma_c_w(w)
+    #profile(1.0)
+    w = np.linspace(0.0, 2., 100)
+    sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)

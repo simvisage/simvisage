@@ -18,8 +18,9 @@ from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import 
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
-from scipy.optimize import minimize, fminbound, brentq
+from scipy.optimize import minimize, brentq
 import time
+from scipy.interpolate import griddata
 
 def H(x):
     return x >= 0.0
@@ -58,7 +59,6 @@ def orthogonalize_filled(args):
 
 
 class NDIdxInterp(HasTraits):
-
     # nd array of values (measured, computed..) of
     # size orthogonalize(axes_values)
     data = Array
@@ -219,131 +219,173 @@ class Interpolator2(HasTraits):
 
 class Interpolator(HasTraits):
 
-    CB_model = Instance(CompositeCrackBridgeView)
+    CB_model = Instance(CompositeCrackBridge)
     n_w = Int
     n_BC = Int
+    n_x = Int
     load_sigma_c_arr = Array
     length = Float
-    
-    n_x = Property(depends_on='CB_model')
+
+    CB_model_view = Property(Instance(CompositeCrackBridgeView), depends_on='CB_model')
     @cached_property
-    def _get_n_x(self):
-        return len(self.CB_model.x_arr) - 2
-    
+    def _get_CB_model_view(self):
+        for i, reinf in enumerate(self.CB_model.reinforcement_lst):
+            self.CB_model.reinforcement_lst[i].n_int = self.n_x
+        return CompositeCrackBridgeView(model=self.CB_model)
+
     def max_sigma_w(self, Ll, Lr):
-        self.CB_model.model.Ll = Ll
-        self.CB_model.model.Lr = Lr
-        def min_full_sigma_c(w):
-            self.CB_model.model.w = float(w)
-            sigma_c = self.CB_model.sigma_c
-            return - sigma_c
-        wmax_full = minimize(min_full_sigma_c, 0.0, options = dict(maxiter = 10)).x
-        if self.CB_model.sigma_c < self.load_sigma_c_arr[-1]:
-            return self.CB_model.sigma_c, wmax_full
+        self.CB_model_view.model.Ll = Ll
+        self.CB_model_view.model.Lr = Lr
+        max_sigma_c, max_w = self.CB_model_view.sigma_c_max
+        if max_sigma_c < self.load_sigma_c_arr[-1]:
+            return max_sigma_c, max_w
         else:
             def residuum(w):
-                self.CB_model.model.w = float(w)
-                sigma_c = self.CB_model.sigma_c
+                self.CB_model_view.model.w = float(w)
+                sigma_c = self.CB_model_view.sigma_c
                 return self.load_sigma_c_arr[-1] - sigma_c
-            result = brentq(residuum, 0.0, wmax_full)
-            return self.CB_model.sigma_c, result
-    
+            max_w = brentq(residuum, 0.0, max_w)
+            return self.load_sigma_c_arr[-1], max_w
+        
     BC_range = Property(depends_on = 'n_BC, CB_model')
     @cached_property
     def _get_BC_range(self):
         self.max_sigma_w(np.inf, np.inf)
-        Lmax = min(self.CB_model.x_arr[-2], self.length)
+        Lmax = min(self.CB_model_view.x_arr[-2], self.length)
         return np.linspace(1.0, Lmax, self.n_BC)
 
-    result_values = Property(Array)
+    result_values = Property(Array, depends_on='CB_model, load_sigma_c_arr, n_w, n_x, n_BC')
     @cached_property
     def _get_result_values(self):
         L_arr = self.BC_range
-        epsm_w_x = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
-        mu_epsf_w_x = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
-        mu_sigma_c_w = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
-        x_ndim = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
-        L_BC = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
-        R_BC = np.zeros((self.n_w, self.n_x,
-                           self.n_BC, self.n_BC))
+        Lmin_arr = np.array([])
+        Lmax_arr = np.array([])
+        x_arr = np.array([])
+        sigma_c_arr = np.array([])
+        mu_epsf_arr = np.array([])
+        epsm_arr = np.array([])
         loops_tot = self.n_BC ** 2
-        for i, ll in enumerate(L_arr):
-            for j, lr in enumerate(L_arr):
+        for i, lmin in enumerate(L_arr):
+            for j, lmax in enumerate(L_arr):
                 if j >= i:
                     # find maximum
-                    sigma_c_max, wmax = self.max_sigma_w(ll, lr)
+                    sigma_c_max, wmax = self.max_sigma_w(lmin, lmax)
                     w_arr = np.linspace(0.0, wmax, self.n_w)
-                    # 
-                    epsm, mu_epsf, x, mu_sigma_c = self.CB_model.w_x_res(w_arr)
+
+                    mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax)
                     mask = np.where(mu_sigma_c <= sigma_c_max, 1, np.NaN)
                     epsm = epsm * mask
                     mu_epsf = mu_epsf * mask
                     # store the particular result for BC ll and lr into the result array
-                    print mask
-                    epsm_w_x[:, :, i, j] = epsm
-                    epsm_w_x[:, :, j, i] = epsm[:,::-1]
-                    mu_epsf_w_x[:, :, i, j] = mu_epsf
-                    mu_epsf_w_x[:, :, j, i] = mu_epsf[:,::-1]
-                    mu_sigma_c_w[:, :, i, j] = mu_sigma_c
-                    mu_sigma_c_w[:, :, j, i] = mu_sigma_c[:,::-1]
-                    x_ndim[:, :, i, j] = x
-                    x_ndim[:, :, j, i] = x[:,::-1]
+                    Lmin_arr = np.hstack((Lmin_arr, np.ones_like(mu_sigma_c) * lmin))
+                    Lmax_arr = np.hstack((Lmax_arr, np.ones_like(mu_sigma_c) * lmax))
+                    x_arr = np.hstack((x_arr, x))
+                    sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
+                    mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
+                    epsm_arr = np.hstack((epsm_arr, epsm))
                     current_loop = i * len(L_arr) + j + 1
                     print 'progress: %2.1f %%' % \
                     (current_loop / float(loops_tot) * 100.)
-        axes_values = [self.load_sigma_c_arr, self.x_arr, self.BC_range, self.BC_range]
-        interp_epsm = NDIdxInterp(data=epsm_w_x, axes_values=axes_values)
-        interp_epsf = NDIdxInterp(data=mu_epsf_w_x, axes_values=axes_values) 
-        interp_sigmac = NDIdxInterp(data=mu_sigma_c_w, axes_values=axes_values) 
-        return interp_epsm, interp_epsf, interp_sigmac
+        points = np.array([Lmin_arr, Lmax_arr, x_arr, sigma_c_arr])
+        return points, mu_epsf_arr, epsm_arr
 
-    interpolator_epsm = Property(depends_on = 'CB_model, load_sigma_c_max, load_n_sigma_c, n_w, n_x, n_BC')
-    @cached_property
-    def _get_interpolator_epsm(self):
-        return self.result_values[0]
-    
-    interpolator_mu_epsf = Property(depends_on = 'CB_model, load_sigma_c_max, load_n_sigma_c, n_w, n_x, n_BC')
-    @cached_property
-    def _get_interpolator_mu_epsf(self):
-        return self.result_values[1]
-    
-    interpolator_mu_sigma_c = Property(depends_on = 'CB_model, load_sigma_c_max, load_n_sigma_c, n_w, n_x, n_BC')
-    @cached_property
-    def _get_interpolator_mu_sigma_c(self):
-        return self.result_values[2]
+    def interpolator_mu_epsf(self, Ll, Lr, points_x_sigma_c):
+        Lmin = min(Ll, Lr)
+        Lmax = max(Ll, Lr)
+        # interpolation between the BCs
+        diffs = np.diff(self.BC_range)
+        idx_Lminmin = np.argwhere(Lmin > self.BC_range)[-1]
+        idx_Lminmax = np.argwhere(Lmin < self.BC_range)[0]
+        idx_Lmaxmin = np.argwhere(Lmax > self.BC_range)[-1]
+        idx_Lmaxmax = np.argwhere(Lmax < self.BC_range)[0]
+
+        Lminmin = self.BC_range[idx_Lminmin]
+        Lminmax = self.BC_range[idx_Lminmax]
+        Lmaxmin = self.BC_range[idx_Lmaxmin]
+        Lmaxmax = self.BC_range[idx_Lmaxmax]
+
+        Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
+        Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
+
+        Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
+        Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
+
+        Wminminmaxmin = Wminmin * Wmaxmin
+        Wminminmaxmax = Wminmin * Wmaxmax
+        Wminmaxmaxmin = Wminmax * Wmaxmin
+        Wminmaxmaxmax = Wminmax * Wmaxmax
+
+        mask_minminmaxmin = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmin) == 1
+        RES_minminmaxmin = self.result_values[1][mask_minminmaxmin]
+
+        points = self.result_values[0][2:,mask_minminmaxmin]
+
+        print points.T.shape, self.result_values[1][mask_minminmaxmin].shape, points_x_sigma_c.shape
+        interp_minminmaxmin = griddata(points.T,
+                                       self.result_values[1][mask_minminmaxmin],
+                                       points_x_sigma_c, method='linear')
+        print interp_minminmaxmin
+        len(self.result_values[1][self.result_values[0][0]==self.BC_range[2]])
+        if Lmin < self.BC_range[0]:
+            lmin = self.BC_range[0]
+        elif Lmin > self.BC_range[0] and Lmin < self.BC_range[-1]:
+            L1 = Lmin - self.BC_range[np.argwhere(Lmin > self.BC_range)[-1]]
+            L2 = self.BC_range[np.argwhere(Lmin < self.BC_range)[0]] - Lmin
+            weight_min1 = L1 / diffs[np.argwhere(Lmin > self.BC_range)[-1]]
+            weight_min2 = L2 / diffs[np.argwhere(Lmin > self.BC_range)[-1]]
+        else:
+            raise ValueError
+        
+        L2 = self.BC_range[np.argwhere(Lmin < self.BC_range)[0]] - Lmin
+        F2 = L2/diffs[np.argwhere(Lmin > self.BC_range)[-1]]
+        
+        print F2
+        
+        idxs_min = np.argwhere(self.BC_range < Lmin)
+        if len(idxs_min) == 0:
+            lmin = self.BC_range[0]
+        else:
+            lmin = self.BC_range[idxs_min[-1]]
+        idxs_max = np.argwhere(self.BC_range > Lmax)
+        if len(idxs_max) == 0:
+            lmax = self.BC_range[0]
+        else:
+            lmax = self.BC_range[idxs_min[-1]]
+        return griddata(self.result_values[0].T, self.result_values[1], points_x_sigma_c, method='nearest')
+
+    def interpolator_epsm(self, points):
+        return griddata(self.result_values[0], self.result_values[2], points, method='linear')
 
 if __name__ == '__main__':
     from stats.spirrid import make_ogrid as orthogonalize
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.002, scale=0.002),
-                          tau=RV('uniform', loc=0.02, scale=20.),
+                          tau=RV('uniform', loc=0.02, scale=.1),
                           V_f=0.15,
                           E_f=200e3,
-                          xi=WeibullFibers(shape=5., sV0=0.00618983207723),
-                          n_int=50,
+                          xi=WeibullFibers(shape=5., sV0=0.0024),
                           label='carbon')
 
-    model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
-                                 Ll=100.,
-                                 Lr=100.)
+    CB_model = CompositeCrackBridge(E_m=25e3, reinforcement_lst=[reinf])
 
-    ccb_post = CompositeCrackBridgeView(model=model)
-    
-    ir = Interpolator(CB_model = ccb_post,
-                             load_sigma_c_arr = np.linspace(0.0, 25., 50),
-                             n_w = 30,
-                             n_BC = 3
+    ir = Interpolator(CB_model=CB_model,
+                             load_sigma_c_arr=np.linspace(0.0, 25., 50),
+                             n_w=10,
+                             n_BC=3,
+                             n_x=20,
+                             length=500.
                              )
+    pts = np.array([[0.0, 10.0]]) * np.ones((30,1))
+    pts[:,0] = np.linspace(-20., 20, 30)
+    print pts
+
+    epsf = ir.interpolator_mu_epsf(1.5, 2.5, pts)
+    plt.plot(np.linspace(-20., 20, 300), epsf)
+    plt.show()
 
     def plot():
-        
+
         w_arr = np.linspace(0.0, 0.1, 20)
         ll = 2.0
         lr = 5.0
@@ -371,4 +413,4 @@ if __name__ == '__main__':
         m.surf(eps_vars[0], eps_vars[1], sig_c /(25e3*0.85 + 200e3*0.15)*500)
         m.show()
 
-    plot()
+    #plot()
