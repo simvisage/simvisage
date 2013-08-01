@@ -46,12 +46,10 @@ class CB(HasTraits):
     x = Array
     crack_load_sigma_c = Float
 
-    def get_sigma_c_x(self, load):
-        '''
-        sigma_c at load=load
-        returns load if intact or NaN if broken
-        '''
-        return self.interpolator.interpolator_mu_sigma_c(load, 0.0, self.Ll, self.Lr)
+    max_sigma_c = Property(Float, depends_on='Ll, Lr')
+    @cached_property
+    def _get_max_sigma_c(self):
+        return self.interpolator.interpolate_max_sigma_c(self.Ll, self.Lr)
 
     def get_epsf_x_w(self, load):
         '''
@@ -63,7 +61,7 @@ class CB(HasTraits):
         '''
         evaluation of matrix strain profile
         '''
-        return self.interpolator.interpolator_epsm(load, self.x, self.Ll, self.Lr)
+        return self.interpolator.interpolate_epsm(load, self.x, self.Ll, self.Lr)
 
 
 class SCM(HasTraits):
@@ -76,7 +74,7 @@ class SCM(HasTraits):
     nx = Int(desc='number of discretization points')
     CB_model = Instance(CompositeCrackBridge)
     load_sigma_c_arr = Array
-    
+
     interpolator = Instance(Interpolator)
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
@@ -213,8 +211,8 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             cb = [cbi for cbi in cb_list if
                   cbi.position == float(crack_position)][0]
-            sigc = cb.get_sigma_c_x(self.load_sigma_c_arr).flatten()
-            new_sigc_max = np.max(sigc[np.isnan(sigc) == False])
+            sigc = cb.max_sigma_c
+            new_sigc_max = max(sigc, self.load_sigma_c_arr[-1])
 #             plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
 #             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.E_m, color='blue', lw=2)
 #             plt.plot(self.x_arr, self.matrix_strength / self.E_m, color='black', lw=2)

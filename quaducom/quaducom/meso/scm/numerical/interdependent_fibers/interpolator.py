@@ -20,7 +20,8 @@ from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx i
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 from scipy.optimize import minimize, brentq
 import time
-from scipy.interpolate import griddata
+from scipy.interpolate import griddata, interp2d
+from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
 def H(x):
     return x >= 0.0
@@ -246,7 +247,7 @@ class Interpolator(HasTraits):
                 return self.load_sigma_c_arr[-1] - sigma_c
             max_w = brentq(residuum, 0.0, max_w)
             return self.load_sigma_c_arr[-1], max_w
-        
+
     BC_range = Property(depends_on = 'n_BC, CB_model')
     @cached_property
     def _get_BC_range(self):
@@ -265,11 +266,13 @@ class Interpolator(HasTraits):
         mu_epsf_arr = np.array([])
         epsm_arr = np.array([])
         loops_tot = self.n_BC ** 2
+        max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
         for i, lmin in enumerate(L_arr):
             for j, lmax in enumerate(L_arr):
                 if j >= i:
                     # find maximum
                     sigma_c_max, wmax = self.max_sigma_w(lmin, lmax)
+                    max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                     w_arr = np.linspace(0.0, wmax, self.n_w)
 
                     mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax, self.BC_range[-1])
@@ -287,28 +290,33 @@ class Interpolator(HasTraits):
                     print 'progress: %2.1f %%' % \
                     (current_loop / float(loops_tot) * 100.)
         points = np.array([Lmin_arr, Lmax_arr, x_arr, sigma_c_arr])
-        return points, mu_epsf_arr, epsm_arr
+        return points, mu_epsf_arr, epsm_arr, max_sigma_c_arr
 
-    def interpolator_mu_epsf(self, Ll, Lr, points_x_sigma_c):
-        Lmin = min(Ll, Lr)
-        Lmax = max(Ll, Lr)
+    def interpolate(self, Ll, Lr, points_x_sigma_c, idx):
+        Lmin, Lmax = self.get_Lmin_lmax(Ll, Lr)
         # interpolation between the BCs
         diffs = np.diff(self.BC_range)
-        idx_Lminmin = np.argwhere(Lmin > self.BC_range)[-1]
-        idx_Lminmax = np.argwhere(Lmin < self.BC_range)[0]
-        idx_Lmaxmin = np.argwhere(Lmax > self.BC_range)[-1]
-        idx_Lmaxmax = np.argwhere(Lmax < self.BC_range)[0]
+        idx_Lminmin = np.argwhere(Lmin >= self.BC_range)[-1]
+        idx_Lminmax = np.argwhere(Lmin <= self.BC_range)[0]
+        idx_Lmaxmin = np.argwhere(Lmax >= self.BC_range)[-1]
+        idx_Lmaxmax = np.argwhere(Lmax <= self.BC_range)[0]
 
         Lminmin = self.BC_range[idx_Lminmin]
         Lminmax = self.BC_range[idx_Lminmax]
         Lmaxmin = self.BC_range[idx_Lmaxmin]
         Lmaxmax = self.BC_range[idx_Lmaxmax]
 
-        Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
-        Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
+        if Lminmin == Lminmax:
+            Wminmin = Wminmax = 0.5
+        else:
+            Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
+            Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
 
-        Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
-        Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
+        if Lmaxmin == Lmaxmax:
+            Wmaxmin = Wmaxmax = 0.5
+        else:
+            Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
+            Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
 
         # weight factors for the 4 combinations
         Wminminmaxmin = Wminmin * Wmaxmin
@@ -317,115 +325,64 @@ class Interpolator(HasTraits):
         Wminmaxmaxmax = Wminmax * Wmaxmax
 
         mask_minminmaxmin = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmin) == 1
-        values_minminmaxmin = self.result_values[1][mask_minminmaxmin]
-        pts_minminmaxmin = self.result_values[0][2:,mask_minminmaxmin]
+        values_minminmaxmin = self.result_values[idx][mask_minminmaxmin]
+        pts_minminmaxmin = self.result_values[0][2:, mask_minminmaxmin]
 
-        interp_minminmaxmin_lin = griddata(pts_minminmaxmin.T,
+        values_minminmaxmin = griddata(pts_minminmaxmin.T,
                                        values_minminmaxmin,
                                        points_x_sigma_c, method='linear')
-        
-        values_minminmaxmin = np.nan_to_num(interp_minminmaxmin_lin)
  
         mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
-        values_minmaxmaxmin = self.result_values[1][mask_minmaxmaxmin]
-        pts_minmaxmaxmin = self.result_values[0][2:,mask_minmaxmaxmin]
+        values_minmaxmaxmin = self.result_values[idx][mask_minmaxmaxmin]
+        pts_minmaxmaxmin = self.result_values[0][2:, mask_minmaxmaxmin]
 
-        interp_minmaxmaxmin_lin = griddata(pts_minmaxmaxmin.T,
+        values_minmaxmaxmin = griddata(pts_minmaxmaxmin.T,
                                        values_minmaxmaxmin,
                                        points_x_sigma_c, method='linear')
-        
-        values_minmaxmaxmin = np.nan_to_num(interp_minmaxmaxmin_lin)
-        
-        mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
-        values_minminmaxmax = self.result_values[1][mask_minminmaxmax]
-        pts_minminmaxmax = self.result_values[0][2:,mask_minminmaxmax]
 
-        interp_minminmaxmax_lin = griddata(pts_minminmaxmax.T,
+        mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minminmaxmax = self.result_values[idx][mask_minminmaxmax]
+        pts_minminmaxmax = self.result_values[0][2:, mask_minminmaxmax]
+
+        values_minminmaxmax = griddata(pts_minminmaxmax.T,
                                        values_minminmaxmax,
                                        points_x_sigma_c, method='linear')
-        
-        values_minminmaxmax = np.nan_to_num(interp_minminmaxmax_lin)
-        
-        mask_minmaxmaxmax = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmax) == 1
-        values_minmaxmaxmax = self.result_values[1][mask_minmaxmaxmax]
-        pts_minmaxmaxmax = self.result_values[0][2:,mask_minmaxmaxmax]
 
-        interp_minmaxmaxmax_lin = griddata(pts_minmaxmaxmax.T,
+        mask_minmaxmaxmax = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmax) == 1
+        values_minmaxmaxmax = self.result_values[idx][mask_minmaxmaxmax]
+        pts_minmaxmaxmax = self.result_values[0][2:, mask_minmaxmaxmax]
+
+        values_minmaxmaxmax = griddata(pts_minmaxmaxmax.T,
                                        values_minmaxmaxmax,
                                        points_x_sigma_c, method='linear')
 
-        values_minmaxmaxmax = np.nan_to_num(interp_minmaxmaxmax_lin)
-       
-        return Wminminmaxmin * values_minminmaxmin + Wminmaxmaxmin * values_minmaxmaxmin + Wminminmaxmax * values_minminmaxmax + Wminmaxmaxmax * values_minmaxmaxmax
+        interpolated_result = (Wminminmaxmin * values_minminmaxmin +
+                               Wminmaxmaxmin * values_minmaxmaxmin +
+                               Wminminmaxmax * values_minminmaxmax +
+                               Wminmaxmaxmax * values_minmaxmaxmax)
 
-    def interpolator_epsm(self, Ll, Lr, points_x_sigma_c):
+        if Ll <= Lr:
+            return interpolated_result[::-1:]
+        else:
+            return interpolated_result[::::]
+
+    def interpolate_mu_epsf(self, Ll, Lr, points_x_sigma_c):
+        return self.interpolate(Ll, Lr, points_x_sigma_c, 1)
+
+    def interpolate_epsm(self, Ll, Lr, points_x_sigma_c):
+        return self.interpolate(Ll, Lr, points_x_sigma_c, 2)
+
+    def interpolate_max_sigma_c(self, Ll, Lr):
+        Lmin, Lmax = self.get_Lmin_Lmax(Ll, Lr)
+        interp = interp2d(self.BC_range, self.BC_range, self.result_values[3])
+        return interp(Lmin, Lmax)
+
+    def get_Lmin_lmax(self, Ll, Lr):
+        self.result_values
         Lmin = min(Ll, Lr)
         Lmax = max(Ll, Lr)
-        # interpolation between the BCs
-        diffs = np.diff(self.BC_range)
-        idx_Lminmin = np.argwhere(Lmin > self.BC_range)[-1]
-        idx_Lminmax = np.argwhere(Lmin < self.BC_range)[0]
-        idx_Lmaxmin = np.argwhere(Lmax > self.BC_range)[-1]
-        idx_Lmaxmax = np.argwhere(Lmax < self.BC_range)[0]
-
-        Lminmin = self.BC_range[idx_Lminmin]
-        Lminmax = self.BC_range[idx_Lminmax]
-        Lmaxmin = self.BC_range[idx_Lmaxmin]
-        Lmaxmax = self.BC_range[idx_Lmaxmax]
-
-        Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
-        Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
-
-        Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
-        Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
-
-        # weight factors for the 4 combinations
-        Wminminmaxmin = Wminmin * Wmaxmin
-        Wminmaxmaxmin = Wminmax * Wmaxmin
-        Wminminmaxmax = Wminmin * Wmaxmax
-        Wminmaxmaxmax = Wminmax * Wmaxmax
-
-        mask_minminmaxmin = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmin) == 1
-        values_minminmaxmin = self.result_values[2][mask_minminmaxmin]
-        pts_minminmaxmin = self.result_values[0][2:,mask_minminmaxmin]
-
-        interp_minminmaxmin_lin = griddata(pts_minminmaxmin.T,
-                                       values_minminmaxmin,
-                                       points_x_sigma_c, method='linear')
-        
-        values_minminmaxmin = np.nan_to_num(interp_minminmaxmin_lin)
- 
-        mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
-        values_minmaxmaxmin = self.result_values[2][mask_minmaxmaxmin]
-        pts_minmaxmaxmin = self.result_values[0][2:,mask_minmaxmaxmin]
-
-        interp_minmaxmaxmin_lin = griddata(pts_minmaxmaxmin.T,
-                                       values_minmaxmaxmin,
-                                       points_x_sigma_c, method='linear')
-        
-        values_minmaxmaxmin = np.nan_to_num(interp_minmaxmaxmin_lin)
-        
-        mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
-        values_minminmaxmax = self.result_values[2][mask_minminmaxmax]
-        pts_minminmaxmax = self.result_values[0][2:,mask_minminmaxmax]
-
-        interp_minminmaxmax_lin = griddata(pts_minminmaxmax.T,
-                                       values_minminmaxmax,
-                                       points_x_sigma_c, method='linear')
-        
-        values_minminmaxmax = np.nan_to_num(interp_minminmaxmax_lin)
-        
-        mask_minmaxmaxmax = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmax) == 1
-        values_minmaxmaxmax = self.result_values[2][mask_minmaxmaxmax]
-        pts_minmaxmaxmax = self.result_values[0][2:,mask_minmaxmaxmax]
-
-        interp_minmaxmaxmax_lin = griddata(pts_minmaxmaxmax.T,
-                                       values_minmaxmaxmax,
-                                       points_x_sigma_c, method='linear')
-
-        values_minmaxmaxmax = np.nan_to_num(interp_minmaxmaxmax_lin)
-       
-        return Wminminmaxmin * values_minminmaxmin + Wminmaxmaxmin * values_minmaxmaxmin + Wminminmaxmax * values_minminmaxmax + Wminmaxmaxmax * values_minmaxmaxmax
+        BC_line = MFnLineArray(xdata=self.BC_range, ydata=self.BC_range, extrapolate='constant')
+        return BC_line.get_values([Lmin, Lmax])
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
@@ -443,14 +400,16 @@ if __name__ == '__main__':
                              load_sigma_c_arr=np.linspace(0.0, 25., 50),
                              n_w=50,
                              n_BC=3,
-                             n_x=200,
+                             n_x=30,
                              length=500.
                              )
-    pts = np.array([[0.0, 10.0]]) * np.ones((30,1))
-    pts[:,0] = np.linspace(-5.5, 6.5, 30)
+    pts = np.array([[0.0, 10.0]]) * np.ones((100, 1))
+    pts[:, 0] = np.linspace(-2.3, 2.4, 100)
 
-    epsf = ir.interpolator_epsm(5.5, 6.5, pts)
-    plt.plot(np.linspace(-5.5, 6.5, 30), epsf)
+    epsm = ir.interpolate_epsm(2.3, 2.4, pts)
+    mu_epsf = ir.interpolate_mu_epsf(2.3, 2.4, pts)
+    plt.plot(np.linspace(-2.3, 2.4, 100), epsm)
+    plt.plot(np.linspace(-2.3, 2.4, 100), mu_epsf)
     plt.show()
 
     def plot():
