@@ -275,7 +275,7 @@ class Interpolator(HasTraits):
                     max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                     w_arr = np.linspace(0.0, wmax, self.n_w)
 
-                    mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax, self.BC_range[-1])
+                    mu_sigma_c, x, mu_epsf, epsm = self.CB_model_view.w_x_res(w_arr, lmin, lmax, self.length)
                     mask = np.where(mu_sigma_c <= sigma_c_max, 1, np.NaN)
                     epsm = epsm * mask
                     mu_epsf = mu_epsf * mask
@@ -286,6 +286,15 @@ class Interpolator(HasTraits):
                     sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
                     mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
                     epsm_arr = np.hstack((epsm_arr, epsm))
+                    
+#                     if j != i:
+#                         Lmin_arr = np.hstack((Lmin_arr, np.ones_like(mu_sigma_c) * lmax))
+#                         Lmax_arr = np.hstack((Lmax_arr, np.ones_like(mu_sigma_c) * lmin))
+#                         x_arr = np.hstack((x_arr, -x[::-1]))
+#                         sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
+#                         mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf[::-1]))
+#                         epsm_arr = np.hstack((epsm_arr, epsm[::-1]))
+                    
                     current_loop = i * len(L_arr) + j + 1
                     print 'progress: %2.1f %%' % \
                     (current_loop / float(loops_tot) * 100.)
@@ -305,15 +314,16 @@ class Interpolator(HasTraits):
         Lminmax = self.BC_range[idx_Lminmax]
         Lmaxmin = self.BC_range[idx_Lmaxmin]
         Lmaxmax = self.BC_range[idx_Lmaxmax]
-
+        print Lminmin, Lminmax, Lmaxmin, Lmaxmax
+        
         if Lminmin == Lminmax:
-            Wminmin = Wminmax = 0.5
+            Wminmin = Wminmax = .5
         else:
             Wminmin = (Lmin - Lminmin) / diffs[idx_Lminmin]
             Wminmax = (Lminmax - Lmin) / diffs[idx_Lminmin]
 
         if Lmaxmin == Lmaxmax:
-            Wmaxmin = Wmaxmax = 0.5
+            Wmaxmin = Wmaxmax = .5
         else:
             Wmaxmin = (Lmax - Lmaxmin) / diffs[idx_Lmaxmin]
             Wmaxmax = (Lmaxmax - Lmax) / diffs[idx_Lmaxmin]
@@ -360,11 +370,7 @@ class Interpolator(HasTraits):
                                Wminmaxmaxmin * values_minmaxmaxmin +
                                Wminminmaxmax * values_minminmaxmax +
                                Wminmaxmaxmax * values_minmaxmaxmax)
-
-        if Ll <= Lr:
-            return interpolated_result[::-1:]
-        else:
-            return interpolated_result[::::]
+        return interpolated_result
 
     def interpolate_mu_epsf(self, Ll, Lr, points_x_sigma_c):
         return self.interpolate(Ll, Lr, points_x_sigma_c, 1)
@@ -399,17 +405,22 @@ if __name__ == '__main__':
     ir = Interpolator(CB_model=CB_model,
                              load_sigma_c_arr=np.linspace(0.0, 25., 50),
                              n_w=50,
-                             n_BC=3,
+                             n_BC=5,
                              n_x=30,
                              length=500.
                              )
-    pts = np.array([[0.0, 10.0]]) * np.ones((100, 1))
-    pts[:, 0] = np.linspace(-2.3, 2.4, 100)
+    
+    Ll = 1.15
+    Lr = 1.2
+    x_arr = np.linspace(-Ll, Lr, 200)
+    
+    pts = np.array([[0.0, 10.0]]) * np.ones((200, 1))
+    pts[:, 0] = x_arr
 
-    epsm = ir.interpolate_epsm(2.3, 2.4, pts)
-    mu_epsf = ir.interpolate_mu_epsf(2.3, 2.4, pts)
-    plt.plot(np.linspace(-2.3, 2.4, 100), epsm)
-    plt.plot(np.linspace(-2.3, 2.4, 100), mu_epsf)
+    epsm = ir.interpolate_epsm(Ll, Lr, pts)
+    mu_epsf = ir.interpolate_mu_epsf(Ll, Lr, pts)
+    plt.plot(x_arr, epsm)
+    plt.plot(x_arr, mu_epsf)
     plt.show()
 
     def plot():

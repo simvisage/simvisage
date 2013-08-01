@@ -129,7 +129,7 @@ class CompositeCrackBridgeView(ModelView):
         def residuum(w):
             self.model.w = float(w)
             return sigma - self.sigma_c
-        brentq(residuum, 0.0, 10.)
+        brentq(residuum, 0.0, .001)
 
     def sigma_f_lst(self, w_arr):
         sigma_f_arr = np.zeros(len(w_arr) *
@@ -213,27 +213,6 @@ if __name__ == '__main__':
 
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
-    
-    reinf1 = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
-                          tau=RV('uniform', loc=4., scale=2.),
-                          V_f=0.2,
-                          E_f=70e3,
-                          xi=RV('weibull_min', shape=5., scale=0.04),
-                          n_int=50,
-                          label='AR glass')
-
-    reinf2 = ContinuousFibers(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
-                          tau=RV('uniform', loc=.3, scale=.05),
-                          V_f=0.1,
-                          E_f=200e3,
-                          xi=RV('weibull_min', shape=20., scale=0.02),
-                          n_int=50,
-                          label='carbon')
-
-    reinf = ContinuousFibers(r=RV('uniform', loc=.005, scale=.01),
-                          tau=RV('uniform', loc=.05, scale=.1),
-                          xi=WeibullFibers(shape=20., sV0=0.003),
-                          V_f=0.3, E_f=200e3, n_int=50)
 
     reinf = ContinuousFibers(r=0.00345,
                           tau=RV('uniform', loc=0.0, scale=.02),
@@ -243,13 +222,20 @@ if __name__ == '__main__':
                           n_int=200,
                           label='carbon')
 
+    reinf = ContinuousFibers(r=0.00345,#RV('uniform', loc=0.002, scale=0.002),
+                          tau=RV('uniform', loc=0.02, scale=.1),
+                          V_f=0.15,
+                          E_f=200e3,
+                          xi=WeibullFibers(shape=5., sV0=0.0024),
+                          n_int=200,
+                          label='carbon')
+
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1000.,
-                                 Lr=1000.)
+                                 Ll=1.15,
+                                 Lr=1.2)
 
     ccb_view = CompositeCrackBridgeView(model=model)
-    #ccb_view.apply_load(1.)
 
     def profile(w):
         ccb_view.model.w = w
@@ -301,9 +287,11 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    #profile(1.0)
-    w = np.linspace(0.0, 2., 100)
-    sigma_c_w(w)
+    
+    ccb_view.apply_load(10.0)
+    profile(ccb_view.model.w)
+    #w = np.linspace(0.0, .005, 100)
+    #sigma_c_w(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)
