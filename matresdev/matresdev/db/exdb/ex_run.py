@@ -83,8 +83,8 @@ from etsproxy.traits.ui.table_filter import \
     EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
     EvalTableFilter
 
-from util.traits.editors.mpl_figure_editor import \
-    MPLFigureEditor
+#from util.traits.editors.mpl_figure_editor import \
+#    MPLFigureEditor
 
 from matplotlib.figure import \
     Figure

@@ -49,6 +49,8 @@ from copy import copy
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+import pylab as p
+import numpy as np
 
 # ---------------------------------------------------
 # Calibration controller
@@ -107,8 +109,8 @@ class MATSCalibDamageFn(MATSExplore):
 
     # default settings are overloaded with settings specified in 'ec_config'
 
-    max_load = Property(Float)
-    def _get_max_load(self):
+    max_eps = Property(Float)
+    def _get_max_eps(self):
         return self.mfn_line_array_target.xdata[-1]
 
     n_steps = Int(1)
@@ -123,7 +125,7 @@ class MATSCalibDamageFn(MATSExplore):
 
     step_size = Property(Float)
     def _get_step_size(self):
-        return self.max_load / self.n_steps
+        return self.max_eps / self.n_steps
 
 
     def run_through(self):
@@ -253,8 +255,15 @@ class MATSCalibDamageFn(MATSExplore):
         self.tloop.tline.tolerance = self.tolerance
         self.tloop.tline.RESETMAX = self.RESETMAX
 
-
-
+    # store trial step data in the lists if trial steps are to be stored 
+    # for the plotting method 'plot_trail_steps'
+    #
+    rec_trial_steps = True
+    phi_trial_list_i = []
+    sig_trial_list_i = []
+    phi_trial_list_n = []
+    sig_trial_list_n = []
+        
     def get_lack_of_fit(self, phi_trial):
         '''Return the difference between the macroscopic stress calculated
         based on the value of phi_trial (damage at the next step) and the
@@ -334,6 +343,12 @@ class MATSCalibDamageFn(MATSExplore):
             print '    lack_of_fit_relative  ', lack_of_fit_relative
             print '# get_lack_of_fit # END '
 
+        if self.rec_trial_steps:
+            # store all trial values of 'phi_trail' and 'sig_app_trail' within each iteration to a global list
+            #
+            self.phi_trial_list_i.append( phi_trial )
+            self.sig_trial_list_i.append( sig_app_trial )
+
         return lack_of_fit_relative
 
     def fit_response(self):
@@ -381,9 +396,9 @@ class MATSCalibDamageFn(MATSExplore):
 #                phi_new = brenth( self.get_lack_of_fit, 0., phi_old )
             except ValueError:
 
-                lof_0 = self.get_lack_of_fit(0.)
-                lof_phi_old = self.get_lack_of_fit(phi_old)
                 if self.log:
+                    lof_0 = self.get_lack_of_fit(0.)
+                    lof_phi_old = self.get_lack_of_fit(phi_old)
                     print 'No sign change between get_lack_of_fit(phi_old) = ', lof_phi_old, ' and '
                     print 'get_lack_of_fit(0.) = ', lof_0
                     print 'Use old value for phi_trial. phi_old = ', phi_old
@@ -391,15 +406,18 @@ class MATSCalibDamageFn(MATSExplore):
                     print '(!)',
 
             # current time corresponds to the current strain applied
+            #
             current_time = self.tloop.t_n
 
             # replace old 'phi_value' with iterated value:
+            #
             phi_old = phi_new
 
             # get mats_state_array:
-            mats_state_array = copy(self.tloop.tstepper.sctx.mats_state_array)
+#            mats_state_array = copy(self.tloop.tstepper.sctx.mats_state_array)
 
             # update phi_data:
+            #
             x = hstack([ self.fitted_phi_fn.xdata[:], current_time + self.step_size  ])
             y = hstack([ self.fitted_phi_fn.ydata[:], phi_new             ])
 
@@ -416,6 +434,19 @@ class MATSCalibDamageFn(MATSExplore):
                 print '### run_one_step ###'
                 print '### step', n   , '###'
                 print '### current time:', current_time
+                 
+            if self.rec_trial_steps:
+                # add entries of the iterations ('i') in the current step ('n') 
+                # (yields a list of lists) 
+                #
+                self.phi_trial_list_n.append( self.phi_trial_list_i )
+                self.sig_trial_list_n.append( self.sig_trial_list_i )
+                # delete the entries of the iterations ('i') in the last step ('n') 
+                # and fill it with the iterations of the next step ('n+1')
+                # 
+                self.phi_trial_list_i = []
+                self.sig_trial_list_i = []
+                
             self.run_one_step()
 #            print '(g%)' %(n)
 
@@ -425,6 +456,148 @@ class MATSCalibDamageFn(MATSExplore):
         self.composite_cross_section.set_param(mats_eval, ctt_key,
                                                copy(self.fitted_phi_fn))
 
+
+    def plot_trial_steps(self):
+        '''plot the target function (sig-eps-curve of the tensile test) together 
+        with the trial steps within the numerical iteration processes. Plot target and trial curves
+        and corresponding phi function together with trail steps from the iteration process.
+        NOTE: the global variable 'rec_trial_steps' must be set to True in order to store the iteration values
+              within the global variables 'phi_trial_list_n' and 'sig_trial_list_n'
+        n - index of the time steps to be considered
+        i - index of the iteration steps performed in order to fit the target curve 
+        '''
+        #-------------------------------------------------------------------
+        # configure the style of the font to be used for labels and ticks
+        #-------------------------------------------------------------------
+        #
+        from matplotlib.font_manager import FontProperties
+        font = FontProperties()
+#        font.serif         : Times, Palatino, New Century Schoolbook, Bookman, Computer Modern Roman
+#        font.sans-serif    : Helvetica, Avant Garde, Computer Modern Sans serif
+#        font.cursive       : Zapf Chancery
+#        font.monospace     : Courier, Computer Modern Typewriter
+        font.set_name('Script MT')
+        #name = ['Times New Roman', 'Helvetica', 'Script MT'] #?
+        font.set_family('serif')
+        #family = ['serif', 'sans-serif', 'cursive', 'fantasy', 'monospace']
+        font.set_style('normal')
+        #style  = ['normal', 'italic', 'oblique']
+        font.set_size('small')
+        #size  = ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', '11']
+        font.set_variant('normal')
+        #variant= ['normal', 'small-caps']
+        font.set_weight('medium')
+        #weight = ['light', 'normal', 'medium', 'semibold', 'bold', 'heavy', 'black']
+        
+        #-------------------------------------------------------------------
+
+        p.figure(facecolor = 'white') # white background
+
+        # time list corresponding to the specified numbers of steps and step size
+        # 
+        step_list = [n * self.step_size for n in range(self.n_steps + 1)]
+
+        # get list of lists containing the trial values of 'sig_app' and 'phi_trail' 
+        # the lists are defined as global variables of 'MATSCalibDamageFn' and are filled
+        # within the iteration process when the method 'get_lack_of_fit" is called
+        #
+        phi_trial_list_n = [[1.]] + self.phi_trial_list_n 
+        sig_trial_list_n = [[0.]] + self.sig_trial_list_n  
+
+        xrange = 7. # plotting range for strain [mm/m]
+        yrange = 18. # plotting range for stress [MPa]
+
+        for n in range(self.n_steps):
+            for i in range(len(phi_trial_list_n[n+1])):
+                x = np.array([step_list[n], step_list[n+1]])
+                eps = 1000. * x # plot strains in permil on the x-axis
+                #--------------------------------------
+                # sig-eps trial
+                #--------------------------------------
+                # plot the numerically calculated sig-eps-curve (tensile test)
+                # (with trial steps)
+                #
+                sig_trail = np.array([sig_trial_list_n[n][-1], sig_trial_list_n[n+1][i]])
+                p.subplot(222)
+                p.plot(eps, sig_trail, color = 'k', linewidth = 1)
+                p.xlabel('strain [1E3]', fontproperties=font)
+                p.ylabel('stress [MPa]', fontproperties=font)
+                p.axis([0, xrange, 0., yrange], fontproperties=font)
+    
+                # format ticks for plot
+                #
+                locs,labels = p.xticks()
+                p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+                p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
+                locs,labels = p.yticks()
+                p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+                p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
+            
+                #--------------------------------------
+                # phi_trail
+                #--------------------------------------
+                # plot the fitted phi-function 
+                # (with trial steps)
+                #
+                p.subplot(224)
+                phi_trail = np.array([phi_trial_list_n[n][-1], phi_trial_list_n[n+1][i]])
+                p.plot(eps, phi_trail, color = 'k', linewidth = 1)
+
+                # format ticks for plot
+                #
+                p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+                p.axis([0, xrange, 0., 1.])
+                locs,labels = p.xticks()
+                p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+                p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
+                locs,labels = p.yticks()
+                p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
+                p.ylabel('integrity $\phi$ [-]', fontproperties=font)
+
+        #--------------------------------------
+        # sig-eps target
+        #--------------------------------------
+        # plot the sig-eps-target curve (tensile test)
+        #
+        p.subplot(221)
+        eps = 1000. * self.mfn_line_array_target.xdata[:-1]
+        sig_target = self.mfn_line_array_target.ydata[:-1]
+        p.plot(eps, sig_target, color = 'black', linewidth = 1)
+        # format ticks for plot
+        #
+        p.axis([0, xrange, 0., yrange])
+        locs,labels = p.xticks()
+        p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+        p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
+        locs,labels = p.yticks()
+        p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+        p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
+
+        #--------------------------------------
+        # phi_trail (final)
+        #--------------------------------------
+        # plot the corresponding fitted phi-function 
+        # (without trial steps)
+        #
+        p.subplot(223)
+        eps = 1000. * self.fitted_phi_fn.xdata[:-1]
+        phi_fn = self.fitted_phi_fn.ydata[:-1]
+        p.plot(eps, phi_fn, color = 'black', linewidth = 1)        
+        # format ticks for plot
+        #
+        p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        p.axis([0, xrange, 0., 1.])
+        locs,labels = p.xticks()
+        p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+        p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
+        locs,labels = p.yticks()
+        p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
+        p.ylabel('integrity $\phi$ [-]', fontproperties=font)
+
+        p.savefig('plot_trail_steps.png')
+
+        p.show()
+        
     #-----------------------------------------------------------------------------------------
     # User interaction
     #-----------------------------------------------------------------------------------------
@@ -525,10 +698,10 @@ def run():
                                     phi_fn = PhiFnGeneral,
                                     )
 
-    print 'normals', mats_eval._MPN
-    print 'weights', mats_eval._MPW
+#    print 'normals', mats_eval._MPN
+#    print 'weights', mats_eval._MPW
 
-    fitter = MATSCalibDamageFn( n_steps = 300,
+    fitter = MATSCalibDamageFn( n_steps = 50,
                                 KMAX = 300,
                                 tolerance = 5e-4, #0.01,
                                 RESETMAX = 0,
@@ -577,8 +750,8 @@ def run():
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
 
-                              '2010-02-09_TT-10g-3cm-a-TR_TRC11',
-                              'TT-10g-3cm-a-TR-V2.DAT')
+                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
 
@@ -615,7 +788,7 @@ def run():
 #        p.show()
 
         fitter.fit_response()
-        
+        fitter.plot_trial_steps()
 
     return
 

@@ -97,28 +97,28 @@ class ExRunTableAdapter (TabularAdapter):
         value = self.object.inst_list[ self.row, factor_idx ]
         return str(value)
 
-exdb_tabular_editor = TabularEditor(adapter = ExRunTableAdapter(),
-                                   multi_select = True,
-                                   selected = 'selected_inst_list',
+exdb_tabular_editor = TabularEditor(adapter=ExRunTableAdapter(),
+                                   multi_select=True,
+                                   selected='selected_inst_list',
                                  )
 
 exdb_table_editor = TableEditor(
-                        columns_name = 'table_columns',
-                        selection_mode = 'rows',
-                        selected = 'object.selected_inst_list',
+                        columns_name='table_columns',
+                        selection_mode='rows',
+                        selected='object.selected_inst_list',
                         # selected_indices  = 'object.selected_exruns',
-                        show_toolbar = True,
-                        auto_add = False,
-                        configurable = True,
-                        sortable = True,
-                        reorderable = False,
-                        sort_model = False,
-                        orientation = 'vertical',
-                        auto_size = True,
-                        filters = [EvalFilterTemplate,
+                        show_toolbar=True,
+                        auto_add=False,
+                        configurable=True,
+                        sortable=True,
+                        reorderable=False,
+                        sort_model=False,
+                        orientation='vertical',
+                        auto_size=True,
+                        filters=[EvalFilterTemplate,
                                        MenuFilterTemplate,
                                        RuleFilterTemplate ],
-                        search = EvalTableFilter(),
+                        search=EvalTableFilter(),
             )
 
 #------------------------------------------------------------------------------------------
@@ -135,31 +135,31 @@ class ExRunClassExt(SimDBClassExt):
     #
     klass = Type
 
-    classname = Property(depends_on = 'klass')
+    classname = Property(depends_on='klass')
     @cached_property
     def _get_classname(self):
         return self.klass.__name__
 
-    field_names = Property(depends_on = 'klass')
+    field_names = Property(depends_on='klass')
     @cached_property
     def _get_field_names(self):
         '''
         Get the list of table fields.
         '''
-        return self.klass.class_trait_names(table_field = lambda x: x != None)
+        return self.klass.class_trait_names(table_field=lambda x: x != None)
 
     # Get columns for the table editor
     #
-    table_columns = Property(depends_on = 'klass')
+    table_columns = Property(depends_on='klass')
     @cached_property
     def _get_table_columns(self):
-        columns = [ ObjectColumn(name = 'key',
-                                  editable = False,
-                                  horizontal_alignment = 'center',
+        columns = [ ObjectColumn(name='key',
+                                  editable=False,
+                                  horizontal_alignment='center',
                                )  ]
-        columns += [ ObjectColumn(name = field_name,
-                               editable = False,
-                               horizontal_alignment = 'center',
+        columns += [ ObjectColumn(name=field_name,
+                               editable=False,
+                               horizontal_alignment='center',
                                #width = 100 
                                ) for field_name in self.field_names ]
         return columns
@@ -213,7 +213,7 @@ class ExRunClassExt(SimDBClassExt):
         return []
 
     selected_instance = Property(Instance(ExType),
-                                  depends_on = 'selected_inst_list[]')
+                                  depends_on='selected_inst_list[]')
     def _get_selected_instance(self):
         if len(self.selected_inst_list) > 0:
             return self.selected_inst_list[0]
@@ -240,7 +240,7 @@ class ExRunClassExt(SimDBClassExt):
 
     figure = Instance(Figure)
     def _figure_default(self):
-        figure = Figure(facecolor = 'white')
+        figure = Figure(facecolor='white')
         #figure.add_axes( [0.08, 0.13, 0.85, 0.74] )
         figure.add_axes([0.15, 0.15, 0.75, 0.75])
         return figure
@@ -251,23 +251,23 @@ class ExRunClassExt(SimDBClassExt):
 
     # selected plot template
     #
-    plot_template = Enum(values = 'plot_template_list')
+    plot_template = Enum(values='plot_template_list')
 
     # list of availble plot templates 
     # (gets extracted from the model whenever it's been changed)
     #
-    plot_template_list = Property(depends_on = 'klass')
+    plot_template_list = Property(depends_on='klass')
     @cached_property
     def _get_plot_template_list(self):
         '''Change the selection list of plot templates.
-        
+
         This method is called upon every change of the model. This makes the viewing of
         different experiment types possible.
         '''
         return self.inst_list[0].plot_templates.keys()
 
     @on_trait_change('selected_inst_list,plot_template')
-    def redraw(self, ui_info = None):
+    def redraw(self, ui_info=None):
         ''' Use the currently selected plot template to plot it in the Figure.
         '''
 
@@ -291,7 +291,7 @@ class ExRunClassExt(SimDBClassExt):
         for run in self.selected_inst_list:
             legend_names = legend_names + [run.key]
         if len(legend_names) > 0:
-            axes.legend(legend_names, loc = 7)
+            axes.legend(legend_names, loc=7)
 
         self.data_changed = True
 
@@ -304,55 +304,55 @@ class ExRunClassExt(SimDBClassExt):
                        VSplit(
                                VGroup(
                                      HGroup(Item('classname',
-                                                 emphasized = True,
-                                                 style = 'readonly',
-                                                 label = 'database extension class')
+                                                 emphasized=True,
+                                                 style='readonly',
+                                                 label='database extension class')
                                             ),
                                      Item('inst_list',
-                                           editor = exdb_table_editor,
-                                           show_label = False,
-                                           style = 'custom' ,
-                                           resizable = True),
+                                           editor=exdb_table_editor,
+                                           show_label=False,
+                                           style='custom' ,
+                                           resizable=True),
                                      ),
-                                label = 'experiment table',
-                                id = 'exdb.table.inst_list',
-                                dock = 'tab',
-                               scrollable = True,
+                                label='experiment table',
+                                id='exdb.table.inst_list',
+                                dock='tab',
+                               scrollable=True,
                              ),
                        VGroup(
                            VGroup(
                                  Item('selected_instance@',
-                                       resizable = True,
-                                       show_label = False),
-                                 label = 'experiment',
-                                 id = 'exdb.table.instance',
-                                 dock = 'tab',
-                                 scrollable = True,
+                                       resizable=True,
+                                       show_label=False),
+                                 label='experiment',
+                                 id='exdb.table.instance',
+                                 dock='tab',
+                                 scrollable=True,
                                  ),
                             Group(
-                                Item('figure', editor = MPLFigureEditor(),
-                                     resizable = True, show_label = False),
-                                     id = 'exrun_table.plot_sheet',
-                                     label = 'plot sheet',
-                                     dock = 'tab',
+                                Item('figure', editor=MPLFigureEditor(),
+                                     resizable=True, show_label=False),
+                                     id='exrun_table.plot_sheet',
+                                     label='plot sheet',
+                                     dock='tab',
                                      ),
                             Group(
                                 Item('plot_template'),
-                                columns = 1,
-                                label = 'plot parameters',
-                                id = 'exrun_table.plot_params',
-                                dock = 'tab',
+                                columns=1,
+                                label='plot parameters',
+                                id='exrun_table.plot_params',
+                                dock='tab',
                                 ),
-                            id = 'exdb.table.right',
-                            layout = 'split',
-                            label = 'selected instance',
-                            dock = 'tab',
+                            id='exdb.table.right',
+                            layout='split',
+                            label='selected instance',
+                            dock='tab',
                             ),
-                        id = 'exdb.table.splitter',
+                        id='exdb.table.splitter',
                     ),
-                    id = 'exdb.table',
-                    buttons = ['OK', 'Cancel'],
-                    dock = 'tab',
-                    resizable = True,
-                    height = 0.8, width = 0.8,
+                    id='exdb.table',
+                    buttons=['OK', 'Cancel'],
+                    dock='tab',
+                    resizable=True,
+                    height=0.8, width=0.8,
                     )

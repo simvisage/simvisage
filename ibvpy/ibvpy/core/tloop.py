@@ -43,6 +43,8 @@ import time
 import os
 from ibvpy.core.ibv_resource import IBVResource
 
+from etsproxy.util.home_directory import get_home_directory
+
 #import pymem
 from ibvpy.core.tstepper import TStepper
 
@@ -159,7 +161,7 @@ class TLoop(IBVResource):
     def _dir_default(self):
 
         # get the path to the simdb directory
-        home_dir = os.environ['HOME']
+        home_dir = get_home_directory()
         sim_data_dir = os.path.join(home_dir, 'simdb', 'simdata')
         if not os.path.exists(sim_data_dir):
             os.mkdir(sim_data_dir)
@@ -170,6 +172,7 @@ class TLoop(IBVResource):
         if not os.path.exists(mod_path):
             os.mkdir(mod_path)
 
+        print 'directory',mod_path
         return mod_path
 
     user_wants_abort = False
