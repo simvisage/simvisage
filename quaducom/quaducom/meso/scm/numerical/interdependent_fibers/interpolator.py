@@ -314,7 +314,6 @@ class Interpolator(HasTraits):
         Lminmax = self.BC_range[idx_Lminmax]
         Lmaxmin = self.BC_range[idx_Lmaxmin]
         Lmaxmax = self.BC_range[idx_Lmaxmax]
-        print Lminmin, Lminmax, Lmaxmin, Lmaxmax
         
         if Lminmin == Lminmax:
             Wminmin = Wminmax = .5
@@ -342,13 +341,22 @@ class Interpolator(HasTraits):
                                        values_minminmaxmin,
                                        points_x_sigma_c, method='linear')
  
-        mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
-        values_minmaxmaxmin = self.result_values[idx][mask_minmaxmaxmin]
-        pts_minmaxmaxmin = self.result_values[0][2:, mask_minmaxmaxmin]
+        if Lminmax <= Lmaxmin:
+            mask_minmaxmaxmin = (self.result_values[0][0] == Lminmax) * (self.result_values[0][1] == Lmaxmin) == 1
+            values_minmaxmaxmin = self.result_values[idx][mask_minmaxmaxmin]
+            pts_minmaxmaxmin = self.result_values[0][2:, mask_minmaxmaxmin]
 
-        values_minmaxmaxmin = griddata(pts_minmaxmaxmin.T,
-                                       values_minmaxmaxmin,
-                                       points_x_sigma_c, method='linear')
+            values_minmaxmaxmin = griddata(pts_minmaxmaxmin.T,
+                                           values_minmaxmaxmin,
+                                           points_x_sigma_c, method='linear')
+        else:
+            mask_minmaxmaxmin = (self.result_values[0][0] == Lmaxmin) * (self.result_values[0][1] == Lminmax) == 1
+            values_minmaxmaxmin = self.result_values[idx][mask_minmaxmaxmin]
+            pts_minmaxmaxmin = self.result_values[0][2:, mask_minmaxmaxmin]
+
+            values_minmaxmaxmin = griddata(pts_minmaxmaxmin.T,
+                                           values_minmaxmaxmin,
+                                           points_x_sigma_c, method='linear')
 
         mask_minminmaxmax = (self.result_values[0][0] == Lminmin) * (self.result_values[0][1] == Lmaxmax) == 1
         values_minminmaxmax = self.result_values[idx][mask_minminmaxmax]
@@ -409,12 +417,12 @@ if __name__ == '__main__':
                              n_x=30,
                              length=500.
                              )
+
+    Ll = 2.6
+    Lr = 3.
+    x_arr = np.linspace(-Ll, Lr, 500)
     
-    Ll = 1.15
-    Lr = 1.2
-    x_arr = np.linspace(-Ll, Lr, 200)
-    
-    pts = np.array([[0.0, 10.0]]) * np.ones((200, 1))
+    pts = np.array([[0.0, 10.0]]) * np.ones((500, 1))
     pts[:, 0] = x_arr
 
     epsm = ir.interpolate_epsm(Ll, Lr, pts)
