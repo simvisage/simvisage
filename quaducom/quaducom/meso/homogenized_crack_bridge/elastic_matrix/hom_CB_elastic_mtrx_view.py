@@ -252,7 +252,7 @@ if __name__ == '__main__':
 
     def sigma_c_w(w_arr):
         sigma_c_arr, u_arr = ccb_view.sigma_c_arr(w_arr, u=True)
-        plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
+        plt.plot(w_arr, sigma_c_arr / 0.01111, lw=2, color='black', label='w-sigma')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
         #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')

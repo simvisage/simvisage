@@ -13,8 +13,8 @@
 # Created on Mar 29, 2010 by: rch
 
 from etsproxy.traits.api import \
-    HasTraits, Property
-    
+    HasTraits, Property, Str
+
 from os.path import \
     join
 
@@ -39,16 +39,28 @@ class SimDB(HasTraits):
     home_dir = Property
     def _get_home_dir(self):
         return get_home_directory()
-    
+
     simdb_dir = Property
     def _get_simdb_dir(self):
         return join(self.home_dir, 'simdb')
-    
+
+    simdb_cache_dir = Property
+    def _get_simdb_cache_dir(self):
+        return join(self.home_dir, '.simdb_cache')
+
     exdata_dir = Property
     def _get_exdata_dir(self):
         return join(self.simdb_dir, 'exdata')
-    
+
     matdata_dir = Property
-    def _get_matdata_dir(self): 
+    def _get_matdata_dir(self):
         return join(self.simdb_dir, 'matdata')
 
+    '''
+    -remote data
+    '''
+    server_username = Str('simdb')
+
+    server_host = Str('mordred.imb.rwth-aachen.de')
+
+    simdb_cache_remote_dir = Str('/home/simdb/simdb/')

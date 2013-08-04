@@ -19,9 +19,6 @@ import time
 from scipy.interpolate import griddata, interp2d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
-
-
-
 class Interpolator(HasTraits):
 
     CB_model = Instance(CompositeCrackBridge)
@@ -155,7 +152,10 @@ if __name__ == '__main__':
                              n_x=100,
                              length=500.
                              )
-    
+
+    Ll = 2.6
+    Lr = 3.
+    x_arr = np.linspace(-Ll, Lr, 500)
     Ll = 5.
     Lr = 2.
     x_arr = np.linspace(-Ll, Lr, 200)
