@@ -36,7 +36,7 @@ def H(x):
     return x >= 0.0
 
 
-class CBResidualRandXi(RF):
+class CBFinResidualRandXi(RF):
     '''
     Crack bridged by a fiber with constant
     frictional interface to rigid; free fiber end;
@@ -64,33 +64,43 @@ class CBResidualRandXi(RF):
     V_f = Float(0.0175, auto_set=False, enter_set=True, input=True,
               distr=['uniform'])
 
+    lm = Float(np.inf, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'])
+
     w = Float(auto_set=False, enter_set=True, input=True,
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
-
-    include_pullout = Bool(True)
 
     x_label = Str('crack opening [mm]')
     y_label = Str('composite stress [MPa]')
 
     C_code = Str('')
 
-    def __call__(self, w, tau, E_f, V_f, r, m, sV0):
+    def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
         #strain and debonded length of intact fibers
         T = 2. * tau / r
         #scale parameter with respect to a reference volume
-        s0 = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
+        s0cb = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
         k = np.sqrt(T/E_f)
-        ef0 = k*np.sqrt(w)
-        Gxi = 1 - np.exp(-(ef0/s0)**(m+1))
-        mu_int = ef0 * (1-Gxi)
-        I = s0 * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s0)**(m+1))
-        mu_broken = I / (m+1)
+        ef0cb = k*np.sqrt(w)
+        Gxicb = 1 - np.exp(-(ef0cb/s0cb)**(m+1))
+        
+        s0lin = ((T**2 * (m+1) * sV0**m * lm)/(4. * E_f**2 * pi * r ** 2))**(1./(m+2))
+        ef0lin = (w - T*lm**2/4./E_f)/lm + T*lm/2./E_f
+        a = ef0lin * E_f / T
+        Gxilin = 1. - np.exp(-(ef0lin/s0lin)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+        
+        ef0 = ef0cb * H(w) * H(T*lm**2/4./E_f - w) + ef0lin * H(w - T*lm**2/4./E_f)
+        Gxi = Gxicb * H(w) * H(T*lm**2/4./E_f - w) + Gxilin * H(w - T*lm**2/4./E_f)
+        mu_int = ef0 * (1.-Gxi)
+        s00 = ((T * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
+        I = s00 * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s00)**(m+1))
+        mu_broken = I / 2.
         return (mu_int + mu_broken) * E_f * V_f * r**2
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    cb = CBResidualRandXi()
-    w = np.linspace(0.0, 1., 300)
-    plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026))
+    cb = CBFinResidualRandXi()
+    w = np.linspace(0.0, .1, 300)
+    plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026, 3.))
     plt.show()
