@@ -101,6 +101,6 @@ class CBFinResidualRandXi(RF):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     cb = CBFinResidualRandXi()
-    w = np.linspace(0.0, .1, 300)
-    plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026, 3.))
+    w = np.linspace(0.0, .8, 300)
+    plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026, 100.))
     plt.show()
