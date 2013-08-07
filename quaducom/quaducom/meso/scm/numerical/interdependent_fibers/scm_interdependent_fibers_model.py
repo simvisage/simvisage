@@ -26,14 +26,13 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 import copy
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 from spirrid.rv import RV
 from matplotlib import pyplot as plt
 from math import pi
-
+import time as t
 
 class CB(HasTraits):
     '''crack bridge class - includes informations about position,
@@ -50,18 +49,57 @@ class CB(HasTraits):
     @cached_property
     def _get_max_sigma_c(self):
         return self.interpolator.interpolate_max_sigma_c(self.Ll, self.Lr)
+    
+    strain_profiles = Property(depends_on='Ll, Lr')
+    @cached_property
+    def _get_strain_profiles(self):
+        return self.interpolator.get_strain_profiles(self.Ll, self.Lr)
 
     def get_epsf_x_w(self, load):
         '''
         evaluation of matrix strain profile
         '''
-        return self.interpolator.interpolate_mu_epsf(load, self.x, self.Ll, self.Lr)
+        if load > self.max_sigma_c:
+            raise ValueError('applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa')
+        else:
+            sigma_c = self.strain_profiles[0][1]
+            sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
+            sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
+            mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
+            mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
+    
+            interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
+                                  self.strain_profiles[1][mask_sigma_c_low])
+            values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+ 
+            interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
+                                   self.strain_profiles[1][mask_sigma_c_high])
+            values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
+            
+            return values_low + values_high
 
     def get_epsm_x_w(self, load):
         '''
         evaluation of matrix strain profile
         '''
-        return self.interpolator.interpolate_epsm(load, self.x, self.Ll, self.Lr)
+        if load > self.max_sigma_c:
+            raise ValueError('applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa')
+        else:
+            sigma_c = self.strain_profiles[0][1]
+            sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
+            sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
+            mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
+            mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
+    
+            interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
+                                  self.strain_profiles[2][mask_sigma_c_low])
+            values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+ 
+            interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
+                                   self.strain_profiles[2][mask_sigma_c_high])
+            values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
+            
+            return values_low + values_high
 
 
 class SCM(HasTraits):
@@ -79,7 +117,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=6, n_x=50
+                            length=self.length, n_w=50, n_BC=5, n_x=50
                             )
 
     sigma_c_crack = List
@@ -192,7 +230,9 @@ class SCM(HasTraits):
         sigc_min = 0.0
         sigc_max = self.load_sigma_c_arr[-1]
         while np.any(self.sigma_m(sigc_max) > self.matrix_strength):
+            s = t.clock()
             sigc_min = brentq(self.residuum, sigc_min, sigc_max)
+            print t.clock() - s, 's'
             crack_position = self.x_arr[np.argmin(self.matrix_strength -
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
@@ -208,7 +248,6 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list] 
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-            print sigc_max
 #             #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
 #             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
 #             plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)

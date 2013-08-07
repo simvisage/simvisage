@@ -151,7 +151,6 @@ if __name__ == '__main__':
               load_sigma_c_arr=np.linspace(0.01, 25., 100),
               )
 
-    scm.evaluate()
     scm_view = SCMView(model=scm)
     scm_view.model.evaluate()
 

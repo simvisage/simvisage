@@ -16,7 +16,7 @@ from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx i
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 from scipy.optimize import brentq
 import time
-from scipy.interpolate import griddata, interp2d
+from scipy.interpolate import griddata, interp2d, interp1d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
 class Interpolator(HasTraits):
@@ -89,37 +89,6 @@ class Interpolator(HasTraits):
         points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
         return points, mu_epsf_arr, epsm_arr, max_sigma_c_arr
 
-    def interpolate(self, load, x, Ll, Lr, idx):
-        strength = self.interpolate_max_sigma_c(Ll, Lr)
-        if load > strength:
-            raise ValueError('applied load', load, 'MPa higher then strength ', strength, 'MPa')
-        else:
-            L_l, L_r = self.get_L(Ll, Lr)
-            L_l = self.BC_range[np.argwhere(L_l <= self.BC_range)[0]]
-            L_r = self.BC_range[np.argwhere(L_r <= self.BC_range)[0]]
-            
-            maskBC = (self.result_values[0][0] == L_l) * (self.result_values[0][1] == L_r) == 1
-            
-            
-            sigma_c_masked = self.result_values[0][-1][maskBC]
-            sigma_c_low = np.max(sigma_c_masked[np.argwhere(sigma_c_masked < load)])
-            sigma_c_high = np.min(sigma_c_masked[np.argwhere(sigma_c_masked > load)])
-            mask_sigma_c_low = (self.result_values[0][-1] == sigma_c_low)
-            mask_sigma_c_high = (self.result_values[0][-1] == sigma_c_high)
-            line_low = MFnLineArray(xdata=self.result_values[0][2][maskBC * mask_sigma_c_low == 1],
-                                    ydata=self.result_values[idx][maskBC * mask_sigma_c_low == 1])
-            values_low = line_low.get_values(x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
-            line_high = MFnLineArray(xdata=self.result_values[0][2][maskBC * mask_sigma_c_high == 1],
-                                    ydata=self.result_values[idx][maskBC * mask_sigma_c_high == 1])
-            values_high = line_high.get_values(x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low) 
-            return values_low + values_high
-
-    def interpolate_mu_epsf(self, load, x, Ll, Lr):
-        return self.interpolate(load, x, Ll, Lr, 1)
-
-    def interpolate_epsm(self, load, x, Ll, Lr):
-        return self.interpolate(load, x, Ll, Lr, 2)
-
     def interpolate_max_sigma_c(self, Ll, Lr):
         L_l, L_r = self.get_L(Ll, Lr)
         L_l = self.BC_range[np.argwhere(L_l <= self.BC_range)[0]]
@@ -131,6 +100,18 @@ class Interpolator(HasTraits):
         self.result_values
         BC_line = MFnLineArray(xdata=self.BC_range, ydata=self.BC_range, extrapolate='constant')
         return BC_line.get_values([Ll, Lr])
+    
+    def get_strain_profiles(self, Ll, Lr):
+        L_l, L_r = self.get_L(Ll, Lr)
+        L_l = self.BC_range[np.argwhere(L_l <= self.BC_range)[0]]
+        L_r = self.BC_range[np.argwhere(L_r <= self.BC_range)[0]]
+        maskBC = (self.result_values[0][0] == L_l) * (self.result_values[0][1] == L_r) == 1
+        
+        points = np.array([self.result_values[0][2][maskBC],
+                           self.result_values[0][3][maskBC]])
+        mu_epsf_arr = self.result_values[1][maskBC]
+        epsm_arr = self.result_values[2][maskBC]
+        return points, mu_epsf_arr, epsm_arr
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
