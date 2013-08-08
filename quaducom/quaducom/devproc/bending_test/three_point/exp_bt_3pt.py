@@ -195,7 +195,7 @@ class ExpBT3PT(ExType):
     # flag distinguishes weather data from a displacement gauge is available
     # stored in a separate ASC-file with a corresponding file name
     # 
-    flag_dat_file = 'true'
+    flag_ASC_file = Bool(True)
 
     def _read_data_array(self):
         ''' Read the experiment data.
@@ -203,52 +203,85 @@ class ExpBT3PT(ExType):
         if exists(self.data_file):
 
             print 'READ FILE'
-            # change the file name dat with asc  
             file_split = self.data_file.split('.')
 
+            # first check if a '.csv' file exists. If yes use the 
+            # data stored in the '.csv'-file and ignore 
+            # the data in the '.raw' file!
+            #
             file_name = file_split[0] + '.csv'
             if not os.path.exists(file_name):
-
                 file_name = file_split[0] + '.raw'
                 if not os.path.exists(file_name):
                     raise IOError, 'file %s does not exist' % file_name
 
-            _data_array = loadtxt_bending(file_name)
-
             print 'file_name', file_name
-
-            file_name = file_split[0] + '.ASC'
-            if not os.path.exists(file_name):
-                print 'NOTE: no data from displacement gauge is available (no .ASC file); use machine displacement as value for center deflection'
-                self.flag_dat_file = 'false'
-            else:
-                print 'NOTE: data from displacement gauge for center deflection is available (stored in .ASC-file)!'
-
+            _data_array = loadtxt_bending(file_name)
             self.data_array = _data_array
 
-
-    names_and_units = Property
+            # check if a '.ASC'-file exists. If yes append this information 
+            # to the data array.
+            #
+            file_name = file_split[0] + '.ASC'
+            if not os.path.exists(file_name):
+                print 'NOTE: no data from displacement gauge is available (no .ASC file)'
+                self.flag_ASC_file = False
+            else:
+                print 'NOTE: additional data from displacement gauge for center deflection is available (.ASC-file loaded)!'
+                self.flag_ASC_file = True
+                # add data array read in from .ASC-file; the values are assigned by '_set_array_attribs' based on the 
+                # read in values in 'names_and_units' read in from the corresponding .DAT-file
+                #
+                self.data_array_ASC = loadtxt(file_name,
+                                              delimiter = ';')
+ 
+    names_and_units = Property(depends_on = 'data_file')
     @cached_property
     def _get_names_and_units(self):
-        ''' Set the names and units of the measured data.
+        '''names and units corresponding to the returned '_data_array' by 'loadtxt_bending'
         '''
         names = ['w_raw', 'eps_c_raw', 'F_raw']
         units = ['mm', '1*E-3', 'N']
+        print 'names, units', names, units
+        return names, units
+    
+    names_and_units_ASC = Property(depends_on = 'data_file')
+    @cached_property
+    def _get_names_and_units_ASC(self):
+        ''' Extract the names and units of the measured data.
+        The order of the names in the .DAT-file corresponds 
+        to the order of the .ASC-file.   
+        '''
+        data_file = open( self.data_file, 'r' )
+        print 'data_file', data_file
+        lines = data_file.read().split()
+        names = []
+        units = []
+        for i in range( len( lines ) ):
+            if lines[i] == '#BEGINCHANNELHEADER':
+                name = lines[i + 1].split( ',' )[1]
+                unit = lines[i + 3].split( ',' )[1]
+                names.append( name )
+                units.append( unit )
+        print 'names, units extracted from .DAT-file', names, units
         return names, units
 
-    F = Property(Array('float_'), depends_on='input_change')
-    @cached_property
-    def _get_F(self):
-        # convert data in .raw-file from 'N' to 'kN' and change sign to positive value
-        #
-        return -0.001 * self.F_raw
+    factor_list_ASC = Property(depends_on = 'data_file')
+    def _get_factor_list_ASC(self):
+        return self.names_and_units_ASC[0]
+    
+    def _set_array_attribs( self ):
+        '''Set the measured data as named attributes defining slices into 
+        the processed data array.
+        '''
+        for i, factor in enumerate(self.factor_list):
+            self.add_trait(factor, Array(value = self.processed_data_array[:, i], transient = True))
 
-    eps_c = Property(Array('float_'), depends_on='input_change')
-    @cached_property
-    def _get_eps_c(self):
-        # convert the promile values to dimensionless
-        #
-        return 0.001 * self.eps_c_raw
+        if self.flag_ASC_file:
+            for i, factor in enumerate(self.factor_list_ASC):
+                self.add_trait(factor, Array(value = self.data_array_ASC[:, i], transient = True))
+                
+
 
     elastomer_law = Property(depends_on='input_change')
     @cached_property
@@ -258,10 +291,12 @@ class ExpBT3PT(ExType):
         _data_array_elastomer = loadtxt_bending(elastomer_path)
 
         # force [kN]:
+        # NOTE: after conversion 'F_elastomer' is a positive value
         #
         F_elastomer = -0.001 * _data_array_elastomer[:, 2].flatten()
 
         # displacement [mm]:
+        # NOTE: after conversion 'w_elastomer' is a positive value
         #
         w_elastomer = -1.0 * _data_array_elastomer[:, 0].flatten()
 
@@ -275,137 +310,202 @@ class ExpBT3PT(ExType):
         # subtract the deformation of the elastomer cushion between the cylinder
         # and change sign in positive values for vertical displacement [mm]
         #
-        w = -1.0 * self.w_raw
-        return w - self.elastomer_law(self.F)
+        return self.w_raw - self.elastomer_law( self.F_raw )
 
-    M_kNm = Property(Array('float_'), depends_on='input_change')
+    M_ASC = Property(Array('float_'), depends_on='input_change')
     @cached_property
-    def _get_M_kNm(self):
-        return self.F * self.length / 4.0
-
-    Fw_asc = Property(depends_on='input_change')
+    def _get_M_ASC(self):
+        return self.F_ASC * self.length / 4.0
+    
+    M_raw = Property(Array('float_'), depends_on='input_change')
     @cached_property
-    def _get_Fw_asc(self):
-        # if data from displacement gauge is available (stored in .ASC file use this data for center displacement
-        #
-        # change the file name dat with asc  
-        file_split = self.data_file.split('.')
-        file_name = file_split[0] + '.ASC'
-        return np.loadtxt(file_name,
-                            delimiter=';',
-                            usecols=[1, 2])
+    def _get_M_raw(self):
+        return self.F_raw * self.length / 4.0
 
-    F_asc = Property(depends_on='input_change')
-    @cached_property
-    def _get_F_asc(self):
-        # force [kN] stored in the .ASC-file:
-        #
-        F_asc = self.Fw_asc[:, 0].flatten()
-        # change sign to positive value  
-        F_asc *= -1.
-        return F_asc
-
-    w_asc = Property(depends_on='input_change')
-    @cached_property
-    def _get_w_asc(self):
-        # displacement [mm] stored in the .ASC-file:
-        #
-        w_asc = self.Fw_asc[:, 1].flatten()
-        # change sign to positive value for deflection 
-        w_asc *= -1.
-        return w_asc
-
+#    # get only the ascending branch of the response curve
+#    #
+#    max_force_idx = Property(Int)
+#    def _get_max_force_idx(self):
+#        '''get the index of the maximum force'''
+#        return argmax(-self.Kraft)
+#
+#    f_asc = Property(Array)
+#    def _get_f_asc(self):
+#        '''get only the ascending branch of the response curve'''
+#        return -self.Kraft[:self.max_force_idx + 1]
+        
 
     def process_source_data(self):
         '''read in the measured data from file and assign
         attributes after array processing.
         '''
         super(ExpBT3PT, self).process_source_data()
+        
+        #---------------------------------------------
+        # process data from .raw file (machine data)
+        #---------------------------------------------
+        
+        # convert machine force [N] to [kN] and return only positive values
+        #
+        self.F_raw *= -0.001 
 
+        # convert machine displacement [mm] to positive values
+        #
+        self.w_raw *= - 1.0 
+
+        # convert [permille] to [-] and return only positive values
+        #
+        self.eps_c_raw *= - 0.001 
+        
         # access the derived arrays to initiate their processing
-        self.M_kNm
+        #
         self.w_wo_elast
+        self.M_raw
+
+        #---------------------------------------------
+        # process data from .ASC file (displacement gauge)
+        #---------------------------------------------
+
         # only if separate ASC.-file with force-displacement data from displacement gauge is available
-        if self.flag_dat_file == 'true':
-            print 'XXX', self.flag_dat_file
-            self.F_asc
-            self.w_asc
+        #
+        if self.flag_ASC_file == True:
+
+            self.F_ASC = - 1.0 * self.Kraft 
+
+            # remove offset and change sign to return positive displacement values
+            #
+            if hasattr(self, "WA50"):
+                self.WA50 *= -1
+                self.WA50 -= self.WA50[0]
+                WA50_avg = np.average( self.WA50 )
+            
+            if hasattr(self, "W10_u"):
+                self.W10_u *= -1
+                self.W10_u -= self.W10_u[0]
+                W10_u_avg = np.average( self.W10_u )
+
+            # check which displacement gauge has been used depending on weather two names are listed in .DAT file or only one
+            #
+            if hasattr(self, "W10_u") and hasattr(self, "WA50"):
+                if W10_u_avg > WA50_avg: 
+                    self.w_ASC = self.W10_u
+                    print 'self.WA50 assigned to self.w_ASC'
+                else:
+                    self.w_ASC = self.WA50
+                    print 'self.W10_u assigned to self.w_ASC'
+            elif hasattr(self, "W10_u"):
+                self.w_ASC = self.W10_u
+                print 'self.W10_u assigned to self.w_ASC'
+            elif hasattr(self, "WA50"):
+                self.w_ASC = self.WA50
+                print 'self.WA50 assigned to self.w_ASC'
+               
+            # convert strain from [permille] to [-], 
+            # swith to positive values for compressive strains 
+            # and remove offset
+            #
+            self.eps_c_ASC = - 0.001 * self.DMS_l 
+            self.eps_c_ASC -= self.eps_c_ASC[0] 
+
+            # access the derived arrays to initiate their processing
+            #
+            self.M_ASC
+
+
 
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection (machine displacement)' : '_plot_force_deflection_machine_displ',
-                      'force / deflection (displacement gauge)' : '_plot_force_deflection_gauge_displ',
-                      'smoothed force / deflection' : '_plot_smoothed_force_deflection',
-                      'moment / eps_c' : '_plot_moment_eps_c',
-                      'smoothed moment / eps_c' : '_plot_smoothed_moment_eps_c'
+    plot_templates = {'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
+                      'force / machine displacement (incl. w_elast)'   : '_plot_force_machine_displacement',
+                      'force / gauge displacement'                     : '_plot_force_gauge_displacement',
+                      
+                      'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
+                      'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
+
+                      'moment / eps_c (ASC)'                           : '_plot_moment_eps_c_ASC',
+                      'moment / eps_c (raw)'                           : '_plot_moment_eps_c_raw',
+
+                      'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
+                      'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw'
                      }
 
     default_plot_template = 'force / deflection (displacement gauge)'
 
-    def _plot_force_deflection_machine_displ(self, axes):
-        xkey = 'deflection [mm]'
-        ykey = 'force [kN]'
+    def _plot_force_machine_displacement_wo_elast(self, axes):
 
         xdata = self.w_wo_elast
-        ydata = self.F
+        ydata = self.F_raw
 
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
+#        xkey = 'deflection [mm]'
+#        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
-    def _plot_force_deflection_gauge_displ(self, axes):
-        xkey = 'deflection [mm]'
-        ykey = 'force [kN]'
 
-        xdata = self.w_asc
-        ydata = self.F_asc
-
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
+    def _plot_force_machine_displacement(self, axes):
+        xdata = self.w_raw
+        ydata = self.F_raw
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
+#        xkey = 'deflection [mm]'
+#        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
 
-    def _plot_moment_eps_c(self, axes):
-        xkey = 'compressive strain [1*E-3]'
-        ykey = 'moment [kNm]'
-        # NOTE: processed data returns positive values for force and displacement
-        #
-        xdata = self.eps_c
-        ydata = self.M_kNm
+    def _plot_force_gauge_displacement(self, axes):
+        xdata = self.w_ASC
+        ydata = self.F_ASC
 
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
+#        xkey = 'deflection [mm]'
+#        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
-    n_fit_window_fraction = Float(0.1)
 
-    def _plot_smoothed_force_deflection(self, axes):
-#        if self.flag_dat_file == 'false':
-#            w = self.w_wo_elast
-#        else:
-#            w = self.w_dat
-
-        w = self.w_wo_elast
+    def _plot_smoothed_force_gauge_displacement(self, axes):
 
         # get the index of the maximum stress
-        max_force_idx = argmax(self.F)
+        #
+        max_force_idx = argmax(self.F_ASC)
+
         # get only the ascending branch of the response curve
-        f_asc = self.F[:max_force_idx + 1]
-        w_asc = w[:max_force_idx + 1]
+        #
+        F_asc = self.F_ASC[:max_force_idx + 1]
+        w_asc = self.w_ASC[:max_force_idx + 1]
 
         n_points = int(self.n_fit_window_fraction * len(w_asc))
-        f_smooth = smooth(f_asc, n_points, 'flat')
+        F_smooth = smooth(F_asc, n_points, 'flat')
         w_smooth = smooth(w_asc, n_points, 'flat')
 
-        axes.plot(w_smooth, f_smooth, color='blue', linewidth=2)
+        axes.plot(w_smooth, F_smooth, color='blue', linewidth=2)
+
+
+    def _plot_smoothed_force_machine_displacement_wo_elast(self, axes):
+
+        # get the index of the maximum stress
+        #
+        max_force_idx = argmax(self.F_raw)
+
+        # get only the ascending branch of the response curve
+        #
+        F_asc = self.F_raw[:max_force_idx + 1]
+        w_asc = self.w_wo_elast[:max_force_idx + 1]
+
+        n_points = int(self.n_fit_window_fraction * len(w_asc))
+        F_smooth = smooth(F_asc, n_points, 'flat')
+        w_smooth = smooth(w_asc, n_points, 'flat')
+
+        axes.plot(w_smooth, F_smooth, color='blue', linewidth=2)
 
 #        secant_stiffness_w10 = ( f_smooth[10] - f_smooth[0] ) / ( w_smooth[10] - w_smooth[0] )
 #        w0_lin = array( [0.0, w_smooth[10] ], dtype = 'float_' )
@@ -413,30 +513,76 @@ class ExpBT3PT(ExType):
 
         #axes.plot( w0_lin, f0_lin, color = 'black' )
 
-    M_eps_c_smoothed = Property(depends_on='input_change')
-    @cached_property
-    def _get_M_eps_c_smoothed(self):
-        # get the index of the maximum stress
-        max_idx = argmax(self.M_kNm)
-        # get only the ascending branch of the response curve
-        m_asc = self.M_kNm[:max_idx + 1]
-        eps_c_asc = self.eps_c[:max_idx + 1]
 
+    def _plot_moment_eps_c_ASC(self, axes):
+        xkey = 'compressive strain [1*E-3]'
+        ykey = 'moment [kNm]'
+        xdata = self.eps_c_ASC
+        ydata = self.M_ASC
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        axes.plot(xdata, ydata)
+
+
+    def _plot_moment_eps_c_raw(self, axes):
+        xkey = 'compressive strain [1*E-3]'
+        ykey = 'moment [kNm]'
+        xdata = self.eps_c_raw
+        ydata = self.M_raw
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        axes.plot(xdata, ydata)
+
+
+    n_fit_window_fraction = Float(0.1)
+
+    smoothed_M_eps_c_ASC = Property(depends_on='input_change')
+    @cached_property
+    def _get_smoothed_M_eps_c_ASC(self):
+        # get the index of the maximum stress
+        max_idx = argmax(self.M_ASC)
+        # get only the ascending branch of the response curve
+        m_asc = self.M_ASC[:max_idx + 1]
+        eps_c_asc = self.eps_c_ASC[:max_idx + 1]
         n_points = int(self.n_fit_window_fraction * len(eps_c_asc))
         m_smoothed = smooth(m_asc, n_points, 'flat')
         eps_c_smoothed = smooth(eps_c_asc, n_points, 'flat')
         return m_smoothed, eps_c_smoothed
 
-    eps_c_smoothed = Property
-    def _get_eps_c_smoothed(self):
-        return self.M_eps_c_smoothed[1]
+    smoothed_eps_c_ASC = Property
+    def _get_smoothed_eps_c_ASC(self):
+        return self.smoothed_M_eps_c_ASC[1]
 
-    M_smoothed = Property
-    def _get_M_smoothed(self):
-        return self.M_eps_c_smoothed[0]
+    smoothed_M_ASC = Property
+    def _get_smoothed_M_ASC(self):
+        return self.smoothed_M_eps_c_ASC[0]
 
-    def _plot_smoothed_moment_eps_c(self, axes):
-        axes.plot(self.eps_c_smoothed, self.M_smoothed, color='blue', linewidth=2)
+    def _plot_smoothed_moment_eps_c_ASC(self, axes):
+        axes.plot(self.smoothed_eps_c_ASC, self.smoothed_M_ASC, color='blue', linewidth=2)
+
+    smoothed_M_eps_c_raw = Property(depends_on='input_change')
+    @cached_property
+    def _get_smoothed_M_eps_c_raw(self):
+        # get the index of the maximum stress
+        max_idx = argmax(self.M_raw)
+        # get only the ascending branch of the response curve
+        m_asc = self.M_raw[:max_idx + 1]
+        eps_c_asc = self.eps_c_raw[:max_idx + 1]
+        n_points = int(self.n_fit_window_fraction * len(eps_c_asc))
+        m_smoothed = smooth(m_asc, n_points, 'flat')
+        eps_c_smoothed = smooth(eps_c_asc, n_points, 'flat')
+        return m_smoothed, eps_c_smoothed
+
+    smoothed_eps_c_raw = Property
+    def _get_smoothed_eps_c_raw(self):
+        return self.smoothed_M_eps_c_raw[1]
+
+    smoothed_M_raw = Property
+    def _get_smoothed_M_raw(self):
+        return self.smoothed_M_eps_c_raw[0]
+
+    def _plot_smoothed_moment_eps_c_raw(self, axes):
+        axes.plot(self.smoothed_eps_c_raw, self.smoothed_M_raw, color='blue', linewidth=2)
 
     #--------------------------------------------------------------------------------
     # view
