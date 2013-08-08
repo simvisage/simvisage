@@ -60,7 +60,8 @@ class CB(HasTraits):
         evaluation of matrix strain profile
         '''
         if load > self.max_sigma_c:
-            raise ValueError('applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa')
+            print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
+            return np.nan * np.ones_like(self.x)
         else:
             sigma_c = self.strain_profiles[0][1]
             sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
@@ -83,7 +84,8 @@ class CB(HasTraits):
         evaluation of matrix strain profile
         '''
         if load > self.max_sigma_c:
-            raise ValueError('applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa')
+            print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
+            return np.nan * np.ones_like(self.x)
         else:
             sigma_c = self.strain_profiles[0][1]
             sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
@@ -117,7 +119,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=5, n_x=50
+                            length=self.length, n_w=50, n_BC=5, n_x=500
                             )
 
     sigma_c_crack = List
@@ -232,7 +234,7 @@ class SCM(HasTraits):
         while np.any(self.sigma_m(sigc_max) > self.matrix_strength):
             s = t.clock()
             sigc_min = brentq(self.residuum, sigc_min, sigc_max)
-            print t.clock() - s, 's'
+            print 'evaluation of the next matrix crack ', t.clock() - s, 's'
             crack_position = self.x_arr[np.argmin(self.matrix_strength -
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
@@ -248,11 +250,11 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list] 
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-#             #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
-#             plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
+#            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
 #             #plt.ylim(0,0.0008)
-#             plt.show()
+#            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
@@ -266,21 +268,21 @@ if __name__ == '__main__':
     length = 1000.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=10.,
+                               lacor=200.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
                                 shape=15.,
-                                scale=3.5,
+                                scale=2.5,
                                 non_negative_check=True,
                                 distribution='Weibull'
                                )
 
-    reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('weibull_min', loc=0.007, shape=1.22, scale=.04),
+    reinf = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.006, shape=1.23, scale=.03),
                           V_f=0.0103,
-                          E_f=180e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0052),
+                          E_f=240e3,
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
                           n_int=200,
                           label='carbon')
 
@@ -292,7 +294,7 @@ if __name__ == '__main__':
               nx=nx,
               random_field=random_field,
               CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 25., 100),
+              load_sigma_c_arr=np.linspace(0.01, 15., 100),
               )
 
     scm.evaluate()

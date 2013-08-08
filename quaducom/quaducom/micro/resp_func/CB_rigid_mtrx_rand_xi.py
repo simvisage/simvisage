@@ -79,12 +79,12 @@ class CBResidualRandXi(RF):
         #strain and debonded length of intact fibers
         T = 2. * tau / r
         #scale parameter with respect to a reference volume
-        s0 = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
+        s = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
         k = np.sqrt(T/E_f)
         ef0 = k*np.sqrt(w)
-        Gxi = 1 - np.exp(-(ef0/s0)**(m+1))
+        Gxi = 1 - np.exp(-(ef0/s)**(m+1))
         mu_int = ef0 * (1-Gxi)
-        I = s0 * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s0)**(m+1))
+        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
         mu_broken = I / (m+1)
         return (mu_int + mu_broken) * E_f * V_f * r**2
 

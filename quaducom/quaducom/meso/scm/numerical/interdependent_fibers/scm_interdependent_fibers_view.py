@@ -100,9 +100,6 @@ class SCMView(ModelView):
                                   * self.model.x_arr[np.newaxis, :])
         for i, q in enumerate(self.model.load_sigma_c_arr):
             mu_epsf_x[i, :] = self.model.epsf_x(q)
-#         plt.plot(self.model.x_arr, self.model.epsf_x(8.45))
-#         plt.plot(self.model.x_arr, self.model.epsf_x(8.75))
-#         plt.show()
         return mu_epsf_x
 
     eps_sigma = Property(depends_on='model.')
@@ -122,22 +119,22 @@ if __name__ == '__main__':
     length = 1000.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=10.,
+                               lacor=200.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
                                 shape=15.,
-                                scale=3.5,
+                                scale=2.5,
                                 non_negative_check=True,
                                 distribution='Weibull'
                                )
 
-    reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('weibull_min', loc=0.007, shape=1.22, scale=.04),
-                          V_f=0.0103,
-                          E_f=180e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0052),
-                          n_int=200,
+    reinf = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.006, shape=1.23, scale=.03),
+                          V_f=0.011,
+                          E_f=240e3,
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
+                          n_int=2000,
                           label='carbon')
 
     CB_model = CompositeCrackBridge(E_m=25e3,
@@ -148,7 +145,7 @@ if __name__ == '__main__':
               nx=nx,
               random_field=random_field,
               CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 25., 100),
+              load_sigma_c_arr=np.linspace(0.01, 15., 100),
               )
 
     scm_view = SCMView(model=scm)

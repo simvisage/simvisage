@@ -71,6 +71,7 @@ class Interpolator(HasTraits):
         for i, ll in enumerate(L_arr):
             for j, lr in enumerate(L_arr):
                 if j >= i:
+                    print ll, lr
                     # find maximum
                     sigma_c_max, wmax = self.max_sigma_w(ll, lr)
                     max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
