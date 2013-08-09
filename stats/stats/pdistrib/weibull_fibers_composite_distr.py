@@ -9,6 +9,9 @@ from scipy.special import gamma
 import numpy as np
 from math import pi
 
+def H(x):
+    return x >= 0.0 
+
 class WeibullFibers(HasTraits):
     '''the class contains a method for the evaluation of
     failure probability of continuous fibers in a composite
@@ -23,12 +26,12 @@ class WeibullFibers(HasTraits):
         Ll = shorter_boundary
         Lr = longer_boundary
         if np.any(Lr > max_strain / strain_slope + 1e-15):
-            print 'oj'
+            print 'wrong input for Pf (WeibullFibers)'
         s = (strain_slope ** 2 * (m + 1) * self.sV0 ** m * self.V0 / pi / fiber_radius ** 2) ** (1./(m+2))
         a0 = max_strain / strain_slope + 1e-15
         Pf = 1. - np.exp(- (max_strain / s ) ** (m + 2) *
             ((1. - (1. - Ll / a0) ** (m + 1))/Ll   +  (1. - (1. - Lr / a0) ** (m + 1))/Lr))
-        return Pf
+        return Pf * H(max_strain)
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt

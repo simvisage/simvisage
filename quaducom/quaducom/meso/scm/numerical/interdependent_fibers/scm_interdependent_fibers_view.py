@@ -116,10 +116,10 @@ class SCMView(ModelView):
             return eps, self.model.load_sigma_c_arr
 
 if __name__ == '__main__':
-    length = 1000.
+    length = 200.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=200.,
+                               lacor=50.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
@@ -130,11 +130,10 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=1.23, scale=.03),
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          n_int=2000,
                           label='carbon')
 
     CB_model = CompositeCrackBridge(E_m=25e3,

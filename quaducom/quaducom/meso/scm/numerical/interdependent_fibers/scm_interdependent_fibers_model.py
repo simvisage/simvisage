@@ -119,7 +119,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=5, n_x=500
+                            length=self.length, n_w=50, n_BC=5, n_x=1000
                             )
 
     sigma_c_crack = List
@@ -250,11 +250,11 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list] 
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
-#            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-#             #plt.ylim(0,0.0008)
-#            plt.show()
+            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
+            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+             #plt.ylim(0,0.0008)
+            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,

@@ -44,6 +44,10 @@ class ContinuousFibers(Reinforcement):
             tau = self.tau.ppf(
                 np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
             stat_weights *= 1. / self.n_int
+            # check on accuracy
+            if np.abs(self.tau._distr.mean - np.mean(tau))/self.tau._distr.mean > 0.01:
+                print 'Warning, the n_int should be increased. The numericaly predicted mean is ', np.mean(tau),
+                print 'while the true value is ', self.tau._distr.mean 
             nu_r_tau = np.ones_like(tau)
         else:
             tau = self.tau
@@ -52,6 +56,10 @@ class ContinuousFibers(Reinforcement):
             r = self.r.ppf(
                 np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
             stat_weights *= 1. / self.n_int
+            # check on accuracy
+            if np.abs(self.r._distr.mean - np.mean(r))/self.r._distr.mean > 0.01:
+                print 'Warning, the n_int should be increased. The numericaly predicted mean is ', np.mean(r),
+                print 'while the true value is ', self.r._distr.mean 
             r2 = r ** 2
             nu_r = r2 / np.mean(r2)
         else:

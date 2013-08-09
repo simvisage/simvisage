@@ -201,7 +201,7 @@ class CompositeCrackBridge(HasTraits):
         # integrated f(depsf) - see article
         F = self.F(dems, amin)
         # a(T) for double sided pullout
-        a1 = np.exp(F/2. + np.log(amin))# * mask_po + Le * inv_mask_po
+        a1 = np.exp(F/2. + np.log(amin))
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
             a = np.hstack((-Lmin, 0.0, Lmax))
@@ -330,27 +330,26 @@ class CompositeCrackBridge(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-
     reinf = ContinuousFibers(r=0.0035,
                           tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.703,
+                          V_f=0.03,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          n_int=20,
+                          xi=WeibullFibers(shape=5.0, sV0=10.0026),
+                          n_int=500,
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=100.,
-                                 Lr=100.,
-                                 w=4.)
+                                 Ll=1.,
+                                 Lr=50.,
+                                 w=.03)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
     plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro')
     for i, depsf in enumerate(ccb.sorted_depsf):
-        epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf*np.abs(ccb._x_arr),ccb._epsm_arr)
-        print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
+        epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr),ccb._epsm_arr)
+        #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         plt.plot(ccb._x_arr, epsf_x)
     plt.legend(loc='best')
     plt.show()
