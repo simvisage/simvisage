@@ -64,7 +64,6 @@ class CompositeCrackBridgeView(ModelView):
         sigma_c_lst = []
         u_lst = []
         for w in w_arr:
-            print w
             self.model.w = w
             sigma_c_lst.append(self.sigma_c)
             if u == True:
@@ -86,15 +85,16 @@ class CompositeCrackBridgeView(ModelView):
     def _get_sigma_c_max(self):
         def minfunc(w):
             self.model.w = w
-            damage = self.model.damage
-            if np.sum(damage)/len(damage) > 0.9:
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage)/np.sum(self.model.Kf)
+            if stiffness_loss > 0.30:
                 return w * 1e10
-            #plt.plot(w, self.sigma_c, 'ro')
+            plt.plot(w, self.sigma_c, 'ro')
             return - self.sigma_c
         #t = time.clock()
-        w = fminbound(minfunc, 1e-10, 5.0, maxfun = 30)
+        w = fminbound(minfunc, 1e-10, 5., maxfun = 30)
         #result = minimize(minfunc, 0.001, options=dict(maxiter=5))
         #print time.clock() - t, 's'
+        print 'evaluate for damage e.g 0.5, then brute force + local optimizations and take the max of them'
         return self.sigma_c, w
 
     def w_x_results(self, w_arr, x):
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         plt.ylabel('strain')
 
     def sigma_c_w(w_arr):
-        sigma_c_arr, u_arr=ccb_view.sigma_c_arr(w_arr, u=True)
+        sigma_c_arr, u_arr = ccb_view.sigma_c_arr(w_arr, u=True)
         plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
         #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
@@ -297,12 +297,13 @@ if __name__ == '__main__':
 #    for i, s in enumerate(sigma_c):
 #        ccb_view.apply_load(s)
 #        profile(ccb_view.model.w)
-    w = np.linspace(0., .4, 50)
+    w = np.linspace(0., .35, 50)
     sigma_c_w(w)
+    #energy(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)
-    plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'ro')
+    plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
     #sigma_f(np.linspace(.0, .16, 50))
     plt.legend(loc='best')
     plt.show()
