@@ -23,7 +23,7 @@ from interpolator import Interpolator
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
-from scipy.interpolate import interp1d
+from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from scipy.optimize import brentq
 import copy
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
@@ -64,18 +64,21 @@ class CB(HasTraits):
             return np.nan * np.ones_like(self.x)
         else:
             sigma_c = self.strain_profiles[0][1]
-            sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
+            idx_low = np.argwhere(sigma_c <= load)
+            if len(idx_low) == 0:
+                sigma_c_low = sigma_c[0]
+            else:
+                sigma_c_low = np.max(sigma_c[idx_low])
             sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
             mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
             mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
-    
-            interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
-                                  self.strain_profiles[1][mask_sigma_c_low])
-            values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+            interp_low = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_low],
+                                      ydata=self.strain_profiles[1][mask_sigma_c_low])
+            values_low = interp_low.get_values(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
  
-            interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
-                                   self.strain_profiles[1][mask_sigma_c_high])
-            values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
+            interp_high = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_high],
+                                       ydata=self.strain_profiles[1][mask_sigma_c_high])
+            values_high = interp_high.get_values(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
             
             return values_low + values_high
 
@@ -88,18 +91,21 @@ class CB(HasTraits):
             return np.nan * np.ones_like(self.x)
         else:
             sigma_c = self.strain_profiles[0][1]
-            sigma_c_low = np.max(sigma_c[np.argwhere(sigma_c < load)])
+            idx_low = np.argwhere(sigma_c <= load)
+            if len(idx_low) == 0:
+                sigma_c_low = sigma_c[0]
+            else:
+                sigma_c_low = np.max(sigma_c[idx_low])
             sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
             mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
             mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
-    
-            interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
-                                  self.strain_profiles[2][mask_sigma_c_low])
-            values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+            interp_low = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_low],
+                                      ydata=self.strain_profiles[2][mask_sigma_c_low])
+            values_low = interp_low.get_values(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
  
-            interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
-                                   self.strain_profiles[2][mask_sigma_c_high])
-            values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
+            interp_high = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_high],
+                                       ydata=self.strain_profiles[2][mask_sigma_c_high])
+            values_high = interp_high.get_values(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)  
             
             return values_low + values_high
 
@@ -119,7 +125,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=5, n_x=1000
+                            length=self.length, n_w=50, n_BC=28, n_x=500
                             )
 
     sigma_c_crack = List
@@ -139,8 +145,8 @@ class SCM(HasTraits):
         # evaluates a random field
         # realization and creates a spline reprezentation
         rf = self.random_field.random_field
-        rf_spline = interp1d(self.random_field.xgrid, rf)
-        return rf_spline(self.x_arr)
+        rf_spline = MFnLineArray(xdata=self.random_field.xgrid, ydata=rf)
+        return rf_spline.get_values(self.x_arr)
 
     def sort_cbs(self):
         # sorts the CBs by position and adjusts the boundary conditions
@@ -223,7 +229,10 @@ class SCM(HasTraits):
         return epsf_x
 
     def residuum(self, q):
-        return np.min(self.matrix_strength - self.sigma_m(q))
+        sigm = self.sigma_m(q)     
+        residuum = np.min(self.matrix_strength - self.sigma_m(q))
+        print 'load =', q, 'residuum = ', residuum
+        return residuum
 
     def evaluate(self):
         # seek for the minimum strength redundancy to find the position
@@ -250,11 +259,11 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list] 
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
-            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-             #plt.ylim(0,0.0008)
-            plt.show()
+#             plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
+#             plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+#              #plt.ylim(0,0.0008)
+#             plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
@@ -265,10 +274,10 @@ class SCM(HasTraits):
         #print sigc_min, sigc_min / (self.reinforcement.E_f * self.reinforcement.V_f + self.E_m * (1. - self.reinforcement.V_f))
 
 if __name__ == '__main__':
-    length = 1000.
+    length = 200.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=200.,
+                               lacor=10.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
@@ -279,11 +288,10 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=1.23, scale=.03),
-                          V_f=0.0103,
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
+                          V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          n_int=200,
                           label='carbon')
 
     CB_model = CompositeCrackBridge(E_m=25e3,

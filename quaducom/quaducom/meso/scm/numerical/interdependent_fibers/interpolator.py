@@ -9,15 +9,13 @@ the Interpolator2 class evaluates crack bridges along x and for a range of load 
 from etsproxy.traits.api import HasTraits, Property, cached_property, \
     Instance, Array, Float, Int
 import numpy as np
-from spirrid.rv import RV
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
-from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
 from scipy.optimize import brentq
 import time
-from scipy.interpolate import griddata, interp2d, interp1d
+from scipy.interpolate import interp2d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
+import pickle
 
 class Interpolator(HasTraits):
 
@@ -54,41 +52,76 @@ class Interpolator(HasTraits):
     def _get_BC_range(self):
         self.max_sigma_w(np.inf, np.inf)
         Lmax = min(self.CB_model_view.x_arr[-2], self.length)
-        return np.linspace(1.0, Lmax, self.n_BC)
+        return np.logspace(np.log10(1.0), np.log10(Lmax), self.n_BC)
+
+    def w_x_res(self, w_arr, ll, lr, maxBC):
+        self.CB_model_view.model.Ll = ll
+        self.CB_model_view.model.Lr = lr
+        epsm = np.array([0.0])
+        mu_epsf = np.array([0.0])
+        x = np.array([0.0])
+        sigma_c = np.array([0.0])
+        ll_arr = np.array([0.0])
+        lr_arr = np.array([0.0])
+        for w in w_arr:
+            self.CB_model_view.model.w = w
+            if self.CB_model_view.sigma_c > sigma_c[-1]:
+                sigma_c = np.hstack((sigma_c, np.ones(len(self.CB_model_view.x_arr) + 2) * self.CB_model_view.sigma_c))
+                ll_arr = np.hstack((ll_arr, ll * np.ones(len(self.CB_model_view.x_arr) + 2)))
+                lr_arr = np.hstack((lr_arr, lr * np.ones(len(self.CB_model_view.x_arr) + 2)))
+                epsm = np.hstack((epsm, self.CB_model_view.epsm_arr[0], self.CB_model_view.epsm_arr, self.CB_model_view.epsm_arr[-1]))
+                mu_epsf = np.hstack((mu_epsf, self.CB_model_view.mu_epsf_arr[0], self.CB_model_view.mu_epsf_arr, self.CB_model_view.mu_epsf_arr[-1]))
+                x = np.hstack((x, -maxBC - 1e-10, self.CB_model_view.x_arr, maxBC + 1e-10))
+                if ll != lr:
+                    ll_arr = np.hstack((ll_arr, lr * np.ones(len(self.CB_model_view.x_arr) + 2)))
+                    lr_arr = np.hstack((lr_arr, ll * np.ones(len(self.CB_model_view.x_arr) + 2)))
+                    epsm = np.hstack((epsm, self.CB_model_view.epsm_arr[-1], self.CB_model_view.epsm_arr[::-1], self.CB_model_view.epsm_arr[0]))
+                    mu_epsf = np.hstack((mu_epsf, self.CB_model_view.mu_epsf_arr[-1], self.CB_model_view.mu_epsf_arr[::-1], self.CB_model_view.mu_epsf_arr[0]))
+                    x = np.hstack((x, -maxBC - 1e-10, -self.CB_model_view.x_arr[::-1], maxBC + 1e-10))
+                    sigma_c = np.hstack((sigma_c, np.ones(len(self.CB_model_view.x_arr) + 2) * self.CB_model_view.sigma_c))
+        return sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr
 
     result_values = Property(Array, depends_on='CB_model, load_sigma_c_arr, n_w, n_x, n_BC')
     @cached_property
     def _get_result_values(self):
-        L_arr = self.BC_range
-        Ll_arr = np.array([])
-        Lr_arr = np.array([])
-        x_arr = np.array([])
-        sigma_c_arr = np.array([])
-        mu_epsf_arr = np.array([])
-        epsm_arr = np.array([])
-        loops_tot = self.n_BC ** 2
-        max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
-        for i, ll in enumerate(L_arr):
-            for j, lr in enumerate(L_arr):
-                if j >= i:
-                    print ll, lr
-                    # find maximum
-                    sigma_c_max, wmax = self.max_sigma_w(ll, lr)
-                    max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
-                    w_arr = np.linspace(0.0, wmax, self.n_w)
-                    mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.CB_model_view.w_x_res(w_arr, ll, lr, self.length)
-                    # store the particular result for BC ll and lr into the result array
-                    Ll_arr = np.hstack((Ll_arr, ll_arr))
-                    Lr_arr = np.hstack((Lr_arr, lr_arr))
-                    x_arr = np.hstack((x_arr, x))
-                    sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
-                    mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
-                    epsm_arr = np.hstack((epsm_arr, epsm))
-                current_loop = i * len(L_arr) + j + 1
-                print 'progress: %2.1f %%' % \
-                (current_loop / float(loops_tot) * 100.)
-        points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
-        return points, mu_epsf_arr, epsm_arr, max_sigma_c_arr
+        try:
+            pkl_file = open('interp_arr.pkl', 'rb')
+            return pickle.load(pkl_file)
+        except:
+            L_arr = self.BC_range
+            Ll_arr = np.array([])
+            Lr_arr = np.array([])
+            x_arr = np.array([])
+            sigma_c_arr = np.array([])
+            mu_epsf_arr = np.array([])
+            epsm_arr = np.array([])
+            loops_tot = self.n_BC ** 2
+            max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
+            for i, ll in enumerate(L_arr):
+                for j, lr in enumerate(L_arr):
+                    if j >= i:
+                        print ll, lr
+                        # find maximum
+                        sigma_c_max, wmax = self.max_sigma_w(ll, lr)
+                        max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
+                        w_arr = np.linspace(0.0, wmax, self.n_w)
+                        mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.w_x_res(w_arr, ll, lr, self.length)
+                        # store the particular result for BC ll and lr into the result array
+                        Ll_arr = np.hstack((Ll_arr, ll_arr))
+                        Lr_arr = np.hstack((Lr_arr, lr_arr))
+                        x_arr = np.hstack((x_arr, x))
+                        sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
+                        mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
+                        epsm_arr = np.hstack((epsm_arr, epsm))
+                    current_loop = i * len(L_arr) + j + 1
+                    print 'progress: %2.1f %%' % \
+                    (current_loop / float(loops_tot) * 100.)
+            points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
+            interp_arr = open('interp_arr.pkl', 'wb')
+            pickle.dump([points, mu_epsf_arr, epsm_arr, max_sigma_c_arr], interp_arr, -1)
+            interp_arr.close()
+            pkl_file = open('interp_arr.pkl', 'rb')
+            return pickle.load(pkl_file)
 
     def interpolate_max_sigma_c(self, Ll, Lr):
         L_l, L_r = self.get_L(Ll, Lr)
@@ -115,34 +148,4 @@ class Interpolator(HasTraits):
         return points, mu_epsf_arr, epsm_arr
 
 if __name__ == '__main__':
-    from matplotlib import pyplot as plt
-
-    reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('weibull_min', loc=0.007, shape=1.22, scale=.04),
-                          V_f=0.0103,
-                          E_f=180e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0032),
-                          n_int=200,
-                          label='carbon')
-
-    CB_model = CompositeCrackBridge(E_m=25e3, reinforcement_lst=[reinf])
-
-    ir = Interpolator(CB_model=CB_model,
-                             load_sigma_c_arr=np.linspace(0.0, 25., 50),
-                             n_w=50,
-                             n_BC=3,
-                             n_x=100,
-                             length=500.
-                             )
-
-    Ll = 2.6
-    Lr = 3.
-    x_arr = np.linspace(-Ll, Lr, 500)
-    Ll = 5.
-    Lr = 2.
-    x_arr = np.linspace(-Ll, Lr, 200)
-    sigma_c = np.linspace(1., 11., 7)
-    for i, s in enumerate(sigma_c):
-        plt.plot(x_arr, ir.interpolate_epsm(s, x_arr, Ll, Lr))
-        plt.plot(x_arr, ir.interpolate_mu_epsf(s, x_arr, Ll, Lr))
-    plt.show()
+    pass

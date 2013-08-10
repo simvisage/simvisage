@@ -83,19 +83,37 @@ class CompositeCrackBridgeView(ModelView):
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_sigma_c_max(self):
-        def minfunc(w):
+        def minfunc_sigma(w):
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage)/np.sum(self.model.Kf)
-            if stiffness_loss > 0.30:
+            if stiffness_loss > 0.90:
                 return w * 1e10
-            plt.plot(w, self.sigma_c, 'ro')
+            #plt.plot(w, self.sigma_c, 'ro')
             return - self.sigma_c
+        def residuum_stiffness(w):
+            self.model.w = w
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage)/np.sum(self.model.Kf)
+            if stiffness_loss > 0.90:
+                return w * 1e10
+            if stiffness_loss < 0.65 and stiffness_loss > 0.45:
+                residuum = 0.0
+            else:
+                residuum = stiffness_loss - 0.5
+            return residuum
+        
+        try:
+            w_max = brentq(residuum_stiffness, 0.0, 5.0)
+            w_points = np.linspace(0, w_max, 7)
+            w_maxima = []
+            sigma_maxima = []
+            for i, w in enumerate(w_points[1:]):
+                w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i+1], maxfun = 5, disp=0))
+                sigma_maxima.append(self.sigma_c)
+            return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
         #t = time.clock()
-        w = fminbound(minfunc, 1e-10, 5., maxfun = 30)
-        #result = minimize(minfunc, 0.001, options=dict(maxiter=5))
         #print time.clock() - t, 's'
-        print 'evaluate for damage e.g 0.5, then brute force + local optimizations and take the max of them'
-        return self.sigma_c, w
+        except:
+            return np.inf, np.inf
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -109,32 +127,6 @@ class CompositeCrackBridgeView(ModelView):
             mu_epsf[i,:] = mu_epsf_line.get_values(x)
             sigma_c.append(self.sigma_c)
         return epsm, mu_epsf, np.array(sigma_c)
-
-    def w_x_res(self, w_arr, ll, lr, maxBC):
-        self.model.Ll = ll
-        self.model.Lr = lr
-        epsm = np.array([])
-        mu_epsf = np.array([])
-        x = np.array([])
-        sigma_c = np.array([])
-        ll_arr = np.array([])
-        lr_arr = np.array([])
-        for w in w_arr:
-            self.model.w = w
-            ll_arr = np.hstack((ll_arr, ll * np.ones(len(self.x_arr) + 2)))
-            lr_arr = np.hstack((lr_arr, lr * np.ones(len(self.x_arr) + 2)))
-            epsm = np.hstack((epsm, self.epsm_arr[0], self.epsm_arr, self.epsm_arr[-1]))
-            mu_epsf = np.hstack((mu_epsf, self.mu_epsf_arr[0], self.mu_epsf_arr, self.mu_epsf_arr[-1]))
-            x = np.hstack((x, -maxBC, self.x_arr, maxBC))
-            sigma_c = np.hstack((sigma_c, np.ones(len(self.x_arr) + 2) * self.sigma_c))
-            if ll != lr:
-                ll_arr = np.hstack((ll_arr, lr * np.ones(len(self.x_arr) + 2)))
-                lr_arr = np.hstack((lr_arr, ll * np.ones(len(self.x_arr) + 2)))
-                epsm = np.hstack((epsm, self.epsm_arr[-1], self.epsm_arr[::-1], self.epsm_arr[0]))
-                mu_epsf = np.hstack((mu_epsf, self.mu_epsf_arr[-1], self.mu_epsf_arr[::-1], self.mu_epsf_arr[0]))
-                x = np.hstack((x, -maxBC, -self.x_arr[::-1], maxBC))
-                sigma_c = np.hstack((sigma_c, np.ones(len(self.x_arr) + 2) * self.sigma_c))  
-        return sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr
 
     def apply_load(self, sigma):
         if sigma > self.sigma_c_max[0]:
@@ -233,13 +225,13 @@ if __name__ == '__main__':
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          n_int=5000,
+                          n_int=500,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1.,
-                                 Lr=25.)
+                                 Ll=20.,
+                                 Lr=50.)
 
     ccb_view = CompositeCrackBridgeView(model=model)
 

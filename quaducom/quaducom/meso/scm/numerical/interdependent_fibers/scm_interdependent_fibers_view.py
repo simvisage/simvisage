@@ -119,7 +119,7 @@ if __name__ == '__main__':
     length = 200.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=50.,
+                               lacor=5.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
