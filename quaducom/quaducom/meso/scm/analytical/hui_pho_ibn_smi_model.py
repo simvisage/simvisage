@@ -10,7 +10,6 @@ from etsproxy.traits.api import HasTraits, Float, Property, cached_property
 import numpy as np
 from scipy.special import expi
 
-
 class SFC_Hui(HasTraits):
 
     l0 = Float
@@ -68,14 +67,27 @@ class SFC_Hui(HasTraits):
         return self.A0(s) * np.exp(-s**self.rho * x)
     
     def p2(self, s, x):
-        return
-    
+        def integ_scalar(s, x):
+            t = np.linspace(x, s, 200)
+            return np.trapz(self.A0(t)/t * np.exp(-t**self.rho * (x + t/2.)), t)
+        integ_vect = np.vectorize(integ_scalar)
+        return 2. * self.rho * integ_vect(s, x) + self.p1(x, x)
+
+    def p3(self, x):
+        return self.p2(2*x, x)
+
+    def p(self, s, x):
+        p = self.p1(s, x) * (x > s) + self.p2(s, x) * (x < s) * (x > s/2.) + self.p3(x) * (x < s/2.)
+        mask = np.isnan(p) == False
+        p_inf = np.trapz(p[mask], x[mask])
+        return p/p_inf
+
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
-    for s in np.linspace(0.5, 0.8, 3):
-        x = np.linspace(s, 5.0, 100)
-        plt.plot(x, sfc.p1(s, x), label=str(s))
+    for s in np.linspace(0.5, 1.2, 3):
+        x = np.linspace(0.01*s, 2.0, 1000)
+        plt.plot(x, sfc.p(s, x), label=str(s))
     plt.legend()
     plt.show()
     
