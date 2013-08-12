@@ -74,13 +74,13 @@ class SFC_Hui(HasTraits):
         return 2. * self.rho * integ_vect(s, x) + self.p1(x, x)
 
     def p3(self, x):
-        return self.p2(2*x, x)
+        return self.p2(2 * x, x)
 
     def p(self, s, x):
-        p = self.p1(s, x) * (x > s) + self.p2(s, x) * (x < s) * (x > s/2.) + self.p3(x) * (x < s/2.)
+        p = self.p1(s, x) * (x > s) + self.p2(s, x) * (x < s) * (x > s / 2.) + self.p3(x) * (x < s / 2.)
         mask = np.isnan(p) == False
         p_inf = np.trapz(p[mask], x[mask])
-        return p/p_inf
+        return p / p_inf
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt

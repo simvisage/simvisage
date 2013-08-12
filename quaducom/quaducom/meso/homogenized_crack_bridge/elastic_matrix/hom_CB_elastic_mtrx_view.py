@@ -113,7 +113,7 @@ class CompositeCrackBridgeView(ModelView):
         #t = time.clock()
         #print time.clock() - t, 's'
         except:
-            return np.inf, np.inf
+            return 1e10, 100.
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -222,22 +222,22 @@ if __name__ == '__main__':
 
     reinf = ContinuousFibers(r=0.0035,
                           tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.011,
+                          V_f=0.01,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
+                          xi=WeibullFibers(shape=5.0, sV0=10.0026),
                           n_int=500,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=20.,
-                                 Lr=50.)
+                                 Ll=50.,
+                                 Lr=20.)
 
     ccb_view = CompositeCrackBridgeView(model=model)
 
     def profile(w):
         ccb_view.model.w = w
-        plt.plot(ccb_view.x_arr, ccb_view.epsm_arr, color='blue', lw=2)#, label='w_eval=' + str(ccb_view.w_evaluated) + ' w_ctrl=' + str(ccb_view.model.w))
+        plt.plot(ccb_view.x_arr, ccb_view.epsm_arr, lw=2, label='Ll=' + str(ccb_view.model.Ll))
         plt.plot(ccb_view.x_arr, ccb_view.mu_epsf_arr, color='red', lw=2)
         plt.xlabel('position [mm]')
         plt.ylabel('strain')
@@ -289,13 +289,19 @@ if __name__ == '__main__':
 #    for i, s in enumerate(sigma_c):
 #        ccb_view.apply_load(s)
 #        profile(ccb_view.model.w)
-    w = np.linspace(0., .35, 50)
-    sigma_c_w(w)
+    ccb_view.apply_load(10.5)
+    profile(ccb_view.model.w)
+    ccb_view.model.Ll = 1.0
+    ccb_view.apply_load(10.5)
+    profile(ccb_view.model.w)
+    #w = np.linspace(0., .35, 50)
+    #sigma_c_w(w)
     #energy(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)
-    plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+    #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
     #sigma_f(np.linspace(.0, .16, 50))
+    plt.xlim(0,30.0)
     plt.legend(loc='best')
     plt.show()

@@ -314,7 +314,7 @@ class CompositeCrackBridge(HasTraits):
             ff = t.clock()
             try:
 
-                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*0.02,
+                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf)*0.2,
                               method='excitingmixing', options={'maxiter':100})
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
@@ -334,13 +334,13 @@ if __name__ == '__main__':
                           tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
                           V_f=0.03,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
+                          xi=WeibullFibers(shape=5.0, sV0=10.0026),
                           n_int=500,
                           label='carbon')
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1.,
+                                 Ll=50.,
                                  Lr=50.,
                                  w=.1)
 
