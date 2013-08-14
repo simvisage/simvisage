@@ -9,6 +9,7 @@ model of single fiber composite by Hui, Phoenix, Ibnabeljalil and Smith
 from etsproxy.traits.api import HasTraits, Float, Property, cached_property
 import numpy as np
 from scipy.special import expi
+from scipy.integrate import cumtrapz
 
 class SFC_Hui(HasTraits):
 
@@ -77,17 +78,22 @@ class SFC_Hui(HasTraits):
         return self.p2(2 * x, x)
 
     def p(self, s, x):
-        p = self.p1(s, x) * (x > s) + self.p2(s, x) * (x < s) * (x > s / 2.) + self.p3(x) * (x < s / 2.)
-        mask = np.isnan(p) == False
-        p_inf = np.trapz(p[mask], x[mask])
+        p1 = np.nan_to_num(self.p1(s, x)) * (x >= s)
+        p2 = np.nan_to_num(self.p2(s, x)) * (x < s) * (x >= s / 2.)
+        p3 = np.nan_to_num(self.p3(x)) * (x < s / 2.)
+        p = p1 + p2 + p3
+        p_inf = np.trapz(p, x)
         return p / p_inf
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
-    for s in np.linspace(0.5, 1.2, 3):
-        x = np.linspace(0.01*s, 2.0, 1000)
-        plt.plot(x, sfc.p(s, x), label=str(s))
+    for rho in np.array([1., 3., 5., 10., 20.]):
+        sfc.rho = rho
+        x = np.linspace(0.01, 3.0, 200)
+        pdf = sfc.p(3., x)
+        cdf = np.hstack((0., cumtrapz(pdf, x)))
+        plt.plot(x, pdf, label=str(rho))
     plt.legend()
     plt.show()
     
