@@ -72,14 +72,23 @@ class SFC_Hui(HasTraits):
             t = np.linspace(x, s, 200)
             return np.trapz(self.A0(t)/t * np.exp(-t**self.rho * (x + t/2.)), t)
         integ_vect = np.vectorize(integ_scalar)
-        return 2. * self.rho * integ_vect(s, x) + self.p1(x, x)
+        return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
+
+    def p22(self, s, x):
+        def integ_scalar(s, x):
+            t = np.linspace(x, s, 200)
+            def integrant(t):
+                return t**(2.*self.rho) * np.exp(self.lambd * t ** (self.rho + 1) -2.*self.lambd * (0.577215664901532 + np.log(t**(self.rho+1)/2.) - expi(-t**(self.rho+1)/2.)) -t**self.rho * (x + t/2.)) /t
+            return np.trapz(integrant(t), t)
+        integ_vect = np.vectorize(integ_scalar)
+        return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
 
     def p3(self, x):
-        return self.p2(2 * x, x)
+        return self.p22(2 * x, x)
 
     def p(self, s, x):
         p1 = np.nan_to_num(self.p1(s, x)) * (x >= s)
-        p2 = np.nan_to_num(self.p2(s, x)) * (x < s) * (x >= s / 2.)
+        p2 = np.nan_to_num(self.p22(s, x)) * (x < s) * (x >= s / 2.)
         p3 = np.nan_to_num(self.p3(x)) * (x < s / 2.)
         p = p1 + p2 + p3
         p_inf = np.trapz(p, x)
@@ -93,7 +102,7 @@ if __name__ == '__main__':
         x = np.linspace(0.01, 3.0, 200)
         pdf = sfc.p(3., x)
         cdf = np.hstack((0., cumtrapz(pdf, x)))
-        plt.plot(x, pdf, label=str(rho))
+        plt.plot(x, cdf, label=str(rho))
     plt.legend()
     plt.show()
     
