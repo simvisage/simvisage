@@ -74,6 +74,9 @@ class SFC_Hui(HasTraits):
         integ_vect = np.vectorize(integ_scalar)
         return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
 
+    def p11(self, s, x):
+        return s**(2.*self.rho) * np.exp(self.lambd * s ** (self.rho + 1) -2.*self.lambd * (0.577215664901532 + np.log(s**(self.rho+1)/2.) - expi(-s**(self.rho+1)/2.)) -s**self.rho * x) 
+
     def p22(self, s, x):
         def integ_scalar(s, x):
             t = np.linspace(x, s, 200)
@@ -87,7 +90,7 @@ class SFC_Hui(HasTraits):
         return self.p22(2 * x, x)
 
     def p(self, s, x):
-        p1 = np.nan_to_num(self.p1(s, x)) * (x >= s)
+        p1 = np.nan_to_num(self.p11(s, x)) * (x >= s)
         p2 = np.nan_to_num(self.p22(s, x)) * (x < s) * (x >= s / 2.)
         p3 = np.nan_to_num(self.p3(x)) * (x < s / 2.)
         p = p1 + p2 + p3
@@ -99,10 +102,10 @@ if __name__ == '__main__':
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
     for rho in np.array([1., 3., 5., 10., 20.]):
         sfc.rho = rho
-        x = np.linspace(0.01, 3.0, 200)
-        pdf = sfc.p(3., x)
+        x = np.linspace(0.01, 3.5, 200)
+        pdf = sfc.p(5., x)
         cdf = np.hstack((0., cumtrapz(pdf, x)))
-        plt.plot(x, cdf, label=str(rho))
+        plt.plot(x, pdf, label=str(rho))
     plt.legend()
     plt.show()
     
