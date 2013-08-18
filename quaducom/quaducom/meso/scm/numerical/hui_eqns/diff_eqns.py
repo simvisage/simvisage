@@ -72,24 +72,18 @@ if __name__ == '__main__':
     for rho in np.array([10.]):
         sfc.rho = rho
         sfc.x = np.linspace(0.01, 7., 300)
-        pdf_x = sfc.hui_model.p_x(1.5, sfc.x)
-        a = np.trapz(pdf_x, sfc.x)
-        print 2./a
-        b = np.trapz(sfc.x * pdf_x / a, sfc.x)
-        print b
-        
         #print np.trapz(x*pdf_x_num, x)
         #cdf_x = np.hstack((0., cumtrapz(pdf_x, x)))
         plt.plot(sfc.x, sfc.hui_model.p_x(1., sfc.x), label='analytical 1.0')
-        plt.plot(sfc.x, sfc.hui_model.p_x(1.3, sfc.x), label='analytical 1.3')
+        plt.plot(sfc.x, sfc.hui_model.p_x(1.5, sfc.x), label='analytical 1.5')
         t = time.clock()
-        euler = sfc.p_num_euler(2.8)
+        euler = sfc.p_num_euler(1.5)
         print 'euler', time.clock() - t, 's'
         t = time.clock()
-        rk = sfc.p_num_scipy(2.8)
+        rk = sfc.p_num_scipy(1.5)
         print 'RK', time.clock() - t, 's'
-        #plt.plot(sfc.x, euler, label='numerical 1.3')
-        plt.plot(sfc.x, rk, label='ru-ku 1.3')
+        plt.plot(sfc.x, euler, label='euler')
+        plt.plot(sfc.x, rk, label='ru-ku')
     plt.ylim(0,4.0)
     plt.legend()
     plt.show()
