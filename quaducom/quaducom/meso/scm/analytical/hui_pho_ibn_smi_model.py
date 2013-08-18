@@ -74,6 +74,9 @@ class SFC_Hui(HasTraits):
         integ_vect = np.vectorize(integ_scalar)
         return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
 
+    def p3(self, x):
+        return self.p2(2 * x, x)
+
     def p11(self, s, x):
         return s**(2.*self.rho) * np.exp(self.lambd * s ** (self.rho + 1) -2.*self.lambd * (0.577215664901532 + np.log(s**(self.rho+1)/2.) - expi(-s**(self.rho+1)/2.)) -s**self.rho * x) 
 
@@ -84,28 +87,33 @@ class SFC_Hui(HasTraits):
                 return t**(2.*self.rho) * np.exp(self.lambd * t ** (self.rho + 1) -2.*self.lambd * (0.577215664901532 + np.log(t**(self.rho+1)/2.) - expi(-t**(self.rho+1)/2.)) -t**self.rho * (x + t/2.)) /t
             return np.trapz(integrant(t), t)
         integ_vect = np.vectorize(integ_scalar)
-        return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
+        return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p11(x, x))
 
-    def p3(self, x):
+    def p33(self, x):
         return self.p22(2 * x, x)
 
-    def p(self, s, x):
+    def p_x(self, s, x):
         p1 = np.nan_to_num(self.p11(s, x)) * (x >= s)
         p2 = np.nan_to_num(self.p22(s, x)) * (x < s) * (x >= s / 2.)
-        p3 = np.nan_to_num(self.p3(x)) * (x < s / 2.)
+        p3 = np.nan_to_num(self.p33(x)) * (x < s / 2.)
         p = p1 + p2 + p3
-        p_inf = np.trapz(p, x)
-        return p / p_inf
+        #p_inf = np.trapz(p, x)
+        return p# / p_inf
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
-    for rho in np.array([1., 3., 5., 10., 20.]):
+    
+    for rho in np.array([12., 100.]):
         sfc.rho = rho
-        x = np.linspace(0.01, 3.5, 200)
-        pdf = sfc.p(5., x)
-        cdf = np.hstack((0., cumtrapz(pdf, x)))
-        plt.plot(x, pdf, label=str(rho))
+        x = np.linspace(0.01, 2.5, 500)
+        pdf_x = sfc.p_x(50., x)
+        print np.trapz(x*pdf_x, x)
+        cdf_x = np.hstack((0., cumtrapz(pdf_x, x)))
+#         s = np.linspace(0.01, 1.0, 200)
+#         pdf_s = sfc.p_s(s, 1.0)
+#         cdf_s = np.hstack((0., cumtrapz(pdf_s, s)))
+        plt.plot(x, pdf_x, label=str(rho))
     plt.legend()
     plt.show()
     
