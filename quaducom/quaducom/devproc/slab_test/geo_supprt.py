@@ -18,7 +18,7 @@ from os.path import join
 from math import pi
 
 
-class GeoSPT(HasTraits):
+class GeoSUPPRT(HasTraits):
     '''Geometry definition of the tappered support added from four hp-surfaces and a planar top-level.
     used for linear reduction of the stiffness of the support.
     '''
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     from numpy import mgrid, c_, hstack, vstack, shape
     from etsproxy.mayavi import mlab
 
-    geo_supprt = GeoSPT()
+    geo_supprt = GeoSUPPRT()
 
     shape_xy = 2
     shape_z = 1
