@@ -9,8 +9,6 @@ from etsproxy.traits.api import \
 
 import numpy as np
 
-from numpy import c_
-
 import scipy as sp
 
 from os.path import join
@@ -37,11 +35,6 @@ class GeoST(HasTraits):
     #
     shape_R = Int(3, input = True)
         
-    # discretization in z-direction 
-    # (thickness direction):
-    #
-    shape_z = Int(1, input = True)
-
     # ratio of the discretization, i.e. number of elements for each region     
     #
     r_ = Property(depends_on = '+input')
@@ -153,18 +146,22 @@ class GeoST(HasTraits):
 
 if __name__ == '__main__':
 
-    from numpy import mgrid, c_, hstack, vstack, shape
     from etsproxy.mayavi import mlab
 
     st = GeoST()
 
-    grid = mgrid[0:1:complex(0, st.shape_xy + 1),
-                 0:1:complex(0, st.shape_xy + 1),
-                 0:1:complex(0, st.shape_z )]
+    # discretization in z-direction 
+    # (thickness direction):
+    #
+    shape_z = 2
+
+    grid = np.mgrid[0:1:complex(0, st.shape_xy + 1),
+                    0:1:complex(0, st.shape_xy + 1),
+                    0:1:complex(0, shape_z + 1)]
 
     X, Y, Z = grid
 
-    gpoints = c_[ X.flatten(), Y.flatten(), Z.flatten() ]
+    gpoints = np.c_[ X.flatten(), Y.flatten(), Z.flatten() ]
     
     mlab.figure(bgcolor=(1.,1.,1.,))
     fp1 = st(gpoints)
