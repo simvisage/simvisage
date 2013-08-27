@@ -38,20 +38,13 @@ class MFnLineArray(HasTraits):
                 raise ValueError('value(s) outside interpolation range')
 
         elif self.extrapolate == 'constant':
-            mask = x >= self.xdata[0]
-            mask *= x <= self.xdata[-1]
-            l_mask = x < self.xdata[0]
-            r_mask = x > self.xdata[-1]
-            extrapol_left = np.repeat(ip.splev(self.xdata[0], tck, der = 0), len(x)) * l_mask
-            extrapol_right = np.repeat(ip.splev(self.xdata[-1], tck, der = 0), len(x)) * r_mask
-            extrapol = extrapol_left + extrapol_right
-            values = ip.splev(x, tck, der = 0) * mask + extrapol
+            values = ip.splev(x, tck, der = 0)
+            values[x < self.xdata[0]] = self.ydata[0]
+            values[x > self.xdata[-1]] = self.ydata[-1]
         elif self.extrapolate == 'zero':
-            mask = x >= self.xdata[0]
-            mask *= x <= self.xdata[-1]
-            mask_extrapol = mask == False
-            extrapol = np.zeros(len(x)) * mask_extrapol
-            values = ip.splev(x, tck, der = 0) * mask + extrapol
+            values = ip.splev(x, tck, der = 0)
+            values[x < self.xdata[0]] = 0.0
+            values[x > self.xdata[-1]] = 0.0
         return values
 
     def get_value(self, x):
@@ -164,8 +157,8 @@ if __name__ == '__main__':
 
     data()
     #scalar()
-    constant()
-    #zero()
+    #constant()
+    zero()
     #diff()
     #exception()
     plt.legend(loc = 'best')

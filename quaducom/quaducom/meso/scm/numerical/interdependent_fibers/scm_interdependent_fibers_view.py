@@ -25,7 +25,7 @@ class SCMView(ModelView):
 
     def crack_widths(self, sigma_c):
         # find the index of the nearest value in the load range
-        idx = np.abs(self.model.load_sigma_c - sigma_c).argmin()
+        idx = np.abs(self.model.load_sigma_c_arr - sigma_c).argmin()
         # evaluate the relative strain e_rel between fibers
         # and matrix for the given load
         e_rel = self.mu_epsf_x[idx, :] - self.eps_m_x[idx, :]
@@ -51,7 +51,7 @@ class SCMView(ModelView):
     eval_w = Property(List, depends_on='model')
     @cached_property
     def _get_eval_w(self):
-        return [self.crack_widths(load) for load in self.model.load_sigma_c]
+        return [self.crack_widths(load) for load in self.model.load_sigma_c_arr]
 
     w_mean = Property(Array, depends_on='model')
     @cached_property
@@ -76,33 +76,30 @@ class SCMView(ModelView):
     x_area = Property(depends_on='model.')
     @cached_property
     def _get_x_area(self):
-        return  np.ones_like(self.model.load_sigma_c)[:, np.newaxis] \
+        return  np.ones_like(self.model.load_sigma_c_arr)[:, np.newaxis] \
             * self.model.x_arr[np.newaxis, :]
 
     sigma_m_x = Property(depends_on='model.')
     @cached_property
     def _get_sigma_m_x(self):
-        sigma_m_x = np.zeros_like(self.model.load_sigma_c[:, np.newaxis]
+        sigma_m_x = np.zeros_like(self.model.load_sigma_c_arr[:, np.newaxis]
                                   * self.model.x_arr[np.newaxis, :])
-        for i, q in enumerate(self.model.load_sigma_c):
+        for i, q in enumerate(self.model.load_sigma_c_arr):
             sigma_m_x[i, :] = self.model.sigma_m(q)
         return sigma_m_x
 
     eps_m_x = Property(Array, depends_on='model.')
     @cached_property
     def _get_eps_m_x(self):
-        return self.sigma_m_x / self.model.E_m
+        return self.sigma_m_x / self.model.CB_model.E_m
 
     mu_epsf_x = Property(depends_on='model.')
     @cached_property
     def _get_mu_epsf_x(self):
-        mu_epsf_x = np.zeros_like(self.model.load_sigma_c[:, np.newaxis]
+        mu_epsf_x = np.zeros_like(self.model.load_sigma_c_arr[:, np.newaxis]
                                   * self.model.x_arr[np.newaxis, :])
-        for i, q in enumerate(self.model.load_sigma_c):
+        for i, q in enumerate(self.model.load_sigma_c_arr):
             mu_epsf_x[i, :] = self.model.epsf_x(q)
-#         plt.plot(self.model.x_arr, self.model.epsf_x(8.45))
-#         plt.plot(self.model.x_arr, self.model.epsf_x(8.75))
-#         plt.show()
         return mu_epsf_x
 
     eps_sigma = Property(depends_on='model.')
@@ -110,47 +107,46 @@ class SCMView(ModelView):
     def _get_eps_sigma(self):
         eps = np.trapz(self.mu_epsf_x, self.x_area, axis=1) / self.model.length
         eps = eps[np.isnan(eps) == False]
-        if len(eps) != len(self.model.load_sigma_c):
+        if len(eps) != len(self.model.load_sigma_c_arr):
             eps = list(eps) + [list(eps)[-1]]
-            sigma = copy.copy(self.model.load_sigma_c[:len(eps)])
+            sigma = copy.copy(self.model.load_sigma_c_arr[:len(eps)])
             sigma[-1] = 0.0
             return eps, sigma
         else:
-            return eps, self.model.load_sigma_c
+            return eps, self.model.load_sigma_c_arr
 
 if __name__ == '__main__':
-    length = 1000.
+    length = 200.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=10.,
-                                xgrid=np.linspace(0., length, 200),
+                               lacor=5.,
+                                xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
                                 shape=15.,
-                                scale=6.,
+                                scale=2.5,
                                 non_negative_check=True,
                                 distribution='Weibull'
                                )
 
-    reinf = ContinuousFibers(r=0.00345,
-                          tau=RV('uniform', loc=0.0, scale=.04),
-                          V_f=0.0103,
-                          E_f=200e3,
-                          xi=WeibullFibers(shape=4.3, sV0=10.00295),
-                          n_int=200,
+    reinf = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
+                          V_f=0.011,
+                          E_f=240e3,
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
                           label='carbon')
+
+    CB_model = CompositeCrackBridge(E_m=25e3,
+                                 reinforcement_lst=[reinf],
+                                 )
 
     scm = SCM(length=length,
               nx=nx,
               random_field=random_field,
-              E_m=25e3,
-              reinforcement=reinf,
-              load_sigma_c_min=.1,
-              load_sigma_c_max=18.,
-              load_n_sigma_c=200
+              CB_model=CB_model,
+              load_sigma_c_arr=np.linspace(0.01, 15., 100),
               )
 
-    scm.evaluate()
     scm_view = SCMView(model=scm)
     scm_view.model.evaluate()
 
@@ -167,15 +163,15 @@ if __name__ == '__main__':
 #         plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
 #         plt.legend(loc='best')
         plt.figure()
-        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean,
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean,
                  color='green', lw=2, label='mean crack width')
-        plt.plot(scm_view.model.load_sigma_c, scm_view.w_median,
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_median,
                  color='blue', lw=2, label='median crack width')
-        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean + scm_view.w_stdev,
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean + scm_view.w_stdev,
                  color='black', label='stdev')
-        plt.plot(scm_view.model.load_sigma_c, scm_view.w_mean - scm_view.w_stdev,
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean - scm_view.w_stdev,
                  color='black')
-        plt.plot(scm_view.model.load_sigma_c, scm_view.w_max,
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_max,
                  ls='dashed', color='red', label='max crack width')
         plt.legend(loc='best')
         plt.show()

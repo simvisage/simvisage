@@ -41,16 +41,28 @@ class ContinuousFibers(Reinforcement):
     def _get_results(self):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
-            tau = self.tau.ppf(
-                np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
+            tau = []
+            p_arr = np.linspace(.005, 0.995, self.n_int + 1)
+            for i, p in enumerate(p_arr[1:]):
+                tau_arr = self.tau.ppf(np.linspace(p_arr[i], p, 500))
+                pdf = self.tau.pdf(tau_arr)
+                tau.append(np.trapz(tau_arr * pdf, tau_arr)/(p-p_arr[i]))
+            tau = np.array(tau)
+            
             stat_weights *= 1. / self.n_int
             nu_r_tau = np.ones_like(tau)
         else:
             tau = self.tau
             nu_r_tau = 1.0
         if isinstance(self.r, RV):
-            r = self.r.ppf(
-                np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
+            r = []
+            p_arr = np.linspace(.005, 0.995, self.n_int + 1)
+            for i, p in enumerate(p_arr[1:]):
+                r_arr = self.r.ppf(np.linspace(p_arr[i], p, 500))
+                pdf = self.r.pdf(r_arr)
+                r.append(np.trapz(r_arr * pdf, r_arr)/(p-p_arr[i]))
+            r = np.array(r)
+            
             stat_weights *= 1. / self.n_int
             r2 = r ** 2
             nu_r = r2 / np.mean(r2)
