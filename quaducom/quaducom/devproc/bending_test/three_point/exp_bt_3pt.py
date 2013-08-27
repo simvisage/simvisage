@@ -125,7 +125,7 @@ class ExpBT3PT(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    length = Float(0.42, unit='m', input=True, table_field=True,
+    length = Float(0.46, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
     width = Float(0.1, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
@@ -195,7 +195,7 @@ class ExpBT3PT(ExType):
     # flag distinguishes weather data from a displacement gauge is available
     # stored in a separate ASC-file with a corresponding file name
     # 
-    flag_ASC_file = Bool(True)
+    flag_ASC_file = Bool(False)
 
     def _read_data_array(self):
         ''' Read the experiment data.
@@ -242,7 +242,7 @@ class ExpBT3PT(ExType):
         '''
         names = ['w_raw', 'eps_c_raw', 'F_raw']
         units = ['mm', '1*E-3', 'N']
-        print 'names, units', names, units
+        print 'names, units from .raw-file', names, units
         return names, units
     
     names_and_units_ASC = Property(depends_on = 'data_file')
@@ -252,8 +252,9 @@ class ExpBT3PT(ExType):
         The order of the names in the .DAT-file corresponds 
         to the order of the .ASC-file.   
         '''
-        data_file = open( self.data_file, 'r' )
-        print 'data_file', data_file
+        file_split = self.data_file.split('.')
+        file_name = file_split[0] + '.DAT'
+        data_file = open( file_name, 'r' )
         lines = data_file.read().split()
         names = []
         units = []
@@ -263,6 +264,7 @@ class ExpBT3PT(ExType):
                 unit = lines[i + 3].split( ',' )[1]
                 names.append( name )
                 units.append( unit )
+
         print 'names, units extracted from .DAT-file', names, units
         return names, units
 
@@ -350,8 +352,10 @@ class ExpBT3PT(ExType):
         self.F_raw *= -0.001 
 
         # convert machine displacement [mm] to positive values
+        # and remove offset
         #
         self.w_raw *= - 1.0 
+        self.w_raw -= self.w_raw[0] 
 
         # convert [permille] to [-] and return only positive values
         #
@@ -385,14 +389,15 @@ class ExpBT3PT(ExType):
                 W10_u_avg = np.average( self.W10_u )
 
             # check which displacement gauge has been used depending on weather two names are listed in .DAT file or only one
+            # and assign values to 'w_ASC'
             #
             if hasattr(self, "W10_u") and hasattr(self, "WA50"):
                 if W10_u_avg > WA50_avg: 
                     self.w_ASC = self.W10_u
-                    print 'self.WA50 assigned to self.w_ASC'
+                    print 'self.W10_u assigned to self.w_ASC'
                 else:
                     self.w_ASC = self.WA50
-                    print 'self.W10_u assigned to self.w_ASC'
+                    print 'self.WA50 assigned to self.w_ASC'
             elif hasattr(self, "W10_u"):
                 self.w_ASC = self.W10_u
                 print 'self.W10_u assigned to self.w_ASC'
@@ -401,7 +406,7 @@ class ExpBT3PT(ExType):
                 print 'self.WA50 assigned to self.w_ASC'
                
             # convert strain from [permille] to [-], 
-            # swith to positive values for compressive strains 
+            # switch to positive values for compressive strains 
             # and remove offset
             #
             self.eps_c_ASC = - 0.001 * self.DMS_l 
@@ -438,9 +443,7 @@ class ExpBT3PT(ExType):
         xdata = self.w_wo_elast
         ydata = self.F_raw
 
-        axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
-                       )
+        axes.plot( xdata, ydata )
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -450,9 +453,7 @@ class ExpBT3PT(ExType):
     def _plot_force_machine_displacement(self, axes):
         xdata = self.w_raw
         ydata = self.F_raw
-        axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
-                       )
+        axes.plot( xdata, ydata )
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -462,10 +463,7 @@ class ExpBT3PT(ExType):
     def _plot_force_gauge_displacement(self, axes):
         xdata = self.w_ASC
         ydata = self.F_ASC
-
-        axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
-                       )
+        axes.plot( xdata, ydata )
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
