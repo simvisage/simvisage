@@ -81,18 +81,18 @@ class TLine(HasTraits):
 
     traits_view = View(HGroup(Item('min'),
                                 spring,
-                                Item('step', label = 'step size'),
+                                Item('step', label='step size'),
                                 spring,
                                 Item('max')),
-                        Item('time', editor = RangeEditor(low_name = 'min',
-                                                           high_name = 'max',
-                                                           format = '(%s)',
-                                                           auto_set = False,
-                                                           enter_set = False,
+                        Item('time', editor=RangeEditor(low_name='min',
+                                                           high_name='max',
+                                                           format='(%s)',
+                                                           auto_set=False,
+                                                           enter_set=False,
                                                            ),
-                                    show_label = False
+                                    show_label=False
                                                            ),
-                        resizable = True
+                        resizable=True
                         )
 
 class CompTimer(object):
@@ -141,7 +141,7 @@ class TLoopHandler(Handler):
 #            self.computation_thread = Thread(target=info.object.eval, name="computation")
 #            self.computation_thread.start()
 
-RecalcAction = Action(name = 'Recalculate', action = 'recalculate')
+RecalcAction = Action(name='Recalculate', action='recalculate')
 
 from etsproxy.traits.ui.api import TreeNodeObject
 from warnings import warn
@@ -172,7 +172,7 @@ class TLoop(IBVResource):
         if not os.path.exists(mod_path):
             os.mkdir(mod_path)
 
-        print 'directory',mod_path
+        print 'directory', mod_path
         return mod_path
 
     user_wants_abort = False
@@ -181,7 +181,7 @@ class TLoop(IBVResource):
 
     tline = Instance(TLine)
     def _tline_default(self):
-        return TLine(min = 0.0, max = 1.0, step = 1.0)
+        return TLine(min=0.0, max=1.0, step=1.0)
 
     # Convenience property to set the boundary condition list 
     # in the time stepper through the time loop
@@ -219,7 +219,7 @@ class TLoop(IBVResource):
     # Supply the global resp-trace-evals. They can be accessed from
     # the time-stepper and included in views to the model.
     #
-    rte_dict = Property(List, depends_on = 'tstepper:rte_dict')
+    rte_dict = Property(List, depends_on='tstepper:rte_dict')
     @cached_property
     def _get_rte_dict(self):
         return { 'time'        : lambda sctx, U_k, *args, **kw: np.array([self.t_n1]) ,
@@ -240,11 +240,11 @@ class TLoop(IBVResource):
 
         # Computation timer for individual steps.
         #
-        self.eval_timer = CompTimer(name = 'Eval')
-        self.iter_timer = CompTimer(name = 'Iter')
-        self.crpr_timer = CompTimer(name = 'CorrPred')
-        self.solv_timer = CompTimer(name = 'Solve')
-        self.rtrace_mngr_timer = CompTimer(name = 'RTrace')
+        self.eval_timer = CompTimer(name='Eval')
+        self.iter_timer = CompTimer(name='Iter')
+        self.crpr_timer = CompTimer(name='CorrPred')
+        self.solv_timer = CompTimer(name='Solve')
+        self.rtrace_mngr_timer = CompTimer(name='RTrace')
 
         #self.mem_counter = pymem.MemCounter()
 
@@ -302,7 +302,7 @@ class TLoop(IBVResource):
     # Tolerance in the time variable to end the iteration.  
     step_tolerance = Float(1e-8)
 
-    def eval(self, e = None):
+    def eval(self, e=None):
 
         if not self.sync_resp_tracing:
             self.rtrace_mngr.start_timer()
@@ -373,7 +373,7 @@ class TLoop(IBVResource):
                                           self.d_U,
                                           self.t_n,
                                           self.t_n1)
-                except np.linalg.LinAlgError:
+                except np.linalg.LinAlgError, e:
                     # abort computation due to ultimate failure
                     # might be caused by material instability
                     print 'Exception of equation solver, aborting'
@@ -476,8 +476,10 @@ class TLoop(IBVResource):
 
             if abort_tloop:
                 # ultimate failure exit the calculation
-                print 'ABORT tloop TRUE'
-                self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
+                print 'ABORT tloop with exception', e
+                try: self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
+                except:
+                    pass
                 break
 
             if adap.ehandler_needed(): # explicit adaptations 
@@ -596,7 +598,7 @@ class TLoop(IBVResource):
             self.user_wants_abort = True
         else:
             self.user_wants_abort = False
-            self.computation_thread = Thread(target = self.eval, name = "computation")
+            self.computation_thread = Thread(target=self.eval, name="computation")
             self.computation_thread.start()
 
 
@@ -605,21 +607,21 @@ class TLoop(IBVResource):
         '''
         self.tstepper.register_mv_pipelines(e)
 
-    view = View(Group(Item('calculate', show_label = False),
+    view = View(Group(Item('calculate', show_label=False),
 #                        'sync_resp_tracing',
-                        Item('tline', label = 'Time line', style = 'custom'),
-                        HGroup(Item('KMAX', label = 'Max. number of iterations'),
-                                Item('RESETMAX', label = 'Max. number of resets'),
-                                Item('tolerance', label = 'Tolerance on residual norm')
+                        Item('tline', label='Time line', style='custom'),
+                        HGroup(Item('KMAX', label='Max. number of iterations'),
+                                Item('RESETMAX', label='Max. number of resets'),
+                                Item('tolerance', label='Tolerance on residual norm')
                                 ),
                         ),
                  #Item('rmgr', style="custom"),
                  #handler = TCHandler(),
-                 resizable = True,
-                 scrollable = True,
-                 height = 0.75, width = 0.75,
-                 handler = TLoopHandler(),
-                 buttons = [OKButton, CancelButton, RecalcAction])
+                 resizable=True,
+                 scrollable=True,
+                 height=0.75, width=0.75,
+                 handler=TLoopHandler(),
+                 buttons=[OKButton, CancelButton, RecalcAction])
 
 if LOGGING_ON:
     import logging.config
