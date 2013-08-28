@@ -107,6 +107,9 @@ class MATSCalibDamageFn(MATSExplore):
     for integrity = 1 - full damage of the material.
     '''
 
+    # store the fitted 'PhiFn' in the data base, i.e. 'CCSUniteCell' 
+    store_fitted_phi_fn = Bool(True)
+
     # default settings are overloaded with settings specified in 'ec_config'
 
     max_eps = Property(Float)
@@ -453,15 +456,16 @@ class MATSCalibDamageFn(MATSExplore):
         self.fitted_phi_fn.changed = True
         mats_eval = self.dim.mats_eval.__class__.__name__
         ctt_key = str(self.composite_tensile_test.key)
-        self.composite_cross_section.set_param(mats_eval, ctt_key,
-                                               copy(self.fitted_phi_fn))
+        if self.store_fitted_phi_fn:
+            print "stored 'fitted_phi_fn' in CCSUnitCell with material model %s and calibration test %s" %(mats_eval, ctt_key)
+            self.composite_cross_section.set_param(mats_eval, ctt_key,
+                                                   copy(self.fitted_phi_fn))
 
 
     def plot_trial_steps(self):
-        '''plot the target function (sig-eps-curve of the tensile test) together 
-        with the trial steps within the numerical iteration processes. Plot target and trial curves
+        '''Plot target (sig-eps-curve of the tensile test) and trial curves
         and corresponding phi function together with trail steps from the iteration process.
-        NOTE: the global variable 'rec_trial_steps' must be set to True in order to store the iteration values
+        NOTE: the global variable 'rec_trial_steps' must be set to 'True' in order to store the iteration values
               within the global variables 'phi_trial_list_n' and 'sig_trial_list_n'
         n - index of the time steps to be considered
         i - index of the iteration steps performed in order to fit the target curve 
@@ -709,6 +713,7 @@ def run():
                                                     mats_eval = mats_eval,
                                                     explorer_config = ec,
                                                     ),
+                                store_fitted_phi_fn = True,
                                 log = False
                                 )
 
@@ -749,18 +754,22 @@ def run():
                               
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
-
-                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
+#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
 
 #                              '2012-01-09_TT-12c-6cm-0-TU_SH1',
 #                              'TT-12c-6cm-TU-SH1F-V3.DAT')
 
-#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
+#        test_file = join(simdb.exdata_dir,
+#                              'tensile_tests',
+#                              'buttstrap_clamping',
+#                              '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
+#                              'TTb-6c-2cm-0-TU-V1_bs4.DAT')
 
         ex_run = ExRun(data_file = test_file)
 
@@ -768,11 +777,13 @@ def run():
         # in the experiment data base and use this in mats_eval.
         #
         E_c = ex_run.ex_type.E_c
-#        print 'E_c', E_c 
         # use the value as graphically determined from the tensile test (= initial stiffness)
-#        E_c = 33127.
-#        print 'E_c', E_c 
+        E_c = 28500.
+
+        print 'E_c USED FOR CALIBRATION', E_c 
+
         nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
+        print 'nu', nu 
 
         fitter.ex_run = ex_run
         fitter.dim.mats_eval.E = E_c
