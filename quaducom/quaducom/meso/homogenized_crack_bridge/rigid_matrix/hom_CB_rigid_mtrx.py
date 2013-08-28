@@ -20,7 +20,7 @@ Created on Jan 15, 2013
 from quaducom.micro.resp_func.CB_rigid_mtrx import CBResidual
 import numpy as np
 from matplotlib import pyplot as plt
-from spirrid.spirrid import SPIRRID
+from spirrid import SPIRRID
 from spirrid.rv import RV
 
 if __name__ == '__main__':
@@ -45,15 +45,15 @@ if __name__ == '__main__':
         plt.legend(loc='best')
         plt.show()
     w = np.linspace(0, .5, 300)
-    tau = 0.5#RV('weibull_min', shape=3., scale=.03)
-    E_f = 200e3
+    tau = RV('weibull_min', shape=3., scale=.28)
+    E_f = 170e3
     V_f = 0.01
-    r = RV('uniform', loc=0.001, scale=0.004)
-    m = 7.
+    r = 0.003#RV('uniform', loc=0.001, scale=0.004)
+    m = 5.
     # sV0=XXX corresponds to sL0=0.02 at L0=100 and r=0.002
-    sV0 = 3.1e-3
+    sV0 = 3e-3
     Pf = RV('uniform', loc=0., scale=1.0)
-    n_int = 300
+    n_int = 30
     #cb = CBResidual()
     #plt.plot(w, cb(w, 0.5, E_f, V_f, 0.001, m, sV0, 0.5) / 0.001 ** 2, label='r=0.001')
     #plt.plot(w, cb(w, 0.5, E_f, V_f, 0.002, m, sV0, 0.5) / 0.002 ** 2, label='r=0.002')

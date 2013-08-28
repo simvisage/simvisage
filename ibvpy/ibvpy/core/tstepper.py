@@ -32,7 +32,7 @@ from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
 from ibvpy.mesh.fe_subdomain import FESubDomain
 from ibvpy.mesh.fe_grid import FEGrid
 
-class TStepper( IBVResource ):
+class TStepper(IBVResource):
     """
     The TStepper is a spatially bounded TStepperEval.
 
@@ -64,11 +64,11 @@ class TStepper( IBVResource ):
 
     # Sub-time-stepper or integrator.
     #
-    tse = Instance( ITStepperEval )
+    tse = Instance(ITStepperEval)
 
-    tse_integ = Property( depends_on = 'tse,_sdomain, _sdomain.changed_structure' )
+    tse_integ = Property(depends_on='tse,_sdomain, _sdomain.changed_structure')
     @cached_property
-    def _get_tse_integ( self ):
+    def _get_tse_integ(self):
         if self.tse:
             self.tse.tstepper = self
             return self.tse
@@ -79,58 +79,58 @@ class TStepper( IBVResource ):
     # Spatial domain to bind the time-stepper to.
     # For convenience automatically convert the plain list to FEDomainList
     #
-    _sdomain = Instance( ISDomain )
-    sdomain = Property( Instance( ISDomain ) )
-    def _set_sdomain( self, value ):
-        if isinstance( value, FEGrid ):
+    _sdomain = Instance(ISDomain)
+    sdomain = Property(Instance(ISDomain))
+    def _set_sdomain(self, value):
+        if isinstance(value, FEGrid):
             # construct FERefinementGrid and FEDomain
             self._sdomain = FEDomain()
-            fe_rgrid = FERefinementGrid( domain = self._sdomain,
-                                         fets_eval = value.fets_eval )
+            fe_rgrid = FERefinementGrid(domain=self._sdomain,
+                                         fets_eval=value.fets_eval)
             value.level = fe_rgrid
-        elif isinstance( value, FERefinementGrid ):
+        elif isinstance(value, FERefinementGrid):
             # construct FEDomain
             self._sdomain = FEDomain()
             value.domain = self._sdomain
-        elif isinstance( value, list ):
+        elif isinstance(value, list):
             self._sdomain = FEDomain()
             for d in value:
-                if isinstance( d, FEGrid ):
-                    fe_rgrid = FERefinementGrid( domain = self._sdomain,
-                                                 fets_eval = d.fets_eval )
+                if isinstance(d, FEGrid):
+                    fe_rgrid = FERefinementGrid(domain=self._sdomain,
+                                                 fets_eval=d.fets_eval)
                     d.level = fe_rgrid
-                elif isinstance( d, FESubDomain ):
+                elif isinstance(d, FESubDomain):
                     d.domain = self._sdomain
                 else:
                     raise TypeError, 'The list can contain only FEGrid or FERefinementGrid'
         else:
             self._sdomain = value
-    def _get_sdomain( self ):
+    def _get_sdomain(self):
         if self._sdomain == None:
             self._sdomain = SDomain()
         return self._sdomain
 
     subdomains = Property()
-    def _get_subdomains( self ):
+    def _get_subdomains(self):
         if self.sdomain == None:
             return []
         return self.sdomain.subdomains
 
     xdomains = Property()
-    def _get_xdomains( self ):
+    def _get_xdomains(self):
         if self.sdomain == None:
             return []
         return self.sdomain.xdomains
 
-    def redraw( self ):
+    def redraw(self):
         self.sdomain.redraw()
 
-    sctx = Instance( SContext )
+    sctx = Instance(SContext)
 
     # Boundary condition manager
     #
-    bcond_mngr = Instance( BCondMngr )
-    def _bcond_mngr_default( self ):
+    bcond_mngr = Instance(BCondMngr)
+    def _bcond_mngr_default(self):
         return BCondMngr()
 
     # Convenience constructor 
@@ -139,17 +139,17 @@ class TStepper( IBVResource ):
     # tstepper.bcond_list = [BCDof(var='u',dof=5,value=0, ... ]
     # The result gets propageted to the BCondMngr
     #
-    bcond_list = Property( List )
-    def _get_bcond_list( self ):
+    bcond_list = Property(List)
+    def _get_bcond_list(self):
         return self.bcond_mngr.bcond_list
-    def _set_bcond_list( self, bcond_list ):
+    def _set_bcond_list(self, bcond_list):
         self.bcond_mngr.bcond_list = bcond_list
 
     # Response variable manager
     #
-    rtrace_mngr = Instance( RTraceMngr )
-    def _rtrace_mngr_default( self ):
-        return RTraceMngr( tstepper = self )
+    rtrace_mngr = Instance(RTraceMngr)
+    def _rtrace_mngr_default(self):
+        return RTraceMngr(tstepper=self)
 
     # Convenience constructor 
     #
@@ -157,10 +157,10 @@ class TStepper( IBVResource ):
     # tstepper.bcond_list = [RVDof(var='u',dof=5,value=0, ... ]
     # The result gets propageted to the RTraceMngr
     #
-    rtrace_list = Property( List )
-    def _get_rtrace_list( self ):
+    rtrace_list = Property(List)
+    def _get_rtrace_list(self):
         return self.rtrace_mngr.rtrace_list
-    def _set_rtrace_list( self, rtrace_list ):
+    def _set_rtrace_list(self, rtrace_list):
         self.rtrace_mngr.rtrace_list = rtrace_list
 
     # Possibility to add a callable for derived 
@@ -175,14 +175,14 @@ class TStepper( IBVResource ):
     tloop = WeakRef
 
     dir = Property
-    def _get_dir( self ):
+    def _get_dir(self):
         return self.tloop.dir
 
-    dof_resultants = Bool( True )
+    dof_resultants = Bool(True)
 
-    rte_dict = Property( Dict, depends_on = 'tse' )
+    rte_dict = Property(Dict, depends_on='tse')
     @cached_property
-    def _get_rte_dict( self ):
+    def _get_rte_dict(self):
         '''
         Gather all the currently applicable evaluators from the sub-ts
         and from the time-loop.
@@ -192,51 +192,51 @@ class TStepper( IBVResource ):
         '''
         _rte_dict = {}
 
-        def _get_F_int( sctx, U_k, *args, **kw ):
+        def _get_F_int(sctx, U_k, *args, **kw):
             return self.F_int
 
         if self.dof_resultants:
             _rte_dict['F_int'] = _get_F_int # lambda sctx, U_k: self.F_int
             _rte_dict['F_ext'] = lambda sctx, U_k, *args, **kw: self.F_ext
 
-        _rte_dict.update( self.tse_integ.rte_dict )
+        _rte_dict.update(self.tse_integ.rte_dict)
         if self.tloop:
-            _rte_dict.update( self.tloop.rte_dict )
+            _rte_dict.update(self.tloop.rte_dict)
         return _rte_dict
 
-    def new_cntl_var( self ):
+    def new_cntl_var(self):
         return self.tse_integ.new_cntl_var()
 
-    def new_resp_var( self ):
+    def new_resp_var(self):
         return self.tse_integ.new_resp_var()
 
-    U_k = Property( depends_on = '_sdomain.changed_structure' )
+    U_k = Property(depends_on='_sdomain.changed_structure')
     @cached_property
-    def _get_U_k( self ):
+    def _get_U_k(self):
         '''
          Setup the primary state variables on demand
         '''
         U_k = self.new_cntl_var()
         return U_k
 
-    d_U = Property( depends_on = '_sdomain.changed_structure' )
+    d_U = Property(depends_on='_sdomain.changed_structure')
     @cached_property
-    def _get_d_U( self ):
+    def _get_d_U(self):
         '''
-         Current increment of the displacement variable 
+         Current increment of the displacement variable
         '''
         return self.new_cntl_var()
 
-    F_ext = Property( depends_on = '_sdomain.changed_structure' )
+    F_ext = Property(depends_on='_sdomain.changed_structure')
     @cached_property
-    def _get_F_ext( self ):
+    def _get_F_ext(self):
         '''
          Return the response variable to be used when assembling the
-         boundary conditions. Should the bcond_mngr take care of this? 
+         boundary conditions. Should the bcond_mngr take care of this?
          That's the source object, isn't it? BCondMngr is the bounded
          version of the conditions, it could supply the matrix
          autonomously.
-        
+
         '''
         return self.new_resp_var()
 
@@ -245,7 +245,7 @@ class TStepper( IBVResource ):
     # a change has been performed either in a spatial domain or in
     # tse.
     #
-    def setup( self ):
+    def setup(self):
 
         # Put the spatial domain into the spatial context
         #
@@ -258,12 +258,12 @@ class TStepper( IBVResource ):
         # TODO - the setup needs the link to the algorithm and to the
         # time-steppers as well.!
         #
-        self.bcond_mngr.setup( sctx )
+        self.bcond_mngr.setup(sctx)
 
         # Let the response variables setup themselves within the
         # spatial context
         #
-        self.rtrace_mngr.setup( self.sdomain )
+        self.rtrace_mngr.setup(self.sdomain)
 
         # Set up the system matrix
         #
@@ -271,9 +271,9 @@ class TStepper( IBVResource ):
 
         # Register the essential boundary conditions in the system matrix
         #
-        self.bcond_mngr.apply_essential( self.K )
+        self.bcond_mngr.apply_essential(self.K)
 
-        self.tse_integ.apply_constraints( self.K )
+        self.tse_integ.apply_constraints(self.K)
 
         # Prepare the global update flag
         sctx.update_state_on = False
@@ -288,26 +288,25 @@ class TStepper( IBVResource ):
         self.kw = {}
         self.args = []
 
-
-    def eval( self, step_flag, U_k, d_U, t_n, t_n1 ):
+    def eval(self, step_flag, U_k, d_U, t_n, t_n1):
         '''Get the tangential operator (system matrix) and residuum
         associated with the current time step.
-        
+
         @param step_flag: indicator of the predictor | corrector step
-           it is needed for proper handling of constraint equations 
-           (essential boundary conditions and explicit links between 
+           it is needed for proper handling of constraint equations
+           (essential boundary conditions and explicit links between
            the variables.
-           
-        @param U_k: current value of the control variable (including 
+
+        @param U_k: current value of the control variable (including
             the value of the last increment d_U
-        
-        @param d_U: increment of the control variable 
+
+        @param d_U: increment of the control variable
             U[k] = U[k-1] + d_U
-            
-        @param t_n: value of the time control parameters in the 
+
+        @param t_n: value of the time control parameters in the
             last equilibrated step.
-            
-        @param t_n1: value of the target time in the current 
+
+        @param t_n1: value of the target time in the current
             time step.
         '''
 
@@ -320,12 +319,12 @@ class TStepper( IBVResource ):
         sctx = self.sctx
 
         if self.u_processor:
-            self.args, self.kw = self.u_processor( U_k )
+            self.args, self.kw = self.u_processor(U_k)
 
         # Let the time sub-stepper evaluate its contribution.
         #
-        F_int, K_mtx = self.tse_integ.get_corr_pred( sctx, U_k, d_U, t_n, t_n1,
-                                                     *self.args, **self.kw )
+        F_int, K_mtx = self.tse_integ.get_corr_pred(sctx, U_k, d_U, t_n, t_n1,
+                                                     *self.args, **self.kw)
 
         # Promote the system matrix to the SysMtxAssembly
         # Supported representation of the system matrix is
@@ -334,13 +333,13 @@ class TStepper( IBVResource ):
         # @todo use coerce in order to hide this conversions.
         # or is adapter concept of traits a possibility?
         #
-        if isinstance( K_mtx, ndarray ):
-            self.K.add_mtx( K_mtx )
-        elif isinstance( K_mtx, SysMtxArray ):
-            self.K.sys_mtx_arrays.append( K_mtx )
-        elif isinstance( K_mtx, list ):
+        if isinstance(K_mtx, ndarray):
+            self.K.add_mtx(K_mtx)
+        elif isinstance(K_mtx, SysMtxArray):
+            self.K.sys_mtx_arrays.append(K_mtx)
+        elif isinstance(K_mtx, list):
             self.K.sys_mtx_arrays = K_mtx
-        elif isinstance( K_mtx, SysMtxAssembly ):
+        elif isinstance(K_mtx, SysMtxAssembly):
             self.K.sys_mtx_arrays = K_mtx.sys_mtx_arrays
 
         # Switch off the global update flag
@@ -373,7 +372,7 @@ class TStepper( IBVResource ):
 
             # Assemble boundary conditions in K and self.F_ext 
             #
-            self.bcond_mngr.apply( step_flag, sctx, self.K, self.F_ext, t_n, t_n1 )
+            self.bcond_mngr.apply(step_flag, sctx, self.K, self.F_ext, t_n, t_n1)
 
             # Return the system matrix assembly K and the residuum
             #
@@ -389,7 +388,7 @@ class TStepper( IBVResource ):
             # 
             # Then F_int can be used as the target for the boundary conditions
             #
-            self.bcond_mngr.apply( step_flag, sctx, self.K, F_int, t_n, t_n1 )
+            self.bcond_mngr.apply(step_flag, sctx, self.K, F_int, t_n, t_n1)
 
             #
             # The subtraction F_ext - F_int has then been performed implicitly
@@ -397,36 +396,36 @@ class TStepper( IBVResource ):
             #
             return self.K, F_int
 
-    def update_state( self, U ):
+    def update_state(self, U):
         '''
         spatial context represents a stack with the top object
          representing the current level.
-        @param U: 
+        @param U:
         '''
         #sctx = ( self.sdomain, )
         self.sctx.update_state_on = True
         #self.tse_integ.update_state( sctx, U )
 
-    def register_mv_pipelines( self, e ):
+    def register_mv_pipelines(self, e):
         '''Register the visualization pipelines in mayavi engine
         '''
-        self.tse_integ.register_mv_pipelines( e )
+        self.tse_integ.register_mv_pipelines(e)
         scene = e.new_scene()
         scene.name = 'Spatial domain'
-        self.sdomain.register_mv_pipelines( e )
-        self.rtrace_mngr.register_mv_pipelines( e )
+        self.sdomain.register_mv_pipelines(e)
+        self.rtrace_mngr.register_mv_pipelines(e)
 
-    traits_view = View( Group( Item( 'sdomain', style = 'custom', show_label = False ),
-                               label = 'Discretization' ),
-                        Group( Item( 'tse', style = 'simple', show_label = False ),
-                               label = 'Integrator' ),
-                        Group( Item( 'bcond_mngr', style = 'custom', show_label = False ),
-                               label = 'Boundary conditions' ),
-                        Group( Item( 'dof_resultants' ),
-                               label = 'Options' ),
-                        resizable = True,
-                        height = 0.8,
-                        width = 0.8,
-                        buttons = [OKButton, CancelButton],
-                        kind = 'subpanel',
+    traits_view = View(Group(Item('sdomain', style='custom', show_label=False),
+                               label='Discretization'),
+                        Group(Item('tse', style='simple', show_label=False),
+                               label='Integrator'),
+                        Group(Item('bcond_mngr', style='custom', show_label=False),
+                               label='Boundary conditions'),
+                        Group(Item('dof_resultants'),
+                               label='Options'),
+                        resizable=True,
+                        height=0.8,
+                        width=0.8,
+                        buttons=[OKButton, CancelButton],
+                        kind='subpanel',
                         )
