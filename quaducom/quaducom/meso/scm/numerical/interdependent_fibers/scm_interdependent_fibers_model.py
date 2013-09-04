@@ -23,6 +23,7 @@ from interpolator import Interpolator
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
+from scipy.interpolate import interp1d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from scipy.optimize import brentq
 import copy
@@ -33,6 +34,7 @@ from spirrid.rv import RV
 from matplotlib import pyplot as plt
 from math import pi
 import time as t
+
 
 class CB(HasTraits):
     '''crack bridge class - includes informations about position,
@@ -65,22 +67,33 @@ class CB(HasTraits):
         else:
             sigma_c = self.strain_profiles[0][1]
             idx_low = np.argwhere(sigma_c <= load)
+            idx_high = np.argwhere(sigma_c > load)
             if len(idx_low) == 0:
                 sigma_c_low = sigma_c[0]
             else:
                 sigma_c_low = np.max(sigma_c[idx_low])
-            sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
-            mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
-            mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
-            interp_low = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_low],
-                                      ydata=self.strain_profiles[1][mask_sigma_c_low])
-            values_low = interp_low.get_values(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
- 
-            interp_high = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_high],
-                                       ydata=self.strain_profiles[1][mask_sigma_c_high])
-            values_high = interp_high.get_values(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
-            
-            return values_low + values_high
+            if len(idx_high) == 0:
+                sigma_c_high = sigma_c[-1]
+            else:
+                sigma_c_high = np.min(sigma_c[idx_high])
+
+            if sigma_c_high == sigma_c_low:
+                mask_sigma_c = (self.strain_profiles[0][1] == sigma_c_low)
+                interp = interp1d(self.strain_profiles[0][0][mask_sigma_c],
+                                      self.strain_profiles[1][mask_sigma_c])
+                return interp(self.x)
+            else:
+                mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
+                mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
+                interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
+                                      self.strain_profiles[1][mask_sigma_c_low])
+                values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+     
+                interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
+                                       self.strain_profiles[1][mask_sigma_c_high])
+                values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)         
+                
+                return values_low + values_high
 
     def get_epsm_x_w(self, load):
         '''
@@ -92,22 +105,32 @@ class CB(HasTraits):
         else:
             sigma_c = self.strain_profiles[0][1]
             idx_low = np.argwhere(sigma_c <= load)
+            idx_high = np.argwhere(sigma_c > load)
             if len(idx_low) == 0:
                 sigma_c_low = sigma_c[0]
             else:
                 sigma_c_low = np.max(sigma_c[idx_low])
-            sigma_c_high = np.min(sigma_c[np.argwhere(sigma_c > load)])
-            mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
-            mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
-            interp_low = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_low],
-                                      ydata=self.strain_profiles[2][mask_sigma_c_low])
-            values_low = interp_low.get_values(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
- 
-            interp_high = MFnLineArray(xdata=self.strain_profiles[0][0][mask_sigma_c_high],
-                                       ydata=self.strain_profiles[2][mask_sigma_c_high])
-            values_high = interp_high.get_values(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)  
-            
-            return values_low + values_high
+            if len(idx_high) == 0:
+                sigma_c_high = sigma_c[-1]
+            else:
+                sigma_c_high = np.min(sigma_c[idx_high])
+            if sigma_c_high == sigma_c_low:
+                mask_sigma_c = (self.strain_profiles[0][1] == sigma_c_low)
+                interp = interp1d(self.strain_profiles[0][0][mask_sigma_c],
+                                      self.strain_profiles[2][mask_sigma_c])
+                return interp(self.x)
+            else:
+                mask_sigma_c_low = (self.strain_profiles[0][1] == sigma_c_low)
+                mask_sigma_c_high = (self.strain_profiles[0][1] == sigma_c_high)
+                interp_low = interp1d(self.strain_profiles[0][0][mask_sigma_c_low],
+                                      self.strain_profiles[2][mask_sigma_c_low])
+                values_low = interp_low(self.x) * (sigma_c_high - load) / (sigma_c_high - sigma_c_low)
+     
+                interp_high = interp1d(self.strain_profiles[0][0][mask_sigma_c_high],
+                                       self.strain_profiles[2][mask_sigma_c_high])
+                values_high = interp_high(self.x) * (load - sigma_c_low) / (sigma_c_high - sigma_c_low)  
+                
+                return values_low + values_high
 
 
 class SCM(HasTraits):
@@ -125,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=30, n_x=500
+                            length=self.length, n_w=50, n_BC=15, n_x=500
                             )
 
     sigma_c_crack = List
@@ -213,7 +236,7 @@ class SCM(HasTraits):
                 crack_position_idx = np.argwhere(self.x_arr == cb.position)
                 left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
                 right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                sigma_m[left:right] = cb.get_epsm_x_w(load) * Em
+                sigma_m[left:right] = cb.get_epsm_x_w(float(load)) * Em
         return sigma_m
 
     def epsf_x(self, load):
@@ -225,7 +248,7 @@ class SCM(HasTraits):
                 crack_position_idx = np.argwhere(self.x_arr == cb.position)
                 left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
                 right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                epsf_x[left:right] = cb.get_epsf_x_w(load)
+                epsf_x[left:right] = cb.get_epsf_x_w(float(load))
         return epsf_x
 
     def residuum(self, q):
@@ -268,7 +291,7 @@ class SCM(HasTraits):
             last_pos = float(crack_position)
 
 if __name__ == '__main__':
-    length = 200.
+    length = 2000.
     nx = 1000
     random_field = RandomField(seed=True,
                                lacor=5.,
@@ -282,7 +305,7 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
+                          tau=RV('weibull_min', loc=0.006, shape=.26, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
@@ -296,7 +319,7 @@ if __name__ == '__main__':
               nx=nx,
               random_field=random_field,
               CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 15., 100),
+              load_sigma_c_arr=np.linspace(0.01, 25., 100),
               )
 
     scm.evaluate()

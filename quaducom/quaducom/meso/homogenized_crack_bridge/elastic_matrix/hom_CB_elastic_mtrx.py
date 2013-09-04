@@ -338,7 +338,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=100.0026),

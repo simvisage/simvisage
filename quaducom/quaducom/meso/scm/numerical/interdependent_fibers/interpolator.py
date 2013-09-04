@@ -44,10 +44,10 @@ class Interpolator(HasTraits):
                 self.CB_model_view.model.w = float(w)
                 sigma_c = self.CB_model_view.sigma_c
                 return self.load_sigma_c_arr[-1] - sigma_c
-            max_w = brentq(residuum, 0.0, max_w)
+            max_w = brentq(residuum, 0.0, 10.)
             return self.load_sigma_c_arr[-1], max_w
 
-    BC_range = Property(depends_on = 'n_BC, CB_model')
+    BC_range = Property(depends_on='n_BC, CB_model')
     @cached_property
     def _get_BC_range(self):
         self.max_sigma_w(np.inf, np.inf)
@@ -134,13 +134,13 @@ class Interpolator(HasTraits):
         self.result_values
         BC_line = MFnLineArray(xdata=self.BC_range, ydata=self.BC_range, extrapolate='constant')
         return BC_line.get_values([Ll, Lr])
-    
+
     def get_strain_profiles(self, Ll, Lr):
         L_l, L_r = self.get_L(Ll, Lr)
         L_l = self.BC_range[np.argwhere(L_l <= self.BC_range)[0]]
         L_r = self.BC_range[np.argwhere(L_r <= self.BC_range)[0]]
         maskBC = (self.result_values[0][0] == L_l) * (self.result_values[0][1] == L_r) == 1
-        
+
         points = np.array([self.result_values[0][2][maskBC],
                            self.result_values[0][3][maskBC]])
         mu_epsf_arr = self.result_values[1][maskBC]
