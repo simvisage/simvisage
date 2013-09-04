@@ -8,7 +8,7 @@ from etsproxy.traits.api import Instance, Property, cached_property, Array
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
-from scipy.optimize import brentq, fminbound
+from scipy.optimize import brentq, fminbound, newton
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import time
@@ -100,20 +100,15 @@ class CompositeCrackBridgeView(ModelView):
             else:
                 residuum = stiffness_loss - 0.5
             return residuum
-        
-        try:
-            w_max = brentq(residuum_stiffness, 0.0, 10.0)
-            w_points = np.linspace(0, w_max, 7)
-            w_maxima = []
-            sigma_maxima = []
-            for i, w in enumerate(w_points[1:]):
-                w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i+1], maxfun = 5, disp=0))
-                sigma_maxima.append(self.sigma_c)
-            return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
-        #t = time.clock()
-        #print time.clock() - t, 's'
-        except:
-            return 1e10, 100.
+
+        w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+        w_points = np.linspace(0, w_max, 7)
+        w_maxima = []
+        sigma_maxima = []
+        for i, w in enumerate(w_points[1:]):
+            w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i+1], maxfun = 5, disp=0))
+            sigma_maxima.append(self.sigma_c)
+        return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -135,7 +130,7 @@ class CompositeCrackBridgeView(ModelView):
             def residuum(w):
                 self.model.w = float(w)
                 return sigma - self.sigma_c
-            brentq(residuum, 0.0, self.sigma_c_max[1])
+            brentq(residuum, 0.0, min(self.sigma_c_max[1], 20.))
 
     def sigma_f_lst(self, w_arr):
         sigma_f_arr = np.zeros(len(w_arr) *
@@ -221,10 +216,10 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.01,
+                          tau=RV('weibull_min', loc=0.0001, shape=.8, scale=.015),
+                          V_f=0.011,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0056),
+                          xi=WeibullFibers(shape=3.5, sV0=0.0056),
                           label='carbon',
                           n_int=500)
 
@@ -290,7 +285,7 @@ if __name__ == '__main__':
 #    for i, s in enumerate(sigma_c):
 #        ccb_view.apply_load(s)
 #        profile(ccb_view.model.w)
-    w = np.linspace(0., .1, 200)
+    w = np.linspace(0., .1, 80)
     sigma_c_w(w)
     #energy(w)
     # bundle at 20 mm

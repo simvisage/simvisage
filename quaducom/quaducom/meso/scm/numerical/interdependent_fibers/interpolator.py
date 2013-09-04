@@ -40,12 +40,8 @@ class Interpolator(HasTraits):
         if max_sigma_c < self.load_sigma_c_arr[-1]:
             return max_sigma_c, max_w
         else:
-            def residuum(w):
-                self.CB_model_view.model.w = float(w)
-                sigma_c = self.CB_model_view.sigma_c
-                return self.load_sigma_c_arr[-1] - sigma_c
-            max_w = brentq(residuum, 0.0, 10.)
-            return self.load_sigma_c_arr[-1], max_w
+            self.CB_model_view.apply_load(self.load_sigma_c_arr[-1])
+            return self.load_sigma_c_arr[-1], self.CB_model_view.model.w
 
     BC_range = Property(depends_on='n_BC, CB_model')
     @cached_property
@@ -103,6 +99,7 @@ class Interpolator(HasTraits):
                         print ll, lr
                         # find maximum
                         sigma_c_max, wmax = self.max_sigma_w(ll, lr)
+                        print sigma_c_max, wmax
                         max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                         w_arr = np.linspace(0.0, wmax, self.n_w)
                         mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.w_x_res(w_arr, ll, lr, self.length)

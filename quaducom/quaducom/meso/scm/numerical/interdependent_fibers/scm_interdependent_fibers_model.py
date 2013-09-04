@@ -148,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=15, n_x=500
+                            length=self.length, n_w=50, n_BC=10, n_x=200
                             )
 
     sigma_c_crack = List
