@@ -116,7 +116,7 @@ class SCMView(ModelView):
             return eps, self.model.load_sigma_c_arr
 
 if __name__ == '__main__':
-    length = 200.
+    length = 1000.
     nx = 1000
     random_field = RandomField(seed=True,
                                lacor=5.,
@@ -130,7 +130,7 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
+                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),

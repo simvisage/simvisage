@@ -104,7 +104,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
     
-    for rho in np.array([12., 100.]):
+    for rho in np.array([4.9, 100.]):
         sfc.rho = rho
         x = np.linspace(0.01, 2.5, 500)
         pdf_x = sfc.p_x(50., x)
