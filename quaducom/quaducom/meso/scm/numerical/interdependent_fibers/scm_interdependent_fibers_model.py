@@ -57,7 +57,7 @@ class CB(HasTraits):
 
     def get_epsf_x_w(self, load):
         '''
-        evaluation of matrix strain profile
+        evaluation of mean fiber strain profile
         '''
         if load > self.max_sigma_c:
             print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
@@ -125,7 +125,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=28, n_x=500
+                            length=self.length, n_w=50, n_BC=30, n_x=500
                             )
 
     sigma_c_crack = List
@@ -229,9 +229,7 @@ class SCM(HasTraits):
         return epsf_x
 
     def residuum(self, q):
-        sigm = self.sigma_m(q)     
         residuum = np.min(self.matrix_strength - self.sigma_m(q))
-        print 'load =', q, 'residuum = ', residuum
         return residuum
 
     def evaluate(self):
@@ -257,27 +255,23 @@ class SCM(HasTraits):
                 self.cracks_list.append([new_cb])
             self.sort_cbs()
             cb_list = self.cracks_list[-1]
-            sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list] 
+            sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-#             plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#             plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
-#             plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-#              #plt.ylim(0,0.0008)
-#             plt.show()
+#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
+#            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+#            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
                 try to adapt x, w, BC ranges''')
             last_pos = float(crack_position)
-        #plt.plot(self.x_arr, self.matrix_strength)
-        
-        #print sigc_min, sigc_min / (self.reinforcement.E_f * self.reinforcement.V_f + self.E_m * (1. - self.reinforcement.V_f))
 
 if __name__ == '__main__':
     length = 200.
     nx = 1000
     random_field = RandomField(seed=True,
-                               lacor=10.,
+                               lacor=5.,
                                 xgrid=np.linspace(0., length, 400),
                                 nsim=1,
                                 loc=.0,
@@ -288,7 +282,7 @@ if __name__ == '__main__':
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
+                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
