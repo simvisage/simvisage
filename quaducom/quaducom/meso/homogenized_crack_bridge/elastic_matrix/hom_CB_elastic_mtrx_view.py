@@ -221,17 +221,18 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.01,
+                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
+                          V_f=0.011,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=10.0026),
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
                           n_int=500,
                           label='carbon')
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=50.,
-                                 Lr=20.)
+                                 Ll=4.,
+                                 Lr=10.,
+                                 )
 
     ccb_view = CompositeCrackBridgeView(model=model)
 
@@ -289,10 +290,12 @@ if __name__ == '__main__':
 #    for i, s in enumerate(sigma_c):
 #        ccb_view.apply_load(s)
 #        profile(ccb_view.model.w)
-    ccb_view.apply_load(10.5)
+    ccb_view.apply_load(6.19)
+    print ccb_view.model.w
     profile(ccb_view.model.w)
-    ccb_view.model.Ll = 1.0
-    ccb_view.apply_load(10.5)
+    ccb_view.model.Ll = 10.0
+    ccb_view.apply_load(6.19)
+    print ccb_view.model.w
     profile(ccb_view.model.w)
     #w = np.linspace(0., .35, 50)
     #sigma_c_w(w)
@@ -302,6 +305,6 @@ if __name__ == '__main__':
     #plt.plot(w,sigma_bundle)
     #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
     #sigma_f(np.linspace(.0, .16, 50))
-    plt.xlim(0,30.0)
+    plt.xlim(0,10.0)
     plt.legend(loc='best')
     plt.show()

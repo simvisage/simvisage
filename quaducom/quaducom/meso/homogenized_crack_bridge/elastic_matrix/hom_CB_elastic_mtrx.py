@@ -190,6 +190,13 @@ class CompositeCrackBridge(HasTraits):
                 C = np.log(amin_i/amin)
             F[mask] += 2 * C
         return F
+    
+    def clamped(self, Lmin, Lmax, init_dem):
+        a = np.hstack((-Lmin, 0.0, Lmax))
+        em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
+        epsf0 = (self.sorted_depsf/2. * (Lmin**2 + Lmax**2) +
+                     self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
+        return a, em, epsf0
 
     def profile(self, iter_damage, Lmin, Lmax):
         # matrix strain derivative with resp. to z as a function of T
@@ -204,30 +211,30 @@ class CompositeCrackBridge(HasTraits):
         a1 = amin * np.exp(F/2.)
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
-            a = np.hstack((-Lmin, 0.0, Lmax))
-            em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
-            epsf0 = (self.sorted_depsf/2. * (Lmin**2 + Lmax**2) +
-                     self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
+            a, em, epsf0 = self.clamped(Lmin, Lmax, init_dem)
 
         elif Lmin < a1[0] and Lmax >= a1[0]:
             # all fibers debonded up to Lmin but not up to Lmax
             amin = -Lmin + np.sqrt(2 * Lmin**2 + 2*self.w / (self.sorted_depsf[0] + init_dem))
             C = np.log(amin**2 + 2*Lmin*amin - Lmin**2)
             a2 = np.sqrt(2*Lmin**2 + np.exp((F + C))) - Lmin
-            if Lmax <= a2[-1]:
-                idx = np.sum(a2 < Lmax) - 1
-                a = np.hstack((-Lmin, 0.0, a2[:idx + 1], Lmax))
-                em2 = np.cumsum(np.diff(np.hstack((0.0, a2)))*dems)
-                em = np.hstack((init_dem*Lmin, 0.0, em2[:idx+1], em2[idx] + (Lmax-a2[idx])*dems[idx]))
-                um = np.trapz(em, a)
-                epsf01 = em2[:idx + 1] + a2[:idx + 1] * self.sorted_depsf[:idx+1]
-                epsf02 = (self.w + um + self.sorted_depsf[idx + 1:] / 2. * (Lmin**2 + Lmax**2)) / (Lmin +Lmax)
-                epsf0 = np.hstack((epsf01, epsf02))
+            if Lmax < a2[0]:
+                a, em, epsf0 = self.clamped(Lmin, Lmax, init_dem)
             else:
-                a = np.hstack((-Lmin, 0.0, a2, Lmax))
-                em2 = np.cumsum(np.diff(np.hstack((0.0, a2)))*dems)
-                em = np.hstack((init_dem * Lmin, 0.0, em2, em2[-1]))
-                epsf0 = em2 + self.sorted_depsf * a2
+                if Lmax <= a2[-1]:
+                    idx = np.sum(a2 < Lmax) - 1
+                    a = np.hstack((-Lmin, 0.0, a2[:idx + 1], Lmax))
+                    em2 = np.cumsum(np.diff(np.hstack((0.0, a2)))*dems)
+                    em = np.hstack((init_dem * Lmin, 0.0, em2[:idx+1], em2[idx] + (Lmax-a2[idx])*dems[idx]))
+                    um = np.trapz(em, a)
+                    epsf01 = em2[:idx + 1] + a2[:idx + 1] * self.sorted_depsf[:idx+1]
+                    epsf02 = (self.w + um + self.sorted_depsf[idx + 1:] / 2. * (Lmin**2 + Lmax**2)) / (Lmin +Lmax)
+                    epsf0 = np.hstack((epsf01, epsf02))
+                else:
+                    a = np.hstack((-Lmin, 0.0, a2, Lmax))
+                    em2 = np.cumsum(np.diff(np.hstack((0.0, a2)))*dems)
+                    em = np.hstack((init_dem * Lmin, 0.0, em2, em2[-1]))
+                    epsf0 = em2 + self.sorted_depsf * a2
         elif a1[0] < Lmin and a1[-1] > Lmin:
             # some fibers are debonded up to Lmin, some are not
             # boundary condition position
@@ -331,25 +338,31 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.03,
+                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
+                          V_f=0.011,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=10.0026),
+                          xi=WeibullFibers(shape=5.0, sV0=100.0026),
                           n_int=500,
                           label='carbon')
 
+    CB_model = CompositeCrackBridge(E_m=25e3,
+                                 reinforcement_lst=[reinf],
+                                 )
+
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=50.,
-                                 Lr=50.,
-                                 w=.1)
+                                 Ll=5.0,
+                                 Lr=10.,
+                                 w=.03)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
     plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro')
     for i, depsf in enumerate(ccb.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr),ccb._epsm_arr)
-        print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
+        #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         plt.plot(ccb._x_arr, epsf_x)
     plt.legend(loc='best')
+    plt.xlim(-5,10)
+    plt.ylim(0,0.0003)
     plt.show()
