@@ -64,7 +64,9 @@ class RTUAvg(RTraceDomain):
         #@todo: hack, works just with one fe_grid, 
         # make it work for arbitrary number of fe_grids
         #
-        fe_subgrid = self.sd.fe_subgrids[0]
+        #fe_subgrid = self.sd.fe_subgrids[0]
+        sd = self.sd
+        fe_subgrid = sd.fe_subgrids[0]
         n_dims = fe_subgrid.geo_grid.n_dims
 
         X_pnt = fe_subgrid.dof_grid.cell_grid.point_X_arr
@@ -136,7 +138,7 @@ class RTUAvg(RTraceDomain):
             # Value of the weighting function
             #
             alpha = a_fn(dist)   # ( elems,n_ip )
-            J_det = fe_subgrid.dots.J_det_grid_unmasked[active_elems]   # ( elems, n_ip )
+            J_det = fe_subgrid.dots.J_det_grid[active_elems]   # ( elems, n_ip )
 
             values = (ip_weights.T * J_det) * alpha #( elems, n_ip )
 

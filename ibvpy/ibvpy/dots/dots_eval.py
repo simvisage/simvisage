@@ -63,7 +63,7 @@ class DOTSEval(TStepperEval):
     k_arr = Property(Array, depends_on='sdomain.changed_structure')
     @cached_property
     def _get_k_arr(self):
-        n_e, n_e_dofs = self.sdomain.elem_dof_map.shape
+        n_e, n_e_dofs = self.sdomain.elem_dof_map_unmasked.shape
         return zeros((n_e, n_e_dofs, n_e_dofs), dtype='float_')
 
     F_int = Property(Array, depends_on='sdomain.changed_structure')
@@ -74,18 +74,12 @@ class DOTSEval(TStepperEval):
     B_mtx_grid = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
     @cached_property
     def _get_B_mtx_grid(self):
-        return self.sdomain.apply_on_ip_grid(self.fets_eval.get_B_mtx,
-                                             self.fets_eval.ip_coords)
+        return self.sdomain.apply_on_ip_grid_unmasked(self.fets_eval.get_B_mtx,
+                                                      self.fets_eval.ip_coords)
 
     J_det_grid = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
     @cached_property
     def _get_J_det_grid(self):
-        return self.sdomain.apply_on_ip_grid(self.fets_eval.get_J_det,
-                                             self.fets_eval.ip_coords)
-
-    J_det_grid_unmasked = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
-    @cached_property
-    def _get_J_det_grid_unmasked(self):
         return self.sdomain.apply_on_ip_grid_unmasked(self.fets_eval.get_J_det,
                                                       self.fets_eval.ip_coords)
 
@@ -95,14 +89,13 @@ class DOTSEval(TStepperEval):
 
         # The overall size is just a n_elem times the size of a single element
         #
-        n_elems = self.sdomain.n_active_elems
+        n_elems = self.sdomain.n_elems
         self.e_arr_size = self.fets_eval.get_state_array_size()
-        dots_arr_size = n_elems * self.e_arr_size
-        return dots_arr_size
+        return n_elems * self.e_arr_size
 
     ip_offset = Property(depends_on='sdomain.changed_structure')
     def _get_ip_offset(self):
-        n_elems = self.sdomain.n_active_elems
+        n_elems = self.sdomain.n_elems
         return arange(n_elems + 1, dtype=int) * self.fets_eval.n_gp
 
     # temporary alias - method deprecated - use property instead
@@ -118,7 +111,7 @@ class DOTSEval(TStepperEval):
         sctx = self.sdomain.domain.new_scontext()
         # Run the setup of sub-evaluator
         #
-        for e_id, elem in enumerate(self.sdomain.elements):
+        for e_id, elem in zip(self.sdomain.idx_active_elems, self.sdomain.elements):
             sctx.elem = elem
             sctx.elem_state_array = state_array[ e_id * e_arr_size : (e_id + 1) * e_arr_size ]
             self.fets_eval.setup(sctx)
@@ -150,9 +143,9 @@ class DOTSEval(TStepperEval):
         kw_fets = {}
         U_avg_k = kw.get('eps_avg', None)
         if U_avg_k != None:
-            u_avg_arr = U_avg_k[ self.sdomain.elem_dof_map ]
+            u_avg_arr = U_avg_k[ self.sdomain.elem_dof_map_unmasked ]
 
-        for e_id, elem in enumerate(self.sdomain.elements):
+        for e_id, elem in zip(self.sdomain.idx_active_elems, self.sdomain.elements):
 
             ix = elem.get_dof_map()
             sctx.elem = elem
@@ -175,7 +168,7 @@ class DOTSEval(TStepperEval):
             k_arr[ e_id ] = k
             F_int[ ix_(ix) ] += f
 
-        return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map)
+        return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map_unmasked)
 
     def map_u(self, sctx, U):
         ix = sctx.elem.get_dof_map()
@@ -262,10 +255,9 @@ class DOTSEval(TStepperEval):
         pts_array = array(pts, dtype='float_')
         return pts_array
 
-
     debug_cell_data = Bool(False)
 
-    ## @todo - comment this procedure
+    ## @todo - comment this procedure`
     def get_vtk_cell_data(self, position, point_offset, cell_offset):
         if position == 'nodes':
             subcell_offsets, subcell_lengths, subcells, subcell_types = self.fets_eval.vtk_node_cell_data
@@ -358,8 +350,6 @@ class DOTSEval(TStepperEval):
     def _get_n_cell_points(self):
         '''Return the number of points defining one cell'''
         return self.fets_eval.n_vtk_r
-
-
 
     traits_view = View(Item('fets_eval', style='custom', show_label=False),
                         resizable=True,

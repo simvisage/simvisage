@@ -345,6 +345,11 @@ class FEGrid(FEGridActivationMap):
     def _get_ls_elem_dof_map(self):
         return self.dof_grid.elem_dof_map
 
+    # Full elem dof map ignoring masked elements.
+    elem_dof_map_unmasked = Property
+    def _get_elem_dof_map_unmasked(self):
+        return self.dof_grid.elem_dof_map
+
     elem_dof_map = Property(depends_on='fets_eval.dof_r,shape,dof_offset, changed_structure')
     def _get_elem_dof_map(self):
         elem_dof_map = self.dof_grid.elem_dof_map[ self.activation_map, : ]
@@ -361,12 +366,20 @@ class FEGrid(FEGridActivationMap):
     def _get_ls_elem_X_map(self):
         return self.geo_grid.elem_X_map.copy()
 
+    elem_X_map_unmasked = Property
+    def _get_elem_X_map_unmasked(self):
+        return self.geo_grid.elem_X_map.copy()
+
     elem_x_map = Property(depends_on=\
                            'fets_eval.geo_r,shape,coord_min,coord_max,n_nodal_dofs, changed_structure')
     @cached_property
     def _get_elem_x_map(self):
         elem_x_map = self.geo_grid.elem_x_map[ self.activation_map, : ].copy()
         return copy(elem_x_map)
+
+    elem_x_map_unmasked = Property
+    def _get_elem_x_map_unmasked(self):
+        return self.geo_grid.elem_x_map.copy()
 
     ls_elem_x_map = Property
     def _get_ls_elem_x_map(self):
@@ -435,7 +448,6 @@ class FEGrid(FEGridActivationMap):
                 out_grid[ el, ip, ... ] = fn(ip_mask[ip], X_el[el])
 
         return out_grid
-
 
     #-------------------------------------------------------------
     # Queries 
