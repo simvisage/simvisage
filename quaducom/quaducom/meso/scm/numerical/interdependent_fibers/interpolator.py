@@ -99,7 +99,6 @@ class Interpolator(HasTraits):
                         print ll, lr
                         # find maximum
                         sigma_c_max, wmax = self.max_sigma_w(ll, lr)
-                        print sigma_c_max, wmax
                         max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                         w_arr = np.linspace(0.0, wmax, self.n_w)
                         mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.w_x_res(w_arr, ll, lr, self.length)
