@@ -45,32 +45,32 @@ class MATS3DScalarDamage(MATS3DEval):
     #---------------------------------------------------------------------------
 
     E = Float(1., #34e+3,
-                 label = "E",
-                 desc = "Young's Modulus",
-                 auto_set = False)
+                 label="E",
+                 desc="Young's Modulus",
+                 auto_set=False)
     nu = Float(0.2,
-                 label = 'nu',
-                 desc = "Poison's ratio",
-                 auto_set = False)
+                 label='nu',
+                 desc="Poison's ratio",
+                 auto_set=False)
     epsilon_0 = Float(59e-6,
-                 label = "eps_0",
-                 desc = "Breaking Strain",
-                 auto_set = False)
+                 label="eps_0",
+                 desc="Breaking Strain",
+                 auto_set=False)
 
     epsilon_f = Float(191e-6,
-                 label = "eps_f",
-                 desc = "Shape Factor",
-                 auto_set = False)
+                 label="eps_f",
+                 desc="Shape Factor",
+                 auto_set=False)
 
     stiffness = Enum("secant", "algorithmic")
 
-    strain_norm = EitherType(klasses = [Energy,
+    strain_norm = EitherType(klasses=[Energy,
                                          Euclidean,
                                          Mises,
                                          Rankine,
                                          Mazars])
 
-    D_el = Property(Array(float), depends_on = 'E, nu')
+    D_el = Property(Array(float), depends_on='E, nu')
     @cached_property
     def _get_D_el(self):
         return self._get_D_el()
@@ -87,13 +87,13 @@ class MATS3DScalarDamage(MATS3DEval):
     view_traits = View(VSplit(Group(Item('E'),
                                       Item('nu'),
                                       Item('strain_norm')),
-                                Group(Item('stiffness', style = 'custom'),
-                                       Spring(resizable = True),
-                                       label = 'Configuration parameters',
-                                       show_border = True,
+                                Group(Item('stiffness', style='custom'),
+                                       Spring(resizable=True),
+                                       label='Configuration parameters',
+                                       show_border=True,
                                        ),
                                 ),
-                        resizable = True
+                        resizable=True
                         )
 
     #--------------------------------------------------------------------------
@@ -112,14 +112,6 @@ class MATS3DScalarDamage(MATS3DEval):
         '''
         return 2
 
-    def setup(self, sctx):
-        '''
-        Intialize state variables.
-        @param sctx:spatial context
-        '''
-        sctx.mats_state_array[:] = zeros(2, float_)
-        #sctx.update_state_on = False
-
     def new_cntl_var(self):
         '''
         Return contoll variable array
@@ -137,7 +129,7 @@ class MATS3DScalarDamage(MATS3DEval):
     # Evaluation - get the corrector and predictor
     #--------------------------------------------------------------------------
 
-    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg = None):
+    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg=None):
         '''
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain

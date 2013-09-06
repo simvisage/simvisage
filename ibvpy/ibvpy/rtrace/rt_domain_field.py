@@ -110,16 +110,11 @@ class RTraceDomainField(RTraceDomain):
         field = []
         state_array = self.sd.dots.state_array
 
-        ip_offset = self.sd.dots.ip_offset
-
         for e_id, e in zip(self.sd.idx_active_elems, self.sd.elements):
             loc_coords = self.dots.get_vtk_r_arr(e_id)
             n_loc = loc_coords.shape[0]
 
-            mats_arr_size = self.fets_eval.m_arr_size
-
-            sctx.elem_state_array = state_array[ ip_offset[e_id] * mats_arr_size\
-                                                : ip_offset[(e_id + 1)] * mats_arr_size ]#differs from the homogenous case
+            sctx.elem_state_array = state_array[e_id]
 
             # setting the spatial context should be intermediated by the fets
             sctx.X = e.get_X_mtx()
@@ -134,9 +129,7 @@ class RTraceDomainField(RTraceDomain):
 
             for i in range(n_loc):
                 ip_id = ip_map[i]
-                m_arr_size = self.fets_eval.m_arr_size
-                sctx.mats_state_array = sctx.elem_state_array\
-                                            [ip_id * m_arr_size: (ip_id + 1) * m_arr_size]
+                sctx.mats_state_array = sctx.elem_state_array[ip_id]
                 sctx.loc = loc_coords[i]
                 sctx.r_pnt = loc_coords[i]
                 sctx.p_id = i
@@ -165,17 +158,14 @@ class RTraceDomainField(RTraceDomain):
 
         for e_id, e in zip(self.sd.idx_active_elems, self.sd.elements):
 
-            sctx.elem_state_array = state_array[e_id * e_arr_size :\
-                                                           (e_id + 1) * e_arr_size]
+            sctx.elem_state_array = state_array[e_id]
             sctx.X = e.get_X_mtx()
             sctx.x = e.get_x_mtx()
             sctx.elem = e
             sctx.e_id = e_id
             field_entry = []
             for i, ip in enumerate(self.fets_eval.ip_coords):
-                m_arr_size = self.fets_eval.m_arr_size
-                sctx.mats_state_array = sctx.elem_state_array\
-                                            [i * m_arr_size: (i + 1) * m_arr_size]
+                sctx.mats_state_array = sctx.elem_state_array[i]
                 sctx.loc = ip
                 sctx.r_pnt = ip
                 sctx.p_id = i#TODO:check this

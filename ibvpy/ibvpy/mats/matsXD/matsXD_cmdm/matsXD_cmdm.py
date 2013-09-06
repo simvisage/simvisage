@@ -20,11 +20,13 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring, Include
 
+import numpy as np
+
 from numpy import \
-     array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-     fabs, linspace, vdot, identity, tensordot, \
-     sin as nsin, meshgrid, float_, ix_, \
-     vstack, hstack, sqrt as arr_sqrt, swapaxes, copy
+     array, zeros, outer, inner, transpose, dot, \
+     fabs, identity, tensordot, \
+     float_, \
+     sqrt as arr_sqrt, copy
 
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
@@ -436,7 +438,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             # NOTE: This must be copied otherwise self.D2_e gets modified when
             # essential boundary conditions are inserted
             D2_e = copy(self.D2_e)
-            sig_eng = tensordot(D2_e, eps_app_eng, [[1], [0]])
+            sig_eng = np.einsum('...ij,...j->...i', D2_e, eps_app_eng)
+
+            if len(eps_app_eng.shape) >= len(D2_e.shape):
+                D2_e = self.D2_e[np.newaxis, ...]
+
             return sig_eng, D2_e
 
         # -----------------------------------------------------------------------------------------------

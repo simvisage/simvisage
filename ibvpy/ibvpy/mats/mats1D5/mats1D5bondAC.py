@@ -55,17 +55,17 @@ class MATS1D5BondAC(MATS1D5Bond):
     '''
 
     s_cr = Float(1., #34e+3,
-                 label = "s_cr",
-                 desc = "Critical Slip",
-                 auto_set = False)
+                 label="s_cr",
+                 desc="Critical Slip",
+                 auto_set=False)
     tau_max = Float(1., #34e+3,
-                 label = "T_max",
-                 desc = "maximal shear stress",
-                 auto_set = False)
+                 label="T_max",
+                 desc="maximal shear stress",
+                 auto_set=False)
     tau_fr = Float(1., #34e+3,
-                 label = "T_fr",
-                 desc = "Frictional shear stress",
-                 auto_set = False)
+                 label="T_fr",
+                 desc="Frictional shear stress",
+                 auto_set=False)
 
     # This event can be used by the clients to trigger an action upon
     # the completed reconfiguration of the material model
@@ -83,12 +83,6 @@ class MATS1D5BondAC(MATS1D5Bond):
     #-----------------------------------------------------------------------------------------------
     # Setup for computation within a supplied spatial context
     #-----------------------------------------------------------------------------------------------
-
-    def setup(self, sctx):
-        '''
-        Intialize state variables.
-        '''
-        sctx.mats_state_array[:] = 0
 
     def get_state_array_size(self):
         '''

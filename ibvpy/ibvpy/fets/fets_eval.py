@@ -8,9 +8,10 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
      View, Item, Group
 
+import numpy as np
+
 from numpy import \
-     array, zeros, float_, dot, hstack, arange, argmin, broadcast_arrays, c_, \
-     zeros_like
+     array, zeros, float_, dot, hstack, arange, argmin, broadcast_arrays, c_
 
 from scipy.linalg import \
      det
@@ -34,7 +35,7 @@ from ibvpy.core.rtrace_eval import \
     RTraceEval
 
 from i_fets_eval import IFETSEval
- 
+
 from etsproxy.tvtk.helper import tvtk_helper
 
 import types
@@ -46,14 +47,14 @@ def oriented_3d_array(arr, axis):
     '''In order to use the indices as spatial locators
     the array of gauss points is augmented with newaxes into 3D
     so that the carthesian broadcasting can be done.
-    
+
     There is only the expand_dim function available in numpy.
     Here we want to  put the supplied array in 3d space along
-    the axis  
+    the axis
     '''
     shape = [None, None, None]
     shape[axis] = slice(None)
-    _arr = array(arr, dtype = 'float_')
+    _arr = array(arr, dtype='float_')
     return _arr[ tuple(shape) ]
 
 #-------------------------------------------------------------------
@@ -67,16 +68,16 @@ class FETSEval(TStepperEval):
     dots_class = Class(DOTSEval)
 
     dof_r = Array('float_',
-                   desc = 'Local coordinates of nodes included in the field ansatz')
+                   desc='Local coordinates of nodes included in the field ansatz')
 
     geo_r = Array('float_',
-                   desc = 'Local coordinates of nodes included in the geometry ansatz')
+                   desc='Local coordinates of nodes included in the geometry ansatz')
 
-    n_nodal_dofs = Int(desc = 'Number of nodal degrees of freedom')
+    n_nodal_dofs = Int(desc='Number of nodal degrees of freedom')
 
     id_number = Int
 
-    mats_eval = Instance(IMATSEval, desc = 'Material model')
+    mats_eval = Instance(IMATSEval, desc='Material model')
 
     #--------------------------------------------------------------------------------
     # Derived info about the finite element formulation
@@ -93,18 +94,18 @@ class FETSEval(TStepperEval):
     # Field visualization
     #--------------------------------------------------------------------------------
 
-    vtk_r = Array(Float, desc = 'Local coordinates of nodes included in the field visualization')
+    vtk_r = Array(Float, desc='Local coordinates of nodes included in the field visualization')
 
-    vtk_cell_types = Any(desc = 'Tuple of vtk cell types in the same order as they are specified in the vtk_cells list')
+    vtk_cell_types = Any(desc='Tuple of vtk cell types in the same order as they are specified in the vtk_cells list')
 
-    vtk_cells = List(desc = 'List of maps of nodes constituting the vtk cells covering the single element')
+    vtk_cells = List(desc='List of maps of nodes constituting the vtk cells covering the single element')
 
     # Distinguish the type of base geometric entity to be used for 
     # the visualization of the results.
     #
     # field_entity_type = Enum('vertex','line','triangle','quad','tetra','hexa')
 
-    vtk_node_cell_data = Property(depends_on = 'vtk_cells, vtk_cell_types')
+    vtk_node_cell_data = Property(depends_on='vtk_cells, vtk_cell_types')
     @cached_property
     def _get_vtk_node_cell_data(self):
 
@@ -123,9 +124,9 @@ class FETSEval(TStepperEval):
 
         if isinstance(self.vtk_cells[0], int):
             # just a single cell defined
-            return (array([0, ], dtype = int),
-                     array(self.vtk_cells.shape[0], dtype = int),
-                     array(self.vtk_cells, dtype = int),
+            return (array([0, ], dtype=int),
+                     array(self.vtk_cells.shape[0], dtype=int),
+                     array(self.vtk_cells, dtype=int),
                      cell_types)
 
 
@@ -140,12 +141,12 @@ class FETSEval(TStepperEval):
             offset_list.append(vtk_offset)
             vtk_offset += cell_len + 1
 
-        return (array(offset_list, dtype = int),
-                 array(length_list, dtype = int),
-                 array(cell_list, dtype = int),
-                 array(cell_types, dtype = int))
+        return (array(offset_list, dtype=int),
+                 array(length_list, dtype=int),
+                 array(cell_list, dtype=int),
+                 array(cell_types, dtype=int))
 
-    vtk_ip_cell_data = Property(depends_on = 'vtk_cells, vtk_cell_types')
+    vtk_ip_cell_data = Property(depends_on='vtk_cells, vtk_cell_types')
     @cached_property
     def _get_vtk_ip_cell_data(self):
 
@@ -153,17 +154,17 @@ class FETSEval(TStepperEval):
 
         cell_types = array([(tvtk_helper.get_class('PolyVertex')()).cell_type ])
 
-        return (array([0, ], dtype = int),
-                 array([n_ip_pnts], dtype = int),
+        return (array([0, ], dtype=int),
+                 array([n_ip_pnts], dtype=int),
                  arange(n_ip_pnts),
                  cell_types)
 
-    n_vtk_r = Property(Int, depends_on = 'vtk_r')
+    n_vtk_r = Property(Int, depends_on='vtk_r')
     @cached_property
     def _get_n_vtk_r(self):
         return self.vtk_r.shape[0]
 
-    n_vtk_cells = Property(Int, depends_on = 'field_faces')
+    n_vtk_cells = Property(Int, depends_on='field_faces')
     @cached_property
     def _get_n_vtk_cells(self):
         return self.field_faces.shape[0]
@@ -176,11 +177,11 @@ class FETSEval(TStepperEval):
     def adjust_spatial_context_for_point(self, sctx):
         '''
         Method gets called prior to the evaluation at the material point level.
-        
+
         The method can be used for dimensionally reduced evaluators.
         This is FETS specific and should be moved there.
         However, the RTraceEval is not distinguished at the moment, therefore
-        it is here - move!!!.   
+        it is here - move!!!.
         '''
         sctx.X_reg = sctx.X
 
@@ -189,8 +190,8 @@ class FETSEval(TStepperEval):
         mapping of the visualization point to the integration points
         according to mutual proximity in the local coordinates
         '''
-        vtk_pt_arr = zeros((1, 3), dtype = 'float_')
-        ip_map = zeros(vtk_r.shape[0], dtype = 'int_')
+        vtk_pt_arr = zeros((1, 3), dtype='float_')
+        ip_map = zeros(vtk_r.shape[0], dtype='int_')
         for i, vtk_pt in enumerate(vtk_r):
             vtk_pt_arr[0, self.dim_slice] = vtk_pt[self.dim_slice]
             # get the nearest ip_coord
@@ -208,7 +209,7 @@ class FETSEval(TStepperEval):
     #
     # The old loop-based expansion is preserved below for reference.
     #
-    gp_r_grid = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    gp_r_grid = Property(depends_on='ngp_r,ngp_s,ngp_t')
     @cached_property
     def _get_gp_r_grid(self):
         '''Return a tuple of three arrays for X, Y, Z coordinates of the
@@ -226,7 +227,7 @@ class FETSEval(TStepperEval):
         x, y, z = apply(broadcast_arrays, gp_coords)
         return x, y, z
 
-    gp_w_grid = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    gp_w_grid = Property(depends_on='ngp_r,ngp_s,ngp_t')
     @cached_property
     def _get_gp_w_grid(self):
         '''In analogy to the above, get the grid of gauss weights in 3D.
@@ -242,27 +243,27 @@ class FETSEval(TStepperEval):
         w = reduce(lambda x, y: x * y, gp_w)
         return w
 
-    ip_coords = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    ip_coords = Property(depends_on='ngp_r,ngp_s,ngp_t')
     def _get_ip_coords(self):
         '''Generate the flat array of ip_coords used for integration.
         '''
         x, y, z = self.gp_r_grid
         return c_[ x.flatten(), y.flatten(), z.flatten() ]
 
-    ip_coords_grid = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    ip_coords_grid = Property(depends_on='ngp_r,ngp_s,ngp_t')
     def _get_ip_coords_grid(self):
         '''Generate the grid of ip_coords
         '''
         return c_[ self.gp_r_grid ]
 
-    ip_weights = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    ip_weights = Property(depends_on='ngp_r,ngp_s,ngp_t')
     def _get_ip_weights(self):
         '''Generate the flat array of ip_coords used for integration.
         '''
         w = self.gp_w_grid
         return w.flatten()
 
-    ip_weights_grid = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    ip_weights_grid = Property(depends_on='ngp_r,ngp_s,ngp_t')
     def _get_ip_weights_grid(self):
         '''Generate the flat array of ip_coords used for integration.
         '''
@@ -272,7 +273,7 @@ class FETSEval(TStepperEval):
     def get_ip_scheme(self, *params):
         return (self.ip_coords, self.ip_weights)
 
-    n_gp = Property(depends_on = 'ngp_r,ngp_s,ngp_t')
+    n_gp = Property(depends_on='ngp_r,ngp_s,ngp_t')
     @cached_property
     def _get_n_gp(self):
         nr = max(1, self.ngp_r)
@@ -280,7 +281,7 @@ class FETSEval(TStepperEval):
         nt = max(1, self.ngp_t)
         return nr * ns * nt
 
-    n_gp_list = Property(depends_on = 'ngp_r,ngp_s,ngp_r')
+    n_gp_list = Property(depends_on='ngp_r,ngp_s,ngp_r')
     @cached_property
     def _get_n_gp_list(self):
         nr = self.ngp_r
@@ -315,7 +316,7 @@ class FETSEval(TStepperEval):
         r_c = c_[ tuple([ r.flatten() for r in r_grid ]) ]
         w_grid = reduce(lambda x, y: x * y, w)
         if isinstance(w_grid, types.FloatType):
-            w_grid = array([w_grid], dtype = 'float_')
+            w_grid = array([w_grid], dtype='float_')
         else:
             w_grid = w_grid.flatten()
         return r_c, w_grid, ix
@@ -326,19 +327,19 @@ class FETSEval(TStepperEval):
     # The user-specified fv_loc_coords list gets transform to an internal 
     # array representation
     #
-    vtk_r_arr = Property(depends_on = 'vtk_r')
+    vtk_r_arr = Property(depends_on='vtk_r')
     @cached_property
     def _get_vtk_r_arr(self):
         if len(self.vtk_r) == 0:
             raise ValueError, 'Cannot generate plot, no vtk_r specified in fets_eval'
         return array(self.vtk_r)
 
-    def get_vtk_r_glb_arr(self, X_mtx, r_mtx = None):
+    def get_vtk_r_glb_arr(self, X_mtx, r_mtx=None):
         '''
         Get an array with global coordinates of the element decomposition.
-        
-        If the local_point_list is non-empty then use it instead of the one supplied 
-        by the element specification. This is useful for augmented specification of RTraceEval 
+
+        If the local_point_list is non-empty then use it instead of the one supplied
+        by the element specification. This is useful for augmented specification of RTraceEval
         evaluations with a specific profile of a field variable to be traced.
         '''
         if self.dim_slice:
@@ -355,7 +356,7 @@ class FETSEval(TStepperEval):
         n_add = 3 - n_dims
         if n_add > 0:
             X3D = hstack([X3D,
-                           zeros([r_mtx.shape[0], n_add], dtype = 'float_')])
+                           zeros([r_mtx.shape[0], n_add], dtype='float_')])
         return X3D
 
     def get_X_pnt(self, sctx):
@@ -426,26 +427,19 @@ class FETSEval(TStepperEval):
         '''
         return self.mats_eval.get_state_array_size()
 
-    def setup(self, sctx):
-        '''Perform the setup in the all integration points.
-        '''
-        for i, gp in enumerate(self.ip_coords):
-            sctx.mats_state_array = sctx.elem_state_array[(i * self.m_arr_size): ((i + 1) * self.m_arr_size)]
-            self.mats_eval.setup(sctx)
-
-    ngp_r = Int(0, label = 'Number of Gauss points in r-direction')
-    ngp_s = Int(0, label = 'Number of Gauss points in s-direction')
-    ngp_t = Int(0, label = 'Number of Gauss points in t-direction')
+    ngp_r = Int(0, label='Number of Gauss points in r-direction')
+    ngp_s = Int(0, label='Number of Gauss points in s-direction')
+    ngp_t = Int(0, label='Number of Gauss points in t-direction')
 
     #-------------------------------------------------------------------
     # Overloadable methods
     #-------------------------------------------------------------------
     def get_corr_pred(self, sctx, u, du, tn, tn1,
-                      eps_avg = None,
-                      B_mtx_grid = None,
-                      J_det_grid = None,
-                      ip_coords = None,
-                      ip_weights = None):
+                      eps_avg=None,
+                      B_mtx_grid=None,
+                      J_det_grid=None,
+                      ip_coords=None,
+                      ip_weights=None):
         '''
         Corrector and predictor evaluation.
 
@@ -557,7 +551,7 @@ class FETSEval(TStepperEval):
         '''
         raise NotImplementedError
 
-    def get_mtrl_corr_pred(self, sctx, eps_eng, d_eps_eng, tn, tn1, eps_avg = None):
+    def get_mtrl_corr_pred(self, sctx, eps_eng, d_eps_eng, tn, tn1, eps_avg=None):
         if self.mats_eval.initial_strain:
             X_pnt = self.get_X_pnt(sctx)
             x_pnt = self.get_x_pnt(sctx)
@@ -575,7 +569,7 @@ class FETSEval(TStepperEval):
     #-------------------------------------------------------------------
 
     def get_J_det(self, r_pnt, X_mtx):
-        return array(self._get_J_det(r_pnt, X_mtx), dtype = 'float_')
+        return array(self._get_J_det(r_pnt, X_mtx), dtype='float_')
 
     def _get_J_det(self, r_pnt3d, X_mtx):
         if self.dim_slice:
@@ -640,7 +634,7 @@ class FETSEval(TStepperEval):
     def get_eps0_mtx33(self, sctx, u):
         '''Get epsilon without the initial strain
         '''
-        eps0_mtx33 = zeros((3, 3), dtype = 'float_')
+        eps0_mtx33 = zeros((3, 3), dtype='float_')
         if self.mats_eval.initial_strain:
             X_pnt = self.get_X_pnt(sctx)
             x_pnt = self.get_x_pnt(sctx)
@@ -649,7 +643,7 @@ class FETSEval(TStepperEval):
 
     def get_eps_mtx33(self, sctx, u):
         eps_eng = self.get_eps_eng(sctx, u)
-        eps_mtx33 = zeros((3, 3), dtype = 'float_')
+        eps_mtx33 = zeros((3, 3), dtype='float_')
         eps_mtx33[ self.dim_slice, self.dim_slice ] = self.mats_eval.map_eps_eng_to_mtx(eps_eng)
         return eps_mtx33
 
@@ -680,19 +674,19 @@ class FETSEval(TStepperEval):
         RTraceEval dictionary with field variables used to verify the element implementation
         '''
         if self.debug_on:
-            return {'Ngeo_mtx' : RTraceEvalElemFieldVar(eval = lambda sctx, u: self.get_N_geo_mtx(sctx.loc),
-                                                ts = self),
-                    'N_mtx': RTraceEvalElemFieldVar(eval = lambda sctx, u: self.get_N_mtx(sctx.loc)[0],
-                                                ts = self),
-                    'B_mtx0': RTraceEvalElemFieldVar(eval = lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[0],
-                                                ts = self),
-                    'B_mtx1': RTraceEvalElemFieldVar(eval = lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[1],
-                                                ts = self),
-                    'B_mtx2': RTraceEvalElemFieldVar(eval = lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[2],
-                                                ts = self),
-                    'J_det'  : RTraceEvalElemFieldVar(eval = lambda sctx, u:
+            return {'Ngeo_mtx' : RTraceEvalElemFieldVar(eval=lambda sctx, u: self.get_N_geo_mtx(sctx.loc),
+                                                ts=self),
+                    'N_mtx': RTraceEvalElemFieldVar(eval=lambda sctx, u: self.get_N_mtx(sctx.loc)[0],
+                                                ts=self),
+                    'B_mtx0': RTraceEvalElemFieldVar(eval=lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[0],
+                                                ts=self),
+                    'B_mtx1': RTraceEvalElemFieldVar(eval=lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[1],
+                                                ts=self),
+                    'B_mtx2': RTraceEvalElemFieldVar(eval=lambda sctx, u: self.get_B_mtx(sctx.loc, sctx.X)[2],
+                                                ts=self),
+                    'J_det'  : RTraceEvalElemFieldVar(eval=lambda sctx, u:
                                                 array([det(self.get_J_mtx(sctx.loc, sctx.X)) ]),
-                                                              ts = self) }
+                                                              ts=self) }
         else:
             return {}
 
@@ -713,14 +707,14 @@ class FETSEval(TStepperEval):
 
             # add the eval into the loop.
             #
-            rte_dict[ key ] = RTraceEvalElemFieldVar(name = key,
-                                                      u_mapping = self.get_eps1t_eng,
-                                                      eval = v_eval)
+            rte_dict[ key ] = RTraceEvalElemFieldVar(name=key,
+                                                      u_mapping=self.get_eps1t_eng,
+                                                      eval=v_eval)
 
-        rte_dict.update({'eps_app' : RTraceEvalElemFieldVar(eval = self.get_eps_mtx33),
-                          'eps0_app' : RTraceEvalElemFieldVar(eval = self.get_eps0_mtx33),
-                          'eps1t_app' : RTraceEvalElemFieldVar(eval = self.get_eps1t_mtx33),
-                          'u'   : RTraceEvalElemFieldVar(eval = self.get_u)})
+        rte_dict.update({'eps_app' : RTraceEvalElemFieldVar(eval=self.get_eps_mtx33),
+                          'eps0_app' : RTraceEvalElemFieldVar(eval=self.get_eps0_mtx33),
+                          'eps1t_app' : RTraceEvalElemFieldVar(eval=self.get_eps1t_mtx33),
+                          'u'   : RTraceEvalElemFieldVar(eval=self.get_u)})
 
         return rte_dict
 
@@ -728,7 +722,7 @@ class FETSEval(TStepperEval):
                               Item('mats_eval'),
                               Item('n_e_dofs'),
                               Item('n_nodal_dofs'),
-                              label = 'Numerical parameters'
+                              label='Numerical parameters'
                               ),
                         Group(
 #                              Item( 'dof_r' ),
@@ -736,13 +730,13 @@ class FETSEval(TStepperEval):
                               Item('vtk_r'),
                               Item('vtk_cells'),
                               Item('vtk_cell_types'),
-                              label = 'Visualization parameters'
+                              label='Visualization parameters'
                             ),
 #                         Item('rte_dict'),
-                        resizable = True,
-                        scrollable = True,
-                        width = 0.2,
-                        height = 0.4
+                        resizable=True,
+                        scrollable=True,
+                        width=0.2,
+                        height=0.4
                         )
 
 class RTraceIntegEvalElemFieldVar(RTraceEval):
@@ -750,7 +744,7 @@ class RTraceIntegEvalElemFieldVar(RTraceEval):
     integral = True
     # To be specialized for element level
     #
-    def __call__(self, sctx, u, B_mtx_grid = None, J_det_grid = None):
+    def __call__(self, sctx, u, B_mtx_grid=None, J_det_grid=None):
         if J_det_grid == None or B_mtx_grid == None:
             X_mtx = sctx.X
 #            if self.dim_slice:
