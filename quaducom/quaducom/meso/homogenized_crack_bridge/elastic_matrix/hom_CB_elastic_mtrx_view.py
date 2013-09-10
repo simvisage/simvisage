@@ -87,7 +87,7 @@ class CompositeCrackBridgeView( ModelView ):
             self.model.w = w
             stiffness_loss = np.sum( self.model.Kf * self.model.damage ) / np.sum( self.model.Kf )
             if stiffness_loss > 0.90:
-                return w * 1e10
+                return 1. + w
             # plt.plot(w, self.sigma_c, 'ro')
             return -self.sigma_c
         def residuum_stiffness( w ):
