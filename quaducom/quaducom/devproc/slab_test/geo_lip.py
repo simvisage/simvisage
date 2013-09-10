@@ -24,17 +24,7 @@ class GeoLIP(HasTraits):
     #-----------------------------------------------------------------
     # geometric parameters of the slab
     #-----------------------------------------------------------------
-    # NOTE: coordinate system is placed where the symmetry planes cut each other, 
-    # i.e the center of the load introduction area (=middle of steel plate)
-
-    # discretization of the load introduction plate (region 'R')
-    #
-    shape_R = Int(3, input = True)
-        
-    # discretization in z-direction 
-    # (thickness direction):
-    #
-    shape_z = Int(1, input = True)
+    # NOTE: coordinate system is placed in the center of the load introduction plate
 
     # specify offset (translation) of the elastomer patch
     # in global coordinates
@@ -92,7 +82,6 @@ class GeoLIP(HasTraits):
         #
         pts[:,-1] = pts[:,-1][::-1]
 
-        
         return pts
 
 
@@ -105,9 +94,19 @@ if __name__ == '__main__':
 
     lip = GeoLIP()
 
-    grid = mgrid[0:1:complex(0, lip.shape_R + 1),
-                 0:1:complex(0, lip.shape_R + 1),
-                 0:1:complex(0, lip.shape_z )]
+    # discretization of the load introduction plate (region 'R')
+    # i.e. number of elements in thickness direction 
+    #
+    shape_R = 3
+        
+    # discretization in z-direction 
+    # (thickness direction):
+    #
+    shape_z = 1
+
+    grid = mgrid[0:1:complex(0, shape_R + 1),
+                 0:1:complex(0, shape_R + 1),
+                 0:1:complex(0, shape_z + 1)]
 
     X, Y, Z = grid
 

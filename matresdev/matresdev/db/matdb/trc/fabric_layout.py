@@ -104,7 +104,7 @@ FabricLayOut.db = SimDBClassExt(
                                            ),
 
 
-               # AR-glas textile (2 x 800 tex in 0-direction):                            
+               # AR-glas textile (2 x 1200 tex in 0-direction):                            
                #
                '2D-02-06a' : FabricLayOut( 
                                            a_tex_0 = 71.65,
@@ -117,7 +117,7 @@ FabricLayOut.db = SimDBClassExt(
 
                # carbon textile / tricot binding ("Trikot") 
                # 2 x 800 tex in 0-direction (2v1l): spacing 12,5 mm                            
-               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                           
+               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.7 mm!                           
                #
                '2D-14-10' : FabricLayOut( 
                                            a_tex_0 = 73.89,
@@ -130,7 +130,7 @@ FabricLayOut.db = SimDBClassExt(
 
                # carbon textile / tricot binding ("Trikot") 
                # 1 x 800 tex in 0-direction (1v1l): 8.3 mm                            
-               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
+               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.7 mm!                            
                #
                '2D-04-11' : FabricLayOut( 
                                            a_tex_0 = 55.4,
@@ -144,7 +144,7 @@ FabricLayOut.db = SimDBClassExt(
                # carbon textile / tricot binding ("Trikot") with defect 
                # due to the manifacturing process (rovings are separated by the binding thread) 
                # 1 x 800 tex in 0-direction (1v1l): 8.3 mm                            
-               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
+               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.7 mm!                            
                #
                '2D-04-11_defect' : FabricLayOut( 
                                            a_tex_0 = 55.4,
@@ -158,7 +158,7 @@ FabricLayOut.db = SimDBClassExt(
                # demonstrator textile (carbon)
                # carbon textile / tissue binding ("Tuch") 
                # 1 x 800 tex in 0-direction (1v1l): 8.3 mm                            
-               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
+               # 1 x 800 tex in 90-direction (1v1l): effective spacing of 7.7 mm!                            
                #
                '2D-05-11' : FabricLayOut( 
                                            a_tex_0 = 55.4,
@@ -172,7 +172,7 @@ FabricLayOut.db = SimDBClassExt(
                # AR-glass tissue binding (barrel shell)
                # tissue binding ("Tuch") 
                # 1 x 1200 tex in 0-direction (1v1l): 8.3 mm                            
-               # 1 x 1200 tex in 90-direction (1v1l): effective spacing of 7.6 mm!                            
+               # 1 x 1200 tex in 90-direction (1v1l): effective spacing of 7.7 mm!                            
                #
                '2D-09-12' : FabricLayOut( 
                                            a_tex_0 = 55.4,

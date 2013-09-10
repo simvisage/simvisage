@@ -1,4 +1,3 @@
-
 from etsproxy.traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
@@ -82,10 +81,20 @@ from geo_st import \
 
 from geo_lip import \
     GeoLIP
-
+    
+from geo_supprt import \
+    GeoSUPPRT
 
 from pickle import dump, load
 
+from matplotlib.font_manager import FontProperties
+font = FontProperties()
+font.set_name('Script MT')
+font.set_family('serif')
+font.set_style('normal')
+font.set_size('large')
+font.set_variant('normal')
+font.set_weight('medium')
 
 def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     '''format 2d-plot black and with with times legends 
@@ -99,11 +108,13 @@ def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     font.set_name('Script MT')
     font.set_family('serif')
     font.set_style('normal')
-    font.set_size('small')
+#    font.set_size('small')
+    font.set_size('large')
     font.set_variant('normal')
     font.set_weight('medium')
     
-    axes.axis([0, xlim, 0., ylim], fontproperties=font)
+    if xlim != None and ylim != None:
+        axes.axis([0, xlim, 0., ylim], fontproperties=font)
 
     # format ticks for plot
     #
@@ -117,7 +128,15 @@ def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
         
 
 class SimST(IBVModel):
-    '''Plate test prepared for parametric study.
+    '''Slab test prepared for parametric study. Due to symmetry only a quarter of the slab is simulated. 
+    @params:
+    'geo_st_flag': specify weather a geometric transformation of the mesh of the slab is to be performed 
+                   in order to capture the round load introduction area  
+
+    'elstrm_flag': specify weather a elastomer is modeled for the load introduction  
+
+    'supprt_flag': specify weather the support is modeled as separate fe-grid allowing for realistic 
+                   kinematics at the support (rotation/translation in the plane between slab and support 
     '''
 
     input_change = Event
@@ -130,17 +149,18 @@ class SimST(IBVModel):
     #-----------------
     # discretization:
     #-----------------
+
+    # discretization in x,y-direction (quarter of the slab):
     #
-    # discretization in x,y-direction:
     shape_xy = Int( 14, input = True,
                       ps_levels = ( 8, 12, 3 ) )
 
     # discretization of the load introduction plate (region 'R')
     #
-    shape_R = Int(3, input = True)
+    shape_R = Int( 3, input = True)
 
     # discretization in z-direction:
-    shape_z = Int( 2, input = True,
+    shape_z = Int( 3, input = True,
                       ps_levels = ( 2, 3, 3 ) )
 
     #-----------------
@@ -148,10 +168,8 @@ class SimST(IBVModel):
     #-----------------
     #
     # edge length of the quadratic plate (entire length without symmetry)
-    # length = 1.25m - 2*0.05m supports
-    # NOTE: if support is modeled take entire length (l = 1,25m)
+    #
     length = Float(1.25, input = True)
-
     thickness = Float(0.06, input = True)
 
     elem_length_xy = Property(Float, depends_on = 'shape_xy, length')
@@ -159,11 +177,35 @@ class SimST(IBVModel):
     def _get_elem_length_xy(self):
         return self.length / self.shape_xy
 
+    # properties of the load introduction plate
+    # NOTE: only available when geometric transformation for slab test is used
+    #
     radius_plate = Float(0.10, input = True)
     thickness_plate = Float(0.02, input = True)
 
+    # thickness of the tappered support
+    #
     thickness_supprt = Float(0.02, input = True)
 
+    #-----------------
+    # specify the refinement of the idealization
+    #-----------------
+
+    # specify weather rounded load introduction plate is modeled. If set to 'False' a complete square element mesh is used.
+    #
+    geo_st_flag = True
+
+    # specify weather elastomer is to be modeled for load introduction
+    #
+    elstmr_flag = True
+
+    # specify weather steel support is to be modeled 
+    #
+    supprt_flag = True
+
+    #-----------------
+    # 'geo_transform'
+    #-----------------
 
     # geometry transformation for slab with rounded load introduction plate (called elastomer)
     #
@@ -177,39 +219,54 @@ class SimST(IBVModel):
                      length_quarter = self.length / 2.,
                      thickness = self.thickness)
 
-    # geometry transformation rounded load introduction plate
+    # geometry transformation rounded load introduction plate (if modeled)
     #
-    geo_lip = Property(Instance(GeoLIP), depends_on = '+ps_levels, +input')
+    geo_elstmr = Property(Instance(GeoLIP), depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_geo_lip(self):
-        return GeoLIP(shape_R = self.shape_R,
-                      shape_z = self.shape_z,
-                      radius_plate = self.radius_plate,
+    def _get_geo_elstmr(self):
+        return GeoLIP(radius_plate = self.radius_plate,
                       thickness_plate = self.thickness_plate,
                       xyoffset = self.length / 2. - self.radius_plate,
                       zoffset = self.thickness)
 
-    #-----------------
-    # phi function extended:
-    #-----------------
+    # geometry transformation for four sided tappered support with reduced stiffness towards the edges (if modeled)
     #
+    geo_supprt = Property(Instance(GeoSUPPRT), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_geo_supprt(self):
+        # element length within the range of the slab without the area of the 
+        # load introduction plate 
+        #
+        elem_size = (self.length / 2.0 - self.radius_plate) / (self.shape_xy - self.shape_R)
+        width_supprt = 2. * elem_size
+        print 'width_supprt = ', width_supprt
+        return GeoSUPPRT(thickness_supprt = self.thickness_supprt,
+                      width_supprt = width_supprt,
+                      xyoffset = 0.,
+                      zoffset = - self.thickness_supprt)
+
+    #-----------------
+    # phi function
+    #-----------------
+
     phi_fn = Instance(IPhiFn, input = True)
     def _phi_fn_default(self):
         return PhiFnStrainHardening()
 
     #----------------------------------------------------------------------------------
-    # mats_eval
+    # mats
     #----------------------------------------------------------------------------------
 
-    # age of the plate at the time of testing
-    # NOTE: that the same phi-function is used independent of age. This assumes a 
-    # an afine/proportional damage evolution for different ages. 
+    # age of the slab at the time of testing
     #
     age = Int(28, auto_set = False, enter_set = True, input = True)
 
-    # composite E-modulus 
-    # 28 GPa = 28000 [MPa] 
-    E_c = Float(28e3, auto_set = False, enter_set = True, input = True)
+    # composite E-modulus / Poisson's ratio
+    # NOTE 1: value are retrieved from the database
+    #         same values are used for calibration (as taken from tensile test) and for slab test  
+    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume  
+    #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
+    #         used in the simulation of the slab test and within the calibration procedure. 
 
     # composite E-modulus 
     # 210 GPa = 210000 [MPa] 
@@ -220,6 +277,8 @@ class SimST(IBVModel):
     nu = Float(0.2, auto_set = False, enter_set = True, input = True)
 
     tstep = Float(0.05, auto_set = False, enter_set = True, input = True)
+    tmax = Float(1.0, auto_set = False, enter_set = True, input = True)
+    tolerance = Float(0.001, auto_set = False, enter_set = True, input = True)
 
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
@@ -229,64 +288,527 @@ class SimST(IBVModel):
     @cached_property
     def _get_mats_eval(self):
         mats_eval = MATS2D5MicroplaneDamage(
-                                E = self.E_c,
+#                                E = self.E_c,
+                                E = self.E_m, # relevant for compressive behavior/used for calibration of phi_fn
                                 nu = self.nu,
                                 n_mp = 30,
                                 symmetrization = 'sum-type',
                                 model_version = 'compliance',
                                 phi_fn = self.phi_fn)
-
         return mats_eval
 
     elstmr_mats = Property(Instance(MATS3DElastic),
-                                   depends_on = 'input_change')
+                                    depends_on = 'input_change')
     @cached_property
     def _get_elstmr_mats(self):
-        max_f = 0.020 # MN
-        max_eps = 1.0 # [-]
-        area = self.elem_length_xy ** 2
-        sig = max_f / area
-        E_elast = sig / max_eps
+#        max_f = 0.020 # MN
+#        max_eps = 1.0 # [-]
+#        area = self.elem_length_xy ** 2
+#        sig = max_f / area
+#        E_elast = sig / max_eps
+        E_elast = self.E_c / 10.
         print 'effective elastomer E_modulus', E_elast
         return MATS3DElastic(E = E_elast,
                              nu = 0.2)
+#                             nu = 0.4)
 
     supprt_mats = Property(Instance(MATS3DElastic),
-                                   depends_on = 'input_change')
+                                    depends_on = 'input_change')
     @cached_property
     def _get_supprt_mats(self):
         return MATS3DElastic(E = self.E_s,
                              nu = 0.2)
-
 
     #-----------------
     # fets:
     #-----------------
 
     # use quadratic serendipity elements
-    #
+    # NOTE: 2D5 elements behave linear elastic in out of plane direction!
+
     specmn_fets = Property(Instance(FETSEval),
-                     depends_on = 'input_change')
+                           depends_on = 'input_change')
     @cached_property
     def _get_specmn_fets(self):
-        return FETS2D58H20U(mats_eval = self.mats_eval)
-
-    # use quadratic serendipity elements
-    # NOTE: 2D5 elements behave linear elastic in out of plane direction!
-    #
+        fets = FETS2D58H20U(mats_eval = self.mats_eval)
+        fets.vtk_r *= self.vtk_r
+        return fets
+    
     elstmr_fets = Property(Instance(FETSEval),
                            depends_on = 'input_change')
     @cached_property
     def _get_elstmr_fets(self):
-        return FETS2D58H20U(mats_eval = self.elstmr_mats)
+        fets = FETS2D58H20U(mats_eval = self.elstmr_mats)
+        fets.vtk_r *= self.vtk_r
+        return fets
 
-    # use quadratic serendipity elements
-    #
-    supprt_fets = Property(Instance(FETSEval),
-                           depends_on = 'input_change')
+    if supprt_flag:
+        supprt_fets = Property(Instance(FETSEval),
+                               depends_on = 'input_change')
+        @cached_property
+        def _get_supprt_fets(self):
+            fets = FETS2D58H20U(mats_eval = self.supprt_mats)
+            fets.vtk_r *= self.vtk_r
+            return fets
+
+    fe_domain = Property(depends_on = '+ps_levels, +input')
     @cached_property
-    def _get_supprt_fets(self):
-        return FETS2D58H20U(mats_eval = self.supprt_mats)
+    def _get_fe_domain(self):
+        return FEDomain()
+
+    #-----------------
+    # fe_grid:
+    #-----------------
+
+    # specify element shrink facktor in plot of fe-model
+    #
+    vtk_r = Float(0.95)
+
+    specmn_fe_level = Property(depends_on = '+ps_levels, +input')
+    def _get_specmn_fe_level(self):
+        return FERefinementGrid(name = 'specimen patch',
+                                fets_eval = self.specmn_fets,
+                                domain = self.fe_domain)
+
+    specmn_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_specmn_fe_grid(self):
+        # if 'geo_st' is used for modeling of round load introduction area
+        #
+        if self.geo_st_flag:
+            fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
+                             coord_max = (1.0, 1.0, 1.0),
+                             shape = (self.shape_xy, self.shape_xy, self.shape_z),
+                             level = self.specmn_fe_level,
+                             geo_transform = self.geo_st,
+                             fets_eval = self.specmn_fets)
+        else:
+            # total effective length = 1.25m - 2*0.05m (from center supports to center support)
+            width_supprt = 0.1
+            length_quarter_eff = self.length / 2. - width_supprt / 2.
+            length_quarter_eff = self.length / 2. 
+            fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
+                             coord_max = (length_quarter_eff, length_quarter_eff, self.thickness),
+                             shape = (self.shape_xy, self.shape_xy, self.shape_z),
+                             level = self.specmn_fe_level,
+                             fets_eval = self.specmn_fets)
+        return fe_grid
+
+    if elstmr_flag:
+        elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
+        def _get_elstmr_fe_level(self):
+            return  FERefinementGrid(name = 'elastomer patch',
+                                     fets_eval = self.elstmr_fets,
+                                     domain = self.fe_domain)
+    
+        elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+        @cached_property
+        def _get_elstmr_fe_grid(self):
+            # if 'geo_st' is used for modeling of round load introduction area
+            #
+            if self.geo_st_flag:
+                fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
+                                 coord_max = (1.0, 1.0, 1.0),
+                                 level = self.elstmr_fe_level,
+                                 shape = (self.shape_R, self.shape_R, 1), 
+                                 geo_transform = self.geo_elstmr,
+                                 fets_eval = self.elstmr_fets)
+            # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
+            #
+            else:
+                elstmr_min = self.length / 2. - self.elem_length
+                elstmr_max = self.length / 2. 
+                fe_grid = FEGrid(coord_min = (elstmr_min, elstmr_min, self.thickness),
+                                 coord_max = (elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
+                                 level = self.elstmr_fe_level,
+                                 shape = (self.shape_R, self.shape_R, 1), 
+                                 fets_eval = self.elstmr_fets)
+            return fe_grid
+
+    if supprt_flag:
+        supprt_fe_level = Property(depends_on = '+ps_levels, +input')
+        def _get_supprt_fe_level(self):
+            return  FERefinementGrid(name = 'elastomer patch',
+                                     fets_eval = self.supprt_fets,
+                                     domain = self.fe_domain)
+
+        supprt_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+        @cached_property
+        def _get_supprt_fe_grid(self):
+            return FEGrid(coord_min = (0, 0, 0),
+                          coord_max = (1, 1, 1),
+                          level = self.supprt_fe_level,
+                          # use shape (2,2) in order to place support in the center of the steel support
+                          # corresponding to 4 elements of the slab mesh
+                          #
+                          shape = (2, 2, 1),
+                          geo_transform = self.geo_supprt,
+                          fets_eval = self.supprt_fets)
+
+    #--------------------------------------------------------------
+    # tloop
+    #--------------------------------------------------------------
+
+    tloop = Property(depends_on = 'input_change')
+    @cached_property
+    def _get_tloop(self):
+
+        specmn = self.specmn_fe_grid
+
+        if self.elstmr_flag:
+            elstmr = self.elstmr_fe_grid
+        
+        if self.supprt_flag:
+            supprt = self.supprt_fe_grid
+
+        self.fe_domain.n_dofs
+
+        #--------------------------------------------------------------
+        # boundary conditions for the symmetry planes and the support
+        #--------------------------------------------------------------
+        
+        # symmetry planes of the specimen
+        #
+        bc_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = specmn[-1, :, :, -1, :, :])
+        bc_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = specmn[:, -1, :, :, -1, :])
+        
+        # tappered support with fixed node in the corner
+        #
+#        if self.supprt_flag:
+#            print 'support with edge rotation'
+#            bc_supprt_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = supprt[0, :, :, 0, :, :])
+#            bc_supprt_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = supprt[:, 0, :, :, 0, :])
+#            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, 0, 0, 0])
+#            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
+#                                   slice = specmn[0, 0, 0, :, :, 0],
+#                                   link_slice = supprt[0, 0, -1, :, :, -1],
+#                                   link_dims = [2],
+#                                   link_coeffs = [1.])
+
+        # four sided tappered support with fixed node in the center
+        # use two element rows for the size of the steel plate rotation support 
+        #
+        if self.supprt_flag:
+            #---------------------------
+            # fixed support with sliding connection to the plate 
+            #---------------------------
+
+            print 'four sided tappered support with center rotation'
+            # allow movement of the support's outer corner node only in the 45-degree direction 
+            # by linking the corresponding degrees of freedom 
+            # 
+            sdofs = supprt[0, 0, 0, 0, 0, 0].dofs
+            s_dof_x, s_dof_y = sdofs[0,0,(0,1)].flatten()
+            sym_support_link = BCDof( var = 'u', value = 0., dof = s_dof_x,
+                                      link_dofs = [s_dof_y],
+                                      link_coeffs = [1.0])
+            # fix bottom-middle node of the tappered support
+            # 
+            support_000 = BCSlice(var = 'u', value = 0., dims = [0,1,2], slice = supprt[0, 0, 0, -1, -1, 0])
+            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
+                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
+                                   link_slice = supprt[:, :, -1, :, :, -1],
+                                   link_dims = [2],
+                                   link_coeffs = [1.])
+
+#            #---------------------------
+#            # sliding support with fixed connection to the plate 
+#            #---------------------------
+#            
+#            # allow sliding of the support only in 45-degree direction (towards the center of the slab due to symmetry)
+#            #
+#            sdofs = supprt[0, 0, 0, -1, -1, 0].dofs
+#            s_dof_x, s_dof_y = sdofs[0,0,(0,1)].flatten()
+#            sym_support_link = BCDof( var = 'u', value = 0., dof = s_dof_x,
+#                                      link_dofs = [s_dof_y],
+#                                      link_coeffs = [1.0])
+#            # sliding support (only z-direction is blocked)
+#            #
+#            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, -1, -1, 0])
+#            # link support and slab in all dofs and all directions as no sliding 
+#            # occurs in the experiment due to friction
+#            #
+#            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
+#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
+#                                   link_slice = supprt[:, :, -1, :, :, -1],
+#                                   link_dims = [2],
+#                                   link_coeffs = [1.])
+#            link_sp_sp_x = BCSlice(var = 'u', value = 0., dims = [0],
+#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
+#                                   link_slice = supprt[:, :, -1, :, :, -1],
+#                                   link_dims = [0],
+#                                   link_coeffs = [1.])
+#            link_sp_sp_y = BCSlice(var = 'u', value = 0., dims = [1],
+#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
+#                                   link_slice = supprt[:, :, -1, :, :, -1],
+#                                   link_dims = [1],
+#                                   link_coeffs = [1.])
+#           #---------------------------
+
+        else:
+            # place support at the corner / reduce the edge length of the slab in the model to effective values, 
+            # i.e. l_ = length_quarter - width_supprt / 2
+            # 
+            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
+
+        #--------------------------------------------------------------
+        # boundary conditions for loading
+        #--------------------------------------------------------------
+
+        # center displacement
+        #
+        w_max = -0.020 # [m]
+        
+        center_dof = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2].flatten()
+        print 'center_dof', center_dof 
+        
+        # if elastomer is modeled
+        #
+        if self.elstmr_flag:
+            bc_el_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1],
+                                        slice = elstmr[:, -1, :, :, -1, :])
+            bc_el_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0],
+                                        slice = elstmr[-1, :, :, -1, :, :])
+            if self.geo_st_flag:
+                # link all elements of the load introduction area with the corresponding elements of the elastomer 
+                #
+                link_el_sp = BCSlice(var = 'u', value = 0., dims = [2],
+                                     slice = elstmr[:, :, 0, :, :, 0],
+                                     link_slice = specmn[-self.shape_R :, -self.shape_R :, -1, :, :, -1],
+                                     link_dims = [2],
+                                     link_coeffs = [1.])
+            else:
+                # link the corner element of the slab mesh with the elastomer (one element)
+                #
+                link_el_sp = BCSlice(var = 'u', value = 0., dims = [2],
+                                     slice = elstmr[0, 0, 0, :, :, 0],
+                                     link_slice = specmn[-1, -1, -1, :, :, -1],
+                                     link_dims = [2],
+                                     link_coeffs = [1.])
+
+            #--------------------------------------------------------------
+            # var 'elstmr': nodal displacement applied at top of the load introduction plate
+            #--------------------------------------------------------------
+#            time_function = MFnLineArray(xdata = [0.0, 0.2, 0.4, 1.0], ydata = [0.0, 0.2, 0.75, 1.0])
+
+            # displacement applied at the top of the elastomer
+            #
+            bc_w = [BCSlice(var = 'u', value = w_max, dims = [2], #time_function = time_function.get_value,
+                           slice = elstmr[:, :, -1, :, :, -1])]
+            # dofs for RTrace f-w-diagram
+            #
+            ctl_dofs = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
+            print 'ctl_dofs', ctl_dofs
+            print 'ctl_dofs.shape', ctl_dofs.shape
+            
+        # if no elastomer is modeled
+        #
+        else:
+            
+            # if geometry transformation for the slab is used
+            #
+            if self.geo_st_flag:
+                # z-displacement applied along the edge of the load introduction plate 
+                #
+                nodes_line_Rx = specmn[-self.shape_R:, -self.shape_R, -1, :, 0, -1]
+                nodes_line_Ry = specmn[-self.shape_R, -self.shape_R:, -1, 0, :, -1]
+                bc_w_Rxline = BCSlice(var = 'u', value = w_max, dims = [2], slice = nodes_line_Rx)
+                bc_w_Ryline = BCSlice(var = 'u', value = w_max, dims = [2], slice = nodes_line_Ry)
+                bc_w = [ bc_w_Rxline, bc_w_Ryline ]
+                # dofs for RTrace f-w-diagram
+                #
+                dofs_line_Rx = nodes_line_Rx.dofs[:, :, 2].flatten()
+                dofs_line_Ry = nodes_line_Ry.dofs[:, :, 2].flatten()
+                # use 'np.unique' in order to avoid that the same 'dof' is listed twice in the
+                # array as it appears in two adjacent elements of the same slice or in both x- and y-line slice
+                ctl_dofs = np.unique( np.hstack([dofs_line_Rx, dofs_line_Ry]) ) 
+                print 'dofs_line_Rx', dofs_line_Rx
+                print 'dofs_line_Ry', dofs_line_Ry
+                print 'ctl_dofs', ctl_dofs
+
+            # if no geometry transformation for the slab is used (regular rectangular mesh only)
+            #
+            else:
+                ### var 1 displacement applied at the center nodes (all nodes in the symmetry axis)
+                ### var 2: displacement applied at the center top node (one node) 
+                #
+                bc_w = [BCSlice(var = 'u', value = w_max, dims = [2], 
+#                                          slice = specmn[-1, -1, :, -1, -1, :])] # all nodes along z-axis
+                                          slice = specmn[-1, -1, -1, -1, -1, -1])] # only top node
+
+                ### var 3: 
+                #
+                # displacement applied along the edge of the 2nd element row (from the middle) for 
+                # shape_xy = 10 and an edge length of L_quarter = 0.575m the distance from the center equals 0.23m
+#                nodes_line_x = specmn[-2:, -2, -1, :, 0, -1]
+#                nodes_line_y = specmn[-2, -2:, -1, 0, :, -1]
+#                bc_w_xline = BCSlice(var = 'u', value = w_max, dims = [2], slice = nodes_line_x)
+#                bc_w_yline = BCSlice(var = 'u', value = w_max, dims = [2], slice = nodes_line_y)
+#                bc_w = [ bc_w_xline, bc_w_yline ]
+#                # dofs for RTrace f-w-diagram
+#                #
+#                dofs_line_x = nodes_line_x.dofs[:, :, 2].flatten()
+#                dofs_line_y = nodes_line_y.dofs[:, :, 2].flatten()
+#                ctl_dofs = np.unique( np.hstack([dofs_line_x, dofs_line_y]) ) 
+
+        #--------------------------------------------------------------
+        # force-displacement-diagrams 
+        #--------------------------------------------------------------
+
+        # get center-edge dof at the upper side of the slab
+        #
+        # if shape_xy is an even number:
+        if self.shape_xy % 2 == 0:
+            x_idx_center_edge = (self.shape_xy / 2) - 1
+            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, -1, -1, -1].dofs
+        # if shape_xy is an odd number:
+        else:
+            # get the midside node of the center-edge-element
+            x_idx_center_edge = (self.shape_xy - 1) / 2
+            # valid only for quadratic elements
+            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, 1, -1, -1].dofs
+
+        center_dof = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
+        print 'center_dof', center_dof 
+        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - reaction 2',
+                                       var_x = 'U_k'  , idx_x = center_dof,
+                                       # elastomer load
+                                       var_y = 'F_int', idx_y_arr = ctl_dofs,
+#                                       var_y = 'F_int', idx_y = center_dof,
+                                       record_on = 'update',
+                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+                                       # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
+                                       #
+                                       transform_y = '4 * 1000. * y')
+        
+        if self.supprt_flag:
+            supprt_dof_z = supprt[0, 0, 0, -1, -1, 0].dofs[0, 0, 2]
+            print 'supprt_dof_z', supprt_dof_z
+            self.f_w_diagram_supprt = RTraceGraph(name = 'displacement (supprt) - reaction 2',
+                                           var_x = 'U_k'  , idx_x = center_dof,
+                                           # elastomer load
+                                           var_y = 'F_int', idx_y = supprt_dof_z,
+                                           record_on = 'update',
+                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+                                           # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
+                                           #
+                                           transform_y = '4 * 1000. * y')
+        else:
+            supprt_dof_z = specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
+            self.f_w_diagram_supprt = RTraceGraph(name = 'displacement (supprt) - reaction 2',
+                                           var_x = 'U_k'  , idx_x = center_dof,
+                                           # elastomer load
+                                           var_y = 'F_int', idx_y = supprt_dof_z,
+                                           record_on = 'update',
+                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+                                           # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
+                                           #
+                                           transform_y = '4 * 1000. * y')
+        
+        
+#        center_edge_dof = center_edge_top_dofs[0, 0, 2]
+#        print 'center_edge_dof', center_edge_dof 
+#        self.f_w_diagram_center_edge = RTraceGraph(name = 'displacement (center/edge) - reaction 2',
+#                                                   var_x = 'U_k'  , idx_x = center_edge_dof,
+#                                                   var_y = 'F_int', idx_y_arr = ctl_dofs,
+#                                                   record_on = 'update',
+#                                                   transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                                   transform_y = '-4 * 1000 * y')
+#
+#        edge_dof = specmn[ 0, -1, -1, 0, -1, -1].dofs[0, 0, 2]
+#        print 'edge_dof', edge_dof 
+#        self.f_w_diagram_edge = RTraceGraph(name = 'displacement (edge) - reaction 2',
+#                                            var_x = 'U_k'  , idx_x = edge_dof,
+#                                            var_y = 'F_int', idx_y_arr = ctl_dofs,
+#                                            record_on = 'update',
+#                                            transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                            transform_y = '-4 * 1000 * y')
+
+        #--------------------------------------------------------------
+        # boundary conditions 
+        #--------------------------------------------------------------
+
+        bcond_list = [bc_symplane_yz, bc_symplane_xz, support_000] + bc_w
+
+        if self.supprt_flag:
+            bcond_list += [link_sp_sp_z, sym_support_link]
+
+        if self.elstmr_flag:
+            bcond_list += [bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp]
+
+        # [link_sp_sp_x, link_sp_sp_y]
+        # [bc_supprt_symplane_yz, bc_supprt_symplane_xz]
+
+        #--------------------------------------------------------------
+        # ts 
+        #--------------------------------------------------------------
+
+        ts = TS(
+                sdomain = self.fe_domain,
+                bcond_list = bcond_list,
+                rtrace_list = [
+                             self.f_w_diagram_center,
+#                             self.f_w_diagram_center_edge,
+#                             self.f_w_diagram_edge,
+                             self.f_w_diagram_supprt,
+
+                             RTraceDomainListField(name = 'Displacement' ,
+                                            var = 'u', idx = 0, warp = True),
+#                             RTraceDomainListField(name = 'Stress' ,
+#                                            var = 'sig_app', idx = 0, warp = True, 
+#                                            record_on = 'update'),
+                             RTraceDomainListField(name = 'Strain' ,
+                                        var = 'eps_app', idx = 0, warp = True, 
+                                        record_on = 'update'),
+                             RTraceDomainListField(name = 'Damage' ,
+                                        var = 'omega_mtx', idx = 0, warp = True,
+                                        record_on = 'update'),
+                             RTraceDomainListField(name = 'max_omega_i', warp = True,
+                                        var = 'max_omega_i', idx = 0,
+                                        record_on = 'update'),
+#                             RTraceDomainListField(name = 'IStress' ,
+#                                            position = 'int_pnts',
+#                                            var = 'sig_app', idx = 0, 
+#                                            record_on = 'update'),
+#                             RTraceDomainListField(name = 'IStrain' ,
+#                                            position = 'int_pnts',
+#                                            var = 'eps_app', idx = 0, 
+#                                            record_on = 'update'),
+                              ]
+                )
+
+        # Add the time-loop control
+        #
+        tloop = TLoop(tstepper = ts,
+
+                       # allow only a low tolerance 
+                       #
+#                       KMAX = 200, 
+#                       tolerance = 5e-4, 
+
+                       # allow a high tolerance 
+                       #
+                       KMAX = 300,
+                       tolerance = self.tolerance,
+
+                       # allow a very high tolerance 
+                       #
+#                       KMAX = 50,
+#                       tolerance = 0.1,
+
+                       RESETMAX = 0,
+                       debug = False,
+                       
+                       # 0.85 * 40 mm = 34 mm
+                       #
+#                       tline = TLine(min = 0.0, step = self.tstep, max = 1.00 )) 
+                       tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
+
+        return tloop
+
+    #--------------------------------------------------------------
+    # prepare pstudy
+    #--------------------------------------------------------------
 
     def peval(self):
         '''
@@ -302,365 +824,6 @@ class SimST(IBVModel):
         return array([ u_center_top_z, F_max ],
                        dtype = 'float_')
 
-    fe_domain = Property(depends_on = '+ps_levels, +input')
-    @cached_property
-    def _get_fe_domain(self):
-        return FEDomain()
-
-    # specify element shrink facktor in plot of fe-model
-    #
-    vtk_r = Float(0.95)
-
-    specmn_fe_level = Property(depends_on = '+ps_levels, +input')
-    def _get_specmn_fe_level(self):
-        specmn_fets = self.specmn_fets
-        specmn_fets.vtk_r *= self.vtk_r
-        return FERefinementGrid(name = 'specimen patch',
-                                fets_eval = specmn_fets,
-                                domain = self.fe_domain)
-
-    specmn_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-    @cached_property
-    def _get_specmn_fe_grid(self):
-        # NOTE: only a quarter of the plate is simulated due to symmetry:
-        #
-        fe_grid = FEGrid(#coord_max = (self.length / 2, self.length / 2, self.thickness),
-                         coord_min = (0.0, 0.0, 0.0),
-                         coord_max = (1.0, 1.0, 1.0),
-                         shape = (self.shape_xy, self.shape_xy, self.shape_z),
-                         level = self.specmn_fe_level,
-                         geo_transform = self.geo_st,
-                         fets_eval = self.specmn_fets)
-        return fe_grid
-
-    elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
-    def _get_elstmr_fe_level(self):
-        return  FERefinementGrid(name = 'elastomer patch',
-                                 fets_eval = self.elstmr_fets,
-                                 domain = self.fe_domain)
-
-    elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-    @cached_property
-    def _get_elstmr_fe_grid(self):
-        # coordinates adapt to discretization
-#        elstmr_min = self.length / 2.0 - self.elem_length_xy
-#        elstmr_max = self.length / 2.0
-#        z_max = self.thickness * 1.1
-        self.elstmr_fets.vtk_r *= self.vtk_r
-        return FEGrid(
-#                      coord_min = (elstmr_min, elstmr_min, self.thickness),
-#                      coord_max = (elstmr_max, elstmr_max, z_max),
-                      coord_min = (0.0, 0.0, 0.0),
-                      coord_max = (1.0, 1.0, 1.0),
-                      level = self.elstmr_fe_level,
-                      shape = (self.shape_R, self.shape_R, 1), # default set to (2,2,1)
-                      geo_transform = self.geo_lip,
-                      fets_eval = self.elstmr_fets)
-
-    supprt_fe_level = Property(depends_on = '+ps_levels, +input')
-    def _get_supprt_fe_level(self):
-        return  FERefinementGrid(name = 'elastomer patch',
-                                 fets_eval = self.supprt_fets,
-                                 domain = self.fe_domain)
-
-    supprt_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-    @cached_property
-    def _get_supprt_fe_grid(self):
-        # coordinates adapt to discretization
-#        supprt_min = 0
-#        supprt_max = self.elem_length_xy
-
-        # element length within the range of the slab without the area of the 
-        # load introduction plate 
-        #
-        elem_length = (self.length / 2.0 - self.radius_plate) / self.shape_xy
-        print 'support width = ', 2. * elem_length
-
-        supprt_min = 0
-        supprt_max = 2. * elem_length
-        z_max = self.thickness_supprt
-
-        return FEGrid(coord_min = (supprt_min, supprt_min, -z_max),
-                      coord_max = (supprt_max, supprt_max, 0),
-                      level = self.supprt_fe_level,
-                      # use shape (2,2) in order to place support in the center of the steel support
-                      #
-                      shape = (2, 2, 1),
-#                      geo_transform = tappered_support,
-                      fets_eval = self.supprt_fets)
-
-#        def tappered_support(pts):
-#            x_, y_, z_ = pts.T
-#            dx = np.max(x_) - np.min(x_)
-#            dy = np.max(y_) - np.min(y_)
-#            dz = np.max(z_) - np.min(z_)
-#
-#            dz2 = dz / 2 / 2 / 2
-#            dz4 = dz / 6 / 2 / 2
-#
-#            dz_red = (dz2 * x_ / dx + dz2 * y_ / dy - dz4 * x_ / dx * y_ / dy)
-#
-#            pts = c_[x_, y_, z_ + dz_red]
-#            return pts
-#
-#        return FEGrid(coord_min = (supprt_min, supprt_min, -z_max),
-#                      coord_max = (supprt_max, supprt_max, 0),
-#                      level = self.supprt_fe_level,
-#                      shape = (1, 1, 1),
-##                      geo_transform = tappered_support,
-#                      fets_eval = self.supprt_fets)
-
-
-    # specify weather elastomer is to be modeled for load introduction
-    #
-    elstmr_flag = True
-
-    # specify weather steel support is to be modeled 
-    #
-    supprt_flag = True
-
-    tloop = Property(depends_on = 'input_change')
-    @cached_property
-    def _get_tloop(self):
-
-        if self.elstmr_flag:
-            elstmr = self.elstmr_fe_grid
-        if self.supprt_flag:
-            supprt = self.supprt_fe_grid
-
-        specmn = self.specmn_fe_grid
-
-        self.fe_domain.n_dofs
-
-        #--------------------------------------------------------------
-        # boundary conditions for the symmetry and the single support
-        #--------------------------------------------------------------
-        
-        # symmetry planes of the specimen
-        #
-        bc_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = specmn[-1, :, :, -1, :, :])
-        bc_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = specmn[:, -1, :, :, -1, :])
-        
-#        if self.supprt_flag:
-#            bc_supprt_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = supprt[0, :, :, 0, :, :])
-#            bc_supprt_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = supprt[:, 0, :, :, 0, :])
-#            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, 0, 0, 0])
-#            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
-#                                   slice = specmn[0, 0, 0, :, :, 0],
-#                                   link_slice = supprt[0, 0, -1, :, :, -1],
-#                                   link_dims = [2],
-#                                   link_coeffs = [1.])
-            
-        # use two element rows for the size of the steel plate rotation support 
-        #
-        if self.supprt_flag:
-            print 'support with center rotation'
-#            bc_supprt_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = supprt[0, :, :, 0, :, :])
-#            bc_supprt_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = supprt[:, 0, :, :, 0, :])
-            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, -1, -1, -1])
-            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
-                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
-                                   link_slice = supprt[:, :, -1, :, :, -1],
-                                   link_dims = [0,1,2],
-                                   link_coeffs = [1.])
-        else:
-            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
-
-        #--------------------------------------------------------------
-        # loading
-        #--------------------------------------------------------------
-        # w_max = center displacement:
-#        w_max = -0.028 # [m]
-
-        # NOTE: use this together with tstep = 0.025 and tmax = 0.85 in order to calculate 
-        # 1mm steps within the calculation up to maximum loading of 34mm (= 0.85 * 40mm) 
-        w_max = -0.040 # [m] 
-
-        #=======================================================================
-        # elastomer conditions
-        #=======================================================================
-        if self.elstmr_flag:
-            bc_el_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1],
-                                     slice = elstmr[:, -1, :, :, -1, :])
-            bc_el_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0],
-                                     slice = elstmr[-1, :, :, -1, :, :])
-
-    #        link_el_sp = BCDofGroup(var = 'u', value = 0., dims = [2],
-    #                                get_dof_method = elstmr.get_bottom_dofs,
-    #                                get_link_dof_method = specmn.get_top_dofs,
-    #                                link_coeffs = [1.])
-            link_el_sp = BCSlice(var = 'u', value = 0., dims = [2],
-                                 slice = elstmr[0, 0, 0, :, :, 0],
-                                 link_slice = specmn[-1, -1, -1, :, :, -1],
-                                 link_dims = [2],
-                                 link_coeffs = [1.])
-            time_function = MFnLineArray(xdata = [0.0, 0.2, 0.4, 1.0], ydata = [0.0, 0.2, 0.75, 1.0])
-            bc_el_w = BCSlice(var = 'u', value = w_max, dims = [2], #time_function = time_function.get_value,
-                                     slice = elstmr[:, :, -1, :, :, -1])
-            
-        #--------------------------------------------------------------
-        # var 1: nodal displacement applied at top at the center of the plate
-        #--------------------------------------------------------------
-        bc_center_w = BCSlice(var = 'u', value = w_max, dims = [2], slice = specmn[-1, -1, :, -1, -1, :])
-        
-        #--------------------------------------------------------------
-        # var 2: apply nodal displacements at top nodes of center element 
-        #--------------------------------------------------------------
-        bc_center_w_elem = BCSlice(var = 'u', value = w_max, dims = [2], slice = specmn[-1, -1, -1, :, :, -1])
-
-        #--------------------------------------------------------------
-        # var 3: displacement applied along the edge of the 2nd element row (from the middle) for 
-        # shape_xy = 10 and an edge length of L_quarter = 0.515m the distance from the center equals 0.23m
-        #--------------------------------------------------------------
-        bc_center_w_xline = BCSlice(var = 'u', value = w_max, dims = [2], slice = specmn[-2:, -2, -1, :, 0, -1])
-        bc_center_w_yline = BCSlice(var = 'u', value = w_max, dims = [2], slice = specmn[-2, -2:, -1, 0, :, -1])
-
-        #--------------------------------------------------------------
-        # force-displacement-diagram 
-        #--------------------------------------------------------------
-
-        # get center-dof and edge-dof and center-edge-dof for displacement tracer
-        #
-        self.center_top_dofs = specmn[-1, -1, -1, -1, -1, -1].dofs
-        self.edge_top_dofs = specmn[ 0, -1, -1, 0, -1, -1].dofs
-
-        # if shape_xy is an even number:
-        if self.shape_xy % 2 == 0:
-            x_idx_center_edge = (self.shape_xy / 2) - 1
-            self.center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, -1, -1, -1].dofs
-        # if shape_xy is an odd number:
-        else:
-            # get the midside node of the center-edge-element
-            x_idx_center_edge = (self.shape_xy - 1) / 2
-            # valid only for quadratic elements
-            self.center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, 1, -1, -1].dofs
-
-        # center_top_line_dofs
-        #
-        if self.elstmr_flag:
-            ctl_dofs = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-        else:
-            # for var 3 (= line loads) 
-            # @todo: verify!
-#            ctl_dofs = np.hstack([ specmn[-2:, -2, -1, :, 0, -1].dofs[:, :, 2].flatten(),
-#                                   specmn[-2, -2:, -1, 0, :, -1].dofs[:, :, 2].flatten()])
-            # for var 1 (= single nodal load) 
-            ctl_dofs = specmn[-1, -1, :, -1, -1, :].dofs[:, :, 2].flatten() 
-
-        # force-displacement-diagram 
-        # 
-        center_dof = self.center_top_dofs[0, 0, 2]
-        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - reaction 2',
-                                       var_x = 'U_k'  , idx_x = center_dof,
-                                       # elastomer load
-                                       var_y = 'F_int', idx_y_arr = ctl_dofs,
-                                       record_on = 'update',
-                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-                                       #
-                                       transform_y = '-4 * 1000. * y')
-
-        center_edge_dof = self.center_edge_top_dofs[0, 0, 2]
-        self.f_w_diagram_center_edge = RTraceGraph(name = 'displacement (center/edge) - reaction 2',
-                                                   var_x = 'U_k'  , idx_x = center_edge_dof,
-                                                   var_y = 'F_int', idx_y_arr = ctl_dofs,
-                                                   record_on = 'update',
-                                                   transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                                   transform_y = '-4 * 1000 * y')
-
-        edge_dof = self.edge_top_dofs[0, 0, 2]
-        self.f_w_diagram_edge = RTraceGraph(name = 'displacement (edge) - reaction 2',
-                                            var_x = 'U_k'  , idx_x = edge_dof,
-                                            var_y = 'F_int', idx_y_arr = ctl_dofs,
-                                            record_on = 'update',
-                                            transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                            transform_y = '-4 * 1000 * y')
-
-
-        #--------------------------------------------------------------
-        # boundary conditions 
-        #--------------------------------------------------------------
-
-        bcond_list = [bc_symplane_yz, bc_symplane_xz, support_000]
-
-        if self.supprt_flag:
-            bcond_list += [link_sp_sp_z]#, bc_supprt_symplane_yz, bc_supprt_symplane_xz]
-
-        if self.elstmr_flag:
-            bcond_list += [bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp, bc_el_w]
-        else:
-            bcond_list += [# var 1:
-                          bc_center_w,
-#                          # var 2:
-#                          bc_center_w_elem,
-#                          # var 3:
-#                          bc_center_w_xline, bc_center_w_yline
-                          ]
-
-        #--------------------------------------------------------------
-        # ts 
-        #--------------------------------------------------------------
-
-        ts = TS(
-                sdomain = self.fe_domain,
-                bcond_list = bcond_list,
-                rtrace_list = [
-                             self.f_w_diagram_center,
-                             self.f_w_diagram_center_edge,
-                             self.f_w_diagram_edge,
-                             RTraceDomainListField(name = 'Displacement' ,
-                                            var = 'u', idx = 0, warp = True),
-
-#                             RTraceDomainListField(name = 'Stress' ,
-#                                            var = 'sig_app', idx = 0, warp = True, 
-#                                            record_on = 'update'),
-#                             RTraceDomainListField(name = 'Strain' ,
-#                                        var = 'eps_app', idx = 0, warp = True, 
-#                                        record_on = 'update'),
-                             RTraceDomainListField(name = 'Damage' ,
-                                        var = 'omega_mtx', idx = 0, warp = True,
-                                        record_on = 'update'),
-
-#                             RTraceDomainListField(name = 'IStress' ,
-#                                            position = 'int_pnts',
-#                                            var = 'sig_app', idx = 0, 
-#                                            record_on = 'update'),
-#                             RTraceDomainListField(name = 'IStrain' ,
-#                                            position = 'int_pnts',
-#                                            var = 'eps_app', idx = 0, 
-#                                            record_on = 'update'),
-                              ]
-                )
-
-        print 'tstep', self.tstep
-        # Add the time-loop control
-        tloop = TLoop(tstepper = ts,
-
-                       # allow only a low tolerance 
-                       #
-#                       KMAX = 200, 
-#                       tolerance = 5e-4, 
-
-                       # allow a high tolerance 
-                       #
-                       KMAX = 100,
-                       tolerance = 0.001,
-
-##                       # allow a very high tolerance 
-##                       #
-#                       KMAX = 50,
-#                       tolerance = 0.1,
-
-                       RESETMAX = 0,
-                       debug = False,
-                       
-                       # 0.85 * 40 mm = 34 mm
-                       #
-                       tline = TLine(min = 0.0, step = self.tstep, max = 1 * self.tstep ))#0.85))
-#                       tline = TLine(min = 0.0, step = self.tstep, max = self.tstep))
-
-        return tloop
-
     def get_sim_outputs(self):
         '''
         Specifies the results and their order returned by the model
@@ -672,9 +835,15 @@ class SimST(IBVModel):
 
 class SimSTDB(SimST):
 
-    # vary the failure strain in PhiFnGeneralExtended:
+    # extend the failure strain in PhiFnGeneralExtended
+    #
     factor_eps_fail = Float(1.4, input = True,
                              ps_levels = (1.0, 1.2, 3))
+
+    # specify exponential softening in 'PhiFnGeneralExtendedExp'
+    #
+    Efp_frac = Float(0.2, input = True)
+
 
     #-----------------
     # composite cross section unit cell:
@@ -722,7 +891,7 @@ class SimSTDB(SimST):
     @cached_property
     def _get_phi_fn(self):
         return PhiFnGeneralExtendedExp(mfn = self.damage_function,
-                                        Efp_frac = 0.2)
+                                       Efp_frac = self.Efp_frac )
 #        return PhiFnStrainHardening()
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
@@ -731,19 +900,23 @@ class SimSTDB(SimST):
     # mats_eval
     #----------------------------------------------------------------------------------
 
-    # age of the plate at the time of testing
-    # NOTE: that the same phi-function is used independent of age. This assumes a 
-    # an afine/proportional damage evolution for different ages. 
+    # concrete matrix E-modulus (taken from 'ccs_unit_cell')
     #
-    age = Int(28, #input = True
-                )
+    E_m = Property(Float, depends_on = 'input_change')
+    @cached_property
+    def _get_E_m(self):
+        E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
+        print 'E_m (from ccs)', E_m 
+        return E_m
 
-    # composite E-modulus 
+    # composite E-modulus (taken from 'ccs_unit_cell')
     #
     E_c = Property(Float, depends_on = 'input_change')
     @cached_property
     def _get_E_c(self):
-        return self.ccs_unit_cell_ref.get_E_c_time(self.age)
+        E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
+        print 'E_c (from ccs)', E_c 
+        return E_c
 
     # Poisson's ratio 
     #
@@ -755,6 +928,7 @@ class SimSTDB(SimST):
 
 if __name__ == '__main__':
 
+# paramters for AG-glas slab tests (3cm) with tricot-binding:
 #                                ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
 #                                calibration_test = 'TT11-10a-average',
 #                                calibration_test = 'TT11-10a-V2',
@@ -762,115 +936,275 @@ if __name__ == '__main__':
 
     # s_tex,z = 4.62 mm corresponds to: n_tex = 12; h = 60 mm
     #
-    sim_model = SimSTDB(ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+    sim_model = SimSTDB( 
+                        
+#                        ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
+#                        calibration_test = 'TT11-10a-average',
+                        
+                        ccs_unit_cell_key = 'barrelshell_2D-05-11_0.00286_all0',
+                        calibration_test = 'TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
+                        thickness = 0.02,
+                        length = 0.80,
+                        
+#                        ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+                        
                          #calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
-                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V2',
-                         age = 27,
-                         shape_xy = 14,
-                         shape_z = 3,
-#                         tstep = 0.2 
-                         tstep = 0.025 # tmax / 34 steps with tmax = 0.85 corresponding to 34 mm
+#                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V2',
+
+                         # calibration for: age = 26d; E_m = 28400 MPa; nu = 0.25   
+                         #
+#                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
+                         
+                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25   
+                         #
+#                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02',
+                         # age of the slab at the time of testing
+                         # NOTE: that the same phi-function is used independent of age. This assumes a 
+                         # an afine/proportional damage evolution for different ages. get_E_m_time(self.age)
+                         #
+                         age = 23,
+#                         shape_xy = 10,
+#                         shape_z = 3,
+                         tstep = 0.05, 
+                         tmax = 1.0 
+#                         tstep = 0.05 
+#                         tstep = 0.025 # tmax / 34 steps with tmax = 0.85 corresponding to 1 mm / tstep
                          )
 
-    print 'sim_model.ccs_unit_cell_key', sim_model.ccs_unit_cell_key
-    print 'sim_model.damage_function', sim_model.damage_function
-
-    # plot the used 'phi_fn'
+    #-----------------------------------------
+    ### Var.3 ### ST-12c-6cm; L = 1,25m; t = 60 mm
+    #-----------------------------------------
     #
-    import pylab as p
-    mfn = sim_model.damage_function
-    eps_last = sim_model.damage_function.xdata[-1]
-    print 'eps_last', eps_last
-#    mfn.mpl_plot(p)
-#    sim_model.phi_fn.mfn.mpl_plot(p)
-    phi_fn_vect = np.vectorize( sim_model.phi_fn.get_value )
-    xdata = np.linspace(0., eps_last*1.1, 400)
-    ydata = phi_fn_vect( xdata )
-#    p.plot(xdata, ydata)
-#    p.show()
+    sim_model = SimSTDB( 
 
-    do = 'ui'
+                        thickness = 0.06,
+                        length = 1.25,
+
+                        ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+
+                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25   
+                         #
+                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02',
+                         # age of the slab at the time of testing
+                         age = 23,
+                         # NOTE: that the same phi-function is used independent of age. This assumes a 
+                         # an afine/proportional damage evolution for different ages. 
+                         #
+                         shape_xy = 28,
+                         shape_R = 5,
+                         shape_z = 3,
+                         #
+                         tstep = 0.05, 
+                         tmax = 1.0, 
+                         tolerance = 0.0001
+                         )
+
+    #------------------------------
+    # do
+    #------------------------------
+#    do = 'ui'
 #    do = 'pstudy'
-#    do = 'validation'
+    do = 'validation'
 #    do = 'show_last_results'
 
+    #------------------------------
+    # ui
+    #------------------------------    
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
         sim_model.tloop.eval()
         app.main()
 
-    if do == 'pstudy':
-        sim_ps = SimPStudy(sim_model = sim_model)
-        sim_ps.configure_traits()
-
+    #------------------------------
+    # validation
+    #------------------------------
     if do == 'validation':
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
+        pickle_path = 'pickle_files'
+        png_path = 'png_files'
+
         p.figure(facecolor = 'white') # white background
 
-        # PT-12c-6cm-TU
-        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
-        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
-
-        # PT-9a
-#        path = join( simdb.exdata_dir, 'plate_tests', 'PT-9a' )
-#        tests = [ 'PT01-9a.DAT', 'PT02-9a.DAT' , 'PT09-9a.DAT' ]
-
-        # PT-10a
-#        path = join( simdb.exdata_dir, 'plate_tests', 'PT-10a' )
-#        tests = [ 'PT10-10a.DAT', 'PT11-10a.DAT' , 'PT12-10a.DAT' ]
-
+        #--------------------        
+        # simulation
+        #--------------------        
         sim_model.tloop.eval()
-        sim_model.f_w_diagram_center.refresh()
+ 
         pickle_path = 'pickle_files'
-        file_name = 'f_w_diagram_SH2F-V2_nelems10-10-2_low-tol.pickle'
+        ccs_unit_cell_key = sim_model.ccs_unit_cell_key
+        calibration_test = sim_model.calibration_test
+        length = sim_model.length
+        thickness = sim_model.thickness
+        shape_xy = sim_model.shape_xy
+        E_m = sim_model.E_m
+        nu = sim_model.nu
+        tolerance = sim_model.tolerance
+        param_key = ccs_unit_cell_key + '_' + calibration_test + 'L=%g h=% sxy= %g Em=%g nu=%g tol=%g' %(length, thickness, shape_xy, E_m, nu, tolerance ) 
+
+        # f-w-diagram_center
+        #
+        sim_model.f_w_diagram_center.refresh()
+        file_name = 'f_w_diagram_c_' + param_key + '.pickle'
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'w')
         dump(sim_model.f_w_diagram_center.trace, file)
         file.close()
         sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
 
-        for t in tests:
-            ex_path = join(path, t)
-            ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_smoothed_force_deflection_center(p)
-            ex_run.ex_type._plot_force_edge_deflection(p)
-            ex_run.ex_type._plot_force_center_edge_deflection(p)
-
-        # plot sim curve as time new roman black and white plot 
+        # f-w-diagram_supprt
         #
-        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
+        sim_model.f_w_diagram_supprt.refresh()
+        file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
+        pickle_file_path = join(pickle_path, file_name)
+        file = open(pickle_file_path, 'w')
+        dump(sim_model.f_w_diagram_supprt.trace, file)
+        file.close()
+        sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color = 'blue')
 
+#        # f-w-diagram_center-edge
+#        #
+#        sim_model.f_w_diagram_center.refresh()
+#        file_name = 'f_w_diagram_ce_' + param_key + '.pickle'
+#        pickle_file_path = join(pickle_path, file_name)
+#        file = open(pickle_file_path, 'w')
+#        dump(sim_model.f_w_diagram_center_edge.trace, file)
+#        file.close()
+#        sim_model.f_w_diagram_center_edge.trace.mpl_plot(p, color = 'red')
+#
+#        # f-w-diagram_edge
+#        #
+#        sim_model.f_w_diagram_center.refresh()
+#        file_name = 'f_w_diagram_e_' + param_key + '.pickle'
+#        pickle_file_path = join(pickle_path, file_name)
+#        file = open(pickle_file_path, 'w')
+#        dump(sim_model.f_w_diagram_edge.trace, file)
+#        file.close()
+#        sim_model.f_w_diagram_edge.trace.mpl_plot(p, color = 'red')
+
+        #--------------------        
+        # experiments
+        #--------------------        
+
+        # PT-12c-6cm-TU
+#        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
+#        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
+
+        # PT-10a
+#        path10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
+#        path11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
+#        path12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
+#        tests = [path10, path11, path12]
+#        for ex_path in tests:
+#            ex_run = ExRun(ex_path)
+#            ex_run.ex_type._plot_force_center_deflection_smoothed(p)
+
+        # ST-6c-2cm-TU_bs2
+        #
+        ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+        ex_run = ExRun(ex_path)
+        ex_run.ex_type._plot_force_center_deflection( p )
+
+        # plot sim curve as time new roman within the predefined limits  
+        #
+#        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
+        png_file_path = join(png_path, param_key + '.png')
+        p.title( param_key )
+        p.savefig( png_file_path, dpi=600. )
         p.show()
+
+    #------------------------------
+    # show last results
+    #------------------------------
 
     if do == 'show_last_results':
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
-        pickle_path = 'pickle_files'
+        #------------------
+        # simulation
+        #------------------
 
-        file_name = 'f_w_diagram_SH2F-V2_nelems10-10-2_low-tol.pickle'
+        pickle_path = 'pickle_files'
+#        param_key = 'SH2F-V3_nelems14-3-2_w_line_Ec28400'
+#        param_key = 'SH2F-V3_nelems14-3-2_line_w_Em23d_a23d-nu02_ts0-0025'
+#        param_key = 'SH2F-V3_nelems10-10-2_node_w_node_supprt'
+        param_key = 'FIL-10-09_2D-02-06a_0.00273_90_0__TT11-10a-average'
+
+        # f-w-diagram_supprt
+        #
+        file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'r')
         trace = load(file)
-        p.plot(trace.xdata, trace.ydata/4., color = 'red')
+        p.plot(trace.xdata, trace.ydata, color = 'blue')
 
-        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
-        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
-#        path = join( simdb.exdata_dir, 'plate_tests', 'PT-10a' )
-#        tests = [ 'PT10-10a.DAT', 'PT11-10a.DAT' , 'PT12-10a.DAT' ]
-#        tests = [ 'PT10-10a.DAT' ]
+        # f-w-diagram_center
+        #
+        file_name = 'f_w_diagram_c_' + param_key + '.pickle'
+        pickle_file_path = join(pickle_path, file_name)
+        file = open(pickle_file_path, 'r')
+        trace = load(file)
+        p.plot(trace.xdata, trace.ydata, color = 'red')
 
-        for t in tests:
-            ex_path = join(path, t)
-            ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_smoothed_force_deflection_center(p)
-#            ex_run.ex_type._plot_force_edge_deflection( p )
-#            ex_run.ex_type._plot_force_center_edge_deflection( p )
+#        # f-w-diagram_center-edge
+#        #
+#        file_name = 'f_w_diagram_ce_' + param_key + '.pickle'
+#        pickle_file_path = join(pickle_path, file_name)
+#        file = open(pickle_file_path, 'r')
+#        trace = load(file)
+#        p.plot(trace.xdata, trace.ydata, color = 'red')
+#
+#        # f-w-diagram_edge
+#        #
+#        file_name = 'f_w_diagram_e_' + param_key + '.pickle'
+#        pickle_file_path = join(pickle_path, file_name)
+#        file = open(pickle_file_path, 'r')
+#        trace = load(file)
+#        p.plot(trace.xdata, trace.ydata, color = 'red')
+
+        #------------------
+        # experiments
+        #------------------
+
+#        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
+#        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
+##        path = join( simdb.exdata_dir, 'plate_tests', 'PT-10a' )
+##        tests = [ 'PT10-10a.DAT', 'PT11-10a.DAT' , 'PT12-10a.DAT' ]
+##        tests = [ 'PT10-10a.DAT' ]
+#
+#        for t in tests:
+#            ex_path = join(path, t)
+#            ex_run = ExRun(ex_path)
+#            ex_run.ex_type._plot_force_deflection_avg_interpolated(p)
+##            ex_run.ex_type._plot_force_deflection_avg( p )
+
+        # ST-6c-2cm-TU_bs2
+        #
+        ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+        ex_run = ExRun(ex_path)
+        ex_run.ex_type._plot_force_center_deflection( p )
+#            ex_run.ex_type._plot_force_center_deflection_smoothed(p)
+
+        # plot sim curve as time new roman within the predefined limits
+        #
+#        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
 
         p.show()
+
+
+    if do == 'pstudy':
+        sim_ps = SimPStudy(sim_model = sim_model)
+        sim_ps.configure_traits()
+
+
+
+
+
+
+
 
         ### shape ###:
 
@@ -1025,4 +1359,17 @@ if __name__ == '__main__':
 #        p.plot( trace.xdata, trace.ydata, color = 'yellow' )
 
 
+#    print 'sim_model.ccs_unit_cell_key', sim_model.ccs_unit_cell_key
+#    print 'sim_model.damage_function', sim_model.damage_function
 
+#    import pylab as p
+#    mfn = sim_model.damage_function
+#    eps_last = sim_model.damage_function.xdata[-1]
+#    print 'eps_last', eps_last
+#    mfn.mpl_plot(p)
+#    sim_model.phi_fn.mfn.mpl_plot(p)
+#    phi_fn_vect = np.vectorize( sim_model.phi_fn.get_value )
+#    xdata = np.linspace(0., eps_last*1.1, 400)
+#    ydata = phi_fn_vect( xdata )
+#    p.plot(xdata, ydata)
+#    p.show()

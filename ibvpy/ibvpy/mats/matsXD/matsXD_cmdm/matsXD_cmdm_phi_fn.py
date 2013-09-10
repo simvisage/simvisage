@@ -5,8 +5,8 @@ from etsproxy.traits.api import \
      implements, Dict, Property, cached_property, Delegate, Button, \
      Interface, WeakRef, String, List, Constant
 
-from util.traits.either_type import \
-    EitherType
+#from util.traits.either_type import \
+#    EitherType
 # Traits UI imports
 from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, \
@@ -174,10 +174,10 @@ class PhiFnGeneral(PhiFnBase):
 
     # Default TraitsUI view
     traits_view = View(Group(
-                               Item('mfn', show_label = False, editor = mfn_editor),
-                               label = 'Damage law',
-                               show_border = True
-                               ),
+                             Item('mfn', show_label = False, editor = mfn_editor),
+                             label = 'Damage law',
+                             show_border = True
+                             ),
                         buttons = ['OK', 'Cancel' ],
                         resizable = True,
                         width = 800, height = 800)
@@ -225,7 +225,7 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
 
     Dfp = Float(0.0, desc = 'residual integrity',
                 enter_set = True, auto_set = False)
-    Efp_frac = Float(0.05, desc = 'Efp factor',
+    Efp_frac = Float(0.01, desc = 'Efp factor',
                 enter_set = True, auto_set = False)
 
     def get_value(self, e_max, *c_list):
@@ -249,10 +249,7 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
 
     def get_plot_range(self):
         '''plot the extended phi function'''
-        return self.mfn.xdata[0], self.mfn.xdata[-1]
-
-
-
+        return self.mfn.xdata[0], self.mfn.xdata[-1] * 2.0
 
 #--------------------------------------------------------------------------------------
 # Damage function with stain softening for MDM
@@ -681,7 +678,8 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
 
 if __name__ == '__main__':
     #phi_fn = PhiFnStrainSoftening( Epp = 0.2, Efp = 0.6 )
-    phi_fn = PhiFnGeneralExtendedExp()
+    phi_fn = PhiFnGeneral()
+    #phi_fn = PhiFnGeneralExtendedExp()
 #    phi_fn = PhiFnStrainHardening(Epp = 0.2, Efp = 0.6, Dfp = 0.2, Elimit = 4.0)
 #    phi_fn = PhiFnStrainHardeningBezier()
     #phi_fn = PhiFnStrainHardeningLinear()

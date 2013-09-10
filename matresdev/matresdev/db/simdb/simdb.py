@@ -5,7 +5,7 @@
 #
 # This software is provided without warranty under the terms of the BSD
 # license included in simvisage/LICENSE.txt and may be redistributed only
-# under the conditions described in the aforementioned license.  The license
+# under the conditions described in the aforementioned license. The license
 # is also available online at http://www.simvisage.com/licenses/BSD.txt
 #
 # Thanks for using Simvisage open source!
@@ -23,19 +23,15 @@ from etsproxy.util.home_directory import \
 
 class SimDB(HasTraits):
     '''
-    Basic structure of the database directory.
-    
-    Implements the relative paths for the three different
-    categories of data that are managed using the svn server.
-    
-    - experimental data
-    - simulation data
-    - material data
-    
-    Repository of raw data 
-    
-    - local data
-    '''
+Basic structure of the database directory.
+Implements the relative paths for the three different
+categories of data that are managed using the svn server.
+- experimental data
+- simulation data
+- material data
+Repository of raw data
+- local data
+'''
     home_dir = Property
     def _get_home_dir(self):
         return get_home_directory()

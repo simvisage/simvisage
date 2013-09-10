@@ -144,35 +144,3 @@ class MATS3DElastic(MATS3DEval):
                 'strain_energy' : self.get_strain_energy                 }
 
 
-class MATS3DElasticNL(MATS3DElastic):
-    #---------------------------------------------------------------------------------
-    # Piece wise linear stress strain curve
-    #---------------------------------------------------------------------------------
-    _stress_strain_curve = Instance(MFnLineArray)
-    def __stress_strain_curve_default(self):
-        return MFnLineArray(ydata = [ 0., self.E ],
-                            xdata = [ 0., 1.])
-    @on_trait_change('E')
-    def reset_stress_strain_curve(self):
-        self._stress_strain_curve = MFnLineArray(ydata = [ 0., self.E ],
-                                                 xdata = [ 0., 1.])
-
-    stress_strain_curve = Property
-    def _get_stress_strain_curve(self):
-        return self._stress_strain_curve
-
-    def _set_stress_strain_curve(self, curve):
-        self._stress_strain_curve = curve
-
-    #-----------------------------------------------------------------------------------------------
-    # Evaluation - get the corrector and predictor
-    #-----------------------------------------------------------------------------------------------
-
-    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1):
-        '''
-        Corrector predictor computation.
-        @param eps_app_eng input variable - engineering strain
-        '''
-        D_el = self.get_D_el(eps_app_eng, tn1)
-        sigma = dot(D_el, eps_app_eng)
-        return  sigma, self.D_el

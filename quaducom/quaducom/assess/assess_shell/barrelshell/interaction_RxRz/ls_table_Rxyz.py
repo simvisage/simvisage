@@ -328,11 +328,13 @@ class ULSRxyz(LS):
 
     # shear Resistance
     #
-    Rx_Rd = Float(5.3, input = True)
+#    Rx_Rd = Float(5.3, input = True)
+    Rx_Rd = Float(4.8, input = True)
 
     # pull-out Resistance
     #
-    Rz_Rd = Float(4.8, input = True)
+#    Rz_Rd = Float(4.8, input = True) # log-normal distribution
+    Rz_Rd = Float(4.7, input = True)  # normal distribution
 
     # (unused as Ry = 0. for all cases)
     #
