@@ -34,7 +34,7 @@ from mathkit.mfn.mfn_polar.mfn_polar import MFnPolar
 
 from matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnStrainSoftening, PhiFnStrainHardening, PhiFnStrainHardeningLinear, \
-    PhiFnGeneral, PhiFnGeneralExtended, PhiFnStrainHardeningBezier
+    PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp, PhiFnStrainHardeningBezier
 
 #----------------------------------------------------------------------------------
 #                                     VariedParam
@@ -158,6 +158,7 @@ class PolarDiscr(HasTraits):
 
     phi_fn = EitherType(klasses = [ PhiFnGeneral,
                                      PhiFnGeneralExtended,
+                                     PhiFnGeneralExtendedExp,
                                      PhiFnStrainSoftening,
                                      PhiFnStrainHardening,
                                      PhiFnStrainHardeningLinear,

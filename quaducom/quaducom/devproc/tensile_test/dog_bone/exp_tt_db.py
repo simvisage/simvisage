@@ -190,6 +190,12 @@ class ExpTTDB(ExType):
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
+    # E-modulus of the concrete at the time of testing 
+    E_m = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
+    @cached_property
+    def _get_E_m(self):
+        return self.ccs.get_E_m_time(self.age)
+
     # cross-sectional-area of the composite 
     A_c = Property(Float, unit='m^2', depends_on='input_change')
     @cached_property

@@ -51,6 +51,8 @@ from numpy import array, fabs, where, copy, ones, argsort
 from numpy import \
     loadtxt, argmax, polyfit, poly1d, frompyfunc, dot
 
+import numpy as np
+
 from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter
@@ -267,7 +269,8 @@ class ExpST(ExType):
                       'force / deflection (center-edges)'         : '_plot_force_center_edge_deflection',
                       'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
                       'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
-                      'force / average deflection (c; ce; e)'    : '_plot_force_deflection_avg'
+                      'force / average deflection (c; ce; e)'    : '_plot_force_deflection_avg',
+                      'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated'
                      }
     
     default_plot_template = 'force / deflection (center)'
@@ -312,8 +315,8 @@ class ExpST(ExType):
         xdata = -self.WA_M
         ydata = -self.Kraft
 
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
@@ -415,6 +418,46 @@ class ExpST(ExType):
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
+
+    def _plot_force_deflection_avg_interpolated(self, axes):
+        '''plot the average F-w-diagrams for the center(c), center-edge (ce) and edge(vh) and edge (lr) deflections
+        NOTE: center deflection curve is cut at its starting point in order to remove offset in the dispacement meassurement 
+        '''
+        # get the index of the maximum stress
+        max_force_idx = argmax(-self.Kraft)
+        # get only the ascending branch of the response curve
+        f_asc = -self.Kraft[:max_force_idx + 1]
+        w_m = -self.WA_M[:max_force_idx + 1]
+        
+#        w_m -= 0.17
+#        axes.plot(w_m, f_asc, color = 'blue', linewidth = 1)
+        
+        # move the starting point of the center deflection curve to the point where the force starts
+        # (remove offset in measured displacement where there is still no force measured)
+        # 
+        idx_0 = np.where(f_asc > 0.05)[0][0]
+
+        f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
+        w_m_cut = np.hstack([w_m[ idx_0: ]])-w_m[ idx_0 ] 
+        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 2)
+        
+        ### center-edge deflection (ce)
+        w_ml_asc = -self.WA_ML[:max_force_idx + 1]
+        w_mr_asc = -self.WA_MR[:max_force_idx + 1]
+        # get the average displacement values of the corresponding displacement gauges
+        w_mlmr_asc = (w_ml_asc + w_mr_asc) / 2
+        axes.plot(w_mlmr_asc, f_asc, color = 'red', linewidth = 1)
+
+        ### edge deflections (e)
+        w_v_asc = -self.WA_V[:max_force_idx + 1]
+        w_h_asc = -self.WA_H[:max_force_idx + 1]
+        w_l_asc = -self.WA_L[:max_force_idx + 1]
+        w_r_asc = -self.WA_R[:max_force_idx + 1]
+        # get the average displacement values of the corresponding displacement gauges
+        w_vh_asc = (w_v_asc + w_h_asc) / 2
+        w_lr_asc = (w_l_asc + w_r_asc) / 2
+        axes.plot( w_vh_asc, f_asc, color = 'green', linewidth = 1, label = 'w_vh' )
+        axes.plot( w_lr_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_lr' )
 
 
     #--------------------------------------------------------------------------------

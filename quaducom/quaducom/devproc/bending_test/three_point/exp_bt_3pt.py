@@ -422,7 +422,9 @@ class ExpBT3PT(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
+    plot_templates = {'force / machine displacement (without w_elast) (interpolated)' : '_plot_force_machine_displacement_wo_elast_interpolated',
+                      
+                      'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
                       'force / machine displacement (incl. w_elast)'   : '_plot_force_machine_displacement',
                       'force / gauge displacement'                     : '_plot_force_gauge_displacement',
                       
@@ -440,14 +442,50 @@ class ExpBT3PT(ExType):
 
     def _plot_force_machine_displacement_wo_elast(self, axes):
 
-        xdata = self.w_wo_elast
-        ydata = self.F_raw
+        # get the index of the maximum stress
+        #
+        max_force_idx = argmax(self.F_raw)
 
-        axes.plot( xdata, ydata )
+        # get only the ascending branch of the response curve
+        #
+        f_asc = self.F_raw[:max_force_idx + 1]
+        w_asc = self.w_wo_elast[:max_force_idx + 1]
+        axes.plot( w_asc, f_asc )
+
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
+
+    def _plot_force_machine_displacement_wo_elast_interpolated(self, axes):
+
+        # get the index of the maximum stress
+        #
+        max_force_idx = argmax(self.F_raw)
+
+        # get only the ascending branch of the response curve
+        #
+        f_asc = self.F_raw[:max_force_idx + 1]
+        w_asc = self.w_wo_elast[:max_force_idx + 1]
+
+        # interpolate the starting point of the center deflection curve based on the slope of the curve
+        # (remove offset in measured displacement where there is still no force measured)
+        # 
+        idx_10 = np.where(f_asc > f_asc[-1] * 0.10)[0][0]
+        idx_8 = np.where(f_asc > f_asc[-1] * 0.08)[0][0]
+        f8 = f_asc[ idx_8 ]
+        f10 = f_asc[ idx_10 ]
+        w8 = w_asc[ idx_8 ]
+        w10 = w_asc[ idx_10 ]        
+        m = (f10-f8)/(w10-w8)
+        delta_w = f8 / m
+        w0 = w8 - delta_w * 0.9
+        print 'w0', w0 
+        f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]]) 
+        w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])  
+        print 'type( w_asc_interpolated )', type( w_asc_interpolated ) 
+        w_asc_interpolated -= float(w0) 
+        axes.plot(w_asc_interpolated, f_asc_interpolated, color = 'blue', linewidth = 1)
 
 
     def _plot_force_machine_displacement(self, axes):

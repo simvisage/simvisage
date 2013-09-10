@@ -29,11 +29,11 @@ class GeoST(HasTraits):
 
     # discretization of total slab in x- and y-direction (region 'L')
     #
-    shape_xy = Int(14, input = True)
+    shape_xy = Int(30, input = True)
 
     # discretization of the load introduction plate (region 'R')
     #
-    shape_R = Int(3, input = True)
+    shape_R = Int(5, input = True)
         
     # ratio of the discretization, i.e. number of elements for each region     
     #

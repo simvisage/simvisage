@@ -207,7 +207,8 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
-        return ctt.eps_smooth, ctt.sig_c_smooth
+        return ctt.eps_ironed, ctt.sig_c_ironed # original data without smoothing (without jumps)
+#        return ctt.eps_smooth, ctt.sig_c_smooth #smoothed data
 
     #--------------------------------------------------
     # interpolation function for fitting data:
@@ -406,7 +407,7 @@ class MATSCalibDamageFn(MATSExplore):
                     print 'get_lack_of_fit(0.) = ', lof_0
                     print 'Use old value for phi_trial. phi_old = ', phi_old
                 else:
-                    print '(!)',
+                    print '(!) n = ', n
 
             # current time corresponds to the current strain applied
             #
@@ -765,11 +766,11 @@ def run():
                               '2012-02-14_TT-12c-6cm-0-TU_SH2',
                               'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
-#        test_file = join(simdb.exdata_dir,
-#                              'tensile_tests',
-#                              'buttstrap_clamping',
-#                              '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
-#                              'TTb-6c-2cm-0-TU-V1_bs4.DAT')
+        test_file = join(simdb.exdata_dir,
+                              'tensile_tests',
+                              'buttstrap_clamping',
+                              '2013-07-18_TTb-6c-2cm-0-TU_bs5',
+                              'TTb-6c-2cm-0-TU-V1_bs5.DAT')
 
         ex_run = ExRun(data_file = test_file)
 
@@ -777,16 +778,29 @@ def run():
         # in the experiment data base and use this in mats_eval.
         #
         E_c = ex_run.ex_type.E_c
-        # use the value as graphically determined from the tensile test (= initial stiffness)
-        E_c = 28500.
+        print 'E_c', E_c 
+#
+#        # use the value as graphically determined from the tensile test (= initial stiffness for tension)
+#        E_c = 28000.
 
-        print 'E_c USED FOR CALIBRATION', E_c 
+        ex_run.ex_type.age = 23
+        age = ex_run.ex_type.age
+        print 'age', age
 
+        E_m = ex_run.ex_type.E_m # E-modulus of the concrete matrix at the age of testing
+        # NOTE: value is more relevant as compression behavior is determined by it in the bening test; 
+        # behavior in tensile zone defined by phi_fn and predefined E_m
+        print 'E_m', E_m
+        
+        ex_run.ex_type.ccs.concrete_mixture_ref.nu = 0.2
         nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
         print 'nu', nu 
 
         fitter.ex_run = ex_run
-        fitter.dim.mats_eval.E = E_c
+#        fitter.dim.mats_eval.E = E_c
+        print 'E_m = %g used for calibration' %E_m
+        fitter.dim.mats_eval.E = E_m
+        print 'nu = %g used for calibration' %nu
         fitter.dim.mats_eval.nu = nu
         fitter.init()
 #        ctt = fitter.composite_tensile_test
