@@ -4,18 +4,15 @@ Created on 16.11.2012
 @author: Q
 '''
 from etsproxy.traits.ui.api import ModelView
-from etsproxy.traits.api import Instance, Property, cached_property, Array, Float
-from hom_CB_elastic_mtrx import CompositeCrackBridge
-from hom_CB_elastic_mtrx_py_loop import CompositeCrackBridgeLoop
+from etsproxy.traits.api import Instance, Property, cached_property, Array
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
-from reinforcement import Reinforcement, WeibullFibers
-from scipy.optimize import brentq, minimize, fminbound
+from scipy.optimize import brentq, fminbound, newton
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import time
-import scipy
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 
 
 class CompositeCrackBridgeView(ModelView):
@@ -69,9 +66,9 @@ class CompositeCrackBridgeView(ModelView):
         for w in w_arr:
             self.model.w = w
             sigma_c_lst.append(self.sigma_c)
-            if u==True:
+            if u == True:
                 u_lst.append(self.u_evaluated)
-        if u==True:
+        if u == True:
             return np.array(sigma_c_lst), np.array(u_lst)
         return np.array(sigma_c_lst)
 
@@ -86,18 +83,32 @@ class CompositeCrackBridgeView(ModelView):
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_sigma_c_max(self):
-        def minfunc(w):
+        def minfunc_sigma(w):
             self.model.w = w
-            damage = self.model.damage
-            if np.sum(damage)/len(damage) > 0.9:
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage)/np.sum(self.model.Kf)
+            if stiffness_loss > 0.90:
                 return w * 1e10
             #plt.plot(w, self.sigma_c, 'ro')
             return - self.sigma_c
-        #t = time.clock()
-        w = fminbound(minfunc, 1e-10, 5.0, maxfun = 30)
-        #result = minimize(minfunc, 0.001, options=dict(maxiter=5))
-        #print time.clock() - t, 's'
-        return self.sigma_c, w
+        def residuum_stiffness(w):
+            self.model.w = w
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage)/np.sum(self.model.Kf)
+            if stiffness_loss > 0.90:
+                return w * 1e10
+            if stiffness_loss < 0.65 and stiffness_loss > 0.45:
+                residuum = 0.0
+            else:
+                residuum = stiffness_loss - 0.5
+            return residuum
+
+        w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+        w_points = np.linspace(0, w_max, 7)
+        w_maxima = []
+        sigma_maxima = []
+        for i, w in enumerate(w_points[1:]):
+            w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i+1], maxfun = 5, disp=0))
+            sigma_maxima.append(self.sigma_c)
+        return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -113,10 +124,13 @@ class CompositeCrackBridgeView(ModelView):
         return epsm, mu_epsf, np.array(sigma_c)
 
     def apply_load(self, sigma):
-        def residuum(w):
-            self.model.w = float(w)
-            return sigma - self.sigma_c
-        brentq(residuum, 0.0, 10.)
+        if sigma > self.sigma_c_max[0]:
+            raise ValueError('applied load ',sigma ,'MPa is larger than composite strength ', self.sigma_c_max[0], 'MPa')
+        else:
+            def residuum(w):
+                self.model.w = float(w)
+                return sigma - self.sigma_c
+            brentq(residuum, 0.0, min(self.sigma_c_max[1], 20.))
 
     def sigma_f_lst(self, w_arr):
         sigma_f_arr = np.zeros(len(w_arr) *
@@ -198,38 +212,28 @@ class CompositeCrackBridgeView(ModelView):
 
 if __name__ == '__main__':
 
-    reinf1 = Reinforcement(r=0.00345,#RV('uniform', loc=0.001, scale=0.005),
-                          tau=RV('uniform', loc=4., scale=2.),
-                          V_f=0.2,
-                          E_f=70e3,
-                          xi=RV('weibull_min', shape=5., scale=0.04),
-                          n_int=50,
-                          label='AR glass')
+    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
+    from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
-    reinf2 = Reinforcement(r=0.003,#RV('uniform', loc=0.002, scale=0.002),
-                          tau=RV('uniform', loc=.3, scale=.05),
-                          V_f=0.1,
-                          E_f=200e3,
-                          xi=RV('weibull_min', shape=20., scale=0.02),
-                          n_int=50,
-                          label='carbon')
-
-    reinf = Reinforcement(r=RV('uniform', loc=.005, scale=.01),
-                          tau=RV('uniform', loc=.05, scale=.1),
-                          xi=WeibullFibers(shape=20., sV0=0.003),
-                          V_f=0.3, E_f=200e3, n_int=40)
+    reinf = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.0001, shape=.8, scale=.015),
+                          V_f=0.011,
+                          E_f=240e3,
+                          xi=WeibullFibers(shape=3.5, sV0=0.0056),
+                          label='carbon',
+                          n_int=500)
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1000.,
-                                 Lr=1000.)
+                                 Ll=1.,
+                                 Lr=1.,
+                                 )
 
     ccb_view = CompositeCrackBridgeView(model=model)
-    #ccb_view.apply_load(1.)
 
     def profile(w):
         ccb_view.model.w = w
-        plt.plot(ccb_view.x_arr, ccb_view.epsm_arr, color='blue', lw=2)#, label='w_eval=' + str(ccb_view.w_evaluated) + ' w_ctrl=' + str(ccb_view.model.w))
+        plt.plot(ccb_view.x_arr, ccb_view.epsm_arr, lw=2, label='Ll=' + str(ccb_view.model.Ll))
         plt.plot(ccb_view.x_arr, ccb_view.mu_epsf_arr, color='red', lw=2)
         plt.xlabel('position [mm]')
         plt.ylabel('strain')
@@ -238,7 +242,7 @@ if __name__ == '__main__':
         sigma_c_arr, u_arr = ccb_view.sigma_c_arr(w_arr, u=True)
         plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
         plt.ylabel('$\sigma_c$ [MPa]')
         plt.legend(loc='best')
@@ -277,13 +281,17 @@ if __name__ == '__main__':
 
     #TODO: check energy for combined reinf
     #energy(np.linspace(.0, .15, 100))
-    #profile(0.025)
-    w = np.linspace(0.0, .6, 20)
+#    sigma_c = np.linspace(1., 7., 7)
+#    for i, s in enumerate(sigma_c):
+#        ccb_view.apply_load(s)
+#        profile(ccb_view.model.w)
+    w = np.linspace(0., .1, 80)
     sigma_c_w(w)
+    #energy(w)
     # bundle at 20 mm
     #sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     #plt.plot(w,sigma_bundle)
-    #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'ro')
+    #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
     #sigma_f(np.linspace(.0, .16, 50))
     plt.legend(loc='best')
     plt.show()

@@ -17,17 +17,17 @@ import tempfile
 ''' a dictionary filled with distribution names (keys) and
     scipy.stats.distribution attributes having None
     or 1 shape parameters (values)'''
-# import scipy.stats
-# distr_dict = {}
-# distr_enum = []
-# for distr in scipy.stats.distributions.__all__[2:84]:
-#    if scipy.stats.distributions.__dict__[distr].numargs == 0:
-#        distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
-#        distr_enum.append(distr)
-#
-#    elif scipy.stats.distributions.__dict__[distr].numargs == 1:
-#        distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
-#        distr_enum.append(distr)
+import scipy.stats
+distr_dict = {}
+distr_enum = []
+for distr in scipy.stats.distributions.__all__[2:84]:
+   if scipy.stats.distributions.__dict__[distr].numargs == 0:
+       distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
+       distr_enum.append(distr)
+
+   elif scipy.stats.distributions.__dict__[distr].numargs == 1:
+       distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
+       distr_enum.append(distr)
 
 class IPDistrib(Interface):
 
@@ -40,15 +40,15 @@ class PDistrib(HasTraits):
     # puts all chosen continuous distributions distributions defined
     # in the scipy.stats.distributions module as a list of strings
     # into the Enum trait
-#     distr_choice = Enum(distr_enum)
-#     distr_dict = Dict(distr_dict)
+    distr_choice = Enum(distr_enum)
+    distr_dict = Dict(distr_dict)
 
-    distr_choice = Enum('sin2x', 'weibull_min', 'sin_distr', 'uniform', 'norm')
-    distr_dict = {'sin2x' : sin2x,
-                  'uniform' : uniform,
-                  'norm' : norm,
-                  'weibull_min' : weibull_min,
-                  'sin_distr' : sin_distr}
+#    distr_choice = Enum('sin2x', 'weibull_min', 'sin_distr', 'uniform', 'norm')
+#    distr_dict = {'sin2x' : sin2x,
+#                  'uniform' : uniform,
+#                  'norm' : norm,
+#                  'weibull_min' : weibull_min,
+#                  'sin_distr' : sin_distr}
 
     # instantiating the continuous distributions
     distr_type = Property(Instance(Distribution), depends_on='distr_choice')

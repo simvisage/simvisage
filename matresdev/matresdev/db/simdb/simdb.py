@@ -53,8 +53,8 @@ Repository of raw data
         return join(self.simdb_dir, 'matdata')
 
     '''
--remote data
-'''
+    -remote data
+    '''
     server_username = Str('simdb')
 
     server_host = Str('mordred.imb.rwth-aachen.de')
