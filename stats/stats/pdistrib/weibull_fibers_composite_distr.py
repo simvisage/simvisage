@@ -34,7 +34,8 @@ class WeibullFibers(HasTraits):
 #        Pf = 1. - np.exp(- (max_strain / s ) ** (m + 2) *
 #            ((1. - (1. - Ll / a0) ** (m + 1))/Ll   +  (1. - (1. - Lr / a0) ** (m + 1))/Lr))
 #        return Pf * H(max_strain)
-        return weibull_min(m, scale=(self.V0 * self.sV0 ** m / fiber_radius ** 2 / pi / 10.)**(1./m)).cdf(max_strain)
+        a = 2 * max_strain / strain_slope
+        return weibull_min(m, scale=(self.V0 * self.sV0 ** m / fiber_radius ** 2 / pi / a)**(1./m)).cdf(max_strain)
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
