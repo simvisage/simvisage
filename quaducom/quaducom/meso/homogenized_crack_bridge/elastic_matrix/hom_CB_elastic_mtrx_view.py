@@ -215,21 +215,21 @@ if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
-    reinf = ContinuousFibers( r = 0.0035,
-                          tau = RV( 'weibull_min', loc = 0.0001, shape = .8, scale = .015 ),
-                          V_f = 0.011,
-                          E_f = 240e3,
-                          xi = WeibullFibers( shape = 3.5, sV0 = 0.0056 ),
-                          label = 'carbon',
-                          n_int = 500 )
+    reinf = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
+                          V_f=0.001,
+                          E_f=240e3,
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
+                          label='carbon',
+                          n_int=500)
 
-    model = CompositeCrackBridge( E_m = 25e3,
-                                 reinforcement_lst = [reinf],
-                                 Ll = 1.,
-                                 Lr = 1.,
+    model = CompositeCrackBridge(E_m=23e5,
+                                 reinforcement_lst=[reinf],
+                                 Ll=10000.,
+                                 Lr=10000.,
                                  )
 
-    ccb_view = CompositeCrackBridgeView( model = model )
+    ccb_view = CompositeCrackBridgeView(model=model)
 
     def profile( w ):
         ccb_view.model.w = w
@@ -285,8 +285,8 @@ if __name__ == '__main__':
 #    for i, s in enumerate(sigma_c):
 #        ccb_view.apply_load(s)
 #        profile(ccb_view.model.w)
-    w = np.linspace( 0., .1, 80 )
-    sigma_c_w( w )
+    w = np.linspace(0., 7., 100)
+    sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
     # sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)

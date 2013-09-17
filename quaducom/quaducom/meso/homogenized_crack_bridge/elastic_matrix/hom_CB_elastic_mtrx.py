@@ -341,7 +341,7 @@ if __name__ == '__main__':
                           tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
                           V_f=0.011,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=100.0026),
+                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
                           n_int=500,
                           label='carbon')
 
@@ -353,7 +353,7 @@ if __name__ == '__main__':
                                  reinforcement_lst=[reinf],
                                  Ll=5.0,
                                  Lr=10.,
-                                 w=.03)
+                                 w=.07)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
@@ -363,6 +363,6 @@ if __name__ == '__main__':
         #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         plt.plot(ccb._x_arr, epsf_x)
     plt.legend(loc='best')
-    plt.xlim(-5,10)
-    plt.ylim(0,0.0003)
+    #plt.xlim(-5,10)
+    #plt.ylim(0,0.0003)
     plt.show()

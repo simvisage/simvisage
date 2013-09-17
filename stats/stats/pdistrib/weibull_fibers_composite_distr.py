@@ -25,6 +25,12 @@ class WeibullFibers(HasTraits):
     def weibull_fibers_cdf(self, ef0, strain_slope,
                            shorter_boundary, longer_boundary, r):
         m = self.shape
+        s = ((strain_slope * (m+1) * self.sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
+        Pf_int = 1 - np.exp(-(ef0/s)**(m+1))
+        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
+        Pf_broken = I / (m + 1) / ef0
+        return Pf_int - Pf_broken
+
 #        Ll = shorter_boundary
 #        Lr = longer_boundary
 #        if np.any(Lr > ef0 / strain_slope + 1e-15):
@@ -34,13 +40,6 @@ class WeibullFibers(HasTraits):
 #        Pf = 1. - np.exp(- (ef0 / s ) ** (m + 2) *
 #            ((1. - (1. - Ll / a0) ** (m + 1))/Ll   +  (1. - (1. - Lr / a0) ** (m + 1))/Lr))
 #        return Pf * H(ef0)
-
-        s = ((strain_slope * (m+1) * self.sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
-        Pf_int = 1 - np.exp(-(ef0/s)**(m+1))
-        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
-        Pf_broken = I / (m + 1) / ef0
-        return Pf_int - Pf_broken
-
 #        a = 2 * max_strain / strain_slope
 #        return weibull_min(m, scale=(self.V0 * self.sV0 ** m / fiber_radius ** 2 / pi / a)**(1./m)).cdf(max_strain)
 
