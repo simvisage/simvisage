@@ -74,11 +74,8 @@ class CompositeCrackBridgeView( ModelView ):
 
     u_evaluated = Property( depends_on = 'model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+' )
     @cached_property
-    def _get_u_evaluated( self ):
-        u_debonded = np.trapz( self.mu_epsf_arr, self.x_arr )
-        u_compact = ( ( self.model.Ll - np.abs( self.x_arr[0] ) ) * self.mu_epsf_arr[0]
-                    + ( self.model.Lr - np.abs( self.x_arr[-1] ) ) * self.mu_epsf_arr[-1] )
-        return u_debonded + u_compact
+    def _get_u_evaluated(self):
+        return np.trapz(self.mu_epsf_arr, self.x_arr)
 
     sigma_c_max = Property( depends_on = 'model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+' )
     @cached_property
@@ -216,17 +213,17 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.001,
+                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=0.03),
+                          V_f=0.04,
                           E_f=240e3,
                           xi=WeibullFibers(shape=5.0, sV0=0.0026),
                           label='carbon',
                           n_int=500)
 
-    model = CompositeCrackBridge(E_m=23e5,
+    model = CompositeCrackBridge(E_m=23e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=10000.,
-                                 Lr=10000.,
+                                 Ll=10.,
+                                 Lr=10.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -241,8 +238,8 @@ if __name__ == '__main__':
     def sigma_c_w( w_arr ):
         sigma_c_arr, u_arr = ccb_view.sigma_c_arr( w_arr, u = True )
         plt.plot( w_arr, sigma_c_arr, lw = 2, color = 'black', label = 'w-sigma' )
-        # plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        # plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
+        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel( 'w,u [mm]' )
         plt.ylabel( '$\sigma_c$ [MPa]' )
         plt.legend( loc = 'best' )
@@ -269,8 +266,8 @@ if __name__ == '__main__':
             U.append( ccb_view.U )
             Winel.append( ccb_view.W_inel_tot )
             u.append( ccb_view.u_evaluated )
-        plt.plot( w_arr, Welm, lw = 2, label = 'Welm' )
-        plt.plot( w_arr, Welf, lw = 2, label = 'Welf' )
+        #plt.plot( w_arr, Welm, lw = 2, label = 'Welm' )
+        #plt.plot( w_arr, Welf, lw = 2, label = 'Welf' )
         plt.plot( w_arr, Wel_tot, lw = 2, color = 'black', label = 'elastic strain energy' )
         plt.plot( w_arr, Winel, lw = 2, ls = 'dashed', color = 'black', label = 'inelastic energy' )
         plt.plot( w_arr, U, lw = 3, color = 'red', label = 'work of external force' )
@@ -282,16 +279,14 @@ if __name__ == '__main__':
     # TODO: check energy for combined reinf
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
-#    for i, s in enumerate(sigma_c):
-#        ccb_view.apply_load(s)
-#        profile(ccb_view.model.w)
-    w = np.linspace(0., 7., 100)
+    #profile(0.031)
+    w = np.linspace(0., .4, 200)
     sigma_c_w(w)
-    # energy(w)
+    #energy(w)
     # bundle at 20 mm
     # sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
     # plt.plot(w,sigma_bundle)
     # plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
     # sigma_f(np.linspace(.0, .16, 50))
-    plt.legend( loc = 'best' )
+    plt.legend(loc= 'best' )
     plt.show()

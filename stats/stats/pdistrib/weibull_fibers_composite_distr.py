@@ -29,7 +29,7 @@ class WeibullFibers(HasTraits):
         Pf_int = 1 - np.exp(-(ef0/s)**(m+1))
         I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
         Pf_broken = I / (m + 1) / ef0
-        return Pf_int - Pf_broken
+        return Pf_int# - Pf_broken
 
 #        Ll = shorter_boundary
 #        Lr = longer_boundary

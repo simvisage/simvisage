@@ -107,9 +107,9 @@ if __name__ == '__main__':
     for rho in np.array([4.9, 100.]):
         sfc.rho = rho
         x = np.linspace(0.01, 2.5, 500)
-        pdf_x = sfc.p_x(50., x)
-        print np.trapz(x*pdf_x, x)
-        cdf_x = np.hstack((0., cumtrapz(pdf_x, x)))
+        pdf_x = sfc.p_x(3., x)
+#        print np.trapz(x*pdf_x, x)
+#        cdf_x = np.hstack((0., cumtrapz(pdf_x, x)))
 #         s = np.linspace(0.01, 1.0, 200)
 #         pdf_s = sfc.p_s(s, 1.0)
 #         cdf_s = np.hstack((0., cumtrapz(pdf_s, s)))

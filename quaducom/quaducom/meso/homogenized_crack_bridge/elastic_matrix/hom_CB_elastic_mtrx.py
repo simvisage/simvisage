@@ -151,10 +151,12 @@ class CompositeCrackBridge(HasTraits):
         methods, masks = self.sorted_xi_cdf
         for i, method in enumerate(methods):
             if method.__name__ == 'weibull_fibers_cdf':
-                Pf += method(epsy * masks[i], self.sorted_depsf,
-                             x_short, x_long, self.sorted_r)
+                Pf[masks[i]] += method(epsy[masks[i]],
+                                self.sorted_depsf[masks[i]],
+                              x_short[masks[i]], x_long[masks[i]], 
+                                self.sorted_r[masks[i]])
             else:
-                Pf += method(epsy * masks[i])
+                Pf[masks[i]] += method( epsy[masks[i]] )
         return Pf
 
     def dem_depsf_vect(self, damage):
@@ -190,7 +192,7 @@ class CompositeCrackBridge(HasTraits):
                 C = np.log(amin_i/amin)
             F[mask] += 2 * C
         return F
-    
+
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
         em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
@@ -338,12 +340,12 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=.03),
-                          V_f=0.011,
+                          tau=RV('weibull_min', loc=0.006, shape=4., scale=20.3),
+                          V_f=0.3,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          n_int=500,
-                          label='carbon')
+                          xi=WeibullFibers(shape=10.0, sV0=0.0026),
+                          label='carbon',
+                          n_int=500)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
@@ -351,9 +353,9 @@ if __name__ == '__main__':
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=5.0,
-                                 Lr=10.,
-                                 w=.07)
+                                 Ll=1.,
+                                 Lr=1.,
+                                 w=.03)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
