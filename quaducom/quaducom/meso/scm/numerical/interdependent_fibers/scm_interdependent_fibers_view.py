@@ -116,35 +116,35 @@ class SCMView(ModelView):
             return eps, self.model.load_sigma_c_arr
 
 if __name__ == '__main__':
-    length = 2000.
-    nx = 1000
-    random_field = RandomField(seed=True,
-                               lacor=5.,
-                                xgrid=np.linspace(0., length, 400),
-                                nsim=1,
-                                loc=.0,
-                                shape=25.,
-                                scale=2.0,
-                                non_negative_check=True,
-                                distribution='Weibull'
+    length = 150.
+    nx = 500
+    random_field = RandomField( seed = True,
+                               lacor = 5.,
+                               xgrid = np.linspace( 0., length, 400 ),
+                                nsim = 1,
+                                loc = .0,
+                                shape = 25.,
+                                scale = 2.0,
+                                non_negative_check = True,
+                                distribution = 'Weibull'
                                )
 
-    reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.0001, shape=.8, scale=.015),
-                          V_f=0.011,
-                          E_f=240e3,
-                          xi=WeibullFibers(shape=3.5, sV0=0.0056),
-                          label='carbon')
+    reinf1 = ContinuousFibers( r = 0.0035,
+                          tau = RV( 'weibull_min', loc = 0.007, shape = 1., scale = .05 ),  # RV( 'uniform', loc = 0.5, scale = 1.5 ),  # RV( 'weibull_min', loc = 0.006, shape = .23, scale = .03 ),  # RV( 'uniform', loc = 0.5, scale = 1.5 ),  # RV( 'weibull_min', loc = 0.006, shape = .23, scale = .03 ),
+                          V_f = 0.02,
+                          E_f = 240e3,
+                          xi = WeibullFibers( shape = 5.0, sV0 = 0.0026 ),
+                          label = 'carbon' )
 
-    CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
+    CB_model = CompositeCrackBridge( E_m = 25e3,
+                                 reinforcement_lst = [reinf1],
                                  )
 
-    scm = SCM(length=length,
-              nx=nx,
-              random_field=random_field,
-              CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 15., 100),
+    scm = SCM( length = length,
+              nx = nx,
+              random_field = random_field,
+              CB_model = CB_model,
+              load_sigma_c_arr = np.linspace( 0.01, 15., 100 ),
               )
 
     scm_view = SCMView(model=scm)
