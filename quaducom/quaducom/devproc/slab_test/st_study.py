@@ -61,6 +61,8 @@ import numpy as np
 from time import time
 from os.path import join
 
+import os 
+
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 
@@ -95,17 +97,10 @@ from pickle import dump, load
 from sim_st import SimST
 from sim_st import SimSTDB
 
-from matplotlib.font_manager import FontProperties
-font = FontProperties()
-font.set_name('Script MT')
-font.set_family('serif')
-font.set_style('normal')
-font.set_size('large')
-font.set_variant('normal')
-font.set_weight('medium')
+#from devproc.format_plot import format_plot
 
 def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
-    '''format 2d-plot black and with with times legends 
+    '''format 2d-plot black and with with times font 
     '''
     #-------------------------------------------------------------------
     # configure the style of the font to be used for labels and ticks
@@ -133,13 +128,22 @@ def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     locs,labels = axes.yticks()
     axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
-
+    
+    
 
 if __name__ == '__main__':
 
-    test_series = 'ST-10g'
-    test_series = 'ST-6c'
+    #------------------------------
+    # do
+    #------------------------------
+#    do = 'ui'
+    do = 'validation'
+#    do = 'show_last_results'
+#    do = 'pstudy'
+    
+#    test_series = 'ST-10g'
     test_series = 'ST-12c'
+#    test_series = 'ST-6c'
     
     #-----------------------------------------------
     # ST-10g: AG-glas slab tests (125 cm / 3 cm) with tricot-binding:
@@ -152,11 +156,12 @@ if __name__ == '__main__':
                             #
                             ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
                             calibration_test = 'TT11-10a-average',
+#                            age = 23,
+                            #
                             thickness = 0.03,
                             length = 1.25,
-                            age = 23,
                             #
-                            elastmr_flag = False,
+                            elstmr_flag = False,
                             supprt_flag = False,
                             geo_st_flag = False,
                             #
@@ -164,41 +169,16 @@ if __name__ == '__main__':
                             shape_z = 3,
                             #
                             tstep = 0.05, 
-                            tmax = 1.0, 
+                            tmax = 0.05, 
                             tolerance = 0.0005
                             )
 
-    #-----------------------------------------------
-    # ST-6c: carbon slab tests (80 cm / 2 cm): 
-    #-----------------------------------------------
-    if test_series == 'ST-10g':
+    #-----------------------------------------
+    # ST-12c-6cm; L = 1,25m; t = 6 cm
+    #-----------------------------------------
+    if test_series == 'ST-12c':
 
         sim_model = SimSTDB(
-                            
-                            ccs_unit_cell_key = 'barrelshell_2D-05-11_0.00286_all0',
-                            calibration_test = 'TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
-                            thickness = 0.02,
-                            length = 0.80,
-                            age = 23,
-                            #
-                            elastmr_flag = True,
-                            supprt_flag = True,
-                            geo_st_flag = True,
-                            #
-                            shape_xy = 28,
-                            shape_R = 5,
-                            shape_z = 3,
-                            tstep = 0.05, 
-                            tmax = 1.0, 
-                            tolerance = 0.0005
-                            )
-
-    #-----------------------------------------
-    # Var.3 ### ST-12c-6cm; L = 1,25m; t = 60 mm
-    #-----------------------------------------
-    if test_series == 'ST-10g':
-
-        sim_model = SimSTDB( 
     
                             thickness = 0.06,
                             length = 1.25,
@@ -213,27 +193,76 @@ if __name__ == '__main__':
                             # NOTE: that the same phi-function is used independent of age. This assumes a 
                             # an afine/proportional damage evolution for different ages. 
                             #
-                            elastmr_flag = True,
+                            elstmr_flag = False,
+                            supprt_flag = False,
+#                            supprt_flag = True,
+                            geo_st_flag = True,
+                            #
+                            shape_xy = 26,
+                            shape_R = 5,
+                            shape_z = 2,
+                            #
+                            shape_supprt_xy = 4,
+                            #
+                            tstep = 0.05, 
+                            tmax = 0.10, 
+                            tolerance = 0.0005
+                            )
+
+    #-----------------------------------------------
+    # ST-6c: carbon slab tests (80 cm / 2 cm): 
+    #-----------------------------------------------
+    if test_series == 'ST-6c':
+
+        sim_model = SimSTDB(
+                            
+                            ccs_unit_cell_key = 'barrelshell_2D-05-11_0.00286_all0',
+                            calibration_test = 'TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
+                            age = 23,
+                            #
+                            thickness = 0.02,
+                            length = 0.80,
+                            #
+                            elstmr_flag = True,
                             supprt_flag = True,
                             geo_st_flag = True,
-    
+                            #
                             shape_xy = 28,
                             shape_R = 5,
                             shape_z = 3,
                             #
                             tstep = 0.05, 
                             tmax = 1.0, 
-                            tolerance = 0.0001
+                            tolerance = 0.0005
                             )
 
-    #------------------------------
-    # do
-    #------------------------------
-#    do = 'ui'
-#    do = 'pstudy'
-    do = 'validation'
-#    do = 'show_last_results'
+    # print settings:
+    #
+    ccs_unit_cell_key = sim_model.ccs_unit_cell_key
+    calibration_test = sim_model.calibration_test
+    length = sim_model.length
+    thickness = sim_model.thickness
+    shape_xy = sim_model.shape_xy
+    E_m = sim_model.E_m
+    nu = sim_model.nu
+    tolerance = sim_model.tolerance
 
+    print '\n' 
+    print '### calculation settings: ###'
+    print 'ccs_unit_cell_key', ccs_unit_cell_key
+    print 'calibration_test', calibration_test
+    print 'length', length
+    print 'thickness', thickness
+    print 'shape_xy', shape_xy
+    print 'E_m', E_m
+    print 'nu', nu
+    print 'tolerance', tolerance
+    print '\n' 
+
+#--------------------------------------------------------------
+# do: ui / validation / show_last_result / pstudy
+#--------------------------------------------------------------
+    
     #------------------------------
     # ui
     #------------------------------    
@@ -250,17 +279,22 @@ if __name__ == '__main__':
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
-        pickle_path = 'pickle_files'
-        png_path = 'png_files'
+        pickle_path = join(simdb.simdata_dir, 'pickle_files')
+        png_path = join(simdb.simdata_dir, 'png_files')
 
-        p.figure(facecolor = 'white') # white background
+        if not os.path.exists( pickle_path ):
+            os.mkdir( pickle_path )
+            os.mkdir( png_path )
+
+        p.figure(facecolor = 'white') # white background for diagram
 
         #--------------------        
-        # simulation
+        # simulation 
         #--------------------        
         sim_model.tloop.eval()
  
-        pickle_path = 'pickle_files'
+        # settings:
+        #
         ccs_unit_cell_key = sim_model.ccs_unit_cell_key
         calibration_test = sim_model.calibration_test
         length = sim_model.length
@@ -269,7 +303,11 @@ if __name__ == '__main__':
         E_m = sim_model.E_m
         nu = sim_model.nu
         tolerance = sim_model.tolerance
-        param_key = ccs_unit_cell_key + '_' + calibration_test + 'L=%g h=% sxy= %g Em=%g nu=%g tol=%g' %(length, thickness, shape_xy, E_m, nu, tolerance ) 
+        
+        # param_key 
+        #
+        param_key = ccs_unit_cell_key + '_' + calibration_test + '_L=%g_h=%g_sxy=%g_Em=%g_nu=%g_tol=%g' %(length, thickness, shape_xy, E_m, nu, tolerance ) 
+        print 'param_key = %s' %param_key
 
         # f-w-diagram_center
         #
@@ -278,8 +316,19 @@ if __name__ == '__main__':
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'w')
         dump(sim_model.f_w_diagram_center.trace, file)
+        print 'pickle file saved to file: %s' %file_name
         file.close()
         sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
+
+        # f-w-diagram_center_bottom
+        #
+        sim_model.f_w_diagram_center_bottom.refresh()
+        file_name = 'f_w_diagram_cb_' + param_key + '.pickle'
+        pickle_file_path = join(pickle_path, file_name)
+        file = open(pickle_file_path, 'w')
+        dump(sim_model.f_w_diagram_center_bottom.trace, file)
+        file.close()
+        sim_model.f_w_diagram_center_bottom.trace.mpl_plot(p, color = 'green')
 
         # f-w-diagram_supprt
         #
@@ -288,58 +337,48 @@ if __name__ == '__main__':
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'w')
         dump(sim_model.f_w_diagram_supprt.trace, file)
+        print 'pickle file saved to file: %s' %file_name
         file.close()
         sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color = 'blue')
-
-#        # f-w-diagram_center-edge
-#        #
-#        sim_model.f_w_diagram_center.refresh()
-#        file_name = 'f_w_diagram_ce_' + param_key + '.pickle'
-#        pickle_file_path = join(pickle_path, file_name)
-#        file = open(pickle_file_path, 'w')
-#        dump(sim_model.f_w_diagram_center_edge.trace, file)
-#        file.close()
-#        sim_model.f_w_diagram_center_edge.trace.mpl_plot(p, color = 'red')
-#
-#        # f-w-diagram_edge
-#        #
-#        sim_model.f_w_diagram_center.refresh()
-#        file_name = 'f_w_diagram_e_' + param_key + '.pickle'
-#        pickle_file_path = join(pickle_path, file_name)
-#        file = open(pickle_file_path, 'w')
-#        dump(sim_model.f_w_diagram_edge.trace, file)
-#        file.close()
-#        sim_model.f_w_diagram_edge.trace.mpl_plot(p, color = 'red')
 
         #--------------------        
         # experiments
         #--------------------        
 
-        # PT-12c-6cm-TU
-#        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
-#        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
+        if test_series == 'ST-12c':
+            # PT-12c-6cm-TU
+            #
+            ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
+            ex_run = ExRun(ex_path)
+            ex_run.ex_type._plot_force_center_deflection( p )
 
-        # PT-10a
-#        path10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
-#        path11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
-#        path12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
-#        tests = [path10, path11, path12]
-#        for ex_path in tests:
-#            ex_run = ExRun(ex_path)
-#            ex_run.ex_type._plot_force_center_deflection_smoothed(p)
+        if test_series == 'ST-10g':
+            # PT-10a
+            #
+            ex_path_TRC10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
+            ex_path_TRC11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
+            ex_path_TRC12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
+            tests = [ex_path_TRC10, ex_path_TRC11, ex_path_TRC12]
+            for ex_path in tests:
+                ex_run = ExRun( ex_path )
+                ex_run.ex_type._plot_force_center_deflection( p )
 
-        # ST-6c-2cm-TU_bs2
-        #
-        ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
-        ex_run = ExRun(ex_path)
-        ex_run.ex_type._plot_force_center_deflection( p )
+        if test_series == 'ST-6c':
+            # ST-6c-2cm-TU_bs2
+            #
+            ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+            ex_run = ExRun(ex_path)
+            ex_run.ex_type._plot_force_center_deflection( p )
 
+        #----------------------------------------------------------------------
         # plot sim curve as time new roman within the predefined limits  
+        #----------------------------------------------------------------------
         #
 #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
         png_file_path = join(png_path, param_key + '.png')
         p.title( param_key )
-        p.savefig( png_file_path, dpi=600. )
+        p.savefig( png_file_path, dpi = 600. )
+        print 'png-file saved to file: %s' %png_file_path
         p.show()
 
     #------------------------------
@@ -350,15 +389,16 @@ if __name__ == '__main__':
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
+        pickle_path = join(simdb.simdata_dir, 'pickle_files')
+        png_path = join(simdb.simdata_dir, 'png_files')
+
+        # param_key 
+        #
+        param_key = 'FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02_L=1.25_h=0.06_sxy=26_Em=27975.8_nu=0.25_tol=0.0001'
+        
         #------------------
         # simulation
         #------------------
-
-        pickle_path = 'pickle_files'
-#        param_key = 'SH2F-V3_nelems14-3-2_w_line_Ec28400'
-#        param_key = 'SH2F-V3_nelems14-3-2_line_w_Em23d_a23d-nu02_ts0-0025'
-#        param_key = 'SH2F-V3_nelems10-10-2_node_w_node_supprt'
-        param_key = 'FIL-10-09_2D-02-06a_0.00273_90_0__TT11-10a-average'
 
         # f-w-diagram_supprt
         #
@@ -376,44 +416,34 @@ if __name__ == '__main__':
         trace = load(file)
         p.plot(trace.xdata, trace.ydata, color = 'red')
 
-#        # f-w-diagram_center-edge
-#        #
-#        file_name = 'f_w_diagram_ce_' + param_key + '.pickle'
-#        pickle_file_path = join(pickle_path, file_name)
-#        file = open(pickle_file_path, 'r')
-#        trace = load(file)
-#        p.plot(trace.xdata, trace.ydata, color = 'red')
-#
-#        # f-w-diagram_edge
-#        #
-#        file_name = 'f_w_diagram_e_' + param_key + '.pickle'
-#        pickle_file_path = join(pickle_path, file_name)
-#        file = open(pickle_file_path, 'r')
-#        trace = load(file)
-#        p.plot(trace.xdata, trace.ydata, color = 'red')
-
-        #------------------
+        #--------------------        
         # experiments
-        #------------------
+        #--------------------        
 
-#        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
-#        tests = [ 'ST-12c-6cm-u-TU.DAT' ]
-##        path = join( simdb.exdata_dir, 'plate_tests', 'PT-10a' )
-##        tests = [ 'PT10-10a.DAT', 'PT11-10a.DAT' , 'PT12-10a.DAT' ]
-##        tests = [ 'PT10-10a.DAT' ]
-#
-#        for t in tests:
-#            ex_path = join(path, t)
-#            ex_run = ExRun(ex_path)
-#            ex_run.ex_type._plot_force_deflection_avg_interpolated(p)
-##            ex_run.ex_type._plot_force_deflection_avg( p )
+        if test_series == 'ST-12c':
+            # PT-12c-6cm-TU
+            #
+            ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
+            ex_run = ExRun(ex_path)
+            ex_run.ex_type._plot_force_center_deflection( p )
 
-        # ST-6c-2cm-TU_bs2
-        #
-        ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
-        ex_run = ExRun(ex_path)
-        ex_run.ex_type._plot_force_center_deflection( p )
-#            ex_run.ex_type._plot_force_center_deflection_smoothed(p)
+        if test_series == 'ST-10g':
+            # PT-10a
+            #
+            ex_path_TRC10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
+            ex_path_TRC11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
+            ex_path_TRC12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
+            tests = [ex_path_TRC10, ex_path_TRC11, ex_path_TRC12]
+            for ex_path in tests:
+                ex_run = ExRun( ex_path )
+                ex_run.ex_type._plot_force_center_deflection( p )
+
+        if test_series == 'ST-6c':
+            # ST-6c-2cm-TU_bs2
+            #
+            ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+            ex_run = ExRun(ex_path)
+            ex_run.ex_type._plot_force_center_deflection( p )
 
         # plot sim curve as time new roman within the predefined limits
         #
