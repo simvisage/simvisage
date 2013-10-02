@@ -157,3 +157,10 @@ if __name__ == '__main__':
     points = arange( 21 ).reshape( 7, 3 ) / 20.
     print points
     print hp( points )
+    
+    
+    from numpy import mgrid, c_, hstack, vstack, shape
+    from etsproxy.mayavi import mlab
+    fp1 = hp( points )
+    mlab.points3d( fp1[:, 0], fp1[:, 1], fp1[:, 2], scale_factor = 0.05 , resolution = 8 )
+    mlab.show()

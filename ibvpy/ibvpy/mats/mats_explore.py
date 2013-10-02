@@ -109,6 +109,20 @@ if __name__ == '__main__':
                                                  MATS2DMicroplaneDamage( n_mp = 30,
                                                                          phi_fn = phi_fn ) ) )
 
+
+    from ibvpy.mats.mats2D5.mats2D5_cmdm.mats2D5_cmdm import \
+        MATS2D5MicroplaneDamage
+
+    from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
+        MATS3DElastic
+
+    from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
+         PhiFnStrainHardeningLinear
+
+    phi_fn = PhiFnStrainHardeningLinear( alpha = 0.5, beta = 0.7 )
+    explorer = MATSExplore( dim = MATS3DExplore( mats_eval = \
+                                                 MATS3DElastic( E = 30000., nu = 0.2 ) ) )
+
     from ibvpy.plugins.ibvpy_app import IBVPyApp
     ibvpy_app = IBVPyApp( ibv_resource = explorer )
     ibvpy_app.main()

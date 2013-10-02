@@ -186,6 +186,12 @@ class CompositeCrossSection( SimDBClass ):
         '''
         return sum( self.E_tex_arr * self.thickness_arr ) / self.thickness
 
+    def get_E_m_time( self, age ):
+        '''function for the concrete matrix E-modulus as function depending of the concrete age.
+        '''
+        E_m = self.concrete_mixture_ref.get_E_m_time( age )
+        return E_m
+
     def get_E_c_time( self, age ):
         '''function for the composite E-modulus as weighted sum of all
         fabric layups. Returns a function depending of the concrete age.

@@ -166,6 +166,14 @@ class CCSUnitCell(SimDBClass):
     # Derived material parameters - supplied during the calibration
     #--------------------------------------------------------------------------------
 
+    def get_E_m_time(self, age):
+        '''function for the composite E-modulus as weighted sum of all
+        fabric layups. Returns a function depending of the concrete age.
+        '''
+        E_m = self.concrete_mixture_ref.get_E_m_time(age)
+        print 'E_m_time', E_m
+        return E_m
+
     def get_E_c_time(self, age):
         '''function for the composite E-modulus as weighted sum of all
         fabric layups. Returns a function depending of the concrete age.
@@ -173,7 +181,8 @@ class CCSUnitCell(SimDBClass):
         rho = self.rho
         E_tex = self.E_tex
         E_m = self.concrete_mixture_ref.get_E_m_time(age)
-        return (1 - rho) * E_m + rho * E_tex  
+        E_c = (1 - rho) * E_m + rho * E_tex
+        return E_c  
 
     E_c28 = Property(Float, unit = 'MPa', depends_on = 'input_change')
     @cached_property

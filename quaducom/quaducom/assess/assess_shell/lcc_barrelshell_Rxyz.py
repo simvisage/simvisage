@@ -388,7 +388,7 @@ if __name__ == '__main__':
         #--------------------------------------------------------------
         #
         print 'lct_Q.combi_arr', lct_Q.combi_arr.shape 
-#        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter = ';')
+        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------
         # brows the loading case combinations within an interactive table view
@@ -400,19 +400,15 @@ if __name__ == '__main__':
         # RxRz-interaction plot (tangential reaction force - radial reaction force) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_RxRz_interaction( save_max_min_RxRz_to_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC15-18')
-#        lct_Q.plot_RxRz_interaction( save_fig_to_file = 'RxRz_interaction_LC1-14' )
-#        lct_Q.plot_RxRz_interaction( add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC1-18' )
+        lct_T.plot_RxRz_interaction( save_max_min_RxRz_to_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC15-18')
+        lct_Q.plot_RxRz_interaction( save_fig_to_file = 'RxRz_interaction_LC1-14' )
+        lct_Q.plot_RxRz_interaction( add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'RxRz_interaction_LC1-18' )
 #        lct_Q.plot_RxRz_interaction( show_tension_only = True )
 
         #--------------------------------------------------------------
         # interaction plot of build-in screw usage 'eta_RxRz' (Ausnutzungsgrad) 
         #--------------------------------------------------------------
         #
-#        lct_T.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC15-18' )
-#        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC1-14')
-#        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'eta_RxRz_interaction_LC1-18')
-
-
-
-
+        lct_T.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC15-18' )
+        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, save_fig_to_file = 'eta_RxRz_interaction_LC1-14')
+        lct_Q.plot_eta_RxRz_interaction( show_tension_only = True, add_max_min_RxRz_from_file = 'max_min_RxRz_arr_LC15-18', save_fig_to_file = 'eta_RxRz_interaction_LC1-18')

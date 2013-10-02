@@ -724,8 +724,8 @@ class LCCTable(HasTraits):
  
             # get Rx_Ed and Rz_Ed 
             #
-            Rx_Ed = getattr(ls_class, 'Rx')
-            Rz_Ed = getattr(ls_class, 'Rz')
+            Rx_Ed = np.copy( getattr(ls_class, 'Rx'))
+            Rz_Ed = np.copy( getattr(ls_class, 'Rz'))
             
             # add read in saved values to be superposed with currently read in values
             #
@@ -887,8 +887,8 @@ class LCCTable(HasTraits):
  
             # get Rx_Ed and Rz_Ed 
             #
-            Rx_Ed = getattr(ls_class, 'Rx')
-            Rz_Ed = getattr(ls_class, 'Rz')
+            Rx_Ed = np.copy( getattr(ls_class, 'Rx'))
+            Rz_Ed = np.copy( getattr(ls_class, 'Rz'))
 
             # get Rx_Rd and Rz_Rd 
             #

@@ -110,7 +110,7 @@ class ExpBT4PT(ExType):
 
     implements(IExType)
 
-    file_ext = 'raw'
+    file_ext = 'DAT'
 
     #--------------------------------------------------------------------
     # register a change of the traits with metadata 'input'
@@ -217,8 +217,8 @@ class ExpBT4PT(ExType):
 
             # use ironing method only for columns of the displacement gauges.
             #
-            print 'self.names_and_units[0]',self.names_and_units[0]
-            print 'self.names_and_units',self.names_and_units
+#            print 'self.names_and_units[0]',self.names_and_units[0]
+#            print 'self.names_and_units',self.names_and_units
             if self.names_and_units[0][ idx ] != 'Kraft' and \
                 self.names_and_units[0][ idx ] != 'Bezugskanal' and \
                 self.names_and_units[0][ idx ] != 'DMS_o':
@@ -240,8 +240,8 @@ class ExpBT4PT(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
-                print 'force', unique(around(-self.data_array[jump_idx,1],2))
+#                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
+#                print 'force', unique(around(-self.data_array[jump_idx,1],2))
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -322,43 +322,47 @@ class ExpBT4PT(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection (center)'          : '_plot_force_deflection_center',
-                      'smoothed force / deflection (center)' : '_plot_smoothed_force_deflection_center',
-                      'force / deflection (thirdpoints)' : '_plot_force_deflection_thirdpoints',
-                      'strain (top/bottom) / force': '_plot_strain_top_bottom_force',
-                      'displacement (ironed/original - center)':'_plot_ironed_orig_force_deflection_center',
-                      'displacement (ironed/original - left)':'_plot_ironed_orig_force_deflection_left',
-                      'displacement (ironed/original - right)':'_plot_ironed_orig_force_deflection_right'
+    plot_templates = {'force / deflection (center)'            : '_plot_force_deflection_center',
+                      'smoothed force / deflection (center)'   : '_plot_smoothed_force_deflection_center',
+                      'force / deflection (thirdpoints)'       : '_plot_force_deflection_thirdpoints',
+                      'strain (top/bottom) / force'            : '_plot_strain_top_bottom_force',
+                      'displacement (ironed/original - center)': '_plot_ironed_orig_force_deflection_center',
+                      'displacement (ironed/original - left)'  : '_plot_ironed_orig_force_deflection_left',
+                      'displacement (ironed/original - right)' : '_plot_ironed_orig_force_deflection_right'
                      }
 
     default_plot_template = 'force / deflection (center)'
 
-    def _plot_force_deflection_center(self, axes):
+    # get only the ascending branch of the response curve
+    #
+    max_force_idx = Property(Int)
+    def _get_max_force_idx(self):
+        '''get the index of the maximum force'''
         # NOTE: processed data returns positive values for force and displacement
-        #
-        xdata = self.DB_mi
-        ydata = self.Kraft
+        return argmax( self.Kraft )
+    
+    def _plot_force_deflection_center(self, axes):
+        # get only the ascending branch of the response curve
+        f_asc = self.Kraft[:self.max_force_idx + 1]
+        w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot(xdata, ydata)
+        axes.plot( w_asc, f_asc, color = 'black' )
 
         # add axes labels
         #
         xkey = 'deflection [mm]'
         ykey = 'force [kN]'
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
     n_fit_window_fraction = Float(0.1)
 
     def _plot_smoothed_force_deflection_center(self, axes):
-
-        # get the index of the maximum stress
-        max_force_idx = argmax(self.Kraft)
         # get only the ascending branch of the response curve
-        f_asc = self.Kraft[:max_force_idx + 1]
-        w_asc = self.DB_mi[:max_force_idx + 1]
+        f_asc = self.Kraft[:self.max_force_idx + 1]
+        w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add axes labels
         #
@@ -374,14 +378,12 @@ class ExpBT4PT(ExType):
     def _plot_force_deflection_thirdpoints(self, axes):
         '''deflection at the third points (under the loading points)
         '''
-        # get the index of the maximum stress
-        max_force_idx = argmax(-self.Kraft)
         # get only the ascending branch of the response curve
-        f_asc = self.Kraft[:max_force_idx + 1]
+        f_asc = self.Kraft[:self.max_force_idx + 1]
         # displacement left 
-        w_l_asc = self.DB_li[:max_force_idx + 1]
+        w_l_asc = self.DB_li[:self.max_force_idx + 1]
         # displacement rigth 
-        w_r_asc = self.DB_re[:max_force_idx + 1]
+        w_r_asc = self.DB_re[:self.max_force_idx + 1]
 
 #        # average
 #        w_lr_asc = (w_l_asc + w_r_asc) / 2
@@ -393,15 +395,13 @@ class ExpBT4PT(ExType):
     def _plot_strain_top_bottom_force(self, axes):
         '''deflection at the third points (under the loading points)
         '''
-        # get the index of the maximum stress
-        max_force_idx = argmax(self.Kraft)
         # get only the ascending branch of the response curve
-        f_asc = self.Kraft[:max_force_idx + 1]
+        f_asc = self.Kraft[:self.max_force_idx + 1]
         # compressive strain (top) [permile] 
-        eps_c = self.DMS_o [:max_force_idx + 1] 
+        eps_c = self.DMS_o [:self.max_force_idx + 1] 
         # tensile strain (bottom) [permile]; 
         # measuring length l_0 = 0.45m
-        eps_t = self.W10_u [:max_force_idx + 1] / 0.45 
+        eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45 
 
         # add curves
         #
@@ -419,21 +419,22 @@ class ExpBT4PT(ExType):
         '''plot original displacement (center) as measured by the displacement gauge
         and compare with curve after data has been proccessed by ironing procedure
         '''
-        w_ironed = self.DB_mi
-        w_orig = self.DB_mi_orig
-        F = self.Kraft
+        # get only the ascending branch of the response curve
+        F_asc = self.Kraft[:self.max_force_idx + 1]    
+        w_ironed_asc = self.DB_mi[:self.max_force_idx + 1]
+        w_orig_asc = self.DB_mi_orig[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot(w_ironed, F)
-        axes.plot(w_orig, F)
+        axes.plot(w_ironed_asc, F_asc)
+        axes.plot(w_orig_asc, F_asc)
 
         # add axes labels
         #
         xkey = 'deflection (original data / ironed data) [mm]'
         ykey = 'force [kN]'
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
     def _plot_ironed_orig_force_deflection_left(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
@@ -446,8 +447,8 @@ class ExpBT4PT(ExType):
         axes.plot(w_orig, F)
         xkey = 'deflection (original data / ironed data) [mm]'
         ykey = 'force [kN]'
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
     def _plot_ironed_orig_force_deflection_right(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
@@ -460,11 +461,8 @@ class ExpBT4PT(ExType):
         axes.plot(w_orig, F)
         xkey = 'deflection (original data / ironed data) [mm]'
         ykey = 'force [kN]'
-        axes.set_xlabel('%s' % (xkey,))
-        axes.set_ylabel('%s' % (ykey,))
-
-
-
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
 
     #--------------------------------------------------------------------------------
     # view
