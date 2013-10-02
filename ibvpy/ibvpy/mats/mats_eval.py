@@ -150,17 +150,7 @@ class MATSEval(HasStrictTraits, TStepperEval):
 
     # This is only relevant for strain softening models
     #
-    def get_regularizing_length(self, sctx, eps_app_eng, *args, **kw):
-
-        X_mtx = sctx.X_reg[0]
-
-        # first principle strain unit vector
-        #
-        print 'eps_app_eng', eps_app_eng.shape
-        if len(eps_app_eng.shape) > 1:
-            def grl(eps_app_eng_):
-                self.get_regularizing_length(sctx, eps_app_eng_)
-            return np.apply_over_axes(grl, -1, eps_app_eng)
+    def get_regularizing_length(self, X_mtx, eps_app_eng, *args, **kw):
 
         eigval, eigvec = eigh(self.map_eps_eng_to_mtx(eps_app_eng))
 

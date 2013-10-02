@@ -213,9 +213,11 @@ class DOTSEval(TStepperEval):
 
         eps_mtx_arr = np.einsum('ijkl, il-> ijk', B_mtx_grid, u_el)
         d_eps_mtx_arr = np.einsum('ijkl, il-> ijk', B_mtx_grid, d_u_el)
+
         sig_mtx_arr, D_mtx_arr = self.fets_eval.get_mtrl_corr_pred(sctx,
                                                                    eps_mtx_arr, d_eps_mtx_arr,
                                                                    tn, tn1)
+
         k_arr2 = np.einsum('ijkl, ikm, ijmn, ij -> iln',
                            B_mtx_grid, D_mtx_arr, B_mtx_grid, w_J_det_grid)
         f_int_arr = np.einsum('ijkl, ijk, ij -> il',
