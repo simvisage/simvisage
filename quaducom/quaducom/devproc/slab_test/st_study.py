@@ -136,6 +136,7 @@ if __name__ == '__main__':
     #------------------------------
     # do
     #------------------------------
+#    do = 'show_phi_fn'
 #    do = 'ui'
     do = 'validation'
 #    do = 'show_last_results'
@@ -166,10 +167,10 @@ if __name__ == '__main__':
                             geo_st_flag = False,
                             #
                             shape_xy = 10,
-                            shape_z = 3,
+                            shape_z = 2,
                             #
                             tstep = 0.05, 
-                            tmax = 0.05, 
+                            tmax = 1.00, 
                             tolerance = 0.0005
                             )
 
@@ -185,28 +186,41 @@ if __name__ == '__main__':
     
                             ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
     
-                            # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25   
+                            # calibration for: age = 23d; E_m = 27975 MPa; nu = 0.20; nsteps = 100   
                             #
-                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02',
+                            #calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+#                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s50',
+                            calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+                            
                             # age of the slab at the time of testing
                             age = 23,
                             # NOTE: that the same phi-function is used independent of age. This assumes a 
                             # an afine/proportional damage evolution for different ages. 
                             #
                             elstmr_flag = False,
-                            supprt_flag = False,
-#                            supprt_flag = True,
+                            supprt_flag = True,
                             geo_st_flag = True,
                             #
-                            shape_xy = 26,
-                            shape_R = 5,
-                            shape_z = 2,
+                            # coarse mesh:
+#                            shape_z = 2,
+#                            shape_xy = 14,
+#                            shape_R = 2,
+#                            shape_supprt_xy = 2,
                             #
+                            # fine mesh:
+                            shape_z = 3,
+                            shape_xy = 26,
+                            shape_R = 4,
                             shape_supprt_xy = 4,
                             #
-                            tstep = 0.05, 
-                            tmax = 0.10, 
-                            tolerance = 0.0005
+#                            w_max = 0.10,  @todo: make this an argument of sim_st()
+                            tstep = 0.01, 
+#                            tstep = 1.00, 
+                            tmax = 1.00, 
+                            # 'NOTE: tloop.norm switched to "max(abs(x))"'
+                            tolerance = 0.0001,#0.0001#1e-6#1e-8#0.0005
+                            #
+                            phi_fn_class = PhiFnGeneralExtended
                             )
 
     #-----------------------------------------------
@@ -262,7 +276,35 @@ if __name__ == '__main__':
 #--------------------------------------------------------------
 # do: ui / validation / show_last_result / pstudy
 #--------------------------------------------------------------
-    
+     
+    if do == 'show_phi_fn':
+        phi_fn = sim_model.phi_fn
+#        phi_fn_ext = sim_model.phi_fn_ext
+#        phi_fn_exp = sim_model.phi_fn_exp
+
+        damage_function = sim_model.damage_function
+        print 'sim_model.damage_function', sim_model.damage_function
+        print 'self.ccs_unit_cell_ref.damage_function_list', [sim_model.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(len(sim_model.ccs_unit_cell_ref.damage_function_list))]
+        import pylab as p
+        p.figure(facecolor = 'white') 
+        
+        phi_fn.mfn.plot(p, color = 'black', linewidth = 4 )
+#        phi_fn_exp.mfn.plot(p, color = 'green', linewidth = 3)
+#        phi_fn_ext.mfn.plot(p, color = 'blue', linewidth = 2)
+
+        damage_function.plot(p, color = 'red', linewidth = 1)
+#        phi_fn_exp.refresh_plot()
+#        phi_fn_exp.mfn.plot(p, color = 'red')
+
+        xmax = sim_model.damage_function.xdata[-1]
+        print 'xmax', xmax
+        x = linspace(0, 2*xmax, 4000)
+        phi_fn = frompyfunc(phi_fn, 1, 1)
+        y = phi_fn(x)
+        p.plot(x,y)
+
+        p.show()
+
     #------------------------------
     # ui
     #------------------------------    
@@ -276,6 +318,9 @@ if __name__ == '__main__':
     # validation
     #------------------------------
     if do == 'validation':
+#        from ibvpy.plugins.ibvpy_app import IBVPyApp
+#        app = IBVPyApp(ibv_resource = sim_model)
+        
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
@@ -286,100 +331,113 @@ if __name__ == '__main__':
             os.mkdir( pickle_path )
             os.mkdir( png_path )
 
-        p.figure(facecolor = 'white') # white background for diagram
-
-        #--------------------        
-        # simulation 
-        #--------------------        
-        sim_model.tloop.eval()
- 
-        # settings:
+        # pstudy: calibration test
         #
-        ccs_unit_cell_key = sim_model.ccs_unit_cell_key
-        calibration_test = sim_model.calibration_test
-        length = sim_model.length
-        thickness = sim_model.thickness
-        shape_xy = sim_model.shape_xy
-        E_m = sim_model.E_m
-        nu = sim_model.nu
-        tolerance = sim_model.tolerance
-        
-        # param_key 
+        st_study_list = [ 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100', 'TT-12c-6cm-TU-SH1F-V1' ]
+
+        # pstudy: phi_fn
         #
-        param_key = ccs_unit_cell_key + '_' + calibration_test + '_L=%g_h=%g_sxy=%g_Em=%g_nu=%g_tol=%g' %(length, thickness, shape_xy, E_m, nu, tolerance ) 
-        print 'param_key = %s' %param_key
-
-        # f-w-diagram_center
-        #
-        sim_model.f_w_diagram_center.refresh()
-        file_name = 'f_w_diagram_c_' + param_key + '.pickle'
-        pickle_file_path = join(pickle_path, file_name)
-        file = open(pickle_file_path, 'w')
-        dump(sim_model.f_w_diagram_center.trace, file)
-        print 'pickle file saved to file: %s' %file_name
-        file.close()
-        sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
-
-        # f-w-diagram_center_bottom
-        #
-        sim_model.f_w_diagram_center_bottom.refresh()
-        file_name = 'f_w_diagram_cb_' + param_key + '.pickle'
-        pickle_file_path = join(pickle_path, file_name)
-        file = open(pickle_file_path, 'w')
-        dump(sim_model.f_w_diagram_center_bottom.trace, file)
-        file.close()
-        sim_model.f_w_diagram_center_bottom.trace.mpl_plot(p, color = 'green')
-
-        # f-w-diagram_supprt
-        #
-        sim_model.f_w_diagram_supprt.refresh()
-        file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
-        pickle_file_path = join(pickle_path, file_name)
-        file = open(pickle_file_path, 'w')
-        dump(sim_model.f_w_diagram_supprt.trace, file)
-        print 'pickle file saved to file: %s' %file_name
-        file.close()
-        sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color = 'blue')
-
-        #--------------------        
-        # experiments
-        #--------------------        
-
-        if test_series == 'ST-12c':
-            # PT-12c-6cm-TU
+#        st_study_list = [ PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp ] 
+#        st_study_list = [ PhiFnGeneralExtended ] 
+        for st_param in st_study_list:
+            
+            sim_model.calibration_test = st_param
+#            sim_model.phi_fn_class = st_param
+            
+            p.figure(facecolor = 'white') # white background for diagram
+    
+            #--------------------        
+            # simulation 
+            #--------------------        
+            sim_model.tloop.eval()
+     
+            # settings:
             #
-            ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
-            ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_center_deflection( p )
+            ccs_unit_cell_key = sim_model.ccs_unit_cell_key
+            calibration_test = sim_model.calibration_test
+            length = sim_model.length
+            thickness = sim_model.thickness
+            shape_xy = sim_model.shape_xy
+            shape_z = sim_model.shape_z
+            shape_R = sim_model.shape_R
+            E_m = sim_model.E_m
+            nu = sim_model.nu
+            tolerance = sim_model.tolerance
+            phi_fn_class = sim_model.phi_fn_class.__name__
+            print 'phi_fn_class', phi_fn_class
+            supprt_flag = str(sim_model.supprt_flag)
+            geo_st_flag = str(sim_model.geo_st_flag) 
 
-        if test_series == 'ST-10g':
-            # PT-10a
+            # param_key 
             #
-            ex_path_TRC10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
-            ex_path_TRC11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
-            ex_path_TRC12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
-            tests = [ex_path_TRC10, ex_path_TRC11, ex_path_TRC12]
-            for ex_path in tests:
-                ex_run = ExRun( ex_path )
+            param_key = ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxy%gz%gR%g_s%sg%s_Em%g_nu%g_tol%g' \
+                        %(phi_fn_class, length, thickness, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E_m, nu, tolerance ) 
+            print 'param_key = %s' %param_key
+    
+    #        # f-w-diagram_center
+    #        #
+    #        sim_model.f_w_diagram_center.refresh()
+    #        file_name = 'f_w_diagram_c_' + param_key + '.pickle'
+    #        pickle_file_path = join(pickle_path, file_name)
+    #        file = open(pickle_file_path, 'w')
+    #        dump(sim_model.f_w_diagram_center.trace, file)
+    #        print 'pickle file saved to file: %s' %file_name
+    #        file.close()
+    #        sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
+    
+            # f-w-diagram_supprt
+            #
+            sim_model.f_w_diagram_supprt.refresh()
+            file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
+            pickle_file_path = join(pickle_path, file_name)
+            file = open(pickle_file_path, 'w')
+            dump(sim_model.f_w_diagram_supprt.trace, file)
+            print 'pickle file saved to file: %s' %file_name
+            file.close()
+            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color = 'blue')
+    
+            #--------------------        
+            # experiments
+            #--------------------        
+    
+            if test_series == 'ST-12c':
+                # PT-12c-6cm-TU
+                #
+                ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
+                ex_run = ExRun(ex_path)
+                ex_run.ex_type._plot_force_center_deflection_interpolated( p )
+    
+            if test_series == 'ST-10g':
+                # PT-10a
+                #
+                ex_path_TRC10 = join( simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT' )
+                ex_path_TRC11 = join( simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
+                ex_path_TRC12 = join( simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT' )
+                tests = [ex_path_TRC10, ex_path_TRC11, ex_path_TRC12]
+                for ex_path in tests:
+                    ex_run = ExRun( ex_path )
+                    ex_run.ex_type._plot_force_center_deflection_interpolated( p )
+    
+            if test_series == 'ST-6c':
+                # ST-6c-2cm-TU_bs2
+                #
+                ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+                ex_run = ExRun(ex_path)
                 ex_run.ex_type._plot_force_center_deflection( p )
-
-        if test_series == 'ST-6c':
-            # ST-6c-2cm-TU_bs2
+    
+            #----------------------------------------------------------------------
+            # plot sim curve as time new roman within the predefined limits  
+            #----------------------------------------------------------------------
             #
-            ex_path = join( simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
-            ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_center_deflection( p )
+    #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
+            png_file_path = join(png_path, param_key + '.png')
+            p.title( param_key )
+            p.savefig( png_file_path, dpi = 600. )
+            print 'png-file saved to file: %s' %png_file_path
+#            p.show()
 
-        #----------------------------------------------------------------------
-        # plot sim curve as time new roman within the predefined limits  
-        #----------------------------------------------------------------------
-        #
-#        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
-        png_file_path = join(png_path, param_key + '.png')
-        p.title( param_key )
-        p.savefig( png_file_path, dpi = 600. )
-        print 'png-file saved to file: %s' %png_file_path
-        p.show()
+#        app.main()
+
 
     #------------------------------
     # show last results
