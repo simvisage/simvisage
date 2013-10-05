@@ -270,7 +270,8 @@ class ExpST(ExType):
                       'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
                       'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
                       'force / average deflection (c; ce; e)'    : '_plot_force_deflection_avg',
-                      'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated'
+                      'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
+                      'force / deflection (center) interpolated' : '_plot_force_center_deflection_interpolated'
                      }
     
     default_plot_template = 'force / deflection (center)'
@@ -320,6 +321,7 @@ class ExpST(ExType):
         axes.plot(xdata, ydata
                        # color = c, linewidth = w, linestyle = s 
                        )
+
     def _plot_force_center_deflection_smoothed(self, axes):
         '''plot the F-w-diagramm for the center (c) deflection (smoothed curves)
         '''
@@ -328,6 +330,27 @@ class ExpST(ExType):
 #        w0_lin = array([0.0, w_smooth[10] ], dtype = 'float_')
 #        f0_lin = array([0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_')
         #axes.plot( w0_lin, f0_lin, color = 'black' )
+
+    def _plot_force_center_deflection_interpolated(self, axes):
+        '''plot the F-w-diagramm for the center (c) deflection (interpolated initial stiffness)
+        '''
+                # get the index of the maximum stress
+        max_force_idx = argmax(-self.Kraft)
+        # get only the ascending branch of the response curve
+        f_asc = -self.Kraft[:max_force_idx + 1]
+        w_m = -self.WA_M[:max_force_idx + 1]
+        
+#        w_m -= 0.17
+#        axes.plot(w_m, f_asc, color = 'blue', linewidth = 1)
+        
+        # move the starting point of the center deflection curve to the point where the force starts
+        # (remove offset in measured displacement where there is still no force measured)
+        # 
+        idx_0 = np.where(f_asc > 0.05)[0][0]
+
+        f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
+        w_m_cut = np.hstack([w_m[ idx_0: ]])-w_m[ idx_0 ] 
+        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 1.5)
 
     def _plot_force_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the edge (e) deflections
@@ -439,7 +462,7 @@ class ExpST(ExType):
 
         f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
         w_m_cut = np.hstack([w_m[ idx_0: ]])-w_m[ idx_0 ] 
-        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 2)
+        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 1.5)
         
         ### center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
