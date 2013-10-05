@@ -58,8 +58,8 @@ class MATS1DDamageWithFlaw(MATS1DDamage):
     variable omega_0.
     '''
 
-    # default parameters of the damage rule 
-    # onset of damage 
+    # default parameters of the damage rule
+    # onset of damage
     epsilon_0 = 0.1
     # slope of the damage
     epsilon_f = 10.0
@@ -75,7 +75,7 @@ class MATS1DDamageWithFlaw(MATS1DDamage):
         if sctx:
             X = sctx.fets_eval.get_X_pnt(sctx)
             if fabs(X[0] - self.flaw_position) < self.flaw_radius:
-                #print 'reduced epsilon_0 at', X[0], self.epsilon_0 * self.reduction_factor
+                # print 'reduced epsilon_0 at', X[0], self.epsilon_0 * self.reduction_factor
                 return self.epsilon_0 * self.reduction_factor
         return self.epsilon_0
 
@@ -107,6 +107,7 @@ class MATS1DDamageWithFlaw(MATS1DDamage):
 class BarStrainLocalization(IBVModel):
     '''Model assembling the components for studying the restrained crack localization.
     '''
+
     shape = Int(20, desc='Number of finite elements',
                    ps_levsls=(10, 40, 4),
                    input=True)
@@ -216,7 +217,7 @@ class BarStrainLocalization(IBVModel):
     @cached_property
     def _get_fets(self):
         fets_eval = FETS1D2L(mats_eval=self.mats)
-        #fets_eval = FETS1D2L3U( mats_eval = self.mats )
+        # fets_eval = FETS1D2L3U( mats_eval = self.mats )
         return fets_eval
 
     fe_domain = Property(depends_on='+input')
@@ -353,7 +354,7 @@ class BarStrainLocalization(IBVModel):
     def eval(self):
         '''Run the time loop.
         '''
-        # 
+        #
         avg_processor = None
         if self.avg_radius > 0.0:
             avg_processor = RTNonlocalAvg(sd=self.fe_domain,
@@ -388,13 +389,13 @@ if __name__ == '__main__':
 
     if do == 'avg_test':
         avg_radius_list = [ 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 ]
-        #avg_radius_list = [ 0.0, 0.05, 0.1, 0.3, 0.7 ]
-        #avg_radius_list = [ 0.1, 0.6 ]
-        #avg_radius_list = [0.1]
+        # avg_radius_list = [ 0.0, 0.05, 0.1, 0.3, 0.7 ]
+        # avg_radius_list = [ 0.1, 0.6 ]
+        # avg_radius_list = [0.1]
         legend_list = [ 'radius = %.2f' % radius for radius in avg_radius_list ]
 
-        shape = 31
-        n_steps = 15
+        shape = 51
+        n_steps = 50
         length = 1
         flaw_radius = length / float(shape) / 2.0
 
