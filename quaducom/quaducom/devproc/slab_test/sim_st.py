@@ -138,10 +138,12 @@ class SimST(IBVModel):
     'supprt_flag': specify weather the support is modeled as separate fe-grid allowing for realistic 
                    kinematics at the support (rotation/translation in the plane between slab and support 
     '''
-
+    i = 0
     input_change = Event
     @on_trait_change('+input,ccs_unit_cell.input_change')
     def _set_input_change(self):
+        print 'xxx input_change Event', self.i
+        self.i += 1
         self.input_change = True
 
     implements(ISimModel)
@@ -180,7 +182,7 @@ class SimST(IBVModel):
     idx_supprt_center_elem = Property(Float, depends_on = 'shape_supprt_xy')
     @cached_property
     def _get_idx_supprt_center_elem(self):
-        return self.shape_supprt_xy / 2 - 1
+        return self.shape_supprt_xy / 2 
     
     #
     # edge length of the quadratic plate (entire length without symmetry)
@@ -265,9 +267,13 @@ class SimST(IBVModel):
     # phi function
     #-----------------
 
-    phi_fn = Instance(IPhiFn, input = True)
-    def _phi_fn_default(self):
-        return PhiFnStrainHardening()
+#    phi_fn = Instance(IPhiFn, input = True)
+#    def _phi_fn_default(self):
+#        return PhiFnStrainHardening()
+
+#    phi_fn = Instance(PhiFnGeneral, input = True)
+#    def _phi_fn_default(self):
+#        return PhiFnGeneral()
 
     #----------------------------------------------------------------------------------
     # mats
@@ -301,6 +307,9 @@ class SimST(IBVModel):
                           depends_on = 'input_change')
     @cached_property
     def _get_mats_eval(self):
+#        import pylab as p
+#        self.phi_fn.mfn.mpl_plot(p)
+#        p.show()
         mats_eval = MATS2D5MicroplaneDamage(
 #                                E = self.E_c,
                                 E = self.E_m, # relevant for compressive behavior/used for calibration of phi_fn
@@ -555,7 +564,8 @@ class SimST(IBVModel):
 
         # center displacement
         #
-        w_max = -0.020 # [m]
+        w_max = -0.035 # [m]
+#        w_max = Float( -0.020, auto_set = False, enter_set = True, input = True) # [m]
 
         # if elastomer is modeled
         #
@@ -660,30 +670,16 @@ class SimST(IBVModel):
         center_top_dof_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
         print 'center_top_dof used for displacement tracing: ', center_top_dof_z 
 
-        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - force',
-                                       var_x = 'U_k'  , idx_x = center_top_dof_z,
-                                       # elastomer load
-                                       var_y = 'F_int', idx_y_arr = load_dofs_z,
-#                                       var_y = 'F_int', idx_y = center_dof,
-                                       record_on = 'update',
-                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
-                                       #
-                                       transform_y = '-4 * 1000. * y')
-        
-        center_bottom_dof_z = specmn[-1, -1, 0, -1, -1, 0].dofs[0, 0, 2]
-        print 'center_bottom_dof used for displacement tracing: ', center_bottom_dof_z 
-        
-        self.f_w_diagram_center_bottom = RTraceGraph(name = 'displacement (center bottom) - force',
-                                       var_x = 'U_k'  , idx_x = center_bottom_dof_z,
-                                       # elastomer load
-                                       var_y = 'F_int', idx_y_arr = load_dofs_z,
-#                                       var_y = 'F_int', idx_y = center_dof,
-                                       record_on = 'update',
-                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
-                                       #
-                                       transform_y = '-4 * 1000. * y')
+#        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - force',
+#                                       var_x = 'U_k'  , idx_x = center_top_dof_z,
+#                                       # elastomer load
+#                                       var_y = 'F_int', idx_y_arr = load_dofs_z,
+##                                       var_y = 'F_int', idx_y = center_dof,
+#                                       record_on = 'update',
+#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                       # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
+#                                       #
+#                                       transform_y = '-4 * 1000. * y')
         
         # trace support reaction
         #
@@ -753,8 +749,7 @@ class SimST(IBVModel):
                 rtrace_list = [
                               # @todo: check weather tracing yields same results:
                               #
-                              self.f_w_diagram_center,
-                              self.f_w_diagram_center_bottom,
+#                              self.f_w_diagram_center,
                               self.f_w_diagram_supprt,
 #                             self.f_w_diagram_center_edge,
 #                             self.f_w_diagram_edge,
@@ -771,6 +766,7 @@ class SimST(IBVModel):
 #                             RTraceDomainListField(name = 'Damage' ,
 #                                        var = 'omega_mtx', idx = 0, warp = True,
 #                                        record_on = 'update'),
+
 #                             RTraceDomainListField(name = 'max_omega_i', warp = True,
 #                                        var = 'max_omega_i', idx = 0,
 #                                        record_on = 'update'),
@@ -789,29 +785,11 @@ class SimST(IBVModel):
         # Add the time-loop control
         #
         tloop = TLoop(tstepper = ts,
-
-                       # allow only a low tolerance 
-                       #
-#                       KMAX = 200, 
-#                       tolerance = 5e-4, 
-
-                       # allow a high tolerance 
-                       #
-                       KMAX = 300,
-                       tolerance = self.tolerance,
-
-                       # allow a very high tolerance 
-                       #
-#                       KMAX = 50,
-#                       tolerance = 0.1,
-
-                       RESETMAX = 0,
-                       debug = False,
-                       
-                       # 0.85 * 40 mm = 34 mm
-                       #
-#                       tline = TLine(min = 0.0, step = self.tstep, max = 1.00 )) 
-                       tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
+#                      KMAX = 300,
+                      KMAX = 50,
+                      RESETMAX = 0,
+                      tolerance = self.tolerance,
+                      tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
 
         return tloop
 
@@ -844,9 +822,10 @@ class SimST(IBVModel):
 
 class SimSTDB(SimST):
 
-    # extend the failure strain in PhiFnGeneralExtended
+    # extend the failure strain in 'PhiFnGeneralExtended' by this factor
+    # before the integrety function drops down to zero
     #
-    factor_eps_fail = Float(1.4, input = True,
+    factor_eps_fail = Float(1.0, input = True,
                              ps_levels = (1.0, 1.2, 3))
 
     # specify exponential softening in 'PhiFnGeneralExtendedExp'
@@ -892,18 +871,42 @@ class SimSTDB(SimST):
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------
-    # phi function extended:
+    # phi function General:
     #-----------------
     #
-    phi_fn = Property(Instance(PhiFnGeneralExtendedExp),
-                       depends_on = 'input_change,+ps_levels')
+    phi_fn_class = Enum(PhiFnGeneral,[PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp], input = True,)
+    phi_fn = Property( Instance(phi_fn_class), depends_on = 'phi_fn_class, input_change, +ps_levels' )
     @cached_property
     def _get_phi_fn(self):
-        return PhiFnGeneralExtendedExp(mfn = self.damage_function,
-                                       Efp_frac = self.Efp_frac )
-#        return PhiFnStrainHardening()
+        return self.phi_fn_class( mfn = self.damage_function )
+    
+#    phi_fn = Property(Instance(PhiFnGeneral),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn(self):
+#        return PhiFnGeneral( mfn = self.damage_function )
+#
+#    #-----------------
+#    # phi function General Extended:
+#    #-----------------
+#    #
+#    phi_fn_ext = Property(Instance(PhiFnGeneralExtended),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn_ext(self):
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
+#        
+##    #-----------------
+##    # phi function General Extended Exp:
+##    #-----------------
+##    #
+#    phi_fn_exp = Property(Instance(PhiFnGeneralExtendedExp),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn_exp(self):
+#        return PhiFnGeneralExtendedExp(mfn = self.damage_function,
+#                                       Efp_frac = self.Efp_frac)
 
     #----------------------------------------------------------------------------------
     # mats_eval
@@ -934,6 +937,10 @@ class SimSTDB(SimST):
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
         print 'nu (from ccs)', nu 
+        # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
+        #
+        print 'nu set explicitly to 0.20' 
+        nu = 0.2
         return nu
 
 
@@ -977,7 +984,7 @@ if __name__ == '__main__':
 #                         shape_xy = 10,
 #                         shape_z = 3,
                          tstep = 0.05, 
-                         tmax = 1.0 
+                         tmax = 0.4 
 #                         tstep = 0.05 
 #                         tstep = 0.025 # tmax / 34 steps with tmax = 0.85 corresponding to 1 mm / tstep
                          )
@@ -1013,9 +1020,10 @@ if __name__ == '__main__':
     #------------------------------
     # do
     #------------------------------
+    do = 'show_phi_fn'
 #    do = 'ui'
 #    do = 'pstudy'
-    do = 'validation'
+#    do = 'validation'
 #    do = 'show_last_results'
 
     #------------------------------
