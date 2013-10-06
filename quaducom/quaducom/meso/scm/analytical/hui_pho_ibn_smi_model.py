@@ -103,10 +103,12 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
     
-    for rho in np.array([50.]):
+    for rho in np.array([500.]):
         sfc.rho = rho
-        x = np.linspace(0., 4.0, 500)
-        pdf_x = sfc.p_x(10., x)
+        x = np.linspace(0.4, 1.2, 1000)
+        pdf_x = sfc.p_x(4., x)
+        pdf_x = pdf_x / np.trapz(pdf_x, x)
+        print 2 * np.trapz(pdf_x * x, x)
         # Widom limiting case
         # print 2. / np.trapz(pdf_x, x)
         #cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
