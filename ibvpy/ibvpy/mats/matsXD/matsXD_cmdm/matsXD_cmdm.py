@@ -91,7 +91,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     #---------------------------------------------------------------------------------------------
 
     config_param_vgroup = Group(Item('model_version', style='custom'),
-                               Item('stress_state', style='custom'),
+                          #     Item('stress_state', style='custom'),
                                Item('symmetrization', style='custom'),
                                Item('elastic_debug@'),
                                Item('double_constraint@'),

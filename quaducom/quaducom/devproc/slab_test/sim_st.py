@@ -138,10 +138,12 @@ class SimST(IBVModel):
     'supprt_flag': specify weather the support is modeled as separate fe-grid allowing for realistic 
                    kinematics at the support (rotation/translation in the plane between slab and support 
     '''
-
+    i = 0
     input_change = Event
     @on_trait_change('+input,ccs_unit_cell.input_change')
     def _set_input_change(self):
+        print 'xxx input_change Event', self.i
+        self.i += 1
         self.input_change = True
 
     implements(ISimModel)
@@ -150,7 +152,7 @@ class SimST(IBVModel):
     # discretization:
     #-----------------
 
-    # discretization in x,y-direction (quarter of the slab):
+    # slab discretization in x,y-direction (quarter of the slab):
     #
     shape_xy = Int( 14, input = True,
                       ps_levels = ( 8, 12, 3 ) )
@@ -159,13 +161,29 @@ class SimST(IBVModel):
     #
     shape_R = Int( 3, input = True)
 
-    # discretization in z-direction:
+    # slab discretization in z-direction:
+    #
     shape_z = Int( 3, input = True,
                       ps_levels = ( 2, 3, 3 ) )
+
+    # support discretization in xy-direction:
+    # NOTE: chose '2' for 2x2-grid or '4' for 4x4-grid
+    #
+    shape_supprt_xy = Int( 2, input = True,
+                      ps_levels = ( 2, 4, 2 ) )
 
     #-----------------
     # geometry:
     #-----------------
+
+    # get an element of the support mesh adjacent to the center node, i.e. the fixed node
+    # NOTE: property only distinguish weather support mesh is discretized with 2x2 or 4x4 grid
+    #
+    idx_supprt_center_elem = Property(Float, depends_on = 'shape_supprt_xy')
+    @cached_property
+    def _get_idx_supprt_center_elem(self):
+        return self.shape_supprt_xy / 2 
+    
     #
     # edge length of the quadratic plate (entire length without symmetry)
     #
@@ -197,7 +215,7 @@ class SimST(IBVModel):
 
     # specify weather elastomer is to be modeled for load introduction
     #
-    elstmr_flag = True
+    elstmr_flag = False
 
     # specify weather steel support is to be modeled 
     #
@@ -238,20 +256,24 @@ class SimST(IBVModel):
         # load introduction plate 
         #
         elem_size = (self.length / 2.0 - self.radius_plate) / (self.shape_xy - self.shape_R)
-        width_supprt = 2. * elem_size
+        width_supprt = self.shape_supprt_xy * elem_size
         print 'width_supprt = ', width_supprt
         return GeoSUPPRT(thickness_supprt = self.thickness_supprt,
-                      width_supprt = width_supprt,
-                      xyoffset = 0.,
-                      zoffset = - self.thickness_supprt)
+                         width_supprt = width_supprt,
+                         xyoffset = 0.,
+                         zoffset = - self.thickness_supprt)
 
     #-----------------
     # phi function
     #-----------------
 
-    phi_fn = Instance(IPhiFn, input = True)
-    def _phi_fn_default(self):
-        return PhiFnStrainHardening()
+#    phi_fn = Instance(IPhiFn, input = True)
+#    def _phi_fn_default(self):
+#        return PhiFnStrainHardening()
+
+#    phi_fn = Instance(PhiFnGeneral, input = True)
+#    def _phi_fn_default(self):
+#        return PhiFnGeneral()
 
     #----------------------------------------------------------------------------------
     # mats
@@ -268,14 +290,12 @@ class SimST(IBVModel):
     #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
     #         used in the simulation of the slab test and within the calibration procedure. 
 
-    # composite E-modulus 
+    # composite E-modulus of steel support
     # 210 GPa = 210000 [MPa] 
-    E_s = Float(210e3, auto_set = False, enter_set = True, input = True)
+    E_s = Float(210000., auto_set = False, enter_set = True, input = True)
 
-    # Poisson's ratio 
+    # time stepping params 
     #  
-    nu = Float(0.2, auto_set = False, enter_set = True, input = True)
-
     tstep = Float(0.05, auto_set = False, enter_set = True, input = True)
     tmax = Float(1.0, auto_set = False, enter_set = True, input = True)
     tolerance = Float(0.001, auto_set = False, enter_set = True, input = True)
@@ -287,6 +307,9 @@ class SimST(IBVModel):
                           depends_on = 'input_change')
     @cached_property
     def _get_mats_eval(self):
+#        import pylab as p
+#        self.phi_fn.mfn.mpl_plot(p)
+#        p.show()
         mats_eval = MATS2D5MicroplaneDamage(
 #                                E = self.E_c,
                                 E = self.E_m, # relevant for compressive behavior/used for calibration of phi_fn
@@ -441,7 +464,7 @@ class SimST(IBVModel):
                           # use shape (2,2) in order to place support in the center of the steel support
                           # corresponding to 4 elements of the slab mesh
                           #
-                          shape = (2, 2, 1),
+                          shape = (self.shape_supprt_xy, self.shape_supprt_xy, 1),
                           geo_transform = self.geo_supprt,
                           fets_eval = self.supprt_fets)
 
@@ -502,54 +525,38 @@ class SimST(IBVModel):
             sym_support_link = BCDof( var = 'u', value = 0., dof = s_dof_x,
                                       link_dofs = [s_dof_y],
                                       link_coeffs = [1.0])
-            # fix bottom-middle node of the tappered support
+
+            # link specimen bottom nodes in the slab corner with the top nodes of the tappered support in z-direction
             # 
-            support_000 = BCSlice(var = 'u', value = 0., dims = [0,1,2], slice = supprt[0, 0, 0, -1, -1, 0])
             link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
-                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
+                                   slice = specmn[0:self.shape_supprt_xy, 0:self.shape_supprt_xy, 0, :, :, 0],
                                    link_slice = supprt[:, :, -1, :, :, -1],
                                    link_dims = [2],
                                    link_coeffs = [1.])
+            
+            # fix bottom-middle node of the tappered support
+            # 
+            support_000 = BCSlice(var = 'u', value = 0., dims = [0,1,2], 
+                                  slice = supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
 
-#            #---------------------------
-#            # sliding support with fixed connection to the plate 
-#            #---------------------------
-#            
-#            # allow sliding of the support only in 45-degree direction (towards the center of the slab due to symmetry)
-#            #
-#            sdofs = supprt[0, 0, 0, -1, -1, 0].dofs
-#            s_dof_x, s_dof_y = sdofs[0,0,(0,1)].flatten()
-#            sym_support_link = BCDof( var = 'u', value = 0., dof = s_dof_x,
-#                                      link_dofs = [s_dof_y],
-#                                      link_coeffs = [1.0])
-#            # sliding support (only z-direction is blocked)
-#            #
-#            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, -1, -1, 0])
-#            # link support and slab in all dofs and all directions as no sliding 
-#            # occurs in the experiment due to friction
-#            #
-#            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
-#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
-#                                   link_slice = supprt[:, :, -1, :, :, -1],
-#                                   link_dims = [2],
-#                                   link_coeffs = [1.])
-#            link_sp_sp_x = BCSlice(var = 'u', value = 0., dims = [0],
-#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
-#                                   link_slice = supprt[:, :, -1, :, :, -1],
-#                                   link_dims = [0],
-#                                   link_coeffs = [1.])
-#            link_sp_sp_y = BCSlice(var = 'u', value = 0., dims = [1],
-#                                   slice = specmn[0:2, 0:2, 0, :, :, 0],
-#                                   link_slice = supprt[:, :, -1, :, :, -1],
-#                                   link_dims = [1],
-#                                   link_coeffs = [1.])
-#           #---------------------------
+            supprt_dof_z = supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
+            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
 
         else:
-            # place support at the corner / reduce the edge length of the slab in the model to effective values, 
+            # Var_1: place support at the corner / reduce the edge length of the slab in the model to effective values, 
             # i.e. l_ = length_quarter - width_supprt / 2
             # 
-            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
+#            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
+#            supprt_dof_z = specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
+#            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+            
+            # Var_2: place single support at the center of the support position (position defined by 'idx_supprt_center_elem'
+            # depending on the mesh fines; NOTE: mesh fines and index must correspond approximately to the correct support width 
+            # 
+            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
+            supprt_dof_z = specmn[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
+            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+
 
         #--------------------------------------------------------------
         # boundary conditions for loading
@@ -557,11 +564,9 @@ class SimST(IBVModel):
 
         # center displacement
         #
-        w_max = -0.020 # [m]
-        
-        center_dof = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2].flatten()
-        print 'center_dof', center_dof 
-        
+        w_max = -0.035 # [m]
+#        w_max = Float( -0.020, auto_set = False, enter_set = True, input = True) # [m]
+
         # if elastomer is modeled
         #
         if self.elstmr_flag:
@@ -597,9 +602,9 @@ class SimST(IBVModel):
                            slice = elstmr[:, :, -1, :, :, -1])]
             # dofs for RTrace f-w-diagram
             #
-            ctl_dofs = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-            print 'ctl_dofs', ctl_dofs
-            print 'ctl_dofs.shape', ctl_dofs.shape
+            load_dofs_z = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
+            print 'load_dofs_z', load_dofs_z
+            print 'load_dofs_z.shape', load_dofs_z.shape
             
         # if no elastomer is modeled
         #
@@ -621,20 +626,27 @@ class SimST(IBVModel):
                 dofs_line_Ry = nodes_line_Ry.dofs[:, :, 2].flatten()
                 # use 'np.unique' in order to avoid that the same 'dof' is listed twice in the
                 # array as it appears in two adjacent elements of the same slice or in both x- and y-line slice
-                ctl_dofs = np.unique( np.hstack([dofs_line_Rx, dofs_line_Ry]) ) 
+                load_dofs_z = np.unique( np.hstack([dofs_line_Rx, dofs_line_Ry]) ) 
                 print 'dofs_line_Rx', dofs_line_Rx
                 print 'dofs_line_Ry', dofs_line_Ry
-                print 'ctl_dofs', ctl_dofs
+                print 'load_dofs_z', load_dofs_z
 
             # if no geometry transformation for the slab is used (regular rectangular mesh only)
             #
             else:
-                ### var 1 displacement applied at the center nodes (all nodes in the symmetry axis)
-                ### var 2: displacement applied at the center top node (one node) 
+                ### var 1: single nodal displacement applied at the center top node (one node only) 
                 #
                 bc_w = [BCSlice(var = 'u', value = w_max, dims = [2], 
-#                                          slice = specmn[-1, -1, :, -1, -1, :])] # all nodes along z-axis
                                           slice = specmn[-1, -1, -1, -1, -1, -1])] # only top node
+                load_dofs_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
+                print 'load_dofs_z', load_dofs_z
+
+#                ### var 2 displacement applied at all center nodes (all nodes in the symmetry axis)
+#                #
+#                bc_w = [BCSlice(var = 'u', value = w_max, dims = [2], 
+#                                          slice = specmn[-1, -1, :, -1, -1, :])] # all nodes along z-axis
+#                load_dofs_z = specmn[-1, -1, :, -1, -1, :].dofs[0, 0, 2]
+#                print 'load_dofs_z', load_dofs_z
 
                 ### var 3: 
                 #
@@ -649,68 +661,59 @@ class SimST(IBVModel):
 #                #
 #                dofs_line_x = nodes_line_x.dofs[:, :, 2].flatten()
 #                dofs_line_y = nodes_line_y.dofs[:, :, 2].flatten()
-#                ctl_dofs = np.unique( np.hstack([dofs_line_x, dofs_line_y]) ) 
+#                load_dofs_z = np.unique( np.hstack([dofs_line_x, dofs_line_y]) ) 
 
         #--------------------------------------------------------------
-        # force-displacement-diagrams 
+        # force-displacement-diagram
         #--------------------------------------------------------------
 
-        # get center-edge dof at the upper side of the slab
+        center_top_dof_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
+        print 'center_top_dof used for displacement tracing: ', center_top_dof_z 
+
+#        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - force',
+#                                       var_x = 'U_k'  , idx_x = center_top_dof_z,
+#                                       # elastomer load
+#                                       var_y = 'F_int', idx_y_arr = load_dofs_z,
+##                                       var_y = 'F_int', idx_y = center_dof,
+#                                       record_on = 'update',
+#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                       # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
+#                                       #
+#                                       transform_y = '-4 * 1000. * y')
+        
+        # trace support reaction
         #
-        # if shape_xy is an even number:
-        if self.shape_xy % 2 == 0:
-            x_idx_center_edge = (self.shape_xy / 2) - 1
-            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, -1, -1, -1].dofs
-        # if shape_xy is an odd number:
-        else:
-            # get the midside node of the center-edge-element
-            x_idx_center_edge = (self.shape_xy - 1) / 2
-            # valid only for quadratic elements
-            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, 1, -1, -1].dofs
-
-        center_dof = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
-        print 'center_dof', center_dof 
-        self.f_w_diagram_center = RTraceGraph(name = 'displacement (center) - reaction 2',
-                                       var_x = 'U_k'  , idx_x = center_dof,
+        self.f_w_diagram_supprt = RTraceGraph(name = 'displacement (supprt) - force',
+                                       var_x = 'U_k'  , idx_x = center_top_dof_z,
                                        # elastomer load
-                                       var_y = 'F_int', idx_y_arr = ctl_dofs,
-#                                       var_y = 'F_int', idx_y = center_dof,
+                                       var_y = 'F_int', idx_y = supprt_dof_z,
                                        record_on = 'update',
                                        transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
                                        #
                                        transform_y = '4 * 1000. * y')
         
-        if self.supprt_flag:
-            supprt_dof_z = supprt[0, 0, 0, -1, -1, 0].dofs[0, 0, 2]
-            print 'supprt_dof_z', supprt_dof_z
-            self.f_w_diagram_supprt = RTraceGraph(name = 'displacement (supprt) - reaction 2',
-                                           var_x = 'U_k'  , idx_x = center_dof,
-                                           # elastomer load
-                                           var_y = 'F_int', idx_y = supprt_dof_z,
-                                           record_on = 'update',
-                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                           # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
-                                           #
-                                           transform_y = '4 * 1000. * y')
-        else:
-            supprt_dof_z = specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
-            self.f_w_diagram_supprt = RTraceGraph(name = 'displacement (supprt) - reaction 2',
-                                           var_x = 'U_k'  , idx_x = center_dof,
-                                           # elastomer load
-                                           var_y = 'F_int', idx_y = supprt_dof_z,
-                                           record_on = 'update',
-                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                           # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
-                                           #
-                                           transform_y = '4 * 1000. * y')
-        
-        
+        #------------------------
+        # F-w-diagram edge and edge/center 
+        #------------------------
+#        # get center-edge dof at the upper side of the slab
+#        #
+#        # if shape_xy is an even number:
+#        if self.shape_xy % 2 == 0:
+#            x_idx_center_edge = (self.shape_xy / 2) - 1
+#            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, -1, -1, -1].dofs
+#        # if shape_xy is an odd number:
+#        else:
+#            # get the midside node of the center-edge-element
+#            x_idx_center_edge = (self.shape_xy - 1) / 2
+#            # valid only for quadratic elements
+#            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, 1, -1, -1].dofs
+
 #        center_edge_dof = center_edge_top_dofs[0, 0, 2]
 #        print 'center_edge_dof', center_edge_dof 
 #        self.f_w_diagram_center_edge = RTraceGraph(name = 'displacement (center/edge) - reaction 2',
 #                                                   var_x = 'U_k'  , idx_x = center_edge_dof,
-#                                                   var_y = 'F_int', idx_y_arr = ctl_dofs,
+#                                                   var_y = 'F_int', idx_y_arr = load_dofs_z,
 #                                                   record_on = 'update',
 #                                                   transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
 #                                                   transform_y = '-4 * 1000 * y')
@@ -719,7 +722,7 @@ class SimST(IBVModel):
 #        print 'edge_dof', edge_dof 
 #        self.f_w_diagram_edge = RTraceGraph(name = 'displacement (edge) - reaction 2',
 #                                            var_x = 'U_k'  , idx_x = edge_dof,
-#                                            var_y = 'F_int', idx_y_arr = ctl_dofs,
+#                                            var_y = 'F_int', idx_y_arr = load_dofs_z,
 #                                            record_on = 'update',
 #                                            transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
 #                                            transform_y = '-4 * 1000 * y')
@@ -728,16 +731,13 @@ class SimST(IBVModel):
         # boundary conditions 
         #--------------------------------------------------------------
 
-        bcond_list = [bc_symplane_yz, bc_symplane_xz, support_000] + bc_w
+        bcond_list = [ bc_symplane_yz, bc_symplane_xz, support_000 ] + bc_w
 
         if self.supprt_flag:
-            bcond_list += [link_sp_sp_z, sym_support_link]
+            bcond_list += [ link_sp_sp_z, sym_support_link ]
 
         if self.elstmr_flag:
-            bcond_list += [bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp]
-
-        # [link_sp_sp_x, link_sp_sp_y]
-        # [bc_supprt_symplane_yz, bc_supprt_symplane_xz]
+            bcond_list += [ bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp ]
 
         #--------------------------------------------------------------
         # ts 
@@ -747,25 +747,30 @@ class SimST(IBVModel):
                 sdomain = self.fe_domain,
                 bcond_list = bcond_list,
                 rtrace_list = [
-                             self.f_w_diagram_center,
+                              # @todo: check weather tracing yields same results:
+                              #
+#                              self.f_w_diagram_center,
+                              self.f_w_diagram_supprt,
 #                             self.f_w_diagram_center_edge,
 #                             self.f_w_diagram_edge,
-                             self.f_w_diagram_supprt,
 
-                             RTraceDomainListField(name = 'Displacement' ,
-                                            var = 'u', idx = 0, warp = True),
+                              RTraceDomainListField(name = 'Displacement' ,
+                                                    var = 'u', idx = 0, warp = True),
 #                             RTraceDomainListField(name = 'Stress' ,
 #                                            var = 'sig_app', idx = 0, warp = True, 
 #                                            record_on = 'update'),
-                             RTraceDomainListField(name = 'Strain' ,
-                                        var = 'eps_app', idx = 0, warp = True, 
-                                        record_on = 'update'),
-                             RTraceDomainListField(name = 'Damage' ,
-                                        var = 'omega_mtx', idx = 0, warp = True,
-                                        record_on = 'update'),
-                             RTraceDomainListField(name = 'max_omega_i', warp = True,
-                                        var = 'max_omega_i', idx = 0,
-                                        record_on = 'update'),
+
+#                             RTraceDomainListField(name = 'Strain' ,
+#                                        var = 'eps_app', idx = 0, warp = True, 
+#                                        record_on = 'update'),
+#                             RTraceDomainListField(name = 'Damage' ,
+#                                        var = 'omega_mtx', idx = 0, warp = True,
+#                                        record_on = 'update'),
+
+#                             RTraceDomainListField(name = 'max_omega_i', warp = True,
+#                                        var = 'max_omega_i', idx = 0,
+#                                        record_on = 'update'),
+
 #                             RTraceDomainListField(name = 'IStress' ,
 #                                            position = 'int_pnts',
 #                                            var = 'sig_app', idx = 0, 
@@ -780,29 +785,11 @@ class SimST(IBVModel):
         # Add the time-loop control
         #
         tloop = TLoop(tstepper = ts,
-
-                       # allow only a low tolerance 
-                       #
-#                       KMAX = 200, 
-#                       tolerance = 5e-4, 
-
-                       # allow a high tolerance 
-                       #
-                       KMAX = 300,
-                       tolerance = self.tolerance,
-
-                       # allow a very high tolerance 
-                       #
-#                       KMAX = 50,
-#                       tolerance = 0.1,
-
-                       RESETMAX = 0,
-                       debug = False,
-                       
-                       # 0.85 * 40 mm = 34 mm
-                       #
-#                       tline = TLine(min = 0.0, step = self.tstep, max = 1.00 )) 
-                       tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
+#                      KMAX = 300,
+                      KMAX = 50,
+                      RESETMAX = 0,
+                      tolerance = self.tolerance,
+                      tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
 
         return tloop
 
@@ -835,9 +822,10 @@ class SimST(IBVModel):
 
 class SimSTDB(SimST):
 
-    # extend the failure strain in PhiFnGeneralExtended
+    # extend the failure strain in 'PhiFnGeneralExtended' by this factor
+    # before the integrety function drops down to zero
     #
-    factor_eps_fail = Float(1.4, input = True,
+    factor_eps_fail = Float(1.0, input = True,
                              ps_levels = (1.0, 1.2, 3))
 
     # specify exponential softening in 'PhiFnGeneralExtendedExp'
@@ -883,18 +871,42 @@ class SimSTDB(SimST):
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------
-    # phi function extended:
+    # phi function General:
     #-----------------
     #
-    phi_fn = Property(Instance(PhiFnGeneralExtendedExp),
-                       depends_on = 'input_change,+ps_levels')
+    phi_fn_class = Enum(PhiFnGeneral,[PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp], input = True,)
+    phi_fn = Property( Instance(phi_fn_class), depends_on = 'phi_fn_class, input_change, +ps_levels' )
     @cached_property
     def _get_phi_fn(self):
-        return PhiFnGeneralExtendedExp(mfn = self.damage_function,
-                                       Efp_frac = self.Efp_frac )
-#        return PhiFnStrainHardening()
+        return self.phi_fn_class( mfn = self.damage_function )
+    
+#    phi_fn = Property(Instance(PhiFnGeneral),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn(self):
+#        return PhiFnGeneral( mfn = self.damage_function )
+#
+#    #-----------------
+#    # phi function General Extended:
+#    #-----------------
+#    #
+#    phi_fn_ext = Property(Instance(PhiFnGeneralExtended),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn_ext(self):
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
+#        
+##    #-----------------
+##    # phi function General Extended Exp:
+##    #-----------------
+##    #
+#    phi_fn_exp = Property(Instance(PhiFnGeneralExtendedExp),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn_exp(self):
+#        return PhiFnGeneralExtendedExp(mfn = self.damage_function,
+#                                       Efp_frac = self.Efp_frac)
 
     #----------------------------------------------------------------------------------
     # mats_eval
@@ -923,7 +935,13 @@ class SimSTDB(SimST):
     nu = Property(Float, depends_on = 'input_change')
     @cached_property
     def _get_nu(self):
-        return self.ccs_unit_cell_ref.nu
+        nu = self.ccs_unit_cell_ref.nu
+        print 'nu (from ccs)', nu 
+        # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
+        #
+        print 'nu set explicitly to 0.20' 
+        nu = 0.2
+        return nu
 
 
 if __name__ == '__main__':
@@ -966,7 +984,7 @@ if __name__ == '__main__':
 #                         shape_xy = 10,
 #                         shape_z = 3,
                          tstep = 0.05, 
-                         tmax = 1.0 
+                         tmax = 0.4 
 #                         tstep = 0.05 
 #                         tstep = 0.025 # tmax / 34 steps with tmax = 0.85 corresponding to 1 mm / tstep
                          )
@@ -1002,9 +1020,10 @@ if __name__ == '__main__':
     #------------------------------
     # do
     #------------------------------
+    do = 'show_phi_fn'
 #    do = 'ui'
 #    do = 'pstudy'
-    do = 'validation'
+#    do = 'validation'
 #    do = 'show_last_results'
 
     #------------------------------

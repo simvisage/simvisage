@@ -29,11 +29,11 @@ class GeoST(HasTraits):
 
     # discretization of total slab in x- and y-direction (region 'L')
     #
-    shape_xy = Int(30, input = True)
+    shape_xy = Int(14, input = True)
 
     # discretization of the load introduction plate (region 'R')
     #
-    shape_R = Int(5, input = True)
+    shape_R = Int(2, input = True)
         
     # ratio of the discretization, i.e. number of elements for each region     
     #
@@ -150,10 +150,13 @@ if __name__ == '__main__':
 
     st = GeoST()
 
+#    shape_xy = 26
+#    st.shape_R = 5
+
     # discretization in z-direction 
     # (thickness direction):
     #
-    shape_z = 2
+    shape_z = 0
 
     grid = np.mgrid[0:1:complex(0, st.shape_xy + 1),
                     0:1:complex(0, st.shape_xy + 1),

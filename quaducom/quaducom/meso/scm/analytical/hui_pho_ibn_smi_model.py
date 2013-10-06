@@ -69,7 +69,7 @@ class SFC_Hui(HasTraits):
     
     def p2(self, s, x):
         def integ_scalar(s, x):
-            t = np.linspace(x, s, 300)
+            t = np.linspace(x, s, 500)
             return np.trapz(self.A0(t)/t * np.exp(-t**self.rho * (x + t/2.)), t)
         integ_vect = np.vectorize(integ_scalar)
         return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p1(x, x))
@@ -82,7 +82,7 @@ class SFC_Hui(HasTraits):
 
     def p22(self, s, x):
         def integ_scalar(s, x):
-            t = np.linspace(x, s, 300)
+            t = np.linspace(x, s, 500)
             def integrant(t):
                 return t**(2.*self.rho) * np.exp(self.lambd * t ** (self.rho + 1) -2.*self.lambd * (0.577215664901532 + np.log(t**(self.rho+1)/2.) - expi(-t**(self.rho+1)/2.)) -t**self.rho * (x + t/2.)) /t
             return np.trapz(integrant(t), t)
@@ -105,12 +105,10 @@ if __name__ == '__main__':
     
     for rho in np.array([500.]):
         sfc.rho = rho
-        x = np.linspace(0.4, 1.2, 1000)
-        pdf_x = sfc.p_x(4., x)
-        pdf_x = pdf_x / np.trapz(pdf_x, x)
-        print 2 * np.trapz(pdf_x * x, x)
+        x = np.linspace(0.4, 1.5, 300)
+        pdf_x = sfc.p_x(50., x)
         # Widom limiting case
-        # print 2. / np.trapz(pdf_x, x)
+        print 2. / np.trapz(pdf_x, x)
         #cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
         plt.plot(x, pdf_x, label=str(rho))
         #plt.plot(x, cdf_x, label=str(rho))
