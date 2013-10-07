@@ -8,7 +8,7 @@ from etsproxy.traits.api import Instance, Property, cached_property, Array
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid.rv import RV
-from scipy.optimize import brentq, fminbound, newton
+from scipy.optimize import brentq, fminbound
 from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import time
@@ -210,20 +210,20 @@ class CompositeCrackBridgeView( ModelView ):
 if __name__ == '__main__':
 
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
-    from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
+    from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.23, scale=0.03),
+                          tau=RV('weibull_min', loc=0.006, shape=2.23, scale=0.03),
                           V_f=0.04,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
+                          xi=fibers_MC(m=5.0, sV0=0.0026),
                           label='carbon',
                           n_int=500)
 
     model = CompositeCrackBridge(E_m=23e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=10.,
-                                 Lr=10.,
+                                 Ll=1.,
+                                 Lr=1.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     #profile(0.031)
-    w = np.linspace(0., .4, 200)
+    w = np.linspace(0.0, .04, 200)
     sigma_c_w(w)
     #energy(w)
     # bundle at 20 mm
