@@ -101,7 +101,7 @@ if __name__ == '__main__':
 #    do = 'show_last_results'
     
     test_series = 'BT-12c'
-    test_series = 'BT-6c'
+#    test_series = 'BT-6c'
     
     #-----------------------------------------
     # BT-3PT-12c-6cm; L = 1.25m; L0 = 1.15 cm t = 6 cm
@@ -119,15 +119,15 @@ if __name__ == '__main__':
                                elstmr_flag = False,
                                supprt_flag = False,
                                #
-                               shape_x = 8,
+                               shape_x = 4,
                                mid_shape_x = 2,
                                shape_y = 2,
-                               shape_z = 3,
+                               shape_z = 2,
                                #
                                w_max = 0.01,
-                               tstep = 0.05, 
+                               tstep = 0.2, 
                                tmax = 1.0, 
-                               tolerance = 0.0005
+                               tolerance = 0.0001
                                )
     
     #-----------------------------------------------
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     length = sim_model.length
     width = sim_model.width
     thickness = sim_model.thickness
-    shape_xy = sim_model.shape_xy
+    shape_x = sim_model.shape_x
     E_m = sim_model.E_m
     nu = sim_model.nu
     tolerance = sim_model.tolerance
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     print 'length', length
     print 'width', width
     print 'thickness', thickness
-    print 'shape_xy', shape_xy
+    print 'shape_x', shape_x
     print 'E_m', E_m
     print 'nu', nu
     print 'tolerance', tolerance
@@ -274,29 +274,30 @@ if __name__ == '__main__':
      
             # settings:
             #
-            sim_model_name = sim_model.__name__
+            sim_model_name = sim_model.__class__.__name__
             ccs_unit_cell_key = sim_model.ccs_unit_cell_key
             calibration_test = sim_model.calibration_test
             length = sim_model.length
             thickness = sim_model.thickness
-            shape_xy = sim_model.shape_xy
+            shape_x = sim_model.shape_x
+            mid_shape_x = sim_model.mid_shape_x
+            shape_y = sim_model.shape_y
             shape_z = sim_model.shape_z
-            shape_R = sim_model.shape_R
             E_m = sim_model.E_m
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
             print 'phi_fn_class', phi_fn_class
             supprt_flag = str(sim_model.supprt_flag)
-            geo_st_flag = str(sim_model.geo_st_flag) 
+            elstmr_flag = str(sim_model.elstmr_flag) 
             n_mp = sim_model.n_mp 
             tstep = sim_model.tstep
             w_max = sim_model.w_max
 
             # param_key 
             #
-            param_key = sim_model_name + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxy%gz%gR%g_s%sg%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        %(phi_fn_class, length, thickness, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
+            param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sx%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
+                        %(phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
             print 'param_key = %s' %param_key
     
     #        # f-w-diagram_center
@@ -337,13 +338,13 @@ if __name__ == '__main__':
                 tests = [ex_path_V1, ex_path_V2, ex_path_V3, ex_path_V4]
                 for ex_path in tests:
                     ex_run = ExRun( ex_path )
-                    ex_run.ex_type._plot_force_center_deflection_interpolated( p )
+                    ex_run.ex_type._plot_force_machine_displacement_wo_elast_interpolated( p )
     
             if test_series == 'BT-6c':
                 ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
                                        'BT-6c-2cm-0-TU-V1_bs4.DAT')
                 ex_run = ExRun(ex_path)
-                ex_run.ex_type._plot_force_center_deflection( p )
+                ex_run.ex_type._plot_force_gauge_displacement( p )
     
             #----------------------------------------------------------------------
             # plot sim curve as time new roman within the predefined limits  
