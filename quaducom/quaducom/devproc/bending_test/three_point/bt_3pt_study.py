@@ -204,19 +204,12 @@ if __name__ == '__main__':
         import pylab as p
         p.figure(facecolor = 'white') 
 
-        # plot damage function taken from calibration
-        # 
-#        damage_function = sim_model.damage_function
-#        damage_function.plot(p, color = 'red', linewidth = 1)
-#        print 'sim_model.damage_function', sim_model.damage_function
-#        print 'self.ccs_unit_cell_ref.damage_function_list', [sim_model.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(len(sim_model.ccs_unit_cell_ref.damage_function_list))]
-        
         # plot mfn-line function stored in phi_fn
         # 
         phi_fn = sim_model.phi_fn
         phi_fn.mfn.plot(p, color = 'black', linewidth = 3 )
 
-        # plot phi_fn
+        # plot phi_fn (extended plot range)
         #
         xmax = sim_model.damage_function.xdata[-1]
         print 'xmax', xmax
