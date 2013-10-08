@@ -14,6 +14,7 @@ from numpy import \
      vstack, hstack, sqrt as arr_sqrt
 
 from scipy.linalg import eig, inv
+import numpy as np
 
 from ibvpy.mats.mats_eval import \
     IMATSEval
@@ -43,21 +44,21 @@ class MATS3DElastic(MATS3DEval):
     #---------------------------------------------------------------------------
 
     E = Float(1., #34e+3,
-                 label = "E",
-                 desc = "Young's Modulus",
-                 auto_set = False)
+                 label="E",
+                 desc="Young's Modulus",
+                 auto_set=False)
     nu = Float(0.2,
-                 label = 'nu',
-                 desc = "Poison's ratio",
-                 auto_set = False)
+                 label='nu',
+                 desc="Poison's ratio",
+                 auto_set=False)
 
-    D_el = Property(Array(float), depends_on = 'E, nu')
+    D_el = Property(Array(float), depends_on='E, nu')
     @cached_property
     def _get_D_el(self):
         return self.get_D_el(self.E, self.nu)
 
     def get_D_el(self, E, nu):
-        D_mtx = zeros((6, 6), dtype = 'float_')
+        D_mtx = zeros((6, 6), dtype='float_')
         print 'E', E
         print 'nu', nu
         D_mtx[0, 0] = E / (1 + nu) + E * nu / (1 + nu) / (1 - 2 * nu);
@@ -86,7 +87,7 @@ class MATS3DElastic(MATS3DEval):
     view_traits = View(VSplit(Group(Item('E'),
                                       Item('nu'),),
                                 ),
-                        resizable = True
+                        resizable=True
                         )
 
     #-----------------------------------------------------------------------------------------------
@@ -117,8 +118,18 @@ class MATS3DElastic(MATS3DEval):
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain
         '''
-        sigma = dot(self.D_el, eps_app_eng)
-        return  sigma, self.D_el
+        D_el = self.D_el
+        sigma = np.einsum('...ij,...j->...i', D_el, eps_app_eng)
+
+        if len(eps_app_eng.shape) >= len(self.D_el.shape):
+            D_el = self.D_el[np.newaxis, ...]
+
+        return  sigma, D_el
+#        
+#        print self.D_el
+#        print eps_app_eng
+#        sigma = dot(self.D_el, eps_app_eng)
+#        return  sigma, self.D_el
 
     #---------------------------------------------------------------------------------------------
     # Subsidiary methods realizing configurable features
@@ -150,12 +161,12 @@ class MATS3DElasticNL(MATS3DElastic):
     #---------------------------------------------------------------------------------
     _stress_strain_curve = Instance(MFnLineArray)
     def __stress_strain_curve_default(self):
-        return MFnLineArray(ydata = [ 0., self.E ],
-                            xdata = [ 0., 1.])
+        return MFnLineArray(ydata=[ 0., self.E ],
+                            xdata=[ 0., 1.])
     @on_trait_change('E')
     def reset_stress_strain_curve(self):
-        self._stress_strain_curve = MFnLineArray(ydata = [ 0., self.E ],
-                                                 xdata = [ 0., 1.])
+        self._stress_strain_curve = MFnLineArray(ydata=[ 0., self.E ],
+                                                 xdata=[ 0., 1.])
 
     stress_strain_curve = Property
     def _get_stress_strain_curve(self):

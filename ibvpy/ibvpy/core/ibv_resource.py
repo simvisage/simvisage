@@ -4,14 +4,14 @@ from etsproxy.traits.api import \
 
 class IBVResource(HasTraits):
     '''Base class for components of the boundary value problem.
-    
-    This class defines the generic behavior of the IBVResources, 
+
+    This class defines the generic behavior of the IBVResources,
     namely, IBVModel. TLoop, TStepper, RTraceMngr and SDomain.
 
-    It makes the component classes available to the services 
+    It makes the component classes available to the services
     within the application framework IBVPyApp.
     '''
-    
+
     service_class = Str('')
     service_attrib = Str('')
 
