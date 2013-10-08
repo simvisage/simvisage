@@ -129,7 +129,9 @@ def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
     
-    
+#------------------------------------------------
+# script for parameter study  
+#------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -191,14 +193,14 @@ if __name__ == '__main__':
 #                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s50',
 #                            calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
                             
-                            n_mp = 6,
+                            n_mp = 30,
                             
                             # age of the slab at the time of testing
                             age = 23,
                             # NOTE: that the same phi-function is used independent of age. This assumes a 
                             # an afine/proportional damage evolution for different ages. 
                             #
-                            elstmr_flag = False,
+                            elstmr_flag = True,
                             supprt_flag = True,
                             geo_st_flag = True,
                             #
@@ -214,12 +216,12 @@ if __name__ == '__main__':
 #                            shape_R = 4,
 #                            shape_supprt_xy = 4,
                             #
-#                            w_max = 0.10, -0.030  @todo: make this an argument of sim_st()
-                            tstep = 0.02, 
+                            w_max = -0.030, 
+                            tstep = 0.1, 
 #                            tstep = 1.00, 
                             tmax = 1.00, 
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
-                            tolerance = 0.0002,##[MN]0.0001#1e-6#1e-8#0.0005
+                            tolerance = 0.001,##[MN]0.0001#1e-6#1e-8#0.0005
                             #
                             # 'factor_eps_fail' = 1.0 (default)
                             phi_fn_class = PhiFnGeneralExtended
@@ -442,7 +444,7 @@ if __name__ == '__main__':
             #
     #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
             png_file_path = join(png_path, param_key + '.png')
-            p.title( param_key )
+            p.title( param_key, fontsize=8 )
             p.savefig( png_file_path, dpi = 600. )
             print 'png-file saved to file: %s' %png_file_path
             p.show()
