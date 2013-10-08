@@ -263,23 +263,13 @@ class SimST(IBVModel):
                          xyoffset = 0.,
                          zoffset = - self.thickness_supprt)
 
-    #-----------------
-    # phi function
-    #-----------------
-
-#    phi_fn = Instance(IPhiFn, input = True)
-#    def _phi_fn_default(self):
-#        return PhiFnStrainHardening()
-
-#    phi_fn = Instance(PhiFnGeneral, input = True)
-#    def _phi_fn_default(self):
-#        return PhiFnGeneral()
-
     #----------------------------------------------------------------------------------
     # mats
     #----------------------------------------------------------------------------------
 
-    # age of the slab at the time of testing
+    # age of the specimen at the time of testing
+    # determines the E-modulus and nu based on the time dependent function stored 
+    # in 'CCSUniteCell' if params are not explicitly set
     #
     age = Int(28, auto_set = False, enter_set = True, input = True)
 
@@ -290,15 +280,13 @@ class SimST(IBVModel):
     #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
     #         used in the simulation of the slab test and within the calibration procedure. 
 
-    # composite E-modulus of steel support
-    # 210 GPa = 210000 [MPa] 
-    E_s = Float(210000., auto_set = False, enter_set = True, input = True)
-
     # time stepping params 
     #  
     tstep = Float(0.05, auto_set = False, enter_set = True, input = True)
     tmax = Float(1.0, auto_set = False, enter_set = True, input = True)
     tolerance = Float(0.001, auto_set = False, enter_set = True, input = True)
+
+    n_mp = Int(30., auto_set = False, enter_set = True, input = True)
 
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
@@ -310,11 +298,12 @@ class SimST(IBVModel):
 #        import pylab as p
 #        self.phi_fn.mfn.mpl_plot(p)
 #        p.show()
+        print 'self.n_mp', self.n_mp
         mats_eval = MATS2D5MicroplaneDamage(
 #                                E = self.E_c,
                                 E = self.E_m, # relevant for compressive behavior/used for calibration of phi_fn
                                 nu = self.nu,
-                                n_mp = 30,
+                                n_mp = self.n_mp,
                                 symmetrization = 'sum-type',
                                 model_version = 'compliance',
                                 phi_fn = self.phi_fn)
@@ -335,12 +324,16 @@ class SimST(IBVModel):
                              nu = 0.2)
 #                             nu = 0.4)
 
+    # E-modulus and nu of steel support
+    E_s = Float(210000., auto_set = False, enter_set = True, input = True)
+    nu_s = Float(0.20, auto_set = False, enter_set = True, input = True)
+    
     supprt_mats = Property(Instance(MATS3DElastic),
                                     depends_on = 'input_change')
     @cached_property
     def _get_supprt_mats(self):
         return MATS3DElastic(E = self.E_s,
-                             nu = 0.2)
+                             nu = self.nu_s)
 
     #-----------------
     # fets:
@@ -348,7 +341,7 @@ class SimST(IBVModel):
 
     # use quadratic serendipity elements
     # NOTE: 2D5 elements behave linear elastic in out of plane direction!
-
+    #
     specmn_fets = Property(Instance(FETSEval),
                            depends_on = 'input_change')
     @cached_property
@@ -365,29 +358,30 @@ class SimST(IBVModel):
         fets.vtk_r *= self.vtk_r
         return fets
 
-    if supprt_flag:
-        supprt_fets = Property(Instance(FETSEval),
-                               depends_on = 'input_change')
-        @cached_property
-        def _get_supprt_fets(self):
-            fets = FETS2D58H20U(mats_eval = self.supprt_mats)
-            fets.vtk_r *= self.vtk_r
-            return fets
+    supprt_fets = Property(Instance(FETSEval),
+                           depends_on = 'input_change')
+    @cached_property
+    def _get_supprt_fets(self):
+        # linear-elastic behavior quadratic serendipity elements
+        fets = FETS3D8H20U(mats_eval = self.supprt_mats)
+        fets.vtk_r *= self.vtk_r
+        return fets
+
+    #-----------------
+    # fe_grid:
+    #-----------------
+
+    # specify element shrink factor in plot of fe-model
+    #
+    vtk_r = Float(0.95)
 
     fe_domain = Property(depends_on = '+ps_levels, +input')
     @cached_property
     def _get_fe_domain(self):
         return FEDomain()
 
-    #-----------------
-    # fe_grid:
-    #-----------------
-
-    # specify element shrink facktor in plot of fe-model
-    #
-    vtk_r = Float(0.95)
-
     specmn_fe_level = Property(depends_on = '+ps_levels, +input')
+    @cached_property
     def _get_specmn_fe_level(self):
         return FERefinementGrid(name = 'specimen patch',
                                 fets_eval = self.specmn_fets,
@@ -417,39 +411,41 @@ class SimST(IBVModel):
                              fets_eval = self.specmn_fets)
         return fe_grid
 
-    if elstmr_flag:
-        elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
-        def _get_elstmr_fe_level(self):
-            return  FERefinementGrid(name = 'elastomer patch',
-                                     fets_eval = self.elstmr_fets,
-                                     domain = self.fe_domain)
-    
-        elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-        @cached_property
-        def _get_elstmr_fe_grid(self):
-            # if 'geo_st' is used for modeling of round load introduction area
-            #
-            if self.geo_st_flag:
-                fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
-                                 coord_max = (1.0, 1.0, 1.0),
-                                 level = self.elstmr_fe_level,
-                                 shape = (self.shape_R, self.shape_R, 1), 
-                                 geo_transform = self.geo_elstmr,
-                                 fets_eval = self.elstmr_fets)
-            # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
-            #
-            else:
-                elstmr_min = self.length / 2. - self.elem_length
-                elstmr_max = self.length / 2. 
-                fe_grid = FEGrid(coord_min = (elstmr_min, elstmr_min, self.thickness),
-                                 coord_max = (elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
-                                 level = self.elstmr_fe_level,
-                                 shape = (self.shape_R, self.shape_R, 1), 
-                                 fets_eval = self.elstmr_fets)
-            return fe_grid
+#    if elstmr_flag:
+    elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_elstmr_fe_level(self):
+        return  FERefinementGrid(name = 'elastomer patch',
+                                 fets_eval = self.elstmr_fets,
+                                 domain = self.fe_domain)
+
+    elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_elstmr_fe_grid(self):
+        # if 'geo_st' is used for modeling of round load introduction area
+        #
+        if self.geo_st_flag:
+            fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
+                             coord_max = (1.0, 1.0, 1.0),
+                             level = self.elstmr_fe_level,
+                             shape = (self.shape_R, self.shape_R, 1), 
+                             geo_transform = self.geo_elstmr,
+                             fets_eval = self.elstmr_fets)
+        # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
+        #
+        else:
+            elstmr_min = self.length / 2. - self.elem_length
+            elstmr_max = self.length / 2. 
+            fe_grid = FEGrid(coord_min = (elstmr_min, elstmr_min, self.thickness),
+                             coord_max = (elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
+                             level = self.elstmr_fe_level,
+                             shape = (self.shape_R, self.shape_R, 1), 
+                             fets_eval = self.elstmr_fets)
+        return fe_grid
 
     if supprt_flag:
         supprt_fe_level = Property(depends_on = '+ps_levels, +input')
+        @cached_property
         def _get_supprt_fe_level(self):
             return  FERefinementGrid(name = 'elastomer patch',
                                      fets_eval = self.supprt_fets,
@@ -471,6 +467,8 @@ class SimST(IBVModel):
     #--------------------------------------------------------------
     # tloop
     #--------------------------------------------------------------
+
+    w_max = Float(-0.030, input = True) # [m]
 
     tloop = Property(depends_on = 'input_change')
     @cached_property
@@ -564,7 +562,7 @@ class SimST(IBVModel):
 
         # center displacement
         #
-        w_max = -0.035 # [m]
+        w_max = self.w_max
 #        w_max = Float( -0.020, auto_set = False, enter_set = True, input = True) # [m]
 
         # if elastomer is modeled
@@ -767,9 +765,9 @@ class SimST(IBVModel):
 #                                        var = 'omega_mtx', idx = 0, warp = True,
 #                                        record_on = 'update'),
 
-#                             RTraceDomainListField(name = 'max_omega_i', warp = True,
-#                                        var = 'max_omega_i', idx = 0,
-#                                        record_on = 'update'),
+                             RTraceDomainListField(name = 'max_omega_i', warp = True,
+                                        var = 'max_omega_i', idx = 0,
+                                        record_on = 'update'),
 
 #                             RTraceDomainListField(name = 'IStress' ,
 #                                            position = 'int_pnts',
@@ -786,7 +784,7 @@ class SimST(IBVModel):
         #
         tloop = TLoop(tstepper = ts,
 #                      KMAX = 300,
-                      KMAX = 50,
+                      KMAX = 100,
                       RESETMAX = 0,
                       tolerance = self.tolerance,
                       tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
@@ -843,7 +841,7 @@ class SimSTDB(SimST):
                               auto_set = False, enter_set = True)
 
     ccs_unit_cell_ref = Property(Instance(SimDBClass),
-                                  depends_on = 'ccs_unit_cell_key')
+                                 depends_on = 'ccs_unit_cell_key')
     @cached_property
     def _get_ccs_unit_cell_ref(self):
         return CCSUnitCell.db[ self.ccs_unit_cell_key ]
@@ -874,12 +872,24 @@ class SimSTDB(SimST):
     # phi function General:
     #-----------------
     #
+    # definition of 'phi_fn' in order to run scripting
+    # @todo: how can the implementation be changed in order to allow for parameter passing, e.g. 'factor_eps_fail', etc.
+    #
     phi_fn_class = Enum(PhiFnGeneral,[PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp], input = True,)
     phi_fn = Property( Instance(phi_fn_class), depends_on = 'phi_fn_class, input_change, +ps_levels' )
     @cached_property
     def _get_phi_fn(self):
         return self.phi_fn_class( mfn = self.damage_function )
+
+    #@todo: is mapped traist a better alternative?
+#    phi_fn_class = Trait('PhiFnGeneral', { 'PhiFnGeneral' : PhiFnGeneral( mfn = self.damage_function ), 
+#                                           'PhiFnGeneralExtended : PhiFnGeneralExtended( mfn = self.damage_function, factor_eps_fail = self.factor_eps_fail ), 
+#                                           'PhiFnGeneralExtendedExp : PhiFnGeneralExtendedExp( mfn = self.damage_function, Efp_frac = self.Efp_frac ) }, 
+#                                           input = True,)
     
+    #-----------------
+    # phi function General:
+    #-----------------
 #    phi_fn = Property(Instance(PhiFnGeneral),
 #                       depends_on = 'input_change,+ps_levels')
 #    @cached_property
@@ -897,10 +907,10 @@ class SimSTDB(SimST):
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
 #        
-##    #-----------------
-##    # phi function General Extended Exp:
-##    #-----------------
-##    #
+#    #-----------------
+#    # phi function General Extended Exp:
+#    #-----------------
+#    #
 #    phi_fn_exp = Property(Instance(PhiFnGeneralExtendedExp),
 #                       depends_on = 'input_change,+ps_levels')
 #    @cached_property
@@ -909,7 +919,7 @@ class SimSTDB(SimST):
 #                                       Efp_frac = self.Efp_frac)
 
     #----------------------------------------------------------------------------------
-    # mats_eval
+    # material properties stored in 'ccs'
     #----------------------------------------------------------------------------------
 
     # concrete matrix E-modulus (taken from 'ccs_unit_cell')
@@ -1020,8 +1030,8 @@ if __name__ == '__main__':
     #------------------------------
     # do
     #------------------------------
-    do = 'show_phi_fn'
-#    do = 'ui'
+#    do = 'show_phi_fn'
+    do = 'ui'
 #    do = 'pstudy'
 #    do = 'validation'
 #    do = 'show_last_results'
@@ -1032,7 +1042,7 @@ if __name__ == '__main__':
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
-        sim_model.tloop.eval()
+#        sim_model.tloop.eval()
         app.main()
 
     #------------------------------

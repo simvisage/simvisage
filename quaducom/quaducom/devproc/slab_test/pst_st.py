@@ -129,7 +129,9 @@ def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
     
-    
+#------------------------------------------------
+# script for parameter study  
+#------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -140,7 +142,6 @@ if __name__ == '__main__':
 #    do = 'ui'
     do = 'validation'
 #    do = 'show_last_results'
-#    do = 'pstudy'
     
 #    test_series = 'ST-10g'
     test_series = 'ST-12c'
@@ -188,38 +189,41 @@ if __name__ == '__main__':
     
                             # calibration for: age = 23d; E_m = 27975 MPa; nu = 0.20; nsteps = 100   
                             #
-                            #calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
 #                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s50',
-                            calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+#                            calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
+                            
+                            n_mp = 30,
                             
                             # age of the slab at the time of testing
                             age = 23,
                             # NOTE: that the same phi-function is used independent of age. This assumes a 
                             # an afine/proportional damage evolution for different ages. 
                             #
-                            elstmr_flag = False,
+                            elstmr_flag = True,
                             supprt_flag = True,
                             geo_st_flag = True,
                             #
                             # coarse mesh:
-#                            shape_z = 2,
-#                            shape_xy = 14,
-#                            shape_R = 2,
-#                            shape_supprt_xy = 2,
+                            shape_z = 2,
+                            shape_xy = 14,
+                            shape_R = 2,
+                            shape_supprt_xy = 2,
                             #
                             # fine mesh:
-                            shape_z = 3,
-                            shape_xy = 26,
-                            shape_R = 4,
-                            shape_supprt_xy = 4,
+#                            shape_z = 2,
+#                            shape_xy = 26,
+#                            shape_R = 4,
+#                            shape_supprt_xy = 4,
                             #
-#                            w_max = 0.10,  @todo: make this an argument of sim_st()
-                            tstep = 0.01, 
+                            w_max = -0.030, 
+                            tstep = 0.1, 
 #                            tstep = 1.00, 
                             tmax = 1.00, 
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
-                            tolerance = 0.0001,#0.0001#1e-6#1e-8#0.0005
+                            tolerance = 0.001,##[MN]0.0001#1e-6#1e-8#0.0005
                             #
+                            # 'factor_eps_fail' = 1.0 (default)
                             phi_fn_class = PhiFnGeneralExtended
                             )
 
@@ -260,6 +264,7 @@ if __name__ == '__main__':
     E_m = sim_model.E_m
     nu = sim_model.nu
     tolerance = sim_model.tolerance
+    n_mp = sim_model.n_mp
 
     print '\n' 
     print '### calculation settings: ###'
@@ -271,6 +276,7 @@ if __name__ == '__main__':
     print 'E_m', E_m
     print 'nu', nu
     print 'tolerance', tolerance
+    print 'n_mp', n_mp
     print '\n' 
 
 #--------------------------------------------------------------
@@ -278,30 +284,28 @@ if __name__ == '__main__':
 #--------------------------------------------------------------
      
     if do == 'show_phi_fn':
+        import pylab as p
+        p.figure(facecolor = 'white') 
+
         phi_fn = sim_model.phi_fn
 #        phi_fn_ext = sim_model.phi_fn_ext
 #        phi_fn_exp = sim_model.phi_fn_exp
 
-        damage_function = sim_model.damage_function
-        print 'sim_model.damage_function', sim_model.damage_function
-        print 'self.ccs_unit_cell_ref.damage_function_list', [sim_model.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(len(sim_model.ccs_unit_cell_ref.damage_function_list))]
-        import pylab as p
-        p.figure(facecolor = 'white') 
+#        damage_function = sim_model.damage_function
+#        damage_function.plot(p, color = 'red', linewidth = 1)
+#        print 'sim_model.damage_function', sim_model.damage_function
+#        print 'self.ccs_unit_cell_ref.damage_function_list', [sim_model.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(len(sim_model.ccs_unit_cell_ref.damage_function_list))]
         
-        phi_fn.mfn.plot(p, color = 'black', linewidth = 4 )
-#        phi_fn_exp.mfn.plot(p, color = 'green', linewidth = 3)
+        phi_fn.mfn.plot(p, color = 'black', linewidth = 3 )
 #        phi_fn_ext.mfn.plot(p, color = 'blue', linewidth = 2)
-
-        damage_function.plot(p, color = 'red', linewidth = 1)
-#        phi_fn_exp.refresh_plot()
-#        phi_fn_exp.mfn.plot(p, color = 'red')
+#        phi_fn_exp.mfn.plot(p, color = 'green', linewidth = 3)
 
         xmax = sim_model.damage_function.xdata[-1]
         print 'xmax', xmax
-        x = linspace(0, 2*xmax, 4000)
+        x = linspace(0, 3*xmax, 1000)
         phi_fn = frompyfunc(phi_fn, 1, 1)
         y = phi_fn(x)
-        p.plot(x,y)
+        p.plot(x,y, color = 'grey', linewidth = 2)
 
         p.show()
 
@@ -318,8 +322,8 @@ if __name__ == '__main__':
     # validation
     #------------------------------
     if do == 'validation':
-#        from ibvpy.plugins.ibvpy_app import IBVPyApp
-#        app = IBVPyApp(ibv_resource = sim_model)
+        from ibvpy.plugins.ibvpy_app import IBVPyApp
+        app = IBVPyApp(ibv_resource = sim_model)
         
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
@@ -331,17 +335,23 @@ if __name__ == '__main__':
             os.mkdir( pickle_path )
             os.mkdir( png_path )
 
+        # pstudy: n_mp
+        #
+        st_study_list = [ 30 ]
+        
         # pstudy: calibration test
         #
-        st_study_list = [ 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100', 'TT-12c-6cm-TU-SH1F-V1' ]
+#        st_study_list = [ 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100' , 'TT-12c-6cm-TU-SH1F-V1' ]
 
         # pstudy: phi_fn
         #
 #        st_study_list = [ PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp ] 
-#        st_study_list = [ PhiFnGeneralExtended ] 
+
+        
         for st_param in st_study_list:
             
-            sim_model.calibration_test = st_param
+            sim_model.n_mp = st_param
+#            sim_model.calibration_test = st_param
 #            sim_model.phi_fn_class = st_param
             
             p.figure(facecolor = 'white') # white background for diagram
@@ -367,11 +377,14 @@ if __name__ == '__main__':
             print 'phi_fn_class', phi_fn_class
             supprt_flag = str(sim_model.supprt_flag)
             geo_st_flag = str(sim_model.geo_st_flag) 
+            n_mp = sim_model.n_mp 
+            tstep = sim_model.tstep
+            w_max = sim_model.w_max
 
             # param_key 
             #
-            param_key = ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxy%gz%gR%g_s%sg%s_Em%g_nu%g_tol%g' \
-                        %(phi_fn_class, length, thickness, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E_m, nu, tolerance ) 
+            param_key = ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxy%gz%gR%g_s%sg%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
+                        %(phi_fn_class, length, thickness, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
             print 'param_key = %s' %param_key
     
     #        # f-w-diagram_center
@@ -431,12 +444,12 @@ if __name__ == '__main__':
             #
     #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
             png_file_path = join(png_path, param_key + '.png')
-            p.title( param_key )
+            p.title( param_key, fontsize=8 )
             p.savefig( png_file_path, dpi = 600. )
             print 'png-file saved to file: %s' %png_file_path
-#            p.show()
+            p.show()
 
-#        app.main()
+        app.main()
 
 
     #------------------------------
