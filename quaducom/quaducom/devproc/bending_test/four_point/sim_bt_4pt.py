@@ -38,8 +38,7 @@ from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
     MATS3DElastic
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
-    IPhiFn, PhiFnGeneralExtended, \
-    PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear
+    IPhiFn, PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp
 
 from mathkit.geo.geo_ndgrid import \
     GeoNDGrid
@@ -85,8 +84,8 @@ from pickle import dump, load
 from quaducom.devproc.show_results import format_plot
 
 
-class SimFourPointBending(IBVModel):
-    '''Simulation: Four point bending test.
+class SimBT4PT(IBVModel):
+    '''Simulation: four point bending test.
     '''
 
     input_change = Event
@@ -100,41 +99,47 @@ class SimFourPointBending(IBVModel):
     # discretization:
     #-----------------
 
-    # specify weather the elastomer is to be modelled or if the load is
+    # specify weather the elastomer is to be modeled or if the load is
     # introduced as line load
     #
     elstmr_flag = Bool(True)
 
     # discretization in x-direction (longitudinal):
+    #
     outer_zone_shape_x = Int(6, input = True,
-                      ps_levels = (4, 12, 3))
+                             ps_levels = (4, 12, 3))
 
     # discretization in x-direction (longitudinal):
+    #
     load_zone_shape_x = Int(2, input = True,
-                      ps_levels = (1, 4, 1))
+                            ps_levels = (1, 4, 1))
 
     # middle part discretization in x-direction (longitudinal):
+    #
     mid_zone_shape_x = Int(3, input = True,
-                      ps_levels = (1, 4, 1))
-
+                           ps_levels = (1, 4, 1))
+    
     # discretization in y-direction (width):
+    #
     shape_y = Int(2, input = True,
-                      ps_levels = (1, 4, 2))
+                     ps_levels = (1, 4, 2))
 
     # discretization in z-direction:
+    #
     shape_z = Int(2, input = True,
-                      ps_levels = (1, 3, 3))
+                     ps_levels = (1, 3, 3))
 
     #-----------------
     # geometry:
     #-----------------
     #
     # edge length of the bending specimen (beam) (entire length without symmetry)
-    length = Float(1.5, input = True)
+    #
+    length = Float(1.50, input = True)
+
     elstmr_length = Float(0.05, input = True)
     mid_zone_length = Float(0.50, input = True)
-    elstmr_thickness = Float(0.005, input = True,
-                                enter_set = True, auto_set = False)
+    elstmr_thickness = Float(0.005, input = True)
     width = Float(0.20, input = True)
     thickness = Float(0.06, input = True)
 
@@ -166,14 +171,6 @@ class SimFourPointBending(IBVModel):
     def _get_sym_width(self):
         return self.width / 2.
 
-    #-----------------
-    # phi function extended:
-    #-----------------
-    #
-    phi_fn = Instance(IPhiFn, input = True)
-    def _phi_fn_default(self):
-        return PhiFnStrainHardening()
-
     #----------------------------------------------------------------------------------
     # mats_eval
     #----------------------------------------------------------------------------------
@@ -184,15 +181,13 @@ class SimFourPointBending(IBVModel):
     #
     age = Int(28, input = True)
 
-    # composite E-modulus 
-    #
-    E_c = Float(28700., input = True)
-    print 'E_c set to:', E_c 
+    # time stepping params 
+    #  
+    tstep = Float(0.05, auto_set = False, enter_set = True, input = True)
+    tmax = Float(1.0, auto_set = False, enter_set = True, input = True)
+    tolerance = Float(0.001, auto_set = False, enter_set = True, input = True)
 
-    # Poisson's ratio 
-    #
-    nu = Float(0.20, input = True)
-    print 'nu set to:', nu 
+    n_mp = Int(30, input = True)
 
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
@@ -201,30 +196,23 @@ class SimFourPointBending(IBVModel):
                           depends_on = 'input_change')
     @cached_property
     def _get_specmn_mats(self):
-    # used for basic testing:
-#        return MATS3DElastic( E = self.E_c,
-#                              nu = self.nu )
         return MATS2D5MicroplaneDamage(
 #                                E = self.E_c,
                                 E = self.E_m,
                                 nu = self.nu,
                                 # corresponding to settings in "MatsCalib"
-                                n_mp = 30,
+                                n_mp = self.n_mp,
                                 symmetrization = 'sum-type',
                                 model_version = 'compliance',
                                 phi_fn = self.phi_fn)
 
     if elstmr_flag:
         elstmr_mats = Property(Instance(MATS3DElastic),
-                                       depends_on = 'input_change')
+                               depends_on = 'input_change')
         @cached_property
         def _get_elstmr_mats(self):
-            max_eps = self.elstmr_thickness
-            max_f = 0.020 # MN
-            max_eps = 1.0 # [-]
-            area = self.elstmr_length * self.sym_width
-            sig = max_f / area
-            E_elast = sig / max_eps
+            # specify a small elastomer stiffness (approximation)
+            E_elast = self.E_c / 10.
             print 'effective elastomer E_modulus', E_elast
             return MATS3DElastic(E = E_elast,
                                  nu = 0.4)
@@ -232,14 +220,17 @@ class SimFourPointBending(IBVModel):
     #-----------------
     # fets:
     #-----------------
+    
+    # specify element shrink factor in plot of fe-model
+    #
+    vtk_r = Float(0.95)
 
     # use quadratic serendipity elements
     #
     specmn_fets = Property(Instance(FETSEval),
-                             depends_on = 'input_change')
+                           depends_on = 'input_change')
     @cached_property
     def _get_specmn_fets(self):
-#        return FETS2D58H(mats_eval = self.specmn_mats)
         fets = FETS2D58H20U(mats_eval = self.specmn_mats)
         fets.vtk_r *= self.vtk_r
         return fets
@@ -247,26 +238,21 @@ class SimFourPointBending(IBVModel):
     # use quadratic serendipity elements
     #
     elstmr_fets = Property(Instance(FETSEval),
-                             depends_on = 'input_change')
+                           depends_on = 'input_change')
     @cached_property
     def _get_elstmr_fets(self):
-#        return FETS2D58H(mats_eval = self.elstmr_mats)
         fets = FETS2D58H20U(mats_eval = self.elstmr_mats)
         fets.vtk_r *= self.vtk_r
         return fets
     
-# used for basic testing:
-#        return FETS3D8H20U( mats_eval = self.mats_eval )
-#        return FETS3D8H( mats_eval = self.mats_eval )
-
     fe_domain = Property(depends_on = '+ps_levels, +input')
     @cached_property
     def _get_fe_domain(self):
         return FEDomain()
 
-    # specify element shrink facktor in plot of fe-model
-    #
-    vtk_r = Float(0.95)
+    #===========================================================================
+    # fe level 
+    #===========================================================================
 
     outer_zone_specmn_fe_level = Property(depends_on = '+ps_levels, +input')
     def _get_outer_zone_specmn_fe_level(self):
@@ -326,20 +312,20 @@ class SimFourPointBending(IBVModel):
                          fets_eval = self.specmn_fets)
         return fe_grid
 
-    if elstmr_flag:
-        elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-        @cached_property
-        def _get_elstmr_fe_grid(self):
-            fe_grid = FEGrid(coord_min = (self.sym_mid_zone_specmn_length - self.sym_elstmr_length,
-                                          0., 
-                                          self.thickness),
-                             coord_max = (self.sym_mid_zone_specmn_length + self.sym_elstmr_length,
-                                          self.sym_width, 
-                                          self.thickness + self.elstmr_thickness),
-                             level = self.elstmr_fe_level,
-                             shape = (self.load_zone_shape_x, self.shape_y, 1),
-                             fets_eval = self.elstmr_fets)
-            return fe_grid
+#    if elstmr_flag:
+    elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_elstmr_fe_grid(self):
+        fe_grid = FEGrid(coord_min = (self.sym_mid_zone_specmn_length - self.sym_elstmr_length,
+                                      0., 
+                                      self.thickness),
+                         coord_max = (self.sym_mid_zone_specmn_length + self.sym_elstmr_length,
+                                      self.sym_width, 
+                                      self.thickness + self.elstmr_thickness),
+                         level = self.elstmr_fe_level,
+                         shape = (self.load_zone_shape_x, self.shape_y, 1),
+                         fets_eval = self.elstmr_fets)
+        return fe_grid
 
     outer_zone_specmn_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
     @cached_property
@@ -359,12 +345,16 @@ class SimFourPointBending(IBVModel):
     #===========================================================================
     # Boundary conditions
     #===========================================================================
+
+    w_max = Float(-0.030, input = True) # [m]
+
     bc_list = Property(depends_on = '+ps_levels, +input')
     @cached_property
     def _get_bc_list(self):
         mid_zone_specimen = self.mid_zone_specmn_fe_grid
         load_zone_specimen = self.load_zone_specmn_fe_grid
         outer_zone_specimen = self.outer_zone_specmn_fe_grid
+
         if self.elstmr_flag:
             elastomer = self.elstmr_fe_grid
 
@@ -408,28 +398,21 @@ class SimFourPointBending(IBVModel):
                                 link_coeffs = [1.])
 
         if self.elstmr_flag:
-            link_elstmr_loadzn_xz = BCDofGroup(var = 'u', value = 0., dims = [0,2],
-                                get_dof_method = elastomer.get_back_dofs,
-                                get_link_dof_method = load_zone_specimen.get_front_dofs,
-                                link_coeffs = [1.])
-            link_elstmr_loadzn_x = BCDofGroup(var = 'u', value = 0., dims = [0],
-                                    get_dof_method = elastomer.get_back_dofs,
-                                    get_link_dof_method = load_zone_specimen.get_front_dofs,
-                                    link_coeffs = [1.])
-            link_elstmr_loadzn_y = BCDofGroup(var = 'u', value = 0., dims = [1],
-                                    get_dof_method = elastomer.get_back_dofs,
-                                    get_link_dof_method = load_zone_specimen.get_front_dofs,
-                                    link_coeffs = [1.])
             link_elstmr_loadzn_z = BCDofGroup(var = 'u', value = 0., dims = [2],
                                     get_dof_method = elastomer.get_back_dofs,
                                     get_link_dof_method = load_zone_specimen.get_front_dofs,
                                     link_coeffs = [1.])
+            
+            # hold elastomer in a single point in order to avoid kinematic movement yielding singular K_mtx 
+            #
+            bc_elstmr_fix = BCSlice(var = 'u', value = 0., dims = [0],
+                                 slice = elastomer[0, 0, 0, 0, 0, 0])
 
         #--------------------------------------------------------------
         # loading
         #--------------------------------------------------------------
         # w_max = center displacement:
-        w_max = -0.03 # [m]
+        w_max = self.w_max
 #        f_max = -0.010 / 0.10 # [MN/m]
 
         # NOTE: the entire symmetry axis (yz)-plane is moved downwards 
@@ -438,16 +421,22 @@ class SimFourPointBending(IBVModel):
 #        bc_center_w = BCSlice( var = 'u', value = w_max, dims = [2], slice = domain[-1, :, :, -1, :, :] )
 #        bc_center_f = BCSlice( var = 'f', value = 1.0, dims = [2], slice = domain[-1, :, :, -1, :, :] )
 
-        bc_line_w = BCSlice(var = 'u', value = w_max, dims = [2],
+        if self.elstmr_flag:
+            # apply displacement at all top nodes of the elastomer (surface load)
+            #
+            bc_w = BCSlice(var = 'u', value = w_max, dims = [2],
+                           slice = elastomer[:, :, -1, :, :, -1])
+        else:
+            bc_w = BCSlice(var = 'u', value = w_max, dims = [2],
                             # slice is only valid for 'load_zone_shape_x' = 2
                             # center line of the load zone
                             slice = load_zone_specimen[0, :, -1, -1, :, -1])
 
-        f_max = 0.010 / 4. / self.sym_width 
-        bc_line_f = BCSlice(var = 'f', value = f_max, dims = [2],
-                            # slice is only valid for 'load_zone_shape_x' = 2
-                            # center line of the load zone
-                            slice = load_zone_specimen[0, :, -1, -1, :, -1])
+#        f_max = 0.010 / 4. / self.sym_width 
+#        bc_line_f = BCSlice(var = 'f', value = f_max, dims = [2],
+#                            # slice is only valid for 'load_zone_shape_x' = 2
+#                            # center line of the load zone
+#                            slice = load_zone_specimen[0, :, -1, -1, :, -1])
 
 #        bc_center_f = BCSlice(var = 'f', value = f_max, dims = [2],
 #                              slice = elastomer[:, :, -1, :, :, -1])
@@ -456,27 +445,23 @@ class SimFourPointBending(IBVModel):
                    bc_load_zone_symplane_xz,
                    bc_mid_zone_symplane_xz,
                    bc_mid_zone_symplane_yz,
-
+                   #
                    link_midzn_loadzn,
                    link_loadzn_outerzn,
-                
+                   #
                    bc_support_0y0,
-
-#                 bc_center_f,
-#                 bc_line_f,
-                   
+                   #
+                   bc_w,
                    ]
 
         if self.elstmr_flag:
-            # apply displacement at all top nodes of the elastomer (surface load)
-            #
-            bc_center_w = BCSlice(var = 'u', value = w_max, dims = [2],
-                                  slice = elastomer[:, :, -1, :, :, -1])
-            bc_list += [ bc_el_symplane_xz, link_elstmr_loadzn_xz, bc_center_w ]
-        else:
-            bc_list += [ bc_line_w ]
+            bc_list += [ bc_el_symplane_xz, link_elstmr_loadzn_z, bc_elstmr_fix ]
             
         return bc_list
+
+    #----------------------
+    # tloop
+    #----------------------
 
     tloop = Property(depends_on = 'input_change')
     @cached_property
@@ -495,29 +480,29 @@ class SimFourPointBending(IBVModel):
             elstmr_top_dofs_z = np.unique( elstmr_top_dofs_z )
             print 'elstmr_top_dofs_z (unique)', elstmr_top_dofs_z
     
-            # ELSTRMR BOTTOM SURFACE
-            # dofs at elastomer bottom surface (used to integrate the force)
-            #
-            elastomer = self.elstmr_fe_grid
-            elstmr_bottom_dofs_z = elastomer[:, :, 0, :, :, 0].dofs[:, :, 2].flatten()
-            elstmr_bottom_dofs_z = np.unique( elstmr_bottom_dofs_z )
-            print 'elstmr_bottom_dofs_z (unique)', elstmr_bottom_dofs_z
+#            # ELSTRMR BOTTOM SURFACE
+#            # dofs at elastomer bottom surface (used to integrate the force)
+#            #
+#            elastomer = self.elstmr_fe_grid
+#            elstmr_bottom_dofs_z = elastomer[:, :, 0, :, :, 0].dofs[:, :, 2].flatten()
+#            elstmr_bottom_dofs_z = np.unique( elstmr_bottom_dofs_z )
+#            print 'elstmr_bottom_dofs_z (unique)', elstmr_bottom_dofs_z
 
-        # LOAD TOP SURFACE
-        # dofs at specmn load zone top surface (used to integrate the force)
-        #
-        load_zone_spec = self.load_zone_specmn_fe_grid
-        load_zone_spec_top_dofs_z = load_zone_spec[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-        load_zone_spec_top_dofs_z = np.unique( load_zone_spec_top_dofs_z )
-        print 'load_zone_spec_top_dofs_z (unique)', load_zone_spec_top_dofs_z
+#        # LOAD TOP SURFACE
+#        # dofs at specmn load zone top surface (used to integrate the force)
+#        #
+#        load_zone_spec = self.load_zone_specmn_fe_grid
+#        load_zone_spec_top_dofs_z = load_zone_spec[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
+#        load_zone_spec_top_dofs_z = np.unique( load_zone_spec_top_dofs_z )
+#        print 'load_zone_spec_top_dofs_z (unique)', load_zone_spec_top_dofs_z
 
-        # LOAD TOP LINE
-        # dofs at center line of the specmn load zone (used to integrate the force)
-        # note slice index in x-direction is only valid for load_zone_shape_x = 2 !
-        #
-        load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
-        load_zone_spec_topline_dofs_z = np.unique( load_zone_spec_topline_dofs_z )
-        print 'load_zone_spec_topline_dofs_z (unique)', load_zone_spec_topline_dofs_z
+#        # LOAD TOP LINE
+#        # dofs at center line of the specmn load zone (used to integrate the force)
+#        # note slice index in x-direction is only valid for load_zone_shape_x = 2 !
+#        #
+#        load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
+#        load_zone_spec_topline_dofs_z = np.unique( load_zone_spec_topline_dofs_z )
+#        print 'load_zone_spec_topline_dofs_z (unique)', load_zone_spec_topline_dofs_z
 
         # SUPPRT LINE
         # dofs at support line of the specmn (used to integrate the force)
@@ -537,7 +522,7 @@ class SimFourPointBending(IBVModel):
         if self.elstmr_flag:
             # force-displacement-diagram (ELSTMR TOP SURFACE) 
             # 
-            self.f_w_diagram_center_elasttop = RTraceGraph(name = 'displacement_elasttop (center) - reaction 2',
+            self.f_w_diagram_center = RTraceGraph(name = 'displacement_elasttop (center) - reaction 2',
                                            var_x = 'U_k'  , idx_x = center_bottom_dof,
                                            # surface load
                                            #
@@ -549,55 +534,55 @@ class SimFourPointBending(IBVModel):
                                            #
                                            transform_y = '-4000. * y')
     
-            # force-displacement-diagram (ELSTMR BOTTOM SURFACE) 
-            # 
-            self.f_w_diagram_center_elastbottom = RTraceGraph(name = 'displacement_elastbottom (center) - reaction 2',
-                                           var_x = 'U_k'  , idx_x = center_bottom_dof,
-                                           # surface load
-                                           #
-                                           var_y = 'F_int', idx_y_arr = elstmr_bottom_dofs_z,
-    
-                                           record_on = 'update',
-                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                           # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-                                           #
-                                           transform_y = '4000. * y')
-
-        # force-displacement-diagram_specmn (SPECIMN TOP SURFACE)
-        # 
-        self.f_w_diagram_center_spectop = RTraceGraph(name = 'displacement_spectop (center) - reaction 2',
-                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
-
-                                       # nodal displacement at center node
-                                       #
-#                                       var_y = 'F_int', idx_y = center_dof,
-
-                                       # surface load
-                                       #
-                                       var_y = 'F_int', idx_y_arr = load_zone_spec_top_dofs_z,
-
-                                       record_on = 'update',
-                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-                                       #
-                                       transform_y = '-4000. * y')
-
-        # force-displacement-diagram_specmn (SPECIMN TOP LINE)
-        # 
-        self.f_w_diagram_center_topline = RTraceGraph(name = 'displacement_topline (center) - reaction 2',
-                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
-                                       # surface load
-                                       #
-                                       var_y = 'F_int', idx_y_arr = load_zone_spec_topline_dofs_z,
-                                       record_on = 'update',
-                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-                                       #
-                                       transform_y = '-4000. * y')
+#            # force-displacement-diagram (ELSTMR BOTTOM SURFACE) 
+#            # 
+#            self.f_w_diagram_center_elastbottom = RTraceGraph(name = 'displacement_elastbottom (center) - reaction 2',
+#                                           var_x = 'U_k'  , idx_x = center_bottom_dof,
+#                                           # surface load
+#                                           #
+#                                           var_y = 'F_int', idx_y_arr = elstmr_bottom_dofs_z,
+#    
+#                                           record_on = 'update',
+#                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                           # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
+#                                           #
+#                                           transform_y = '4000. * y')
+#
+#        # force-displacement-diagram_specmn (SPECIMN TOP SURFACE)
+#        # 
+#        self.f_w_diagram_center_spectop = RTraceGraph(name = 'displacement_spectop (center) - reaction 2',
+#                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
+#
+#                                       # nodal displacement at center node
+#                                       #
+##                                       var_y = 'F_int', idx_y = center_dof,
+#
+#                                       # surface load
+#                                       #
+#                                       var_y = 'F_int', idx_y_arr = load_zone_spec_top_dofs_z,
+#
+#                                       record_on = 'update',
+#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
+#                                       #
+#                                       transform_y = '-4000. * y')
+#
+#        # force-displacement-diagram_specmn (SPECIMN TOP LINE)
+#        # 
+#        self.f_w_diagram_center_topline = RTraceGraph(name = 'displacement_topline (center) - reaction 2',
+#                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
+#                                       # surface load
+#                                       #
+#                                       var_y = 'F_int', idx_y_arr = load_zone_spec_topline_dofs_z,
+#                                       record_on = 'update',
+#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
+#                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
+#                                       #
+#                                       transform_y = '-4000. * y')
 
         # force-displacement-diagram_supprt (SUPPRT LINE)
         # 
-        self.f_w_diagram_center_supprtline = RTraceGraph(name = 'displacement_supprtline (center) - reaction 2',
+        self.f_w_diagram_supprt = RTraceGraph(name = 'displacement_supprtline (center) - reaction 2',
                                        var_x = 'U_k'  , idx_x = center_bottom_dof,
                                        # surface load
                                        #
@@ -627,58 +612,44 @@ class SimFourPointBending(IBVModel):
                 sdomain = self.fe_domain,
                 bcond_list = self.bc_list,
                 rtrace_list = [
-#                             self.f_w_diagram_center_elasttop,
+                             self.f_w_diagram_center,
 #                             self.f_w_diagram_center_elastbottom,
-                             self.f_w_diagram_center_spectop,
-                             self.f_w_diagram_center_supprtline,
-                             self.f_w_diagram_center_topline,
+#                             self.f_w_diagram_center_spectop,
+                             self.f_w_diagram_supprt,
+#                             self.f_w_diagram_center_topline,
 #                             self.f_w_diagram_load,
                              RTraceDomainListField(name = 'Displacement' ,
                                             var = 'u', idx = 0, warp = True),
-                             RTraceDomainListField(name = 'Stress' ,
-                                            var = 'sig_app', idx = 0, warp = True,
-                                            record_on = 'update'),
-                             RTraceDomainListField(name = 'Strain' ,
-                                        var = 'eps_app', idx = 0, warp = True,
-                                        record_on = 'update'),
-                             RTraceDomainListField(name = 'Damage' ,
-                                        var = 'omega_mtx', idx = 0, warp = True,
-                                        record_on = 'update'),
+#                             RTraceDomainListField(name = 'Stress' ,
+#                                            var = 'sig_app', idx = 0, warp = True,
+#                                            record_on = 'update'),
+#                             RTraceDomainListField(name = 'Strain' ,
+#                                        var = 'eps_app', idx = 0, warp = True,
+#                                        record_on = 'update'),
+#                             RTraceDomainListField(name = 'Damage' ,
+#                                        var = 'omega_mtx', idx = 0, warp = True,
+#                                        record_on = 'update'),
                              RTraceDomainListField(name = 'max_omega_i', warp = True,
                                         var = 'max_omega_i', idx = 0,
                                         record_on = 'update'),
-                             RTraceDomainListField(name = 'IStress' ,
-                                            position = 'int_pnts',
-                                            var = 'sig_app', idx = 0,
-                                            record_on = 'update'),
-                             RTraceDomainListField(name = 'IStrain' ,
-                                            position = 'int_pnts',
-                                            var = 'eps_app', idx = 0,
-                                            record_on = 'update'),
+#                             RTraceDomainListField(name = 'IStress' ,
+#                                            position = 'int_pnts',
+#                                            var = 'sig_app', idx = 0,
+#                                            record_on = 'update'),
+#                             RTraceDomainListField(name = 'IStrain' ,
+#                                            position = 'int_pnts',
+#                                            var = 'eps_app', idx = 0,
+#                                            record_on = 'update'),
                               ]
                 )
 
         # Add the time-loop control
         tloop = TLoop(tstepper = ts,
-
-                       # allow only a low tolerance 
-                       #
-                       KMAX = 100,
-#                       tolerance = 0.010, # very low tolerance
-                       tolerance = 0.0010, # low tolerance
-#                       tolerance = 0.0005, # medium tolerance
-#                       tolerance = 0.0001, # high tolerance
-
-#                       # allow a high tolerance 
-#                       #
-#                       KMAX = 50,
-#                       tolerance = 0.001,
-
-                       RESETMAX = 0,
-                       debug = False,
-#                       tline = TLine(min = 0.0, step = 0.1, max = 1.0)
-                       tline = TLine(min = 0.0, step = 0.1, max = 0.3)
-                       )
+                      KMAX = 50,
+                      tolerance = self.tolerance,
+                      RESETMAX = 0,
+                      tline = TLine(min = 0.0, step = self.tstep, max = self.tmax)
+                      )
 
         return tloop
 
@@ -705,19 +676,20 @@ class SimFourPointBending(IBVModel):
                  SimOut(name = 'F_max', unit = 'kN') ]
 
 
-class SimFourPointBendingDB(SimFourPointBending):
+class SimBT4PTDB(SimBT4PT):
 
     # vary the failure strain in PhiFnGeneralExtended:
     factor_eps_fail = Float(1.0, input = True,
-                             ps_levels = (1.0, 1.2, 3))
+                            ps_levels = (1.0, 1.2, 3))
 
     #-----------------
     # composite cross section unit cell:
     #-----------------
     #
-    ccs_unit_cell_key = Enum(CCSUnitCell.db.keys(),
-                              simdb = True, input = True,
-                              auto_set = False, enter_set = True)
+    ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
+                             CCSUnitCell.db.keys(),
+                             simdb = True, input = True,
+                             auto_set = False, enter_set = True)
 
     ccs_unit_cell_ref = Property(Instance(SimDBClass),
                                   depends_on = 'ccs_unit_cell_key')
@@ -735,15 +707,14 @@ class SimFourPointBendingDB(SimFourPointBending):
         # This is necessary to avoid an ValueError at setup  
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
-    calibration_test = Str(input = True
-                            )
+    calibration_test = Str( input = True )
     def _calibration_test_default(self):
         # return the material model key of the first DamageFunctionEntry
         # This is necessary to avoid an ValueError at setup  
         return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
 
     damage_function = Property(Instance(MFnLineArray),
-                                depends_on = 'input_change')
+                               depends_on = 'input_change')
     @cached_property
     def _get_damage_function(self):
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
@@ -752,22 +723,29 @@ class SimFourPointBendingDB(SimFourPointBending):
     # phi function extended:
     #-----------------
     #
-    phi_fn = Property(Instance(PhiFnGeneralExtended),
-                       depends_on = 'input_change,+ps_levels')
+#    phi_fn = Property(Instance(PhiFnGeneralExtended),
+#                       depends_on = 'input_change,+ps_levels')
+#    @cached_property
+#    def _get_phi_fn(self):
+#        return PhiFnGeneralExtended(mfn = self.damage_function,
+#                                     factor_eps_fail = self.factor_eps_fail)
+
+    #-----------------
+    # phi function General:
+    #-----------------
+    #
+    # definition of 'phi_fn' in order to run scripting
+    # @todo: how can the implementation be changed in order to allow for parameter passing, e.g. 'factor_eps_fail', etc.
+    #
+    phi_fn_class = Enum(PhiFnGeneral,[PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp], input = True,)
+    phi_fn = Property( Instance(phi_fn_class), depends_on = 'phi_fn_class, input_change, +ps_levels' )
     @cached_property
     def _get_phi_fn(self):
-        return PhiFnGeneralExtended(mfn = self.damage_function,
-                                     factor_eps_fail = self.factor_eps_fail)
+        return self.phi_fn_class( mfn = self.damage_function )
 
     #----------------------------------------------------------------------------------
-    # mats_eval
+    # material properties stored in 'ccs'
     #----------------------------------------------------------------------------------
-
-    # age of the plate at the time of testing
-    # NOTE: that the same phi-function is used independent of age. This assumes a 
-    # an afine/proportional damage evolution for different ages. 
-    #
-    age = Int(26, input = True)
 
     # concrete matrix E-modulus (taken from 'ccs_unit_cell')
     #
@@ -793,75 +771,25 @@ class SimFourPointBendingDB(SimFourPointBending):
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu
+        print 'nu (from ccs)', nu 
+        # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
+        #
+        print 'nu set explicitly to 0.20' 
+        nu = 0.2
         return nu
-
-    def run_study( self, run_key):
-        '''run the simulation and save a pickle file and a png-file of the resulting F-w-curve.
-        '''
-        #------------------------------
-        # simulation:
-        #------------------------------
-
-        self.tloop.eval()
-
-        pickle_path = 'pickle_files'
-        png_path = 'png_files'
-
-        # F-w-diagram_center
-        #
-        self.f_w_diagram_center.refresh()
-        file_name = 'f_w_diagram_c_' + run_key + '.pickle'
-        pickle_file_path = join(pickle_path, file_name)
-        file = open(pickle_file_path, 'w')
-        dump(self.f_w_diagram_center.trace, file)
-        file.close()
-        self.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
-
-        # F-w-diagram_load (thirdpoint of the beam, e.g. loading point)
-        #
-        self.f_w_diagram_load.refresh()
-        file_name = 'f_w_diagram_l_' + run_key + '.pickle'
-        pickle_file_path = join(pickle_path, file_name)
-        file = open(pickle_file_path, 'w')
-        dump(self.f_w_diagram_load.trace, file)
-        file.close()
-        self.f_w_diagram_load.trace.mpl_plot(p, color = 'blue')
-
-        #------------------------------
-        # experiment:
-        #------------------------------
-        path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4')
-        tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT' ]
-        for t in tests:
-            ex_path = join(path, t)
-            ex_run = ExRun(ex_path)
-#            ex_run.ex_type._plot_smoothed_force_deflection_center( p )
-            ex_run.ex_type._plot_force_deflection_center( p )
-            ex_run.ex_type._plot_force_deflection_thirdpoints( p )
-
-        format_plot(p, xlabel = 'displacement [mm]', ylabel = 'applied force [kN]', xlim = 50., ylim = 20.)
-
-        png_file_path = join(png_path, run_key)
-        p.title( run_key )
-        p.savefig( png_file_path, dpi=600. )
-        p.clf()
-
 
 if __name__ == '__main__':
 
-    sim_model = SimFourPointBendingDB(ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
+    sim_model = SimBT4PTDB(ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
                                 calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
                                 age = 23)
 
-#    do = 'ui'
-#    do = 'param_study'
-    do = 'validation'
+    do = 'ui'
+#    do = 'validation'
 #    do = 'show_last_results'
-#    do = 'pstudy'
 
     if do == 'ui':
-#        sim_model.tloop.eval()
+        sim_model.tloop.eval()
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
         app.main()
@@ -941,8 +869,8 @@ if __name__ == '__main__':
 
         # F-w-diagram_center_supprtline (SUPPRT LINE)
         #
-        sim_model.f_w_diagram_center_supprtline.refresh()
-        sim_model.f_w_diagram_center_supprtline.trace.mpl_plot(p, color = 'black', linestyle = '-', label = 'SL')
+        sim_model.f_w_diagram_center.refresh()
+        sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'black', linestyle = '-', label = 'SL')
 
         # F-w-diagram_center_topline (TOP LINE)
         #
