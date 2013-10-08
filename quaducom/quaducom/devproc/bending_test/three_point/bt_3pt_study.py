@@ -110,24 +110,28 @@ if __name__ == '__main__':
 
         sim_model = SimBT3PTDB(
                                ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                               calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
+                               calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+                               age = 26,
                                #
                                thickness = 0.06,
                                length = 1.15,
                                width = 0.20,
                                #
-                               elstmr_flag = False,
+                               elstmr_flag = True,
                                supprt_flag = False,
                                #
-                               shape_x = 4,
-                               mid_shape_x = 2,
+                               shape_x = 10,
+                               mid_shape_x = 1,
                                shape_y = 2,
                                shape_z = 2,
                                #
-                               w_max = 0.01,
-                               tstep = 0.2, 
-                               tmax = 1.0, 
-                               tolerance = 0.0001
+                               w_max = -0.010,
+                               tstep = 0.10, 
+                               tmax = 1.100, 
+                               tolerance = 0.0001,
+                               #
+                               # 'factor_eps_fail' = 1.0 (default)
+                               phi_fn_class = PhiFnGeneralExtended
                                )
     
     #-----------------------------------------------
@@ -147,10 +151,10 @@ if __name__ == '__main__':
                                #
                                thickness = 0.02,
                                length = 0.46,
-                               width = 0.10,
+                               width = -0.010,
                                #
-#                               elstmr_flag = True,
-#                               supprt_flag = True,
+                               elstmr_flag = False,
+                               supprt_flag = False,
                                #
                                shape_x = 8,
                                mid_shape_x = 2,
@@ -159,7 +163,10 @@ if __name__ == '__main__':
                                #
                                tstep = 0.05, 
                                tmax = 1.0, 
-                               tolerance = 0.0005
+                               tolerance = 0.0001,
+                               #
+                               # 'factor_eps_fail' = 1.0 (default)
+                               phi_fn_class = PhiFnGeneralExtended
                                )
 
     # print settings:
@@ -226,7 +233,7 @@ if __name__ == '__main__':
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
-        sim_model.tloop.eval()
+#        sim_model.tloop.eval()
         app.main()
 
     #------------------------------
@@ -300,16 +307,16 @@ if __name__ == '__main__':
                         %(phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
             print 'param_key = %s' %param_key
     
-    #        # f-w-diagram_center
-    #        #
-    #        sim_model.f_w_diagram_center.refresh()
-    #        file_name = 'f_w_diagram_c_' + param_key + '.pickle'
-    #        pickle_file_path = join(pickle_path, file_name)
-    #        file = open(pickle_file_path, 'w')
-    #        dump(sim_model.f_w_diagram_center.trace, file)
-    #        print 'pickle file saved to file: %s' %file_name
-    #        file.close()
-    #        sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
+            # f-w-diagram_center
+            #
+            sim_model.f_w_diagram_center.refresh()
+            file_name = 'f_w_diagram_c_' + param_key + '.pickle'
+            pickle_file_path = join(pickle_path, file_name)
+            file = open(pickle_file_path, 'w')
+            dump(sim_model.f_w_diagram_center.trace, file)
+            print 'pickle file saved to file: %s' %file_name
+            file.close()
+            sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
     
             # f-w-diagram_supprt
             #
@@ -352,8 +359,8 @@ if __name__ == '__main__':
             #
     #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
             png_file_path = join(png_path, param_key + '.png')
-            p.title( param_key )
-            p.savefig( png_file_path, dpi = 600. )
+            p.title( param_key, fontsize=8 )
+            p.savefig( png_file_path, dpi = 1200. )
             print 'png-file saved to file: %s' %png_file_path
             p.show()
 
