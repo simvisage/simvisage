@@ -30,6 +30,7 @@ from spirrid.rf import \
 
 from math import pi
 from scipy.special import gammainc, gamma
+from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
 
 
 def H(x):
@@ -80,17 +81,30 @@ class CBResidualRandXi(RF):
         T = 2. * tau / r
         #scale parameter with respect to a reference volume
         s = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
-        k = np.sqrt(T/E_f)
-        ef0 = k*np.sqrt(w)
+        ef0 = np.sqrt(w*T/E_f)
         Gxi = 1 - np.exp(-(ef0/s)**(m+1))
         mu_int = ef0 * (1-Gxi)
         I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
         mu_broken = I / (m+1)
         return (mu_int + mu_broken) * E_f * V_f * r**2
+    
+#    def __call__(self, w, tau, E_f, V_f, r, m, sV0):
+#        #strain and debonded length of intact fibers
+#        T = 2. * tau / r
+#        #scale parameter with respect to a reference volume
+#        s = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
+#        ef0 = np.sqrt(w*T/E_f)
+#        distr = fibers_MC(m=m, sV0=sV0, Ll=500., Lr=500.)
+#        a = ef0 / (T/E_f)
+#        Gxi = distr.cdf(ef0, T/E_f, r, a, a)
+#        mu_int = ef0 * (1-Gxi)
+#        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
+#        mu_broken = I / (m+1)
+#        return (mu_int + mu_broken) * E_f * V_f * r**2
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     cb = CBResidualRandXi()
-    w = np.linspace(0.0, 1., 300)
+    w = np.linspace(0.0, 2., 300)
     plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026))
     plt.show()
