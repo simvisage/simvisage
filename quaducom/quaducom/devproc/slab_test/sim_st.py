@@ -411,37 +411,37 @@ class SimST(IBVModel):
                              fets_eval = self.specmn_fets)
         return fe_grid
 
-    if elstmr_flag:
-        elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
-        @cached_property
-        def _get_elstmr_fe_level(self):
-            return  FERefinementGrid(name = 'elastomer patch',
-                                     fets_eval = self.elstmr_fets,
-                                     domain = self.fe_domain)
-    
-        elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
-        @cached_property
-        def _get_elstmr_fe_grid(self):
-            # if 'geo_st' is used for modeling of round load introduction area
-            #
-            if self.geo_st_flag:
-                fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
-                                 coord_max = (1.0, 1.0, 1.0),
-                                 level = self.elstmr_fe_level,
-                                 shape = (self.shape_R, self.shape_R, 1), 
-                                 geo_transform = self.geo_elstmr,
-                                 fets_eval = self.elstmr_fets)
-            # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
-            #
-            else:
-                elstmr_min = self.length / 2. - self.elem_length
-                elstmr_max = self.length / 2. 
-                fe_grid = FEGrid(coord_min = (elstmr_min, elstmr_min, self.thickness),
-                                 coord_max = (elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
-                                 level = self.elstmr_fe_level,
-                                 shape = (self.shape_R, self.shape_R, 1), 
-                                 fets_eval = self.elstmr_fets)
-            return fe_grid
+#    if elstmr_flag:
+    elstmr_fe_level = Property(depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_elstmr_fe_level(self):
+        return  FERefinementGrid(name = 'elastomer patch',
+                                 fets_eval = self.elstmr_fets,
+                                 domain = self.fe_domain)
+
+    elstmr_fe_grid = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    @cached_property
+    def _get_elstmr_fe_grid(self):
+        # if 'geo_st' is used for modeling of round load introduction area
+        #
+        if self.geo_st_flag:
+            fe_grid = FEGrid(coord_min = (0.0, 0.0, 0.0),
+                             coord_max = (1.0, 1.0, 1.0),
+                             level = self.elstmr_fe_level,
+                             shape = (self.shape_R, self.shape_R, 1), 
+                             geo_transform = self.geo_elstmr,
+                             fets_eval = self.elstmr_fets)
+        # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
+        #
+        else:
+            elstmr_min = self.length / 2. - self.elem_length
+            elstmr_max = self.length / 2. 
+            fe_grid = FEGrid(coord_min = (elstmr_min, elstmr_min, self.thickness),
+                             coord_max = (elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
+                             level = self.elstmr_fe_level,
+                             shape = (self.shape_R, self.shape_R, 1), 
+                             fets_eval = self.elstmr_fets)
+        return fe_grid
 
     if supprt_flag:
         supprt_fe_level = Property(depends_on = '+ps_levels, +input')
@@ -467,6 +467,8 @@ class SimST(IBVModel):
     #--------------------------------------------------------------
     # tloop
     #--------------------------------------------------------------
+
+    w_max = Float(-0.030, input = True) # [m]
 
     tloop = Property(depends_on = 'input_change')
     @cached_property
@@ -560,7 +562,7 @@ class SimST(IBVModel):
 
         # center displacement
         #
-        w_max = -0.030 # [m]
+        w_max = self.w_max
 #        w_max = Float( -0.020, auto_set = False, enter_set = True, input = True) # [m]
 
         # if elastomer is modeled
@@ -782,7 +784,7 @@ class SimST(IBVModel):
         #
         tloop = TLoop(tstepper = ts,
 #                      KMAX = 300,
-                      KMAX = 50,
+                      KMAX = 100,
                       RESETMAX = 0,
                       tolerance = self.tolerance,
                       tline = TLine(min = 0.0, step = self.tstep, max = self.tmax))
@@ -839,7 +841,7 @@ class SimSTDB(SimST):
                               auto_set = False, enter_set = True)
 
     ccs_unit_cell_ref = Property(Instance(SimDBClass),
-                                  depends_on = 'ccs_unit_cell_key')
+                                 depends_on = 'ccs_unit_cell_key')
     @cached_property
     def _get_ccs_unit_cell_ref(self):
         return CCSUnitCell.db[ self.ccs_unit_cell_key ]
@@ -1028,8 +1030,8 @@ if __name__ == '__main__':
     #------------------------------
     # do
     #------------------------------
-    do = 'show_phi_fn'
-#    do = 'ui'
+#    do = 'show_phi_fn'
+    do = 'ui'
 #    do = 'pstudy'
 #    do = 'validation'
 #    do = 'show_last_results'
@@ -1040,7 +1042,7 @@ if __name__ == '__main__':
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource = sim_model)
-        sim_model.tloop.eval()
+#        sim_model.tloop.eval()
         app.main()
 
     #------------------------------
