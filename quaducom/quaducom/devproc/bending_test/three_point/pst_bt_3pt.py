@@ -120,14 +120,14 @@ if __name__ == '__main__':
                                elstmr_flag = True,
                                supprt_flag = False,
                                #
-                               shape_x = 10,
+                               shape_x = 12,
                                mid_shape_x = 1,
-                               shape_y = 2,
-                               shape_z = 2,
+                               shape_y = 3,
+                               shape_z = 6,
                                #
                                w_max = -0.010,
                                tstep = 0.10, 
-                               tmax = 1.100, 
+                               tmax = 1.00, 
                                tolerance = 0.0001,
                                #
                                # 'factor_eps_fail' = 1.0 (default)
