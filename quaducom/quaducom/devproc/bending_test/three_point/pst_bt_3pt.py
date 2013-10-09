@@ -61,7 +61,7 @@ import numpy as np
 from time import time
 from os.path import join
 
-import os 
+import os
 
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
@@ -96,44 +96,44 @@ if __name__ == '__main__':
     # do
     #------------------------------
 #    do = 'show_phi_fn'
-#    do = 'ui'
-    do = 'validation'
+    do = 'ui'
+#    do = 'validation'
 #    do = 'show_last_results'
-    
+
     test_series = 'BT-12c'
 #    test_series = 'BT-6c'
-    
+
     #-----------------------------------------
     # BT-3PT-12c-6cm; L = 1.25m; L0 = 1.15 cm t = 6 cm
     #-----------------------------------------
     if test_series == 'BT-12c':
 
         sim_model = SimBT3PTDB(
-                               ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                               calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
-                               age = 26,
+                               ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+                               age=26,
                                #
-                               thickness = 0.06,
-                               length = 1.15,
-                               width = 0.20,
+                               thickness=0.06,
+                               length=1.15,
+                               width=0.20,
                                #
-                               elstmr_flag = True,
-                               supprt_flag = False,
+                               elstmr_flag=True,
+                               supprt_flag=False,
                                #
-                               shape_x = 10,
-                               mid_shape_x = 1,
-                               shape_y = 2,
-                               shape_z = 2,
+                               shape_x=10,
+                               mid_shape_x=1,
+                               shape_y=2,
+                               shape_z=3,
                                #
-                               w_max = -0.010,
-                               tstep = 0.10, 
-                               tmax = 1.100, 
-                               tolerance = 0.0001,
+                               w_max= -0.010,
+                               tstep=0.10,
+                               tmax=1.100,
+                               tolerance=0.0001,
                                #
                                # 'factor_eps_fail' = 1.0 (default)
-                               phi_fn_class = PhiFnGeneralExtended
+                               phi_fn_class=PhiFnGeneralExtended
                                )
-    
+
     #-----------------------------------------------
     # ST-6c: carbon slab tests (80 cm / 2 cm): 
     #-----------------------------------------------
@@ -145,28 +145,28 @@ if __name__ == '__main__':
                                # 'E_c' = 28600; 
                                # 'nu' = 0.25; 
                                # 'compliance_version'
-                               ccs_unit_cell_key = 'barrelshell_2D-05-11_0.00286_all0',
-                               calibration_test = 'TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
-                               age = 28,
+                               ccs_unit_cell_key='barrelshell_2D-05-11_0.00286_all0',
+                               calibration_test='TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
+                               age=28,
                                #
-                               thickness = 0.02,
-                               length = 0.46,
-                               width = -0.010,
+                               thickness=0.02,
+                               length=0.46,
+                               width= -0.010,
                                #
-                               elstmr_flag = False,
-                               supprt_flag = False,
+                               elstmr_flag=False,
+                               supprt_flag=False,
                                #
-                               shape_x = 8,
-                               mid_shape_x = 2,
-                               shape_y = 2,
-                               shape_z = 3,
+                               shape_x=8,
+                               mid_shape_x=2,
+                               shape_y=2,
+                               shape_z=3,
                                #
-                               tstep = 0.05, 
-                               tmax = 1.0, 
-                               tolerance = 0.0001,
+                               tstep=0.05,
+                               tmax=1.0,
+                               tolerance=0.0001,
                                #
                                # 'factor_eps_fail' = 1.0 (default)
-                               phi_fn_class = PhiFnGeneralExtended
+                               phi_fn_class=PhiFnGeneralExtended
                                )
 
     # print settings:
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     tolerance = sim_model.tolerance
     n_mp = sim_model.n_mp
 
-    print '\n' 
+    print '\n'
     print '### calculation settings: ###'
     print 'ccs_unit_cell_key', ccs_unit_cell_key
     print 'calibration_test', calibration_test
@@ -194,29 +194,29 @@ if __name__ == '__main__':
     print 'nu', nu
     print 'tolerance', tolerance
     print 'n_mp', n_mp
-    print '\n' 
+    print '\n'
 
 #--------------------------------------------------------------
 # do: ui / validation / show_last_result / pstudy
 #--------------------------------------------------------------
-     
+
     if do == 'show_phi_fn':
         import pylab as p
-        p.figure(facecolor = 'white') 
+        p.figure(facecolor='white')
 
         # plot mfn-line function stored in phi_fn
         # 
         phi_fn = sim_model.phi_fn
-        phi_fn.mfn.plot(p, color = 'black', linewidth = 3 )
+        phi_fn.mfn.plot(p, color='black', linewidth=3)
 
         # plot phi_fn (extended plot range)
         #
         xmax = sim_model.damage_function.xdata[-1]
         print 'xmax', xmax
-        x = linspace(0, 3*xmax, 1000)
+        x = linspace(0, 3 * xmax, 1000)
         phi_fn = frompyfunc(phi_fn, 1, 1)
         y = phi_fn(x)
-        p.plot(x,y, color = 'grey', linewidth = 2)
+        p.plot(x, y, color='grey', linewidth=2)
 
         p.show()
 
@@ -225,8 +225,8 @@ if __name__ == '__main__':
     #------------------------------    
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp(ibv_resource = sim_model)
-#        sim_model.tloop.eval()
+        app = IBVPyApp(ibv_resource=sim_model)
+        sim_model.tloop.eval()
         app.main()
 
     #------------------------------
@@ -234,22 +234,22 @@ if __name__ == '__main__':
     #------------------------------
     if do == 'validation':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp(ibv_resource = sim_model)
-        
+        app = IBVPyApp(ibv_resource=sim_model)
+
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
         pickle_path = join(simdb.simdata_dir, 'pickle_files')
         png_path = join(simdb.simdata_dir, 'png_files')
 
-        if not os.path.exists( pickle_path ):
-            os.mkdir( pickle_path )
-            os.mkdir( png_path )
+        if not os.path.exists(pickle_path):
+            os.mkdir(pickle_path)
+            os.mkdir(png_path)
 
         # pstudy: n_mp
         #
         st_study_list = [ 30 ]
-        
+
         # pstudy: calibration test
         #
 #        st_study_list = [ 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100' , 'TT-12c-6cm-TU-SH1F-V1' ]
@@ -258,20 +258,20 @@ if __name__ == '__main__':
         #
 #        st_study_list = [ PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp ] 
 
-        
+
         for st_param in st_study_list:
-            
+
             sim_model.n_mp = st_param
 #            sim_model.calibration_test = st_param
 #            sim_model.phi_fn_class = st_param
-            
-            p.figure(facecolor = 'white') # white background for diagram
-    
+
+            p.figure(facecolor='white') # white background for diagram
+
             #--------------------        
             # simulation 
             #--------------------        
             sim_model.tloop.eval()
-     
+
             # settings:
             #
             sim_model_name = sim_model.__class__.__name__
@@ -289,17 +289,17 @@ if __name__ == '__main__':
             phi_fn_class = sim_model.phi_fn_class.__name__
             print 'phi_fn_class', phi_fn_class
             supprt_flag = str(sim_model.supprt_flag)
-            elstmr_flag = str(sim_model.elstmr_flag) 
-            n_mp = sim_model.n_mp 
+            elstmr_flag = str(sim_model.elstmr_flag)
+            n_mp = sim_model.n_mp
             tstep = sim_model.tstep
             w_max = sim_model.w_max
 
             # param_key 
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sx%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        %(phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
-            print 'param_key = %s' %param_key
-    
+                        % (phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp)
+            print 'param_key = %s' % param_key
+
             # f-w-diagram_center
             #
             sim_model.f_w_diagram_center.refresh()
@@ -307,10 +307,10 @@ if __name__ == '__main__':
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             dump(sim_model.f_w_diagram_center.trace, file)
-            print 'pickle file saved to file: %s' %file_name
+            print 'pickle file saved to file: %s' % file_name
             file.close()
-            sim_model.f_w_diagram_center.trace.mpl_plot(p, color = 'red')
-    
+            sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
+
             # f-w-diagram_supprt
             #
             sim_model.f_w_diagram_supprt.refresh()
@@ -318,14 +318,14 @@ if __name__ == '__main__':
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             dump(sim_model.f_w_diagram_supprt.trace, file)
-            print 'pickle file saved to file: %s' %file_name
+            print 'pickle file saved to file: %s' % file_name
             file.close()
-            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color = 'blue')
-    
+            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
+
             #--------------------        
             # experiments
             #--------------------        
-    
+
             if test_series == 'BT-12c':
                 ex_path_V1 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
                                        'BT-3PT-12c-6cm-0-Tu-V1.raw')
@@ -337,24 +337,24 @@ if __name__ == '__main__':
                                        'BT-3PT-12c-6cm-0-Tu-V4.raw')
                 tests = [ex_path_V1, ex_path_V2, ex_path_V3, ex_path_V4]
                 for ex_path in tests:
-                    ex_run = ExRun( ex_path )
-                    ex_run.ex_type._plot_force_machine_displacement_wo_elast_interpolated( p )
-    
+                    ex_run = ExRun(ex_path)
+                    ex_run.ex_type._plot_force_machine_displacement_wo_elast_interpolated(p)
+
             if test_series == 'BT-6c':
                 ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
                                        'BT-6c-2cm-0-TU-V1_bs4.DAT')
                 ex_run = ExRun(ex_path)
-                ex_run.ex_type._plot_force_gauge_displacement( p )
-    
+                ex_run.ex_type._plot_force_gauge_displacement(p)
+
             #----------------------------------------------------------------------
             # plot sim curve as time new roman within the predefined limits  
             #----------------------------------------------------------------------
             #
     #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
             png_file_path = join(png_path, param_key + '.png')
-            p.title( param_key, fontsize=8 )
-            p.savefig( png_file_path, dpi = 1200. )
-            print 'png-file saved to file: %s' %png_file_path
+            p.title(param_key, fontsize=8)
+            p.savefig(png_file_path, dpi=1200.)
+            print 'png-file saved to file: %s' % png_file_path
             p.show()
 
         app.main()
@@ -374,7 +374,7 @@ if __name__ == '__main__':
         # param_key 
         #
         param_key = 'FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02_L=1.25_h=0.06_sxy=26_Em=27975.8_nu=0.25_tol=0.0001'
-        
+
         #------------------
         # simulation
         #------------------
@@ -385,7 +385,7 @@ if __name__ == '__main__':
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'r')
         trace = load(file)
-        p.plot(trace.xdata, trace.ydata, color = 'blue')
+        p.plot(trace.xdata, trace.ydata, color='blue')
 
         # f-w-diagram_center
         #
@@ -393,7 +393,7 @@ if __name__ == '__main__':
         pickle_file_path = join(pickle_path, file_name)
         file = open(pickle_file_path, 'r')
         trace = load(file)
-        p.plot(trace.xdata, trace.ydata, color = 'red')
+        p.plot(trace.xdata, trace.ydata, color='red')
 
         #--------------------        
         # experiments
@@ -410,14 +410,14 @@ if __name__ == '__main__':
                                    'BT-3PT-12c-6cm-0-Tu-V4.raw')
             tests = [ex_path_V1, ex_path_V2, ex_path_V3, ex_path_V4]
             for ex_path in tests:
-                ex_run = ExRun( ex_path )
-                ex_run.ex_type._plot_force_center_deflection_interpolated( p )
+                ex_run = ExRun(ex_path)
+                ex_run.ex_type._plot_force_center_deflection_interpolated(p)
 
         if test_series == 'BT-6c':
             ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
                                    'BT-6c-2cm-0-TU-V1_bs4.DAT')
             ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_center_deflection( p )
+            ex_run.ex_type._plot_force_center_deflection(p)
 
         # plot sim curve as time new roman within the predefined limits
         #
@@ -426,7 +426,7 @@ if __name__ == '__main__':
         p.show()
 
     if do == 'pstudy':
-        sim_ps = SimPStudy(sim_model = sim_model)
+        sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
 
 
