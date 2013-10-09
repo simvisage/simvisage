@@ -85,10 +85,14 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from sim_bt_3pt import SimBT3PT
-from sim_bt_3pt import SimBT3PTDB
+from sim_bt_4pt import SimBT4PT
+from sim_bt_4pt import SimBT4PTDB
 
 #from devproc.format_plot import format_plot
+
+#------------------------------------------------
+# script for parameter study  
+#------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -101,68 +105,41 @@ if __name__ == '__main__':
 #    do = 'show_last_results'
     
     test_series = 'BT-12c'
-#    test_series = 'BT-6c'
     
     #-----------------------------------------
-    # BT-3PT-12c-6cm; L = 1.25m; L0 = 1.15 cm t = 6 cm
+    # BT-4PT-12c-6cm; L_0 = 1.50m; t = 6 cm
     #-----------------------------------------
     if test_series == 'BT-12c':
 
-        sim_model = SimBT3PTDB(
+        sim_model = SimBT4PTDB(
                                ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
                                calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
                                age = 26,
                                #
                                thickness = 0.06,
-                               length = 1.15,
+                               length = 1.50,
                                width = 0.20,
                                #
                                elstmr_flag = True,
                                supprt_flag = False,
                                #
-                               shape_x = 12,
-                               mid_shape_x = 1,
-                               shape_y = 3,
-                               shape_z = 6,
+                               # fine mesh
+#                               outer_zone_shape_x = 10,
+#                               load_zone_shape_x = 2,
+#                               mid_zone_shape_x = 8,
+#                               shape_y = 2,
+#                               shape_z = 3,
                                #
-                               w_max = -0.010,
-                               tstep = 0.10, 
-                               tmax = 1.00, 
-                               tolerance = 0.0001,
-                               #
-                               # 'factor_eps_fail' = 1.0 (default)
-                               phi_fn_class = PhiFnGeneralExtended
-                               )
-    
-    #-----------------------------------------------
-    # ST-6c: carbon slab tests (80 cm / 2 cm): 
-    #-----------------------------------------------
-    if test_series == 'BT-6c':
-
-        sim_model = SimBT3PTDB(
-                               # calibration performed with:
-                               # 'n_mp' = 30; 
-                               # 'E_c' = 28600; 
-                               # 'nu' = 0.25; 
-                               # 'compliance_version'
-                               ccs_unit_cell_key = 'barrelshell_2D-05-11_0.00286_all0',
-                               calibration_test = 'TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
-                               age = 28,
-                               #
-                               thickness = 0.02,
-                               length = 0.46,
-                               width = -0.010,
-                               #
-                               elstmr_flag = False,
-                               supprt_flag = False,
-                               #
-                               shape_x = 8,
-                               mid_shape_x = 2,
+                               # coarse mesh
+                               outer_zone_shape_x = 7,
+                               load_zone_shape_x = 1,
+                               mid_zone_shape_x = 4,
                                shape_y = 2,
                                shape_z = 3,
                                #
-                               tstep = 0.05, 
-                               tmax = 1.0, 
+                               w_max = -0.020,
+                               tstep = 0.1, 
+                               tmax = 1.00, 
                                tolerance = 0.0001,
                                #
                                # 'factor_eps_fail' = 1.0 (default)
@@ -176,7 +153,11 @@ if __name__ == '__main__':
     length = sim_model.length
     width = sim_model.width
     thickness = sim_model.thickness
-    shape_x = sim_model.shape_x
+    outer_zone_shape_x = sim_model.outer_zone_shape_x
+    load_zone_shape_x = sim_model.load_zone_shape_x
+    mid_zone_shape_x = sim_model.mid_zone_shape_x
+    shape_y = sim_model.shape_y
+    shape_z = sim_model.shape_z
     E_m = sim_model.E_m
     nu = sim_model.nu
     tolerance = sim_model.tolerance
@@ -189,7 +170,11 @@ if __name__ == '__main__':
     print 'length', length
     print 'width', width
     print 'thickness', thickness
-    print 'shape_x', shape_x
+    print 'outer_zone_shape_x', outer_zone_shape_x 
+    print 'load_zone_shape_x', load_zone_shape_x, 
+    print 'mid_zone_shape_x', mid_zone_shape_x
+    print 'shape_y', shape_y
+    print 'shape_z', shape_z
     print 'E_m', E_m
     print 'nu', nu
     print 'tolerance', tolerance
@@ -279,15 +264,15 @@ if __name__ == '__main__':
             calibration_test = sim_model.calibration_test
             length = sim_model.length
             thickness = sim_model.thickness
-            shape_x = sim_model.shape_x
-            mid_shape_x = sim_model.mid_shape_x
+            outer_zone_shape_x = sim_model.outer_zone_shape_x
+            load_zone_shape_x = sim_model.load_zone_shape_x
+            mid_zone_shape_x = sim_model.mid_zone_shape_x
             shape_y = sim_model.shape_y
             shape_z = sim_model.shape_z
             E_m = sim_model.E_m
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
-            print 'phi_fn_class', phi_fn_class
             supprt_flag = str(sim_model.supprt_flag)
             elstmr_flag = str(sim_model.elstmr_flag) 
             n_mp = sim_model.n_mp 
@@ -296,8 +281,8 @@ if __name__ == '__main__':
 
             # param_key 
             #
-            param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sx%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        %(phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
+            param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxo%gl%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
+                        %(phi_fn_class, length, thickness, outer_zone_shape_x, load_zone_shape_x, mid_zone_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp ) 
             print 'param_key = %s' %param_key
     
             # f-w-diagram_center
@@ -327,24 +312,13 @@ if __name__ == '__main__':
             #--------------------        
     
             if test_series == 'BT-12c':
-                ex_path_V1 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
-                                       'BT-3PT-12c-6cm-0-Tu-V1.raw')
-                ex_path_V2 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
-                                       'BT-3PT-12c-6cm-0-Tu-V2.raw')
-                ex_path_V3 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
-                                       'BT-3PT-12c-6cm-0-Tu-V3.raw')
-                ex_path_V4 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
-                                       'BT-3PT-12c-6cm-0-Tu-V4.raw')
-                tests = [ex_path_V1, ex_path_V2, ex_path_V3, ex_path_V4]
-                for ex_path in tests:
-                    ex_run = ExRun( ex_path )
-                    ex_run.ex_type._plot_force_machine_displacement_wo_elast_interpolated( p )
-    
-            if test_series == 'BT-6c':
-                ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
-                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
-                ex_run = ExRun(ex_path)
-                ex_run.ex_type._plot_force_gauge_displacement( p )
+                path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4')
+                tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT']#, 'BT-4PT-12c-6cm-SH4-V2.DAT' ]
+                for t in tests:
+                    ex_path = join(path, t)
+                    ex_run = ExRun(ex_path)
+                    ex_run.ex_type._plot_force_deflection_center( p )
+#                    ex_run.ex_type._plot_force_deflection_thirdpoints( p )
     
             #----------------------------------------------------------------------
             # plot sim curve as time new roman within the predefined limits  
