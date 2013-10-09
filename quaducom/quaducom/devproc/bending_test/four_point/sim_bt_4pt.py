@@ -413,13 +413,6 @@ class SimBT4PT(IBVModel):
         #--------------------------------------------------------------
         # w_max = center displacement:
         w_max = self.w_max
-#        f_max = -0.010 / 0.10 # [MN/m]
-
-        # NOTE: the entire symmetry axis (yz)-plane is moved downwards 
-        # in order to avoid large indentations at the top nodes
-        #
-#        bc_center_w = BCSlice( var = 'u', value = w_max, dims = [2], slice = domain[-1, :, :, -1, :, :] )
-#        bc_center_f = BCSlice( var = 'f', value = 1.0, dims = [2], slice = domain[-1, :, :, -1, :, :] )
 
         if self.elstmr_flag:
             # apply displacement at all top nodes of the elastomer (surface load)
@@ -428,18 +421,15 @@ class SimBT4PT(IBVModel):
                            slice = elastomer[:, :, -1, :, :, -1])
         else:
             bc_w = BCSlice(var = 'u', value = w_max, dims = [2],
-                            # slice is only valid for 'load_zone_shape_x' = 2
-                            # center line of the load zone
-                            slice = load_zone_specimen[0, :, -1, -1, :, -1])
+                           # slice is only valid for 'load_zone_shape_x' = 2
+                           # center line of the load zone
+                           slice = load_zone_specimen[0, :, -1, -1, :, -1])
 
 #        f_max = 0.010 / 4. / self.sym_width 
 #        bc_line_f = BCSlice(var = 'f', value = f_max, dims = [2],
 #                            # slice is only valid for 'load_zone_shape_x' = 2
 #                            # center line of the load zone
 #                            slice = load_zone_specimen[0, :, -1, -1, :, -1])
-
-#        bc_center_f = BCSlice(var = 'f', value = f_max, dims = [2],
-#                              slice = elastomer[:, :, -1, :, :, -1])
 
         bc_list = [bc_outer_zone_symplane_xz,
                    bc_load_zone_symplane_xz,
