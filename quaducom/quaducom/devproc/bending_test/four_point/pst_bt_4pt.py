@@ -124,21 +124,21 @@ if __name__ == '__main__':
                                supprt_flag = False,
                                #
                                # fine mesh
-                               outer_zone_shape_x = 20,
-                               load_zone_shape_x = 2,
-                               mid_zone_shape_x = 10,
-                               shape_y = 3,
-                               shape_z = 4,
-                               #
-                               # coarse mesh
-#                               outer_zone_shape_x = 7,
-#                               load_zone_shape_x = 1,
-#                               mid_zone_shape_x = 4,
+#                               outer_zone_shape_x = 10,
+#                               load_zone_shape_x = 2,
+#                               mid_zone_shape_x = 8,
 #                               shape_y = 2,
 #                               shape_z = 3,
                                #
+                               # coarse mesh
+                               outer_zone_shape_x = 7,
+                               load_zone_shape_x = 1,
+                               mid_zone_shape_x = 4,
+                               shape_y = 2,
+                               shape_z = 3,
+                               #
                                w_max = -0.020,
-                               tstep = 0.01, 
+                               tstep = 0.1, 
                                tmax = 1.00, 
                                tolerance = 0.0001,
                                #
@@ -218,8 +218,8 @@ if __name__ == '__main__':
     # validation
     #------------------------------
     if do == 'validation':
-#        from ibvpy.plugins.ibvpy_app import IBVPyApp
-#        app = IBVPyApp(ibv_resource = sim_model)
+        from ibvpy.plugins.ibvpy_app import IBVPyApp
+        app = IBVPyApp(ibv_resource = sim_model)
         
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
@@ -329,9 +329,9 @@ if __name__ == '__main__':
             p.title( param_key, fontsize=8 )
             p.savefig( png_file_path, dpi = 1200. )
             print 'png-file saved to file: %s' %png_file_path
-#            p.show()
+            p.show()
 
-#        app.main()
+        app.main()
 
 
     #------------------------------
