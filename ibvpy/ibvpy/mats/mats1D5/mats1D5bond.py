@@ -95,6 +95,16 @@ class MATS1D5Bond(MATSEval):
     # Private initialization methods
     #-----------------------------------------------------------------------------------------------
 
+    #-----------------------------------------------------------------------------------------------
+    # Setup for computation within a supplied spatial context
+    #-----------------------------------------------------------------------------------------------
+
+    def setup(self, sctx):
+        '''
+        Intialize state variables.
+        '''
+
+
     def new_cntl_var(self):
         return zeros(4, float_)#TODO: adapt for 4-5..
 

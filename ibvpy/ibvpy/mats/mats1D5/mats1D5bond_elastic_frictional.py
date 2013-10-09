@@ -139,6 +139,12 @@ class MATS1D5Bond(MATSEval):
     # Setup for computation within a supplied spatial context
     #-----------------------------------------------------------------------------------------------
 
+    def setup(self, sctx):
+        '''
+        Intialize state variables.
+        '''
+        sctx.mats_state_array = zeros(sctx.slip_comp, float_)
+
     def get_state_array_size(self):
         '''
         Give back the nuber of floats to be saved

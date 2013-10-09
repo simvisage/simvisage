@@ -11,7 +11,6 @@ from etsproxy.traits.ui.api import \
 from etsproxy.traits.ui.menu import \
      OKButton, CancelButton
 
-import numpy as np
 
 from numpy import \
      zeros, float_, ix_, meshgrid, repeat, arange, array, dot, \
@@ -104,21 +103,27 @@ class DOTSEval(TStepperEval):
         return 0
 
     state_array = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
-    '''Allocate the state array [el,ip,ss]
-    '''
     @cached_property
     def _get_state_array(self):
-        m_arr_size = self.fets_eval.m_arr_size
-        n_gp = self.fets_eval.n_gp
-        state_array = zeros((self.sdomain.n_elems, n_gp, m_arr_size), dtype='float_')
+        state_array = zeros((self.state_array_size,), dtype='float_')
+        e_arr_size = self.fets_eval.get_state_array_size()
+
+        sctx = self.sdomain.domain.new_scontext()
+        # Run the setup of sub-evaluator
+        #
+        for e_id, elem in zip(self.sdomain.idx_active_elems, self.sdomain.elements):
+            sctx.elem = elem
+            sctx.elem_state_array = state_array[ e_id * e_arr_size : (e_id + 1) * e_arr_size ]
+            self.fets_eval.setup(sctx)
         return state_array
 
-    def xget_corr_pred(self, sctx, u, du, tn, tn1, F_int, *args, **kw):
+    def get_corr_pred(self, sctx, u, du, tn, tn1, F_int, *args, **kw):
 
         # in order to avoid allocation of the array in every time step 
         # of the computation
         k_arr = self.k_arr
         k_arr[...] = 0.0
+        e_arr_size = self.fets_eval.get_state_array_size()
 
         if self.cache_geo_matrices and len(self.sdomain.elements) != 0:#build in control that there is at least one active elem
             B_mtx_grid = self.B_mtx_grid
@@ -144,7 +149,7 @@ class DOTSEval(TStepperEval):
 
             ix = elem.get_dof_map()
             sctx.elem = elem
-            sctx.elem_state_array = state_array[ e_id ]
+            sctx.elem_state_array = state_array[ e_id * e_arr_size : (e_id + 1) * e_arr_size ]
             sctx.X = elem.get_X_mtx()
             sctx.x = elem.get_x_mtx()
             if self.cache_geo_matrices:
@@ -162,95 +167,6 @@ class DOTSEval(TStepperEval):
 
             k_arr[ e_id ] = k
             F_int[ ix_(ix) ] += f
-
-        return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map_unmasked)
-
-    def get_corr_pred(self, sctx, u, du, tn, tn1, F_int, *args, **kw):
-
-        # in order to avoid allocation of the array in every time step 
-        # of the computation
-
-        idx_active_elems = self.sdomain.idx_active_elems
-
-        k_arr = self.k_arr
-        k_arr[...] = 0.0
-
-        B_mtx_grid = self.B_mtx_grid
-        ip_weights = self.fets_eval.ip_weights
-
-        # arr variables are masked
-        J_det_grid = self.J_det_grid
-        J_det_grid[self.sdomain.activation_map == False] = 0.0
-        w_J_det_grid = J_det_grid * ip_weights[np.newaxis, :]
-
-        tstepper = self.sdomain.tstepper
-        U = tstepper.U_k
-        d_U = tstepper.d_U
-
-        # generic arguments to be pushed through the loop levels
-        args_fets = []
-        kw_fets = {}
-        U_avg_k = kw.get('eps_avg', None)
-        if U_avg_k != None:
-            u_avg_arr = U_avg_k[ self.sdomain.elem_dof_map_unmasked ]
-
-        elem_dof_map = self.sdomain.elem_dof_map_unmasked
-        elem_X_map = self.sdomain.elem_X_map_unmasked
-        elem_x_map = self.sdomain.elem_x_map_unmasked
-        sctx.X_reg = elem_X_map
-        sctx.X = elem_X_map
-        sctx.x = elem_x_map
-        sctx.state_array = self.state_array
-
-        u_el = U[ elem_dof_map ]
-        d_u_el = d_U[ elem_dof_map ]
-
-        # indexes for individual dimensions 
-        # i - element [el]
-        # j - integration point [ip]
-        # km - strain component [sc]
-        # ln - elemental degree of freedom [dof]
-
-        eps_mtx_arr = np.einsum('ijkl, il-> ijk', B_mtx_grid, u_el)
-        d_eps_mtx_arr = np.einsum('ijkl, il-> ijk', B_mtx_grid, d_u_el)
-        sig_mtx_arr, D_mtx_arr = self.fets_eval.get_mtrl_corr_pred(sctx,
-                                                                   eps_mtx_arr, d_eps_mtx_arr,
-                                                                   tn, tn1)
-        k_arr2 = np.einsum('ijkl, ikm, ijmn, ij -> iln',
-                           B_mtx_grid, D_mtx_arr, B_mtx_grid, w_J_det_grid)
-        f_int_arr = np.einsum('ijkl, ijk, ij -> il',
-                              B_mtx_grid, sig_mtx_arr, w_J_det_grid)
-
-        F_int2 = np.bincount(elem_dof_map.flatten(), weights=f_int_arr.flatten())
-
-        ##### OLD IMPLEMENTATION
-
-        for e_id, elem in zip(idx_active_elems, self.sdomain.elements):
-
-            ix = elem.get_dof_map()
-            sctx.elem = elem
-            sctx.elem_state_array = self.state_array[e_id]
-            sctx.X = elem.get_X_mtx()
-            sctx.x = elem.get_x_mtx()
-            if self.cache_geo_matrices:
-                Be_mtx_grid = B_mtx_grid[ e_id, ... ]
-                Je_det_grid = self.J_det_grid[ e_id, ... ]
-
-            if U_avg_k != None:
-                kw_fets['eps_avg'] = u_avg_arr[ e_id, ... ]
-
-            f, k = self.fets_eval.get_corr_pred(sctx, U[ ix_(ix) ], d_U[ ix_(ix) ],
-                                                tn, tn1,
-                                                B_mtx_grid=Be_mtx_grid,
-                                                J_det_grid=Je_det_grid,
-                                                 *args_fets, **kw_fets)
-
-            k_arr[ e_id ] = k
-            F_int[ ix_(ix) ] += f
-
-        print 'F_int', F_int
-        print 'diff1', np.sum(k_arr - k_arr2)
-        print 'diff2', np.sum(F_int - F_int2)
 
         return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map_unmasked)
 

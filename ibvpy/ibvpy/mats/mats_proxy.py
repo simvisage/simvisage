@@ -254,6 +254,12 @@ class MATSProxy(MATSEval):
     def get_state_array_size(self):
         return self.mats_eval.get_state_array_size()
 
+    def setup(self, sctx):
+        '''
+        Intialize state variables.
+        '''
+        self.mats_eval.setup(sctx)
+
     def new_cntl_var(self):
         return self.mats_eval.new_cntl_var()
 

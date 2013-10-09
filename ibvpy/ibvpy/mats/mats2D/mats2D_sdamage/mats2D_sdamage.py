@@ -44,30 +44,30 @@ class MATS2DScalarDamage(MATS2DEval):
     #---------------------------------------------------------------------------
 
     E = Float(34e+3,
-                 label="E",
-                 desc="Young's Modulus",
-                 auto_set=False)
+                 label = "E",
+                 desc = "Young's Modulus",
+                 auto_set = False)
     nu = Float(0.2,
-                 label='nu',
-                 desc="Poison's ratio",
-                 auto_set=False)
+                 label = 'nu',
+                 desc = "Poison's ratio",
+                 auto_set = False)
     epsilon_0 = Float(59e-6,
-                 label="eps_0",
-                 desc="Breaking Strain",
-                 auto_set=False)
+                 label = "eps_0",
+                 desc = "Breaking Strain",
+                 auto_set = False)
 
     epsilon_f = Float(191e-4,
-                 label="eps_f",
-                 desc="Shape Factor",
-                 auto_set=False)
+                 label = "eps_f",
+                 desc = "Shape Factor",
+                 auto_set = False)
 
-    strain_norm = EitherType(klasses=[Mazars,
+    strain_norm = EitherType(klasses = [Mazars,
                                        Euclidean,
                                        Energy,
                                        Mises,
                                        Rankine ])
 
-    D_el = Property(Array(float), depends_on='E, nu, stress_state')
+    D_el = Property(Array(float), depends_on = 'E, nu, stress_state')
     @cached_property
     def _get_D_el(self):
         if self.stress_state == "plane_stress":
@@ -90,14 +90,14 @@ class MATS2DScalarDamage(MATS2DEval):
                                       Item('epsilon_0'),
                                       Item('epsilon_f'),
                                       Item('strain_norm')),
-                                Group(Item('stress_state', style='custom'),
-                                       Item('stiffness', style='custom'),
-                                       Spring(resizable=True),
-                                       label='Configuration parameters',
-                                       show_border=True,
+                                Group(Item('stress_state', style = 'custom'),
+                                       Item('stiffness', style = 'custom'),
+                                       Spring(resizable = True),
+                                       label = 'Configuration parameters',
+                                       show_border = True,
                                        ),
                                 ),
-                        resizable=True
+                        resizable = True
                         )
 
     #--------------------------------------------------------------------------
@@ -116,6 +116,15 @@ class MATS2DScalarDamage(MATS2DEval):
         '''
         return 2
 
+    def setup(self, sctx):
+        '''
+        Intialize state variables.
+        @param sctx:spatial context
+        '''
+        state_arr_size = self.get_state_array_size()
+        sctx.mats_state_array = zeros(state_arr_size, 'float_')
+        #sctx.update_state_on = False
+
     def new_cntl_var(self):
         '''
         Return contoll variable array
@@ -133,7 +142,7 @@ class MATS2DScalarDamage(MATS2DEval):
     # Evaluation - get the corrector and predictor
     #--------------------------------------------------------------------------
 
-    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg=None):
+    def get_corr_pred(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg = None):
         '''
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain
@@ -278,20 +287,20 @@ if __name__ == '__main__':
     from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
 
     mats2D_explore = \
-        MATS2DExplore(mats2D_eval=MATS2DScalarDamage(strain_norm_type='Rankine'),
+        MATS2DExplore(mats2D_eval = MATS2DScalarDamage(strain_norm_type = 'Rankine'),
                        #stiffness = 'algorithmic' ),
-                       rtrace_list=[ RTraceGraph(name='strain - stress',
-                                              var_x='eps_app', idx_x=0,
-                                              var_y='sig_app', idx_y=0,
-                                              update_on='update'),
-                                     RTraceGraph(name='strain - strain',
-                                              var_x='eps_app', idx_x=0,
-                                              var_y='eps_app', idx_y=1,
-                                              update_on='update'),
-                                     RTraceGraph(name='stress - stress',
-                                              var_x='sig_app', idx_x=0,
-                                              var_y='sig_app', idx_y=1,
-                                              update_on='update'),
+                       rtrace_list = [ RTraceGraph(name = 'strain - stress',
+                                              var_x = 'eps_app', idx_x = 0,
+                                              var_y = 'sig_app', idx_y = 0,
+                                              update_on = 'update'),
+                                     RTraceGraph(name = 'strain - strain',
+                                              var_x = 'eps_app', idx_x = 0,
+                                              var_y = 'eps_app', idx_y = 1,
+                                              update_on = 'update'),
+                                     RTraceGraph(name = 'stress - stress',
+                                              var_x = 'sig_app', idx_x = 0,
+                                              var_y = 'sig_app', idx_y = 1,
+                                              update_on = 'update'),
         #                             RTraceGraph(name = 'time - sig_norm',
         #                                      var_x = 'time', idx_x = 0,
         #                                      var_y = 'sig_norm', idx_y = 0,
@@ -301,5 +310,5 @@ if __name__ == '__main__':
 
     mats2D_explore.tloop.eval()
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    ibvpy_app = IBVPyApp(ibv_resource=mats2D_explore)
+    ibvpy_app = IBVPyApp(ibv_resource = mats2D_explore)
     ibvpy_app.main()

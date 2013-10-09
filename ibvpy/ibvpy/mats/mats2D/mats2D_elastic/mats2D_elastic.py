@@ -6,7 +6,11 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring
 
-import numpy as np
+from numpy import \
+     array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
+     fabs, sqrt, linspace, vdot, identity, tensordot, \
+     sin as nsin, meshgrid, float_, ix_, \
+     vstack, hstack, sqrt as arr_sqrt
 
 from math import pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 
@@ -37,15 +41,15 @@ class MATS2DElastic(MATS2DEval):
     #---------------------------------------------------------------------------
 
     E = Float(1., #34e+3,
-                 label="E",
-                 desc="Young's Modulus",
-                 auto_set=False)
+                 label = "E",
+                 desc = "Young's Modulus",
+                 auto_set = False)
     nu = Float(0.2,
-                 label='nu',
-                 desc="Poison's ratio",
-                 auto_set=False)
+                 label = 'nu',
+                 desc = "Poison's ratio",
+                 auto_set = False)
 
-    D_el = Property(Array(float), depends_on='E, nu, stress_state')
+    D_el = Property(Array(float), depends_on = 'E, nu, stress_state')
     @cached_property
     def _get_D_el(self):
         if self.stress_state == "plane_stress":
@@ -66,12 +70,12 @@ class MATS2DElastic(MATS2DEval):
 
     view_traits = View(VSplit(Group(Item('E'),
                                       Item('nu'),),
-                                Group(Item('stress_state', style='custom'),
-                                       Spring(resizable=True),
-                                       label='Configuration parameters', show_border=True,
+                                Group(Item('stress_state', style = 'custom'),
+                                       Spring(resizable = True),
+                                       label = 'Configuration parameters', show_border = True,
                                        ),
                                 ),
-                        resizable=True
+                        resizable = True
                         )
 
     #-----------------------------------------------------------------------------------------------
@@ -85,10 +89,10 @@ class MATS2DElastic(MATS2DEval):
     #-----------------------------------------------------------------------------------------------
 
     def new_cntl_var(self):
-        return np.zeros(3, np.float_)
+        return zeros(3, float_)
 
     def new_resp_var(self):
-        return np.zeros(3, np.float_)
+        return zeros(3, float_)
 
 
     #-----------------------------------------------------------------------------------------------
@@ -100,13 +104,11 @@ class MATS2DElastic(MATS2DEval):
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain
         '''
-        D_el = self.D_el
-        sigma = np.einsum('...ij,...j->...i', D_el, eps_app_eng)
+        sigma = dot(self.D_el[:], eps_app_eng)
 
-        if len(eps_app_eng.shape) >= len(self.D_el.shape):
-            D_el = self.D_el[np.newaxis, ...]
+        # You print the stress you just computed and the value of the apparent E
 
-        return  sigma, D_el
+        return  sigma, self.D_el
 
     #---------------------------------------------------------------------------------------------
     # Subsidiary methods realizing configurable features
@@ -115,7 +117,7 @@ class MATS2DElastic(MATS2DEval):
     def _get_D_plane_stress(self):
         E = self.E
         nu = self.nu
-        D_stress = np.zeros([3, 3])
+        D_stress = zeros([3, 3])
         D_stress[0, 0] = E / (1.0 - nu * nu)
         D_stress[0, 1] = E / (1.0 - nu * nu) * nu
         D_stress[1, 0] = E / (1.0 - nu * nu) * nu
@@ -126,7 +128,7 @@ class MATS2DElastic(MATS2DEval):
     def _get_D_plane_strain(self):
         E = self.E
         nu = self.nu
-        D_strain = np.zeros([3, 3])
+        D_strain = zeros([3, 3])
         D_strain[0, 0] = E * (1.0 - nu) / (1.0 + nu) / (1.0 - 2.0 * nu)
         D_strain[0, 1] = E / (1.0 + nu) / (1.0 - 2.0 * nu) * nu
         D_strain[1, 0] = E / (1.0 + nu) / (1.0 - 2.0 * nu) * nu
@@ -137,7 +139,7 @@ class MATS2DElastic(MATS2DEval):
     def _get_D_rotational_symetry(self):
         E = self.E
         nu = self.nu
-        D_strain = np.zeros([6, 6])
+        D_strain = zeros([6, 6])
         C = E / (1. - 2. * nu) / (1. + nu)
         D_strain[0, 0] = C * (1. - nu)
         D_strain[0, 1] = C * nu
@@ -157,13 +159,13 @@ class MATS2DElastic(MATS2DEval):
 
     def get_sig_norm(self, sctx, eps_app_eng):
         sig_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
-        return np.array([ scalar_sqrt(sig_eng[0] ** 2 + sig_eng[1] ** 2) ])
+        return array([ scalar_sqrt(sig_eng[0] ** 2 + sig_eng[1] ** 2) ])
 
 
     # Declare and fill-in the rte_dict - it is used by the clients to
     # assemble all the available time-steppers.
     #
-    rte_dict = Trait(Dict, transient=True)
+    rte_dict = Trait(Dict, transient = True)
     def _rte_dict_default(self):
         return {'sig_app'  : self.get_sig_app,
                 'eps_app'  : self.get_eps_app,
@@ -178,29 +180,29 @@ if __name__ == '__main__':
     from ibvpy.api import RTraceGraph
     from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
     mats2D_explore = \
-    MATS2DExplore(mats2D_eval=MATS2DElastic(),
-                    rtrace_list=[ RTraceGraph(name='strain 0 - stress 0',
-                                                   var_x='eps_app', idx_x=0,
-                                                   var_y='sig_app', idx_y=0,
-                                                   update_on='update'),
-                                    RTraceGraph(name='strain 0 - strain 1',
-                                                   var_x='eps_app', idx_x=0,
-                                                   var_y='eps_app', idx_y=1,
-                                                   update_on='update'),
-                                    RTraceGraph(name='stress 0 - stress 1',
-                                                   var_x='sig_app', idx_x=0,
-                                                   var_y='sig_app', idx_y=1,
-                                                   update_on='update'),
-                                    RTraceGraph(name='time - sig_norm',
-                                                   var_x='time', idx_x=0,
-                                                   var_y='sig_norm', idx_y=0,
-                                                   update_on='update')
+    MATS2DExplore(mats2D_eval = MATS2DElastic(),
+                    rtrace_list = [ RTraceGraph(name = 'strain 0 - stress 0',
+                                                   var_x = 'eps_app', idx_x = 0,
+                                                   var_y = 'sig_app', idx_y = 0,
+                                                   update_on = 'update'),
+                                    RTraceGraph(name = 'strain 0 - strain 1',
+                                                   var_x = 'eps_app', idx_x = 0,
+                                                   var_y = 'eps_app', idx_y = 1,
+                                                   update_on = 'update'),
+                                    RTraceGraph(name = 'stress 0 - stress 1',
+                                                   var_x = 'sig_app', idx_x = 0,
+                                                   var_y = 'sig_app', idx_y = 1,
+                                                   update_on = 'update'),
+                                    RTraceGraph(name = 'time - sig_norm',
+                                                   var_x = 'time', idx_x = 0,
+                                                   var_y = 'sig_norm', idx_y = 0,
+                                                   update_on = 'update')
 
                                     ])
 
     mats2D_explore.tloop.eval()
     #mme.configure_traits( view = 'traits_view_begehung' )
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    ibvpy_app = IBVPyApp(ibv_resource=mats2D_explore)
+    ibvpy_app = IBVPyApp(ibv_resource = mats2D_explore)
     ibvpy_app.main()
 
