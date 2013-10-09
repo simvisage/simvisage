@@ -17,7 +17,7 @@ from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array
 from types import FloatType
 from reinforcement import Reinforcement, ContinuousFibers
-from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
+from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC, WeibullFibers
 from scipy.optimize import root
 import time as t
 from scipy.integrate import cumtrapz
@@ -137,7 +137,9 @@ class CompositeCrackBridge(HasTraits):
             elif isinstance(reinf.xi, RV):
                 methods.append(reinf.xi._distr.cdf)
             elif isinstance(reinf.xi, WeibullFibers):
-                methods.append(reinf.xi.weibull_fibers_cdf)
+                reinf.xi.Ll = self.Ll
+                reinf.xi.Lr = self.Lr
+                methods.append(reinf.xi.cdf)
         return methods, masks
 
     Kf = Property(depends_on='reinforcement_lst+')
@@ -150,11 +152,20 @@ class CompositeCrackBridge(HasTraits):
         Pf = np.zeros_like(self.sorted_depsf)
         methods, masks = self.sorted_xi_cdf
         for i, method in enumerate(methods):
-            if method.__name__ == 'weibull_fibers_cdf':
-                Pf += method(epsy * masks[i], self.sorted_depsf,
-                             x_short, x_long, self.sorted_r)
+            if method.__doc__ == 'weibull_fibers_cdf_mc':
+                Pf[masks[i]] += method(epsy[masks[i]],
+                                       self.sorted_depsf[masks[i]],
+                                       self.sorted_r[masks[i]],
+                                       x_short[masks[i]],
+                                       x_long[masks[i]])
+            elif method.__doc__ == 'weibull_fibers_cdf_cb_elast':
+                Pf[masks[i]] += method(epsy[masks[i]],
+                                       self.sorted_depsf[masks[i]],
+                                       self.sorted_r[masks[i]],
+                                       x_short[masks[i]],
+                                       x_long[masks[i]])
             else:
-                Pf += method(epsy * masks[i])
+                Pf[masks[i]] += method( epsy[masks[i]] )
         return Pf
 
     def dem_depsf_vect(self, damage):
@@ -190,7 +201,7 @@ class CompositeCrackBridge(HasTraits):
                 C = np.log(amin_i/amin)
             F[mask] += 2 * C
         return F
-    
+
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
         em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
@@ -338,12 +349,12 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=1.2, scale=.03),
-                          V_f=0.011,
+                          tau=RV('weibull_min', loc=0.006, shape=4., scale=20.3),
+                          V_f=0.3,
                           E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=100.0026),
-                          n_int=500,
-                          label='carbon')
+                          xi=fibers_MC(m=10.0, sV0=0.0026),
+                          label='carbon',
+                          n_int=500)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
@@ -351,8 +362,8 @@ if __name__ == '__main__':
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=5.0,
-                                 Lr=10.,
+                                 Ll=1.,
+                                 Lr=1.,
                                  w=.03)
 
     ccb.damage
@@ -360,9 +371,9 @@ if __name__ == '__main__':
     plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro')
     for i, depsf in enumerate(ccb.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr),ccb._epsm_arr)
-        #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
+        print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         plt.plot(ccb._x_arr, epsf_x)
     plt.legend(loc='best')
-    plt.xlim(-5,10)
-    plt.ylim(0,0.0003)
+    #plt.xlim(-5,10)
+    #plt.ylim(0,0.0003)
     plt.show()

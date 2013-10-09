@@ -19,7 +19,7 @@ from math import pi
 
 
 class GeoSUPPRT(HasTraits):
-    '''Geometry definition of the tappered support added from four hp-surfaces and a planar top-level.
+    '''Geometry definition of the tappered support with quadratic reduction of thickness and a planar top-level.
     used for linear reduction of the stiffness of the support.
     '''
 

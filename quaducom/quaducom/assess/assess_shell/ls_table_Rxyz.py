@@ -328,27 +328,15 @@ class ULSRxyz(LS):
 
     # shear Resistance
     #
-<<<<<<< HEAD
-    Rx_Rd = Float(5.1, input=True)
-=======
-    Rx_Rd = Float(5.3, input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+    Rx_Rd = Float(4.8, input = True)
 
     # pull-out Resistance
     #
-<<<<<<< HEAD
-    Rz_Rd = Float(4.6, input=True)
-=======
-    Rz_Rd = Float(4.8, input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+    Rz_Rd = Float(4.7, input=True)
 
     # (unused as Ry = 0. for all cases)
-<<<<<<< HEAD
-    Ry_Rd = Float(1., input=True)
-=======
     #
     Ry_Rd = Float(1., input = True)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
     Mx_Rd = Float(1., input=True)
     My_Rd = Float(1., input=True)
@@ -387,15 +375,8 @@ class ULSRxyz(LS):
 
         # evaluate resulting forces and moments
         #
-<<<<<<< HEAD
-        Rres = self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz
-        Mres = self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz
-
-=======
         Rres = sqrt( self.Rx * self.Rx + self.Ry * self.Ry + self.Rz * self.Rz )
         Mres = sqrt( self.Mx * self.Mx + self.My * self.My + self.Mz * self.Mz )
-        
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
         # note: positive values of 'Rx' correspond to shear forces for the support screw
         #       negative values are taken by the compression cushion at the support directly 
         #       Therefore take only the positive part of support force 'Rx' into account
@@ -449,11 +430,8 @@ class ULSRxyz(LS):
     # LS_COLUMNS: specify the properties that are displayed in the view
     #-----------------------------------------------
 
-<<<<<<< HEAD
-=======
     # NOTE: the definition of ls_table.assess_name is given in constructor of 'LCCTable'
     #
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 #    assess_name = 'max_Rx' # @todo: compare with shear resistance of the screw
 #    assess_name = 'min_Rx'
 #    assess_name = 'max_Ry'
@@ -559,12 +537,6 @@ class ULSRxyz(LS):
                        VGroup(
                         HGroup(
                             VGroup(
-<<<<<<< HEAD
-                                Item(name='Rx_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                Item(name='Ry_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                Item(name='Rz_Rd', label='resistance [kN]', style='readonly', format_str="%.1f"),
-                                label='material properties (longitudinal)'
-=======
                                 Item(name = 'Rx_Rd', label = 'resistance R_xd [kN]', style = 'readonly', format_str = "%.1f"),
                                 Item(name = 'Ry_Rd', label = 'resistance R_yd [kN]', style = 'readonly', format_str = "%.1f"),
                                 Item(name = 'Rz_Rd', label = 'resistance R_zd [kN]', style = 'readonly', format_str = "%.1f"),
@@ -573,7 +545,6 @@ class ULSRxyz(LS):
                             VGroup(
                                 Item(name = 'assess_name', label = 'assess_name', style = 'readonly', format_str = "%s"),
                                 label = 'sort rows according to'
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
                                   )
                              ),
 

@@ -26,6 +26,8 @@ from numpy import \
      sin as nsin, meshgrid, float_, ix_, \
      vstack, hstack, sqrt as arr_sqrt, swapaxes, copy
 
+import numpy as np
+
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 
@@ -89,7 +91,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     #---------------------------------------------------------------------------------------------
 
     config_param_vgroup = Group(Item('model_version', style='custom'),
-                               Item('stress_state', style='custom'),
+                          #     Item('stress_state', style='custom'),
                                Item('symmetrization', style='custom'),
                                Item('elastic_debug@'),
                                Item('double_constraint@'),
@@ -767,6 +769,86 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
         return e_app_vct_arr, s_app_vct_arr
 
+
+
+
+    def _get_psi_arr_cv(self, sctx, e_max_arr):
+        '''
+        Returns a list of the compliance integrity factors for all microplanes, i.e. psi_i(e_max) = 1/phi_i(e_max)
+        '''
+        return 1. / self.get_phi_arr(sctx, e_max_arr)
+
+    def _get_psi_mtx_cv(self, sctx, e_max_arr):
+        '''
+        Returns the 2nd order damage effect tensor 'psi_mtx'
+        '''
+        # scalar integrity factor for each microplane
+        psi_arr = self._get_psi_arr_cv(sctx, e_max_arr)
+        # integration terms for each microplanes
+        psi_mtx_arr = array([ psi_arr[i] * self._MPNN[i, :, :] * self._MPW[i]
+                                for i in range(0, self.n_mp) ])
+        # sum of contributions from all microplanes
+        # sum over the first dimension (over the microplanes)
+        psi_mtx = psi_mtx_arr.sum(0)
+        return psi_mtx
+
+    def get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng):
+        # state variables of last converged step at time t_i
+        e_max_arr_old = sctx.mats_state_array
+
+        # compare current values with state variables take max value in history
+        e_max_arr = max(e_max_arr_old, e_max_arr_new)
+
+        # get the corresponding macroscopic stresses for D_mtx at time t_i+1 for strain
+        sig_app_eng, D_mtx_cv = self.get_corr_pred(sctx, e_max_arr, eps_app_eng, 0, 0, 0)
+        psi_arr = self._get_psi_arr_cv(sctx, e_max_arr)
+        psi_mtx_cv = self._get_psi_mtx(sctx, e_max_arr)
+        if self.symmetrization == 'product-type':
+            M4 = self._get_M_tns_product_type(psi_mtx_cv)
+        elif self.symmetrization == 'sum-type':
+            M4 = self._get_M_tns_sum_type(psi_mtx_cv)
+        # apparent stress tensor:
+        sig_app_mtx = self.map_sig_eng_to_mtx(sig_app_eng)
+        # effective stress tensor:
+        sig_eff_mtx = tensordot(M4, sig_app_mtx, [[2, 3], [0, 1]])
+        # effective strain tensor:
+        eps_eff_mtx = tensordot(self.C4_e, sig_eff_mtx, [[2, 3], [0, 1]])
+        # effective microplane strains obtained by projection (kinematic constraint)
+        e_eff_vct_arr = array([ dot(eps_eff_mtx, mpn) for mpn in self._MPN ])
+        # microplane scalar damage variable (integrity):
+        # apparent microplane strains 
+        e_app_vct_arr = array([ dot(psi, e_eff_vct) for psi, e_eff_vct in zip(psi_arr, e_eff_vct_arr) ])
+        # equivalent strain for each microplane
+        e_equiv_arr = self._get_e_equiv_arr(e_app_vct_arr)
+        # lack of fit in the state variables
+        psi_arr_trial = self._get_psi_arr_cv(sctx, e_equiv_arr)
+        lof = psi_arr_trial - psi_arr 
+        return lof
+        
+    # -------------------------------------------------------------
+    # Get the values of the maximum microplane strains (state variables) iteratively 
+    # calculated within each iteration step of the global time loop algorithm fullfilling  
+    # also in the trial steps the consistently derived damage tensor based on the compliance 
+    # version (implicit formulation)
+    # -------------------------------------------------------------    
+    def get_corr_pred_cv(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg = None):
+        '''
+        Returns two arrays containing the microplane strain and stress vectors 
+        consistently derived based on the specified model version, i.e. either 'stiffness' or 'compliance'
+        '''
+        # for compliance version only
+        #
+        if self.model_version != 'compliance':
+            raise ExceptionError('only valid for compliance version')
+            
+        e_max_arr_new = brentq( e_max_arr_new, self.get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng))
+        
+        self.update_state_variables(e_max_arr_new)
+            
+        # get the corresponding macroscopic stresses for D_mtx at time t_i+1 for strain
+        sig_app_eng, D_mtx_cv = self.get_corr_pred(sctx, e_max_arr_new, eps_app_eng, 0, 0, 0)
+
+
     # Equiv:
     def _get_e_s_equiv_arr(self, sctx, eps_app_eng):
         '''
@@ -885,9 +967,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'U_t', U_t        
 #        print 'E_t - U_t', E_t - U_t
         return E_t - U_t
-
-
-
+        
         e_max_arr = self._get_state_variables(sctx, eps_app_eng)
         fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
         fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
@@ -914,6 +994,14 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'e_equiv_arr:  ', e_equiv_arr
         return e_equiv_arr
 
+    def get_max_omega_i(self, sctx, eps_app_eng):
+        '''
+        Get maximum damage at all microplanes. 
+        '''
+        min_phi = np.min(self._get_phi_arr(sctx,eps_app_eng))
+        max_omega = 1. - min_phi 
+        return np.array([ max_omega ])
+         
     def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):
         '''
         Returns the 2nd order damage tensor 'phi_mtx'
@@ -965,7 +1053,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
                  'equiv_projection'         : RTraceEval(eval=self.get_e_equiv_projection,
                                                           ts=self),
                  'fracture_energy_arr'      : self.get_fracture_energy_arr,
-                 'fracture_energy'          : self.get_fracture_energy
+                 'fracture_energy'          : self.get_fracture_energy,
+                 'max_omega_i'              : self.get_max_omega_i
                  }
 
     #----------------------------------------------------------------------------
