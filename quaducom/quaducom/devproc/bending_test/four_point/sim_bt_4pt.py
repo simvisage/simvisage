@@ -187,6 +187,15 @@ class SimBT4PT(IBVModel):
     tmax = Float(1.0, auto_set=False, enter_set=True, input=True)
     tolerance = Float(0.001, auto_set=False, enter_set=True, input=True)
 
+    # specify type of 'linalg.norm'
+    # default value 'None' sets norm to 2-norm,
+    # i.e "norm = sqrt(sum(x_i**2))
+    #
+    # set 'ord=np.inf' to switch norm to
+    # "norm = max(abs(x_i))"
+    # 
+    ord = Enum(None, np.inf)
+
     n_mp = Int(30, input=True)
 
     # @todo: for mats_eval the information of the unit cell should be used
@@ -571,7 +580,8 @@ class SimBT4PT(IBVModel):
                       KMAX=50,
                       tolerance=self.tolerance,
                       RESETMAX=0,
-                      tline=TLine(min=0.0, step=self.tstep, max=self.tmax)
+                      tline=TLine(min=0.0, step=self.tstep, max=self.tmax),
+                      ord=self.ord
                       )
 
         return tloop
