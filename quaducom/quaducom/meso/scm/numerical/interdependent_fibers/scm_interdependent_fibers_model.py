@@ -318,7 +318,7 @@ if __name__ == '__main__':
                                  reinforcement_lst = [reinf],
                                  )
 
-    scm = SCM( length = length,
+    scm = SCM(length=length,
               nx = nx,
               random_field = random_field,
               CB_model = CB_model,

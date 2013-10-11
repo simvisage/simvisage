@@ -111,8 +111,8 @@ class fibers_MC(WeibullFibers):
 
     def cdf(self, e, depsf, r, al, ar):
         '''weibull_fibers_cdf_mc'''
-        Ll, Lr, m = self.Ll, self.Lr, self.m
-        s = ((depsf*(m+1.)*self.sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
+        Ll, Lr, m, sV0 = self.Ll, self.Lr, self.m, self.sV0
+        s = ((depsf*(m+1.)*sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
         a0 = (e+1e-15)/depsf
         expLfree = (e/s) ** (m + 1) * (1.-(1.-al/a0)**(m+1.))
         expLfixed = a0 / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
@@ -124,58 +124,52 @@ class fibers_MC(WeibullFibers):
         expR = expRfree * maskR + expRfixed * (maskR == False)
         return 1. - np.exp(- expL - expR)
 
+    def cdf2(self, e, depsf, r):
+        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
+        #scale parameter with respect to a reference volume
+        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
+        a = e / depsf
+        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+
     def pdf(self, e, depsf, r, al, ar):
         cdf_line = MFnLineArray(xdata=e, ydata=self.cdf(e, depsf, r, al, ar))
         return cdf_line.get_diffs(e)
-    
 
-#     def cdf(self, e, depsf, r, al, ar):
-#         '''weibull_fibers_cdf_mc'''
-#         Ll, Lr, m, sV0 = self.Ll, self.Lr, self.m, self.sV0
-#         s = ((depsf*(m+1.)*sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
-#         a0 = (e+1e-15)/depsf
-#         expLfree = (e/s) ** (m + 1) * (1.-(1.-al/a0)**(m+1.))
-#         s_fixed = (sV0 ** m * self.V0 / (a0 * r ** 2 * pi)) ** (1./m)
-#         expLfixed = (e/s_fixed)**m
-#         maskL = al < Ll
-#         expL = expLfree * maskL + expLfixed * (maskL == False)
-#         expRfree = (e/s) ** (m + 1) * (1.-(1.-ar/a0)**(m+1.))
-#         expRfixed = (e/s_fixed)**m
-#         maskR = ar < Lr
-#         expR = expRfree * maskR + expRfixed * (maskR == False)
-#         return 1. - np.exp(- expL - expR)
-#    def weibull_fibers_cdf(self, ef0, strain_slope,
-#                           shorter_boundary, longer_boundary, r):
-#        m = self.shape
-#        s = ((strain_slope * (m+1) * self.sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
-#        Pf_int = 1 - np.exp(-(ef0/s)**(m+1))
-#        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
-#        Pf_broken = I / (m + 1) / ef0
-#        return Pf_int - Pf_broken
+    def pdf2(self, e, depsf, r):
+        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
+        #scale parameter with respect to a reference volume
+        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
+        a = e / depsf
+        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     from scipy.integrate import cumtrapz
     r = 0.00345
-    tau = 0.5
+    tau = 0.1
     Ef = 200e3
-    m = 4.0
+    m = 3.0
     sV0 = 0.0026
-    e = np.linspace(0.001, 0.04, 100)
+    e = np.linspace(0.001, 0.05, 100)
     a = e * Ef / (2. * tau / r)
+    L = 10.0
+    rat = 2.*a/L
     wfd = fibers_dry(m=m, sV0=sV0)
     CDF = wfd.cdf(e, r, 2*a)
-    #plt.plot(e, CDF, label='dry')
+    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='dry')
     wfcbe = fibers_CB_elast(m=m, sV0=sV0)
     CDF = wfcbe.cdf(e, 2*tau/Ef/r, r, 0.1 * a, 0.1 * a)
     #plt.plot(e, CDF, label='CB')
     wfcbr = fibers_CB_rigid(m=m, sV0=sV0)
     CDF = wfcbr.cdf(e, 2*tau/Ef/r, r)
-    #plt.plot(e, CDF, label='CB rigid')
-    wfmc = fibers_MC(m=m, sV0=sV0, Ll=1.2, Lr=1.2)
+    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='CB rigid')
+    wfmc = fibers_MC(m=m, sV0=sV0, Ll=L, Lr=L)
     CDF = wfmc.cdf(e, 2*tau/Ef/r, r, a, a)
+    CDF2 = wfmc.cdf2(e, 2*tau/Ef/r, r)
+    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='MC')
+    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF2)), label='MC2')
     plt.plot(e, CDF, label='MC')
-    CDF2 = wfmc.cdf2(e, 2*tau/Ef/r, r, a, a)
     plt.plot(e, CDF2, label='MC2')
     plt.legend()
     plt.show()
