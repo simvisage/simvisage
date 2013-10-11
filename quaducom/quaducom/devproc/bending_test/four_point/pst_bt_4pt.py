@@ -137,10 +137,11 @@ if __name__ == '__main__':
                                shape_y=2,
                                shape_z=3,
                                #
-                               w_max= -0.010,
-                               tstep=0.10,
-                               tmax=0.10,
+                               w_max= -0.030,
+                               tstep=0.04,
+                               tmax=1.00,
                                tolerance=0.0001,
+                               ord=np.inf,  # "norm = max(abs(x_i))"
                                #
                                # 'factor_eps_fail' = 1.0 (default)
                                phi_fn_class=PhiFnGeneralExtended
@@ -233,7 +234,11 @@ if __name__ == '__main__':
 
         # pstudy: n_mp
         #
-        pst_list = [ 30 ]
+        pst_list = [ 0.060, 0.0554, 0.065, 0.05 ]
+        
+        # pstudy: n_mp
+        #
+#        pst_list = [ 30 ]
         
         # pstudy: calibration test
         #
@@ -242,11 +247,11 @@ if __name__ == '__main__':
         # pstudy: phi_fn
         #
 #        pst_list = [ PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp ] 
-
         
         for pst_param in pst_list:
             
-            sim_model.n_mp = pst_param
+            sim_model.thickness = pst_param
+#            sim_model.n_mp = pst_param
 #            sim_model.calibration_test = st_param
 #            sim_model.phi_fn_class = st_param
             
@@ -307,6 +312,17 @@ if __name__ == '__main__':
             file.close()
             sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
     
+            # f-w-diagram_thirdpoint
+            #
+            sim_model.f_w_diagram_supprt.refresh()
+            file_name = 'f_w_diagram_thirdpoint_' + param_key + '.pickle'
+            pickle_file_path = join(pickle_path, file_name)
+            file = open(pickle_file_path, 'w')
+            dump(sim_model.f_w_diagram_supprt.trace, file)
+            print 'pickle file saved to file: %s' % file_name
+            file.close()
+            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
+    
             #--------------------        
             # experiments
             #--------------------        
@@ -320,7 +336,7 @@ if __name__ == '__main__':
                     ex_path = join(path, t)
                     ex_run = ExRun(ex_path)
 #                    ex_run.ex_type._plot_ironed_force_deflection_avg(p)
-                    ex_run.ex_type._plot_force_deflection_center(p)
+                    ex_run.ex_type._plot_force_deflection_center(p, offset_w= -0.017)
 #                    ex_run.ex_type._plot_force_deflection_thirdpoints( p )
 
                 # continuous fabrication with pause
@@ -341,7 +357,7 @@ if __name__ == '__main__':
             p.title(param_key, fontsize=8)
             p.savefig(png_file_path, dpi=1200.)
             print 'png-file saved to file: %s' % png_file_path
-            p.show()
+#            p.show()
 
         app.main()
 
@@ -405,17 +421,25 @@ if __name__ == '__main__':
         trace = load(file)
         p.plot(trace.xdata, trace.ydata, color='red')
 
+        # f-w-diagram_thirdpoint
+        #
+        file_name = 'f_w_diagram__thirdpoint_' + param_key + '.pickle'
+        pickle_file_path = join(pickle_path, file_name)
+        file = open(pickle_file_path, 'r')
+        trace = load(file)
+        p.plot(trace.xdata, trace.ydata, color='red')
+
         #--------------------        
         # experiments
         #--------------------        
 
         if test_series == 'BT-12c':
             path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4')
-            tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT', 'BT-4PT-12c-6cm-SH4-V2.DAT' ]
+            tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT' ]  # , 'BT-4PT-12c-6cm-SH4-V2.DAT' ]
             for t in tests:
                 ex_path = join(path, t)
                 ex_run = ExRun(ex_path)
-                ex_run.ex_type._plot_force_deflection_center(p)
+                ex_run.ex_type._plot_force_deflection_center(p, offset_w= -0.017)
 #                ex_run.ex_type._plot_ironed_force_deflection_avg(p)
 #                ex_run.ex_type._plot_force_deflection_thirdpoints( p )
             path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4FF')
