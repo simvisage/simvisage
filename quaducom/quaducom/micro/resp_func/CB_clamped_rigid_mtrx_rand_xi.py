@@ -76,33 +76,55 @@ class CBFinResidualRandXi(RF):
 
     C_code = Str('')
 
-    def cdf(self, e, depsf, r, lm, m, sV0, mask):
-        '''weibull_fibers_cdf_mc'''
-        s = ((depsf*(m+1.)*sV0**m)/(2.*pi*r**2.))**(1./(m+1.))
-        a0 = (e+1e-15)/depsf
-        expfree = (e/s) ** (m + 1)
-        expfixed = a0 / (lm/2.0) * (e/s) ** (m + 1) * (1.-(1.-lm/2.0/a0)**(m+1.))
-        mask = a0 < lm/2.0
-        exp = expfree * mask + expfixed * (mask == False)
-        return 1. - np.exp(- exp)
+#    def cdf(self, e, depsf, r, lm, m, sV0, mask):
+#        '''weibull_fibers_cdf_mc'''
+#        s = ((depsf*(m+1.)*sV0**m)/(2.*pi*r**2.))**(1./(m+1.))
+#        a0 = (e+1e-15)/depsf
+#        expfree = (e/s) ** (m + 1)
+#        expfixed = a0 / (lm/2.0) * (e/s) ** (m + 1) * (1.-(1.-lm/2.0/a0)**(m+1.))
+#        mask = a0 < lm/2.0
+#        exp = expfree * mask + expfixed * (mask == False)
+#        return 1. - np.exp(- exp)
+#
+#    def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
+#        #strain and debonded length of intact fibers
+#        T = 2. * tau / r
+#        k = np.sqrt(T/E_f)
+#        ef0cb = k*np.sqrt(w)  
+#        ef0lin = w/lm + T*lm/4./E_f
+#        depsf = T/E_f
+#        a0 = ef0cb/depsf
+#        mask = a0 < lm/2.0
+#        e = ef0cb * mask + ef0lin * (mask == False)
+#        Gxi = self.cdf(e, depsf, r, lm, m, sV0, mask)
+#        ef0 = ef0cb * mask + ef0lin * (mask == False)
+#        mu_int = e * (1.-Gxi)
+#        APPROXIMATION FROM PHOENIX OR CURTIN
+#        I = s00 * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s00)**(m+1))
+#        #mu_broken = I / 2.
+#        return (mu_int) * E_f * V_f * r**2
 
     def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
         #strain and debonded length of intact fibers
         T = 2. * tau / r
+        #scale parameter with respect to a reference volume
+        s0cb = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
         k = np.sqrt(T/E_f)
-        ef0cb = k*np.sqrt(w)  
-        ef0lin = w/lm + T*lm/4./E_f
-        depsf = T/E_f
-        a0 = ef0cb/depsf
-        mask = a0 < lm/2.0
-        e = ef0cb * mask + ef0lin * (mask == False)
-        Gxi = self.cdf(e, depsf, r, lm, m, sV0, mask)
-        ef0 = ef0cb * mask + ef0lin * (mask == False)
-        mu_int = e * (1.-Gxi)
-        APPROXIMATION FROM PHOENIX OR CURTIN
+        ef0cb = k*np.sqrt(w)
+        Gxicb = 1 - np.exp(-(ef0cb/s0cb)**(m+1))
+        
+        s0lin = ((T**2 * (m+1) * sV0**m * lm)/(4. * E_f**2 * pi * r ** 2))**(1./(m+2))
+        ef0lin = (w - T*lm**2/4./E_f)/lm + T*lm/2./E_f
+        a = ef0lin * E_f / T
+        Gxilin = 1. - np.exp(-(ef0lin/s0lin)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+        
+        ef0 = ef0cb * H(w) * H(T*lm**2/4./E_f - w) + ef0lin * H(w - T*lm**2/4./E_f)
+        Gxi = Gxicb * H(w) * H(T*lm**2/4./E_f - w) + Gxilin * H(w - T*lm**2/4./E_f)
+        mu_int = ef0 * (1.-Gxi)
+        s00 = ((T * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
         I = s00 * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s00)**(m+1))
-        #mu_broken = I / 2.
-        return (mu_int) * E_f * V_f * r**2
+        mu_broken = I / 2.
+        return (mu_int + mu_broken) * E_f * V_f * r**2
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
