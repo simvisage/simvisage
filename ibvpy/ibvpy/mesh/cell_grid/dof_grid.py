@@ -147,10 +147,10 @@ class DofCellGrid(SDomain):
         given the array of nodes.
         '''
         doffed_nodes = self._get_doffed_nodes()
-        print 'nodes'
-        print nodes
-        print 'doffed_nodes'
-        print doffed_nodes
+#        print 'nodes'
+#        print nodes
+#        print 'doffed_nodes'
+#        print doffed_nodes
         intersect_nodes = intersect1d(nodes, doffed_nodes, assume_unique = False)
         return (self.dofs[ index_exp[ intersect_nodes ] ],
                 self.cell_grid.point_X_arr[  index_exp[ intersect_nodes] ])
