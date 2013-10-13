@@ -9,6 +9,7 @@ import numpy as np
 from math import pi
 from scipy.special import gamma, gammainc
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
+from scipy.integrate import cumtrapz
 
 
 def H(x):
@@ -125,39 +126,39 @@ class fibers_MC(WeibullFibers):
         return 1. - np.exp(- expL - expR)
 
     def cdf2(self, e, depsf, r):
-        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
+        '''strain approximated by constant'''
+        m, sV0 = self.m, self.sV0
         #scale parameter with respect to a reference volume
-        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
-        a = e / depsf
-        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+        s = ((depsf * sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
+        return 1. - np.exp(-(e/s)**(m+1))
 
     def pdf(self, e, depsf, r, al, ar):
         cdf_line = MFnLineArray(xdata=e, ydata=self.cdf(e, depsf, r, al, ar))
         return cdf_line.get_diffs(e)
 
     def pdf2(self, e, depsf, r):
-        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
-        #scale parameter with respect to a reference volume
-        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
-        a = e / depsf
-        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
-
+        pdf_line = MFnLineArray(xdata=e, ydata=self.cdf2(e, depsf, r))
+        return pdf_line.get_diffs(e)
+    
+    def gam(self, e, depsf, r):
+        m, sV0 = self.m, self.sV0
+        s = ((depsf * sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
+        return s * gamma(1. + 1./(m+1)) * gammainc(1. + 1./(m+1), (e/s)**(m+1))
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    from scipy.integrate import cumtrapz
     r = 0.00345
     tau = 0.1
-    Ef = 200e3
-    m = 3.0
+    Ef = 240e3
+    m = 5.0
     sV0 = 0.0026
-    e = np.linspace(0.001, 0.05, 100)
+    e = np.linspace(0.001, 0.02, 200)
     a = e * Ef / (2. * tau / r)
-    L = 10.0
+    L = 10000.1
     rat = 2.*a/L
     wfd = fibers_dry(m=m, sV0=sV0)
     CDF = wfd.cdf(e, r, 2*a)
-    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='dry')
+    #plt.plot(e, CDF, label='dry')
     wfcbe = fibers_CB_elast(m=m, sV0=sV0)
     CDF = wfcbe.cdf(e, 2*tau/Ef/r, r, 0.1 * a, 0.1 * a)
     #plt.plot(e, CDF, label='CB')
@@ -167,10 +168,14 @@ if __name__ == '__main__':
     wfmc = fibers_MC(m=m, sV0=sV0, Ll=L, Lr=L)
     CDF = wfmc.cdf(e, 2*tau/Ef/r, r, a, a)
     CDF2 = wfmc.cdf2(e, 2*tau/Ef/r, r)
+    PDF = wfmc.pdf(e, 2*tau/Ef/r, r,a, a)
+    PDF2 = wfmc.pdf2(e, 2*tau/Ef/r, r)
+    GAMMA = wfmc.gam(e, 2*tau/Ef/r, r)
     #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='MC')
     #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF2)), label='MC2')
     plt.plot(e, CDF, label='MC')
-    plt.plot(e, CDF2, label='MC2')
+    #plt.plot(e, np.hstack((0.0,cumtrapz(PDF2*e, e))), label='MC2')
+    #plt.plot(e, GAMMA, label='gamma')
     plt.legend()
     plt.show()
 

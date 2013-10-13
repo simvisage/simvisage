@@ -151,6 +151,7 @@ class CBView(ModelView):
         axes.plot(self.model.w2, self.model.model_extrapolate, lw=2.0, color='red', \
                   label='model')
         axes.legend()
+        axes.set_ylim(0)
 
     def refresh(self):
         self.plot(self.figure, self.figure2)
