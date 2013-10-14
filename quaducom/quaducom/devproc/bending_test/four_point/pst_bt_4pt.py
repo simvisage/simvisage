@@ -113,7 +113,8 @@ if __name__ == '__main__':
 
         sim_model = SimBT4PTDB(
                                ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+#                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_nu28427_Em0.2_nsteps100',
                                age=26,
                                #
                                thickness=0.06,
