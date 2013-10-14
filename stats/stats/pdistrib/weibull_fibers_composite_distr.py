@@ -7,7 +7,7 @@ Created on Jun 6, 2013
 from etsproxy.traits.api import HasTraits, Float
 import numpy as np
 from math import pi
-from scipy.special import gamma, gammainc
+from scipy.integrate import cumtrapz
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
 
@@ -141,6 +141,20 @@ class fibers_MC(WeibullFibers):
         s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
         a = e / depsf
         return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+    
+    def cdf_exact(self, e, depsf, r):
+        CDF = []
+        m, sV0 = self.m, self.sV0
+        for ei in e:
+            ai = ei / depsf
+            z = np.linspace(0.0, ai, 5000)
+            mask = np.sin(pi / self.Ll * z) > 0.0
+            depsfi = depsf * mask - depsf * (mask == False)
+            f = np.hstack((0.0, cumtrapz(depsfi, z)))
+            f = ei - f
+            CDFi = 1. - np.exp(- pi * r ** 2 / sV0 ** m * 2.0 * np.trapz(f**m, z))
+            CDF.append(CDFi)
+        return np.array(CDF)
 
 
 if __name__ == '__main__':
@@ -151,27 +165,31 @@ if __name__ == '__main__':
     Ef = 200e3
     m = 3.0
     sV0 = 0.0026
-    e = np.linspace(0.001, 0.05, 100)
+    e = np.linspace(0.001, 0.1, 100)
     a = e * Ef / (2. * tau / r)
     L = 10.0
     rat = 2.*a/L
     wfd = fibers_dry(m=m, sV0=sV0)
     CDF = wfd.cdf(e, r, 2*a)
-    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='dry')
-    wfcbe = fibers_CB_elast(m=m, sV0=sV0)
-    CDF = wfcbe.cdf(e, 2*tau/Ef/r, r, 0.1 * a, 0.1 * a)
+    #plt.plot(rat, CDF, label='Phoenix 1992')
+    plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='Phoenix 1992')
+    #wfcbe = fibers_CB_elast(m=m, sV0=sV0)
+    #CDF = wfcbe.cdf(e, 2*tau/Ef/r, r, 0.1 * a, 0.1 * a)
     #plt.plot(e, CDF, label='CB')
     wfcbr = fibers_CB_rigid(m=m, sV0=sV0)
     CDF = wfcbr.cdf(e, 2*tau/Ef/r, r)
-    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='CB rigid')
+    #plt.plot(rat, CDF, label='CB rigid')
+    plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='CB rigid')
     wfmc = fibers_MC(m=m, sV0=sV0, Ll=L, Lr=L)
+    CDFexct = wfmc.cdf_exact(e, 2*tau/Ef/r, r)
     CDF = wfmc.cdf(e, 2*tau/Ef/r, r, a, a)
-    CDF2 = wfmc.cdf2(e, 2*tau/Ef/r, r)
-    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='MC')
-    #plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF2)), label='MC2')
-    plt.plot(e, CDF, label='MC')
-    plt.plot(e, CDF2, label='MC2')
-    plt.legend()
+    #CDF2 = wfmc.cdf2(e, 2*tau/Ef/r, r)
+    plt.plot(np.log(rat), np.log(-np.log(1.0 - CDF)), label='MC')
+    plt.plot(np.log(rat), np.log(-np.log(1.0 - CDFexct)), label='exact')
+    #plt.plot(rat, CDF, label='MC')
+    #plt.plot(rat, CDFexct, label='exact')
+    #plt.ylim(0)
+    plt.legend(loc='best')
     plt.show()
 
 
