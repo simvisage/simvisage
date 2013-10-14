@@ -45,7 +45,7 @@ from ibvpy.core.ibv_resource import IBVResource
 
 from etsproxy.util.home_directory import get_home_directory
 
-#import pymem
+# import pymem
 from ibvpy.core.tstepper import TStepper
 
 LOGGING_ON = False
@@ -104,7 +104,7 @@ class CompTimer(object):
         self.reset()
 
     def reset(self):
-        self.start = time.clock() # time of this process
+        self.start = time.clock()  # time of this process
         self.start_all = time.time()  # wall clock time
 
     def record(self):
@@ -246,7 +246,7 @@ class TLoop(IBVResource):
         self.solv_timer = CompTimer(name='Solve')
         self.rtrace_mngr_timer = CompTimer(name='RTrace')
 
-        #self.mem_counter = pymem.MemCounter()
+        # self.mem_counter = pymem.MemCounter()
 
     t_n = Float()
     def _t_n_default(self):
@@ -301,6 +301,11 @@ class TLoop(IBVResource):
 
     # Tolerance in the time variable to end the iteration.  
     step_tolerance = Float(1e-8)
+
+    # specify type of 'linalg.norm'
+    # default 'ord = None' returns 2-norm
+    # 
+    ord = Enum(None, np.inf)
 
     def eval(self, e=None):
 
@@ -384,12 +389,12 @@ class TLoop(IBVResource):
                     print 'K\n', K
                     print 'R\n', R
 
-                #self.crpr_timer.record()
-                #self.crpr_timer.report()
+                # self.crpr_timer.record()
+                # self.crpr_timer.report()
                 self.rtrace_mngr_timer.reset()
                 self.rtrace_mngr.record_iter(self.tstepper.sctx, self.U_k)
                 self.rtrace_mngr_timer.record()
-                #self.rtrace_mngr_timer.report()
+                # self.rtrace_mngr_timer.report()
 
                 if adap.ihandler_needed():
                     adap.ihandler_invoke()
@@ -411,7 +416,12 @@ class TLoop(IBVResource):
                     print 'constrained K\n', K
                     print 'constrained R\n', R
 
-                self.norm = linalg.norm(R)
+                # default set to 2-norm, i.e
+                # "norm = sqrt(sum(x_i**2))
+                # set 'ord=np.inf' to switch norm to
+                # "norm = max(abs(x_i))"
+                #
+                self.norm = linalg.norm(R, ord=self.ord)
 
                 if self.debug:
                     print 'Norm:', self.norm
@@ -420,7 +430,7 @@ class TLoop(IBVResource):
                     self.n_reset = 0
                     if LOGGING_ON:
                         log.info("time step equilibrated in %d step(s)", self.k)
-                    break                        # update_switch -> on
+                    break  # update_switch -> on
 
                 self.solv_timer.reset()
                 self.d_U = K.solve()  # DG_k * d_U = r
@@ -429,7 +439,7 @@ class TLoop(IBVResource):
                     print 'd_U\n', self.d_U
 
                 self.solv_timer.record()
-                #self.solv_timer.report()
+                # self.solv_timer.report()
 
                 self.U_k += self.d_U
 
@@ -438,7 +448,7 @@ class TLoop(IBVResource):
                 self.ttot_k += 1
                 step_flag = 'corrector'
 
-            else:                                # handling nonconverged step
+            else:  # handling nonconverged step
 
                 if abort_tloop:
                     # ultimate failure exit the calculation
@@ -448,7 +458,7 @@ class TLoop(IBVResource):
                 if LOGGING_ON:
                     log.info("no convergence reached - refinement in time")
                 self.n_reset = self.n_reset + 1  # adaptive strategy halving d_t
-                if self.n_reset > self.RESETMAX: # max number of resets achieved
+                if self.n_reset > self.RESETMAX:  # max number of resets achieved
 
                     # Handle this situation with an exception with an
                     # associated dialog box and concise report of the
@@ -468,8 +478,8 @@ class TLoop(IBVResource):
                 continue
 
             self.iter_timer.record()
-            #self.iter_timer.report()
-            #self.mem_counter.record()
+            # self.iter_timer.report()
+            # self.mem_counter.record()
 
             if self.sync_resp_tracing:
                 self.rtrace_mngr.timer_tick()
@@ -482,9 +492,9 @@ class TLoop(IBVResource):
                     pass
                 break
 
-            if adap.ehandler_needed(): # explicit adaptations 
+            if adap.ehandler_needed():  # explicit adaptations 
                 if adap.ehandler_accept():  # accept equilibrium?
-                    self.accept_time_step() # register the state and response
+                    self.accept_time_step()  # register the state and response
                 adap.ehandler_invoke()
             else:
 
@@ -570,7 +580,7 @@ class TLoop(IBVResource):
             print 'LS:%3d, Time: %.4f' % \
             (self.ls_counter, self.t_n1),
             if self.verbose_iteration:
-                print # just add a new line
+                print  # just add a new line
 
     def report_load_step_end(self):
         if self.verbose_load_step and not self.verbose_iteration:
@@ -615,8 +625,8 @@ class TLoop(IBVResource):
                                 Item('tolerance', label='Tolerance on residual norm')
                                 ),
                         ),
-                 #Item('rmgr', style="custom"),
-                 #handler = TCHandler(),
+                 # Item('rmgr', style="custom"),
+                 # handler = TCHandler(),
                  resizable=True,
                  scrollable=True,
                  height=0.75, width=0.75,
