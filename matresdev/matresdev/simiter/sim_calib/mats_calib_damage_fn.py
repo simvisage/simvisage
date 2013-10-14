@@ -761,8 +761,8 @@ def run():
 #                              'TT11-10a-average.DAT' )
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
-                              '2011-06-10_TT-12c-6cm-0-TU_ZiE',
-                              'TT-12c-6cm-0-TU-V1.DAT')
+#                               '2011-06-10_TT-12c-6cm-0-TU_ZiE',
+#                               'TT-12c-6cm-0-TU-V1.DAT')
 
 #                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
@@ -770,14 +770,14 @@ def run():
 #                              '2012-01-09_TT-12c-6cm-0-TU_SH1',
 #                              'TT-12c-6cm-TU-SH1F-V3.DAT')
 
-#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+                            '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                            'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
-        test_file = join(simdb.exdata_dir,
-                              'tensile_tests',
-                              'buttstrap_clamping',
-                              '2013-07-18_TTb-6c-2cm-0-TU_bs5',
-                              'TTb-6c-2cm-0-TU-V1_bs5.DAT')
+#         test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-18_TTb-6c-2cm-0-TU_bs5',
+#                               'TTb-6c-2cm-0-TU-V1_bs5.DAT')
 
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
@@ -803,7 +803,7 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 9
+        age = 26
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
@@ -813,7 +813,7 @@ def run():
         # set 'nu' 
         # @todo: check values stored in 'mat_db'
         #
-        nu = 0.25
+        nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
         
         n_steps = 100
