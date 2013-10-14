@@ -24,7 +24,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
 
-## overload the 'get_label' method from 'Item' to display units in the label
+# # overload the 'get_label' method from 'Item' to display units in the label
 from util.traits.ui.item import \
     Item
 
@@ -102,7 +102,7 @@ from matresdev.db.simdb import \
 #
 simdb = SimDB()
 
-#class ExpBendingTestThreePoint(ExType):
+# class ExpBendingTestThreePoint(ExType):
 class ExpBT3PT(ExType):
     '''Experiment: Bending Test Three Point
     '''
@@ -233,9 +233,11 @@ class ExpBT3PT(ExType):
                 # read in values in 'names_and_units' read in from the corresponding .DAT-file
                 #
                 self.data_array_ASC = loadtxt(file_name,
-                                              delimiter = ';')
- 
-    names_and_units = Property(depends_on = 'data_file')
+                                              delimiter=';')
+        else:
+            print 'WARNING: data_file with path %s does not exist == False' % (self.data_file)
+
+    names_and_units = Property(depends_on='data_file')
     @cached_property
     def _get_names_and_units(self):
         '''names and units corresponding to the returned '_data_array' by 'loadtxt_bending'
@@ -245,7 +247,7 @@ class ExpBT3PT(ExType):
         print 'names, units from .raw-file', names, units
         return names, units
     
-    names_and_units_ASC = Property(depends_on = 'data_file')
+    names_and_units_ASC = Property(depends_on='data_file')
     @cached_property
     def _get_names_and_units_ASC(self):
         ''' Extract the names and units of the measured data.
@@ -254,34 +256,34 @@ class ExpBT3PT(ExType):
         '''
         file_split = self.data_file.split('.')
         file_name = file_split[0] + '.DAT'
-        data_file = open( file_name, 'r' )
+        data_file = open(file_name, 'r')
         lines = data_file.read().split()
         names = []
         units = []
-        for i in range( len( lines ) ):
+        for i in range(len(lines)):
             if lines[i] == '#BEGINCHANNELHEADER':
-                name = lines[i + 1].split( ',' )[1]
-                unit = lines[i + 3].split( ',' )[1]
-                names.append( name )
-                units.append( unit )
+                name = lines[i + 1].split(',')[1]
+                unit = lines[i + 3].split(',')[1]
+                names.append(name)
+                units.append(unit)
 
         print 'names, units extracted from .DAT-file', names, units
         return names, units
 
-    factor_list_ASC = Property(depends_on = 'data_file')
+    factor_list_ASC = Property(depends_on='data_file')
     def _get_factor_list_ASC(self):
         return self.names_and_units_ASC[0]
     
-    def _set_array_attribs( self ):
+    def _set_array_attribs(self):
         '''Set the measured data as named attributes defining slices into 
         the processed data array.
         '''
         for i, factor in enumerate(self.factor_list):
-            self.add_trait(factor, Array(value = self.processed_data_array[:, i], transient = True))
+            self.add_trait(factor, Array(value=self.processed_data_array[:, i], transient=True))
 
         if self.flag_ASC_file:
             for i, factor in enumerate(self.factor_list_ASC):
-                self.add_trait(factor, Array(value = self.data_array_ASC[:, i], transient = True))
+                self.add_trait(factor, Array(value=self.data_array_ASC[:, i], transient=True))
                 
 
 
@@ -312,7 +314,7 @@ class ExpBT3PT(ExType):
         # subtract the deformation of the elastomer cushion between the cylinder
         # and change sign in positive values for vertical displacement [mm]
         #
-        return self.w_raw - self.elastomer_law( self.F_raw )
+        return self.w_raw - self.elastomer_law(self.F_raw)
 
     M_ASC = Property(Array('float_'), depends_on='input_change')
     @cached_property
@@ -354,12 +356,12 @@ class ExpBT3PT(ExType):
         # convert machine displacement [mm] to positive values
         # and remove offset
         #
-        self.w_raw *= - 1.0 
+        self.w_raw *= -1.0 
         self.w_raw -= self.w_raw[0] 
 
         # convert [permille] to [-] and return only positive values
         #
-        self.eps_c_raw *= - 0.001 
+        self.eps_c_raw *= -0.001 
         
         # access the derived arrays to initiate their processing
         #
@@ -374,19 +376,19 @@ class ExpBT3PT(ExType):
         #
         if self.flag_ASC_file == True:
 
-            self.F_ASC = - 1.0 * self.Kraft 
+            self.F_ASC = -1.0 * self.Kraft 
 
             # remove offset and change sign to return positive displacement values
             #
             if hasattr(self, "WA50"):
                 self.WA50 *= -1
                 self.WA50 -= self.WA50[0]
-                WA50_avg = np.average( self.WA50 )
+                WA50_avg = np.average(self.WA50)
             
             if hasattr(self, "W10_u"):
                 self.W10_u *= -1
                 self.W10_u -= self.W10_u[0]
-                W10_u_avg = np.average( self.W10_u )
+                W10_u_avg = np.average(self.W10_u)
 
             # check which displacement gauge has been used depending on weather two names are listed in .DAT file or only one
             # and assign values to 'w_ASC'
@@ -409,7 +411,7 @@ class ExpBT3PT(ExType):
             # switch to positive values for compressive strains 
             # and remove offset
             #
-            self.eps_c_ASC = - 0.001 * self.DMS_l 
+            self.eps_c_ASC = -0.001 * self.DMS_l 
             self.eps_c_ASC -= self.eps_c_ASC[0] 
 
             # access the derived arrays to initiate their processing
@@ -422,12 +424,14 @@ class ExpBT3PT(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / machine displacement (without w_elast) (interpolated)' : '_plot_force_machine_displacement_wo_elast_interpolated',
-                      
-                      'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
+    plot_templates = {
                       'force / machine displacement (incl. w_elast)'   : '_plot_force_machine_displacement',
-                      'force / gauge displacement'                     : '_plot_force_gauge_displacement',
+                      'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
+                      'force / machine displacement (without w_elast, interpolated)' : '_plot_force_machine_displacement_wo_elast_interpolated',
                       
+                      'force / gauge displacement'                     : '_plot_force_gauge_displacement',
+                      'force / gauge displacement (interpolated)'      : '_plot_force_gauge_displacement_interpolated',
+
                       'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
                       'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
 
@@ -435,12 +439,35 @@ class ExpBT3PT(ExType):
                       'moment / eps_c (raw)'                           : '_plot_moment_eps_c_raw',
 
                       'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
-                      'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw'
+                      'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw',
+    
+                      'analytical bending stiffness'                   :  '_plot_analytical_bending_stiffness'
                      }
 
     default_plot_template = 'force / deflection (displacement gauge)'
 
-    def _plot_force_machine_displacement_wo_elast(self, axes):
+    def _plot_analytical_bending_stiffness(self, axes, color='red', linewidth=1., linestyle='--'):
+        '''plot the analytical bending stiffness of the beam (3 point bending)
+        '''
+        t = self.thickness
+        w = self.width
+        L = self.length
+        
+        # coposite E-modulus
+        #
+        E_c = self.E_c
+
+        # moment of inertia
+        #
+        I_yy = t ** 4 * w / 12.
+
+        delta_11 = L ** 3 / 48 / E_c / I_yy
+        K_linear = 1 / delta_11  # [MN/m] bending stiffness with respect to a force applied at center of the beam
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., K_linear])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
+    def _plot_force_machine_displacement_wo_elast(self, axes, color='blue', linewidth=1., linestyle='-'):
 
         # get the index of the maximum stress
         #
@@ -450,14 +477,14 @@ class ExpBT3PT(ExType):
         #
         f_asc = self.F_raw[:max_force_idx + 1]
         w_asc = self.w_wo_elast[:max_force_idx + 1]
-        axes.plot( w_asc, f_asc )
+        axes.plot(w_asc, f_asc, color=color, linewidth=linewidth, linestyle=linestyle)
 
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
-    def _plot_force_machine_displacement_wo_elast_interpolated(self, axes):
+    def _plot_force_machine_displacement_wo_elast_interpolated(self, axes, color='green', linewidth=1., linestyle='-'):
 
         # get the index of the maximum stress
         #
@@ -477,31 +504,31 @@ class ExpBT3PT(ExType):
         f10 = f_asc[ idx_10 ]
         w8 = w_asc[ idx_8 ]
         w10 = w_asc[ idx_10 ]        
-        m = (f10-f8)/(w10-w8)
+        m = (f10 - f8) / (w10 - w8)
         delta_w = f8 / m
         w0 = w8 - delta_w * 0.9
         print 'w0', w0 
         f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]]) 
         w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])  
-        print 'type( w_asc_interpolated )', type( w_asc_interpolated ) 
+        print 'type( w_asc_interpolated )', type(w_asc_interpolated) 
         w_asc_interpolated -= float(w0) 
-        axes.plot(w_asc_interpolated, f_asc_interpolated, color = 'blue', linewidth = 1)
+        axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
 
 
-    def _plot_force_machine_displacement(self, axes):
+    def _plot_force_machine_displacement(self, axes, color='black', linewidth=1., linestyle='-'):
         xdata = self.w_raw
         ydata = self.F_raw
-        axes.plot( xdata, ydata )
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
 
-    def _plot_force_gauge_displacement(self, axes):
+    def _plot_force_gauge_displacement(self, axes, color='black', linewidth=1., linestyle='-'):
         xdata = self.w_ASC
         ydata = self.F_ASC
-        axes.plot( xdata, ydata )
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -525,6 +552,36 @@ class ExpBT3PT(ExType):
 
         axes.plot(w_smooth, F_smooth, color='blue', linewidth=2)
 
+    def _plot_force_gauge_displacement_interpolated(self, axes, color='green', linewidth=1., linestyle='-'):
+        '''get only the ascending branch of the meassured load-displacement curve)'''
+        
+        # get the index of the maximum stress
+        #
+        max_force_idx = argmax(self.F_ASC)
+
+        # get only the ascending branch of the response curve
+        #
+        f_asc = self.F_ASC[:max_force_idx + 1]
+        w_asc = self.w_ASC[:max_force_idx + 1]
+
+        # interpolate the starting point of the center deflection curve based on the slope of the curve
+        # (remove offset in measured displacement where there is still no force measured)
+        # 
+        idx_10 = np.where(f_asc > f_asc[-1] * 0.10)[0][0]
+        idx_8 = np.where(f_asc > f_asc[-1] * 0.08)[0][0]
+        f8 = f_asc[ idx_8 ]
+        f10 = f_asc[ idx_10 ]
+        w8 = w_asc[ idx_8 ]
+        w10 = w_asc[ idx_10 ]        
+        m = (f10 - f8) / (w10 - w8)
+        delta_w = f8 / m
+        w0 = w8 - delta_w * 0.9
+        print 'w0', w0 
+        f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]]) 
+        w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])  
+        print 'type( w_asc_interpolated )', type(w_asc_interpolated) 
+        w_asc_interpolated -= float(w0) 
+        axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
 
     def _plot_smoothed_force_machine_displacement_wo_elast(self, axes):
 
@@ -547,7 +604,7 @@ class ExpBT3PT(ExType):
 #        w0_lin = array( [0.0, w_smooth[10] ], dtype = 'float_' )
 #        f0_lin = array( [0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_' )
 
-        #axes.plot( w0_lin, f0_lin, color = 'black' )
+        # axes.plot( w0_lin, f0_lin, color = 'black' )
 
 
     def _plot_moment_eps_c_ASC(self, axes):
