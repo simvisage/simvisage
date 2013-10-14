@@ -92,7 +92,7 @@ font.set_size('large')
 font.set_variant('normal')
 font.set_weight('medium')
 
-def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
+def format_plot(axes, xlim = None, ylim = None, xlabel = '', ylabel = ''):
     '''format 2d-plot black and with with times legends 
     '''
     #-------------------------------------------------------------------
@@ -114,11 +114,11 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
 
     # format ticks for plot
     #
-    locs, labels = axes.xticks()
+    locs,labels = axes.xticks()
     axes.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.xlabel(xlabel, fontproperties=font)
 
-    locs, labels = axes.yticks()
+    locs,labels = axes.yticks()
     axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
 
@@ -127,28 +127,12 @@ if __name__ == '__main__':
     from matresdev.db.exdb.ex_run import ExRun
     import pylab as p
 
-    do = 'show_test_results_BT'
-#    do = 'show_test_results_ST'
+    do = 'show_test_results_ST'
 #    do = 'show_test_results_SH'
 #    do = 'show_test_results_TT-CAR'
 #    do = 'show_test_results_TT'
 
-    if do == 'show_test_results_BT':
 
-        ex_path_V1 = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-18_BT-6c-2cm-0-TU_bs5',
-                               'BT-6c-2cm-0-TU-V1_bs5.DAT')
-#        ex_path_V2 = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-18_BT-6c-2cm-0-TU_bs5',
-#                               'BT-6c-2cm-0-TU-V2_bs5.DAT')
-#        ex_path_V3 = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-18_BT-6c-2cm-0-TU_bs5',
-#                               'BT-6c-2cm-0-TU-V3_bs5.DAT')
-        tests = [ ex_path_V1 ]
-        for ex_path in tests:
-            ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_gauge_displacement(p)
-            ex_run.ex_type._plot_force_machine_displacement(p)
-            
-        p.show()
-        
     #---------------------------
     # shell test results
     #---------------------------
@@ -163,9 +147,9 @@ if __name__ == '__main__':
         for t in tests:
             ex_path = join(path, t)
             ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_center_deflection(p)
+            ex_run.ex_type._plot_force_center_deflection( p )
 
-        format_plot(p, xlabel='strain [1E-3]', ylabel='applied force [kN]', xlim=80., ylim=20.)
+        format_plot(p, xlabel = 'strain [1E-3]', ylabel = 'applied force [kN]', xlim = 80., ylim = 20.)
 
 #        p.legend(prop = font)
         
@@ -191,11 +175,11 @@ if __name__ == '__main__':
             ex_path = join(path, t)
             ex_run = ExRun(ex_path)
 #            ex_run.ex_type._plot_force_deflection_center( p, color = 'black', linewidth = 1., linestyle = '-', label = '2D-05-11' )
-            ex_run.ex_type._plot_force_eps_t(p, linewidth=1., linestyle='-', label='2D-05-11')
+            ex_run.ex_type._plot_force_eps_t( p, linewidth = 1., linestyle = '-', label = '2D-05-11' )
 
-        format_plot(p, xlabel='strain [1E-3]', ylabel='applied force [kN]', xlim=10., ylim=100.)
+        format_plot(p, xlabel = 'strain [1E-3]', ylabel = 'applied force [kN]', xlim = 10., ylim = 100.)
 
-        p.legend(prop=font)
+        p.legend(prop = font)
         
         p.show()
 
@@ -212,20 +196,20 @@ if __name__ == '__main__':
         # carbon, tissue, 800tex
         #
         path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2013-05-21-TT-6c-2cm-0-TU_bs2')
-        tests = ['TT-6c-2cm-0-TU-V1_bs2.DAT']  # , 'TT-6c-2cm-0-TU-V2_bs2.DAT']
+        tests = ['TT-6c-2cm-0-TU-V1_bs2.DAT']#, 'TT-6c-2cm-0-TU-V2_bs2.DAT']
         for t in tests:
             ex_path = join(path, t)
             ex_run = ExRun(ex_path)
 #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1., linestyle = '-', label = 'bs2', xscale = 1000. )
-            ex_run.ex_type._plot_comp_stress_strain_asc(p, color='black', linewidth=1., linestyle='-', label='bs2', xscale=1000.)
+            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1., linestyle = '-', label = 'bs2', xscale = 1000. )
 
 #        path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2013-06-12_TT-6c-2cm-0-TU_bs3')
 #        tests = ['TT-6c-2cm-0-TU-V1_bs3.DAT', 'TT-6c-2cm-0-TU-V2_bs3.DAT', 'TT-6c-2cm-0-TU-V3_bs3.DAT']
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'bs3', xscale = 1000. )
 #
 #        path = join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d')
@@ -233,7 +217,7 @@ if __name__ == '__main__':
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'bs4', xscale = 1000. )
 #
 #        path = join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-18_TTb-6c-2cm-0-TU_bs5')
@@ -241,10 +225,10 @@ if __name__ == '__main__':
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'bs5', xscale = 1000. )
  
-        p.legend(prop=font)
+        p.legend(prop = font)
 
         p.show()
 
@@ -265,8 +249,8 @@ if __name__ == '__main__':
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
-# #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'CAR-800-TU', xscale = 1.  )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = '2D-05-11' )
+##            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'CAR-800-TU', xscale = 1.  )
 #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '--', label = 'CAR-800-TU', xscale = 1.  )
 #
 #        ex_path = join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
@@ -282,7 +266,7 @@ if __name__ == '__main__':
         ex_path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone',
                                          '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2F-V3.DAT')
         ex_run = ExRun(ex_path)
-        ex_run.ex_type._plot_tex_stress_strain_asc(p)  # , color = 'black', linewidth = 1.3, linestyle = '--', label = 'CAR-800-TU-bs4', xscale = 1000.  )
+        ex_run.ex_type._plot_tex_stress_strain_asc( p )#, color = 'black', linewidth = 1.3, linestyle = '--', label = 'CAR-800-TU-bs4', xscale = 1000.  )
                                          
 #        ex_path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone',
 #                                         '2012-01-10_TT-12c-6cm-0-TU_SH1', 'TT-12c-6cm-0-TU-SH1F-V3.DAT')
@@ -296,25 +280,25 @@ if __name__ == '__main__':
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-.', label = '2D-09-12'  )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-.', label = '2D-09-12'  )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-.', label = 'ARG-1200-TU', xscale = 1000.   )
 #        
 #        # AR-glas, tricot, 1200tex
 #        #
-# #        path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-03-05_TT-10g-3cm-0-TR')
-# #        tests = ['TT-10g-3cm-0-TR-V2.DAT']#, 'TT-10g-3cm-0-TR-V3.DAT']
+##        path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-03-05_TT-10g-3cm-0-TR')
+##        tests = ['TT-10g-3cm-0-TR-V2.DAT']#, 'TT-10g-3cm-0-TR-V3.DAT']
 #        path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-03-17_TT-8g-3cm-0-TR')
 #        tests = ['TT-8g-3cm-0-TR-V2.DAT']#, 'TT-8g-3cm-0-TR-V2.DAT', 'TT-8g-3cm-0-TR-V3.DAT']
 #        for t in tests:
 #            ex_path = join(path, t)
 #            ex_run = ExRun(ex_path)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-', label = '2D-01-08'  )
+##            ex_run.ex_type._plot_tex_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-', label = '2D-01-08'  )
 #            ex_run.ex_type._plot_comp_stress_strain_asc( p, color = 'black', linewidth = 1.3, linestyle = '-', label = 'ARG-1200-TR', xscale = 1000.   )
 #
-# #        format_plot(p, xlabel = 'Dehnung [1E-3]', ylabel = 'Textilspannung [MPa]', xlim = 14., ylim = 1400.)
+##        format_plot(p, xlabel = 'Dehnung [1E-3]', ylabel = 'Textilspannung [MPa]', xlim = 14., ylim = 1400.)
 #        format_plot(p, xlabel = 'Dehnung [1E-3]', ylabel = 'Kompositspannung [MPa]', xlim = 14., ylim = 25.)
 
-        p.legend(prop=font)
+        p.legend(prop = font)
 
         p.savefig('sig_c-eps', dpi=600.)
                     

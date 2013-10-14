@@ -26,7 +26,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
 
-# # overload the 'get_label' method from 'Item' to display units in the label
+## overload the 'get_label' method from 'Item' to display units in the label
 from util.traits.ui.item import \
     Item
 
@@ -77,7 +77,7 @@ from etsproxy.traits.ui.tabular_adapter \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-data_file_editor = FileEditor(filter=['*.DAT'])
+data_file_editor = FileEditor(filter = ['*.DAT'])
 
 from mathkit.array.smoothing import smooth
 
@@ -112,16 +112,16 @@ class ExpST(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    edge_length = Float(1.25, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
-    thickness = Float(0.03, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+    edge_length = Float(1.25, unit = 'm', input = True, table_field = True,
+                           auto_set = False, enter_set = True)
+    thickness = Float(0.03, unit = 'm', input = True, table_field = True,
+                           auto_set = False, enter_set = True)
 
     # age of the concrete at the time of testing
-    age = Int(28, unit='d', input=True, table_field=True,
-                             auto_set=False, enter_set=True)
-    loading_rate = Float(0.50, unit='mm/min', input=True, table_field=True,
-                            auto_set=False, enter_set=True)
+    age = Int(28, unit = 'd', input = True, table_field = True,
+                             auto_set = False, enter_set = True)
+    loading_rate = Float(0.50, unit = 'mm/min', input = True, table_field = True,
+                            auto_set = False, enter_set = True)
 
     #--------------------------------------------------------------------------
     # composite cross section
@@ -141,17 +141,17 @@ class ExpST(ExType):
         n_layers = 10
         s_tex_z = 0.030 / (n_layers + 1)
         ccs = CompositeCrossSection (
-                    fabric_layup_list=[
+                    fabric_layup_list = [
                             plain_concrete(s_tex_z * 0.5),
                             FabricLayUp (
-                                   n_layers=n_layers,
-                                   orientation_fn_key=orientation_fn_key,
-                                   s_tex_z=s_tex_z,
-                                   fabric_layout_key=fabric_layout_key
+                                   n_layers = n_layers,
+                                   orientation_fn_key = orientation_fn_key,
+                                   s_tex_z = s_tex_z,
+                                   fabric_layout_key = fabric_layout_key
                                    ),
                             plain_concrete(s_tex_z * 0.5)
                                         ],
-                    concrete_mixture_key=concrete_mixture_key
+                    concrete_mixture_key = concrete_mixture_key
                     )
         return ccs
 
@@ -160,15 +160,15 @@ class ExpST(ExType):
     #--------------------------------------------------------------------------
 
     # E-modulus of the composite at the time of testing 
-    E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
+    E_c = Property(Float, unit = 'MPa', depends_on = 'input_change', table_field = True)
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
     # E-modulus of the composite after 28 days
-    E_c28 = DelegatesTo('ccs', listenable=False)
+    E_c28 = DelegatesTo('ccs', listenable = False)
 
     # reinforcement ration of the composite 
-    rho_c = DelegatesTo('ccs', listenable=False)
+    rho_c = DelegatesTo('ccs', listenable = False)
 
     #--------------------------------------------------------------------------------
     # define processing
@@ -177,12 +177,12 @@ class ExpST(ExType):
     # put this into the ironing procedure processor
     #
     jump_rtol = Float(0.03,
-                      auto_set=False, enter_set=True,
-                      ironing_param=True)
+                      auto_set = False, enter_set = True,
+                      ironing_param = True)
 
 
     data_array_ironed = Property(Array(float),
-                                  depends_on='data_array, +ironing_param, +axis_selection')
+                                  depends_on = 'data_array, +ironing_param, +axis_selection')
     @cached_property
     def _get_data_array_ironed(self):
         '''remove the jumps in the displacement curves 
@@ -269,10 +269,9 @@ class ExpST(ExType):
                       'force / deflection (center-edges)'         : '_plot_force_center_edge_deflection',
                       'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
                       'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
-                      'force / average deflection (c; ce; e)'     : '_plot_force_deflection_avg',
+                      'force / average deflection (c; ce; e)'    : '_plot_force_deflection_avg',
                       'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
-                      'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
-                      'force / deflection (corner)'               : '_plot_force_corner_deflection',
+                      'force / deflection (center) interpolated' : '_plot_force_center_deflection_interpolated'
                      }
     
     default_plot_template = 'force / deflection (center)'
@@ -309,27 +308,12 @@ class ExpST(ExType):
     def _get_w_smooth(self):
         return smooth(self.w_asc, self.n_points, 'flat')
 
-    def _plot_force_center_deflection(self, axes, offset_w=0.):
+    def _plot_force_center_deflection(self, axes):
         '''plot the F-w-diagramm for the center (c) deflection
         '''
         xkey = 'deflection [mm]'
         ykey = 'force [kN]'
         xdata = -self.WA_M
-        ydata = -self.Kraft
-
-        xdata += offset_w
-#        axes.set_xlabel('%s' % (xkey,))
-#        axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
-                       )
-
-    def _plot_force_corner_deflection(self, axes):
-        '''plot the F-w-diagramm for the corner deflection (at the center of one of the supports)
-        '''
-        xkey = 'deflection [mm]'
-        ykey = 'force [kN]'
-        xdata = -self.WA_Eck
         ydata = -self.Kraft
 
 #        axes.set_xlabel('%s' % (xkey,))
@@ -341,11 +325,11 @@ class ExpST(ExType):
     def _plot_force_center_deflection_smoothed(self, axes):
         '''plot the F-w-diagramm for the center (c) deflection (smoothed curves)
         '''
-        axes.plot(self.w_smooth, self.f_smooth, color='blue', linewidth=1)
+        axes.plot(self.w_smooth, self.f_smooth, color = 'blue', linewidth = 1)
 #        secant_stiffness_w10 = (f_smooth[10] - f_smooth[0]) / (w_smooth[10] - w_smooth[0])
 #        w0_lin = array([0.0, w_smooth[10] ], dtype = 'float_')
 #        f0_lin = array([0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_')
-        # axes.plot( w0_lin, f0_lin, color = 'black' )
+        #axes.plot( w0_lin, f0_lin, color = 'black' )
 
     def _plot_force_center_deflection_interpolated(self, axes):
         '''plot the F-w-diagramm for the center (c) deflection (interpolated initial stiffness)
@@ -365,8 +349,8 @@ class ExpST(ExType):
         idx_0 = np.where(f_asc > 0.05)[0][0]
 
         f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
-        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ] 
-        axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+        w_m_cut = np.hstack([w_m[ idx_0: ]])-w_m[ idx_0 ] 
+        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 1.5)
 
     def _plot_force_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the edge (e) deflections
@@ -377,10 +361,10 @@ class ExpST(ExType):
         w_h_asc = -self.WA_H[:max_force_idx + 1]
         w_l_asc = -self.WA_L[:max_force_idx + 1]
         w_r_asc = -self.WA_R[:max_force_idx + 1]
-        axes.plot(w_v_asc, f_asc, color='blue', linewidth=1)
-        axes.plot(w_h_asc, f_asc, color='blue', linewidth=1)
-        axes.plot(w_l_asc, f_asc, color='green', linewidth=1)
-        axes.plot(w_r_asc, f_asc, color='green', linewidth=1)
+        axes.plot(w_v_asc, f_asc, color = 'blue', linewidth = 1)
+        axes.plot(w_h_asc, f_asc, color = 'blue', linewidth = 1)
+        axes.plot(w_l_asc, f_asc, color = 'green', linewidth = 1)
+        axes.plot(w_r_asc, f_asc, color = 'green', linewidth = 1)
 
     def _plot_force_edge_deflection_avg(self, axes):
         '''plot the average F-w-diagramm for the edge (e) deflections
@@ -394,8 +378,8 @@ class ExpST(ExType):
         # get the average displacement values of the corresponding displacement gauges
         w_vh_asc = (w_v_asc + w_h_asc) / 2
         w_lr_asc = (w_l_asc + w_r_asc) / 2
-        axes.plot(w_vh_asc, f_asc, color='blue', linewidth=1, label='w_vh')
-        axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
+        axes.plot( w_vh_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_vh' )
+        axes.plot( w_lr_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_lr' )
         axes.legend()
 
     def _plot_force_center_edge_deflection(self, axes):
@@ -406,8 +390,8 @@ class ExpST(ExType):
         f_asc = -self.Kraft[:max_force_idx + 1]
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
-        axes.plot(w_ml_asc, f_asc, color='blue', linewidth=1, label='w_ml')
-        axes.plot(w_mr_asc, f_asc, color='blue', linewidth=1, label='w_mr')
+        axes.plot( w_ml_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_ml' )
+        axes.plot( w_mr_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_mr' )
         axes.legend()
 
     def _plot_force_center_edge_deflection_avg(self, axes):
@@ -421,7 +405,7 @@ class ExpST(ExType):
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
         # get the average displacement values of the corresponding displacement gauges
         w_mlmr_asc = (w_ml_asc + w_mr_asc) / 2
-        axes.plot(w_mlmr_asc, f_asc, color='blue', linewidth=1)
+        axes.plot(w_mlmr_asc, f_asc, color = 'blue', linewidth = 1)
 
     def _plot_force_deflection_avg(self, axes):
         '''plot the average F-w-diagramms for the center(c), center-edge (ce) and edge(vh) and edge (lr) deflections
@@ -432,16 +416,16 @@ class ExpST(ExType):
         f_asc = -self.Kraft[:max_force_idx + 1]
 
         w_m = -self.WA_M[:max_force_idx + 1]
-        axes.plot(w_m, f_asc, color='blue', linewidth=1)
+        axes.plot(w_m, f_asc, color = 'blue', linewidth = 1)
         
-        # ## center-edge deflection (ce)
+        ### center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
         # get the average displacement values of the corresponding displacement gauges
         w_mlmr_asc = (w_ml_asc + w_mr_asc) / 2
-        axes.plot(w_mlmr_asc, f_asc, color='red', linewidth=1)
+        axes.plot(w_mlmr_asc, f_asc, color = 'red', linewidth = 1)
 
-        # ## edge deflections (e)
+        ### edge deflections (e)
         w_v_asc = -self.WA_V[:max_force_idx + 1]
         w_h_asc = -self.WA_H[:max_force_idx + 1]
         w_l_asc = -self.WA_L[:max_force_idx + 1]
@@ -449,8 +433,8 @@ class ExpST(ExType):
         # get the average displacement values of the corresponding displacement gauges
         w_vh_asc = (w_v_asc + w_h_asc) / 2
         w_lr_asc = (w_l_asc + w_r_asc) / 2
-        axes.plot(w_vh_asc, f_asc, color='green', linewidth=1, label='w_vh')
-        axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
+        axes.plot( w_vh_asc, f_asc, color = 'green', linewidth = 1, label = 'w_vh' )
+        axes.plot( w_lr_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_lr' )
 
 #        # set axis-labels
 #        xkey = 'deflection [mm]'
@@ -477,17 +461,17 @@ class ExpST(ExType):
         idx_0 = np.where(f_asc > 0.05)[0][0]
 
         f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
-        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ] 
-        axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+        w_m_cut = np.hstack([w_m[ idx_0: ]])-w_m[ idx_0 ] 
+        axes.plot(w_m_cut, f_asc_cut, color = 'blue', linewidth = 1.5)
         
-        # ## center-edge deflection (ce)
+        ### center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
         # get the average displacement values of the corresponding displacement gauges
         w_mlmr_asc = (w_ml_asc + w_mr_asc) / 2
-        axes.plot(w_mlmr_asc, f_asc, color='red', linewidth=1)
+        axes.plot(w_mlmr_asc, f_asc, color = 'red', linewidth = 1)
 
-        # ## edge deflections (e)
+        ### edge deflections (e)
         w_v_asc = -self.WA_V[:max_force_idx + 1]
         w_h_asc = -self.WA_H[:max_force_idx + 1]
         w_l_asc = -self.WA_L[:max_force_idx + 1]
@@ -495,8 +479,8 @@ class ExpST(ExType):
         # get the average displacement values of the corresponding displacement gauges
         w_vh_asc = (w_v_asc + w_h_asc) / 2
         w_lr_asc = (w_l_asc + w_r_asc) / 2
-        axes.plot(w_vh_asc, f_asc, color='green', linewidth=1, label='w_vh')
-        axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
+        axes.plot( w_vh_asc, f_asc, color = 'green', linewidth = 1, label = 'w_vh' )
+        axes.plot( w_lr_asc, f_asc, color = 'blue', linewidth = 1, label = 'w_lr' )
 
 
     #--------------------------------------------------------------------------------
@@ -505,34 +489,34 @@ class ExpST(ExType):
 
     traits_view = View(VGroup(
                          Group(
-                              Item('jump_rtol', format_str="%.4f"),
-                              label='curve_ironing'
+                              Item('jump_rtol', format_str = "%.4f"),
+                              label = 'curve_ironing'
                               ),
                          Group(
-                              Item('thickness', format_str="%.3f"),
-                              Item('edge_length', format_str="%.3f"),
-                              label='geometry'
+                              Item('thickness', format_str = "%.3f"),
+                              Item('edge_length', format_str = "%.3f"),
+                              label = 'geometry'
                               ),
                          Group(
                               Item('loading_rate'),
                               Item('age'),
-                              label='loading rate and age'
+                              label = 'loading rate and age'
                               ),
                          Group(
-                              Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
-                              Item('ccs@', show_label=False),
-                              label='composite cross section'
+                              Item('E_c', show_label = True, style = 'readonly', format_str = "%.0f"),
+                              Item('ccs@', show_label = False),
+                              label = 'composite cross section'
                               )
                          ),
-                        scrollable=True,
-                        resizable=True,
-                        height=0.8,
-                        width=0.6
+                        scrollable = True,
+                        resizable = True,
+                        height = 0.8,
+                        width = 0.6
                         )
 
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass=ExpST)
+    ex = ExRunClassExt(klass = ExpST)
     ex.configure_traits()
 
