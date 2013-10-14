@@ -500,8 +500,8 @@ class ExpTTDB(ExType):
         F_asc_ironed *= 0.001 # convert units from [kN] to [MN]
         return F_asc_ironed, eps_asc_ironed
 
-    sig_c_ironed = Property(Float, depends_on='input_change',
-                                     output=False, table_field=False, unit='MPa')
+    sig_c_ironed = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
     @cached_property
     def _get_sig_c_ironed(self):
         F_asc_ironed = self.F_w_ironed[0]
@@ -509,8 +509,8 @@ class ExpTTDB(ExType):
 #        sig_c_asc_smoothed_ironed = smooth(sig_c_asc_ironed, self.n_points, 'flat')
         return sig_c_asc_ironed
 
-    eps_ironed = Property(Float, depends_on='input_change',
-                                   output=False, table_field=False, unit='-')
+    eps_ironed = Property(Float, depends_on='input_change')
+#                                    ,output=False, table_field=False, unit='-')
     @cached_property
     def _get_eps_ironed(self):
         eps_asc_ironed = self.F_w_ironed[1]
