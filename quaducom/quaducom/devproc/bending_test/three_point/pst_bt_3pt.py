@@ -97,8 +97,8 @@ if __name__ == '__main__':
     #------------------------------
 #    do = 'show_phi_fn'
 #    do = 'ui'
-#    do = 'validation'
-    do = 'show_last_results'
+    do = 'validation'
+#     do = 'show_last_results'
     
 #    test_series = 'BT-12c'
     test_series = 'BT-6c'

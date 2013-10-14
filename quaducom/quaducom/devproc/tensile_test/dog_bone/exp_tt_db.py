@@ -501,7 +501,7 @@ class ExpTTDB(ExType):
         return F_asc_ironed, eps_asc_ironed
 
     sig_c_ironed = Property(Float, depends_on='input_change',
-                                     output=True, table_field=True, unit='MPa')
+                                     output=False, table_field=False, unit='MPa')
     @cached_property
     def _get_sig_c_ironed(self):
         F_asc_ironed = self.F_w_ironed[0]
@@ -510,7 +510,7 @@ class ExpTTDB(ExType):
         return sig_c_asc_ironed
 
     eps_ironed = Property(Float, depends_on='input_change',
-                                   output=True, table_field=True, unit='MPa')
+                                   output=False, table_field=False, unit='-')
     @cached_property
     def _get_eps_ironed(self):
         eps_asc_ironed = self.F_w_ironed[1]
