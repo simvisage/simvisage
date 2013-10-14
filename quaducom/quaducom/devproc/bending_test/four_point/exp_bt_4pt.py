@@ -27,7 +27,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
 
-## overload the 'get_label' method from 'Item' to display units in the label
+# # overload the 'get_label' method from 'Item' to display units in the label
 from util.traits.ui.item import \
     Item
 
@@ -128,18 +128,18 @@ class ExpBT4PT(ExType):
     # effective length of the bending test specimen 
     # (does not include the 5cm part at each side of the specimens that leaps over the support lines)
     #
-    length = Float(1.50, unit = 'm', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
-    width = Float(0.2, unit = 'm', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
-    thickness = Float(0.06, unit = 'm', input = True, table_field = True,
-                           auto_set = False, enter_set = True)
+    length = Float(1.50, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
+    width = Float(0.2, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
+    thickness = Float(0.06, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
-    age = Int(28, unit = 'd', input = True, table_field = True,
-                             auto_set = False, enter_set = True)
-    loading_rate = Float(3.0, unit = 'mm/min', input = True, table_field = True,
-                            auto_set = False, enter_set = True)
+    age = Int(28, unit='d', input=True, table_field=True,
+                             auto_set=False, enter_set=True)
+    loading_rate = Float(3.0, unit='mm/min', input=True, table_field=True,
+                            auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
     # composite cross section
@@ -156,17 +156,17 @@ class ExpBT4PT(ExType):
         n_layers = 12
         s_tex_z = 0.060 / (n_layers + 1)
         ccs = CompositeCrossSection (
-                    fabric_layup_list = [
+                    fabric_layup_list=[
                             plain_concrete(s_tex_z * 0.5),
                             FabricLayUp (
-                                   n_layers = n_layers,
-                                   orientation_fn_key = orientation_fn_key,
-                                   s_tex_z = s_tex_z,
-                                   fabric_layout_key = fabric_layout_key
+                                   n_layers=n_layers,
+                                   orientation_fn_key=orientation_fn_key,
+                                   s_tex_z=s_tex_z,
+                                   fabric_layout_key=fabric_layout_key
                                    ),
                             plain_concrete(s_tex_z * 0.5)
                                         ],
-                    concrete_mixture_key = concrete_mixture_key
+                    concrete_mixture_key=concrete_mixture_key
                     )
         return ccs
 
@@ -175,15 +175,15 @@ class ExpBT4PT(ExType):
     #--------------------------------------------------------------------------
 
     # E-modulus of the composite at the time of testing 
-    E_c = Property(Float, unit = 'MPa', depends_on = 'input_change', table_field = True)
+    E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
     # E-modulus of the composite after 28 days
-    E_c28 = DelegatesTo('ccs', listenable = False)
+    E_c28 = DelegatesTo('ccs', listenable=False)
 
     # reinforcement ration of the composite 
-    rho_c = DelegatesTo('ccs', listenable = False)
+    rho_c = DelegatesTo('ccs', listenable=False)
 
 
     #--------------------------------------------------------------------------------
@@ -192,15 +192,12 @@ class ExpBT4PT(ExType):
 
     # put this into the ironing procedure processor
     #
-    jump_rtol = Float(0.03,
-                      auto_set = False, enter_set = True,
-                      ironing_param = True)
+    jump_rtol = Float(0.005,
+                      auto_set=False, enter_set=True,
+                      ironing_param=True)
 
     data_array_ironed = Property(Array(float),
-                                  depends_on = 'data_array, +ironing_param, +axis_selection')
-
-
-    
+                                  depends_on='data_array, +ironing_param, +axis_selection') 
     @cached_property
     def _get_data_array_ironed(self):
         '''remove the jumps in the displacement curves 
@@ -304,17 +301,17 @@ class ExpBT4PT(ExType):
         DB_mi_orig = self.data_array[:, 2]
         DB_mi_orig -= DB_mi_orig[0]
         DB_mi_orig *= -1
-        self.add_trait( "DB_mi_orig", Array( value = DB_mi_orig, transient = True ) )
+        self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
 
         DB_li_orig = self.data_array[:, 4]
         DB_li_orig -= DB_li_orig[0]
         DB_li_orig *= -1
-        self.add_trait( "DB_li_orig", Array( value = DB_li_orig, transient = True ) )
+        self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
 
         DB_re_orig = self.data_array[:, 5]
         DB_re_orig -= DB_re_orig[0]
         DB_re_orig *= -1
-        self.add_trait( "DB_re_orig", Array( value = DB_re_orig, transient = True ) )
+        self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
 
 
     
@@ -328,7 +325,8 @@ class ExpBT4PT(ExType):
                       'strain (top/bottom) / force'            : '_plot_strain_top_bottom_force',
                       'displacement (ironed/original - center)': '_plot_ironed_orig_force_deflection_center',
                       'displacement (ironed/original - left)'  : '_plot_ironed_orig_force_deflection_left',
-                      'displacement (ironed/original - right)' : '_plot_ironed_orig_force_deflection_right'
+                      'displacement (ironed/original - right)' : '_plot_ironed_orig_force_deflection_right',
+                      'displacement (center, thirdpoints) (ironed, average)' : '_plot_ironed_force_deflection_avg'
                      }
 
     default_plot_template = 'force / deflection (center)'
@@ -339,16 +337,16 @@ class ExpBT4PT(ExType):
     def _get_max_force_idx(self):
         '''get the index of the maximum force'''
         # NOTE: processed data returns positive values for force and displacement
-        return argmax( self.Kraft )
+        return argmax(self.Kraft)
     
-    def _plot_force_deflection_center(self, axes):
+    def _plot_force_deflection_center(self, axes, offset_w=0.):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot( w_asc, f_asc, color = 'black' )
+        axes.plot(w_asc, f_asc, color='black')
 
         # add axes labels
         #
@@ -372,7 +370,7 @@ class ExpBT4PT(ExType):
 
         # add curves
         #
-        axes.plot(w_smooth, f_smooth, color = 'blue', linewidth = 2)
+        axes.plot(w_smooth, f_smooth, color='blue', linewidth=2)
 
 
     def _plot_force_deflection_thirdpoints(self, axes):
@@ -389,8 +387,8 @@ class ExpBT4PT(ExType):
 #        w_lr_asc = (w_l_asc + w_r_asc) / 2
 
 #        axes.plot( w_lr_asc, f_asc, color = 'green', linewidth = 2 )
-        axes.plot(w_l_asc, f_asc, color = 'green', linewidth = 1)
-        axes.plot(w_r_asc, f_asc, color = 'green', linewidth = 1)
+        axes.plot(w_l_asc, f_asc, color='green', linewidth=1)
+        axes.plot(w_r_asc, f_asc, color='green', linewidth=1)
 
     def _plot_strain_top_bottom_force(self, axes):
         '''deflection at the third points (under the loading points)
@@ -405,8 +403,8 @@ class ExpBT4PT(ExType):
 
         # add curves
         #
-        axes.plot(eps_c,f_asc,  color = 'blue', linewidth = 1)
-        axes.plot(eps_t,f_asc,   color = 'red', linewidth = 1)
+        axes.plot(eps_c, f_asc, color='blue', linewidth=1)
+        axes.plot(eps_t, f_asc, color='red', linewidth=1)
 
         # add axes labels
         #
@@ -417,7 +415,7 @@ class ExpBT4PT(ExType):
 
     def _plot_ironed_orig_force_deflection_center(self, axes):
         '''plot original displacement (center) as measured by the displacement gauge
-        and compare with curve after data has been proccessed by ironing procedure
+        and compare with curve after data has been processed by ironing procedure
         '''
         # get only the ascending branch of the response curve
         F_asc = self.Kraft[:self.max_force_idx + 1]    
@@ -438,7 +436,7 @@ class ExpBT4PT(ExType):
 
     def _plot_ironed_orig_force_deflection_left(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
-        and compare with curve after data has been proccessed by ironing procedure
+        and compare with curve after data has been processed by ironing procedure
         '''
         w_ironed = self.DB_li
         w_orig = self.DB_li_orig
@@ -452,7 +450,7 @@ class ExpBT4PT(ExType):
 
     def _plot_ironed_orig_force_deflection_right(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
-        and compare with curve after data has been proccessed by ironing procedure
+        and compare with curve after data has been processed by ironing procedure
         '''
         w_ironed = self.DB_re
         w_orig = self.DB_re_orig
@@ -464,36 +462,53 @@ class ExpBT4PT(ExType):
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
+    def _plot_ironed_force_deflection_avg(self, axes):
+        '''plot center displacement and the average of the thirdpoints displacement measured by the displacement gauge
+        after data has been processed by ironing procedure (remove resetting jumps of the displacement gauges)
+        '''
+        # get only the ascending branch of the response curve
+        F_asc = self.Kraft[:self.max_force_idx + 1]    
+        w_c_ironed_asc = self.DB_mi[:self.max_force_idx + 1]
+        w_l_ironed_asc = self.DB_li[:self.max_force_idx + 1]
+        w_r_ironed_asc = self.DB_re[:self.max_force_idx + 1]
+        w_lr_avg = (w_l_ironed_asc + w_r_ironed_asc) / 2.
+        axes.plot(w_lr_avg, F_asc, color='black', linewidth=1.5, linestyle='-')
+        axes.plot(w_c_ironed_asc, F_asc, color='black', linewidth=1.5, linestyle='-')
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+
     #--------------------------------------------------------------------------------
     # view
     #--------------------------------------------------------------------------------
 
     traits_view = View(VGroup(
                          Group(
-                              Item('length', format_str = "%.3f"),
-                              Item('width', format_str = "%.3f"),
-                              Item('thickness', format_str = "%.3f"),
-                              label = 'geometry'
+                              Item('length', format_str="%.3f"),
+                              Item('width', format_str="%.3f"),
+                              Item('thickness', format_str="%.3f"),
+                              label='geometry'
                               ),
                          Group(
                               Item('loading_rate'),
                               Item('age'),
-                              label = 'loading rate and age'
+                              label='loading rate and age'
                               ),
                          Group(
-                              Item('E_c', show_label = True, style = 'readonly', format_str = "%.0f"),
-                              Item('ccs@', show_label = False),
-                              label = 'composite cross section'
+                              Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
+                              Item('ccs@', show_label=False),
+                              label='composite cross section'
                               )
                          ),
-                        scrollable = True,
-                        resizable = True,
-                        height = 0.8,
-                        width = 0.6
+                        scrollable=True,
+                        resizable=True,
+                        height=0.8,
+                        width=0.6
                         )
 
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run_table import ExRunClassExt
-    ex = ExRunClassExt(klass = ExpBT4PT)
+    ex = ExRunClassExt(klass=ExpBT4PT)
     ex.configure_traits()
