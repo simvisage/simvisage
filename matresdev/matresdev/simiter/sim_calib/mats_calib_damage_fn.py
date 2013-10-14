@@ -803,7 +803,7 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 9
+        age = 26
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
@@ -813,10 +813,10 @@ def run():
         # set 'nu' 
         # @todo: check values stored in 'mat_db'
         #
-        nu = 0.25
+        nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
         
-        n_steps = 10
+        n_steps = 100
         fitter.n_steps = n_steps
         
         fitter.ex_run.ex_type.age = age
