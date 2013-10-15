@@ -581,12 +581,13 @@ class ExpTTDB(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / gauge displacement'         : '_plot_force_displacement',
-                      'composite stress / strain'          : '_plot_sigc_eps',
-                      'ironed composite stress / strain'   : '_plot_sigc_eps_ironed',
-                      'smoothed composite stress / strain' : '_plot_sigc_eps_smoothed',
-                      'textile stress / strain'            : '_plot_sigtex_eps',
-                      'smoothed textile stress / strain'   : '_plot_sigtex_eps_smoothed',
+    plot_templates = {'force / gauge displacement'             : '_plot_force_displacement',
+                      'force / gauge displacement (ascending)' : '_plot_force_displacement_asc',
+                      'composite stress / strain'              : '_plot_sigc_eps',
+                      'ironed composite stress / strain'       : '_plot_sigc_eps_ironed',
+                      'smoothed composite stress / strain'     : '_plot_sigc_eps_smoothed',
+                      'textile stress / strain'                : '_plot_sigtex_eps',
+                      'smoothed textile stress / strain'       : '_plot_sigtex_eps_smoothed',
                        }
 
     default_plot_template = 'force / gauge displacement'
@@ -607,6 +608,25 @@ class ExpTTDB(ExType):
             axes.plot(self.WA_VR, self.Kraft)
             axes.plot(self.WA_HL, self.Kraft)
             axes.plot(self.WA_HR, self.Kraft)
+            axes.set_xlabel('%s' % ('displacement [mm]',))
+            axes.set_ylabel('%s' % ('force [kN]',))
+
+    def _plot_force_displacement_asc(self, axes):
+        '''plot force-displacement diagram (only the ascending branch)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+            # 
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc)
+            axes.set_xlabel('%s' % ('displacement [mm]',))
+            axes.set_ylabel('%s' % ('force [kN]',))
+        if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
+            # 
+            axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc)
             axes.set_xlabel('%s' % ('displacement [mm]',))
             axes.set_ylabel('%s' % ('force [kN]',))
 
