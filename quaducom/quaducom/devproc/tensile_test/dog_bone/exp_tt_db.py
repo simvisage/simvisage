@@ -268,15 +268,15 @@ class ExpTTDB(ExType):
         print 'CALCULATING STRAINS'
 
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
-            W10_li = np.copy( self.W10_li )
-            W10_re = np.copy( self.W10_re )
-            W10_vo = np.copy( self.W10_vo )
+            W10_li = np.copy(self.W10_li)
+            W10_re = np.copy(self.W10_re)
+            W10_vo = np.copy(self.W10_vo)
     
             # get the minimum value of the displacement gauges 
             # used to reset the displacement gauges if they do not start at zero
-            min_W10_li = np.min( W10_li[:10] )
-            min_W10_re = np.min( W10_re[:10] )
-            min_W10_vo = np.min( W10_vo[:10] )
+            min_W10_li = np.min(W10_li[:10])
+            min_W10_re = np.min(W10_re[:10])
+            min_W10_vo = np.min(W10_vo[:10])
     
             # reset displacement gauges
             #
@@ -285,7 +285,7 @@ class ExpTTDB(ExType):
             W10_vo -= min_W10_vo
 
             # measured strains 
-            eps_li = W10_li / (self.gauge_length * 1000.)  #[mm/mm]
+            eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
             eps_re = W10_re / (self.gauge_length * 1000.)
             eps_vo = W10_vo / (self.gauge_length * 1000.)
 
@@ -308,17 +308,17 @@ class ExpTTDB(ExType):
 
 
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
-            WA_VL = np.copy( self.WA_VL )
-            WA_VR = np.copy( self.WA_VR )
-            WA_HL = np.copy( self.WA_HL )
-            WA_HR = np.copy( self.WA_HR )
+            WA_VL = np.copy(self.WA_VL)
+            WA_VR = np.copy(self.WA_VR)
+            WA_HL = np.copy(self.WA_HL)
+            WA_HR = np.copy(self.WA_HR)
     
             # get the minimum value of the displacement gauges 
             # used to reset the displacement gauges if they do not start at zero
-            min_WA_VL = np.min( WA_VL[:10] )
-            min_WA_VR = np.min( WA_VR[:10] )
-            min_WA_HL = np.min( WA_HL[:10] )
-            min_WA_HR = np.min( WA_HR[:10] )
+            min_WA_VL = np.min(WA_VL[:10])
+            min_WA_VR = np.min(WA_VR[:10])
+            min_WA_HL = np.min(WA_HL[:10])
+            min_WA_HR = np.min(WA_HR[:10])
     
             # reset displacement gauges
             #
@@ -329,7 +329,7 @@ class ExpTTDB(ExType):
 
             # measured strains 
             #
-            eps_V = (self.WA_VL + self.WA_VR) / 2. / (self.gauge_length * 1000.)  #[mm/mm]
+            eps_V = (self.WA_VL + self.WA_VR) / 2. / (self.gauge_length * 1000.)  # [mm/mm]
             eps_H = (self.WA_HL + self.WA_HR) / 2. / (self.gauge_length * 1000.)
 
             # average strains 
@@ -344,7 +344,7 @@ class ExpTTDB(ExType):
     def _get_sig_c(self):
         print 'CALCULATING COMPOSITE STRESS'
         # measured force: 
-        force = self.Kraft # [kN]
+        force = self.Kraft  # [kN]
         # cross sectional area of the concrete [m^2]: 
         A_c = self.A_c
         # calculated stress: 
@@ -356,7 +356,7 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_sig_tex(self):
         # measured force: 
-        force = self.Kraft # [kN]
+        force = self.Kraft  # [kN]
         # cross sectional area of the reinforcement: 
         A_tex = self.A_tex
         # calculated stresses:
@@ -399,7 +399,7 @@ class ExpTTDB(ExType):
     def _get_time_asc(self):
         return self.Bezugskanal[:self.max_stress_idx + 1]
         
-    jump_rtol = Float(0.005, ironing_param = True)
+    jump_rtol = Float(0.005, ironing_param=True)
         
     F_w_ironed = Property(Array('float_'), depends_on='input_change')
     @cached_property
@@ -431,7 +431,7 @@ class ExpTTDB(ExType):
         # force jump exceeds (last step before the jump) the defined tolerance criteria
         # i.e. negative jump that exceeds the defined tolerance magnitude
         #
-        jump_idx_arr = np.where(jump_arr < - jump_crit)[0] - 1
+        jump_idx_arr = np.where(jump_arr < -jump_crit)[0] - 1
 #        print '*** jumps occure at the following indices and time: ***'
 #        print 'jump_idx_arr', jump_idx_arr
 #        print 'F_asc[jump_idx]', F_asc[jump_idx_arr]
@@ -439,14 +439,14 @@ class ExpTTDB(ExType):
         # index of the measurement data where the force reaches 
         # the same magnitude before the sudden value drop due to the jump
         #
-        jump_idx2_arr = np.zeros_like( jump_idx_arr )
+        jump_idx2_arr = np.zeros_like(jump_idx_arr)
        
         # amount of indices between the sudden value drop of the force and 
         # the reloading to the same load level; delta value indicates the strain 
         # range that will be removed in order to smoothen out the influence of the 
         # jump in the force curve
         #
-        delta_jump_idx_arr = np.zeros_like( jump_idx_arr )
+        delta_jump_idx_arr = np.zeros_like(jump_idx_arr)
 
         # search at which index the force reaches its old value before the jump again
         # check that this value is index wise and time wise reached after the jump occurred
@@ -468,9 +468,9 @@ class ExpTTDB(ExType):
         # this can happen when jumps occure within the remounting branch of the force  
         #
         remove_idx = []
-        for i in range(jump_idx2_arr.shape[0]-1):
-            if np.any( jump_idx2_arr[:i+1] > jump_idx2_arr[i+1]):
-                remove_idx += [i+1]
+        for i in range(jump_idx2_arr.shape[0] - 1):
+            if np.any(jump_idx2_arr[:i + 1] > jump_idx2_arr[i + 1]):
+                remove_idx += [i + 1]
         
         jump_idx_arr = np.delete(jump_idx_arr, remove_idx)
         jump_idx2_arr = np.delete(jump_idx2_arr, remove_idx)
@@ -479,7 +479,7 @@ class ExpTTDB(ExType):
         # specify the factor by with the index delta range of a jump (i.e. displacement range of the jump)
         # is multiplied, i.e. up to which index the values of the F-w- curve are removed   
         #
-        jump_smooth_fact  = 2 
+        jump_smooth_fact = 2 
         
         # remove the values of the curve within the jump and the neighboring region   
         #
@@ -489,15 +489,15 @@ class ExpTTDB(ExType):
         jump_idx_arr_ = np.hstack([np.array([0.]), jump_idx_arr, np.array([self.max_stress_idx])])
         delta_jump_idx_arr_ = np.hstack([np.array([0]), delta_jump_idx_arr, np.array([0])])
         
-        for i in range(jump_idx_arr_.shape[0]-1):
-            F_asc_ironed_list += [ F_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i+1]] ]
-            eps_asc_ironed_list += [ eps_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i+1]] ]
+        for i in range(jump_idx_arr_.shape[0] - 1):
+            F_asc_ironed_list += [ F_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
+            eps_asc_ironed_list += [ eps_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
     
         # remove the values of the curve within the jump and the neighboring region   
         #
-        F_asc_ironed = np.hstack( F_asc_ironed_list )  
-        eps_asc_ironed = np.hstack( eps_asc_ironed_list )
-        F_asc_ironed *= 0.001 # convert units from [kN] to [MN]
+        F_asc_ironed = np.hstack(F_asc_ironed_list)  
+        eps_asc_ironed = np.hstack(eps_asc_ironed_list)
+        F_asc_ironed *= 0.001  # convert units from [kN] to [MN]
         return F_asc_ironed, eps_asc_ironed
 
     sig_c_ironed = Property(Float, depends_on='input_change')
@@ -508,6 +508,14 @@ class ExpTTDB(ExType):
         sig_c_asc_ironed = F_asc_ironed / self.A_c
 #        sig_c_asc_smoothed_ironed = smooth(sig_c_asc_ironed, self.n_points, 'flat')
         return sig_c_asc_ironed
+
+    sig_tex_ironed = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_sig_tex_ironed(self):
+        F_asc_ironed = self.F_w_ironed[0]
+        sig_tex_asc_ironed = F_asc_ironed / (self.A_tex / 1000000.)
+        return sig_tex_asc_ironed
 
     eps_ironed = Property(Float, depends_on='input_change')
 #                                    ,output=False, table_field=False, unit='-')
@@ -585,6 +593,7 @@ class ExpTTDB(ExType):
                       'force / gauge displacement (ascending)' : '_plot_force_displacement_asc',
                       'composite stress / strain'              : '_plot_sigc_eps',
                       'ironed composite stress / strain'       : '_plot_sigc_eps_ironed',
+                      'ironed textile stress / strain'         : '_plot_sigtex_eps_ironed',
                       'smoothed composite stress / strain'     : '_plot_sigc_eps_smoothed',
                       'textile stress / strain'                : '_plot_sigtex_eps',
                       'smoothed textile stress / strain'       : '_plot_sigtex_eps_smoothed',
@@ -630,24 +639,24 @@ class ExpTTDB(ExType):
             axes.set_xlabel('%s' % ('displacement [mm]',))
             axes.set_ylabel('%s' % ('force [kN]',))
 
-    def _plot_sigc_eps(self, axes, color = 'black', linewidth = 1., linestyle = '-' ):
+    def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
         '''
         axes.plot(self.eps_asc, self.sig_c_asc,
-                  color = color, linewidth = linewidth, linestyle = linestyle )
+                  color=color, linewidth=linewidth, linestyle=linestyle)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('composite stress [MPa]')
 
-    def _plot_sigc_eps_smoothed(self, axes, color = 'black', linewidth = 1., linestyle = '-' ):
+    def _plot_sigc_eps_smoothed(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot smoothed composite stress-strain diagram
         '''
-        axes.plot(self.eps_smooth, self.sig_c_smooth, color='blue', linewidth=2 )
+        axes.plot(self.eps_smooth, self.sig_c_smooth, color='blue', linewidth=2)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('composite stress [MPa]')
         # original curve
         #
-        axes.plot(self.eps_asc, self.sig_c_asc, 
-                  color = color, linewidth = linewidth, linestyle = linestyle )
+        axes.plot(self.eps_asc, self.sig_c_asc,
+                  color=color, linewidth=linewidth, linestyle=linestyle)
 #        # secant  stiffness
 #        #
 #        sig_lin = array([0, self.sig_c_max], dtype='float_')
@@ -655,19 +664,38 @@ class ExpTTDB(ExType):
 #        axes.plot(eps_lin, sig_lin, color='red')
 
     def _plot_sigc_eps_ironed(self, axes):
-        '''plot smoothed stress-strain diagram without unwanted unloading/reloading paths 
+        '''plot smoothed composite stress-strain diagram without unwanted unloading/reloading paths 
         due to sliding in the buttstrap clamping
         '''
-        axes.plot(self.eps_ironed, self.sig_c_ironed, color='green' )
+        axes.plot(self.eps_ironed, self.sig_c_ironed, color='green')
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('composite stress [MPa]')
+        E_tex = 180000.
+        K_III = E_tex * self.A_tex / (self.A_c * 1000000.)
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')  
         # original curve
         #
 #        axes.plot(self.eps_asc, self.sig_c_asc, color='black')
 
-    def _plot_sigtex_eps(self, axes, color = 'blue', linewidth = 1., linestyle = '-'):
+    def _plot_sigtex_eps_ironed(self, axes):
+        '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths 
+        due to sliding in the buttstrap clamping
+        '''
+        axes.plot(self.eps_ironed, self.sig_tex_ironed, color='green')
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('composite stress [MPa]')
+        # yarn stiffness
+        #
+        E_tex = 180000.
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * E_tex], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--') 
+
+    def _plot_sigtex_eps(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_asc, self.sig_tex_asc,
-                  color = color, linewidth = linewidth, linestyle = linestyle )
+                  color=color, linewidth=linewidth, linestyle=linestyle)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('textile stress [MPa]')
         # original curve
@@ -676,12 +704,12 @@ class ExpTTDB(ExType):
         # plot the textile secant stiffness at fracture state 
         #
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
-        sig_lin = self.ccs.E_tex * eps_lin
-        axes.plot( eps_lin, sig_lin )
+        sig_lin = self.ccs.E_tex_arr[1] * eps_lin
+        axes.plot(eps_lin, sig_lin)
         
-    def _plot_sigtex_eps_smoothed(self, axes, color = 'blue', linewidth = 1., linestyle = '-'):
+    def _plot_sigtex_eps_smoothed(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_smooth, self.sig_tex_smooth,
-                  color = color, linewidth = linewidth, linestyle = linestyle )
+                  color=color, linewidth=linewidth, linestyle=linestyle)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('textile stress [MPa]')
         # original curve
@@ -691,18 +719,18 @@ class ExpTTDB(ExType):
         #
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex * eps_lin
-        axes.plot( eps_lin, sig_lin )
+        axes.plot(eps_lin, sig_lin)
     
     # scaleable plotting methods 
     #            
-    def _plot_tex_stress_strain_asc(self, axes, color = 'blue', linewidth = 1.0, linestyle = '-', label = None, f = None, xscale = 1.):
-        eps_asc_scaled = self.eps_ironed * xscale # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
+        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
         sig_tex_ironed = self.sig_c_ironed / self.rho_c 
-        axes.plot( eps_asc_scaled, sig_tex_ironed, color = color, linewidth = linewidth, linestyle = linestyle, label = label )
+        axes.plot(eps_asc_scaled, sig_tex_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
-    def _plot_comp_stress_strain_asc(self, axes, color = 'blue', linewidth = 1.0, linestyle = '-', label = None, f = None, xscale = 1.):
-        eps_asc_scaled = self.eps_ironed * xscale # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-        axes.plot( eps_asc_scaled, self.sig_c_ironed, color = color, linewidth = linewidth, linestyle = linestyle, label = label )
+    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
+        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+        axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
     
 
     #---------------------------------
