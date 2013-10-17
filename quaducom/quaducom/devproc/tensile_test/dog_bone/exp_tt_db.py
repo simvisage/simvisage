@@ -685,7 +685,7 @@ class ExpTTDB(ExType):
         '''
         axes.plot(self.eps_ironed, self.sig_tex_ironed, color='green')
         axes.set_xlabel('strain [-]')
-        axes.set_ylabel('composite stress [MPa]')
+        axes.set_ylabel('textile stress [MPa]')
         # yarn stiffness
         #
         E_tex = 180000.
@@ -797,11 +797,11 @@ ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
 if __name__ == '__main__':
 
-    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
-    for inst in ExpTTDB.db.inst_list:
-        print inst.key
-        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
-        print inst.production_date
-        inst.save()
+#     ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
+#     for inst in ExpTTDB.db.inst_list:
+#         print inst.key
+#         print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
+#         print inst.production_date
+#         inst.save()
 
     ExpTTDB.db.configure_traits()
