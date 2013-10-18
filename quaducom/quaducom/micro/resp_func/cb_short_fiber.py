@@ -21,15 +21,11 @@ from etsproxy.traits.ui.menu import OKButton, CancelButton
 from etsproxy.traits.ui.api import \
     View, Item
 
-from math import e, pi
-from numpy import sqrt, linspace, sign, abs, cos
+from math import pi
+import numpy as np
 from spirrid.i_rf import IRF
 from spirrid.rf import RF
 
-
-
-def H(x):
-    return sign(sign(x) + 1.)
 
 class CBShortFiber(RF):
     '''
@@ -50,8 +46,8 @@ class CBShortFiber(RF):
                 distr=['uniform', 'norm'],
                 scale=210e3, shape=0)
 
-    D_f = Float(0.3, auto_set=False, enter_set=True,
-                desc='filament diameter [mm]',
+    r = Float(0.3, auto_set=False, enter_set=True,
+                desc='fiber radius [mm]',
                 distr=['uniform', 'norm'],
                 scale=0.5, shape=0)
 
@@ -67,7 +63,7 @@ class CBShortFiber(RF):
 
     tau = Float(1.76, auto_set=False, enter_set=True,
                 desc='bond shear stress [N/mm2]',
-                distr=['norm', 'uniform'],
+                distr=['norm', 'uniform', 'weibull_min'],
                 scale=1.76, shape=0.5)
 
     f = Float(0.03, auto_set=False, enter_set=True,
@@ -80,62 +76,30 @@ class CBShortFiber(RF):
        distr=['sin2x', 'sin_distr'],
                 scale=1.0, shape=0)
 
-    l = Float(0.0, auto_set=False, enter_set=True,
-              distr=['uniform'], desc='free length')
-
-    theta = Float(0.0, auto_set=False, enter_set=True,
-                  distr=['uniform', 'norm'], desc='slack')
-
     w = Float(ctrl_range=(0, 0.01, 100), auto_set=False, enter_set=True)
-
     x_label = Str('crack_opening [mm]', enter_set=True, auto_set=False)
     y_label = Str('force [N]', enter_set=True, auto_set=False)
 
     C_code = ''
 
+    def __call__(self, w, tau, r, E_f, le, phi, f, xi):
 
-    def __call__(self, w, tau, L_f, D_f, E_f, le, phi, f, l, theta, xi):
-
-        l = l * (1 + theta)
-        w = w - theta * l
-        T = tau * pi * D_f
-        E = E_f
-        A = D_f ** 2 / 4. * pi
-
+        T = 2. * tau / r
         # debonding stage
-        q_deb = -l * T + sqrt((l * T) ** 2 + E * A * T * w * H(w))
-
-        # displacement at which debonding is finished
-        w0 = le * T * (le + 2 * l) / E_f / A
-
+        ef0_deb = np.sqrt(T * w / E_f)
+        # crack opening at which debonding is finished
+        w0 = le ** 2 * T / E_f
         # pulling out stage - the fiber is pulled out from the
         # side with the shorter embedded length only
-
-        q_pull = le * T * ((w0 - w) / ((le + 1e-15) - w0) + 1)
-        q = q_deb * H(le * T - q_deb) + q_pull * H(q_deb - le * T)
-
-        # include inclination influence
-        q = q * H(q) * e ** (f * phi)
-
+        ef0_pull = le * T / E_f
+        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*f)
         # include breaking strain
-        q = q * H(A * E_f * xi - q)
-        return q
-
-
-    traits_view2 = View(Item('E_f', label='fiber E-mod'),
-                        Item('D_f', label='fiber diameter'),
-                        Item('f' , label='snubbing coef.'),
-                        Item('phi', label='inclination angle'),
-                        Item('le', label='shorter embedded length'),
-                        Item('tau', label='frictional coef.'),
-                        resizable=True,
-                        scrollable=True,
-                        height=0.8, width=0.8,
-                        buttons=[OKButton, CancelButton]
-                        )
+        ef0 = ef0 * (ef0 < xi)
+        return ef0
 
 if __name__ == '__main__':
-    q = CBShortFiber()
-    # q.configure_traits(view='traits_view2')
-    q.plot(plt, linewidth=2, color='navy')
+    frc = CBShortFiber()
+    w = np.linspace(0.0, .1, 200)
+    ef0 = frc(w, 0.7, 0.1, 200e3, 20.0, 0.5, 0.03, 20.0)
+    plt.plot(w, ef0, linewidth=2, color='navy')
     plt.show()
