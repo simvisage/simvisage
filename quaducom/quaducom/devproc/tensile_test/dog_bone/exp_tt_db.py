@@ -300,7 +300,7 @@ class ExpTTDB(ExType):
                 eps_li = eps_re
             if np.average(eps_vo) < 0.0001:
                 print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
-                eps_vo = (eps_li + eps_re)
+                eps_vo = (eps_li + eps_re) / 2.
 
             # average strains 
             #
@@ -609,16 +609,16 @@ class ExpTTDB(ExType):
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
             axes.plot(self.W10_vo, self.Kraft)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             # 
             axes.plot(self.WA_VL, self.Kraft)
             axes.plot(self.WA_VR, self.Kraft)
             axes.plot(self.WA_HL, self.Kraft)
             axes.plot(self.WA_HR, self.Kraft)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
 
     def _plot_force_displacement_asc(self, axes):
         '''plot force-displacement diagram (only the ascending branch)
@@ -628,16 +628,16 @@ class ExpTTDB(ExType):
             axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             # 
             axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
 
     def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
@@ -797,11 +797,11 @@ ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
 if __name__ == '__main__':
 
-    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
-    for inst in ExpTTDB.db.inst_list:
-        print inst.key
-        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
-        print inst.production_date
-        inst.save()
+#    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
+#    for inst in ExpTTDB.db.inst_list:
+#        print inst.key
+#        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
+#        print inst.production_date
+#        inst.save()
 
     ExpTTDB.db.configure_traits()
