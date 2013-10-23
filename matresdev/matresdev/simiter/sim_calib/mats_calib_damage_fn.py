@@ -803,7 +803,7 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 26
+        age = 23
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
@@ -832,7 +832,7 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_age%g_nu%g_Em%g_nsteps%g' % (age, E_m, nu, n_steps)
+        param_key = '_ZiE-S2_age%g_nu%g_Em%g_nsteps%g' % (age, E_m, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 

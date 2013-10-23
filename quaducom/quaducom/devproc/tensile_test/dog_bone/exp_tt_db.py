@@ -685,7 +685,7 @@ class ExpTTDB(ExType):
         '''
         axes.plot(self.eps_ironed, self.sig_tex_ironed, color='green')
         axes.set_xlabel('strain [-]')
-        axes.set_ylabel('composite stress [MPa]')
+        axes.set_ylabel('textile stress [MPa]')
         # yarn stiffness
         #
         E_tex = 180000.
