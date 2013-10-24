@@ -113,7 +113,11 @@ if __name__ == '__main__':
 
         sim_model = SimBT4PTDB(
                                ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+                               
+                               # calibration for: age = 23d; E_m = 27975.8 MPa; nu = 0.20; nsteps = 100   
+                               #
+                               calibration_test='TT-12c-6cm-0-TU-SH4-V2_age26_Em28427_nu0.2_nsteps100',
+#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
                                age=26,
                                #
                                thickness=0.06,
@@ -134,11 +138,11 @@ if __name__ == '__main__':
                                outer_zone_shape_x=10,
                                load_zone_shape_x=2,
                                mid_zone_shape_x=7,
-                               shape_y=3,
-                               shape_z=4,
+                               shape_y=2,
+                               shape_z=3,
                                #
-                               w_max= -0.045,
-                               tstep=0.005,
+                               w_max=-0.045,
+                               tstep=0.02,
                                tmax=1.00,
                                tolerance=0.0001,
                                ord=np.inf,  # "norm = max(abs(x_i))"
@@ -336,7 +340,7 @@ if __name__ == '__main__':
                     ex_path = join(path, t)
                     ex_run = ExRun(ex_path)
 #                    ex_run.ex_type._plot_ironed_force_deflection_avg(p)
-                    ex_run.ex_type._plot_force_deflection_center(p, offset_w= -0.017)
+                    ex_run.ex_type._plot_force_deflection_center(p, offset_w=-0.017)
 #                    ex_run.ex_type._plot_force_deflection_thirdpoints( p )
 
                 # continuous fabrication with pause
@@ -439,7 +443,7 @@ if __name__ == '__main__':
             for t in tests:
                 ex_path = join(path, t)
                 ex_run = ExRun(ex_path)
-                ex_run.ex_type._plot_force_deflection_center(p, offset_w= -0.017)
+                ex_run.ex_type._plot_force_deflection_center(p, offset_w=-0.017)
 #                ex_run.ex_type._plot_ironed_force_deflection_avg(p)
 #                ex_run.ex_type._plot_force_deflection_thirdpoints( p )
             path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4FF')
