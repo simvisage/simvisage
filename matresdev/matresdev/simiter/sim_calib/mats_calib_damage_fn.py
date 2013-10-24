@@ -761,8 +761,18 @@ def run():
 #                              'TT11-10a-average.DAT' )
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
-                              '2011-06-10_TT-12c-6cm-0-TU_ZiE',
-                              'TT-12c-6cm-0-TU-V1.DAT')
+                               # test series no. 1
+                               #
+#                               '2011-05-23_TT-12c-6cm-0-TU_ZiE',
+#                               'TT-12c-6cm-0-TU-V1.DAT')
+
+                               # test series no. 2
+                               #
+#                               '2011-06-10_TT-12c-6cm-0-TU_ZiE',
+#                               'TT-12c-6cm-0-TU-V1.DAT')
+
+                              '2012-04-12_TT-12c-6cm-0-TU_SH4-Aramis3d',
+                              'TT-12c-6cm-0-TU-SH4-V2.DAT')
 
 #                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
@@ -773,11 +783,11 @@ def run():
 #                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
-        test_file = join(simdb.exdata_dir,
-                              'tensile_tests',
-                              'buttstrap_clamping',
-                              '2013-07-18_TTb-6c-2cm-0-TU_bs5',
-                              'TTb-6c-2cm-0-TU-V1_bs5.DAT')
+#         test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-18_TTb-6c-2cm-0-TU_bs5',
+#                               'TTb-6c-2cm-0-TU-V1_bs5.DAT')
 
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
@@ -832,7 +842,7 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_age%g_nu%g_Em%g_nsteps%g' % (age, E_m, nu, n_steps)
+        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 
