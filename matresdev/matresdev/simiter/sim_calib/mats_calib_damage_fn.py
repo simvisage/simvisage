@@ -813,7 +813,7 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 26
+        age = 23
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 

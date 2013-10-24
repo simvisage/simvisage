@@ -260,7 +260,7 @@ class SimST(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset= -self.thickness_supprt)
+                         zoffset=-self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats
@@ -876,6 +876,7 @@ class SimSTDB(SimST):
                                 depends_on='input_change')
     @cached_property
     def _get_damage_function(self):
+#        print'XXX', [self.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(14)]
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------

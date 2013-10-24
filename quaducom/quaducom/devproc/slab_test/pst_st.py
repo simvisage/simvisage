@@ -189,9 +189,13 @@ if __name__ == '__main__':
     
                             ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
     
+                            # calibration for: age = 23d; E_m = 27975.8 MPa; nu = 0.20; nsteps = 100   
+                            #
+                            calibration_test='TT-12c-6cm-0-TU-V1_ZiE-S1_age23_Em27975.8_nu0.2_nsteps100',
+                            
                             # calibration for: age = 23d; E_m = 27975 MPa; nu = 0.20; nsteps = 100   
                             #
-                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+#                             calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
 #                            calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s50',
 #                            calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
                             
@@ -218,8 +222,8 @@ if __name__ == '__main__':
 #                            shape_R = 4,
 #                            shape_supprt_xy = 4,
                             #
-                            w_max= -0.030,
-                            tstep=0.05,
+                            w_max=-0.040,
+                            tstep=0.02,
 #                            tstep = 1.00, 
                             tmax=1.00,
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
@@ -253,7 +257,7 @@ if __name__ == '__main__':
                             shape_R=2,
                             shape_z=3,
                             #
-                            w_max= -0.040,
+                            w_max=-0.040,
                             tstep=0.01,
                             tmax=1.0,
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
@@ -346,7 +350,7 @@ if __name__ == '__main__':
 
         # pstudy: thickness
         #
-        pst_list = [ 0.0554, 0.06 ]
+        pst_list = [ 0.06 ]  # 0.0554, 
         
         # pstudy: n_mp
         #
