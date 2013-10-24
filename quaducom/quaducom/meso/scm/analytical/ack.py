@@ -28,16 +28,18 @@ class ACK(HasTraits):
     def _get_eps2(self):
         #sigma=sigma_mu
         Ec = self.material.E_c
-        return (Ec/self.material.E_m - 1.337/4. * self.material.V_m) * self.sigma_mu /  self.material.E_f / self.material.V_f
+        return (Ec/self.material.E_m - .334 * self.material.V_m) * self.sigma_mu /  self.material.E_f / self.material.V_f
 
     eps3 = Property()
     def _get_eps3(self):
         #sigma>sigma_mu
-        return self.sigma_max / (self.material.E_f * self.material.V_f) - 1.337/4. * self.material.V_m * self.sigma_mu /  self.material.E_f / self.material.V_f
+        return self.sigma_max / (self.material.E_f * self.material.V_f) - .334 * self.material.V_m * self.sigma_mu /  self.material.E_f / self.material.V_f
 
     def plot_diagram(self):
         Ec = self.material.E_c
         sigma_cu = self.sigma_mu * Ec / self.material.E_m
+        print 'ecxact = ', sigma_cu - self.eps2 * self.material.E_f * self.material.V_f
+        print .334 * self.sigma_mu * self.material.V_m
         eps_list = [0, self.eps1, self.eps2, self.eps3]
         sigma_list = [0, sigma_cu, sigma_cu, self.sigma_max]
 
