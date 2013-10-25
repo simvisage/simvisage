@@ -99,7 +99,8 @@ class CBShortFiber(RF):
 
 if __name__ == '__main__':
     frc = CBShortFiber()
-    w = np.linspace(0.0, .1, 200)
-    ef0 = frc(w, 0.7, 0.1, 200e3, 20.0, 0.5, 0.03, 20.0)
-    plt.plot(w, ef0, linewidth=2, color='navy')
+    w = np.linspace(0.0, .06, 200)
+    ef0 = frc(w, .3, 0.013, 70e3, 7.0, 0.5, 0.03, 20.0)
+    plt.plot(w, ef0 * 70e3, linewidth=2, color='navy')
+    #plt.ylim(0,0.01 * 70e3)
     plt.show()
