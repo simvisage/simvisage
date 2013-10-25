@@ -181,7 +181,7 @@ class SimBT3PT(IBVModel):
     #
     sym_specmn_length = Property
     def _get_sym_specmn_length(self):
-        return (self.length - self.elstmr_length) / 2.
+        return self.length / 2.
 
     # half the length of the elastomer (load introduction
     # with included symmetry
@@ -226,7 +226,7 @@ class SimBT3PT(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset= -self.thickness_supprt)
+                         zoffset=-self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats_eval
@@ -276,8 +276,8 @@ class SimBT3PT(IBVModel):
     @cached_property
     def _get_specmn_mats(self):
         return MATS2D5MicroplaneDamage(
-#                                E = self.E_c,
-                                E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
+                                E=self.E_c,
+#                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
                                 nu=self.nu,
                                 # corresponding to settings in "MatsCalib"
                                 n_mp=30,
