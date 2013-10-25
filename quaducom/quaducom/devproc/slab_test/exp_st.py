@@ -309,7 +309,7 @@ class ExpST(ExType):
     def _get_w_smooth(self):
         return smooth(self.w_asc, self.n_points, 'flat')
 
-    def _plot_force_center_deflection(self, axes, offset_w=0.):
+    def _plot_force_center_deflection(self, axes, offset_w=0., color='blue', linewidth=1.5, linestyle='-'):
         '''plot the F-w-diagramm for the center (c) deflection
         '''
         xkey = 'deflection [mm]'
@@ -320,9 +320,7 @@ class ExpST(ExType):
         xdata += offset_w
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
-                       )
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle) 
 
     def _plot_force_corner_deflection(self, axes):
         '''plot the F-w-diagramm for the corner deflection (at the center of one of the supports)
