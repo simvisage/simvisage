@@ -11,9 +11,7 @@ from etsproxy.traits.api import HasTraits, Property, Array, \
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
 from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
-from quaducom.micro.resp_func.CB_rigid_mtrx_rand_xi import CBResidualRandXi
-from quaducom.micro.resp_func.CB_clamped_rigid_mtrx_rand_xi import \
-    CBFinResidualRandXi
+from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
 from spirrid.spirrid import SPIRRID
 from spirrid.rv import RV
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
@@ -65,7 +63,7 @@ class Model(HasTraits):
 
     model_rand = Property(Array)
     def _get_model_rand(self):
-        cb = CBResidualRandXi()
+        cb = CBClampedRandXi()
         spirrid = SPIRRID(q=cb, sampling_type='PGrid')
         sV0 = self.sV0
         tau_scale = self.tau_scale
@@ -75,8 +73,9 @@ class Model(HasTraits):
         tau = RV('weibull_min', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
         n_int = self.n_int
         w = self.w
+        lm = 1e10
         spirrid.eps_vars=dict(w=w)
-        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0)
+        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
         spirrid.n_int=n_int
         if isinstance(r, RV):
             r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
@@ -88,7 +87,7 @@ class Model(HasTraits):
 
     model_extrapolate = Property(Array)
     def _get_model_extrapolate(self):
-        cb = CBFinResidualRandXi()
+        cb = CBClampedRandXi()
         spirrid = SPIRRID(q=cb, sampling_type='PGrid')
         sV0 = self.sV0
         tau_scale = self.tau_scale
