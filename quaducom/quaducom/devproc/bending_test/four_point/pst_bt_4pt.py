@@ -116,18 +116,18 @@ if __name__ == '__main__':
                                
                                # time synchron fabrication
                                #
-#                                calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Em28427_nu0.2_nsteps100',
-                               calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Ec29940.2_nu0.2_nsteps100',
+#                                 calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Em28427_nu0.2_nsteps100',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Ec29940.2_nu0.2_nsteps100',
 
                                # fresh-in-fresh
                                #
-#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V2_age26_Em28427_nu0.2_nsteps100',
-#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V2_age26_Ec29940.2_nu0.2_nsteps100',
+#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_Em28427_nu0.2_nsteps100',
+#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_Ec29940.2_nu0.2_nsteps100',
                                
-
                                age=26,
                                #
-                               thickness=0.06,
+                                thickness=0.06,
+#                                 thickness=0.0577,
                                length=1.50,
                                width=0.20,
                                #
@@ -290,7 +290,7 @@ if __name__ == '__main__':
             shape_y = sim_model.shape_y
             shape_z = sim_model.shape_z
             E_m = sim_model.E_m
-            E = sim_model.specmn_mats.E_m
+            E = sim_model.specmn_mats.E
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
@@ -373,7 +373,7 @@ if __name__ == '__main__':
             p.title(param_key, fontsize=8)
             p.savefig(png_file_path, dpi=300.)
             print 'png-file saved to file: %s' % png_file_path
-#            p.show()
+            p.show()
 
         app.main()
 
