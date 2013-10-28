@@ -97,38 +97,8 @@ from pickle import dump, load
 from sim_st import SimST
 from sim_st import SimSTDB
 
-# from devproc.format_plot import format_plot
-
-def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
-    '''format 2d-plot black and with with times font 
-    '''
-    #-------------------------------------------------------------------
-    # configure the style of the font to be used for labels and ticks
-    #-------------------------------------------------------------------
-    #
-    from matplotlib.font_manager import FontProperties
-    font = FontProperties()
-    font.set_name('Script MT')
-    font.set_family('serif')
-    font.set_style('normal')
-#    font.set_size('small')
-    font.set_size('large')
-    font.set_variant('normal')
-    font.set_weight('medium')
-    
-    if xlim != None and ylim != None:
-        axes.axis([0, xlim, 0., ylim], fontproperties=font)
-
-    # format ticks for plot
-    #
-    locs, labels = axes.xticks()
-    axes.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-    axes.xlabel(xlabel, fontproperties=font)
-
-    locs, labels = axes.yticks()
-    axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-    axes.ylabel(ylabel, fontproperties=font)
-    
+from quaducom.devproc.format_plot import format_plot
+  
 #------------------------------------------------
 # script for parameter study  
 #------------------------------------------------
@@ -387,7 +357,7 @@ if __name__ == '__main__':
 #            sim_model.calibration_test = pst_param
 #            sim_model.phi_fn_class = pst_param
             
-            p.figure(facecolor='white')  # white background for diagram
+            p.figure(facecolor='white', figsize=(12, 9))  # white background for diagram
     
             #--------------------        
             # simulation 
@@ -480,7 +450,7 @@ if __name__ == '__main__':
     #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
             png_file_path = join(png_path, param_key + '.png')
             p.title(param_key, fontsize=8)
-            p.savefig(png_file_path, dpi=600.)
+            p.savefig(png_file_path, dpi=300.)
             print 'png-file saved to file: %s' % png_file_path
             p.show()
 
