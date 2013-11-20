@@ -70,22 +70,6 @@ class MATSCalibDamageFnController(Handler):
         calibrator.init()
         fit_response = calibrator.fit_response()
 
-#       @todo: delete
-#       this code was here for saving the damage function in a file - however currently the values
-#       should be automatically stored in the fit_response method
-#        ex_run = calibrator.ex_run_view.model
-#        
-#        # Construct the name of the material combination to store the
-#        # material parameters with.
-#        #
-#        file_name = join( simdb.matdata_dir, ex_run.ex_type.textile_cross_section_key + '.mats' )
-#        file = open( file_name, 'w' )
-#
-#        import pickle
-#        mats_eval = calibrator.dim.mats_eval
-#        pickle.dump( mats_eval.phi_fn.mfn, file )
-#        file.close()
-
 # ---------------------------------------------------
 # Calibrator of the damage function from uniaxial test: 
 # ---------------------------------------------------
@@ -761,23 +745,54 @@ def run():
 #                              'TT11-10a-average.DAT' )
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
-                              '2011-06-10_TT-12c-6cm-0-TU_ZiE',
-                              'TT-12c-6cm-0-TU-V1.DAT')
+                               #-----------------------------------
+                               # tests for 'BT-3PT-12c-6cm-TU_ZiE'
+                               #-----------------------------------
+                               # 'ZiE-S1': test series no. 1 (age = 11d)
+                               #
+#                                 '2011-05-23_TT-12c-6cm-0-TU_ZiE',
+#                                 'TT-12c-6cm-0-TU-V2.DAT')
 
-#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
+                                # 'ZiE-S2': test series no. 2 (age = 9d)
+                                #
+#                                 '2011-06-10_TT-12c-6cm-0-TU_ZiE',
+#                                 'TT-12c-6cm-0-TU-V2.DAT')
 
-#                              '2012-01-09_TT-12c-6cm-0-TU_SH1',
-#                              'TT-12c-6cm-TU-SH1F-V3.DAT')
+                                #-----------------------------------
+                                # tests for 'BT-4PT-12c-6cm-TU_SH4'
+                                # tests for 'ST-12c-6cm-TU' (fresh) 
+                                #-----------------------------------
+                                # @todo: add missing front strain information from Aramis3d testing
+                                #
+#                               '2012-04-12_TT-12c-6cm-0-TU_SH4-Aramis3d',
+#                               'TT-12c-6cm-0-TU-SH4-V2.DAT')
 
-#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+#                                 '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                 'TT-12c-6cm-0-TU-SH2-V2.DAT')
 
-        test_file = join(simdb.exdata_dir,
-                              'tensile_tests',
-                              'buttstrap_clamping',
-                              '2013-07-18_TTb-6c-2cm-0-TU_bs5',
-                              'TTb-6c-2cm-0-TU-V1_bs5.DAT')
+                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+
+                                #-----------------------------------
+                                # tests for 'BT-3PT-6c-2cm-TU_bs'
+                                #-----------------------------------
+                                # barrelshell
+                                #
+#                                 # TT-bs1
+#                                 '2013-05-17_TT-6c-2cm-0-TU_bs1',
+#                                 'TT-6c-2cm-0-TU-V3_bs1.DAT')
+#                                 # TT-bs2
+#                                 '2013-05-21-TT-6c-2cm-0-TU_bs2',
+#                                 'TT-6c-2cm-0-TU-V1_bs2.DAT')
+#                                 # TT-bs3
+#                                 '2013-06-12_TT-6c-2cm-0-TU_bs3',
+#                                 'TT-6c-2cm-0-TU-V1_bs3.DAT')
+
+#         test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-18_TTb-6c-2cm-0-TU_bs5',
+#                               'TTb-6c-2cm-0-TU-V3_bs5.DAT')
 
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
@@ -803,12 +818,13 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 23
+        age = 26
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
         # behavior in the tensile zone is defined by calibrated 'phi_fn' with the predefined 'E_m'
-        E_m = ex_run.ex_type.ccs.concrete_mixture_ref.get_E_m_time(age)  
+        E_m = ex_run.ex_type.ccs.get_E_m_time(age)  
+        E_c = ex_run.ex_type.ccs.get_E_c_time(age)  
         
         # set 'nu' 
         # @todo: check values stored in 'mat_db'
@@ -832,7 +848,7 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_ZiE-S2_age%g_nu%g_Em%g_nsteps%g' % (age, E_m, nu, n_steps)
+        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 

@@ -24,7 +24,6 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', 
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
 #                                       'BT-3PT-12c-6cm-0-Tu-V1.raw')
 
-
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU',
 #                                        'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU',

@@ -206,8 +206,8 @@ class SimBT4PT(IBVModel):
     @cached_property
     def _get_specmn_mats(self):
         return MATS2D5MicroplaneDamage(
-#                                E = self.E_c,
-                                E=self.E_m,
+                                E=self.E_c,
+#                                 E=self.E_m,
                                 nu=self.nu,
                                 # corresponding to settings in "MatsCalib"
                                 n_mp=self.n_mp,

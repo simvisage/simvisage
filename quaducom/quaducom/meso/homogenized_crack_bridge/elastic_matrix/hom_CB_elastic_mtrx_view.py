@@ -213,17 +213,17 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=2.23, scale=0.03),
-                          V_f=0.04,
+                          tau=RV('weibull_min', loc=0.0, shape=1., scale=0.1),
+                          V_f=0.01,
                           E_f=240e3,
-                          xi=fibers_MC(m=5.0, sV0=0.0026),
+                          xi=fibers_MC(m=20.0, sV0=0.0026),
                           label='carbon',
                           n_int=500)
 
-    model = CompositeCrackBridge(E_m=23e3,
+    model = CompositeCrackBridge(E_m=25e10,
                                  reinforcement_lst=[reinf],
-                                 Ll=1.,
-                                 Lr=1.,
+                                 Ll=1000.,
+                                 Lr=1000.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     #profile(0.031)
-    w = np.linspace(0.0, .04, 200)
+    w = np.linspace(0.0, .2, 200)
     sigma_c_w(w)
     #energy(w)
     # bundle at 20 mm

@@ -103,15 +103,16 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
     
-    for rho in np.array([500.]):
+    for rho in np.array([10.]):
         sfc.rho = rho
         x = np.linspace(0.4, 1.5, 300)
         pdf_x = sfc.p_x(50., x)
         # Widom limiting case
-        print 2. / np.trapz(pdf_x, x)
+        print 'mean distance between fragment centroids = ', 2. / np.trapz(pdf_x, x)
         #cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
         plt.plot(x, pdf_x, label=str(rho))
         #plt.plot(x, cdf_x, label=str(rho))
     #plt.legend()
+    plt.title('PDF of number of fragments per unit length')
     plt.show()
     

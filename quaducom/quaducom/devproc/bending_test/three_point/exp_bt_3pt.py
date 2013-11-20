@@ -338,6 +338,55 @@ class ExpBT3PT(ExType):
 #        '''get only the ascending branch of the response curve'''
 #        return -self.Kraft[:self.max_force_idx + 1]
         
+    K_bending_elast = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_K_bending_elast(self):
+        '''calculate the analytical bending stiffness of the beam (3 point bending)
+        '''
+        t = self.thickness
+        w = self.width
+        L = self.length
+        
+        # coposite E-modulus
+        #
+        E_c = self.E_c
+
+        # moment of inertia
+        #
+        I_yy = t ** 3 * w / 12.
+
+        delta_11 = (L ** 3) / 48 / E_c / I_yy
+
+        # [MN/m]=[kN/mm] bending stiffness with respect to a force applied at center of the beam
+        #
+        K_bending_elast = 1 / delta_11  
+#         print 'K_bending_elast', K_bending_elast
+
+        return K_bending_elast
+
+    F_cr = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_F_cr(self):
+        '''calculate the analytical cracking load of the beam
+        '''
+        t = self.thickness
+        w = self.width
+        L = self.length
+        
+        # approx. flectural tensile strength
+        #
+        f_cfl = 6.  # MPa
+
+        # resistant moment 
+        #
+        W_yy = t ** 2 * w / 6.
+
+        # analytical cracking load of the beam
+        # corresponds to l = 0.46m and f_cfl = approx. 8.4 MPa#
+        #
+        F_cr = W_yy * f_cfl * 1000. / L  # [kN]
+        
+        return F_cr
 
     def process_source_data(self):
         '''read in the measured data from file and assign
@@ -428,20 +477,22 @@ class ExpBT3PT(ExType):
                       'force / machine displacement (incl. w_elast)'   : '_plot_force_machine_displacement',
                       'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
                       'force / machine displacement (without w_elast, interpolated)' : '_plot_force_machine_displacement_wo_elast_interpolated',
+                      'force / machine displacement (analytical offset)' : '_plot_force_machine_displacement_wo_elast_analytical_offset',
                       
                       'force / gauge displacement'                     : '_plot_force_gauge_displacement',
+                      'force / gauge displacement (analytical offset)' : '_plot_force_gauge_displacement_with_analytical_offset',
                       'force / gauge displacement (interpolated)'      : '_plot_force_gauge_displacement_interpolated',
 
-                      'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
-                      'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
-
+#                       'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
+#                       'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
+# 
                       'moment / eps_c (ASC)'                           : '_plot_moment_eps_c_ASC',
                       'moment / eps_c (raw)'                           : '_plot_moment_eps_c_raw',
-
-                      'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
-                      'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw',
-    
-                      'analytical bending stiffness'                   :  '_plot_analytical_bending_stiffness'
+# 
+#                       'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
+#                       'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw',
+#     
+#                       'analytical bending stiffness'                   :  '_plot_analytical_bending_stiffness'
                      }
 
     default_plot_template = 'force / deflection (displacement gauge)'
@@ -453,13 +504,13 @@ class ExpBT3PT(ExType):
         w = self.width
         L = self.length
         
-        # coposite E-modulus
+        # composite E-modulus
         #
         E_c = self.E_c
 
         # moment of inertia
         #
-        I_yy = t ** 4 * w / 12.
+        I_yy = t ** 3 * w / 12.
 
         delta_11 = L ** 3 / 48 / E_c / I_yy
         K_linear = 1 / delta_11  # [MN/m] bending stiffness with respect to a force applied at center of the beam
@@ -478,7 +529,11 @@ class ExpBT3PT(ExType):
         f_asc = self.F_raw[:max_force_idx + 1]
         w_asc = self.w_wo_elast[:max_force_idx + 1]
         axes.plot(w_asc, f_asc, color=color, linewidth=linewidth, linestyle=linestyle)
-
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -493,7 +548,7 @@ class ExpBT3PT(ExType):
         # get only the ascending branch of the response curve
         #
         f_asc = self.F_raw[:max_force_idx + 1]
-        w_asc = self.w_wo_elast[:max_force_idx + 1]
+        w_asc = np.copy(self.w_wo_elast[:max_force_idx + 1])
 
         # interpolate the starting point of the center deflection curve based on the slope of the curve
         # (remove offset in measured displacement where there is still no force measured)
@@ -507,12 +562,75 @@ class ExpBT3PT(ExType):
         m = (f10 - f8) / (w10 - w8)
         delta_w = f8 / m
         w0 = w8 - delta_w * 0.9
-        print 'w0', w0 
+#         print 'w0', w0 
         f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]]) 
         w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])  
-        print 'type( w_asc_interpolated )', type(w_asc_interpolated) 
+#         print 'type( w_asc_interpolated )', type(w_asc_interpolated) 
         w_asc_interpolated -= float(w0) 
         axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
+
+    def _plot_force_machine_displacement_wo_elast_analytical_offset(self, axes, color='green', linewidth=1., linestyle='-'):
+
+        # get the index of the maximum stress
+        #
+        max_force_idx = argmax(self.F_raw)
+
+        # get only the ascending branch of the response curve
+        #
+        f_asc = self.F_raw[:max_force_idx + 1]
+        w_asc = np.copy(self.w_wo_elast[:max_force_idx + 1])
+
+        M_asc = f_asc * self.length / 4.
+        eps_c_asc = self.eps_c_raw[:max_force_idx + 1]
+
+        t = self.thickness
+        w = self.width
+        
+        # coposite E-modulus
+        #
+        E_c = self.E_c
+
+        # resistant moment
+        #
+        W_yy = t ** 2 * w / 6.
+        
+        K_I_analytic = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        K_I_analytic *= 1000.  # [kN/m] bending stiffness with respect to center moment
+        
+        # interpolate the starting point of the center deflection curve based on the slope of the curve
+        # (remove offset in measured displacement where there is still no force measured)
+        # 
+        idx_lin = np.where(M_asc <= K_I_analytic * eps_c_asc)[0][0]
+        idx_lin = int(idx_lin * 0.7)
+#         idx_lin = 50
+        
+#        idx_lin = np.where(M_asc - M_asc[0] / eps_c_asc <= 0.90 * K_I_analytic)[0][0]
+        print 'idx_lin', idx_lin
+        print 'F_asc[idx_lin]', f_asc[idx_lin]
+        print 'M_asc[idx_lin]', M_asc[idx_lin]
+        print 'w_asc[idx_lin]', w_asc[idx_lin]
+        
+        w_lin_epsc = w_asc[idx_lin]
+        
+        w_lin_analytic = f_asc[idx_lin] / self.K_bending_elast
+        
+        f_asc_offset_analytic = f_asc[ idx_lin: ] 
+        w_asc_offset_analytic = w_asc[ idx_lin: ]
+        w_asc_offset_analytic -= np.array([w_lin_epsc])
+        w_asc_offset_analytic += np.array([w_lin_analytic])  
+
+        axes.plot(w_asc_offset_analytic, f_asc_offset_analytic, color=color, linewidth=linewidth, linestyle=linestyle)
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
 
 
     def _plot_force_machine_displacement(self, axes, color='black', linewidth=1., linestyle='-'):
@@ -523,17 +641,67 @@ class ExpBT3PT(ExType):
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
+    def _plot_force_gauge_displacement_with_analytical_offset(self, axes, color='black', linewidth=1., linestyle='-'):
+        
+        # skip the first values (= first seconds of testing)
+        # and start with the analytical bending stiffness instead to avoid artificial offset of F-w-diagram
+        #
+#         w_max = np.max(self.w_ASC)
+#         cut_idx = np.where(self.w_ASC > 0.001 * w_max)[0]
+
+        cut_idx = np.where(self.w_ASC > 0.01)[0]
+
+        print 'F_cr ', self.F_cr 
+#         cut_idx = np.where(self.F_ASC > 0.6 * self.F_cr)[0]
+            
+        print 'cut_idx', cut_idx[0]
+        print 'w_ASC[cut_idx[0]]', self.w_ASC[cut_idx[0]]
+        xdata = np.copy(self.w_ASC[cut_idx])
+        ydata = np.copy(self.F_ASC[cut_idx])
+        
+        # specify offset if force does not start at the origin with value 0.
+        F_0 = ydata[0]
+        print 'F_0 ', F_0 
+        offset_w = F_0 / self.K_bending_elast
+        xdata -= xdata[0]
+        xdata += offset_w
+        
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
+#        xkey = 'deflection [mm]'
+#        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
 
 
-    def _plot_force_gauge_displacement(self, axes, color='black', linewidth=1., linestyle='-'):
+    def _plot_force_gauge_displacement(self, axes, offset_w=0., color='black', linewidth=1., linestyle='-'):
         xdata = self.w_ASC
         ydata = self.F_ASC
+        
+        # specify offset if force does not start at the origin
+        xdata += offset_w
+        
         axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
 
     def _plot_smoothed_force_gauge_displacement(self, axes):
 
@@ -583,6 +751,12 @@ class ExpBT3PT(ExType):
         w_asc_interpolated -= float(w0) 
         axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
 
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
     def _plot_smoothed_force_machine_displacement_wo_elast(self, axes):
 
         # get the index of the maximum stress
@@ -600,6 +774,12 @@ class ExpBT3PT(ExType):
 
         axes.plot(w_smooth, F_smooth, color='blue', linewidth=2)
 
+        # plot analytical bending stiffness
+        #
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
 #        secant_stiffness_w10 = ( f_smooth[10] - f_smooth[0] ) / ( w_smooth[10] - w_smooth[0] )
 #        w0_lin = array( [0.0, w_smooth[10] ], dtype = 'float_' )
 #        f0_lin = array( [0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_' )
@@ -615,16 +795,53 @@ class ExpBT3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata)
+        # plot stiffness in uncracked state
+        t = self.thickness
+        w = self.width        
+        # composite E-modulus
+        #
+        E_c = self.E_c
+
+        # resistant moment
+        #
+        W_yy = t ** 2 * w / 6.
+
+        max_M = np.max(self.M_raw)
+
+        K_linear = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        K_linear *= 1000.  # [kN/m] bending stiffness with respect to center moment
+        w_linear = np.array([0., max_M / K_linear])
+        M_linear = np.array([0., max_M])
+        axes.plot(w_linear, M_linear, linestyle='--')
 
 
-    def _plot_moment_eps_c_raw(self, axes):
+    def _plot_moment_eps_c_raw(self, axes, color='black', linewidth=1.5, linestyle='-'):
         xkey = 'compressive strain [1*E-3]'
         ykey = 'moment [kNm]'
         xdata = self.eps_c_raw
         ydata = self.M_raw
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata)
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
+        # plot stiffness in uncracked state
+        t = self.thickness
+        w = self.width        
+        # composite E-modulus
+        #
+        E_c = self.E_c
+
+        # resistant moment
+        #
+        W_yy = t ** 2 * w / 6.
+
+        max_M = np.max(self.M_raw)
+
+        K_linear = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        K_linear *= 1000.  # [kN/m] bending stiffness with respect to center moment
+        w_linear = np.array([0., max_M / K_linear])
+        M_linear = np.array([0., max_M])
+        axes.plot(w_linear, M_linear, linestyle='--')
+
 
 
     n_fit_window_fraction = Float(0.1)

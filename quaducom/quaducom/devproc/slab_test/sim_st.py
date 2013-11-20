@@ -260,7 +260,7 @@ class SimST(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset= -self.thickness_supprt)
+                         zoffset=-self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats
@@ -296,6 +296,9 @@ class SimST(IBVModel):
 
     n_mp = Int(30., auto_set=False, enter_set=True, input=True)
 
+# @todo: make the setting which E-modulus to be chosen a parameter to set
+#     E_mats = Trait('E_c', {'E_c':self.E_c, 'E_m':self.E_m})
+
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
     #
@@ -308,8 +311,9 @@ class SimST(IBVModel):
 #        p.show()
         print 'self.n_mp', self.n_mp
         mats_eval = MATS2D5MicroplaneDamage(
-#                                E = self.E_c,
-                                E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
+                                E=self.E_c,
+#                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
+#                                 E=self.E_m,  # #@todo: only available if this parameter is defined by the class
                                 nu=self.nu,
                                 n_mp=self.n_mp,
                                 symmetrization='sum-type',
@@ -876,6 +880,7 @@ class SimSTDB(SimST):
                                 depends_on='input_change')
     @cached_property
     def _get_damage_function(self):
+#        print'XXX', [self.ccs_unit_cell_ref.damage_function_list[i].calibration_test for i in range(14)]
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------

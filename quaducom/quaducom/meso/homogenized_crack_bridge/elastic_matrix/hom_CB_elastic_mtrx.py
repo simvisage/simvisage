@@ -354,7 +354,7 @@ if __name__ == '__main__':
                           E_f=240e3,
                           xi=fibers_MC(m=10.0, sV0=0.0026),
                           label='carbon',
-                          n_int=500)
+                          n_int=10)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
@@ -364,14 +364,14 @@ if __name__ == '__main__':
                                  reinforcement_lst=[reinf],
                                  Ll=1.,
                                  Lr=1.,
-                                 w=.03)
+                                 w=.05)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
     plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro')
     for i, depsf in enumerate(ccb.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr),ccb._epsm_arr)
-        print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
+        #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         plt.plot(ccb._x_arr, epsf_x)
     plt.legend(loc='best')
     #plt.xlim(-5,10)
