@@ -271,7 +271,7 @@ class ExpST(ExType):
                       'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
                       'force / average deflection (c; ce; e)'     : '_plot_force_deflection_avg',
                       'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
-                      'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated'
+                      'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
                       'force / deflection (corner)'               : '_plot_force_corner_deflection',
                      }
     
