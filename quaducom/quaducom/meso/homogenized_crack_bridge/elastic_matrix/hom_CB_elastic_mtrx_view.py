@@ -89,7 +89,7 @@ class CompositeCrackBridgeView( ModelView ):
             return -self.sigma_c
         def residuum_stiffness( w ):
             self.model.w = w
-            stiffness_loss = np.sum( self.model.Kf * self.model.damage ) / np.sum( self.model.Kf )
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
             if stiffness_loss > 0.90:
                 return 1. + w
             if stiffness_loss < 0.65 and stiffness_loss > 0.45:
@@ -98,8 +98,8 @@ class CompositeCrackBridgeView( ModelView ):
                 residuum = stiffness_loss - 0.5
             return residuum
 
-        w_max = brentq( residuum_stiffness, 0.0, min( 0.1 * ( self.model.Ll + self.model.Lr ), 20. ) )
-        w_points = np.linspace( 0, w_max, 7 )
+        w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+        w_points = np.linspace(0, w_max, 7)
         w_maxima = []
         sigma_maxima = []
         for i, w in enumerate( w_points[1:] ):
@@ -213,17 +213,17 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.0, shape=1., scale=0.1),
+                          tau=RV('weibull_min', loc=0.0, shape=3., scale=0.1),
                           V_f=0.01,
-                          E_f=240e3,
-                          xi=fibers_MC(m=20.0, sV0=0.0026),
+                          E_f=180e3,
+                          xi=fibers_MC(m=5.0, sV0=0.003),
                           label='carbon',
                           n_int=500)
 
-    model = CompositeCrackBridge(E_m=25e10,
+    model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1000.,
-                                 Lr=1000.,
+                                 Ll=100.,
+                                 Lr=100.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         sigma_c_arr, u_arr = ccb_view.sigma_c_arr( w_arr, u = True )
         plt.plot( w_arr, sigma_c_arr, lw = 2, color = 'black', label = 'w-sigma' )
         plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel( 'w,u [mm]' )
         plt.ylabel( '$\sigma_c$ [MPa]' )
         plt.legend( loc = 'best' )
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     #profile(0.031)
-    w = np.linspace(0.0, .2, 200)
+    w = np.linspace(0.0, 20., 200)
     sigma_c_w(w)
     #energy(w)
     # bundle at 20 mm

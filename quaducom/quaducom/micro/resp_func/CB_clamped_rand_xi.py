@@ -76,6 +76,8 @@ class CBClampedRandXi(RF):
 
     C_code = Str('')
 
+    pullout = Bool(True)
+
     def mu_broken(self, e, depsf, r, lm, m, sV0, mask):
         n = 200
         shape = [1] * len(mask.shape) + [n]
@@ -117,7 +119,10 @@ class CBClampedRandXi(RF):
         Gxi = self.cdf(e, depsf, r, lm, m, sV0, mask)
         mu_int = e * (1.-Gxi)
         mu_broken = self.mu_broken(e, depsf, r, lm, m, sV0, mask)
-        return (mu_int + mu_broken) * E_f * V_f * r**2
+        if self.pullout:
+            return (mu_int + mu_broken) * E_f * V_f * r**2
+        else:
+            return mu_int * E_f * V_f * r**2
     
     def __call__2(self, w, tau, E_f, V_f, r, m, sV0):
         '''free debonding only = __call__ with lm=infty'''
@@ -129,7 +134,10 @@ class CBClampedRandXi(RF):
         mu_int = ef0 * (1-Gxi)
         I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
         mu_broken = I / (m+1)
-        return (mu_int + mu_broken) * E_f * V_f * r**2
+        if self.pullout:
+            return (mu_int + mu_broken) * E_f * V_f * r**2
+        else:
+            return mu_int * E_f * V_f * r**2
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
