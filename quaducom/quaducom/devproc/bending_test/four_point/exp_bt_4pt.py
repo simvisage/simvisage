@@ -47,10 +47,10 @@ import os
 
 import csv
 
-from numpy import array, fabs, where, copy, ones, argsort
-
-from numpy import \
+from numpy import array, fabs, where, copy, ones, argsort, \
     loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, unique, around
+
+import numpy as np
 
 from etsproxy.traits.ui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
@@ -313,8 +313,60 @@ class ExpBT4PT(ExType):
         DB_re_orig *= -1
         self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
 
+    K_bending_elast_c = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_K_bending_elast_c(self):
+        '''calculate the analytical bending stiffness of the beam (4 point bending)
+        relation between center deflection and 2 * load/2 in the thirdpoints (sum up to F)
+        '''
+        t = self.thickness
+        w = self.width
+        L = self.length
+        
+        # coposite E-modulus
+        #
+        E_c = self.E_c
 
-    
+        # moment of inertia
+        #
+        I_yy = t ** 3 * w / 12.
+
+        delta_11 = (L ** 3) / 56.348 / E_c / I_yy
+
+        # [MN/m]=[kN/mm] bending stiffness with respect to a force applied at center of the beam
+        #
+        K_bending_elast_c = 1 / delta_11  
+#         print 'K_bending_elast_c', K_bending_elast_c
+
+        return K_bending_elast_c
+
+    K_bending_elast_thirdpoints = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_K_bending_elast_thirdpoints(self):
+        '''calculate the analytical bending stiffness of the beam (4 point bending)
+        relation between thirdpoint deflection and 2 * load/2 in the thirdpoints (sum up to F)
+        '''
+        t = self.thickness
+        w = self.width
+        L = self.length
+        
+        # coposite E-modulus
+        #
+        E_c = self.E_c
+
+        # moment of inertia
+        #
+        I_yy = t ** 3 * w / 12.
+
+        delta_11 = (L ** 3) * 5 / 324 / E_c / I_yy
+
+        # [MN/m]=[kN/mm] bending stiffness with respect to a force applied at center of the beam
+        #
+        K_bending_elast_thirdpoints = 1 / delta_11  
+#         print 'K_bending_elast', K_bending_elast
+
+        return K_bending_elast_thirdpoints
+
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
@@ -354,6 +406,10 @@ class ExpBT4PT(ExType):
         ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast_c])
+        axes.plot(w_linear, F_linear, linestyle='--')
+
 
     n_fit_window_fraction = Float(0.1)
 
@@ -389,6 +445,9 @@ class ExpBT4PT(ExType):
 #        axes.plot( w_lr_asc, f_asc, color = 'green', linewidth = 2 )
         axes.plot(w_l_asc, f_asc, color='green', linewidth=1)
         axes.plot(w_r_asc, f_asc, color='green', linewidth=1)
+        w_linear = 2 * np.array([0., 1.])
+        F_linear = 2 * np.array([0., self.K_bending_elast_thirdpoints])
+        axes.plot(w_linear, F_linear, linestyle='--')
 
     def _plot_strain_top_bottom_force(self, axes):
         '''deflection at the third points (under the loading points)

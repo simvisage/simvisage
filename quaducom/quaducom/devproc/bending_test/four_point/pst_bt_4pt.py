@@ -88,7 +88,7 @@ from pickle import dump, load
 from sim_bt_4pt import SimBT4PT
 from sim_bt_4pt import SimBT4PTDB
 
-# from devproc.format_plot import format_plot
+from quaducom.devproc.format_plot import format_plot
 
 #------------------------------------------------
 # script for parameter study  
@@ -114,13 +114,20 @@ if __name__ == '__main__':
         sim_model = SimBT4PTDB(
                                ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                                
-                               # calibration for: age = 23d; E_m = 27975.8 MPa; nu = 0.20; nsteps = 100   
+                               # time synchron fabrication
                                #
-                               calibration_test='TT-12c-6cm-0-TU-SH4-V2_age26_Em28427_nu0.2_nsteps100',
-#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
+#                                 calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Em28427_nu0.2_nsteps100',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V2_age26_Ec29940.2_nu0.2_nsteps100',
+
+                               # fresh-in-fresh
+                               #
+#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_Em28427_nu0.2_nsteps100',
+#                                calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_Ec29940.2_nu0.2_nsteps100',
+                               
                                age=26,
                                #
-                               thickness=0.06,
+                                thickness=0.06,
+#                                 thickness=0.0577,
                                length=1.50,
                                width=0.20,
                                #
@@ -135,9 +142,9 @@ if __name__ == '__main__':
 #                               shape_z = 3,
                                #
                                # coarse mesh
-                               outer_zone_shape_x=10,
+                               outer_zone_shape_x=6,
                                load_zone_shape_x=2,
-                               mid_zone_shape_x=7,
+                               mid_zone_shape_x=4,
                                shape_y=2,
                                shape_z=3,
                                #
@@ -236,9 +243,13 @@ if __name__ == '__main__':
             os.mkdir(pickle_path)
             os.mkdir(png_path)
 
-        # pstudy: n_mp
+        # pstudy: None
         #
-        pst_list = [ 0.060, 0.059, 0.061, 0.0577, 0.0554 ]
+        pst_list = [ 1 ]
+        
+        # pstudy: thickness
+        #
+#         pst_list = [ 0.060, 0.059, 0.061, 0.0577, 0.0554 ]
         
         # pstudy: n_mp
         #
@@ -254,12 +265,12 @@ if __name__ == '__main__':
         
         for pst_param in pst_list:
             
-            sim_model.thickness = pst_param
+#             sim_model.thickness = pst_param
 #            sim_model.n_mp = pst_param
 #            sim_model.calibration_test = st_param
 #            sim_model.phi_fn_class = st_param
             
-            p.figure(facecolor='white')  # white background for diagram
+            p.figure(facecolor='white', figsize=(12, 9))  # white background for diagram
     
             #--------------------        
             # simulation 
@@ -279,6 +290,7 @@ if __name__ == '__main__':
             shape_y = sim_model.shape_y
             shape_z = sim_model.shape_z
             E_m = sim_model.E_m
+            E = sim_model.specmn_mats.E
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
@@ -290,8 +302,8 @@ if __name__ == '__main__':
 
             # param_key 
             #
-            param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxo%gl%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        % (phi_fn_class, length, thickness, outer_zone_shape_x, load_zone_shape_x, mid_zone_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp) 
+            param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxo%gl%gm%gy%gz%g_s%se%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
+                        % (phi_fn_class, length, thickness, outer_zone_shape_x, load_zone_shape_x, mid_zone_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp) 
             print 'param_key = %s' % param_key
     
             # f-w-diagram_center
@@ -356,12 +368,12 @@ if __name__ == '__main__':
             # plot sim curve as time new roman within the predefined limits  
             #----------------------------------------------------------------------
             #
-    #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
+            format_plot(p, xlim=55, ylim=14, xlabel='displacement [mm]', ylabel='force [kN]')
             png_file_path = join(png_path, param_key + '.png')
             p.title(param_key, fontsize=8)
-            p.savefig(png_file_path, dpi=1200.)
+            p.savefig(png_file_path, dpi=300.)
             print 'png-file saved to file: %s' % png_file_path
-#            p.show()
+            p.show()
 
         app.main()
 

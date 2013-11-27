@@ -607,6 +607,8 @@ class ExpBT3PT(ExType):
         # (remove offset in measured displacement where there is still no force measured)
         # 
         idx_lin = np.where(M_asc <= K_I_analytic * eps_c_asc)[0][0]
+        idx_lin = int(idx_lin * 0.7)
+#         idx_lin = 50
         
 #        idx_lin = np.where(M_asc - M_asc[0] / eps_c_asc <= 0.90 * K_I_analytic)[0][0]
         print 'idx_lin', idx_lin
@@ -793,16 +795,34 @@ class ExpBT3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata)
+        # plot stiffness in uncracked state
+        t = self.thickness
+        w = self.width        
+        # composite E-modulus
+        #
+        E_c = self.E_c
+
+        # resistant moment
+        #
+        W_yy = t ** 2 * w / 6.
+
+        max_M = np.max(self.M_raw)
+
+        K_linear = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        K_linear *= 1000.  # [kN/m] bending stiffness with respect to center moment
+        w_linear = np.array([0., max_M / K_linear])
+        M_linear = np.array([0., max_M])
+        axes.plot(w_linear, M_linear, linestyle='--')
 
 
-    def _plot_moment_eps_c_raw(self, axes):
+    def _plot_moment_eps_c_raw(self, axes, color='black', linewidth=1.5, linestyle='-'):
         xkey = 'compressive strain [1*E-3]'
         ykey = 'moment [kNm]'
         xdata = self.eps_c_raw
         ydata = self.M_raw
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata)
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
         # plot stiffness in uncracked state
         t = self.thickness
         w = self.width        
