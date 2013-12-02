@@ -386,7 +386,7 @@ class SimBT4PT(IBVModel):
                                         slice=elastomer[:, 0, :, :, 0, :])
         # symmetry in the yz-plane
         #
-        bc_mid_zone_symplane_yz = BCSlice(mid='u', value=0., dims=[0],
+        bc_mid_zone_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                           slice=mid_zone_specimen[0, :, :, 0, :, :])
 
         #--------------------------------------------------------------
