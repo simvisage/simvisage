@@ -166,14 +166,9 @@ class SimBT3PT(IBVModel):
     elstmr_thickness = Float(0.005, input=True,
                                 enter_set=True, auto_set=False)
     width = Float(0.20, input=True)
-<<<<<<< HEAD
-    thickness = Float(0.06, input=True)
-
-== == == =
     thickness = Float(0.06, input=True,
                       ps_levels=(0.054, 0.060, 0.066))
 
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
     # thickness of the tappered support
     #
     thickness_supprt = Float(0.02, input=True)
@@ -181,7 +176,7 @@ class SimBT3PT(IBVModel):
     # derived geometric parameters
     #-----------------
     #
-    # half the length of the elastomer (load introduction 
+    # half the length of the elastomer (load introduction
     # with included symmetry)
     #
     sym_specmn_length = Property
@@ -209,7 +204,7 @@ class SimBT3PT(IBVModel):
     #
     elstmr_flag = True
 
-    # specify weather steel support is to be modeled 
+    # specify weather steel support is to be modeled
     #
     supprt_flag = False
 
@@ -222,8 +217,8 @@ class SimBT3PT(IBVModel):
     geo_supprt = Property(Instance(GeoSUPPRT), depends_on='+ps_levels, +input')
     @cached_property
     def _get_geo_supprt(self):
-        # element length within the range of the slab without the area of the 
-        # load introduction plate 
+        # element length within the range of the slab without the area of the
+        # load introduction plate
         #
         elem_size = self.sym_specmn_length / self.shape_x
         width_supprt = self.shape_supprt_x * elem_size
@@ -231,36 +226,30 @@ class SimBT3PT(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-<<<<<<< HEAD
                          zoffset= -self.thickness_supprt)
-== == == =
-                         zoffset = -self.thickness_supprt)
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 
     #----------------------------------------------------------------------------------
     # mats_eval
     #----------------------------------------------------------------------------------
 
     # age of the specimen at the time of testing
-    # determines the E-modulus and nu based on the time dependent function stored 
+    # determines the E-modulus and nu based on the time dependent function stored
     # in 'CCSUniteCell' if params are not explicitly set
     #
     age = Int(28, input=True)
 
     # composite E-modulus / Poisson's ratio
     # NOTE 1: value are retrieved from the database
-    #         same values are used for calibration (as taken from tensile test) and for slab test  
-    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume  
-    #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
-    #         used in the simulation of the slab test and within the calibration procedure. 
+    #         same values are used for calibration (as taken from tensile test) and for slab test
+    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume
+    #         an afine/proportional damage evolution for different ages, i.e. a different E would be
+    #         used in the simulation of the slab test and within the calibration procedure.
 
-    # time stepping params 
-    #  
+    # time stepping params
+    #
     tstep = Float(0.05, auto_set=False, enter_set=True, input=True)
     tmax = Float(1.0, auto_set=False, enter_set=True, input=True)
     tolerance = Float(0.001, auto_set=False, enter_set=True, input=True)
-<<<<<<< HEAD
-== == == =
 
     # specify type of 'linalg.norm'
     # default value 'None' sets norm to 2-norm,
@@ -268,9 +257,8 @@ class SimBT3PT(IBVModel):
     #
     # set 'ord=np.inf' to switch norm to
     # "norm = max(abs(x_i))"
-    # 
+    #
     ord = Enum(None, np.inf)
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 
     # number of microplanes
     #
@@ -288,56 +276,30 @@ class SimBT3PT(IBVModel):
     @cached_property
     def _get_specmn_mats(self):
         return MATS2D5MicroplaneDamage(
-<<<<<<< HEAD
-#                                E = self.E_c,
-                                E=self.E_m, # relevant for compressive behavior/used for calibration of phi_fn
-== == ===
                                 E=self.E_c,
 #                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
                                 nu=self.nu,
                                 # corresponding to settings in "MatsCalib"
                                 n_mp=30,
                                 symmetrization='sum-type',
                                 model_version='compliance',
                                 phi_fn=self.phi_fn)
-<<<<<<< HEAD
-== == == =
 
     E_elstmr = Float(3000., input=True)
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 
     elstmr_mats = Property(Instance(MATS3DElastic),
                                    depends_on='input_change')
     @cached_property
     def _get_elstmr_mats(self):
-<<<<<<< HEAD
-#        max_eps = self.elstmr_thickness
-#        max_f = 0.020 # MN
-#        max_eps = 1.0 # [-]
-#        area = self.elstmr_length * self.width / 2.
-#        sig = max_f / area
-#        E_elast = sig / max_eps
-        E_elast = self.E_c / 10.
-        print 'effective elastomer E_modulus', E_elast
-        return MATS3DElastic(E=E_elast,
-                             nu=0.4)
-
-== == == =
         E_elstmr = self.E_elstmr
         print 'effective elastomer E_modulus', E_elstmr
         return MATS3DElastic(E=E_elstmr,
                              nu=0.4)
 
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
     # E-modulus and nu of steel support
     E_s = Float(210000., auto_set=False, enter_set=True, input=True)
     nu_s = Float(0.20, auto_set=False, enter_set=True, input=True)
-<<<<<<< HEAD
 
-== == == =
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
     supprt_mats = Property(Instance(MATS3DElastic),
                                     depends_on='input_change')
     @cached_property
@@ -462,11 +424,7 @@ class SimBT3PT(IBVModel):
             return  FERefinementGrid(name='elastomer patch',
                                      fets_eval=self.supprt_fets,
                                      domain=self.fe_domain)
-<<<<<<< HEAD
 
-== == == =
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
         supprt_fe_grid = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
         @cached_property
         def _get_supprt_fe_grid(self):
@@ -486,13 +444,8 @@ class SimBT3PT(IBVModel):
 
     # w_max = center displacement:
     #
-<<<<<<< HEAD
-    w_max = Float(-0.010, input=True) # [m]
-
-== == == =
     w_max = Float(-0.010, input=True)  # [m]
 
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
     bc_list = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_list(self):
@@ -507,35 +460,19 @@ class SimBT3PT(IBVModel):
         # the x-axis corresponds to the axis of symmetry along the longitudinal axis of the beam:
         bc_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                  slice=specmn[:, 0, :, :, 0, :])
-<<<<<<< HEAD
-== == == =
 
-        bc_mid_symplane_xz = BCSlice(var='u', value=0., dims=[1],
-                                 slice=mid_specmn[:, 0, :, :, 0, :])
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
-
-<<<<<<< HEAD
         bc_mid_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                  slice=mid_specmn[:, 0, :, :, 0, :])
 
         bc_mid_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                  slice=mid_specmn[0, :, :, 0, :, :])
 
-== == == =
-        bc_mid_symplane_yz = BCSlice(var='u', value=0., dims=[0],
-                                 slice=mid_specmn[0, :, :, 0, :, :])
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
         if self.elstmr_flag:
             bc_el_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                         slice=elstmr[:, 0, :, :, 0, :])
             bc_el_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                         slice=elstmr[0, :, :, 0, :, :])
-<<<<<<< HEAD
 
-== == == =
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
         #--------------------------------------------------------------
         # boundary conditions for the support
         #--------------------------------------------------------------
@@ -587,24 +524,17 @@ class SimBT3PT(IBVModel):
             #
             bc_w = BCSlice(var='u', value=w_max, dims=[2],
                            slice=elstmr[:, :, -1, :, :, -1])
-<<<<<<< HEAD
-== == == =
             # apply a single force at the center of the beam (system origin at top of the elastomer
-            # and us elastomer-domain as load distribution plate with a high stiffness (e.g. steel) 
+            # and us elastomer-domain as load distribution plate with a high stiffness (e.g. steel)
 #            F_max = -0.010 #[MN]
 #            bc_F = BCSlice(var = 'f', value = F_max, dims = [2],
 #                           slice = elstmr[0, 0, -1, 0, 0, -1])
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
         else:
             # center top nodes (line load)
             #
             bc_w = BCSlice(var='u', value=w_max, dims=[2],
                             slice=mid_specmn[0, :, -1, 0, :, -1])
-<<<<<<< HEAD
-#            bc_center_f = BCSlice( var = 'f', value = w_max, dims = [2], slice = mid_specmn[0, :, -1, 0, :, -1] )
-== == == =
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
-            # NOTE: the entire symmetry axis (yz)-plane is moved downwards 
+            # NOTE: the entire symmetry axis (yz)-plane is moved downwards
             # in order to avoid large indentations at the top nodes
             #
 #          bc_center_w = BCSlice( var = 'w', value = w_max, dims = [2], slice = mid_specmn[0, :, :, 0, :, :] )
@@ -623,7 +553,7 @@ class SimBT3PT(IBVModel):
     def _get_tloop(self):
 
         #--------------------------------------------------------------
-        # ts 
+        # ts
         #--------------------------------------------------------------
 
         specmn = self.specmn_fe_grid
@@ -643,11 +573,7 @@ class SimBT3PT(IBVModel):
             # center_top_line_dofs
             #
             load_dofs_z = np.unique(mid_specmn[0, :, -1, 0, :, -1].dofs[:, :, 2].flatten())
-<<<<<<< HEAD
         print 'load_dofs_z used for integration of force: ', load_dofs_z
-== == == =
-        print 'load_dofs_z used for integration of force: ', load_dofs_z
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 
         # center top z-dof
         #
@@ -655,17 +581,13 @@ class SimBT3PT(IBVModel):
         print 'center_top_dof used for displacement tracing: ', center_top_dof_z
 
         # force-displacement-diagram (LOAD)
-        # (surface load on the elstmr or line load at specimen center) 
-        # 
+        # (surface load on the elstmr or line load at specimen center)
+        #
         self.f_w_diagram_center = RTraceGraph(name='displacement (center) - reaction 2',
                                        var_x='U_k'  , idx_x=center_top_dof_z,
                                        var_y='F_int', idx_y_arr=load_dofs_z,
                                        record_on='update',
-<<<<<<< HEAD
-                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
-== == ===
-                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
+                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='-4000. * y')
@@ -677,11 +599,7 @@ class SimBT3PT(IBVModel):
                                        var_x='U_k'  , idx_x=center_top_dof_z,
                                        var_y='F_int', idx_y_arr=supprt_dofs_z,
                                        record_on='update',
-<<<<<<< HEAD
-                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
-== == ===
-                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
+                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='4000. * y')
@@ -692,19 +610,11 @@ class SimBT3PT(IBVModel):
                 rtrace_list=[
                              self.f_w_diagram_center,
                              self.f_w_diagram_supprt,
-<<<<<<< HEAD
-#                             RTraceDomainListField(name = 'Displacement' ,
-#                                            var = 'u', idx = 0, warp = True),
-                             RTraceDomainListField(name='Stress' ,
-                                            var='sig_app', idx=0, warp=True,
-                                            record_on='update'),
-== == ===
                              RTraceDomainListField(name='Displacement' ,
                                             var='u', idx=0, warp=True),
 #                             RTraceDomainListField(name = 'Stress' ,
 #                                            var = 'sig_app', idx = 0, warp = True,
 #                                            record_on = 'update'),
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 #                             RTraceDomainListField(name = 'Strain' ,
 #                                        var = 'eps_app', idx = 0, warp = True,
 #                                        record_on = 'update'),
@@ -791,13 +701,13 @@ class SimBT3PTDB(SimBT3PT):
     material_model = Str(input=True)
     def _material_model_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
     calibration_test = Str(input=True)
     def _calibration_test_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
 
     damage_function = Property(Instance(MFnLineArray),
@@ -818,11 +728,7 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_phi_fn(self):
         return self.phi_fn_class(mfn=self.damage_function)
-<<<<<<< HEAD
 
-== == == =
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
 #    phi_fn = Property(Instance(PhiFnGeneralExtended),
 #                       depends_on = 'input_change,+ps_levels')
 #    @cached_property
@@ -854,7 +760,7 @@ class SimBT3PTDB(SimBT3PT):
         print 'E_c (from ccs)', E_c
         return E_c
 
-    # Poisson's ratio 
+    # Poisson's ratio
     #
     nu = Property(Float, depends_on='input_change')
     @cached_property
@@ -871,11 +777,6 @@ class SimBT3PTDB(SimBT3PT):
 if __name__ == '__main__':
 
     sim_model = SimBT3PTDB(
-<<<<<<< HEAD
-
-== == ===
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
                            ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3',
                            thickness=0.06,
@@ -919,11 +820,7 @@ if __name__ == '__main__':
         dump(sim_model.f_w_diagram_center.trace, file)
         file.close()
         sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
-<<<<<<< HEAD
 
-== == == =
-
->>>>>>> branch 'master' of https: // rosoba@github.com / simvisage / simvisage.git
         # SUPPRT LINE
         #
         file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
@@ -974,7 +871,7 @@ if __name__ == '__main__':
         path = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE')
         tests = [
                   'BT-3PT-12c-6cm-0-Tu-V1.raw',
-#                  'BT-3PT-12c-6cm-0-Tu-V2.raw', 
+#                  'BT-3PT-12c-6cm-0-Tu-V2.raw',
 #                  'BT-3PT-12c-6cm-0-Tu-V3.raw',
                   'BT-3PT-12c-6cm-0-Tu-V4.raw' ]
 
