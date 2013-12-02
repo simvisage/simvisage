@@ -7,32 +7,31 @@ the Interpolator2 class evaluates crack bridges along x and for a range of load 
 @author: Q
 '''
 from etsproxy.traits.api import HasTraits, Property, cached_property, \
-    Instance, Array, Float, Int, String
+    Instance, Array, Float, Int
 import numpy as np
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx_view import CompositeCrackBridgeView
-from scipy.optimize import brentq
-import time
 from scipy.interpolate import interp2d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 import pickle
 import os
 
-class Interpolator( HasTraits ):
-    CB_model = Instance( CompositeCrackBridge )
+
+class Interpolator(HasTraits):
+    CB_model = Instance(CompositeCrackBridge)
     n_w = Int
     n_BC = Int
     n_x = Int
     load_sigma_c_arr = Array
     length = Float
-    CB_model_view = Property( Instance( CompositeCrackBridgeView ), depends_on = 'CB_model' )
+    CB_model_view = Property(Instance(CompositeCrackBridgeView), depends_on='CB_model' )
     @cached_property
-    def _get_CB_model_view( self ):
-        for i, reinf in enumerate( self.CB_model.reinforcement_lst ):
+    def _get_CB_model_view(self):
+        for i, reinf in enumerate(self.CB_model.reinforcement_lst):
             self.CB_model.reinforcement_lst[i].n_int = self.n_x
-        return CompositeCrackBridgeView( model = self.CB_model )
+        return CompositeCrackBridgeView(model=self.CB_model)
 
     def max_sigma_w( self, Ll, Lr ):
         self.CB_model_view.model.Ll = Ll
@@ -44,12 +43,13 @@ class Interpolator( HasTraits ):
             self.CB_model_view.apply_load( self.load_sigma_c_arr[-1] )
             return self.load_sigma_c_arr[-1], self.CB_model_view.model.w
 
-    BC_range = Property( depends_on = 'n_BC, CB_model' )
+    BC_range = Property(depends_on='n_BC, CB_model')
     @cached_property
-    def _get_BC_range( self ):
-        self.max_sigma_w( np.inf, np.inf )
-        Lmax = min( self.CB_model_view.x_arr[-2], self.length )
-        return np.logspace( np.log10( 1.0 ), np.log10( Lmax ), self.n_BC )
+    def _get_BC_range(self):
+        self.max_sigma_w(1e5, 1e5)
+        Lmax = min(self.CB_model_view.x_arr[-2], self.length)
+        bc_range = np.logspace(np.log10(1.0), np.log10(Lmax), self.n_BC )
+        return bc_range
 
     def w_x_res( self, w_arr, ll, lr, maxBC ):
         self.CB_model_view.model.Ll = ll
@@ -110,7 +110,6 @@ class Interpolator( HasTraits ):
                 for i, ll in enumerate( L_arr ):
                     for j, lr in enumerate( L_arr ):
                         if j >= i:
-                            print ll, lr
                             # find maximum
                             sigma_c_max, wmax = self.max_sigma_w( ll, lr )
                             max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
