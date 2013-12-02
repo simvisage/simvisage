@@ -249,7 +249,7 @@ class ExpTTDB(ExType):
             W10_vo -= min_W10_vo
 
             # measured strains 
-            eps_li = W10_li / (self.gauge_length * 1000.)  #[mm/mm]
+            eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
             eps_re = W10_re / (self.gauge_length * 1000.)
             eps_vo = W10_vo / (self.gauge_length * 1000.)
 
@@ -264,7 +264,7 @@ class ExpTTDB(ExType):
                 eps_li = eps_re
             if np.average(eps_vo) < 0.0001:
                 print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
-                eps_vo = (eps_li + eps_re)
+                eps_vo = (eps_li + eps_re) / 2.
 
             # average strains 
             #
@@ -293,7 +293,7 @@ class ExpTTDB(ExType):
 
             # measured strains 
             #
-            eps_V = (self.WA_VL + self.WA_VR) / 2. / (self.gauge_length * 1000.)  #[mm/mm]
+            eps_V = (self.WA_VL + self.WA_VR) / 2. / (self.gauge_length * 1000.)  # [mm/mm]
             eps_H = (self.WA_HL + self.WA_HR) / 2. / (self.gauge_length * 1000.)
 
             # average strains 
@@ -308,7 +308,7 @@ class ExpTTDB(ExType):
     def _get_sig_c(self):
         print 'CALCULATING COMPOSITE STRESS'
         # measured force: 
-        force = self.Kraft # [kN]
+        force = self.Kraft  # [kN]
         # cross sectional area of the concrete [m^2]: 
         A_c = self.A_c
         # calculated stress: 
@@ -320,7 +320,7 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_sig_tex(self):
         # measured force: 
-        force = self.Kraft # [kN]
+        force = self.Kraft  # [kN]
         # cross sectional area of the reinforcement: 
         A_tex = self.A_tex
         # calculated stresses:
@@ -461,11 +461,11 @@ class ExpTTDB(ExType):
         #
         F_asc_ironed = np.hstack(F_asc_ironed_list)
         eps_asc_ironed = np.hstack(eps_asc_ironed_list)
-        F_asc_ironed *= 0.001 # convert units from [kN] to [MN]
+        F_asc_ironed *= 0.001  # convert units from [kN] to [MN]
         return F_asc_ironed, eps_asc_ironed
 
-    sig_c_ironed = Property(Float, depends_on='input_change',
-                                     output=True, table_field=True, unit='MPa')
+    sig_c_ironed = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
     @cached_property
     def _get_sig_c_ironed(self):
         F_asc_ironed = self.F_w_ironed[0]
@@ -473,13 +473,60 @@ class ExpTTDB(ExType):
 #        sig_c_asc_smoothed_ironed = smooth(sig_c_asc_ironed, self.n_points, 'flat')
         return sig_c_asc_ironed
 
-    eps_ironed = Property(Float, depends_on='input_change',
-                                   output=True, table_field=True, unit='MPa')
+    sig_c_interpolated = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_sig_c_interpolated(self):
+        sig_c_ironed = np.copy(self.sig_c_ironed)
+        sig_c_interpolated = np.hstack([0., sig_c_ironed])
+        return sig_c_interpolated
+
+    eps_c_interpolated = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_eps_c_interpolated(self):
+        eps_c_interpolated = np.copy(self.eps_ironed)
+        K_I = self.E_c  # depending of the testing age
+        offset_eps_c = self.sig_c_ironed[0] / K_I
+        eps_c_interpolated += offset_eps_c
+        eps_c_interpolated = np.hstack([0., eps_c_interpolated])
+        return eps_c_interpolated
+
+    sig_tex_ironed = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_sig_tex_ironed(self):
+        F_asc_ironed = self.F_w_ironed[0]
+        sig_tex_asc_ironed = F_asc_ironed / (self.A_tex / 1000000.)
+        return sig_tex_asc_ironed
+
+    eps_ironed = Property(Float, depends_on='input_change')
+#                                    ,output=False, table_field=False, unit='-')
     @cached_property
     def _get_eps_ironed(self):
         eps_asc_ironed = self.F_w_ironed[1]
 #        eps_asc_smoothed_ironed = smooth(eps_asc_ironed, self.n_points, 'flat')
         return eps_asc_ironed
+
+    sig_tex_interpolated = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_sig_tex_interpolated(self):
+        sig_tex_ironed = np.copy(self.sig_tex_ironed)
+        sig_tex_interpolated = np.hstack([0., sig_tex_ironed])
+        return sig_tex_interpolated
+
+    eps_tex_interpolated = Property(Float, depends_on='input_change')
+#                                      ,output=False, table_field=False, unit='MPa')
+    @cached_property
+    def _get_eps_tex_interpolated(self):
+        eps_tex_interpolated = np.copy(self.eps_ironed)
+        K_I = self.E_c / self.rho_c
+        offset_eps_tex = self.sig_tex_ironed[0] / K_I
+        eps_tex_interpolated += offset_eps_tex
+        eps_tex_interpolated = np.hstack([0., eps_tex_interpolated])
+        return eps_tex_interpolated
+
     #-------------------------------------------------------------------------------
     # Get maximum values of the variables
     #-------------------------------------------------------------------------------
@@ -545,12 +592,16 @@ class ExpTTDB(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / gauge displacement'         : '_plot_force_displacement',
-                      'composite stress / strain'          : '_plot_sigc_eps',
-                      'ironed composite stress / strain'   : '_plot_sigc_eps_ironed',
-                      'smoothed composite stress / strain' : '_plot_sigc_eps_smoothed',
-                      'textile stress / strain'            : '_plot_sigtex_eps',
-                      'smoothed textile stress / strain'   : '_plot_sigtex_eps_smoothed',
+    plot_templates = {'force / gauge displacement'             : '_plot_force_displacement',
+                      'force / gauge displacement (ascending)' : '_plot_force_displacement_asc',
+                      'composite stress / strain'              : '_plot_sigc_eps',
+                      'ironed composite stress / strain'       : '_plot_sigc_eps_ironed',
+                      'interpolated composite stress / strain' : '_plot_sigc_eps_interpolated',
+                      'ironed textile stress / strain'         : '_plot_sigtex_eps_ironed',
+                      'interpolated textile stress / strain'   : '_plot_sigtex_eps_interpolated',
+                      'smoothed composite stress / strain'     : '_plot_sigc_eps_smoothed',
+                      'textile stress / strain'                : '_plot_sigtex_eps',
+                      'smoothed textile stress / strain'       : '_plot_sigtex_eps_smoothed',
                        }
 
     default_plot_template = 'force / gauge displacement'
@@ -563,16 +614,35 @@ class ExpTTDB(ExType):
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
             axes.plot(self.W10_vo, self.Kraft)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             # 
             axes.plot(self.WA_VL, self.Kraft)
             axes.plot(self.WA_VR, self.Kraft)
             axes.plot(self.WA_HL, self.Kraft)
             axes.plot(self.WA_HR, self.Kraft)
-            axes.set_xlabel('%s' % ('displacement [mm]',))
-            axes.set_ylabel('%s' % ('force [kN]',))
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
+
+    def _plot_force_displacement_asc(self, axes):
+        '''plot force-displacement diagram (only the ascending branch)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+            # 
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc)
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
+        if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
+            # 
+            axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc)
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
 
     def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
@@ -599,15 +669,88 @@ class ExpTTDB(ExType):
 #        axes.plot(eps_lin, sig_lin, color='red')
 
     def _plot_sigc_eps_ironed(self, axes):
-        '''plot smoothed stress-strain diagram without unwanted unloading/reloading paths
+        '''plot smoothed composite stress-strain diagram without unwanted unloading/reloading paths
         due to sliding in the buttstrap clamping
         '''
         axes.plot(self.eps_ironed, self.sig_c_ironed, color='green')
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('composite stress [MPa]')
+        # plot the stiffness of the composite (K_I) - uncracked state)
+        #
+        K_I = self.E_c  # depending of the testing age
+#        K_I = self.E_c28
+        eps_lin = array([0, self.sig_c_max / K_I], dtype='float_')
+        sig_lin = array([0, self.sig_c_max], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        # plot the stiffness of the garn (K_IIb - cracked state)
+        #
+        E_tex = 180000.
+        K_III = E_tex * self.A_tex / (self.A_c * 1000000.)
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # original curve
         #
 #        axes.plot(self.eps_asc, self.sig_c_asc, color='black')
+
+    def _plot_sigc_eps_interpolated(self, axes):
+        '''plot ironed composite stress-strain diagram starting at the origin,
+        i.e. shift the strain by the offset resulting from the
+        initial strain and the analytic composite stiffness
+        '''
+        axes.plot(self.eps_c_interpolated, self.sig_c_interpolated, color='green')
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('composite stress [MPa]')
+        # plot the stiffness of the composite (K_I) - uncracked state)
+        #
+        K_I = self.E_c  # depending of the testing age
+#        K_I = self.E_c28
+        eps_lin = array([0, self.sig_c_max / K_I], dtype='float_')
+        sig_lin = array([0, self.sig_c_max], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        # plot the stiffness of the garn (K_IIb - cracked state)
+        #
+        E_tex = 180000.
+        K_III = E_tex * self.rho_c
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
+    def _plot_sigtex_eps_ironed(self, axes):
+        '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths
+        due to sliding in the buttstrap clamping
+        '''
+        axes.plot(self.eps_ironed, self.sig_tex_ironed, color='green')
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('textile stress [MPa]')
+        # yarn stiffness
+        #
+        E_tex = 180000.
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * E_tex], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
+    def _plot_sigtex_eps_interpolated(self, axes):
+        '''plot ironed textile stress-strain diagram starting at the origin,
+        i.e. shift the strain by the offset resulting from the
+        initial strain and the analytic yarn stiffness
+        '''
+        axes.plot(self.eps_tex_interpolated, self.sig_tex_interpolated, color='green')
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('textile stress [MPa]')
+        # plot the stiffness of the composite (K_I) - uncracked state)
+        #
+        K_I = self.E_c / self.rho_c
+        eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_')
+        sig_lin = array([0, self.sig_tex_max], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        # plot the stiffness of the garn (K_IIb - cracked state)
+        #
+        E_tex = 180000.
+        K_III = E_tex
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
     def _plot_sigtex_eps(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_asc, self.sig_tex_asc,
@@ -620,7 +763,7 @@ class ExpTTDB(ExType):
         # plot the textile secant stiffness at fracture state 
         #
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
-        sig_lin = self.ccs.E_tex * eps_lin
+        sig_lin = self.ccs.E_tex_arr[1] * eps_lin
         axes.plot(eps_lin, sig_lin)
 
     def _plot_sigtex_eps_smoothed(self, axes, color='blue', linewidth=1., linestyle='-'):
@@ -640,12 +783,12 @@ class ExpTTDB(ExType):
     # scaleable plotting methods 
     #            
     def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
-        eps_asc_scaled = self.eps_ironed * xscale # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
         sig_tex_ironed = self.sig_c_ironed / self.rho_c
         axes.plot(eps_asc_scaled, sig_tex_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
-        eps_asc_scaled = self.eps_ironed * xscale # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
         axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
 
@@ -713,11 +856,11 @@ ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
 if __name__ == '__main__':
 
-    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
-    for inst in ExpTTDB.db.inst_list:
-        print inst.key
-        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
-        print inst.production_date
-        inst.save()
+#    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
+#    for inst in ExpTTDB.db.inst_list:
+#        print inst.key
+#        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
+#        print inst.production_date
+#        inst.save()
 
     ExpTTDB.db.configure_traits()

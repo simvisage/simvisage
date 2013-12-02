@@ -129,12 +129,21 @@ if __name__ == '__main__':
                                 distribution = 'Weibull'
                                )
 
-    reinf1 = ContinuousFibers( r = 0.0035,
-                          tau = RV( 'weibull_min', loc = 0.007, shape = 1., scale = .05 ),  # RV( 'uniform', loc = 0.5, scale = 1.5 ),  # RV( 'weibull_min', loc = 0.006, shape = .23, scale = .03 ),  # RV( 'uniform', loc = 0.5, scale = 1.5 ),  # RV( 'weibull_min', loc = 0.006, shape = .23, scale = .03 ),
-                          V_f = 0.02,
-                          E_f = 240e3,
-                          xi = WeibullFibers( shape = 5.0, sV0 = 0.0026 ),
-                          label = 'carbon' )
+    model = CompositeCrackBridge(E_m=25e10,
+                                 reinforcement_lst=[reinf],
+                                 Ll=1000.,
+                                 Lr=1000.,
+                                 )
+
+    ccb_view = CompositeCrackBridgeView(model=model)
+
+    reinf1 = ContinuousFibers(r=0.0035,
+                          tau=RV('weibull_min', loc=0.0, shape=1., scale=0.1),
+                          V_f=0.01,
+                          E_f=240e3,
+                          xi=fibers_MC(m=20.0, sV0=0.0026),
+                          label='carbon',
+                          n_int=500)
 
     CB_model = CompositeCrackBridge( E_m = 25e3,
                                  reinforcement_lst = [reinf1],

@@ -14,7 +14,7 @@
 
 from etsproxy.traits.api import \
     Float, Instance, Array, Int, Property, cached_property, on_trait_change, Bool, \
-    HasTraits, File, Event
+    HasTraits, File, Event, Str
 
 from etsproxy.traits.ui.api import \
     View, Item, FileEditor, HSplit, Group, VSplit, \
@@ -39,7 +39,7 @@ from ibvpy.core.tstepper import TStepper
 
 from matresdev.db.exdb.ex_run import ExRun
 
-data_file_editor = FileEditor(filter = ['*.DAT'])
+data_file_editor = FileEditor(filter=['*.DAT'])
 
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
@@ -69,22 +69,6 @@ class MATSCalibDamageFnController(Handler):
 
         calibrator.init()
         fit_response = calibrator.fit_response()
-
-#       @todo: delete
-#       this code was here for saving the damage function in a file - however currently the values
-#       should be automatically stored in the fit_response method
-#        ex_run = calibrator.ex_run_view.model
-#        
-#        # Construct the name of the material combination to store the
-#        # material parameters with.
-#        #
-#        file_name = join( simdb.matdata_dir, ex_run.ex_type.textile_cross_section_key + '.mats' )
-#        file = open( file_name, 'w' )
-#
-#        import pickle
-#        mats_eval = calibrator.dim.mats_eval
-#        pickle.dump( mats_eval.phi_fn.mfn, file )
-#        file.close()
 
 # ---------------------------------------------------
 # Calibrator of the damage function from uniaxial test: 
@@ -207,18 +191,18 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
-        return ctt.eps_ironed, ctt.sig_c_ironed # original data without smoothing (without jumps)
+        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
 #        return ctt.eps_smooth, ctt.sig_c_smooth #smoothed data
 
     #--------------------------------------------------
     # interpolation function for fitting data:
     #--------------------------------------------------
     mfn_line_array_target = Property(Instance(MFnLineArray),
-                                      depends_on = 'ex_run')
+                                      depends_on='ex_run')
     @cached_property
     def _get_mfn_line_array_target(self):
         xdata, ydata = self.get_target_data_exdb_tensile_test()
-        return MFnLineArray(xdata = xdata, ydata = ydata)
+        return MFnLineArray(xdata=xdata, ydata=ydata)
 
     fitted_phi_fn = Instance(MFnLineArray)
 
@@ -227,7 +211,7 @@ class MATSCalibDamageFn(MATSExplore):
     #-------------------------------------------------------------------
     figure = Instance(Figure)
     def _figure_default(self):
-        figure = Figure(facecolor = 'white')
+        figure = Figure(facecolor='white')
         figure.add_axes([0.12, 0.13, 0.85, 0.74])
         return figure
 
@@ -291,7 +275,7 @@ class MATSCalibDamageFn(MATSExplore):
         # consisting of 'e_max_value_new' and 'phi_trial'
         x = hstack([ self.fitted_phi_fn.xdata[:], current_time + self.step_size ])
         y = hstack([ self.fitted_phi_fn.ydata[:], phi_trial ])
-        self.fitted_phi_fn.set(xdata = x, ydata = y)
+        self.fitted_phi_fn.set(xdata=x, ydata=y)
         self.fitted_phi_fn.data_changed = True
 
         # ------------------------------------                
@@ -323,7 +307,7 @@ class MATSCalibDamageFn(MATSExplore):
         # ------------------------------------                
         x = self.fitted_phi_fn.xdata[:-1]
         y = self.fitted_phi_fn.ydata[:-1]
-        self.fitted_phi_fn.set(xdata = x, ydata = y)
+        self.fitted_phi_fn.set(xdata=x, ydata=y)
         self.fitted_phi_fn.data_changed = True
 
         # ------------------------------------                
@@ -350,10 +334,12 @@ class MATSCalibDamageFn(MATSExplore):
         if self.rec_trial_steps:
             # store all trial values of 'phi_trail' and 'sig_app_trail' within each iteration to a global list
             #
-            self.phi_trial_list_i.append( phi_trial )
-            self.sig_trial_list_i.append( sig_app_trial )
+            self.phi_trial_list_i.append(phi_trial)
+            self.sig_trial_list_i.append(sig_app_trial)
 
         return lack_of_fit_relative
+
+    param_key = Str('')
 
     def fit_response(self):
         '''iterate phi_trial in each incremental step such that the
@@ -395,9 +381,10 @@ class MATSCalibDamageFn(MATSExplore):
                 # therefore the relative lack of fit is returned in 
                 # method 'get_lack_of_fit' 
                 _xtol = 1.0e-6
-                phi_new = brentq(self.get_lack_of_fit, 0., phi_old, xtol = _xtol)
+                phi_new = brentq(self.get_lack_of_fit, 0., phi_old, xtol=_xtol)
                 # @todo: check if 'brenth' gives better fitting results; faster? 
 #                phi_new = brenth( self.get_lack_of_fit, 0., phi_old )
+                print '(#) n = ', n
             except ValueError:
 
                 if self.log:
@@ -425,10 +412,10 @@ class MATSCalibDamageFn(MATSExplore):
             x = hstack([ self.fitted_phi_fn.xdata[:], current_time + self.step_size  ])
             y = hstack([ self.fitted_phi_fn.ydata[:], phi_new             ])
 
-            axes.plot(x, y, color = 'blue', linewidth = 2)
+            axes.plot(x, y, color='blue', linewidth=2)
             self.data_changed = True
 
-            self.fitted_phi_fn.set(xdata = x, ydata = y)
+            self.fitted_phi_fn.set(xdata=x, ydata=y)
             self.fitted_phi_fn.data_changed = True
 
             # run one step with the iterated value for phi in order to
@@ -443,8 +430,8 @@ class MATSCalibDamageFn(MATSExplore):
                 # add entries of the iterations ('i') in the current step ('n') 
                 # (yields a list of lists) 
                 #
-                self.phi_trial_list_n.append( self.phi_trial_list_i )
-                self.sig_trial_list_n.append( self.sig_trial_list_i )
+                self.phi_trial_list_n.append(self.phi_trial_list_i)
+                self.sig_trial_list_n.append(self.sig_trial_list_i)
                 # delete the entries of the iterations ('i') in the last step ('n') 
                 # and fill it with the iterations of the next step ('n+1')
                 # 
@@ -455,11 +442,13 @@ class MATSCalibDamageFn(MATSExplore):
 #            print '(g%)' %(n)
 
         self.fitted_phi_fn.changed = True
-        mats_eval = self.dim.mats_eval.__class__.__name__
+        mats_key = self.dim.mats_eval.__class__.__name__
         ctt_key = str(self.composite_tensile_test.key)
         if self.store_fitted_phi_fn:
-            print "stored 'fitted_phi_fn' in CCSUnitCell with material model %s and calibration test %s" %(mats_eval, ctt_key)
-            self.composite_cross_section.set_param(mats_eval, ctt_key,
+            print "stored 'fitted_phi_fn' in CCSUnitCell with material model %s and calibration test %s" % (mats_key, ctt_key)
+            print 'ctt_key + self.param_key', ctt_key + self.param_key
+            self.composite_cross_section.set_param(mats_key, ctt_key + self.param_key,
+#            self.composite_cross_section.set_param(mats_key, ctt_key,
                                                    copy(self.fitted_phi_fn))
 
 
@@ -482,21 +471,21 @@ class MATSCalibDamageFn(MATSExplore):
 #        font.cursive       : Zapf Chancery
 #        font.monospace     : Courier, Computer Modern Typewriter
         font.set_name('Script MT')
-        #name = ['Times New Roman', 'Helvetica', 'Script MT'] #?
+        # name = ['Times New Roman', 'Helvetica', 'Script MT'] #?
         font.set_family('serif')
-        #family = ['serif', 'sans-serif', 'cursive', 'fantasy', 'monospace']
+        # family = ['serif', 'sans-serif', 'cursive', 'fantasy', 'monospace']
         font.set_style('normal')
-        #style  = ['normal', 'italic', 'oblique']
+        # style  = ['normal', 'italic', 'oblique']
         font.set_size('small')
-        #size  = ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', '11']
+        # size  = ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', '11']
         font.set_variant('normal')
-        #variant= ['normal', 'small-caps']
+        # variant= ['normal', 'small-caps']
         font.set_weight('medium')
-        #weight = ['light', 'normal', 'medium', 'semibold', 'bold', 'heavy', 'black']
+        # weight = ['light', 'normal', 'medium', 'semibold', 'bold', 'heavy', 'black']
         
         #-------------------------------------------------------------------
 
-        p.figure(facecolor = 'white') # white background
+        p.figure(facecolor='white')  # white background
 
         # time list corresponding to the specified numbers of steps and step size
         # 
@@ -509,32 +498,32 @@ class MATSCalibDamageFn(MATSExplore):
         phi_trial_list_n = [[1.]] + self.phi_trial_list_n 
         sig_trial_list_n = [[0.]] + self.sig_trial_list_n  
 
-        xrange = 7. # plotting range for strain [mm/m]
-        yrange = 18. # plotting range for stress [MPa]
+        xrange = 7.  # plotting range for strain [mm/m]
+        yrange = 18.  # plotting range for stress [MPa]
 
         for n in range(self.n_steps):
-            for i in range(len(phi_trial_list_n[n+1])):
-                x = np.array([step_list[n], step_list[n+1]])
-                eps = 1000. * x # plot strains in permil on the x-axis
+            for i in range(len(phi_trial_list_n[n + 1])):
+                x = np.array([step_list[n], step_list[n + 1]])
+                eps = 1000. * x  # plot strains in permil on the x-axis
                 #--------------------------------------
                 # sig-eps trial
                 #--------------------------------------
                 # plot the numerically calculated sig-eps-curve (tensile test)
                 # (with trial steps)
                 #
-                sig_trail = np.array([sig_trial_list_n[n][-1], sig_trial_list_n[n+1][i]])
+                sig_trail = np.array([sig_trial_list_n[n][-1], sig_trial_list_n[n + 1][i]])
                 p.subplot(222)
-                p.plot(eps, sig_trail, color = 'k', linewidth = 1)
+                p.plot(eps, sig_trail, color='k', linewidth=1)
                 p.xlabel('strain [1E3]', fontproperties=font)
                 p.ylabel('stress [MPa]', fontproperties=font)
                 p.axis([0, xrange, 0., yrange], fontproperties=font)
     
                 # format ticks for plot
                 #
-                locs,labels = p.xticks()
+                locs, labels = p.xticks()
                 p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-                locs,labels = p.yticks()
+                locs, labels = p.yticks()
                 p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
             
@@ -545,17 +534,17 @@ class MATSCalibDamageFn(MATSExplore):
                 # (with trial steps)
                 #
                 p.subplot(224)
-                phi_trail = np.array([phi_trial_list_n[n][-1], phi_trial_list_n[n+1][i]])
-                p.plot(eps, phi_trail, color = 'k', linewidth = 1)
+                phi_trail = np.array([phi_trial_list_n[n][-1], phi_trial_list_n[n + 1][i]])
+                p.plot(eps, phi_trail, color='k', linewidth=1)
 
                 # format ticks for plot
                 #
                 p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
                 p.axis([0, xrange, 0., 1.])
-                locs,labels = p.xticks()
+                locs, labels = p.xticks()
                 p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-                locs,labels = p.yticks()
+                locs, labels = p.yticks()
                 p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
                 p.ylabel('integrity $\phi$ [-]', fontproperties=font)
 
@@ -567,14 +556,14 @@ class MATSCalibDamageFn(MATSExplore):
         p.subplot(221)
         eps = 1000. * self.mfn_line_array_target.xdata[:-1]
         sig_target = self.mfn_line_array_target.ydata[:-1]
-        p.plot(eps, sig_target, color = 'black', linewidth = 1)
+        p.plot(eps, sig_target, color='black', linewidth=1)
         # format ticks for plot
         #
         p.axis([0, xrange, 0., yrange])
-        locs,labels = p.xticks()
+        locs, labels = p.xticks()
         p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-        locs,labels = p.yticks()
+        locs, labels = p.yticks()
         p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
 
@@ -587,15 +576,15 @@ class MATSCalibDamageFn(MATSExplore):
         p.subplot(223)
         eps = 1000. * self.fitted_phi_fn.xdata[:-1]
         phi_fn = self.fitted_phi_fn.ydata[:-1]
-        p.plot(eps, phi_fn, color = 'black', linewidth = 1)        
+        p.plot(eps, phi_fn, color='black', linewidth=1)        
         # format ticks for plot
         #
         p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
         p.axis([0, xrange, 0., 1.])
-        locs,labels = p.xticks()
+        locs, labels = p.xticks()
         p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-        locs,labels = p.yticks()
+        locs, labels = p.yticks()
         p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
         p.ylabel('integrity $\phi$ [-]', fontproperties=font)
 
@@ -607,52 +596,52 @@ class MATSCalibDamageFn(MATSExplore):
     # User interaction
     #-----------------------------------------------------------------------------------------
     toolbar = ToolBar(
-                  Action(name = "Run Calibration",
-                         tooltip = 'Run damage function calibration for the current parameters',
-                         image = ImageResource('kt-start'),
-                         action = "run_calibration"),
-                  image_size = (22, 22),
-                  show_tool_names = False,
-                  show_divider = True,
-                  name = 'calibration_toolbar')
+                  Action(name="Run Calibration",
+                         tooltip='Run damage function calibration for the current parameters',
+                         image=ImageResource('kt-start'),
+                         action="run_calibration"),
+                  image_size=(22, 22),
+                  show_tool_names=False,
+                  show_divider=True,
+                  name='calibration_toolbar')
 
     traits_view = View(HSplit(
                             Item('ex_run@',
-                                    show_label = False),
+                                    show_label=False),
                             VSplit(
                                Item('dim@',
-                                    id = 'mats_calib_damage_fn.run.split',
-                                    dock = 'tab',
-                                    resizable = True,
-                                    label = 'experiment run',
-                                    show_label = False),
-                                    id = 'mats_calib_damage_fn.mode_plot_data.vsplit',
-                                    dock = 'tab',
+                                    id='mats_calib_damage_fn.run.split',
+                                    dock='tab',
+                                    resizable=True,
+                                    label='experiment run',
+                                    show_label=False),
+                                    id='mats_calib_damage_fn.mode_plot_data.vsplit',
+                                    dock='tab',
                                 ),
                             VSplit(
                                 Group(
-                                      Item('figure', editor = MPLFigureEditor(),
-                                         resizable = True, show_label = False),
-                                    id = 'mats_calib_damage_fn.plot_sheet',
-                                    label = 'fitted damage function',
-                                    dock = 'tab',
+                                      Item('figure', editor=MPLFigureEditor(),
+                                         resizable=True, show_label=False),
+                                    id='mats_calib_damage_fn.plot_sheet',
+                                    label='fitted damage function',
+                                    dock='tab',
                                     ),
-                                    id = 'mats_calib_damage_fn.plot.vsplit',
-                                    dock = 'tab',
+                                    id='mats_calib_damage_fn.plot.vsplit',
+                                    dock='tab',
                                    ),
-                                    id = 'mats_calib_damage_fn.hsplit',
-                                    dock = 'tab',
+                                    id='mats_calib_damage_fn.hsplit',
+                                    dock='tab',
                                 ),
 #                        menubar = self.default_menubar(),
-                        resizable = True,
-                        toolbar = toolbar,
-                        handler = MATSCalibDamageFnController(),
-                        title = 'Simvisage: damage function calibration',
-                        id = 'mats_calib_damage_fn',
-                        dock = 'tab',
-                        buttons = [ OKButton, CancelButton ],
-                        height = 0.8,
-                        width = 0.8)
+                        resizable=True,
+                        toolbar=toolbar,
+                        handler=MATSCalibDamageFnController(),
+                        title='Simvisage: damage function calibration',
+                        id='mats_calib_damage_fn',
+                        dock='tab',
+                        buttons=[ OKButton, CancelButton ],
+                        height=0.8,
+                        width=0.8)
 
 
 def run():
@@ -684,39 +673,38 @@ def run():
 
     ec = {
           # overload the default configuration
-          'bcond_list'  : [ BCDofProportional(max_strain = 1.0, alpha_rad = 0.0) ],
+          'bcond_list'  : [ BCDofProportional(max_strain=1.0, alpha_rad=0.0) ],
           'rtrace_list' : [
-               RTraceGraph(name = 'stress - strain',
-                           var_x = 'eps_app', idx_x = 0,
-                           var_y = 'sig_app', idx_y = 0,
-                           update_on = 'iteration'),
+               RTraceGraph(name='stress - strain',
+                           var_x='eps_app', idx_x=0,
+                           var_y='sig_app', idx_y=0,
+                           update_on='iteration'),
                         ],
           }
 
     mats_eval = MATS2DMicroplaneDamage(
-                                    n_mp = 30,
-    #mats_eval = MATS1DMicroplaneDamage(
-                                    elastic_debug = False,
-                                    stress_state = 'plane_stress',
-                                    symmetrization = 'sum-type',
-                                    model_version = 'compliance',
-                                    phi_fn = PhiFnGeneral,
+                                    n_mp=30,
+    # mats_eval = MATS1DMicroplaneDamage(
+                                    elastic_debug=False,
+                                    stress_state='plane_stress',
+                                    symmetrization='sum-type',
+                                    model_version='compliance',
+                                    phi_fn=PhiFnGeneral,
                                     )
 
 #    print 'normals', mats_eval._MPN
 #    print 'weights', mats_eval._MPW
 
-    fitter = MATSCalibDamageFn( n_steps = 50,
-                                KMAX = 300,
-                                tolerance = 5e-4, #0.01,
-                                RESETMAX = 0,
-                                dim = MATS2DExplore(
-                                                    mats_eval = mats_eval,
-                                                    explorer_config = ec,
-                                                    ),
-                                store_fitted_phi_fn = True,
-                                log = False
-                                )
+    fitter = MATSCalibDamageFn(KMAX=300,
+                               tolerance=5e-4,  # 0.01,
+                               RESETMAX=0,
+                               dim=MATS2DExplore(
+                                                 mats_eval=mats_eval,
+                                                 explorer_config=ec,
+                                                 ),
+                               store_fitted_phi_fn=True,
+                               log=False
+                               )
 
     #-------------------------------------------
     # run fitter for entire available test data:
@@ -729,7 +717,7 @@ def run():
             ExRunClassExt
         from promod.exdb.ex_composite_tensile_test import \
             ExCompositeTensileTest
-        ex = ExRunClassExt(klass = ExCompositeTensileTest)
+        ex = ExRunClassExt(klass=ExCompositeTensileTest)
         for ex_run in ex.ex_run_list:
             if ex_run.ready_for_calibration:
                 print 'FITTING', ex_run.ex_type.key
@@ -757,61 +745,118 @@ def run():
 #                              'TT11-10a-average.DAT' )
 #                              'TT-10g-3cm-a-TR-average.DAT')
 
-#                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                              'TT-12c-6cm-0-TU-SH2F-V2.DAT')
+                               #-----------------------------------
+                               # tests for 'BT-3PT-12c-6cm-TU_ZiE'
+                               #-----------------------------------
+                               # 'ZiE-S1': test series no. 1 (age = 11d)
+                               #
+#                                 '2011-05-23_TT-12c-6cm-0-TU_ZiE',
+#                                 'TT-12c-6cm-0-TU-V2.DAT')
 
-#                              '2012-01-09_TT-12c-6cm-0-TU_SH1',
-#                              'TT-12c-6cm-TU-SH1F-V3.DAT')
+                                # 'ZiE-S2': test series no. 2 (age = 9d)
+                                #
+#                                 '2011-06-10_TT-12c-6cm-0-TU_ZiE',
+#                                 'TT-12c-6cm-0-TU-V2.DAT')
 
-                              '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                              'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+                                #-----------------------------------
+                                # tests for 'BT-4PT-12c-6cm-TU_SH4'
+                                # tests for 'ST-12c-6cm-TU' (fresh) 
+                                #-----------------------------------
+                                # @todo: add missing front strain information from Aramis3d testing
+                                #
+#                               '2012-04-12_TT-12c-6cm-0-TU_SH4-Aramis3d',
+#                               'TT-12c-6cm-0-TU-SH4-V2.DAT')
 
-        test_file = join(simdb.exdata_dir,
-                              'tensile_tests',
-                              'buttstrap_clamping',
-                              '2013-07-18_TTb-6c-2cm-0-TU_bs5',
-                              'TTb-6c-2cm-0-TU-V1_bs5.DAT')
+#                                 '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                 'TT-12c-6cm-0-TU-SH2-V2.DAT')
 
-        ex_run = ExRun(data_file = test_file)
+                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
-        # get the composite E-modulus and Poisson's ratio as stored
-        # in the experiment data base and use this in mats_eval.
+                                #-----------------------------------
+                                # tests for 'BT-3PT-6c-2cm-TU_bs'
+                                #-----------------------------------
+                                # barrelshell
+                                #
+#                                 # TT-bs1
+#                                 '2013-05-17_TT-6c-2cm-0-TU_bs1',
+#                                 'TT-6c-2cm-0-TU-V3_bs1.DAT')
+#                                 # TT-bs2
+#                                 '2013-05-21-TT-6c-2cm-0-TU_bs2',
+#                                 'TT-6c-2cm-0-TU-V1_bs2.DAT')
+#                                 # TT-bs3
+#                                 '2013-06-12_TT-6c-2cm-0-TU_bs3',
+#                                 'TT-6c-2cm-0-TU-V1_bs3.DAT')
+
+#         test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-18_TTb-6c-2cm-0-TU_bs5',
+#                               'TTb-6c-2cm-0-TU-V3_bs5.DAT')
+
+        #------------------------------------------------------------------
+        # set 'ex_run' of 'fitter' to selected calibration test
+        #------------------------------------------------------------------
         #
-        E_c = ex_run.ex_type.E_c
-        print 'E_c', E_c 
-#
+        ex_run = ExRun(data_file=test_file)
+        fitter.ex_run = ex_run
+        
+        #------------------------------------------------------------------
+        # specify the parameters used within the calibration 
+        #------------------------------------------------------------------
+        #
+        # get the composite E-modulus and Poisson's ratio as stored
+        # in the experiment data base for the specified age of the tensile test 
+        #
+#        E_c = ex_run.ex_type.E_c
+#        print 'E_c', E_c 
+
 #        # use the value as graphically determined from the tensile test (= initial stiffness for tension)
 #        E_c = 28000.
 
-        ex_run.ex_type.age = 23
-        age = ex_run.ex_type.age
-        print 'age', age
+        # age, Em(age), and nu of the slab test or bending test determines the
+        # calibration parameters. Those are used for calibration and are store in the 'param_key'
+        # appendet to the calibration-test-key
+        #
+        age = 26
 
-        E_m = ex_run.ex_type.E_m # E-modulus of the concrete matrix at the age of testing
-        # NOTE: value is more relevant as compression behavior is determined by it in the bening test; 
-        # behavior in tensile zone defined by phi_fn and predefined E_m
-        print 'E_m', E_m
+        # E-modulus of the concrete matrix at the age of testing
+        # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
+        # behavior in the tensile zone is defined by calibrated 'phi_fn' with the predefined 'E_m'
+        E_m = ex_run.ex_type.ccs.get_E_m_time(age)  
+        E_c = ex_run.ex_type.ccs.get_E_c_time(age)  
         
-        ex_run.ex_type.ccs.concrete_mixture_ref.nu = 0.2
-        nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
-        print 'nu', nu 
-
+        # set 'nu' 
+        # @todo: check values stored in 'mat_db'
+        #
+        nu = 0.20
+        ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
+        
+        n_steps = 100
+        fitter.n_steps = n_steps
+        
+        fitter.ex_run.ex_type.age = age
+        print 'age = %g used for calibration' % age
         fitter.ex_run = ex_run
-#        fitter.dim.mats_eval.E = E_c
-        print 'E_m = %g used for calibration' %E_m
+        print 'E_m(age) = %g used for calibration' % E_m
         fitter.dim.mats_eval.E = E_m
-        print 'nu = %g used for calibration' %nu
+        print 'nu = %g used for calibration' % nu
         fitter.dim.mats_eval.nu = nu
+        print 'n_steps = %g used for calibration' % n_steps
+        
+        #------------------------------------------------------------------
+        # set 'param_key' of 'fitter' to store calibration params in the name
+        #------------------------------------------------------------------
+        #
+        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+        fitter.param_key = param_key
+        print 'param_key = %s used in calibration name' % param_key
+
+        #------------------------------------------------------------------
+        # run fitting procedure
+        #------------------------------------------------------------------
+        #
         fitter.init()
-#        ctt = fitter.composite_tensile_test
-
-#        import pylab as p
-#        fitter.mfn_line_array_target.mpl_plot(p)
-#        xdata = fitter.mfn_line_array_target.xdata
-#        ydata = fitter.mfn_line_array_target.ydata
-#        p.plot( xdata, ydata )
-#        p.show()
-
         fitter.fit_response()
         fitter.plot_trial_steps()
 
@@ -835,7 +880,7 @@ def run():
 
         fitter.tloop.reset()
         fitter.run_step_by_step()
-        #fitter.tloop.rtrace_mngr.rtrace_bound_list[0].configure_traits()
+        # fitter.tloop.rtrace_mngr.rtrace_bound_list[0].configure_traits()
         fitter.tloop.rtrace_mngr.rtrace_bound_list[0].redraw()
         last_strain_step_by_step = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.xdata[:]
         last_stress_step_by_step = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.ydata[:]
@@ -849,18 +894,18 @@ def run():
         print 'stress after trial', stress_after_trial_steps
 
         fitter.init()
-        #fitter.mats2D_eval.configure_traits()
+        # fitter.mats2D_eval.configure_traits()
         lof = fitter.get_lack_of_fit(1.0)
         print '1', lof
         lof = fitter.get_lack_of_fit(0.9)
         print '2', lof
 
-        #fitter.tloop.rtrace_mngr.configure_traits()
+        # fitter.tloop.rtrace_mngr.configure_traits()
         fitter.run_trial_step()
 
     else:
         from ibvpy.plugins.ibvpy_app import IBVPyApp
-        ibvpy_app = IBVPyApp(ibv_resource = fitter)
+        ibvpy_app = IBVPyApp(ibv_resource=fitter)
         ibvpy_app.main()
 
 if __name__ == '__main__':

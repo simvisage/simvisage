@@ -1,5 +1,5 @@
 from material import Material
-from etsproxy.traits.api import HasTraits, Float, Instance
+from etsproxy.traits.api import HasTraits, Float, Instance, Property
 
 
 def H(x):
@@ -19,46 +19,38 @@ class ACK(HasTraits):
     sigma_max = Float
     sigma_mu = Float
 
-    def eps_1(self, sigma):
+    eps1 = Property()
+    def _get_eps1(self):
         #sigma<sigma_mu
-        eps_c = self.sigma_mu / self.material.E_m
-        return eps_c
+        return self.sigma_mu / self.material.E_m
 
-    def eps_2(self, sigma):
+    eps2 = Property()
+    def _get_eps2(self):
         #sigma=sigma_mu
-        alpha = self.material.E_m * self.material.V_m / (self.material.E_f
-                                                       * self.material.V_f)
-        eps_m_c = (1 + 0.666 * alpha) * self.sigma_mu / self.material.E_m
-        return eps_m_c
+        Ec = self.material.E_c
+        return (Ec/self.material.E_m - .334 * self.material.V_m) * self.sigma_mu /  self.material.E_f / self.material.V_f
 
-    def eps_3(self, sigma):
+    eps3 = Property()
+    def _get_eps3(self):
         #sigma>sigma_mu
-        K_c = (self.material.E_m * self.material.V_m
-               + self.material.E_f * self.material.V_f)
-        sigma_cu = self.eps_1(self.sigma_mu) * K_c
-        eps_diff = sigma_cu / (self.material.E_f
-                               * self.material.V_f) - self.eps_2(sigma_cu)
-        eps_c_u = sigma / self.material.E_f / self.material.V_f - eps_diff
-        return eps_c_u
+        return self.sigma_max / (self.material.E_f * self.material.V_f) - .334 * self.material.V_m * self.sigma_mu /  self.material.E_f / self.material.V_f
 
     def plot_diagram(self):
-        K_c = (self.material.E_m * self.material.V_m
-              + self.material.E_f * self.material.V_f)
-        sigma_cu = self.eps_1(self.sigma_mu) * K_c
-        eps_list = [0, self.eps_1(sigma_cu)
-                    , self.eps_2(sigma_cu), self.eps_3(self.sigma_max)]
+        Ec = self.material.E_c
+        sigma_cu = self.sigma_mu * Ec / self.material.E_m
+        print 'ecxact = ', sigma_cu - self.eps2 * self.material.E_f * self.material.V_f
+        print .334 * self.sigma_mu * self.material.V_m
+        eps_list = [0, self.eps1, self.eps2, self.eps3]
         sigma_list = [0, sigma_cu, sigma_cu, self.sigma_max]
 
-        ''''''
-        test_eps = [0, self.sigma_max / self.material.E_f / self.material.V_f]
-        test_sigma = [0, self.sigma_max]
-        plt.plot(test_eps, test_sigma)
-        ''''''
+        reinf_eps = [0, self.sigma_max / self.material.E_f / self.material.V_f]
+        reinf_sigma = [0, self.sigma_max]
+        plt.plot(reinf_eps, reinf_sigma)
 
         plt.plot(eps_list, sigma_list)
         plt.ylabel('$\sigma_c$ in [MPa]', fontsize=16)
         plt.xlabel('$\epsilon_c$ in [-]', fontsize=16)
-        plt.title('ACK-Model ')
+        plt.title('ACK-Model')
         plt.show()
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ from etsproxy.traits.api import \
      implements, Dict, Property, cached_property, Delegate, Button, \
      Interface, WeakRef, String, List, Constant
 
-#from util.traits.either_type import \
+# from util.traits.either_type import \
 #    EitherType
 # Traits UI imports
 from etsproxy.traits.ui.api import \
@@ -33,20 +33,20 @@ from math import exp, pow
 from scipy.linalg import eig, inv
 
 mfn_editor = MFnMatplotlibEditor(\
-            adapter = MFnPlotAdapter(label_x = 'strain',
-                                      label_y = 'integrity',
-                                      title = 'Softening law for a microplane',
+            adapter=MFnPlotAdapter(label_x='strain',
+                                      label_y='integrity',
+                                      title='Softening law for a microplane',
                           # Plot properties
-                          line_color = ["black"],
-                          bgcolor = "white",
-                          max_size = (360, 260),
+                          line_color=["black"],
+                          bgcolor="white",
+                          max_size=(360, 260),
                           # Border, padding properties
-                          border_visible = False,
-                          padding = { 'left' : 0.15,
+                          border_visible=False,
+                          padding={ 'left' : 0.15,
                                     'right' : 0.9,
                                     'bottom':0.15,
                                     'top' : 0.85 },
-                          padding_bg_color = "white"
+                          padding_bg_color="white"
                                       ))
 
 class IPhiFn(Interface):
@@ -67,15 +67,15 @@ class PhiFnBase(HasStrictTraits):
     '''
     Damage function.
     '''
-    polar_discr = WeakRef(transient = True)
+    polar_discr = WeakRef(transient=True)
 
     def __init__(self, **args):
         super(PhiFnBase, self).__init__(**args)
-        self.refresh_plot()
+#        self.refresh_plot()
 
     mfn = Instance(MFnLineArray)
     def _mfn_default(self):
-        return MFnLineArray(xdata = [0, 1], ydata = [1, 1])
+        return MFnLineArray(xdata=[0, 1], ydata=[1, 1])
 
     def refresh_plot(self):
         x_min, x_max = self.get_plot_range()
@@ -83,9 +83,9 @@ class PhiFnBase(HasStrictTraits):
         phi_fn = frompyfunc(self, 1, 1)
         x_ = x
         y_ = phi_fn(x)
-        y = array([ v for v in y_ ], dtype = 'float')
-        self.mfn.set(xdata = x, ydata = y)
-        self.mfn.data_changed = True
+        y = array([ v for v in y_ ], dtype='float')
+#        self.mfn.set(xdata = x, ydata = y)
+#        self.mfn.data_changed = True
 
     def __call__(self, e_max, *c_list):
         return self.get_value(e_max, *c_list)
@@ -174,13 +174,13 @@ class PhiFnGeneral(PhiFnBase):
 
     # Default TraitsUI view
     traits_view = View(Group(
-                             Item('mfn', show_label = False, editor = mfn_editor),
-                             label = 'Damage law',
-                             show_border = True
+                             Item('mfn', show_label=False, editor=mfn_editor),
+                             label='Damage law',
+                             show_border=True
                              ),
-                        buttons = ['OK', 'Cancel' ],
-                        resizable = True,
-                        width = 800, height = 800)
+                        buttons=['OK', 'Cancel' ],
+                        resizable=True,
+                        width=800, height=800)
 
 
 
@@ -223,10 +223,10 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
 
     implements(IPhiFn)
 
-    Dfp = Float(0.0, desc = 'residual integrity',
-                enter_set = True, auto_set = False)
-    Efp_frac = Float(0.01, desc = 'Efp factor',
-                enter_set = True, auto_set = False)
+    Dfp = Float(0.0, desc='residual integrity',
+                enter_set=True, auto_set=False)
+    Efp_frac = Float(0.01, desc='Efp factor',
+                enter_set=True, auto_set=False)
 
     def get_value(self, e_max, *c_list):
         '''
@@ -262,24 +262,24 @@ class PhiFnStrainSoftening(PhiFnBase):
     implements(IPhiFn)
 
     G_f = Float(0.001117 ,
-                 label = 'G_f',
-                 desc = 'fracture energy',
-                 auto_set = False, enter_set = True)
+                 label='G_f',
+                 desc='fracture energy',
+                 auto_set=False, enter_set=True)
     f_t = Float(2.8968,
-                 label = 'f_t',
-                 desc = 'tensile strength',
-                 auto_set = False, enter_set = True)
+                 label='f_t',
+                 desc='tensile strength',
+                 auto_set=False, enter_set=True)
     md = Float(0.0,
-                 label = 'md',
-                 desc = 'factor affecting the compresive strength (explain more precisely)',
-                 auto_set = False, enter_set = True)
+                 label='md',
+                 desc='factor affecting the compresive strength (explain more precisely)',
+                 auto_set=False, enter_set=True)
     h = Float(1.0,
-                 label = 'h',
-                 desc = 'element size to norm the fracture energy',
-                 auto_set = False, enter_set = True)
+                 label='h',
+                 desc='element size to norm the fracture energy',
+                 auto_set=False, enter_set=True)
 
-    Epp = Float(desc = 'strain at the onset of damage', enter_set = True, auto_set = False)
-    Efp = Float(desc = 'strain at total damaged', enter_set = True, auto_set = False)
+    Epp = Float(desc='strain at the onset of damage', enter_set=True, auto_set=False)
+    Efp = Float(desc='strain at total damaged', enter_set=True, auto_set=False)
 
     @on_trait_change('G_f,f_t,md,h,polar_discr.E')
     def fit_microplane_params(self):
@@ -301,12 +301,12 @@ class PhiFnStrainSoftening(PhiFnBase):
             gamma = 2.0
 
         Epp = f_t / ((E * (1 - md) ** 2) * (1.95 - 0.95 / (gamma - 1) ** (0.5)))
-        Efp = (G_f / ((1 - md) * h * E * Epp) +
+        Efp = (G_f / ((1 - md) * h * E * Epp) + 
                     (2.13 - 1.13 * md) * Epp) / (2.73 - md) - Epp
         self.Epp = Epp
         self.Efp = Efp
         # @todo - plotting must be done separately
-        #self.refresh_plot()        
+        # self.refresh_plot()        
 
     def _polar_discr_changed(self):
         self.polar_discr.regularization = True
@@ -365,27 +365,27 @@ class PhiFnStrainSoftening(PhiFnBase):
                                Item('f_t'),
                                Item('md'),
                                Item('h'),
-                               show_border = True,
-                               label = 'Macroscopic damage parameters',
-                               springy = True,
+                               show_border=True,
+                               label='Macroscopic damage parameters',
+                               springy=True,
                                ),
-                        Group(Item('Epp', style = 'readonly'),
-                               Item('Efp', style = 'readonly'),
-                               show_border = True,
-                               label = 'Microplane damage parameters' ,
-                               springy = True,
+                        Group(Item('Epp', style='readonly'),
+                               Item('Efp', style='readonly'),
+                               show_border=True,
+                               label='Microplane damage parameters' ,
+                               springy=True,
                                ),
-                        springy = True,
+                        springy=True,
                         ),
                         Group(
-                               Item('mfn', show_label = False, editor = mfn_editor),
-                               show_border = True,
-                               label = 'Damage function',
+                               Item('mfn', show_label=False, editor=mfn_editor),
+                               show_border=True,
+                               label='Damage function',
                                ),
                                ),
-                        buttons = ['OK', 'Cancel'],
-                        resizable = True,
-                        width = 800, height = 500)
+                        buttons=['OK', 'Cancel'],
+                        resizable=True,
+                        width=800, height=500)
 
 
 #--------------------------------------------------------------------------------------
@@ -398,20 +398,20 @@ class PhiFnStrainHardeningLinear(PhiFnBase):
 
     implements(IPhiFn)
 
-    E_f = Float(70e+3, desc = 'E-Modulus of the fibers',
-                enter_set = True, auto_set = False, modified = True)
-    E_m = Float(34e+3, desc = 'E-Modulus of the matrix',
-                enter_set = True, auto_set = False, modified = True)
-    rho = Float(0.03, desc = 'reinforcement ratio',
-                enter_set = True, auto_set = False, modified = True)
-    sigma_0 = Float(5.0, desc = 'asymptotic damage level',
-                enter_set = True, auto_set = False, modified = True)
-    alpha = Float(0.0, desc = 'Slope of the strain hardening curve in section II',
-                enter_set = True, auto_set = False, modified = True)
-    beta = Float(0.0, desc = 'Slope of the strain hardening curve in section III',
-                enter_set = True, auto_set = False, modified = True)
-    Elimit = Float(0.006, desc = 'microplane strain at ultimate failure',
-                enter_set = True, auto_set = False, modified = True)
+    E_f = Float(70e+3, desc='E-Modulus of the fibers',
+                enter_set=True, auto_set=False, modified=True)
+    E_m = Float(34e+3, desc='E-Modulus of the matrix',
+                enter_set=True, auto_set=False, modified=True)
+    rho = Float(0.03, desc='reinforcement ratio',
+                enter_set=True, auto_set=False, modified=True)
+    sigma_0 = Float(5.0, desc='asymptotic damage level',
+                enter_set=True, auto_set=False, modified=True)
+    alpha = Float(0.0, desc='Slope of the strain hardening curve in section II',
+                enter_set=True, auto_set=False, modified=True)
+    beta = Float(0.0, desc='Slope of the strain hardening curve in section III',
+                enter_set=True, auto_set=False, modified=True)
+    Elimit = Float(0.006, desc='microplane strain at ultimate failure',
+                enter_set=True, auto_set=False, modified=True)
 
     def identify_parameters(self):
         return ['E_f', 'E_m', 'rho', 'sigma_0', 'alpha', 'beta', 'Elimit' ]
@@ -463,14 +463,14 @@ class PhiFnStrainHardeningLinear(PhiFnBase):
         epsilon = e_max
 
         if epsilon < epsilon_1:
-            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f *
-                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f *
-                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho *
-                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) /
+            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f * 
+                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f * 
+                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho * 
+                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) / 
                 pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
         else:
-            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta *
-                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) /
+            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta * 
+                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) / 
                                   pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
 
 
@@ -483,15 +483,15 @@ class PhiFnStrainHardeningLinear(PhiFnBase):
                                    Item('alpha'),
                                    Item('beta'),
                                    Item('Elimit'),
-                                   springy = True,
+                                   springy=True,
                                    ),
-                            Item('mfn', show_label = False, editor = mfn_editor),
-                               label = 'Damage function',
-                               show_border = True
+                            Item('mfn', show_label=False, editor=mfn_editor),
+                               label='Damage function',
+                               show_border=True
                                ),
-                        buttons = ['OK', 'Cancel'],
-                        resizable = True,
-                        width = 800, height = 400)
+                        buttons=['OK', 'Cancel'],
+                        resizable=True,
+                        width=800, height=400)
 
 #--------------------------------------------------------------------------------------
 # Damage function with residual damage level for MDM
@@ -503,14 +503,14 @@ class PhiFnStrainHardening(PhiFnBase):
 
     implements(IPhiFn)
 
-    Epp = Float(5.9e-05, desc = 'microplane strain at the onset of damage',
-                enter_set = True, auto_set = False)
-    Efp = Float(1.91e-04, desc = 'microplane strain at totaly damaged state',
-                enter_set = True, auto_set = False)
-    Dfp = Float(0.4, desc = 'asymptotic damage level',
-                enter_set = True, auto_set = False)
-    Elimit = Float(8.00e-02, desc = 'microplane strain at ultimate failure',
-                enter_set = True, auto_set = False)
+    Epp = Float(5.9e-05, desc='microplane strain at the onset of damage',
+                enter_set=True, auto_set=False)
+    Efp = Float(1.91e-04, desc='microplane strain at totaly damaged state',
+                enter_set=True, auto_set=False)
+    Dfp = Float(0.4, desc='asymptotic damage level',
+                enter_set=True, auto_set=False)
+    Elimit = Float(8.00e-02, desc='microplane strain at ultimate failure',
+                enter_set=True, auto_set=False)
 
     def identify_parameters(self):
         return ['Epp', 'Efp', 'Dfp', 'Elimit' ]
@@ -542,7 +542,7 @@ class PhiFnStrainHardening(PhiFnBase):
         Efp = self.Efp * c_list[1]
         Dfp = self.Dfp * c_list[2]
         Elimit = self.Elimit * c_list[3]
-        #@todo: modify this for the case tension stiffening 
+        # @todo: modify this for the case tension stiffening 
         if e_max <= Epp:
             return 0
         else:
@@ -586,15 +586,15 @@ class PhiFnStrainHardening(PhiFnBase):
                                    Item('Efp'),
                                    Item('Dfp'),
                                    Item('Elimit'),
-                                   springy = True,
+                                   springy=True,
                                    ),
-                            Item('mfn', show_label = False, editor = mfn_editor),
-                               label = 'Damage function',
-                               show_border = True
+                            Item('mfn', show_label=False, editor=mfn_editor),
+                               label='Damage function',
+                               show_border=True
                                ),
-                        buttons = ['OK', 'Cancel'],
-                        resizable = True,
-                        width = 800, height = 400)
+                        buttons=['OK', 'Cancel'],
+                        resizable=True,
+                        width=800, height=400)
 
 
 class PhiFnStrainHardeningBezier(PhiFnBase):
@@ -619,7 +619,7 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
     def get_value(self, epsilon, *c_list):
 
         if len(c_list) == 0:
-            c_list = ones((6,), dtype = float)
+            c_list = ones((6,), dtype=float)
 
         epsilon_0 = self.epsilon_0 * c_list[0]
         epsilon_b = self.epsilon_b * c_list[1]
@@ -633,24 +633,24 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
         elif epsilon_0 < epsilon and epsilon <= (epsilon_0 + epsilon_b):
             return 1 - omega_b / epsilon_b * (epsilon - epsilon_0)
         elif (epsilon_0 + epsilon_b) < epsilon and epsilon <= epsilon_0 + epsilon_b + epsilon_f:
-            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
+            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b), 2.0) * omega_b)
-            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
+            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b)) * (epsilon_b * omega_t - sqrt(
-                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 *
-                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b +
+                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * 
+                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + 
                 epsilon_f * omega_b * omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f
                 * omega_b * omega_b * epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b) * (omega_b
                 + omega_t))
-            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t *
-                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 *
-                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b *
+            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t * 
+                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 * 
+                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b * 
                 epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * epsilon_b
                  ), 2.0) / pow(2.0 * epsilon_b * omega_t - epsilon_f * omega_b, 2.0) * (omega_b + omega_f))
             MapleGenVar2 = MapleGenVar3 + MapleGenVar4
@@ -665,22 +665,22 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
 
     # Default TraitsUI view
     traits_view = View(Group(
-                               Item('mfn', show_label = False, editor = mfn_editor),
-                               label = 'Damage law',
-                               show_border = True
+                               Item('mfn', show_label=False, editor=mfn_editor),
+                               label='Damage law',
+                               show_border=True
                                ),
-                        buttons = ['OK', 'Cancel' ],
-                        resizable = True,
-                        width = 800, height = 800)
+                        buttons=['OK', 'Cancel' ],
+                        resizable=True,
+                        width=800, height=800)
 
 
 
 
 if __name__ == '__main__':
-    #phi_fn = PhiFnStrainSoftening( Epp = 0.2, Efp = 0.6 )
+    # phi_fn = PhiFnStrainSoftening( Epp = 0.2, Efp = 0.6 )
     phi_fn = PhiFnGeneral()
-    #phi_fn = PhiFnGeneralExtendedExp()
+    # phi_fn = PhiFnGeneralExtendedExp()
 #    phi_fn = PhiFnStrainHardening(Epp = 0.2, Efp = 0.6, Dfp = 0.2, Elimit = 4.0)
 #    phi_fn = PhiFnStrainHardeningBezier()
-    #phi_fn = PhiFnStrainHardeningLinear()
+    # phi_fn = PhiFnStrainHardeningLinear()
     phi_fn.configure_traits()

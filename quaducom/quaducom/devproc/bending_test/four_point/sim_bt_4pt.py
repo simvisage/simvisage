@@ -105,20 +105,24 @@ class SimBT4PT(IBVModel):
     elstmr_flag = Bool(True)
 
     # discretization in x-direction (longitudinal):
+    #
     outer_zone_shape_x = Int(6, input=True,
-                      ps_levels=(4, 12, 3))
+                             ps_levels=(4, 12, 3))
 
     # discretization in x-direction (longitudinal):
+    #
     load_zone_shape_x = Int(2, input=True,
-                      ps_levels=(1, 4, 1))
+                            ps_levels=(1, 4, 1))
 
     # middle part discretization in x-direction (longitudinal):
+    #
     mid_zone_shape_x = Int(3, input=True,
-                      ps_levels=(1, 4, 1))
+                           ps_levels=(1, 4, 1))
 
     # discretization in y-direction (width):
+    #
     shape_y = Int(2, input=True,
-                      ps_levels=(1, 4, 2))
+                     ps_levels=(1, 4, 2))
 
     # discretization in z-direction:
     #
@@ -130,11 +134,12 @@ class SimBT4PT(IBVModel):
     #-----------------
     #
     # edge length of the bending specimen (beam) (entire length without symmetry)
+    #
     length = Float(1.50, input=True)
+
     elstmr_length = Float(0.05, input=True)
     mid_zone_length = Float(0.50, input=True)
-    elstmr_thickness = Float(0.005, input=True,
-                                enter_set=True, auto_set=False)
+    elstmr_thickness = Float(0.005, input=True)
     width = Float(0.20, input=True)
     thickness = Float(0.06, input=True)
 
@@ -182,6 +187,15 @@ class SimBT4PT(IBVModel):
     tmax = Float(1.0, auto_set=False, enter_set=True, input=True)
     tolerance = Float(0.001, auto_set=False, enter_set=True, input=True)
 
+    # specify type of 'linalg.norm'
+    # default value 'None' sets norm to 2-norm,
+    # i.e "norm = sqrt(sum(x_i**2))
+    #
+    # set 'ord=np.inf' to switch norm to
+    # "norm = max(abs(x_i))"
+    # 
+    ord = Enum(np.inf, None)
+
     n_mp = Int(30, input=True)
 
     # @todo: for mats_eval the information of the unit cell should be used
@@ -192,8 +206,8 @@ class SimBT4PT(IBVModel):
     @cached_property
     def _get_specmn_mats(self):
         return MATS2D5MicroplaneDamage(
-#                                E = self.E_c,
-                                E=self.E_m,
+                                E=self.E_c,
+#                                 E=self.E_m,
                                 nu=self.nu,
                                 # corresponding to settings in "MatsCalib"
                                 n_mp=self.n_mp,
@@ -239,6 +253,7 @@ class SimBT4PT(IBVModel):
         fets = FETS2D58H20U(mats_eval=self.elstmr_mats)
         fets.vtk_r *= self.vtk_r
         return fets
+
     fe_domain = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_fe_domain(self):
@@ -341,6 +356,8 @@ class SimBT4PT(IBVModel):
     #===========================================================================
     w_max = Float(-0.030, input=True) # [m]
 
+    w_max = Float(-0.030, input=True)  # [m]
+
     bc_list = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_list(self):
@@ -414,7 +431,7 @@ class SimBT4PT(IBVModel):
                            slice=elastomer[:, :, -1, :, :, -1])
         else:
             bc_w = BCSlice(var='u', value=w_max, dims=[2],
-                           # slice is only valid for 'load_zone_shape_x' = 2
+                           # slice is only exactly in the center of the loading zone for 'load_zone_shape_x' = 2
                            # center line of the load zone
                            slice=load_zone_specimen[0, :, -1, -1, :, -1])
 
@@ -453,153 +470,86 @@ class SimBT4PT(IBVModel):
         # ts 
         #--------------------------------------------------------------
 
+        mid_zone_spec = self.mid_zone_specmn_fe_grid
+        load_zone_spec = self.load_zone_specmn_fe_grid
+        outer_zone_spec = self.outer_zone_specmn_fe_grid
+
         if self.elstmr_flag:
             # ELSTRMR TOP SURFACE
             # dofs at elastomer top surface (used to integrate the force)
             #
             elastomer = self.elstmr_fe_grid
             elstmr_top_dofs_z = elastomer[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-            elstmr_top_dofs_z = np.unique(elstmr_top_dofs_z)
-            print 'elstmr_top_dofs_z (unique)', elstmr_top_dofs_z
-
-#            # ELSTRMR BOTTOM SURFACE
-#            # dofs at elastomer bottom surface (used to integrate the force)
-#            #
-#            elastomer = self.elstmr_fe_grid
-#            elstmr_bottom_dofs_z = elastomer[:, :, 0, :, :, 0].dofs[:, :, 2].flatten()
-#            elstmr_bottom_dofs_z = np.unique( elstmr_bottom_dofs_z )
-#            print 'elstmr_bottom_dofs_z (unique)', elstmr_bottom_dofs_z
-
-#        # LOAD TOP SURFACE
-#        # dofs at specmn load zone top surface (used to integrate the force)
-#        #
-#        load_zone_spec = self.load_zone_specmn_fe_grid
-#        load_zone_spec_top_dofs_z = load_zone_spec[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-#        load_zone_spec_top_dofs_z = np.unique( load_zone_spec_top_dofs_z )
-#        print 'load_zone_spec_top_dofs_z (unique)', load_zone_spec_top_dofs_z
-
-#        # LOAD TOP LINE
-#        # dofs at center line of the specmn load zone (used to integrate the force)
-#        # note slice index in x-direction is only valid for load_zone_shape_x = 2 !
-#        #
-#        load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
-#        load_zone_spec_topline_dofs_z = np.unique( load_zone_spec_topline_dofs_z )
-#        print 'load_zone_spec_topline_dofs_z (unique)', load_zone_spec_topline_dofs_z
+            load_dofs_z = np.unique(elstmr_top_dofs_z)
+            print 'load_dofs_z', load_dofs_z
+        else:
+            # LINE LOAD TOP OF LOAD ZONE
+            # dofs at center line of the specmn load zone (used to integrate the force)
+            # note slice index in x-direction is only valid for load_zone_shape_x = 2 !
+            #
+            load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
+            load_dofs_z = np.unique(load_zone_spec_topline_dofs_z)
+            print 'load_dofs_z', load_dofs_z
 
         # SUPPRT LINE
         # dofs at support line of the specmn (used to integrate the force)
         #
-        outer_zone_spec = self.outer_zone_specmn_fe_grid
         outer_zone_spec_supprtline_dofs_z = outer_zone_spec[-1, :, 0, -1, :, 0].dofs[:, :, 2].flatten()
-        outer_zone_spec_supprtline_dofs_z = np.unique(outer_zone_spec_supprtline_dofs_z)
-        print 'outer_zone_spec_supprtline_dofs_z (unique)', outer_zone_spec_supprtline_dofs_z
+        supprt_dofs_z = np.unique(outer_zone_spec_supprtline_dofs_z)
+        print 'supprt_dofs_z', supprt_dofs_z
 
-        # center_dof (used for tracing of the displacement)
+        # CENTER DOF (used for tracing of the displacement)
         #
-        mid_zone_spec = self.mid_zone_specmn_fe_grid
         center_bottom_dof = mid_zone_spec[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
-        # @todo: NOTE: this is at the outer edge of the load introduction zone
-        underneath_load_dof = mid_zone_spec[-1, 0, 0, -1, 0, 0].dofs[0, 0, 2]
+        print 'center_bottom_dof', center_bottom_dof
 
-        if self.elstmr_flag:
-            # force-displacement-diagram (ELSTMR TOP SURFACE) 
-            # 
-            self.f_w_diagram_center = RTraceGraph(name='displacement_elasttop (center) - reaction 2',
-                                           var_x='U_k'  , idx_x=center_bottom_dof,
-                                           # surface load
-                                           #
-                                           var_y='F_int', idx_y_arr=elstmr_top_dofs_z,
+        # THIRDPOINT DOF (used for tracing of the displacement) 
+        # dofs at center middle of the laod zone at the bottom side
+        #
+        # NOTE: slice index in x-direction is only valid for load_zone_shape_x = 2 !
+        thirdpoint_bottom_dof = load_zone_spec[0, 0, 0, -1, 0, 0].dofs[0, 0, 2]
+        print 'thirdpoint_bottom_dof', thirdpoint_bottom_dof
 
-                                           record_on='update',
-                                           transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
-                                           # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-                                           #
-                                           transform_y='-4000. * y')
-
-#            # force-displacement-diagram (ELSTMR BOTTOM SURFACE) 
-#            # 
-#            self.f_w_diagram_center_elastbottom = RTraceGraph(name = 'displacement_elastbottom (center) - reaction 2',
-#                                           var_x = 'U_k'  , idx_x = center_bottom_dof,
-#                                           # surface load
-#                                           #
-#                                           var_y = 'F_int', idx_y_arr = elstmr_bottom_dofs_z,
-#    
-#                                           record_on = 'update',
-#                                           transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-#                                           # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-#                                           #
-#                                           transform_y = '4000. * y')
-#
-#        # force-displacement-diagram_specmn (SPECIMN TOP SURFACE)
-#        # 
-#        self.f_w_diagram_center_spectop = RTraceGraph(name = 'displacement_spectop (center) - reaction 2',
-#                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
-#
-#                                       # nodal displacement at center node
-#                                       #
-##                                       var_y = 'F_int', idx_y = center_dof,
-#
-#                                       # surface load
-#                                       #
-#                                       var_y = 'F_int', idx_y_arr = load_zone_spec_top_dofs_z,
-#
-#                                       record_on = 'update',
-#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-#                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-#                                       #
-#                                       transform_y = '-4000. * y')
-#
-#        # force-displacement-diagram_specmn (SPECIMN TOP LINE)
-#        # 
-#        self.f_w_diagram_center_topline = RTraceGraph(name = 'displacement_topline (center) - reaction 2',
-#                                       var_x = 'U_k'  , idx_x = center_bottom_dof,
-#                                       # surface load
-#                                       #
-#                                       var_y = 'F_int', idx_y_arr = load_zone_spec_topline_dofs_z,
-#                                       record_on = 'update',
-#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-#                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-#                                       #
-#                                       transform_y = '-4000. * y')
-
-        # force-displacement-diagram_supprt (SUPPRT LINE)
+        # force-displacement-diagram (CENTER) 
         # 
-        self.f_w_diagram_supprt = RTraceGraph(name='displacement_supprtline (center) - reaction 2',
+        self.f_w_diagram_center = RTraceGraph(name='displacement_elasttop (center) - force',
                                        var_x='U_k'  , idx_x=center_bottom_dof,
-                                       # surface load
+                                       var_y='F_int', idx_y_arr=load_dofs_z,
+                                       record_on='update',
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
+                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
-                                       var_y='F_int', idx_y_arr=outer_zone_spec_supprtline_dofs_z,
+                                       transform_y='-4000. * y')
+
+        # force-displacement-diagram_supprt (SUPPRT)
+        # 
+        self.f_w_diagram_supprt = RTraceGraph(name='displacement_supprtline (center) - force',
+                                       var_x='U_k'  , idx_x=center_bottom_dof,
+                                       var_y='F_int', idx_y_arr=supprt_dofs_z,
                                        record_on='update',
                                        transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='4000. * y')
 
-#        # force-displacement-diagram 
-#        # 
-#        self.f_w_diagram_load = RTraceGraph(name = 'displacement (center) - reaction 2',
-#                                       var_x = 'U_k'  , idx_x = underneath_load_dof,
-#
-#                                       # surface load
-#                                       #
-#                                       var_y = 'F_int', idx_y_arr = elstmr_top_dofs_z,
-#
-#                                       record_on = 'update',
-#                                       transform_x = '-x * 1000', # %g * x' % ( fabs( w_max ),),
-#                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
-#                                       #
-#                                       transform_y = '-4000. * y')
+        # force-displacement-diagram (THIRDPOINT) 
+        # 
+        self.f_w_diagram_thirdpoint = RTraceGraph(name='displacement_elasttop (thirdpoint) - force',
+                                       var_x='U_k'  , idx_x=thirdpoint_bottom_dof,
+                                       var_y='F_int', idx_y_arr=load_dofs_z,
+                                       record_on='update',
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
+                                       # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
+                                       #
+                                       transform_y='-4000. * y')
 
         ts = TS(
                 sdomain=self.fe_domain,
                 bcond_list=self.bc_list,
                 rtrace_list=[
                              self.f_w_diagram_center,
-#                             self.f_w_diagram_center_elastbottom,
-#                             self.f_w_diagram_center_spectop,
+                             self.f_w_diagram_thirdpoint,
                              self.f_w_diagram_supprt,
-#                             self.f_w_diagram_center_topline,
-#                             self.f_w_diagram_load,
                              RTraceDomainListField(name='Displacement' ,
                                             var='u', idx=0, warp=True),
 #                             RTraceDomainListField(name = 'Stress' ,
@@ -630,7 +580,8 @@ class SimBT4PT(IBVModel):
                       KMAX=50,
                       tolerance=self.tolerance,
                       RESETMAX=0,
-                      tline=TLine(min=0.0, step=self.tstep, max=self.tmax)
+                      tline=TLine(min=0.0, step=self.tstep, max=self.tmax),
+                      ord=self.ord
                       )
 
         return tloop
@@ -798,7 +749,7 @@ if __name__ == '__main__':
         param_list = ['1', '2', '3', '4']
         for param_key in param_list:
             shape_z = int(param_key)
-            run_key = 'f_w_diagram_x_olmyz-2221' + param_key + '_Ec-28600_nu-025_tol-m_nsteps-20_TT-12c-6cm-TU-SH2F-V3' #discretization fineness
+            run_key = 'f_w_diagram_x_olmyz-2221' + param_key + '_Ec-28600_nu-025_tol-m_nsteps-20_TT-12c-6cm-TU-SH2F-V3'  # discretization fineness
             sim_model = SimFourPointBendingDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3',
 #                                              outer_zone_shape_x = 2,
@@ -873,7 +824,7 @@ if __name__ == '__main__':
         # experiment:
         #------------------------------
         path = join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4')
-        tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT']#, 'BT-4PT-12c-6cm-SH4-V2.DAT' ]
+        tests = [ 'BT-4PT-12c-6cm-SH4-V1.DAT']  # , 'BT-4PT-12c-6cm-SH4-V2.DAT' ]
         for t in tests:
             ex_path = join(path, t)
             ex_run = ExRun(ex_path)
@@ -935,4 +886,5 @@ if __name__ == '__main__':
     if do == 'pstudy':
         sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
+
 

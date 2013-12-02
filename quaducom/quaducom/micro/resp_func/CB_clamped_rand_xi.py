@@ -30,14 +30,13 @@ from spirrid.rf import \
 
 from math import pi
 from scipy.special import gammainc, gamma
-from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
-
+from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 
 def H(x):
     return x >= 0.0
 
 
-class CBResidualRandXi(RF):
+class CBClampedRandXi(RF):
     '''
     Crack bridged by a fiber with constant
     frictional interface to rigid; free fiber end;
@@ -65,19 +64,63 @@ class CBResidualRandXi(RF):
     V_f = Float(0.0175, auto_set=False, enter_set=True, input=True,
               distr=['uniform'])
 
+    lm = Float(np.inf, auto_set=False, enter_set=True, input=True,
+              distr=['uniform'])
+
     w = Float(auto_set=False, enter_set=True, input=True,
                distr=['uniform'], desc='crack width',
                ctrl_range=(0.0, 1.0, 10))
-
-    include_pullout = Bool(True)
 
     x_label = Str('crack opening [mm]')
     y_label = Str('composite stress [MPa]')
 
     C_code = Str('')
 
-    def __call__(self, w, tau, E_f, V_f, r, m, sV0):
-        #strain and debonded length of intact fibers
+    def mu_broken(self, e, depsf, r, lm, m, sV0, mask):
+        n = 200
+        shape = [1] * len(mask.shape) + [n]
+        fact = np.linspace(0.0, 1.0, n).reshape(tuple(shape))
+        e = e.reshape(tuple(list(e.shape) + [1]))
+        if isinstance(depsf, np.ndarray):
+            depsf = depsf.reshape(tuple(list(depsf.shape) + [1]))
+        if isinstance(r, np.ndarray):
+            r = r.reshape(tuple(list(r.shape) + [1]))
+        e_arr = e * fact
+        a0 = (e_arr+1e-15)/depsf
+        mask = a0 < lm/2.0
+        pdf = np.gradient(self.cdf(e_arr, depsf, r, lm, m, sV0, mask), e/float(n))
+        if isinstance(pdf, list):
+            pdf = pdf[-1]
+        e_broken = e_arr/(m+1) * mask + e_arr / 2. * (mask == False)
+        return np.trapz(np.nan_to_num(pdf) * e_broken, e_arr)
+
+    def cdf(self, e, depsf, r, lm, m, sV0, mask):
+        '''weibull_fibers_cdf_mc'''
+        s = ((depsf*(m+1.)*sV0**m)/(2.*pi*r**2.))**(1./(m+1.))
+        a0 = (e+1e-15)/depsf
+        expfree = (e/s) ** (m + 1)
+        expfixed = a0 / (lm/2.0) * (e/s) ** (m + 1) * (1.-(1.-lm/2.0/a0)**(m+1.))
+        mask = a0 < lm/2.0
+        exp = expfree * mask + np.nan_to_num(expfixed * (mask == False))
+        return 1. - np.exp(- exp)
+
+    def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
+        '''free and fixed fibers combined'''
+        T = 2. * tau / r
+        k = np.sqrt(T/E_f)
+        ef0cb = k*np.sqrt(w)  
+        ef0lin = w/lm + T*lm/4./E_f
+        depsf = T/E_f
+        a0 = ef0cb/depsf
+        mask = a0 < lm/2.0
+        e = ef0cb * mask + ef0lin * (mask == False)
+        Gxi = self.cdf(e, depsf, r, lm, m, sV0, mask)
+        mu_int = e * (1.-Gxi)
+        mu_broken = self.mu_broken(e, depsf, r, lm, m, sV0, mask)
+        return (mu_int + mu_broken) * E_f * V_f * r**2
+    
+    def __call__2(self, w, tau, E_f, V_f, r, m, sV0):
+        '''free debonding only = __call__ with lm=infty'''
         T = 2. * tau / r
         #scale parameter with respect to a reference volume
         s = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
@@ -87,24 +130,13 @@ class CBResidualRandXi(RF):
         I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
         mu_broken = I / (m+1)
         return (mu_int + mu_broken) * E_f * V_f * r**2
-    
-#    def __call__(self, w, tau, E_f, V_f, r, m, sV0):
-#        #strain and debonded length of intact fibers
-#        T = 2. * tau / r
-#        #scale parameter with respect to a reference volume
-#        s = ((T * (m+1) * sV0**m)/(2. * E_f * pi * r ** 2))**(1./(m+1))
-#        ef0 = np.sqrt(w*T/E_f)
-#        distr = fibers_MC(m=m, sV0=sV0, Ll=500., Lr=500.)
-#        a = ef0 / (T/E_f)
-#        Gxi = distr.cdf(ef0, T/E_f, r, a, a)
-#        mu_int = ef0 * (1-Gxi)
-#        I = s * gamma(1 + 1./(m+1)) * gammainc(1 + 1./(m+1), (ef0/s)**(m+1))
-#        mu_broken = I / (m+1)
-#        return (mu_int + mu_broken) * E_f * V_f * r**2
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    cb = CBResidualRandXi()
+    cb = CBClampedRandXi()
     w = np.linspace(0.0, 2., 300)
-    plt.plot(w, cb(w, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026))
+    sigma = []
+    for wi in w:
+        sigma.append(cb(wi, .1, 240e3, 0.01, 0.0035, 5.0, 0.0026, 1000.))
+    plt.plot(w, np.array(sigma)/0.0035**2)
     plt.show()

@@ -15,7 +15,7 @@ class sin2x_gen( rv_continuous ):
     def _stats( self ):
         return pi / 4, 0.0625 * pi ** 2 - 0.5 , 0.0, 0.0
     def _ppf( self, x, *args, **kw ):
-        return arccos( -2 * x + 1 ) / 2
+        return arccos( -2 * x + 1 ) / 2.
 sin2x = sin2x_gen( a = 0, b = pi / 2., name = 'sine(2x)', extradoc = """
 
 sine(2x) distribution.

@@ -52,6 +52,10 @@ Repository of raw data
     def _get_matdata_dir(self):
         return join(self.simdb_dir, 'matdata')
 
+    simdata_dir = Property
+    def _get_simdata_dir(self):
+        return join(self.simdb_dir, 'simdata')
+
     '''
     -remote data
     '''

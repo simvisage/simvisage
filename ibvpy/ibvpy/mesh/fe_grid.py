@@ -653,6 +653,7 @@ class FEGrid(FEGridActivationMap):
 
     traits_view = View(Item('name'),
                         Item('n_dofs'),
+                        Item('geo_transform@'),
                         Item('dof_offset'),
                         Item('fe_cell_array'),
                         Item('prev_grid'),

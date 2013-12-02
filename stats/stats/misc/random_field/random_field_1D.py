@@ -6,6 +6,9 @@ Created on 24.06.2011
 
 from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
+
+from etsproxy.traits.ui.api import View, Item
+
 from math import e
 from numpy import dot, transpose, ones, array, eye, linspace, reshape
 from numpy.linalg import eig, eigh
@@ -19,23 +22,23 @@ class RandomField(HasTraits):
      field. The random field array is stored in the property random_field'''
 
     #Parameters to be set
-    lacor = Float(1. , auto_set = False, enter_set = True,
-                   desc = 'autocorrelation  of the field', modified = True)
-    nsim = Int(1 , auto_set = False, enter_set = True,
-                desc = 'No of Fields to be simulated', modified = True)
-    mean = Float(0, auto_set = False, enter_set = True,
-                  desc = 'mean value', modified = True)
-    stdev = Float(1., auto_set = False, enter_set = True,
-                   desc = 'standard deviation', modified = True)
-    shape = Float(10., auto_set = False, enter_set = True,
-                  desc = 'shape for 3 params weibull', modified = True)
-    scale = Float(5., auto_set = False, enter_set = True,
-                   desc = 'scale at total length L for 3 params weibull', modified = True)
-    loc = Float(1., auto_set = False, enter_set = True,
-                   desc = 'location for 3 params weibull', modified = True)
+    lacor = Float(1. , auto_set=False, enter_set=True,
+                   desc='autocorrelation  of the field', modified=True)
+    nsim = Int(1 , auto_set=False, enter_set=True,
+                desc='No of Fields to be simulated', modified=True)
+    mean = Float(0, auto_set=False, enter_set=True,
+                  desc='mean value', modified=True)
+    stdev = Float(1., auto_set=False, enter_set=True,
+                   desc='standard deviation', modified=True)
+    shape = Float(10., auto_set=False, enter_set=True,
+                  desc='shape for 3 params weibull', modified=True)
+    scale = Float(5., auto_set=False, enter_set=True,
+                   desc='scale at total length L for 3 params weibull', modified=True)
+    loc = Float(1., auto_set=False, enter_set=True,
+                   desc='location for 3 params weibull', modified=True)
 
     xgrid = Array
-    distribution = Enum('Gauss', 'Weibull', modified = True)
+    distribution = Enum('Gauss', 'Weibull', modified=True)
 
     scale_gridpoints = Property(depends_on='scale, lacor, xgrid')
     @cached_property
@@ -50,7 +53,7 @@ class RandomField(HasTraits):
         '''autocorrelation function'''
         return e ** (-(dx / lcorr) ** 2)
 
-    eigenvalues = Property(depends_on = 'lacor')
+    eigenvalues = Property(depends_on='lacor')
     @cached_property
     def _get_eigenvalues(self):
         '''evaluates the eigenvalues and eigenvectors of the autocorrelation matrix'''
@@ -90,7 +93,7 @@ class RandomField(HasTraits):
         elif self.distribution == 'Weibull':
             # setting Weibull params
             Pf = norm().cdf(ydata)
-            scaled_ydata = weibull_min(self.shape, scale = self.scale_gridpoints, loc = self.loc).ppf(Pf)
+            scaled_ydata = weibull_min(self.shape, scale=self.scale_gridpoints, loc=self.loc).ppf(Pf)
         self.reevaluate = False
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
@@ -98,18 +101,26 @@ class RandomField(HasTraits):
                 raise ValueError, 'negative value(s) in random field'
         return rf
 
+    view_traits = View(Item('lacor'),
+                       Item('nsim'),
+                       Item('mean'),
+                       Item('stdev'))
+
 if __name__ == '__main__':
 
     from matplotlib import pyplot as p
-    rf = RandomField(lacor = 3., xgrid = linspace(0, 100., 500), mean = 0.02, stdev = .5)
+    rf = RandomField(lacor=0.2, xgrid=linspace(0, 100., 500), mean=0.02, stdev=.5)
     x = rf.xgrid
     rf.distribution = 'Weibull'
     rf.loc = .0
     rf.shape = 8.
     rf.scale = .02
-    p.plot(x, rf.random_field, lw = 2, color = 'black', label = 'Weibull')
+
+    rf.configure_traits()
+
+    p.plot(x, rf.random_field, lw=2, color='black', label='Weibull')
     rf.distribution = 'Gauss'
     #p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
-    p.legend(loc = 'best')
+    p.legend(loc='best')
     p.ylim(0)
     p.show()
