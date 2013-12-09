@@ -181,6 +181,8 @@ class CompositeCrackBridge(HasTraits):
         return mu_T / E_mtrx
 
     def F(self, dems, amin):
+        '''Auxiliary function (see Part II, appendix B)
+        '''
         F = np.zeros_like(self.sorted_depsf)
         for i, mask in enumerate(self.sorted_masks):
             depsfi = self.sorted_depsf[mask]
@@ -205,11 +207,13 @@ class CompositeCrackBridge(HasTraits):
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
         em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
-        epsf0 = (self.sorted_depsf / 2. * (Lmin ** 2 + Lmax ** 2) + 
+        epsf0 = (self.sorted_depsf / 2. * (Lmin ** 2 + Lmax ** 2) +
                      self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
         return a, em, epsf0
 
     def profile(self, iter_damage, Lmin, Lmax):
+        '''
+        '''
         # matrix strain derivative with resp. to z as a function of T
         dems = self.dem_depsf_vect(iter_damage)
         # initial matrix strain derivative
