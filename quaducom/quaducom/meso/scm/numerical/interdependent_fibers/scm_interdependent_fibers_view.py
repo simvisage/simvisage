@@ -36,7 +36,7 @@ class SCMView(ModelView):
             # the 0 element of their x range
             idxs = []
             for cb in cb_load:
-                idxs.append(np.where(cb.position +
+                idxs.append(np.where(cb.position + 
                                 cb.x[0] == self.model.x_arr)[0])
             # add the index of the last point
             idxs.append(self.model.nx - 1)
@@ -132,7 +132,7 @@ if __name__ == '__main__':
                                )
 
     reinf1 = ContinuousFibers(r=0.0035,
-                          tau=0.0268,#RV('weibull_min', loc=0.0, shape=3., scale=0.03),
+                          tau=0.0268,  # RV('weibull_min', loc=0.0, shape=3., scale=0.03),
                           V_f=0.01,
                           E_f=180e3,
                           xi=fibers_MC(m=5.0, sV0=0.003),
@@ -161,9 +161,9 @@ if __name__ == '__main__':
         plt.xlabel('composite strain [-]')
         plt.ylabel('composite stress [MPa]')
         plt.figure()
-        plt.hist(scm_view.crack_widths(16.), bins=20, label='load = 20 MPa')
-        plt.hist(scm_view.crack_widths(13.), bins=20, label='load = 15 MPa')
-        plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
+        plt.hist(scm_view.crack_widths(11.), bins=20, label='load = 1 MPa')
+        plt.hist(scm_view.crack_widths(9.), bins=20, label='load = 9 MPa')
+        plt.hist(scm_view.crack_widths(6.), bins=20, label='load = 6 MPa')
         plt.legend(loc='best')
         plt.xlim(0)
         plt.figure()

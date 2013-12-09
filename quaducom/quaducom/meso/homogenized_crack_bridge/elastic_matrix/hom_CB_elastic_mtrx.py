@@ -220,6 +220,7 @@ class CompositeCrackBridge(HasTraits):
         F = self.F(dems, amin)
         # a1 is a(depsf) for double sided pullout
         a1 = amin * np.exp(F / 2.)
+        aX = np.exp((-np.log(np.abs(self.sorted_depsf) + dems) + np.log(self.w)) / 2.)
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
             a, em, epsf0 = self.clamped(Lmin, Lmax, init_dem)
@@ -349,10 +350,10 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=4., scale=20.3),
-                          V_f=0.3,
+                          tau=RV('weibull_min', loc=0.006, shape=3., scale=1.3),
+                          V_f=0.1,
                           E_f=240e3,
-                          xi=fibers_MC(m=10.0, sV0=0.0026),
+                          xi=fibers_MC(m=10.0, sV0=10.0026),
                           label='carbon',
                           n_int=10)
 
@@ -362,9 +363,9 @@ if __name__ == '__main__':
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=1.,
-                                 Lr=1.,
-                                 w=.05)
+                                 Ll=20.,
+                                 Lr=20.,
+                                 w=.5)
 
     ccb.damage
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')

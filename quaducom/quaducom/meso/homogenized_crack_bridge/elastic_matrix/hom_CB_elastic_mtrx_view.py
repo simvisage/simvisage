@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     # profile(0.031)
-    w = np.linspace(0.0, 20., 200)
+    w = np.linspace(0.0, 2., 200)
     sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
