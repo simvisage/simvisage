@@ -24,7 +24,7 @@ from ibvpy.fets.fets2D5.fets2D58h20u import \
     FETS2D58H20U
 from ibvpy.fets.fets2D5.fets2D58h import \
     FETS2D58H
-    
+
 from ibvpy.mesh.fe_grid import \
     FEGrid
 
@@ -118,7 +118,7 @@ class SimBT4PT(IBVModel):
     #
     mid_zone_shape_x = Int(3, input=True,
                            ps_levels=(1, 4, 1))
-    
+
     # discretization in y-direction (width):
     #
     shape_y = Int(2, input=True,
@@ -229,7 +229,7 @@ class SimBT4PT(IBVModel):
     #-----------------
     # fets:
     #-----------------
-    
+
     # specify element shrink factor in plot of fe-model
     #
     vtk_r = Float(0.95)
@@ -243,7 +243,7 @@ class SimBT4PT(IBVModel):
         fets = FETS2D58H20U(mats_eval=self.specmn_mats)
         fets.vtk_r *= self.vtk_r
         return fets
-    
+
     # use quadratic serendipity elements
     #
     elstmr_fets = Property(Instance(FETSEval),
@@ -253,7 +253,7 @@ class SimBT4PT(IBVModel):
         fets = FETS2D58H20U(mats_eval=self.elstmr_mats)
         fets.vtk_r *= self.vtk_r
         return fets
-    
+
     fe_domain = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_fe_domain(self):
@@ -290,7 +290,7 @@ class SimBT4PT(IBVModel):
     #===========================================================================
     # Grid definition 
     #===========================================================================
-    
+
     mid_zone_specmn_fe_grid = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
     def _get_mid_zone_specmn_fe_grid(self):
@@ -354,6 +354,7 @@ class SimBT4PT(IBVModel):
     #===========================================================================
     # Boundary conditions
     #===========================================================================
+    w_max = Float(-0.030, input=True) # [m]
 
     w_max = Float(-0.030, input=True)  # [m]
 
@@ -385,7 +386,7 @@ class SimBT4PT(IBVModel):
                                         slice=elastomer[:, 0, :, :, 0, :])
         # symmetry in the yz-plane
         #
-        bc_mid_zone_symplane_yz = BCSlice(mid='u', value=0., dims=[0],
+        bc_mid_zone_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                           slice=mid_zone_specimen[0, :, :, 0, :, :])
 
         #--------------------------------------------------------------
@@ -411,7 +412,7 @@ class SimBT4PT(IBVModel):
                                     get_dof_method=elastomer.get_back_dofs,
                                     get_link_dof_method=load_zone_specimen.get_front_dofs,
                                     link_coeffs=[1.])
-            
+
             # hold elastomer in a single point in order to avoid kinematic movement yielding singular K_mtx 
             #
             bc_elstmr_fix = BCSlice(var='u', value=0., dims=[0],
@@ -447,7 +448,6 @@ class SimBT4PT(IBVModel):
                    #
                    link_midzn_loadzn,
                    link_loadzn_outerzn,
-                   #
                    bc_support_0y0,
                    #
                    bc_w,
@@ -455,7 +455,7 @@ class SimBT4PT(IBVModel):
 
         if self.elstmr_flag:
             bc_list += [ bc_el_symplane_xz, link_elstmr_loadzn_z, bc_elstmr_fix ]
-            
+
         return bc_list
 
     #----------------------
@@ -473,7 +473,7 @@ class SimBT4PT(IBVModel):
         mid_zone_spec = self.mid_zone_specmn_fe_grid
         load_zone_spec = self.load_zone_specmn_fe_grid
         outer_zone_spec = self.outer_zone_specmn_fe_grid
-        
+
         if self.elstmr_flag:
             # ELSTRMR TOP SURFACE
             # dofs at elastomer top surface (used to integrate the force)
@@ -489,7 +489,7 @@ class SimBT4PT(IBVModel):
             #
             load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
             load_dofs_z = np.unique(load_zone_spec_topline_dofs_z)
-            print 'load_dofs_z', load_dofs_z            
+            print 'load_dofs_z', load_dofs_z
 
         # SUPPRT LINE
         # dofs at support line of the specmn (used to integrate the force)
@@ -502,32 +502,32 @@ class SimBT4PT(IBVModel):
         #
         center_bottom_dof = mid_zone_spec[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
         print 'center_bottom_dof', center_bottom_dof
-        
+
         # THIRDPOINT DOF (used for tracing of the displacement) 
         # dofs at center middle of the laod zone at the bottom side
         #
         # NOTE: slice index in x-direction is only valid for load_zone_shape_x = 2 !
         thirdpoint_bottom_dof = load_zone_spec[0, 0, 0, -1, 0, 0].dofs[0, 0, 2]
         print 'thirdpoint_bottom_dof', thirdpoint_bottom_dof
-        
+
         # force-displacement-diagram (CENTER) 
         # 
         self.f_w_diagram_center = RTraceGraph(name='displacement_elasttop (center) - force',
                                        var_x='U_k'  , idx_x=center_bottom_dof,
                                        var_y='F_int', idx_y_arr=load_dofs_z,
                                        record_on='update',
-                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='-4000. * y')
-    
+
         # force-displacement-diagram_supprt (SUPPRT)
         # 
         self.f_w_diagram_supprt = RTraceGraph(name='displacement_supprtline (center) - force',
                                        var_x='U_k'  , idx_x=center_bottom_dof,
                                        var_y='F_int', idx_y_arr=supprt_dofs_z,
                                        record_on='update',
-                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='4000. * y')
@@ -538,7 +538,7 @@ class SimBT4PT(IBVModel):
                                        var_x='U_k'  , idx_x=thirdpoint_bottom_dof,
                                        var_y='F_int', idx_y_arr=load_dofs_z,
                                        record_on='update',
-                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='-4000. * y')
@@ -686,7 +686,7 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m 
+        print 'E_m (from ccs)', E_m
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -695,7 +695,7 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c 
+        print 'E_c (from ccs)', E_c
         return E_c
 
     # Poisson's ratio 
@@ -704,10 +704,10 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu 
+        print 'nu (from ccs)', nu
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20' 
+        print 'nu set explicitly to 0.20'
         nu = 0.2
         return nu
 
@@ -741,14 +741,14 @@ if __name__ == '__main__':
 #                                              mid_zone_shape_x = 2,
 #                                              shape_y = 1,
 #                                              shape_z = 1,
-                                              age=26) 
+                                              age=26)
             sim_model.run_study(run_key)
 
         # influence of the z-discretization
         #
         param_list = ['1', '2', '3', '4']
         for param_key in param_list:
-            shape_z = int(param_key) 
+            shape_z = int(param_key)
             run_key = 'f_w_diagram_x_olmyz-2221' + param_key + '_Ec-28600_nu-025_tol-m_nsteps-20_TT-12c-6cm-TU-SH2F-V3'  # discretization fineness
             sim_model = SimFourPointBendingDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                                               calibration_test='TT-12c-6cm-0-TU-SH2F-V3',
@@ -757,7 +757,7 @@ if __name__ == '__main__':
 #                                              mid_zone_shape_x = 2,
 #                                              shape_y = 1,
                                               shape_z=shape_z,
-                                              age=28) 
+                                              age=28)
             sim_model.run_study(run_key)
 
     if do == 'validation':
@@ -789,12 +789,12 @@ if __name__ == '__main__':
         #
 #        sim_model.f_w_diagram_center_elasttop.refresh()
 #        sim_model.f_w_diagram_center_elasttop.trace.mpl_plot(p, color = 'red', linestyle = '-', label = 'ET', linewidth = 2.)
-        
+
         # F-w-diagram_center_elastbottom (ELAST BOTTOM)
         #
 #        sim_model.f_w_diagram_center_elastbottom.refresh()
 #        sim_model.f_w_diagram_center_elastbottom.trace.mpl_plot(p, color = 'blue', linestyle = '-', label = 'EB')
-        
+
         # F-w-diagram_center_spectop (TOP SURFACE)
         #
 #        sim_model.f_w_diagram_center_spectop.refresh()
@@ -882,9 +882,9 @@ if __name__ == '__main__':
 #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
 
         p.show()
-        
+
     if do == 'pstudy':
         sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
-        
-        
+
+

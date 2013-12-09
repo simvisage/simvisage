@@ -24,55 +24,19 @@
 #
 
 from etsproxy.traits.api import \
-    HasTraits, Directory, List, Int, Float, Any, \
-    on_trait_change, File, Constant, Instance, Trait, \
-    Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Bool, Enum, Event, implements, \
-    DelegatesTo, Date, Time
-
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
-    View, DirectoryEditor, TabularEditor, HSplit, VGroup, \
-    TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
-    InstanceEditor, HGroup, Spring
-
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
+    Int, Float, \
+    on_trait_change, Instance, \
+    Array, Property, cached_property, \
+    Bool, Event, implements, \
+    DelegatesTo, Date
 
 from numpy import \
     array, where, argmax
 
 import numpy as np
 
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
-from string import replace
-from os.path import exists
-
-#-----------------------------------------------------------------------------------
-# ExDesignReader
-#-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
 from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
+    import View, Item
 
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
@@ -271,13 +235,13 @@ class ExpTTDB(ExType):
             W10_li = np.copy(self.W10_li)
             W10_re = np.copy(self.W10_re)
             W10_vo = np.copy(self.W10_vo)
-    
+
             # get the minimum value of the displacement gauges 
             # used to reset the displacement gauges if they do not start at zero
             min_W10_li = np.min(W10_li[:10])
             min_W10_re = np.min(W10_re[:10])
             min_W10_vo = np.min(W10_vo[:10])
-    
+
             # reset displacement gauges
             #
             W10_li -= min_W10_li
@@ -312,14 +276,14 @@ class ExpTTDB(ExType):
             WA_VR = np.copy(self.WA_VR)
             WA_HL = np.copy(self.WA_HL)
             WA_HR = np.copy(self.WA_HR)
-    
+
             # get the minimum value of the displacement gauges 
             # used to reset the displacement gauges if they do not start at zero
             min_WA_VL = np.min(WA_VL[:10])
             min_WA_VR = np.min(WA_VR[:10])
             min_WA_HL = np.min(WA_HL[:10])
             min_WA_HR = np.min(WA_HR[:10])
-    
+
             # reset displacement gauges
             #
             WA_VL -= min_WA_VL
@@ -393,24 +357,24 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_F_asc(self):
         return self.Kraft[:self.max_stress_idx + 1]
-        
+
     time_asc = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_time_asc(self):
         return self.Bezugskanal[:self.max_stress_idx + 1]
-        
+
     jump_rtol = Float(0.005, ironing_param=True)
-        
+
     F_w_ironed = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_F_w_ironed(self):
         '''method to remove jumps in the stress strain curve due to sliding
         in the buttstrap clamping. The small unloading/loading branches are
-        removed from the data and the smoothed curve is determined based on the 
-        remaining data. 
+        removed from the data and the smoothed curve is determined based on the
+        remaining data.
         In order to smoothen out the effect of the jump the pieces of the F-w-curve that
         contain jumps in the force (=unloading/reloading) path are removed from the data
-        in a range up to the double range of the jump, so that it has approximately no 
+        in a range up to the double range of the jump, so that it has approximately no
         further influence on the shape of the F-w- curve thereafter.
         '''
         F_asc = self.F_asc
@@ -420,13 +384,13 @@ class ExpTTDB(ExType):
         # get the differences of the force values between two adjacent time steps
         #
         jump_arr = F_asc[1:] - F_asc[0:-1]
-        
+
         # determine the criteria for a jump
         # based on the data range and the specified tolerances:
         #
         jump_rtol = self.jump_rtol
         jump_crit = jump_rtol * F_asc[-1]
-    
+
         # get the indices of the measurement data at which a 
         # force jump exceeds (last step before the jump) the defined tolerance criteria
         # i.e. negative jump that exceeds the defined tolerance magnitude
@@ -435,12 +399,12 @@ class ExpTTDB(ExType):
 #        print '*** jumps occure at the following indices and time: ***'
 #        print 'jump_idx_arr', jump_idx_arr
 #        print 'F_asc[jump_idx]', F_asc[jump_idx_arr]
-        
+
         # index of the measurement data where the force reaches 
         # the same magnitude before the sudden value drop due to the jump
         #
         jump_idx2_arr = np.zeros_like(jump_idx_arr)
-       
+
         # amount of indices between the sudden value drop of the force and 
         # the reloading to the same load level; delta value indicates the strain 
         # range that will be removed in order to smoothen out the influence of the 
@@ -463,7 +427,7 @@ class ExpTTDB(ExType):
             delta_jump_idx = jump_idx2 - jump_idx
             jump_idx2_arr[ n_idx ] = jump_idx2
             delta_jump_idx_arr[ n_idx ] = delta_jump_idx
-        
+
         # remove jumps from the jump index when a succeeding jump still lays within the influence range of an earlier jump
         # this can happen when jumps occure within the remounting branch of the force  
         #
@@ -471,16 +435,16 @@ class ExpTTDB(ExType):
         for i in range(jump_idx2_arr.shape[0] - 1):
             if np.any(jump_idx2_arr[:i + 1] > jump_idx2_arr[i + 1]):
                 remove_idx += [i + 1]
-        
+
         jump_idx_arr = np.delete(jump_idx_arr, remove_idx)
         jump_idx2_arr = np.delete(jump_idx2_arr, remove_idx)
         delta_jump_idx_arr = np.delete(delta_jump_idx_arr, remove_idx)
-    
+
         # specify the factor by with the index delta range of a jump (i.e. displacement range of the jump)
         # is multiplied, i.e. up to which index the values of the F-w- curve are removed   
         #
-        jump_smooth_fact = 2 
-        
+        jump_smooth_fact = 2
+
         # remove the values of the curve within the jump and the neighboring region   
         #
         F_asc_ironed_list = []
@@ -488,14 +452,14 @@ class ExpTTDB(ExType):
 
         jump_idx_arr_ = np.hstack([np.array([0.]), jump_idx_arr, np.array([self.max_stress_idx])])
         delta_jump_idx_arr_ = np.hstack([np.array([0]), delta_jump_idx_arr, np.array([0])])
-        
+
         for i in range(jump_idx_arr_.shape[0] - 1):
             F_asc_ironed_list += [ F_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
             eps_asc_ironed_list += [ eps_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
-    
+
         # remove the values of the curve within the jump and the neighboring region   
         #
-        F_asc_ironed = np.hstack(F_asc_ironed_list)  
+        F_asc_ironed = np.hstack(F_asc_ironed_list)
         eps_asc_ironed = np.hstack(eps_asc_ironed_list)
         F_asc_ironed *= 0.001  # convert units from [kN] to [MN]
         return F_asc_ironed, eps_asc_ironed
@@ -514,7 +478,7 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_sig_c_interpolated(self):
         sig_c_ironed = np.copy(self.sig_c_ironed)
-        sig_c_interpolated = np.hstack([0., sig_c_ironed]) 
+        sig_c_interpolated = np.hstack([0., sig_c_ironed])
         return sig_c_interpolated
 
     eps_c_interpolated = Property(Float, depends_on='input_change')
@@ -525,7 +489,7 @@ class ExpTTDB(ExType):
         K_I = self.E_c  # depending of the testing age
         offset_eps_c = self.sig_c_ironed[0] / K_I
         eps_c_interpolated += offset_eps_c
-        eps_c_interpolated = np.hstack([0., eps_c_interpolated]) 
+        eps_c_interpolated = np.hstack([0., eps_c_interpolated])
         return eps_c_interpolated
 
     sig_tex_ironed = Property(Float, depends_on='input_change')
@@ -543,13 +507,13 @@ class ExpTTDB(ExType):
         eps_asc_ironed = self.F_w_ironed[1]
 #        eps_asc_smoothed_ironed = smooth(eps_asc_ironed, self.n_points, 'flat')
         return eps_asc_ironed
-    
+
     sig_tex_interpolated = Property(Float, depends_on='input_change')
 #                                      ,output=False, table_field=False, unit='MPa')
     @cached_property
     def _get_sig_tex_interpolated(self):
         sig_tex_ironed = np.copy(self.sig_tex_ironed)
-        sig_tex_interpolated = np.hstack([0., sig_tex_ironed]) 
+        sig_tex_interpolated = np.hstack([0., sig_tex_ironed])
         return sig_tex_interpolated
 
     eps_tex_interpolated = Property(Float, depends_on='input_change')
@@ -557,12 +521,12 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_eps_tex_interpolated(self):
         eps_tex_interpolated = np.copy(self.eps_ironed)
-        K_I = self.E_c / self.rho_c  
+        K_I = self.E_c / self.rho_c
         offset_eps_tex = self.sig_tex_ironed[0] / K_I
         eps_tex_interpolated += offset_eps_tex
-        eps_tex_interpolated = np.hstack([0., eps_tex_interpolated]) 
+        eps_tex_interpolated = np.hstack([0., eps_tex_interpolated])
         return eps_tex_interpolated
-    
+
     #-------------------------------------------------------------------------------
     # Get maximum values of the variables
     #-------------------------------------------------------------------------------
@@ -641,7 +605,7 @@ class ExpTTDB(ExType):
                        }
 
     default_plot_template = 'force / gauge displacement'
-    
+
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
         '''
@@ -703,9 +667,9 @@ class ExpTTDB(ExType):
 #        sig_lin = array([0, self.sig_c_max], dtype='float_')
 #        eps_lin = array([0, self.sig_c_max / self.E_c ], dtype='float_')
 #        axes.plot(eps_lin, sig_lin, color='red')
-    
+
     def _plot_sigc_eps_ironed(self, axes):
-        '''plot smoothed composite stress-strain diagram without unwanted unloading/reloading paths 
+        '''plot smoothed composite stress-strain diagram without unwanted unloading/reloading paths
         due to sliding in the buttstrap clamping
         '''
         axes.plot(self.eps_ironed, self.sig_c_ironed, color='green')
@@ -717,21 +681,21 @@ class ExpTTDB(ExType):
 #        K_I = self.E_c28
         eps_lin = array([0, self.sig_c_max / K_I], dtype='float_')
         sig_lin = array([0, self.sig_c_max], dtype='float_')
-        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')  
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
         E_tex = 180000.
         K_III = E_tex * self.A_tex / (self.A_c * 1000000.)
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
-        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')  
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # original curve
         #
 #        axes.plot(self.eps_asc, self.sig_c_asc, color='black')
 
     def _plot_sigc_eps_interpolated(self, axes):
         '''plot ironed composite stress-strain diagram starting at the origin,
-        i.e. shift the strain by the offset resulting from the 
+        i.e. shift the strain by the offset resulting from the
         initial strain and the analytic composite stiffness
         '''
         axes.plot(self.eps_c_interpolated, self.sig_c_interpolated, color='green')
@@ -743,7 +707,7 @@ class ExpTTDB(ExType):
 #        K_I = self.E_c28
         eps_lin = array([0, self.sig_c_max / K_I], dtype='float_')
         sig_lin = array([0, self.sig_c_max], dtype='float_')
-        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')  
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
         E_tex = 180000.
@@ -753,7 +717,7 @@ class ExpTTDB(ExType):
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
     def _plot_sigtex_eps_ironed(self, axes):
-        '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths 
+        '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths
         due to sliding in the buttstrap clamping
         '''
         axes.plot(self.eps_ironed, self.sig_tex_ironed, color='green')
@@ -764,11 +728,11 @@ class ExpTTDB(ExType):
         E_tex = 180000.
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * E_tex], dtype='float_')
-        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--') 
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
     def _plot_sigtex_eps_interpolated(self, axes):
         '''plot ironed textile stress-strain diagram starting at the origin,
-        i.e. shift the strain by the offset resulting from the 
+        i.e. shift the strain by the offset resulting from the
         initial strain and the analytic yarn stiffness
         '''
         axes.plot(self.eps_tex_interpolated, self.sig_tex_interpolated, color='green')
@@ -779,7 +743,7 @@ class ExpTTDB(ExType):
         K_I = self.E_c / self.rho_c
         eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_')
         sig_lin = array([0, self.sig_tex_max], dtype='float_')
-        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')  
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
         E_tex = 180000.
@@ -801,7 +765,7 @@ class ExpTTDB(ExType):
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex_arr[1] * eps_lin
         axes.plot(eps_lin, sig_lin)
-        
+
     def _plot_sigtex_eps_smoothed(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_smooth, self.sig_tex_smooth,
                   color=color, linewidth=linewidth, linestyle=linestyle)
@@ -815,18 +779,18 @@ class ExpTTDB(ExType):
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex * eps_lin
         axes.plot(eps_lin, sig_lin)
-    
+
     # scaleable plotting methods 
     #            
     def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
         eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-        sig_tex_ironed = self.sig_c_ironed / self.rho_c 
+        sig_tex_ironed = self.sig_c_ironed / self.rho_c
         axes.plot(eps_asc_scaled, sig_tex_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
         eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
         axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
-    
+
 
     #---------------------------------
     # view

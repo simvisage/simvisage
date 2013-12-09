@@ -61,7 +61,7 @@ import numpy as np
 from time import time
 from os.path import join
 
-import os 
+import os
 
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
@@ -99,10 +99,10 @@ if __name__ == '__main__':
 #    do = 'ui'
     do = 'validation'
 #     do = 'show_last_results'
-    
+
     test_series = 'BT-12c'
 #     test_series = 'BT-6c'
-    
+
     #-----------------------------------------
     # BT-3PT-12c-6cm; L = 1.25m; L0 = 1.15 cm t = 6 cm
     #-----------------------------------------
@@ -112,17 +112,17 @@ if __name__ == '__main__':
                                ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
 #                               calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100',
 #                               calibration_test='TT-12c-6cm-0-TU-V1_a9d_nu02_s100',
-                               
+
                                # ZiE-S1 (TT-age = 11d)
                                #
 #                                calibration_test='TT-12c-6cm-0-TU-V2_ZiE-S1_age9_Em24524.1_nu0.2_nsteps100',
 #                                 calibration_test='TT-12c-6cm-0-TU-V2_ZiE-S1_age9_Ec26080.6_nu0.2_nsteps100',
-                                
+
                                # ZiE-S2 (TT-age = 9d)
                                #
 #                               calibration_test='TT-12c-6cm-0-TU-V2_ZiE-S2_age9_Em24524.1_nu0.2_nsteps100',
                                calibration_test='TT-12c-6cm-0-TU-V2_ZiE-S2_age9_Ec26080.6_nu0.2_nsteps100',
-                               
+
                                age=9,
                                #
 #                                 thickness=0.06,
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                                shape_y=1,
                                shape_z=3,
                                #
-                               w_max=-0.020,
+                               w_max= -0.020,
                                tstep=0.02,
                                tmax=1.00,
                                tolerance=0.0001,
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                                # 'factor_eps_fail' = 1.0 (default)
                                phi_fn_class=PhiFnGeneralExtended
                                )
-    
+
     #-----------------------------------------------
     # ST-6c: carbon slab tests (80 cm / 2 cm): 
     #-----------------------------------------------
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                                # 'nu' = 0.25; 
                                # 'compliance_version'
                                ccs_unit_cell_key='barrelshell_2D-05-11_0.00286_all0',
-              
+
 #                                calibration_test='TTb-6c-2cm-0-TU-V1_bs5_nu02_s100',
 
                                # Em = 19800. MPa
@@ -170,14 +170,14 @@ if __name__ == '__main__':
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs2_age28_Em19800_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Em19800_nu0.2_nsteps100',
                                calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Em19800_nu0.2_nsteps100',
-                                
+
                                # Ec = 22213.2 MPa
                                #
 #                               calibration_test='TT-6c-2cm-0-TU-V3_bs1_age28_Ec22213.2_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs2_age28_Ec22213.2_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Ec22213.2_nu0.2_nsteps100',
 #                                calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
-                               
+
                                age=28,
                                #
 #                                 thickness=0.020,
@@ -194,11 +194,11 @@ if __name__ == '__main__':
                                shape_y=1,
                                shape_z=3,
                                #
-                               w_max=-0.015,
+                               w_max= -0.015,
                                tstep=0.02,
                                tmax=1.00,
-                               tolerance=0.0001,  # [MN]
-                               ord=np.inf,  # "norm = max(abs(x_i))"
+                               tolerance=0.0001, # [MN]
+                               ord=np.inf, # "norm = max(abs(x_i))"
                                #
                                # 'factor_eps_fail' = 1.0 (default)
                                phi_fn_class=PhiFnGeneralExtended
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     tolerance = sim_model.tolerance
     n_mp = sim_model.n_mp
 
-    print '\n' 
+    print '\n'
     print '### calculation settings: ###'
     print 'ccs_unit_cell_key', ccs_unit_cell_key
     print 'calibration_test', calibration_test
@@ -231,15 +231,15 @@ if __name__ == '__main__':
     print 'nu', nu
     print 'tolerance', tolerance
     print 'n_mp', n_mp
-    print '\n' 
+    print '\n'
 
 #--------------------------------------------------------------
 # do: ui / validation / show_last_result / pstudy
 #--------------------------------------------------------------
-     
+
     if do == 'show_phi_fn':
         import pylab as p
-        p.figure(facecolor='white') 
+        p.figure(facecolor='white')
 
         # plot mfn-line function stored in phi_fn
         # 
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     if do == 'validation':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
 #         app = IBVPyApp(ibv_resource=sim_model)
-        
+
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
         # pstudy: n_mp
         #
 #        pst_list = [ 6, 12, 30 ]
-        
+
         # pstudy: calibration test
         #
 #         pst_list = [ 
@@ -309,22 +309,22 @@ if __name__ == '__main__':
         #
 #        st_list = [ PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp ] 
 
-        
+
         for pst_param in pst_list:
-            
+
 #            sim_model.thickness = pst_param
 #            sim_model.shape_z = pst_param
 #            sim_model.n_mp = pst_param
 #            sim_model.calibration_test = pst_param
 #            sim_model.phi_fn_class = pst_param
-            
+
             p.figure(facecolor='white', figsize=(12, 9))  # white background for diagram
-    
+
             #--------------------        
             # simulation 
             #--------------------        
             sim_model.tloop.eval()
-     
+
             # settings:
             #
             sim_model_name = sim_model.__class__.__name__
@@ -344,17 +344,17 @@ if __name__ == '__main__':
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
             supprt_flag = str(sim_model.supprt_flag)
-            elstmr_flag = str(sim_model.elstmr_flag) 
-            n_mp = sim_model.n_mp 
+            elstmr_flag = str(sim_model.elstmr_flag)
+            n_mp = sim_model.n_mp
             tstep = sim_model.tstep
             w_max = sim_model.w_max
 
             # param_key 
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sx%gm%gy%gz%g_s%se%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        % (phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp) 
+                        % (phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
             print 'param_key = %s' % param_key
-    
+
             # f-w-diagram_center
             #
             sim_model.f_w_diagram_center.refresh()
@@ -365,7 +365,7 @@ if __name__ == '__main__':
             print 'pickle file saved to file: %s' % file_name
             file.close()
             sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
-    
+
             # f-w-diagram_supprt
             #
             sim_model.f_w_diagram_supprt.refresh()
@@ -376,11 +376,11 @@ if __name__ == '__main__':
             print 'pickle file saved to file: %s' % file_name
             file.close()
             sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
-    
+
             #--------------------        
             # experiments
             #--------------------        
-    
+
             if test_series == 'BT-12c':
                 ex_path_V1 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
                                        'BT-3PT-12c-6cm-0-Tu-V1.raw')
@@ -400,7 +400,7 @@ if __name__ == '__main__':
                 #
                 format_plot(p, xlim=25, ylim=14, xlabel='displacement [mm]', ylabel='force [kN]')
 
-                    
+
             if test_series == 'BT-6c':
                 ex_path_V2 = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
                                        'BT-6c-2cm-0-TU-V2_bs4.DAT')
@@ -416,7 +416,7 @@ if __name__ == '__main__':
                 for ex_path in tests:
                     ex_run = ExRun(ex_path)
                     ex_run.ex_type._plot_force_gauge_displacement_with_analytical_offset(p, color='black')
-    
+
                 # plot sim curve as time new roman within the predefined limits
                 #
                 format_plot(p, xlim=20, ylim=3.5, xlabel='displacement [mm]', ylabel='force [kN]')
@@ -463,11 +463,11 @@ if __name__ == '__main__':
         tolerance = sim_model.tolerance
         phi_fn_class = sim_model.phi_fn_class.__name__
         supprt_flag = str(sim_model.supprt_flag)
-        elstmr_flag = str(sim_model.elstmr_flag) 
-        n_mp = sim_model.n_mp 
+        elstmr_flag = str(sim_model.elstmr_flag)
+        n_mp = sim_model.n_mp
         tstep = sim_model.tstep
         w_max = sim_model.w_max
-        
+
         # pst_list: thickness
         #
         pst_list = [1]
@@ -475,21 +475,21 @@ if __name__ == '__main__':
 
 #        for pst_param in pst_list:
         for pst_param in pst_list:
-            
+
             sim_model.thickness = pst_param
             thickness = sim_model.thickness
             print 'thickness', thickness
-        
+
             # param_key 
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sx%gm%gy%gz%g_s%se%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
-                        % (phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp) 
+                        % (phi_fn_class, length, thickness, shape_x, mid_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
             print 'param_key = %s' % param_key
-        
+
             #------------------
             # simulation
             #------------------
-    
+
             # f-w-diagram_supprt
             #
             file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
@@ -497,7 +497,7 @@ if __name__ == '__main__':
             file = open(pickle_file_path, 'r')
             trace = load(file)
             p.plot(trace.xdata, trace.ydata, color='blue')
-    
+
 #            # f-w-diagram_center
 #            #
 #            file_name = 'f_w_diagram_c_' + param_key + '.pickle'
@@ -533,7 +533,7 @@ if __name__ == '__main__':
             F_linear = 2 * np.array([0., K_linear])
             p.plot(w_linear, F_linear, linestyle='--')
     #        ex_run.ex_type._plot_analytical_bending_stiffness(p)
-            
+
             # analytical cracking load of the beam
             #
             w_cr = 2 * np.array([0., 1.])
@@ -558,7 +558,7 @@ if __name__ == '__main__':
                                    'BT-6c-2cm-0-TU-V2_bs5.DAT')
             ex_path_bs5_V3 = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-18_BT-6c-2cm-0-TU_bs5',
                                    'BT-6c-2cm-0-TU-V3_bs5.DAT')
-            tests = [ 
+            tests = [
                      ex_path_bs4_V2,
                      ex_path_bs4_V3,
 #                     ex_path_bs5_V1,
@@ -572,7 +572,7 @@ if __name__ == '__main__':
 #                ex_run.ex_type._plot_force_machine_displacement(p, linewidth=2.5)
 #                ex_run.ex_type._plot_force_machine_displacement_wo_elast(p)
 #                ex_run.ex_type._plot_force_machine_displacement_wo_elast_interpolated(p, linewidth=2.5)
-        
+
             # analytical bending stiffness of the beam
             #
             K_linear = 1 / 1.369  # [MN/m] bending stiffness with respect to a force applied at center of the beam (E_c(28d) = 22213)
@@ -581,13 +581,13 @@ if __name__ == '__main__':
             F_linear = 2 * np.array([0., K_linear])
             p.plot(w_linear, F_linear, linestyle='--')
     #        ex_run.ex_type._plot_analytical_bending_stiffness(p)
-            
+
             # analytical cracking load of the beam
             #
             w_cr = 2 * np.array([0., 1.])
             F_cr = np.array([0.48, 0.48])  # corresponds to l = 0.46m and f_cfl = approx. 8.4 MPa
             p.plot(w_cr, F_cr, linestyle='--')
-        
+
             # plot sim curve as time new roman within the predefined limits
             #
             format_plot(p, xlim=20, ylim=3.5, xlabel='displacement [mm]', ylabel='force [kN]')
