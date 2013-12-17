@@ -870,7 +870,6 @@ class LCCTable(HasTraits):
                      bgcolor=(1.0, 1.0, 1.0),
                      fgcolor=(0.0, 0.0, 0.0))
 
-#        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
         mlab.points3d(X, Y, Z, plot_col,
                        colormap="YlOrBr",
                        mode="cube",
