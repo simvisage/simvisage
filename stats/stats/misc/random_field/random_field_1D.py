@@ -6,86 +6,100 @@ Created on 24.06.2011
 
 from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
-
 from etsproxy.traits.ui.api import View, Item
-
 from math import e
 from numpy import dot, transpose, ones, array, eye, linspace, reshape
-from numpy.linalg import eig, eigh
+from numpy.linalg import eig
 from numpy.random import shuffle
 from scipy.linalg import toeplitz
 from scipy.stats import norm, weibull_min
 import numpy as np
 
-class RandomField(HasTraits):
-    '''Generating a random field by scaling a standardized normal distribution random
-     field. The random field array is stored in the property random_field'''
 
-    #Parameters to be set
-    lacor = Float(1. , auto_set=False, enter_set=True,
-                   desc='autocorrelation  of the field', modified=True)
-    nsim = Int(1 , auto_set=False, enter_set=True,
-                desc='No of Fields to be simulated', modified=True)
+class RandomField(HasTraits):
+    '''Class for generating a 1D random field by scaling a standardized
+    normally distributed random field. The random field array is stored
+    in the property random_field. Gaussian or Weibull local distributions
+    are available.
+    The parameters of the Weibull random field are related to the minimum
+    extreme along the whole length of the field.
+    '''
+
+    # Parameters to be set
+    lacor = Float(1., auto_set=False, enter_set=True,
+                   desc='autocorrelation length', modified=True)
+    nsim = Int(1, auto_set=False, enter_set=True,
+                desc='No of fields to be simulated', modified=True)
     mean = Float(0, auto_set=False, enter_set=True,
                   desc='mean value', modified=True)
     stdev = Float(1., auto_set=False, enter_set=True,
                    desc='standard deviation', modified=True)
     shape = Float(10., auto_set=False, enter_set=True,
-                  desc='shape for 3 params weibull', modified=True)
+                  desc='shape for Weibull distr', modified=True)
     scale = Float(5., auto_set=False, enter_set=True,
                    desc='scale at total length L for 3 params weibull', modified=True)
-    loc = Float(1., auto_set=False, enter_set=True,
+    loc = Float(auto_set=False, enter_set=True,
                    desc='location for 3 params weibull', modified=True)
-
-    xgrid = Array
-    distribution = Enum('Gauss', 'Weibull', modified=True)
-
-    scale_gridpoints = Property(depends_on='scale, lacor, xgrid')
-    @cached_property
-    def _get_scale_gridpoints(self):
-        return self.scale * (self.xgrid[-1] / self.lacor) ** (1. / self.shape)
-
+    length = Float(1000., auto_set=False, enter_set=True,
+                   desc='length of the random field', modified=True)
+    nx = Int(200, auto_set=False, enter_set=True,
+             desc='number of discretization points', modified=True)
     non_negative_check = False
     reevaluate = Event
     seed = Bool(False)
+    distr_type = Enum('Weibull', 'Gauss', modified=True)
+
+    xgrid = Property(Array, depends_on='length,nx')
+    @cached_property
+    def _get_xgrid(self):
+        '''get the discretized grid for the random field'''
+        return np.linspace(0, self.length, self.nx)
+
+    gridpoint_scale = Property(depends_on='scale,shape,length,nx,lacor')
+    @cached_property
+    def _get_gridpoint_scale(self):
+        '''Scaling of the defined distribution to the distribution of a single
+        grid point. This option is only available for Weibull random field'''
+        gridpoint_length = self.xgrid[1] - self.xgrid[0]
+        l = max(gridpoint_length, self.lacor)
+        return self.scale * (self.length / l) ** (1. / self.shape)
 
     def acor(self, dx, lcorr):
         '''autocorrelation function'''
         return e ** (-(dx / lcorr) ** 2)
 
-    eigenvalues = Property(depends_on='lacor')
+    eigenvalues = Property(depends_on='lacor,length,nx')
     @cached_property
     def _get_eigenvalues(self):
         '''evaluates the eigenvalues and eigenvectors of the autocorrelation matrix'''
-        #creating a symm. toeplitz matrix with (xgrid, xgrid) data points
+        # creating a symm. toeplitz matrix with (xgrid, xgrid) data points
         Rdist = toeplitz(self.xgrid, self.xgrid)
-        #apply the autocorrelation func. to get the correlation matrix
-        R = self.acor(Rdist , self.lacor)
-        #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
+        # apply the autocorrelation func. to get the correlation matrix
+        R = self.acor(Rdist, self.lacor)
+        # evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         print 'evaluating eigenvalues for random field...'
         eigenvalues = eig(R)
-        print 'TODO: use eigh(eigvals=(lo,hi))'
         print 'complete'
         return eigenvalues
 
-    random_field = Property(Array , depends_on='+modified, reevaluate')
+    random_field = Property(Array, depends_on='+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
         if self.seed == True:
             np.random.seed(1540)
         '''simulates the Gaussian random field'''
-        #evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
+        # evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
-        #simulation points from 0 to 1 with an equidistant step for the LHS
+        # simulation points from 0 to 1 with an equidistant step for the LHS
         randsim = linspace(0, 1, len(self.xgrid) + 1) - 0.5 / (len(self.xgrid))
         randsim = randsim[1:]
-        #shuffling points for the simulation
+        # shuffling points for the simulation
         shuffle(randsim)
-        #matrix containing standard Gauss distributed random numbers
+        # matrix containing standard Gauss distributed random numbers
         xi = transpose(ones((self.nsim, len(self.xgrid))) * array([ norm().ppf(randsim) ]))
-        #eigenvalue matrix 
+        # eigenvalue matrix
         LAMBDA = eye(len(self.xgrid)) * _lambda
-        #cutting out the real part
+        # cutting out the real part
         ydata = dot(dot(phi, (LAMBDA) ** 0.5), xi).real
         if self.distribution == 'Gauss':
             # scaling the std. distribution
@@ -93,7 +107,7 @@ class RandomField(HasTraits):
         elif self.distribution == 'Weibull':
             # setting Weibull params
             Pf = norm().cdf(ydata)
-            scaled_ydata = weibull_min(self.shape, scale=self.scale_gridpoints, loc=self.loc).ppf(Pf)
+            scaled_ydata = weibull_min(self.shape, scale=self.gridpoint_scale, loc=self.loc).ppf(Pf)
         self.reevaluate = False
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
@@ -103,24 +117,25 @@ class RandomField(HasTraits):
 
     view_traits = View(Item('lacor'),
                        Item('nsim'),
-                       Item('mean'),
-                       Item('stdev'))
+                       Item('shape'),
+                       Item('scale'),
+                       Item('length'),
+                       Item('nx'),
+                       )
 
 if __name__ == '__main__':
-
     from matplotlib import pyplot as p
-    rf = RandomField(lacor=0.2, xgrid=linspace(0, 100., 500), mean=0.02, stdev=.5)
-    x = rf.xgrid
-    rf.distribution = 'Weibull'
-    rf.loc = .0
-    rf.shape = 8.
-    rf.scale = .02
+
+    rf = RandomField(lacor=9.2,
+                     length=1000.,
+                     nx=100,
+                     distribution='Weibull',
+                     shape=5.,
+                     scale=1.0,
+                     loc=0.0)
 
     rf.configure_traits()
-
-    p.plot(x, rf.random_field, lw=2, color='black', label='Weibull')
-    rf.distribution = 'Gauss'
-    #p.plot(x, rf.random_field, lw = 2, label = 'Gauss')
+    p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
     p.legend(loc='best')
     p.ylim(0)
     p.show()
