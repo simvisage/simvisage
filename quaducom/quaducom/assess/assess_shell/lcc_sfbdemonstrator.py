@@ -211,7 +211,6 @@ if __name__ == '__main__':
 # evaluation for eta_n-eta_m-interaction with varying angle of deflection
 #--------------------------------------------------------
 
-
     # NOTE: resistance values in 'ls_table' file need to be set to sfb-demonstrator values!
     lct = LCCTableULS(data_dir=data_dir,
                       data_filter=remove_midpoints,
@@ -231,7 +230,7 @@ if __name__ == '__main__':
     # nm-interaction plot (normal force - bending moment)
     #--------------------------------------------------------------
     #
-    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12')
+#    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12')
 
     #--------------------------------------------------------------
     # interaction plot of material usage 'eta_nm' (utilization ratio)
