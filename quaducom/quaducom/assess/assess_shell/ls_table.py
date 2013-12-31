@@ -1268,9 +1268,11 @@ class ULS(LS):
             eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdc[bool_arr]
 
             # get 'eta_m' based on imposed moment compared with moment resistence
+            # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
             #
-            eta_m_lo = self.m_sig_lo / m_Rd_lo
-            eta_m_up = self.m_sig_up / m_Rd_up
+            min_thickness = np.min(self.thickness)
+            eta_m_lo = self.m_sig_lo / (m_Rd_lo * self.thickness / min_thickness)
+            eta_m_up = self.m_sig_up / (m_Rd_up * self.thickness / min_thickness)
 
             # get total 'eta_mn' based on imposed normal force and moment
             # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
@@ -1319,9 +1321,10 @@ class ULS(LS):
             eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdc[bool_arr]
 
             # get 'eta_m' based on imposed moment compared with moment resistence
+            # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
             #
-            eta_m2_lo = self.m_sig2_lo / m_Rd_lo
-            eta_m2_up = self.m_sig2_up / m_Rd_up
+            eta_m2_lo = self.m_sig2_lo / (m_Rd_lo * self.thickness / min_thickness)
+            eta_m2_up = self.m_sig2_up / (m_Rd_up * self.thickness / min_thickness)
 
             # get total 'eta_mn' based on imposed normal force and moment
             # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
