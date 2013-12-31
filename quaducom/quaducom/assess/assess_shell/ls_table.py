@@ -119,11 +119,15 @@ class LS(HasTraits):
     state_columns = List([
                            'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
 #                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
-#                           'sig1_lo', 'sig1_up_sig_lo', 'alpha_sig_lo',
+#                           'sig1_lo', 'sig1_up_sig_lo',
+'alpha_sig_lo',
+'alpha_sig2_lo',
                            'm_sig_lo', 'n_sig_lo',
+                           'm_sig2_lo', 'n_sig2_lo',
 #                           'sigx_up', 'sigy_up', 'sigxy_up',
 #                           'sig1_up', 'sig1_lo_sig_up', 'alpha_sig_up',
                            'm_sig_up', 'n_sig_up',
+                           'm_sig2_up', 'n_sig2_up',
                             ])
 
     show_state_columns = Bool(True)
@@ -550,9 +554,9 @@ class ULS(LS):
     # design value for SFB-demonstrator (used in 'eval_mode == princ_sig')
     # --> f_Rtex,0 = 6.87 MPa / 10. * 100cm * 6 cm / 12 layers = 34.3 kN/m
     #
-#    f_Rtex_0 = f_Rtex_90 = 34.3
+    f_Rtex_0 = f_Rtex_90 = 34.3
     # with sig_Rd,0,flection = 7.95 MPa k_fl, evaluates to:
-#    k_fl = 1.15 #7.95 / 6.87
+    k_fl = 1.15  # 7.95 / 6.87
 
     ### 'eval_mode = eta_comp' ###
     #
@@ -567,10 +571,17 @@ class ULS(LS):
 
     ### 'eval_mode = eta_nm' ###
     #
-    # design values for SFB-demonstrator on specimens with thickness 6 cm and width 14 cm
-    n_0_Rdt = 103.4 / 0.14 * 0.84 / 1.5  # [kN/m]     # 413,6 kN/m = tensile resistance as obtained in tensile test
-    n_Rdc = 74.5 * 0.1 * (100. * 6.) / 1.5  # [kN/m]  # 2980 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
-    m_0_Rd = 3.5 / 0.14 * 0.84 / 1.5  # [kNm/m]
+    # design values for SFB-demonstrator on specimens with thickness 6 cm
+    # evaluation of design values based on a log-normal distribution.
+    # tensile resistance as obtained in tensile test (width = 0.14 m)
+    #
+    n_0_Rdt = 412.  # = 57.7 (=F_tRd)/ 0.14 ### [kN/m] ### 413.6 = 103.4 (mean value) / 0.14 * 0.84 / 1.5
+    # compressive strength as obtained in cube test (edge length = 0.150 m) results in C55/67 with f_ck = 55 MPa
+    #
+    n_Rdc = 2200  # = ( 55 (=f_ck for C55/67) / 1.5 ) * 0.06 * 1000 ### [kN/m] ### 2980 = 74.5 (mean value cube)* 0.1 * (100. * 6.) / 1.5
+    # bending strength as obtained in bending test (width = 0.20 m)
+    #
+    m_0_Rd = 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
 
     #-------------------------
     # barrelshell
@@ -678,6 +689,14 @@ class ULS(LS):
     def _get_n_sig_lo(self):
         return self.ls_table.n_sig_lo
 
+    m_sig2_lo = Property(Array)
+    def _get_m_sig2_lo(self):
+        return self.ls_table.m_sig2_lo
+
+    n_sig2_lo = Property(Array)
+    def _get_n_sig2_lo(self):
+        return self.ls_table.n_sig2_lo
+
     # sig1_up -direction:
     #
     sig1_lo_sig_up = Property(Array)
@@ -691,6 +710,14 @@ class ULS(LS):
     n_sig_up = Property(Array)
     def _get_n_sig_up(self):
         return self.ls_table.n_sig_up
+
+    m_sig2_up = Property(Array)
+    def _get_m_sig2_up(self):
+        return self.ls_table.m_sig2_up
+
+    n_sig2_up = Property(Array)
+    def _get_n_sig2_up(self):
+        return self.ls_table.n_sig2_up
 
     #------------------------------------------------------------
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
@@ -1205,6 +1232,10 @@ class ULS(LS):
             #----------------------------------------
             # destinguish the sign of the normal force
 
+            #---------------
+            # 1-direction:
+            #---------------
+
             # initialize arrays to be filled based on case distinction
             #
             eta_n_up = np.zeros_like(self.n_sig_up)
@@ -1250,7 +1281,67 @@ class ULS(LS):
 
             # get maximum 'eta_mn' of both principle directions of upper and lower side
             #
-            eta_nm_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis=1)[:, None]
+            eta_nm1_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis=1)[:, None]
+
+            #---------------
+            # 2-direction:
+            #---------------
+
+            # initialize arrays to be filled based on case distinction
+            #
+            eta_n2_up = np.zeros_like(self.n_sig2_up)
+            eta_n2_lo = np.zeros_like(self.n_sig2_lo)
+
+            # cases with a tensile normal force
+            #
+            cond_ns2u_ge_0 = self.n_sig2_up >= 0.  # tensile force in direction of principle stress at upper side
+            cond_ns2l_ge_0 = self.n_sig2_lo >= 0.  # tensile force in direction of principle stress at lower side
+
+            # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
+            #
+            bool_arr = cond_ns2u_ge_0
+            eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdt_up[bool_arr]
+
+            bool_arr = cond_ns2l_ge_0
+            eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdt_lo[bool_arr]
+
+            # cases with a compressive normal force
+            #
+            cond_ns2u_lt_0 = self.n_sig2_up < 0.  # compressive force in direction of principle stress at upper side
+            cond_ns2l_lt_0 = self.n_sig2_lo < 0.  # compressive force in direction of principle stress at lower side
+
+            # compare imposed compressive normal force with 'n_Rdc' as obtained from compression test
+            #
+            bool_arr = cond_ns2u_lt_0
+            eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdc[bool_arr]
+
+            bool_arr = cond_nsl_lt_0
+            eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdc[bool_arr]
+
+            # get 'eta_m' based on imposed moment compared with moment resistence
+            #
+            eta_m2_lo = self.m_sig2_lo / m_Rd_lo
+            eta_m2_up = self.m_sig2_up / m_Rd_up
+
+            # get total 'eta_mn' based on imposed normal force and moment
+            # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
+            # NOTE: if eta_m is negative (caused by a negative moment) take the absolute value
+            #
+            eta_nm2_lo = np.abs(eta_n2_lo) + np.abs(eta_m2_lo)
+            eta_nm2_up = np.abs(eta_n2_up) + np.abs(eta_m2_up)
+
+            # get maximum 'eta_mn' of both principle directions of upper and lower side
+            #
+            eta_nm2_tot = ndmax(hstack([ eta_nm2_up, eta_nm2_lo]), axis=1)[:, None]
+
+            # overall maximum eta_nm for 1st and 2nd principle direction
+            #
+            eta_nm_tot = ndmax(hstack([ eta_nm1_tot, eta_nm2_tot]), axis=1)[:, None]
+
+            # overall maximum eta_n and eta_m distinguishing normal forces and bending moment influence:
+            #
+            eta_n_tot = ndmax(hstack([ eta_n_lo, eta_n2_lo, eta_n_up, eta_n2_up]), axis=1)[:, None]
+            eta_m_tot = ndmax(hstack([ eta_m_lo, eta_m2_lo, eta_m_up, eta_m2_up]), axis=1)[:, None]
 
             #------------------------------------------------------------
             # construct a dictionary containing the return values
@@ -1263,6 +1354,7 @@ class ULS(LS):
                      'n_Rdt_lo':n_Rdt_lo,
                      'm_Rd_up':m_Rd_up,
                      'm_Rd_lo':m_Rd_lo,
+
                      'eta_n_up':eta_n_up,
                      'eta_m_up':eta_m_up,
                      'eta_nm_up':eta_nm_up,
@@ -1270,6 +1362,17 @@ class ULS(LS):
                      'eta_m_lo':eta_m_lo,
                      'eta_nm_lo':eta_nm_lo,
                      'eta_nm_tot':eta_nm_tot,
+
+                     'eta_n_tot':eta_n_tot,
+                     'eta_m_tot':eta_m_tot,
+
+                     'eta_n2_up':eta_n_up,
+                     'eta_m2_up':eta_m_up,
+                     'eta_nm2_up':eta_nm_up,
+                     'eta_n2_lo':eta_n_lo,
+                     'eta_m2_lo':eta_m_lo,
+                     'eta_nm2_lo':eta_nm_lo,
+
                      'k_alpha_lo' : k_alpha_lo,
                      'k_alpha_up' : k_alpha_up}
 
@@ -1464,6 +1567,8 @@ class ULS(LS):
     def _get_k_alpha_lo(self):
         return self.ls_values['k_alpha_lo']
 
+    # 1st-principle direction
+    #
     eta_n_up = Property(Array)
     def _get_eta_n_up(self):
         return self.ls_values['eta_n_up']
@@ -1488,10 +1593,49 @@ class ULS(LS):
     def _get_eta_nm_lo(self):
         return self.ls_values['eta_nm_lo']
 
+    # max from 1st and 2nd-principle direction
+    #
     eta_nm_tot = Property(Array)
     def _get_eta_nm_tot(self):
         return self.ls_values['eta_nm_tot']
 
+    # max from 1st and 2nd-principle direction only from normal forces
+    #
+    eta_n_tot = Property(Array)
+    def _get_eta_n_tot(self):
+        return self.ls_values['eta_n_tot']
+
+    # max from 1st and 2nd-principle direction only from bending moments
+    #
+    eta_m_tot = Property(Array)
+    def _get_eta_m_tot(self):
+        return self.ls_values['eta_m_tot']
+
+    # 2nd-principle direction
+    #
+    eta_n2_up = Property(Array)
+    def _get_eta_n2_up(self):
+        return self.ls_values['eta_n2_up']
+
+    eta_m2_up = Property(Array)
+    def _get_eta_m2_up(self):
+        return self.ls_values['eta_m2_up']
+
+    eta_nm2_up = Property(Array)
+    def _get_eta_nm2_up(self):
+        return self.ls_values['eta_nm2_up']
+
+    eta_n2_lo = Property(Array)
+    def _get_eta_n2_lo(self):
+        return self.ls_values['eta_n2_lo']
+
+    eta_m2_lo = Property(Array)
+    def _get_eta_m2_lo(self):
+        return self.ls_values['eta_m2_lo']
+
+    eta_nm2_lo = Property(Array)
+    def _get_eta_nm2_lo(self):
+        return self.ls_values['eta_nm2_lo']
 
     # @todo: make an automatised function calle for asses_value_max
 #    @on_trait_change( '+input' )
@@ -1647,6 +1791,9 @@ class LSTable(HasTraits):
         sigy_lo = (ny / A + my / W) / 1000.
         sigxy_lo = (nxy / A + mxy / W) / 1000.
 
+        #--------------
+        # upper face:
+        #--------------
 
         # principal stresses upper face:
         #
@@ -1656,9 +1803,13 @@ class LSTable(HasTraits):
         alpha_sig_up = pi / 2. * ones_like(sig1_up)
 
         # from mechanic formula book (cf. also InfoCAD manual)
+        #
         bool_arr = sig2_up != sigx_up
-
         alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
+
+        # angle of principle stresses (2-direction = minimum stresses (compression))
+        #
+        alpha_sig2_up = alpha_sig_up + pi / 2
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
@@ -1676,6 +1827,10 @@ class LSTable(HasTraits):
         m_sig_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
         n_sig_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
 
+        # transform moments and normal forces in the direction of the principal stresses (1-direction)
+        #
+        m_sig2_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_up) - mxy * sin(2 * alpha_sig2_up)
+        n_sig2_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_up) - nxy * sin(2 * alpha_sig2_up)
 
         #--------------
         # lower face:
@@ -1689,8 +1844,13 @@ class LSTable(HasTraits):
         alpha_sig_lo = pi / 2. * ones_like(sig1_lo)
 
         # from mechanic formula book (cf. also InfoCAD manual)
+        #
         bool_arr = sig2_lo != sigx_lo
         alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
+
+        # angle of principle stresses (2-direction = minimum stresses (compression))
+        #
+        alpha_sig2_lo = alpha_sig_lo + pi / 2
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
@@ -1709,18 +1869,25 @@ class LSTable(HasTraits):
         m_sig_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
         n_sig_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
 
+        # transform moments and normal forces in the direction of the principal stresses (2-direction)
+        #
+        m_sig2_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_lo) - mxy * sin(2 * alpha_sig2_lo)
+        n_sig2_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_lo) - nxy * sin(2 * alpha_sig2_lo)
+
         return {
                  'sigx_up' : sigx_up, 'sigy_up' : sigy_up, 'sigxy_up' : sigxy_up,
                  'sig1_up' : sig1_up, 'sig2_up' : sig2_up, 'alpha_sig_up' : alpha_sig_up_deg,
 
                  'sig1_lo_sig_up' : sig1_lo_sig_up,
                  'm_sig_up' : m_sig_up, 'n_sig_up' : n_sig_up,
+                 'm_sig2_up' : m_sig2_up, 'n_sig2_up' : n_sig2_up,
 
                  'sigx_lo' : sigx_lo, 'sigy_lo' : sigy_lo, 'sigxy_lo' : sigxy_lo,
                  'sig1_lo' : sig1_lo, 'sig2_lo' : sig2_lo, 'alpha_sig_lo' : alpha_sig_lo_deg,
 
                  'sig1_up_sig_lo' : sig1_up_sig_lo,
                  'm_sig_lo' : m_sig_lo, 'n_sig_lo' : n_sig_lo,
+                 'm_sig2_lo' : m_sig2_lo, 'n_sig2_lo' : n_sig2_lo,
 
                }
 
@@ -1762,6 +1929,13 @@ class LSTable(HasTraits):
     def _get_n_sig_up(self):
         return self.princ_values_sig['n_sig_up']
 
+    m_sig2_up = Property(Float)
+    def _get_m_sig2_up(self):
+        return self.princ_values_sig['m_sig2_up']
+
+    n_sig2_up = Property(Float)
+    def _get_n_sig2_up(self):
+        return self.princ_values_sig['n_sig2_up']
 
     # stresses lower face:
     #
@@ -1801,6 +1975,13 @@ class LSTable(HasTraits):
     def _get_n_sig_lo(self):
         return self.princ_values_sig['n_sig_lo']
 
+    m_sig2_lo = Property(Float)
+    def _get_m_sig2_lo(self):
+        return self.princ_values_sig['m_sig2_lo']
+
+    n_sig2_lo = Property(Float)
+    def _get_n_sig2_lo(self):
+        return self.princ_values_sig['n_sig2_lo']
 
     #------------------------------------------
     # combinations of limit states, stress resultants and directions
