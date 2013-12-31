@@ -817,6 +817,14 @@ class LCCTable(HasTraits):
             assess_name = ls_class.assess_name
             if assess_name == 'max_eta_nm_tot':
                 assess_value = getattr(ls_class, 'eta_nm_tot')
+
+                # get only the components resulting from normal forces...
+                #
+#                assess_value = getattr(ls_class, 'eta_n_tot')
+
+                # get only the components resulting from bending moments...
+                #
+#                assess_value = getattr(ls_class, 'eta_m_tot')
             if assess_name == 'max_n_tex':
                 assess_value = getattr(ls_class, 'n_tex')
             if assess_name == 'max_eta_tot':
@@ -1037,16 +1045,16 @@ class LCCTable(HasTraits):
 
 #        p.title('$nm$-Interaktionsdiagramm')
 
-        ax = p.gca()
-        if show_tension_only == False:
-            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
-            ax.set_yticks([200., 0., -200, -400, -600, -800])
-            p.axis([0., 1.05 * m_Rd, 1.2 * n_Rdt, 1.03 * n_Rdc])  # set plotting range for axis
-
-        if show_tension_only == True:
-            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
-            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
-            p.axis([0., 1.2, 140., 0.])  # set plotting range for axis
+#        ax = p.gca()
+#        if show_tension_only == False:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#            ax.set_yticks([200., 0., -200, -400, -600, -800])
+#            p.axis([0., 1.05 * m_Rd, 1.2 * n_Rdt, 1.03 * n_Rdc])  # set plotting range for axis
+#
+#        if show_tension_only == True:
+#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
+#            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
+#            p.axis([0., 1.2, 140., 0.])  # set plotting range for axis
 
         p.plot(x, y1, 'k--', linewidth=2.0)  # black dashed line
         p.plot(x, y2, 'k--', linewidth=2.0)  # black dashed line
@@ -1082,11 +1090,21 @@ class LCCTable(HasTraits):
         # run trough all loading case combinations:
         #----------------------------------------------
 
+        # eta for 1st principal direction:
+        #
         eta_n_lo_list = []
         eta_m_lo_list = []
         eta_n_up_list = []
         eta_m_up_list = []
 
+        # eta for 2nd principal direction:
+        #
+        eta_n2_lo_list = []
+        eta_m2_lo_list = []
+        eta_n2_up_list = []
+        eta_m2_up_list = []
+
+        # get envelope over all loading case combinations (lcc)
         for lcc in lcc_list:
 
             # get the ls_table object and retrieve its 'ls_class'
@@ -1094,12 +1112,19 @@ class LCCTable(HasTraits):
             #
             ls_class = lcc.ls_table.ls_class
 
-            # get 'eta_n' and 'eta_m'
+            # get 'eta_n' and 'eta_m' (1-principle direction)
             #
             eta_m_lo = np.copy(getattr(ls_class, 'eta_m_lo'))
             eta_m_up = np.copy(getattr(ls_class, 'eta_m_up'))
             eta_n_lo = np.copy(getattr(ls_class, 'eta_n_lo'))
             eta_n_up = np.copy(getattr(ls_class, 'eta_n_up'))
+
+            # get 'eta_n' and 'eta_m' (2-principle direction)
+            #
+            eta_m2_lo = np.copy(getattr(ls_class, 'eta_m2_lo'))
+            eta_m2_up = np.copy(getattr(ls_class, 'eta_m2_up'))
+            eta_n2_lo = np.copy(getattr(ls_class, 'eta_n2_lo'))
+            eta_n2_up = np.copy(getattr(ls_class, 'eta_n2_up'))
 
             # add read in saved values to be superposed with currently read in values
             #
@@ -1153,14 +1178,18 @@ class LCCTable(HasTraits):
 
             eta_n_lo_list.append(eta_n_lo)
             eta_n_up_list.append(eta_n_up)
+            eta_n2_lo_list.append(eta_n2_lo)
+            eta_n2_up_list.append(eta_n2_up)
 
             # NOTE: after superposition take only the absolute values for the plot
             #
             eta_m_lo_list.append(abs(eta_m_lo))
             eta_m_up_list.append(abs(eta_m_up))
+            eta_m2_lo_list.append(abs(eta_m2_lo))
+            eta_m2_up_list.append(abs(eta_m2_up))
 
-            eta_n_list = eta_n_lo_list + eta_n_up_list
-            eta_m_list = eta_m_lo_list + eta_m_up_list
+            eta_n_list = eta_n_lo_list + eta_n_up_list + eta_n2_lo_list + eta_n2_up_list
+            eta_m_list = eta_m_lo_list + eta_m_up_list + eta_m2_lo_list + eta_m2_up_list
 
         # stack the list to an array in order to use plot-function
         #
