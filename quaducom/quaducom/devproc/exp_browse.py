@@ -13,8 +13,10 @@ simdb = SimDB()
 
 from matresdev.db.exdb.ex_run_view import ExRunView
 
-ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3',
-                        'TT-12c-4cm-TU-0-SH3-V2.DAT')
+# ex_path = os.path.join(simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
+
+# ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3',
+#                         'TT-12c-4cm-TU-0-SH3-V2.DAT')
 
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
 #                        'TTb-6c-2cm-0-TU-V2_bs4.DAT')
@@ -25,8 +27,8 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-2
 #                                        'BT-3PT-12c-6cm-0-Tu-V1.raw')
 
 
-# ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU',
-#                                        'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
+ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU',
+                                       'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU',
 #                                       'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
 
