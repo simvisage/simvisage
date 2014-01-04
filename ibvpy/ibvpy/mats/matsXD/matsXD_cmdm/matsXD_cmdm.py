@@ -192,12 +192,12 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         based on the list of microplane strain vectors
         '''
         # magnitude of the normal strain vector for each microplane
-        #@todo: faster numpy functionality possible?
+        # @todo: faster numpy functionality possible?
         e_N_arr = array([ dot(e_vct, mpn) for e_vct, mpn in zip(e_vct_arr, self._MPN) ])
         # positive part of the normal strain magnitude for each microplane
         e_N_pos_arr = (fabs(e_N_arr) + e_N_arr) / 2
         # normal strain vector for each microplane
-        #@todo: faster numpy functionality possible?
+        # @todo: faster numpy functionality possible?
         e_N_vct_arr = array([ self._MPN[i, :] * e_N_arr[i] for i in range(0, self.n_mp) ])
         # tangent strain ratio
         c_T = self.c_T
@@ -242,6 +242,22 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         Returns a list of the integrity factors for all microplanes.
         '''
         e_max_arr = self._get_state_variables(sctx, eps_app_eng)
+
+        # @todo: is this a possible position to add in the if-case evaluation
+        # for compression in case of a z-direction "damage broadcasting"?!
+        #
+        # get the sign of the normal component of each microplane
+        # i.e. check if the microplane strain is negative (compression)
+        # if yes ignore the state variable and explicitly set the phi value to 1.0
+        # which corresponds to the initial (undamaged) value of e_max = 0. 
+        # magnitude of the normal strain vector for each microplane
+        # @todo: faster numpy functionality possible? Note that the calculation of 'e_N_arr' is calculated twice!
+        #
+#        e_vct_arr = self._get_e_vct_arr(eps_app_eng)
+#        e_N_arr = array([ dot(e_vct, mpn) for e_vct, mpn in zip(e_vct_arr, self._MPN) ])
+#        bool_arr = e_N_arr < 0.
+#        e_max_arr[bool_arr] = 0. 
+
         return self.get_phi_arr(sctx, e_max_arr)
 
     def _get_phi_mtx(self, sctx, eps_app_eng):
@@ -251,7 +267,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # scalar integrity factor for each microplane
         phi_arr = self._get_phi_arr(sctx, eps_app_eng)
         # integration terms for each microplanes
-        #@todo: faster numpy functionality possible?
+        # @todo: faster numpy functionality possible?
         phi_mtx_arr = array([ phi_arr[i] * self._MPNN[i, :, :] * self._MPW[i]
                                 for i in range(0, self.n_mp) ])
         # sum of contributions from all microplanes
@@ -561,7 +577,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # the stress calculation is performed twice - it might be
         # cached. But not in the spatial integration scheme.
         sig_app_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
-        #return sig_app_eng
+        # return sig_app_eng
         return self.map_sig_eng_to_mtx(sig_app_eng)
 
     def get_microplane_integrity(self, sctx, eps_app_eng):
@@ -592,7 +608,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # ------------------------------------------
     # SUBSIDARY METHODS used only for the response tracer:
     # ------------------------------------------
-    ### Projection: Methods used for projection: 
+    # ## Projection: Methods used for projection: 
 
     #  '_get_e_vct_arr'  -  has been defined above (see 'get_corr_pred') 
     #   (also used as subsidary method for '_get_e_s_vct_arr'.) 
@@ -610,7 +626,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         s_vct_arr = dot(self._MPN, sig_mtx)
         return s_vct_arr
 
-    ### Equiv: Equivalent microplane parts:
+    # ## Equiv: Equivalent microplane parts:
 
     #  '_get_e_equiv_arr'  -  has been defined above (see 'get_corr_pred') 
 
@@ -624,7 +640,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         s_equiv_arr = self._get_e_equiv_arr(s_vct_arr)
         return s_equiv_arr
 
-    ### N: normal microplane parts    
+    # ## N: normal microplane parts    
 
     def _get_e_N_arr(self, e_vct_arr):
         '''
@@ -645,7 +661,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         s_N_arr = self._get_e_N_arr(s_vct_arr)
         return s_N_arr
 
-    ### T: tangential microplane parts    
+    # ## T: tangential microplane parts    
 
     def _get_e_T_arr(self, e_vct_arr):
         '''
@@ -709,10 +725,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # stiffness version:
         #-------------------
         if self.model_version == 'stiffness' :
-            ### microplane equivalent strains obtained by projection (kinematic constraint)
+            # ## microplane equivalent strains obtained by projection (kinematic constraint)
             e_app_vct_arr = self._get_e_vct_arr(eps_app_eng)
 
-            ### microplane equivalent stresses calculated based on corresponding 'beta' and 'phi_mtx'
+            # ## microplane equivalent stresses calculated based on corresponding 'beta' and 'phi_mtx'
             # 2nd order damage tensor:
             phi_mtx = self._get_phi_mtx(sctx, eps_app_eng)
             # 4th order damage tensor:
@@ -741,10 +757,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             # get the corresponding macroscopic stresses
             sig_app_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
 
-            ### microplane equivalent stress obtained by projection (static constraint)
+            # ## microplane equivalent stress obtained by projection (static constraint)
             s_app_vct_arr = self._get_s_vct_arr(sig_app_eng)
 
-            ### microplane equivalent strains calculated based on corresponding 'M' and 'psi_mtx'
+            # ## microplane equivalent strains calculated based on corresponding 'M' and 'psi_mtx'
             # 2nd order damage effect tensor:
             psi_mtx = self._get_psi_mtx(sctx, eps_app_eng)
             # 4th order damage effect tensor:
@@ -791,7 +807,12 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # sum over the first dimension (over the microplanes)
         psi_mtx = psi_mtx_arr.sum(0)
         return psi_mtx
-
+    
+    #------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------
+    # @todo: is an implicit formulation of CMDM possible? First outline see below
+    #------------------------------------------------------------------------------
+    #
     def get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng):
         # state variables of last converged step at time t_i
         e_max_arr_old = sctx.mats_state_array
@@ -831,7 +852,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # also in the trial steps the consistently derived damage tensor based on the compliance 
     # version (implicit formulation)
     # -------------------------------------------------------------    
-    def get_corr_pred_cv(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg = None):
+    def get_corr_pred_cv(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg=None):
         '''
         Returns two arrays containing the microplane strain and stress vectors 
         consistently derived based on the specified model version, i.e. either 'stiffness' or 'compliance'
@@ -841,12 +862,15 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         if self.model_version != 'compliance':
             raise ExceptionError('only valid for compliance version')
             
-        e_max_arr_new = brentq( e_max_arr_new, self.get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng))
+        e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng))
         
         self.update_state_variables(e_max_arr_new)
             
         # get the corresponding macroscopic stresses for D_mtx at time t_i+1 for strain
         sig_app_eng, D_mtx_cv = self.get_corr_pred(sctx, e_max_arr_new, eps_app_eng, 0, 0, 0)
+
+    #------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------
 
 
     # Equiv:
@@ -931,10 +955,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         e_T_arr, s_T_arr = self._get_e_s_T_arr(sctx, eps_app_eng)
         return s_T_arr
 
-### @todo: remove / old
+# ## @todo: remove / old
 
 # @todo: remove: this method and method 'get_integ' in 'polar_fn'
-### old implementation: this assumes a decoupled reaction of all microplanes
+# ## old implementation: this assumes a decoupled reaction of all microplanes
     def get_fracture_energy_arr(self, sctx, e_max_arr):
         '''
         Get the microplane contributions to the fracture energy
@@ -958,7 +982,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         '''
         e_vct_arr, s_vct_arr = self._get_e_s_vct_arr(sctx, eps_app_eng)
 
-        ### N: normal components
+        # ## N: normal components
         # integral under the stress-strain curve
         E_tN = trapz(e_app_vct_arr[:, 0], s_app_vct_arr[:, 0])
         # area of the stored elastic energy  
@@ -998,7 +1022,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         '''
         Get maximum damage at all microplanes. 
         '''
-        min_phi = np.min(self._get_phi_arr(sctx,eps_app_eng))
+        min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
         max_omega = 1. - min_phi 
         return np.array([ max_omega ])
          
@@ -1010,7 +1034,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         phi_arr = self._get_phi_arr(sctx, eps_app_eng)
         omega_arr = 1 - phi_arr ** 2
         # integration terms for each microplanes
-        #@todo: faster numpy functionality possible?
+        # @todo: faster numpy functionality possible?
         omega_mtx_arr = array([ omega_arr[i] * self._MPNN[i, :, :] * self._MPW[i]
                                 for i in range(0, self.n_mp) ])
         # sum of contributions from all microplanes
@@ -1018,7 +1042,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         omega_mtx = omega_mtx_arr.sum(0)
 
         return omega_mtx
-###
+# ##
 
     # Declare and fill-in the rte_dict - it is used by the clients to
     # assemble all the available time-steppers.

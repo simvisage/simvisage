@@ -40,17 +40,17 @@ from ibvpy.mesh.fe_grid_idx_slice import FEGridIdxSlice
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
-    columns = [ ObjectColumn(label = 'Type', name = 'var'),
-                ObjectColumn(label = 'Value', name = 'value'),
-                ObjectColumn(label = 'DOF', name = 'dof')
+    columns=[ ObjectColumn(label='Type', name='var'),
+                ObjectColumn(label='Value', name='value'),
+                ObjectColumn(label='DOF', name='dof')
                 ],
-    editable = False,
+    editable=False,
     )
 
 from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels, MVStructuredGrid
 
-class BCSlice(HasTraits):
+class BCSlice(HasStrictTraits):
     '''
     Implements the IBC functionality for a constrained dof.
     '''
@@ -59,7 +59,7 @@ class BCSlice(HasTraits):
     var = Enum('u', 'f', 'eps', 'sig')
 
     #slice = Instance(FEGridIdxSlice)
-    slice = Trait
+    slice = Trait()
 
     link_slice = Instance(FEGridIdxSlice)
 
@@ -129,11 +129,11 @@ class BCSlice(HasTraits):
                 for node_dofs, dof_X in zip(el_dofs, el_dofs_X):
                     #print 'node_dofs ', node_dofs
                     for dof in node_dofs[ self.dims] :
-                        self.bcdof_list.append(BCDof(var = self.var,
-                                                       dof = dof,
-                                                       value = self.value,
-                                                       link_coeffs = self.link_coeffs,
-                                                       time_function = self.time_function))
+                        self.bcdof_list.append(BCDof(var=self.var,
+                                                       dof=dof,
+                                                       value=self.value,
+                                                       link_coeffs=self.link_coeffs,
+                                                       time_function=self.time_function))
         else:
             # apply the linked slice
             n_link_nodes = len(self.link_slice.dof_nodes.flatten())
@@ -147,12 +147,12 @@ class BCSlice(HasTraits):
                     zip(self.slice.elems, self.slice.dofs, self.slice.dof_X):
                     for node_dofs, dof_X in zip(el_dofs, el_dofs_X):
                         for dof, link_dof in zip(node_dofs[ self.dims ], link_dofs):
-                            self.bcdof_list.append(BCDof(var = self.var,
-                                                           dof = dof,
-                                                           link_dofs = [ link_dof ],
-                                                           value = self.value,
-                                                           link_coeffs = link_coeffs,
-                                                           time_function = self.time_function))
+                            self.bcdof_list.append(BCDof(var=self.var,
+                                                           dof=dof,
+                                                           link_dofs=[ link_dof ],
+                                                           value=self.value,
+                                                           link_coeffs=link_coeffs,
+                                                           time_function=self.time_function))
             else:
                 for el, el_dofs, el_dofs_X, el_link, el_link_dofs, el_link_dofs_X in \
                     zip(self.slice.elems, self.slice.dofs, self.slice.dof_X,
@@ -164,12 +164,12 @@ class BCSlice(HasTraits):
                         for dof, link_dof, link_coeff in zip(node_dofs[ self.dims ],
                                                  node_link_dofs[self.link_dims],
                                                  self.link_coeffs) :
-                            self.bcdof_list.append(BCDof(var = self.var,
-                                                           dof = dof,
-                                                           link_dofs = [ link_dof ],
-                                                           value = self.value,
-                                                           link_coeffs = [link_coeff],
-                                                           time_function = self.time_function))
+                            self.bcdof_list.append(BCDof(var=self.var,
+                                                           dof=dof,
+                                                           link_dofs=[ link_dof ],
+                                                           value=self.value,
+                                                           link_coeffs=[link_coeff],
+                                                           time_function=self.time_function))
 
     def apply_essential(self, K):
 
@@ -197,12 +197,12 @@ class BCSlice(HasTraits):
 
         p_value = self.value * float(self.time_function(t_n1))
 
-        p_vct = zeros((fets_eval.n_nodal_dofs,), dtype = 'float_')
+        p_vct = zeros((fets_eval.n_nodal_dofs,), dtype='float_')
         for d in self.dims:
             p_vct[d] = p_value
 
         for el, el_dofs, el_geo_X in zip(self.slice.elems, slicedofs, slicegeo_X):
-            f_vct = zeros((fets_eval.n_e_dofs,), dtype = 'float_')
+            f_vct = zeros((fets_eval.n_e_dofs,), dtype='float_')
             for r_pnt, w in zip(r_arr, w_arr):
                 if len(ix) > 0:
                     J_mtx = fets_eval.get_J_mtx(r_pnt, el_geo_X)
@@ -257,22 +257,22 @@ class BCSlice(HasTraits):
     #
     mvp_dofs = Trait(MVPointLabels)
     def _mvp_dofs_default(self):
-        return MVPointLabels(name = 'Boundary condition',
-                              points = self._get_mvpoints,
-                              vectors = self._get_labels,
-                              color = (0.0, 0.0, 0.882353))
+        return MVPointLabels(name='Boundary condition',
+                              points=self._get_mvpoints,
+                              vectors=self._get_labels,
+                              color=(0.0, 0.0, 0.882353))
 
     def _get_mvpoints(self):
         ## blow up
         if self.dof_X.shape[2] == 2:
             dof_X = np.hstack([self.dof_X.reshape(self.n_dof_nodes, 2),
-                               np.zeros((self.n_dof_nodes, 1), dtype = 'f')])
+                               np.zeros((self.n_dof_nodes, 1), dtype='f')])
         elif self.dof_X.shape[2] == 1:
             dof_X = np.hstack([self.dof_X.reshape(self.n_dof_nodes, 1),
-                               np.zeros((self.n_dof_nodes, 2), dtype = 'f')])
+                               np.zeros((self.n_dof_nodes, 2), dtype='f')])
         else:
-            dof_X = self.dof_X.reshape(self.n_dof_nodes, 3) 
-        return dof_X 
+            dof_X = self.dof_X.reshape(self.n_dof_nodes, 3)
+        return dof_X
 
     def _get_labels(self):
         ## blow up
@@ -304,30 +304,30 @@ class BCSlice(HasTraits):
     #
     mvp_link_dofs = Trait(MVPointLabels)
     def _mvp_link_dofs_default(self):
-        return MVPointLabels(name = 'Link boundary condition',
-                              points = self._get_link_mvpoints,
-                              vectors = self._get_link_labels,
-                              color = (0.0, 0.882353, 0.0))
+        return MVPointLabels(name='Link boundary condition',
+                              points=self._get_link_mvpoints,
+                              vectors=self._get_link_labels,
+                              color=(0.0, 0.882353, 0.0))
 
     def _get_link_mvpoints(self):
         ## blow up
         ## blow up
         if self.link_slice == None:
-            return np.zeros((0, 3), dtype = 'f')
+            return np.zeros((0, 3), dtype='f')
         if self.dof_X.shape[2] == 2:
             dof_X = np.hstack([self.link_dof_X.reshape(self.n_dof_nodes, 2),
-                               np.zeros((self.n_dof_nodes, 1), dtype = 'f')])
+                               np.zeros((self.n_dof_nodes, 1), dtype='f')])
         elif self.dof_X.shape[2] == 1:
             dof_X = np.hstack([self.link_dof_X.reshape(self.n_dof_nodes, 1),
-                               np.zeros((self.n_dof_nodes, 2), dtype = 'f')])
+                               np.zeros((self.n_dof_nodes, 2), dtype='f')])
         else:
-            dof_X = self.link_dof_X.reshape(self.n_dof_nodes, 3) 
+            dof_X = self.link_dof_X.reshape(self.n_dof_nodes, 3)
         return dof_X
 
     def _get_link_labels(self):
         ## blow up
         if self.link_slice == None:
-            return np.zeros((0, 3), dtype = 'f')        
+            return np.zeros((0, 3), dtype='f')
         n_points = self.n_link_dof_nodes
         dofs = repeat(-1., n_points * 3).reshape(n_points, 3)
         dofs[:, tuple(self.dims) ] = self.link_dofs
@@ -335,18 +335,18 @@ class BCSlice(HasTraits):
 
     redraw_button = Button('Redraw')
     def _redraw_button_fired(self):
-        self.mvp_dofs.redraw(label_mode = 'label_vectors')
-        self.mvp_link_dofs.redraw(label_mode = 'label_vectors')
+        self.mvp_dofs.redraw(label_mode='label_vectors')
+        self.mvp_link_dofs.redraw(label_mode='label_vectors')
 
     traits_view = View(HSplit(Group('var',
                                        'dims',
                                        'value',
                                        'redraw_button'),
                                 Item('bcdof_list',
-                                     style = 'custom',
-                                     editor = bcond_list_editor,
-                                     show_label = False)),
-                        resizable = True,
+                                     style='custom',
+                                     editor=bcond_list_editor,
+                                     show_label=False)),
+                        resizable=True,
                         )
 
 if __name__ == '__main__':
@@ -371,7 +371,7 @@ if __name__ == '__main__':
         from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
             MATS3DElastic
 
-        fets_eval = FETS3D8H27U(mats_eval = MATS3DElastic())
+        fets_eval = FETS3D8H27U(mats_eval=MATS3DElastic())
 
         alpha = 1 * Pi / 2
         def geo_transform(points):
@@ -380,15 +380,15 @@ if __name__ == '__main__':
             y = -X * sin(alpha) + Y * cos(alpha)
             return c_[x, y, Z]
 
-        fe_grid = FEGrid(coord_max = (1.0, 1.0, 1.0),
-                          shape = (5, 5, 5),
-                          geo_transform = geo_transform,
-                          fets_eval = fets_eval)
+        fe_grid = FEGrid(coord_max=(1.0, 1.0, 1.0),
+                          shape=(5, 5, 5),
+                          geo_transform=geo_transform,
+                          fets_eval=fets_eval)
 
-        bcs = [BCSlice(var = 'u', value = 0., dims = [0, 1, 2],
-                        slice = fe_grid[ :, :, 0, :, :, 0 ]),
-               BCSlice(var = 'f', value = 0.1, dims = [2],
-                        slice = fe_grid[ :, :, -1, :, :, -1 ])]
+        bcs = [BCSlice(var='u', value=0., dims=[0, 1, 2],
+                        slice=fe_grid[ :, :, 0, :, :, 0 ]),
+               BCSlice(var='f', value=0.1, dims=[2],
+                        slice=fe_grid[ :, :, -1, :, :, -1 ])]
 
     elif dim == '2D':
 
@@ -402,7 +402,7 @@ if __name__ == '__main__':
         from ibvpy.fets.fets2D.fets2D4q9u import \
             FETS2D4Q9U
 
-        fets_eval = FETS2D4Q(mats_eval = MATS2DElastic())
+        fets_eval = FETS2D4Q(mats_eval=MATS2DElastic())
 
         alpha = 1 * Pi / 2
         def geo_transform(points):
@@ -411,32 +411,32 @@ if __name__ == '__main__':
             y = -X * sin(alpha) + Y * cos(alpha)
             return c_[x, y]
 
-        fe_grid = FEGrid(coord_max = (1.0, 1.0),
-                          shape = (5, 5),
-                          geo_transform = geo_transform,
-                          fets_eval = fets_eval)
+        fe_grid = FEGrid(coord_max=(1.0, 1.0),
+                          shape=(5, 5),
+                          geo_transform=geo_transform,
+                          fets_eval=fets_eval)
 
-        bcs = [BCSlice(var = 'u', value = 0., dims = [0, 1], slice = fe_grid[ :, 0, :, 0 ]),
-               BCSlice(var = 'f', value = -1., dims = [1], slice = fe_grid[ :, :, :, : ]) ]
+        bcs = [BCSlice(var='u', value=0., dims=[0, 1], slice=fe_grid[ :, 0, :, 0 ]),
+               BCSlice(var='f', value= -1., dims=[1], slice=fe_grid[ :, :, :, : ]) ]
 
-    ts = TS(sdomain = fe_grid, bcond_list = bcs,
-            rtrace_list = [
-                         RTraceDomainListField(name = 'Displacement' ,
-                                        var = 'u', idx = 0, warp = True),
-                         RTraceDomainListField(name = 'Stress' ,
-                                        var = 'sig_app', idx = 0, warp = True,
-                                        record_on = 'update'),
+    ts = TS(sdomain=fe_grid, bcond_list=bcs,
+            rtrace_list=[
+                         RTraceDomainListField(name='Displacement' ,
+                                        var='u', idx=0, warp=True),
+                         RTraceDomainListField(name='Stress' ,
+                                        var='sig_app', idx=0, warp=True,
+                                        record_on='update'),
                         ]
               )
 
     # Add the time-loop control
-    tloop = TLoop(tstepper = ts,
-                   tline = TLine(min = 0.0, step = 1., max = 1.0))
+    tloop = TLoop(tstepper=ts,
+                   tline=TLine(min=0.0, step=1., max=1.0))
 
     print 'u', tloop.eval()
 
     print 'F', tloop.tstepper.F_ext
 
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    app = IBVPyApp(ibv_resource = tloop)
+    app = IBVPyApp(ibv_resource=tloop)
     app.main()

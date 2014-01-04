@@ -119,7 +119,7 @@ class MATS3DElastomerZ(MATS3DElastic):
 
 
 class SimBT3PT(IBVModel):
-    '''Simulation: Bending Test Three Point 
+    '''Simulation: Bending Test Three Point
     '''
 
     input_change = Event
@@ -155,7 +155,7 @@ class SimBT3PT(IBVModel):
     #
     shape_supprt_x = Int(2, input=True,
                       ps_levels=(2, 4, 2))
-    
+
     #-----------------
     # geometry:
     #-----------------
@@ -168,7 +168,7 @@ class SimBT3PT(IBVModel):
     width = Float(0.20, input=True)
     thickness = Float(0.06, input=True,
                       ps_levels=(0.054, 0.060, 0.066))
-    
+
     # thickness of the tappered support
     #
     thickness_supprt = Float(0.02, input=True)
@@ -176,7 +176,7 @@ class SimBT3PT(IBVModel):
     # derived geometric parameters
     #-----------------
     #
-    # half the length of the elastomer (load introduction 
+    # half the length of the elastomer (load introduction
     # with included symmetry)
     #
     sym_specmn_length = Property
@@ -204,7 +204,7 @@ class SimBT3PT(IBVModel):
     #
     elstmr_flag = True
 
-    # specify weather steel support is to be modeled 
+    # specify weather steel support is to be modeled
     #
     supprt_flag = False
 
@@ -217,8 +217,8 @@ class SimBT3PT(IBVModel):
     geo_supprt = Property(Instance(GeoSUPPRT), depends_on='+ps_levels, +input')
     @cached_property
     def _get_geo_supprt(self):
-        # element length within the range of the slab without the area of the 
-        # load introduction plate 
+        # element length within the range of the slab without the area of the
+        # load introduction plate
         #
         elem_size = self.sym_specmn_length / self.shape_x
         width_supprt = self.shape_supprt_x * elem_size
@@ -226,27 +226,27 @@ class SimBT3PT(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset=-self.thickness_supprt)
+                         zoffset= -self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats_eval
     #----------------------------------------------------------------------------------
 
     # age of the specimen at the time of testing
-    # determines the E-modulus and nu based on the time dependent function stored 
+    # determines the E-modulus and nu based on the time dependent function stored
     # in 'CCSUniteCell' if params are not explicitly set
     #
     age = Int(28, input=True)
 
     # composite E-modulus / Poisson's ratio
     # NOTE 1: value are retrieved from the database
-    #         same values are used for calibration (as taken from tensile test) and for slab test  
-    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume  
-    #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
-    #         used in the simulation of the slab test and within the calibration procedure. 
+    #         same values are used for calibration (as taken from tensile test) and for slab test
+    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume
+    #         an afine/proportional damage evolution for different ages, i.e. a different E would be
+    #         used in the simulation of the slab test and within the calibration procedure.
 
-    # time stepping params 
-    #  
+    # time stepping params
+    #
     tstep = Float(0.05, auto_set=False, enter_set=True, input=True)
     tmax = Float(1.0, auto_set=False, enter_set=True, input=True)
     tolerance = Float(0.001, auto_set=False, enter_set=True, input=True)
@@ -257,7 +257,7 @@ class SimBT3PT(IBVModel):
     #
     # set 'ord=np.inf' to switch norm to
     # "norm = max(abs(x_i))"
-    # 
+    #
     ord = Enum(None, np.inf)
 
     # number of microplanes
@@ -295,11 +295,11 @@ class SimBT3PT(IBVModel):
         print 'effective elastomer E_modulus', E_elstmr
         return MATS3DElastic(E=E_elstmr,
                              nu=0.4)
-        
+
     # E-modulus and nu of steel support
     E_s = Float(210000., auto_set=False, enter_set=True, input=True)
     nu_s = Float(0.20, auto_set=False, enter_set=True, input=True)
-    
+
     supprt_mats = Property(Instance(MATS3DElastic),
                                     depends_on='input_change')
     @cached_property
@@ -310,11 +310,11 @@ class SimBT3PT(IBVModel):
     #-----------------
     # fets:
     #-----------------
-    
+
     # specify element shrink factor in plot of fe-model
     #
     vtk_r = Float(0.95)
-    
+
     # use quadratic serendipity elements
     # NOTE: 2D5 elements behave linear elastic in out of plane direction!
     #
@@ -335,7 +335,7 @@ class SimBT3PT(IBVModel):
         fets = FETS2D58H20U(mats_eval=self.elstmr_mats)
         fets.vtk_r *= self.vtk_r
         return fets
-        
+
     supprt_fets = Property(Instance(FETSEval),
                            depends_on='input_change')
     @cached_property
@@ -416,7 +416,7 @@ class SimBT3PT(IBVModel):
                          shape=(self.mid_shape_x, self.shape_y, 1),
                          fets_eval=self.elstmr_fets)
         return fe_grid
-        
+
     if supprt_flag:
         supprt_fe_level = Property(depends_on='+ps_levels, +input')
         @cached_property
@@ -424,7 +424,7 @@ class SimBT3PT(IBVModel):
             return  FERefinementGrid(name='elastomer patch',
                                      fets_eval=self.supprt_fets,
                                      domain=self.fe_domain)
-    
+
         supprt_fe_grid = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
         @cached_property
         def _get_supprt_fe_grid(self):
@@ -445,7 +445,7 @@ class SimBT3PT(IBVModel):
     # w_max = center displacement:
     #
     w_max = Float(-0.010, input=True)  # [m]
-    
+
     bc_list = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_list(self):
@@ -460,19 +460,19 @@ class SimBT3PT(IBVModel):
         # the x-axis corresponds to the axis of symmetry along the longitudinal axis of the beam:
         bc_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                  slice=specmn[:, 0, :, :, 0, :])
-        
+
         bc_mid_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                  slice=mid_specmn[:, 0, :, :, 0, :])
 
         bc_mid_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                  slice=mid_specmn[0, :, :, 0, :, :])
-        
+
         if self.elstmr_flag:
             bc_el_symplane_xz = BCSlice(var='u', value=0., dims=[1],
                                         slice=elstmr[:, 0, :, :, 0, :])
             bc_el_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                         slice=elstmr[0, :, :, 0, :, :])
-            
+
         #--------------------------------------------------------------
         # boundary conditions for the support
         #--------------------------------------------------------------
@@ -525,7 +525,7 @@ class SimBT3PT(IBVModel):
             bc_w = BCSlice(var='u', value=w_max, dims=[2],
                            slice=elstmr[:, :, -1, :, :, -1])
             # apply a single force at the center of the beam (system origin at top of the elastomer
-            # and us elastomer-domain as load distribution plate with a high stiffness (e.g. steel) 
+            # and us elastomer-domain as load distribution plate with a high stiffness (e.g. steel)
 #            F_max = -0.010 #[MN]
 #            bc_F = BCSlice(var = 'f', value = F_max, dims = [2],
 #                           slice = elstmr[0, 0, -1, 0, 0, -1])
@@ -534,7 +534,7 @@ class SimBT3PT(IBVModel):
             #
             bc_w = BCSlice(var='u', value=w_max, dims=[2],
                             slice=mid_specmn[0, :, -1, 0, :, -1])
-            # NOTE: the entire symmetry axis (yz)-plane is moved downwards 
+            # NOTE: the entire symmetry axis (yz)-plane is moved downwards
             # in order to avoid large indentations at the top nodes
             #
 #          bc_center_w = BCSlice( var = 'w', value = w_max, dims = [2], slice = mid_specmn[0, :, :, 0, :, :] )
@@ -542,9 +542,9 @@ class SimBT3PT(IBVModel):
         bc_list = [bc_symplane_xz, bc_mid_symplane_xz, bc_mid_symplane_yz,
                    bc_support_0y0, link_msp_sp, bc_w ]
 
-        if self.elstmr_flag:        
+        if self.elstmr_flag:
             bc_list_elstmr = [ link_el_sp, bc_el_symplane_xz, bc_el_symplane_yz ]
-            bc_list += bc_list_elstmr 
+            bc_list += bc_list_elstmr
 
         return bc_list
 
@@ -553,9 +553,9 @@ class SimBT3PT(IBVModel):
     def _get_tloop(self):
 
         #--------------------------------------------------------------
-        # ts 
+        # ts
         #--------------------------------------------------------------
-        
+
         specmn = self.specmn_fe_grid
         mid_specmn = self.mid_specmn_fe_grid
 
@@ -573,16 +573,16 @@ class SimBT3PT(IBVModel):
             # center_top_line_dofs
             #
             load_dofs_z = np.unique(mid_specmn[0, :, -1, 0, :, -1].dofs[:, :, 2].flatten())
-        print 'load_dofs_z used for integration of force: ', load_dofs_z 
+        print 'load_dofs_z used for integration of force: ', load_dofs_z
 
         # center top z-dof
         #
         center_top_dof_z = mid_specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
-        print 'center_top_dof used for displacement tracing: ', center_top_dof_z 
+        print 'center_top_dof used for displacement tracing: ', center_top_dof_z
 
         # force-displacement-diagram (LOAD)
-        # (surface load on the elstmr or line load at specimen center) 
-        # 
+        # (surface load on the elstmr or line load at specimen center)
+        #
         self.f_w_diagram_center = RTraceGraph(name='displacement (center) - reaction 2',
                                        var_x='U_k'  , idx_x=center_top_dof_z,
                                        var_y='F_int', idx_y_arr=load_dofs_z,
@@ -701,13 +701,13 @@ class SimBT3PTDB(SimBT3PT):
     material_model = Str(input=True)
     def _material_model_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
     calibration_test = Str(input=True)
     def _calibration_test_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
 
     damage_function = Property(Instance(MFnLineArray),
@@ -728,7 +728,7 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_phi_fn(self):
         return self.phi_fn_class(mfn=self.damage_function)
-        
+
 #    phi_fn = Property(Instance(PhiFnGeneralExtended),
 #                       depends_on = 'input_change,+ps_levels')
 #    @cached_property
@@ -748,7 +748,7 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m 
+        print 'E_m (from ccs)', E_m
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -757,19 +757,19 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c 
+        print 'E_c (from ccs)', E_c
         return E_c
 
-    # Poisson's ratio 
+    # Poisson's ratio
     #
     nu = Property(Float, depends_on='input_change')
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu 
+        print 'nu (from ccs)', nu
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20' 
+        print 'nu set explicitly to 0.20'
         nu = 0.2
         return nu
 
@@ -777,7 +777,6 @@ class SimBT3PTDB(SimBT3PT):
 if __name__ == '__main__':
 
     sim_model = SimBT3PTDB(
-                           
                            ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3',
                            thickness=0.06,
@@ -821,7 +820,7 @@ if __name__ == '__main__':
         dump(sim_model.f_w_diagram_center.trace, file)
         file.close()
         sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
-        
+
         # SUPPRT LINE
         #
         file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
@@ -835,7 +834,7 @@ if __name__ == '__main__':
         # F-w (experiment)
         #
         path = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE')
-        tests = [ 
+        tests = [
                   'BT-3PT-12c-6cm-0-Tu-V1.raw',
                   'BT-3PT-12c-6cm-0-Tu-V2.raw',
                   'BT-3PT-12c-6cm-0-Tu-V3.raw',
@@ -870,9 +869,9 @@ if __name__ == '__main__':
         # F-w-curves (experiment)
         #
         path = join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE')
-        tests = [ 
+        tests = [
                   'BT-3PT-12c-6cm-0-Tu-V1.raw',
-#                  'BT-3PT-12c-6cm-0-Tu-V2.raw', 
+#                  'BT-3PT-12c-6cm-0-Tu-V2.raw',
 #                  'BT-3PT-12c-6cm-0-Tu-V3.raw',
                   'BT-3PT-12c-6cm-0-Tu-V4.raw' ]
 
