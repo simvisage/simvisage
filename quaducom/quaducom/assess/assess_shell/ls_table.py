@@ -1484,7 +1484,7 @@ class ULS(LS):
         def _get_max_eta_nm_tot(self):
             return ndmax(self.eta_nm_tot)
 
-        ls_columns = List(['alpha_up', 'alpha_lo'
+        ls_columns = List([  # 'alpha_up', 'alpha_lo'
                            'beta_l_up', 'beta_q_up', 'k_alpha_up',
                            'beta_l_lo', 'beta_q_lo', 'k_alpha_lo',
                            'n_Rdt_up', 'n_Rdt_lo',
@@ -1819,13 +1819,13 @@ class LSTable(HasTraits):
 
         # from mechanic formula book (cf. also InfoCAD manual)
         #
-#        bool_arr = sig2_up != sigx_up
-#        alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
+        bool_arr = sig2_up != sigx_up
+        alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
 
         # mohr-circle formula
         #
-        bool_arr = sigx_up != sigy_up
-        alpha_sig_up[ bool_arr ] = 0.5 * arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
+#         bool_arr = sigx_up != sigy_up
+#         alpha_sig_up[ bool_arr ] = 0.5 * arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
@@ -1844,17 +1844,21 @@ class LSTable(HasTraits):
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
         #
-#        m_sig_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
-#        n_sig_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
-        m_sig_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) + mxy * sin(2 * alpha_sig_up)
-        n_sig_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) + nxy * sin(2 * alpha_sig_up)
+        m_sig_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
+        n_sig_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+#         m_sig_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) + mxy * sin(2 * alpha_sig_up)
+#         n_sig_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) + nxy * sin(2 * alpha_sig_up)
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
         #
-#        m_sig2_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_up) - mxy * sin(2 * alpha_sig2_up)
-#        n_sig2_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_up) - nxy * sin(2 * alpha_sig2_up)
-        m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
-        n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+        m_sig2_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_up) - mxy * sin(2 * alpha_sig2_up)
+        n_sig2_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_up) - nxy * sin(2 * alpha_sig2_up)
+        #
+#         m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
+#         n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+        #
+#         m_sig2_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
+#         n_sig2_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
 
         #--------------
         # lower face:
@@ -1869,17 +1873,17 @@ class LSTable(HasTraits):
 
 #        # from mechanic formula book (cf. also InfoCAD manual)
 #        #
-#        bool_arr = sig2_lo != sigx_lo
-#        alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
+        bool_arr = sig2_lo != sigx_lo
+        alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
 
         # mohr-circle formula
         #
-        bool_arr = sigx_lo != sigy_lo
-        alpha_sig_lo[ bool_arr ] = 0.5 * arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
+#         bool_arr = sigx_lo != sigy_lo
+#         alpha_sig_lo[ bool_arr ] = 0.5 * arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
-         alpha_sig2_lo = alpha_sig_lo + pi / 2
+        alpha_sig2_lo = alpha_sig_lo + pi / 2
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
@@ -1895,17 +1899,21 @@ class LSTable(HasTraits):
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
         #
-#        m_sig_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
-#        n_sig_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
-        m_sig_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) + mxy * sin(2 * alpha_sig_lo)
-        n_sig_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) + nxy * sin(2 * alpha_sig_lo)
+        m_sig_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
+        n_sig_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+#         m_sig_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) + mxy * sin(2 * alpha_sig_lo)
+#         n_sig_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) + nxy * sin(2 * alpha_sig_lo)
 
         # transform moments and normal forces in the direction of the principal stresses (2-direction)
         #
-#        m_sig2_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_lo) - mxy * sin(2 * alpha_sig2_lo)
-#        n_sig2_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_lo) - nxy * sin(2 * alpha_sig2_lo)
-        m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
-        n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+        m_sig2_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_lo) - mxy * sin(2 * alpha_sig2_lo)
+        n_sig2_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_lo) - nxy * sin(2 * alpha_sig2_lo)
+        #
+#         m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
+#         n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+        #
+#         m_sig2_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
+#         n_sig2_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
 
         return {
                  'sigx_up' : sigx_up, 'sigy_up' : sigy_up, 'sigxy_up' : sigxy_up,
