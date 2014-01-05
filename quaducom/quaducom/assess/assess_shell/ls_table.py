@@ -120,8 +120,7 @@ class LS(HasTraits):
                            'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
 #                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
 #                           'sig1_lo', 'sig1_up_sig_lo',
-'alpha_sig_lo',
-'alpha_sig2_lo',
+                            'alpha_sig_lo',
                            'm_sig_lo', 'n_sig_lo',
                            'm_sig2_lo', 'n_sig2_lo',
 #                           'sigx_up', 'sigy_up', 'sigxy_up',
@@ -581,6 +580,7 @@ class ULS(LS):
     n_Rdc = 2200  # = ( 55 (=f_ck for C55/67) / 1.5 ) * 0.06 * 1000 ### [kN/m] ### 2980 = 74.5 (mean value cube)* 0.1 * (100. * 6.) / 1.5
     # bending strength as obtained in bending test (width = 0.20 m)
     #
+#    m_0_Rd = 0.49382716 * 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
     m_0_Rd = 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
 
     #-------------------------
@@ -1369,12 +1369,12 @@ class ULS(LS):
                      'eta_n_tot':eta_n_tot,
                      'eta_m_tot':eta_m_tot,
 
-                     'eta_n2_up':eta_n_up,
-                     'eta_m2_up':eta_m_up,
-                     'eta_nm2_up':eta_nm_up,
-                     'eta_n2_lo':eta_n_lo,
-                     'eta_m2_lo':eta_m_lo,
-                     'eta_nm2_lo':eta_nm_lo,
+                     'eta_n2_up':eta_n2_up,
+                     'eta_m2_up':eta_m2_up,
+                     'eta_nm2_up':eta_nm2_up,
+                     'eta_n2_lo':eta_n2_lo,
+                     'eta_m2_lo':eta_m2_lo,
+                     'eta_nm2_lo':eta_nm2_lo,
 
                      'k_alpha_lo' : k_alpha_lo,
                      'k_alpha_up' : k_alpha_up}
@@ -1483,12 +1483,15 @@ class ULS(LS):
         def _get_max_eta_nm_tot(self):
             return ndmax(self.eta_nm_tot)
 
-        ls_columns = List(['beta_l_up', 'beta_q_up', 'k_alpha_up',
+        ls_columns = List(['alpha_up', 'alpha_lo'
+                           'beta_l_up', 'beta_q_up', 'k_alpha_up',
                            'beta_l_lo', 'beta_q_lo', 'k_alpha_lo',
                            'n_Rdt_up', 'n_Rdt_lo',
                            'm_Rd_up', 'm_Rd_lo',
                            'eta_n_up', 'eta_m_up', 'eta_nm_up',
                            'eta_n_lo', 'eta_m_lo', 'eta_nm_lo',
+                           'eta_n2_up', 'eta_m2_up', 'eta_nm2_up',
+                           'eta_n2_lo', 'eta_m2_lo', 'eta_nm2_lo',
                            'eta_nm_tot'])
 
         # specify the material properties for the view:
@@ -1500,6 +1503,14 @@ class ULS(LS):
         plot_item_mpt = Item(name='n_90_Rdt', label='normal tensile strength [kN/m]:  n_90_Rd ', style='readonly', format_str="%.1f"), \
                         Item(name='n_Rdc', label='normal compressive strength [kN/m]:  n_0_Rdc ', style='readonly', format_str="%.1f"), \
                         Item(name='m_90_Rd', label='bending strength [kNm/m]:  m_90_Rd ', style='readonly', format_str="%.1f")
+
+#     alpha_1_up = Property(Array)
+#     def _get_alpha_1_up(self):
+#         return self.ls_values['alpha_1_up']
+# 
+#     alpha_2_up = Property(Array)
+#     def _get_alpha_2_up(self):
+#         return self.ls_values['alpha_2_up']
 
     beta_l_up = Property(Array)
     def _get_beta_l_up(self):
@@ -1853,7 +1864,7 @@ class LSTable(HasTraits):
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
-        alpha_sig2_lo = alpha_sig_lo + pi / 2
+         alpha_sig2_lo = alpha_sig_lo + pi / 2
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
