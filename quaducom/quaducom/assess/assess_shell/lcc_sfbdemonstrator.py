@@ -218,13 +218,13 @@ if __name__ == '__main__':
                       show_lc_characteristic=False,
                       k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
                       )
-
+#     lct.plot_n_tex()
     #--------------------------------------------------------------
     # 'combi_arr': array with indices of all loading case combinations
     #--------------------------------------------------------------
     #
-    print 'lct.combi_arr', lct.combi_arr.shape
-    np.savetxt('combi_arr_LC1-12', lct.combi_arr, delimiter=';')
+#     print 'lct.combi_arr', lct.combi_arr.shape
+#     np.savetxt('combi_arr_LC1-12', lct.combi_arr, delimiter=';')
 
     #--------------------------------------------------------------
     # nm-interaction plot (normal force - bending moment)
@@ -236,19 +236,19 @@ if __name__ == '__main__':
     # interaction plot of material usage 'eta_nm' (utilization ratio)
     #--------------------------------------------------------------
     #
-    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12')
+#     lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12')
 
     #--------------------------------------------------------------
     # plot of structure with color indication of material usage 'eta_nm' (Ausnutzungsgrad)
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
     #
-    lct.plot_assess_value()
+#     lct.plot_assess_value()
 
     #--------------------------------------------------------------
     # brows the loading case combinations within an interactive table view
     #--------------------------------------------------------------
-#    lct.configure_traits()
+    lct.configure_traits()
 
 
 
