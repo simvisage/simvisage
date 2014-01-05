@@ -236,19 +236,19 @@ if __name__ == '__main__':
     # interaction plot of material usage 'eta_nm' (utilization ratio)
     #--------------------------------------------------------------
     #
-    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12')
+#    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12')
 
     #--------------------------------------------------------------
     # plot of structure with color indication of material usage 'eta_nm' (Ausnutzungsgrad)
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
     #
-    lct.plot_assess_value()
+#    lct.plot_assess_value()
 
     #--------------------------------------------------------------
     # brows the loading case combinations within an interactive table view
     #--------------------------------------------------------------
-#    lct.configure_traits()
+    lct.configure_traits()
 
 
 
