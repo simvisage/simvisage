@@ -60,9 +60,9 @@ class RandomField(HasTraits):
     def _get_gridpoint_scale(self):
         '''Scaling of the defined distribution to the distribution of a single
         grid point. This option is only available for Weibull random field'''
-        gridpoint_length = self.xgrid[1] - self.xgrid[0]
-        l = max(gridpoint_length, self.lacor)
-        return self.scale * (self.length / l) ** (1. / self.shape)
+        delta_x = self.xgrid[1] - self.xgrid[0]
+        scale_rho = self.scale * (self.lacor / (self.length + self.lacor)) ** (- 1. / self.shape)
+        return scale_rho * (self.lacor / (delta_x + self.lacor)) ** (1. / self.shape)
 
     def acor(self, dx, lcorr):
         '''autocorrelation function'''
@@ -85,8 +85,8 @@ class RandomField(HasTraits):
     random_field = Property(Array, depends_on='+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
-        if self.seed == True:
-            np.random.seed(1540)
+        #if self.seed == True:
+        #    np.random.seed(1540)
         '''simulates the Gaussian random field'''
         # evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
@@ -126,16 +126,18 @@ class RandomField(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as p
 
-    rf = RandomField(lacor=9.2,
-                     length=1000.,
-                     nx=100,
+    rf = RandomField(lacor=0.01,
+                     length=500.,
+                     nx=400,
                      distribution='Weibull',
-                     shape=5.,
-                     scale=1.0,
-                     loc=0.0)
+                     shape=12.,
+                     scale=5.0,
+                     loc=0.0,
+                     seed=False)
 
-    rf.configure_traits()
+    #rf.configure_traits()
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
+    print np.min(rf.random_field)
     p.legend(loc='best')
     p.ylim(0)
     p.show()
