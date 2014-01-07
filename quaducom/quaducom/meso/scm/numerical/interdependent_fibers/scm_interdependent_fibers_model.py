@@ -152,6 +152,7 @@ class SCM(HasTraits):
                             )
 
     sigma_c_crack = List
+    # @todo: rr comment - what's the difference between sigma_c_crack and cracks_list 
     cracks_list = List
 
     x_arr = Property(Array, depends_on='length, nx')
@@ -217,6 +218,9 @@ class SCM(HasTraits):
         self.cracks_list[-1] = cb_list
 
     def cb_list(self, load):
+        '''Get the number of cracks initiated below the supplied load.
+        @todo: rename cracks_list with cracking_state
+        '''
         if len(self.cracks_list) is not 0:
             idx = np.sum(np.array(self.sigma_c_crack) < load) - 1
             if idx == -1:
