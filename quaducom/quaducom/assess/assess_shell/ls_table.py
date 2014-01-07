@@ -22,10 +22,10 @@ from etsproxy.mayavi import \
     mlab
 
 import numpy as np
-#from etsproxy.mayavi.mlab import \
+# from etsproxy.mayavi.mlab import \
 #    colorbar, show, points3d
 #
-#from etsproxy.mayavi.api import \
+# from etsproxy.mayavi.api import \
 #    Engine
 
 
@@ -59,11 +59,11 @@ class LSArrayAdapter (TabularAdapter):
 
     font = 'Courier 10'
     alignment = 'right'
-    format = '%5.2f'#'%g'
+    format = '%5.2f'  # '%g'
     even_bg_color = Color(0xE0E0FF)
     width = Float(80)
 
-    #@todo: format columns using 'column_id'
+    # @todo: format columns using 'column_id'
 #    adapter_column_map = Property(depends_on = 'adapters,columns')
 
 
@@ -72,7 +72,7 @@ class LS(HasTraits):
     '''
 
     # backward link to the info shell to access the
-    # input data when calculating 
+    # input data when calculating
     # the limit-state-specific values
     #
     ls_table = WeakRef
@@ -118,12 +118,16 @@ class LS(HasTraits):
 
     state_columns = List([
                            'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
-#                           'sigx_lo', 'sigy_lo', 'sigxy_lo', 
-#                           'sig1_lo', 'sig1_up_sig_lo', 'alpha_sig_lo',
+#                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
+#                           'sig1_lo', 'sig1_up_sig_lo',
+                            'alpha_sig_lo',
+# 'alpha_sig2_lo',
                            'm_sig_lo', 'n_sig_lo',
-#                           'sigx_up', 'sigy_up', 'sigxy_up', 
+                           'm_sig2_lo', 'n_sig2_lo',
+#                           'sigx_up', 'sigy_up', 'sigxy_up',
 #                           'sig1_up', 'sig1_lo_sig_up', 'alpha_sig_up',
                            'm_sig_up', 'n_sig_up',
+                           'm_sig2_up', 'n_sig2_up',
                             ])
 
     show_state_columns = Bool(True)
@@ -228,7 +232,7 @@ class LS(HasTraits):
     # all columns associated with the limit state including the corresponding
     # stress resultants
     #
-    columns = Property(List, depends_on = 'show_geo_columns, show_state_columns, show_ls_columns')
+    columns = Property(List, depends_on='show_geo_columns, show_state_columns, show_ls_columns')
     @cached_property
     def _get_columns(self):
         columns = []
@@ -244,40 +248,40 @@ class LS(HasTraits):
 
         return columns
 
-    # select column used for sorting the data in selected sorting order 
+    # select column used for sorting the data in selected sorting order
     #
-    sort_column = Enum(values = 'columns')
+    sort_column = Enum(values='columns')
     def _sort_column_default(self):
         return self.columns[-1]
 
     sort_order = Enum('descending', 'ascending', 'unsorted')
 
     #-------------------------------------------------------
-    # get the maximum value of the selected variable 
+    # get the maximum value of the selected variable
     # 'max_in_column' of the current sheet (only one sheet)
     #-------------------------------------------------------
 
     # get the maximum value of the chosen column
     #
-    max_in_column = Enum(values = 'columns')
+    max_in_column = Enum(values='columns')
     def _max_in_column_default(self):
         return self.columns[-1]
 
-    max_value = Property(depends_on = 'max_in_column')
+    max_value = Property(depends_on='max_in_column')
     def _get_max_value(self):
         col = getattr(self, self.max_in_column)[:, 0]
         return max(col)
 
     #-------------------------------------------------------
-    # get the maximum value and the corresponding case of 
+    # get the maximum value and the corresponding case of
     # the selected variable 'max_in_column' in all (!) sheets
     #-------------------------------------------------------
 
-    max_value_all = Property(depends_on = 'max_in_column')
+    max_value_all = Property(depends_on='max_in_column')
     def _get_max_value_all(self):
         return self.ls_table.max_value_and_case[ self.max_in_column ]['max_value']
 
-    max_case = Property(depends_on = 'max_in_column')
+    max_case = Property(depends_on='max_in_column')
     def _get_max_case(self):
         return self.ls_table.max_value_and_case[ self.max_in_column ]['max_case']
 
@@ -287,7 +291,7 @@ class LS(HasTraits):
 
     # stack columns together for table used by TabularEditor
     #
-    ls_array = Property(Array, depends_on = 'sort_column, sort_order, \
+    ls_array = Property(Array, depends_on='sort_column, sort_order, \
                                               show_geo_columns, \
                                               show_state_columns, \
                                               show_ls_columns')
@@ -311,33 +315,33 @@ class LS(HasTraits):
             return ls_array
 
     #---------------------------------
-    # plot outputs in mlab-window 
+    # plot outputs in mlab-window
     #---------------------------------
-    warp_factor = Float(100., input = True)
+    warp_factor = Float(100., input=True)
 
-    plot_column = Enum(values = 'columns')
+    plot_column = Enum(values='columns')
     plot = Button
     def _plot_fired(self):
-        
+
         plot_col = getattr(self, self.plot_column).flatten()
         if self.plot_column == 'n_tex':
             plot_col = where(plot_col < 0, 0, plot_col)
-        
-        mlab.figure(figure = "SFB532Demo",
-                     bgcolor = (1.0, 1.0, 1.0),
-                     fgcolor = (0.0, 0.0, 0.0))
+
+        mlab.figure(figure="SFB532Demo",
+                     bgcolor=(1.0, 1.0, 1.0),
+                     fgcolor=(0.0, 0.0, 0.0))
 
         gd = self.ls_table.geo_data
         sd = self.ls_table.state_data
 
         r = self.ls_table.reader
         # use plotting function defined by the specific LCCTableReader
-        # extract global coordinates ('X','Y','Z') from 'geo_data' and 
+        # extract global coordinates ('X','Y','Z') from 'geo_data' and
         # global displacements ('ux_elem','uy_elem','uz_elem') from 'state_data'
-        # if this information is available (distinguished by the specific Reader) 
-        r.plot_col(mlab, plot_col, gd, state_data = sd, warp_factor = self.warp_factor)
+        # if this information is available (distinguished by the specific Reader)
+        r.plot_col(mlab, plot_col, gd, state_data=sd, warp_factor=self.warp_factor)
 
-        mlab.scalarbar(title = self.plot_column, orientation = 'vertical')
+        mlab.scalarbar(title=self.plot_column, orientation='vertical')
         mlab.show
 
 
@@ -350,18 +354,18 @@ class LS(HasTraits):
     # ls group
     #-------------------------------
 
-    # @todo: the dynamic selection of the columns to be displayed 
-    # does not work in connection with the LSArrayAdapter 
+    # @todo: the dynamic selection of the columns to be displayed
+    # does not work in connection with the LSArrayAdapter
     ls_group = VGroup(
-                        HGroup(#Item( 'assess_name' ),
+                        HGroup(# Item( 'assess_name' ),
                                 Item('max_in_column'),
-                                Item('max_value', style = 'readonly', format_str = '%6.2f'),
+                                Item('max_value', style='readonly', format_str='%6.2f'),
                               ),
                         HGroup(Item('sort_column'),
                                 Item('sort_order'),
-                                Item('show_geo_columns', label = 'show geo'),
-                                Item('show_state_columns', label = 'show state'),
-                                Item('show_ls_columns', label = 'show ls'),
+                                Item('show_geo_columns', label='show geo'),
+                                Item('show_state_columns', label='show state'),
+                                Item('show_ls_columns', label='show ls'),
                                 Item('plot_column'),
                                 Item('plot'),
                                 Item('warp_factor')
@@ -378,10 +382,10 @@ class SLS(LS):
     # ------------------------------------------------------------
 
     # tensile strength [MPa]
-    f_ctk = Float(5.0, input = True)
+    f_ctk = Float(5.0, input=True)
 
     # flexural tensile strength [MPa]
-    f_m = Float(5.0, input = True)
+    f_m = Float(5.0, input=True)
 
     # ------------------------------------------------------------
     # SLS - derived params:
@@ -403,33 +407,33 @@ class SLS(LS):
     # SLS: outputs
     # ------------------------------------------------------------
 
-    ls_columns = List(['m_sig_lo', 'n_sig_lo', 
-                       'm_sig_up', 'n_sig_up', 
-                       'eta_n_sig_lo', 'eta_m_sig_lo', 'eta_tot_sig_lo', 
+    ls_columns = List(['m_sig_lo', 'n_sig_lo',
+                       'm_sig_up', 'n_sig_up',
+                       'eta_n_sig_lo', 'eta_m_sig_lo', 'eta_tot_sig_lo',
                        'eta_n_sig_up', 'eta_m_sig_up', 'eta_tot_sig_up',
                        'eta_tot'])
 
-    ls_values = Property(depends_on = '+input')
+    ls_values = Property(depends_on='+input')
     @cached_property
     def _get_ls_values(self):
         '''get the outputs for SLS
         '''
         f_ctk = self.f_ctk
         f_m = self.f_m
-        A = self.A # [m**2/m]
-        W = self.W # [m**3/m]
+        A = self.A  # [m**2/m]
+        W = self.W  # [m**3/m]
         print 'A', A
         print 'W', W
 
-        n_sig_lo = self.n_sig_lo # [kN/m]
-        m_sig_lo = self.m_sig_lo # [kNm/m]
-        sig_n_sig_lo = n_sig_lo / A / 1000. # [MPa]
-        sig_m_sig_lo = m_sig_lo / W / 1000. # [MPa]
+        n_sig_lo = self.n_sig_lo  # [kN/m]
+        m_sig_lo = self.m_sig_lo  # [kNm/m]
+        sig_n_sig_lo = n_sig_lo / A / 1000.  # [MPa]
+        sig_m_sig_lo = m_sig_lo / W / 1000.  # [MPa]
 
         n_sig_up = self.n_sig_up
         m_sig_up = self.m_sig_up
-        sig_n_sig_up = n_sig_up / A /1000. 
-        sig_m_sig_up = m_sig_up / W /1000.
+        sig_n_sig_up = n_sig_up / A / 1000.
+        sig_m_sig_up = m_sig_up / W / 1000.
 
         eta_n_sig_lo = sig_n_sig_lo / f_ctk
         eta_m_sig_lo = sig_m_sig_lo / f_m
@@ -439,7 +443,7 @@ class SLS(LS):
         eta_m_sig_up = sig_m_sig_up / f_m
         eta_tot_sig_up = eta_n_sig_up + eta_m_sig_up
 
-        eta_tot = ndmax(hstack([ eta_tot_sig_up, eta_tot_sig_lo]), axis = 1)[:, None]
+        eta_tot = ndmax(hstack([ eta_tot_sig_up, eta_tot_sig_lo]), axis=1)[:, None]
 
         return { 'sig_n_sig_lo':sig_n_sig_lo, 'sig_m_sig_lo':sig_m_sig_lo,
                  'sig_n_sig_up':sig_n_sig_up, 'sig_m_sig_up':sig_m_sig_up,
@@ -500,7 +504,7 @@ class SLS(LS):
 
     assess_name = 'max_eta_tot'
 
-    max_eta_tot = Property(depends_on = '+input')
+    max_eta_tot = Property(depends_on='+input')
     @cached_property
     def _get_max_eta_tot(self):
         return ndmax(self.eta_tot)
@@ -509,27 +513,27 @@ class SLS(LS):
     # ls view
     #-------------------------------
 
-    # @todo: the dynamic selection of the columns to be displayed 
-    # does not work in connection with the LSArrayAdapter 
+    # @todo: the dynamic selection of the columns to be displayed
+    # does not work in connection with the LSArrayAdapter
     traits_view = View(VGroup(
-                            HGroup(Item(name = 'f_ctk', label = 'Tensile strength concrete [MPa]: f_ctk '),
-                                    Item(name = 'f_m', label = 'Flexural tensile trength concrete [MPa]: f_m ')
+                            HGroup(Item(name='f_ctk', label='Tensile strength concrete [MPa]: f_ctk '),
+                                    Item(name='f_m', label='Flexural tensile trength concrete [MPa]: f_m ')
                                    ),
                             VGroup(
                                 Include('ls_group'),
 
-                                # @todo: currently LSArrayAdapter must be called both 
-                                #        in SLS and ULS separately to configure columns 
+                                # @todo: currently LSArrayAdapter must be called both
+                                #        in SLS and ULS separately to configure columns
                                 #        arrangement individually
                                 #
-                                Item('ls_array', show_label = False,
-                                      editor = TabularEditor(adapter = LSArrayAdapter()))
+                                Item('ls_array', show_label=False,
+                                      editor=TabularEditor(adapter=LSArrayAdapter()))
                                   ),
                               ),
-                      resizable = True,
-                      scrollable = True,
-                      height = 1000,
-                      width = 1100
+                      resizable=True,
+                      scrollable=True,
+                      height=1000,
+                      width=1100
                       )
 
 class ULS(LS):
@@ -543,16 +547,16 @@ class ULS(LS):
     #-------------------------
     # sfb-demonstrator
     #-------------------------
-    
+
     ### 'eval_mode = princ_sig' ###
     #
     # tensile strength of the textile reinforcement [kN/m]
     # design value for SFB-demonstrator (used in 'eval_mode == princ_sig')
     # --> f_Rtex,0 = 6.87 MPa / 10. * 100cm * 6 cm / 12 layers = 34.3 kN/m
     #
-#    f_Rtex_0 = f_Rtex_90 = 34.3
+    f_Rtex_0 = f_Rtex_90 = 34.3
     # with sig_Rd,0,flection = 7.95 MPa k_fl, evaluates to:
-#    k_fl = 1.15 #7.95 / 6.87
+    k_fl = 1.15  # 7.95 / 6.87
 
     ### 'eval_mode = eta_comp' ###
     #
@@ -567,11 +571,19 @@ class ULS(LS):
 
     ### 'eval_mode = eta_nm' ###
     #
-    # design values for SFB-demonstrator on specimens with thickness 6 cm and width 14 cm
-#    n_0_Rdt = 103.4 / 0.14 * 0.84 / 1.5 # [kN/m]     # 413,6 kN/m = tensile resistance as obtained in tensile test
-#    n_Rdc = 65 * 0.1 * (100. * 6.) / 1.5 # [kN/m]  # 2600 kN/m = compressive resistance based on compressive strength of the concrete or TRC-compression test
-#    m_0_Rd = 3.5 / 0.14 * 0.84 / 1.5 # [kNm/m]
-    
+    # design values for SFB-demonstrator on specimens with thickness 6 cm
+    # evaluation of design values based on a log-normal distribution.
+    # tensile resistance as obtained in tensile test (width = 0.14 m)
+    #
+    n_0_Rdt = 412.  # = 57.7 (=F_tRd)/ 0.14 ### [kN/m] ### 413.6 = 103.4 (mean value) / 0.14 * 0.84 / 1.5
+    # compressive strength as obtained in cube test (edge length = 0.150 m) results in C55/67 with f_ck = 55 MPa
+    #
+    n_Rdc = 2200  # = ( 55 (=f_ck for C55/67) / 1.5 ) * 0.06 * 1000 ### [kN/m] ### 2980 = 74.5 (mean value cube)* 0.1 * (100. * 6.) / 1.5
+    # bending strength as obtained in bending test (width = 0.20 m)
+    #
+#    m_0_Rd = 0.49382716 * 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
+    m_0_Rd = 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
+
     #-------------------------
     # barrelshell
     #-------------------------
@@ -588,12 +600,12 @@ class ULS(LS):
 
     # 6 layers AR-glas:
     # --> f_Rtex,0 = 5.8 MPa / 10.(MPa/kN/cm**2) * 100cm * 2 cm / 6 layers = 19.3 kN/m/layer
-#    f_Rtex_0 = f_Rtex_90 = 19.3 
+#    f_Rtex_0 = f_Rtex_90 = 19.3
 #    k_fl = 1.77 # 27.3 MPa / 15.2 MPa
-    
+
     ### 'eval_mode = eta_comp' ###
     #
-    sig_comp_0_Rd = Float(10., input = True)
+    sig_comp_0_Rd = Float(10., input=True)
 
     # tensile composite strength in 90-direction [MPa]
     # use value of the 0-direction as conservative simplification:
@@ -601,11 +613,11 @@ class ULS(LS):
     sig_comp_90_Rd = sig_comp_0_Rd
 
     ### 'eval_mode = eta_nm' ###
-    # compressive strength 
-    # take pure concrete values (design values) 
+    # compressive strength
+    # take pure concrete values (design values)
     # f_cd = 38 MPa
     #
-    n_Rdc = 750. # = 38 * 0.1 * (100. * 2.) = 506.7 kN/m 
+#    n_Rdc = 750. # = 38 * 0.1 * (100. * 2.) = 506.7 kN/m
 
     # 6 layers carbon: experimental values for barrelshell on specimens with thickness 2 cm and width 10 cm
 #    n_0_Rdt = 41.1 / 0.1 # [kN/m] # 411 kN/m = tensile resistance as obtained in tensile test
@@ -615,25 +627,25 @@ class ULS(LS):
     # 6 layers carbon: design values for barrelshell on specimens with thickness 2 cm and width 10 cm
     # factor k_alpha_min is used if flag is set to True
     #
-    n_0_Rdt = 223. # [kN/m] # ZiE value 
-    m_0_Rd = 1.7 # [kNm/m] # ZiE value
-    
-#    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
-#    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+#    n_0_Rdt = 223. # [kN/m] # ZiE value
+#    m_0_Rd = 1.7 # [kNm/m] # ZiE value
 
-#    # 6 layers carbon: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-#    n_0_Rdt = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
-#    m_0_Rd = (2.4 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+# #    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
+# #    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
+#
+# #    # 6 layers carbon: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
+# #    n_0_Rdt = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
+# #    m_0_Rd = (2.4 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
 
 #    # 6 layers AR-glas: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
 #    n_0_Rdt = 23.8 * 0.7 / 0.1 * 0.84 / 1.5 # [kN/m]
 #    m_0_Rd = (1.3 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
 
-    # assume the same strength in 90-direction (safe side); 
+    # assume the same strength in 90-direction (safe side);
     # simplification for deflection angle
-    # 
-    n_90_Rdt = n_0_Rdt # [kN/m]
-    m_90_Rd = m_0_Rd # [kNm/m]
+    #
+    n_90_Rdt = n_0_Rdt  # [kN/m]
+    m_90_Rd = m_0_Rd  # [kNm/m]
 
     # ------------------------------------------------------------
     # ULS - derived params:
@@ -642,7 +654,7 @@ class ULS(LS):
     # Parameters for the cracked state (GdT):
     # assumptions!
 
-    # (resultierende statische Nutzhoehe) 
+    # (resultierende statische Nutzhoehe)
     #
     d = Property(Float)
     def _get_d(self):
@@ -678,6 +690,14 @@ class ULS(LS):
     def _get_n_sig_lo(self):
         return self.ls_table.n_sig_lo
 
+    m_sig2_lo = Property(Array)
+    def _get_m_sig2_lo(self):
+        return self.ls_table.m_sig2_lo
+
+    n_sig2_lo = Property(Array)
+    def _get_n_sig2_lo(self):
+        return self.ls_table.n_sig2_lo
+
     # sig1_up -direction:
     #
     sig1_lo_sig_up = Property(Array)
@@ -692,6 +712,14 @@ class ULS(LS):
     def _get_n_sig_up(self):
         return self.ls_table.n_sig_up
 
+    m_sig2_up = Property(Array)
+    def _get_m_sig2_up(self):
+        return self.ls_table.m_sig2_up
+
+    n_sig2_up = Property(Array)
+    def _get_n_sig2_up(self):
+        return self.ls_table.n_sig2_up
+
     #------------------------------------------------------------
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
     #------------------------------------------------------------
@@ -700,40 +728,40 @@ class ULS(LS):
 #    eval_mode = 'princ_sig_level_1'
     eval_mode = 'eta_nm'
 
-    ls_values = Property(depends_on = '+input')
+    ls_values = Property(depends_on='+input')
     @cached_property
     def _get_ls_values(self):
         '''get the outputs for ULS
         '''
         #---------------------------------------------------------
         # conditions for case distinction
-        # (-- pure tension -- bending -- compression --) 
-        # NOTE: based in all cases of 'eval_mode' on the direction of 
+        # (-- pure tension -- bending -- compression --)
+        # NOTE: based in all cases of 'eval_mode' on the direction of
         #       the maximum principle (tensile) stress
         #---------------------------------------------------------
 
-        #----------------------------------------        
+        #----------------------------------------
         # upper side:
-        #----------------------------------------        
+        #----------------------------------------
 
         # NOTE: the case zero stresses at both sides would be included more then once
         # irrelevant for real situations
-        cond_s1u_ge_0 = self.sig1_up >= 0. # tensile stress upper side
-        cond_s1u_le_0 = self.sig1_up <= 0. # compressive stress upper side
-        cond_sl_ge_0 = self.sig1_lo_sig_up >= 0. # corresponding tensile stress lower side
-        cond_sl_le_0 = self.sig1_lo_sig_up <= 0. # corresponding compressive stress lower side
+        cond_s1u_ge_0 = self.sig1_up >= 0.  # tensile stress upper side
+        cond_s1u_le_0 = self.sig1_up <= 0.  # compressive stress upper side
+        cond_sl_ge_0 = self.sig1_lo_sig_up >= 0.  # corresponding tensile stress lower side
+        cond_sl_le_0 = self.sig1_lo_sig_up <= 0.  # corresponding compressive stress lower side
         cond_s1u_gt_sl = abs(self.sig1_up) > abs(self.sig1_lo_sig_up)
         cond_s1u_lt_sl = abs(self.sig1_up) < abs(self.sig1_lo_sig_up)
         cond_s1u_eq_0 = self.sig1_up == 0.
         cond_sl_eq_0 = self.sig1_lo_sig_up == 0.
 
         # consider only cases for bending without zero stresses at both sides:
-        #----------------------------------------        
+        #----------------------------------------
         cond_up_eq_0 = cond_s1u_eq_0 * cond_sl_eq_0
         cond_up_neq_0 = cond_up_eq_0 - True
 
         # tension upper side (sig1_up >= 0):
-        #----------------------------------------        
+        #----------------------------------------
         #
         # caused by pure tension:
         #
@@ -752,7 +780,7 @@ class ULS(LS):
         cond_up_tb_c = cond_up_tb * cond_s1u_lt_sl * cond_up_neq_0
 
         # compression upper side (sig1_up <= 0):
-        #----------------------------------------        
+        #----------------------------------------
         #
         # caused by pure compression:
         #
@@ -762,28 +790,28 @@ class ULS(LS):
         #
         cond_up_cb = cond_s1u_le_0 * cond_sl_ge_0
 
-        #----------------------------------------        
+        #----------------------------------------
         # lower side:
-        #----------------------------------------        
+        #----------------------------------------
 
         # NOTE: the case zero stresses at both sides would be included more then once
         # irrelevant for real situations
-        cond_s1l_ge_0 = self.sig1_lo >= 0. # tensile stress lower side
-        cond_s1l_le_0 = self.sig1_lo <= 0. # compressive stress lower side
-        cond_su_ge_0 = self.sig1_up_sig_lo >= 0. # corresponding tensile stress upper side
-        cond_su_le_0 = self.sig1_up_sig_lo <= 0. # corresponding compressive stress upper side
+        cond_s1l_ge_0 = self.sig1_lo >= 0.  # tensile stress lower side
+        cond_s1l_le_0 = self.sig1_lo <= 0.  # compressive stress lower side
+        cond_su_ge_0 = self.sig1_up_sig_lo >= 0.  # corresponding tensile stress upper side
+        cond_su_le_0 = self.sig1_up_sig_lo <= 0.  # corresponding compressive stress upper side
         cond_s1l_gt_su = abs(self.sig1_lo) > abs(self.sig1_up_sig_lo)
         cond_s1l_lt_su = abs(self.sig1_lo) < abs(self.sig1_up_sig_lo)
-        cond_s1l_eq_0 = self.sig1_lo == 0. # zero stresses at lower side
-        cond_su_eq_0 = self.sig1_up_sig_lo == 0.# corresponding zero stresses at upper side
+        cond_s1l_eq_0 = self.sig1_lo == 0.  # zero stresses at lower side
+        cond_su_eq_0 = self.sig1_up_sig_lo == 0.  # corresponding zero stresses at upper side
 
         # consider only cases for bending without zero stresses at both sides:
-        #----------------------------------------        
+        #----------------------------------------
         cond_lo_eq_0 = cond_s1l_eq_0 * cond_su_eq_0
         cond_lo_neq_0 = cond_lo_eq_0 - True
 
         # tension lower side (sig1_lo >= 0):
-        #----------------------------------------        
+        #----------------------------------------
         #
         # caused by pure tension:
         #
@@ -802,7 +830,7 @@ class ULS(LS):
         cond_lo_tb_c = cond_lo_tb * cond_s1l_lt_su * cond_lo_neq_0
 
         # compression lower side (sig1_lo <= 0):
-        #----------------------------------------        
+        #----------------------------------------
         #
         # caused by pure compression:
         #
@@ -830,22 +858,22 @@ class ULS(LS):
         #------------------------------------------------------------
         # get angel of deflection of the textile reinforcement
         #------------------------------------------------------------
-        # angel of deflection of the textile reinforcement 
+        # angel of deflection of the textile reinforcement
         # distinguished between longitudinal (l) and transversal (q) direction,
         # i.e. 0- and 90-direction of the textile
 
         alpha_up = self.alpha_sig_up
         alpha_lo = self.alpha_sig_lo
 
-        beta_l_up_deg = abs(alpha_up)         # [degree]   
-        beta_q_up_deg = 90. - abs(alpha_up)   # [degree]   
-        beta_l_up = beta_l_up_deg * pi / 180. # [rad] 
-        beta_q_up = beta_q_up_deg * pi / 180. # [rad]
+        beta_l_up_deg = abs(alpha_up)  # [degree]
+        beta_q_up_deg = 90. - abs(alpha_up)  # [degree]
+        beta_l_up = beta_l_up_deg * pi / 180.  # [rad]
+        beta_q_up = beta_q_up_deg * pi / 180.  # [rad]
 
-        beta_l_lo_deg = abs(alpha_lo)         # [degree]   
-        beta_q_lo_deg = 90 - abs(alpha_lo)    # [degree]   
-        beta_l_lo = beta_l_lo_deg * pi / 180. # [rad] 
-        beta_q_lo = beta_q_lo_deg * pi / 180. # [rad]
+        beta_l_lo_deg = abs(alpha_lo)  # [degree]
+        beta_q_lo_deg = 90 - abs(alpha_lo)  # [degree]
+        beta_l_lo = beta_l_lo_deg * pi / 180.  # [rad]
+        beta_q_lo = beta_q_lo_deg * pi / 180.  # [rad]
 
 
         #-------------------------------------------------
@@ -862,13 +890,13 @@ class ULS(LS):
             # initialize arrays to be filled by case distinction:
             #---------------------------------------------------------
             #
-            f_t_sig_up = zeros_like (self.sig1_up) # [kN/m]
-            f_t_sig_lo = zeros_like (self.sig1_up) # [kN/m]
-            k_fl_NM_up = ones_like (self.sig1_up) # [-]
-            k_fl_NM_lo = ones_like (self.sig1_up) # [-]
+            f_t_sig_up = zeros_like (self.sig1_up)  # [kN/m]
+            f_t_sig_lo = zeros_like (self.sig1_up)  # [kN/m]
+            k_fl_NM_up = ones_like (self.sig1_up)  # [-]
+            k_fl_NM_lo = ones_like (self.sig1_up)  # [-]
 
-            m_Eds = zeros_like (self.sig1_up) # [kNm/m]
-            e = zeros_like (self.sig1_up) # [m]
+            m_Eds = zeros_like (self.sig1_up)  # [kNm/m]
+            e = zeros_like (self.sig1_up)  # [m]
 
             #---------------------------------------------------------
             # tension upper side (sig1_up > 0):
@@ -884,7 +912,7 @@ class ULS(LS):
             # in case of pure tension in the cross section:
             f_t_sig_up[ bool_arr ] = n * (zs[ bool_arr ] + e[ bool_arr ]) / (zs[ bool_arr ] + zs[ bool_arr ])
 
-            ### bending with tension at the upper side 
+            # ## bending with tension at the upper side
             #
             bool_arr = cond_up_tb
             m = abs(self.m_sig_up[ bool_arr ])
@@ -920,7 +948,7 @@ class ULS(LS):
             # in case of pure tension in the cross section:
             f_t_sig_lo[ bool_arr ] = n * (zs[ bool_arr ] + e[ bool_arr ]) / (zs[ bool_arr ] + zs[ bool_arr ])
 
-            ### bending with tension at the lower side 
+            # ## bending with tension at the lower side
             #
             bool_arr = cond_lo_tb
             m = abs(self.m_sig_lo[ bool_arr ])
@@ -941,7 +969,7 @@ class ULS(LS):
             f_t_sig_lo[ bool_arr ] = 0.
 
             #---------------------------------------------------------
-            # resulting strength of the bi-directional textile considering the 
+            # resulting strength of the bi-directional textile considering the
             # deflection of the reinforcement in the loading direction
             # per reinforcement layer
             #---------------------------------------------------------
@@ -961,7 +989,7 @@ class ULS(LS):
             #
             n_tex_up = f_t_sig_up / f_Rtex_up
             n_tex_lo = f_t_sig_lo / f_Rtex_lo
-            n_tex = 2 * ndmax(hstack([ n_tex_up, n_tex_lo]), axis = 1)[:, None]
+            n_tex = 2 * ndmax(hstack([ n_tex_up, n_tex_lo]), axis=1)[:, None]
 
             #------------------------------------------------------------
             # construct a dictionary containing the return values
@@ -988,21 +1016,21 @@ class ULS(LS):
 
             print "NOTE: the principle tensile stresses are used to evaluate 'n_tex'"
             # conservative evaluated based on a resulting tensile force of the composite cross section[kN/m]
-            # derived from the maximum value of the tensile stresses at the top or the bottom of the cross section 
+            # derived from the maximum value of the tensile stresses at the top or the bottom of the cross section
             # i.e. sig1_max = min( 0, max( self.sig1_up, self.sig1_lo ) )
 
             # evaluation for upper side:
             #
             sig_comp_Ed_up = self.sig1_up
-            
+
             #---------------------------------------------------------
             # initialize arrays to be filled by case distinction:
             #---------------------------------------------------------
             #
-            f_t_sig_up = zeros_like (self.sig1_up) # [kN/m]
-            f_t_sig_lo = zeros_like (self.sig1_up) # [kN/m]
-            k_fl_NM_up = ones_like (self.sig1_up) # [-]
-            k_fl_NM_lo = ones_like (self.sig1_up) # [-]
+            f_t_sig_up = zeros_like (self.sig1_up)  # [kN/m]
+            f_t_sig_lo = zeros_like (self.sig1_up)  # [kN/m]
+            k_fl_NM_up = ones_like (self.sig1_up)  # [-]
+            k_fl_NM_lo = ones_like (self.sig1_up)  # [-]
 
             #---------------------------------------------------------
             # tension upper side (sig1_up > 0):
@@ -1020,7 +1048,7 @@ class ULS(LS):
             bool_arr = cond_up_tb_t
             sig_b = (abs(self.sig1_up) + abs(self.sig1_lo_sig_up)) / 2
             k_fl_NM_up[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
-                                 ( sig_b[ bool_arr ] / self.sig1_up[ bool_arr ])
+                                 (sig_b[ bool_arr ] / self.sig1_up[ bool_arr ])
             f_t_sig_up[ bool_arr ] = self.sig1_up[ bool_arr ] * self.thickness[ bool_arr ] * 1000.
 
             # bending case with compression:
@@ -1066,7 +1094,7 @@ class ULS(LS):
             bool_arr = cond_lo_tb_t
             sig_b = (abs(self.sig1_lo) + abs(self.sig1_up_sig_lo)) / 2
             k_fl_NM_lo[ bool_arr ] = 1.0 + (self.k_fl - 1.0) * \
-                                 ( sig_b[ bool_arr ] / self.sig1_lo[ bool_arr ])
+                                 (sig_b[ bool_arr ] / self.sig1_lo[ bool_arr ])
             f_t_sig_lo[ bool_arr ] = self.sig1_lo[ bool_arr ] * self.thickness[ bool_arr ] * 1000.
 
             # bending case with compression:
@@ -1093,7 +1121,7 @@ class ULS(LS):
             #---------------------------------------------------------
             # composite resitance stress
             #---------------------------------------------------------
-            # @todo: check for general case 
+            # @todo: check for general case
             # NOTE: needs information about the orientation of the reinforcement
             # works here only because of the simplification that the same resistance of the textile in 0- and 90-direction is assumed
             # and the reinforcement is arranged in the shell approximately orthogonal to
@@ -1111,10 +1139,10 @@ class ULS(LS):
             #
             eta_comp_up = sig_comp_Ed_up / (sig_comp_Rd_up * k_fl_NM_up)
             eta_comp_lo = sig_comp_Ed_lo / (sig_comp_Rd_lo * k_fl_NM_lo)
-            eta_comp = ndmax(hstack([ eta_comp_up, eta_comp_lo]), axis = 1)[:, None]
+            eta_comp = ndmax(hstack([ eta_comp_up, eta_comp_lo]), axis=1)[:, None]
 
             #---------------------------------------------------------
-            # resulting strength of the bi-directional textile considering the 
+            # resulting strength of the bi-directional textile considering the
             # deflection of the reinforcement in the loading direction
             # per reinforcement layer
             #---------------------------------------------------------
@@ -1131,7 +1159,7 @@ class ULS(LS):
             #---------------------------------------------------------
             # for the cases that stresses at the upper or lower face are taken into account
             # for the evaluation of the necessary number of reinforcement layers. 'n_tex' is the
-            # maximum of the upper and lower face evaluation. 
+            # maximum of the upper and lower face evaluation.
             # NOTE: resistance is increased by factor 'k_fl_NM' if a bending case is evaluated
             #
             n_tex_up = f_t_sig_up / (f_Rtex_up * k_fl_NM_up)
@@ -1139,7 +1167,7 @@ class ULS(LS):
 
             # use a symmetric reinforcement layup at the top and at the bottom:
             #
-            n_tex = ndmax(hstack([ n_tex_up, n_tex_lo]), axis = 1)[:, None]
+            n_tex = ndmax(hstack([ n_tex_up, n_tex_lo]), axis=1)[:, None]
 
             #------------------------------------------------------------
             # construct a dictionary containing the return values
@@ -1166,7 +1194,7 @@ class ULS(LS):
 
 
         if self.eval_mode == 'eta_nm':
-            
+
             #-------------------------------------------------
             # VAR 3: NOTE: the principle tensile stresses are used to evaluate the principle direction\
             # 'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)
@@ -1178,16 +1206,16 @@ class ULS(LS):
             # simplification of the transformation formula only valid for assumption of
             # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
             #
-            n_Rdt_lo = self.n_0_Rdt  * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+            n_Rdt_lo = self.n_0_Rdt * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
                        self.n_90_Rdt * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            n_Rdt_up = self.n_0_Rdt  * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+            n_Rdt_up = self.n_0_Rdt * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                        self.n_90_Rdt * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-            m_Rd_lo = self.m_0_Rd  * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+            m_Rd_lo = self.m_0_Rd * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
                       self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            m_Rd_up = self.m_0_Rd  * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+            m_Rd_up = self.m_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                       self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-            n_Rdc = self.n_Rdc * np.ones_like( n_Rdt_lo )
-            
+            n_Rdc = self.n_Rdc * np.ones_like(n_Rdt_lo)
+
             k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
                          cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
             k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
@@ -1197,23 +1225,27 @@ class ULS(LS):
                 print "minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values"
                 # NOTE: conservative simplification: k_alpha_min = 0.707 used
                 #
-                n_Rdt_lo = n_Rdt_up = min( self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like( n_Rdt_lo )
-                m_Rd_lo = m_Rd_up = min( self.m_0_Rd, self.m_90_Rd ) * 0.707 * np.ones_like( m_Rd_lo )
+                n_Rdt_lo = n_Rdt_up = min(self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like(n_Rdt_lo)
+                m_Rd_lo = m_Rd_up = min(self.m_0_Rd, self.m_90_Rd) * 0.707 * np.ones_like(m_Rd_lo)
 
-            #----------------------------------------        
+            #----------------------------------------
             # caluclate eta_nm
-            #----------------------------------------        
+            #----------------------------------------
             # destinguish the sign of the normal force
-            
+
+            #---------------
+            # 1-direction:
+            #---------------
+
             # initialize arrays to be filled based on case distinction
             #
             eta_n_up = np.zeros_like(self.n_sig_up)
             eta_n_lo = np.zeros_like(self.n_sig_lo)
 
-            # cases with a tensile normal force  
+            # cases with a tensile normal force
             #
-            cond_nsu_ge_0 = self.n_sig_up >= 0. # tensile force in direction of principle stress at upper side 
-            cond_nsl_ge_0 = self.n_sig_lo >= 0. # tensile force in direction of principle stress at lower side 
+            cond_nsu_ge_0 = self.n_sig_up >= 0.  # tensile force in direction of principle stress at upper side
+            cond_nsl_ge_0 = self.n_sig_lo >= 0.  # tensile force in direction of principle stress at lower side
 
             # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
             #
@@ -1223,10 +1255,10 @@ class ULS(LS):
             bool_arr = cond_nsl_ge_0
             eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdt_lo[bool_arr]
 
-            # cases with a compressive normal force  
+            # cases with a compressive normal force
             #
-            cond_nsu_lt_0 = self.n_sig_up < 0. # compressive force in direction of principle stress at upper side 
-            cond_nsl_lt_0 = self.n_sig_lo < 0. # compressive force in direction of principle stress at lower side 
+            cond_nsu_lt_0 = self.n_sig_up < 0.  # compressive force in direction of principle stress at upper side
+            cond_nsl_lt_0 = self.n_sig_lo < 0.  # compressive force in direction of principle stress at lower side
 
             # compare imposed compressive normal force with 'n_Rdc' as obtained from compression test
             #
@@ -1237,32 +1269,96 @@ class ULS(LS):
             eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdc[bool_arr]
 
             # get 'eta_m' based on imposed moment compared with moment resistence
+            # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
             #
-            eta_m_lo = self.m_sig_lo / m_Rd_lo
-            eta_m_up = self.m_sig_up / m_Rd_up
+            min_thickness = np.min(self.thickness)
+            eta_m_lo = self.m_sig_lo / (m_Rd_lo * self.thickness / min_thickness)
+            eta_m_up = self.m_sig_up / (m_Rd_up * self.thickness / min_thickness)
 
             # get total 'eta_mn' based on imposed normal force and moment
             # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
             # NOTE: if eta_m is negative (caused by a negative moment) take the absolute value
             #
-            eta_nm_lo = np.abs( eta_n_lo ) + np.abs( eta_m_lo )
-            eta_nm_up = np.abs( eta_n_up ) + np.abs( eta_m_up )
-    
+            eta_nm_lo = np.abs(eta_n_lo) + np.abs(eta_m_lo)
+            eta_nm_up = np.abs(eta_n_up) + np.abs(eta_m_up)
+
             # get maximum 'eta_mn' of both principle directions of upper and lower side
             #
-            eta_nm_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis = 1)[:, None]
+            eta_nm1_tot = ndmax(hstack([ eta_nm_up, eta_nm_lo]), axis=1)[:, None]
+
+            #---------------
+            # 2-direction:
+            #---------------
+
+            # initialize arrays to be filled based on case distinction
+            #
+            eta_n2_up = np.zeros_like(self.n_sig2_up)
+            eta_n2_lo = np.zeros_like(self.n_sig2_lo)
+
+            # cases with a tensile normal force
+            #
+            cond_ns2u_ge_0 = self.n_sig2_up >= 0.  # tensile force in direction of principle stress at upper side
+            cond_ns2l_ge_0 = self.n_sig2_lo >= 0.  # tensile force in direction of principle stress at lower side
+
+            # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
+            #
+            bool_arr = cond_ns2u_ge_0
+            eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdt_up[bool_arr]
+
+            bool_arr = cond_ns2l_ge_0
+            eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdt_lo[bool_arr]
+
+            # cases with a compressive normal force
+            #
+            cond_ns2u_lt_0 = self.n_sig2_up < 0.  # compressive force in direction of principle stress at upper side
+            cond_ns2l_lt_0 = self.n_sig2_lo < 0.  # compressive force in direction of principle stress at lower side
+
+            # compare imposed compressive normal force with 'n_Rdc' as obtained from compression test
+            #
+            bool_arr = cond_ns2u_lt_0
+            eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdc[bool_arr]
+
+            bool_arr = cond_ns2l_lt_0
+            eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdc[bool_arr]
+
+            # get 'eta_m' based on imposed moment compared with moment resistence
+            # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
+            #
+            eta_m2_lo = self.m_sig2_lo / (m_Rd_lo * self.thickness / min_thickness)
+            eta_m2_up = self.m_sig2_up / (m_Rd_up * self.thickness / min_thickness)
+
+            # get total 'eta_mn' based on imposed normal force and moment
+            # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
+            # NOTE: if eta_m is negative (caused by a negative moment) take the absolute value
+            #
+            eta_nm2_lo = np.abs(eta_n2_lo) + np.abs(eta_m2_lo)
+            eta_nm2_up = np.abs(eta_n2_up) + np.abs(eta_m2_up)
+
+            # get maximum 'eta_mn' of both principle directions of upper and lower side
+            #
+            eta_nm2_tot = ndmax(hstack([ eta_nm2_up, eta_nm2_lo]), axis=1)[:, None]
+
+            # overall maximum eta_nm for 1st and 2nd principle direction
+            #
+            eta_nm_tot = ndmax(hstack([ eta_nm1_tot, eta_nm2_tot]), axis=1)[:, None]
+
+            # overall maximum eta_n and eta_m distinguishing normal forces and bending moment influence:
+            #
+            eta_n_tot = ndmax(hstack([ eta_n_lo, eta_n2_lo, eta_n_up, eta_n2_up]), axis=1)[:, None]
+            eta_m_tot = ndmax(hstack([ eta_m_lo, eta_m2_lo, eta_m_up, eta_m2_up]), axis=1)[:, None]
 
             #------------------------------------------------------------
             # construct a dictionary containing the return values
             #------------------------------------------------------------
-            return { 'beta_l_up':beta_l_up_deg, 
+            return { 'beta_l_up':beta_l_up_deg,
                      'beta_q_up':beta_q_up_deg,
-                     'beta_l_lo':beta_l_lo_deg, 
+                     'beta_l_lo':beta_l_lo_deg,
                      'beta_q_lo':beta_q_lo_deg,
                      'n_Rdt_up':n_Rdt_up,
                      'n_Rdt_lo':n_Rdt_lo,
                      'm_Rd_up':m_Rd_up,
                      'm_Rd_lo':m_Rd_lo,
+
                      'eta_n_up':eta_n_up,
                      'eta_m_up':eta_m_up,
                      'eta_nm_up':eta_nm_up,
@@ -1270,6 +1366,17 @@ class ULS(LS):
                      'eta_m_lo':eta_m_lo,
                      'eta_nm_lo':eta_nm_lo,
                      'eta_nm_tot':eta_nm_tot,
+
+                     'eta_n_tot':eta_n_tot,
+                     'eta_m_tot':eta_m_tot,
+
+                     'eta_n2_up':eta_n2_up,
+                     'eta_m2_up':eta_m2_up,
+                     'eta_nm2_up':eta_nm2_up,
+                     'eta_n2_lo':eta_n2_lo,
+                     'eta_m2_lo':eta_m2_lo,
+                     'eta_nm2_lo':eta_nm2_lo,
+
                      'k_alpha_lo' : k_alpha_lo,
                      'k_alpha_up' : k_alpha_up}
 
@@ -1301,8 +1408,8 @@ class ULS(LS):
 
         # specify the material properties for the view:
         #
-        plot_item_mpl = Item(name = 'f_Rtex_0', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style = 'readonly', format_str = "%.1f")
-        plot_item_mpt = Item(name = 'f_Rtex_90', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style = 'readonly', format_str = "%.1f")
+        plot_item_mpl = Item(name='f_Rtex_0', label='reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style='readonly', format_str="%.1f")
+        plot_item_mpt = Item(name='f_Rtex_90', label='reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style='readonly', format_str="%.1f")
 
 
     elif eval_mode == 'princ_sig_level_1':
@@ -1313,12 +1420,12 @@ class ULS(LS):
 #        assess_name = 'max_eta_comp'
         assess_name = 'max_n_tex'
 
-        max_eta_comp = Property(depends_on = '+input')
+        max_eta_comp = Property(depends_on='+input')
         @cached_property
         def _get_max_eta_comp(self):
             return ndmax(self.eta_comp)
 
-        max_n_tex = Property(depends_on = '+input')
+        max_n_tex = Property(depends_on='+input')
         @cached_property
         def _get_max_n_tex(self):
             return ndmax(self.n_tex)
@@ -1335,7 +1442,7 @@ class ULS(LS):
         k_fl_NM_lo = Property(Array)
         def _get_k_fl_NM_lo(self):
             return self.ls_values['k_fl_NM_lo']
-        
+
         k_fl_NM_up = Property(Array)
         def _get_k_fl_NM_up(self):
             return self.ls_values['k_fl_NM_up']
@@ -1347,22 +1454,22 @@ class ULS(LS):
         eta_comp_up = Property(Array)
         def _get_eta_comp_up(self):
             return self.ls_values['eta_comp_up']
-        
+
         eta_comp_lo = Property(Array)
         def _get_eta_comp_lo(self):
             return self.ls_values['eta_comp_lo']
-        
+
         eta_comp = Property(Array)
         def _get_eta_comp(self):
             return self.ls_values['eta_comp']
 
         # specify the material properties for the view:
         #
-        plot_item_mpl = Item(name = 'f_Rtex_0', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'sig_comp_0_Rd', label = 'composit tensile strength [MPa]:  sig_comp_0_Rd ', style = 'readonly', format_str = "%.1f")
+        plot_item_mpl = Item(name='f_Rtex_0', label='reinforcement strength per layer [kN/m]:  f_Rtex_0 ', style='readonly', format_str="%.1f"), \
+                        Item(name='sig_comp_0_Rd', label='composit tensile strength [MPa]:  sig_comp_0_Rd ', style='readonly', format_str="%.1f")
 
-        plot_item_mpt = Item(name = 'f_Rtex_90', label = 'reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'sig_comp_90_Rd', label = 'composit tensile strength [MPa]:  sig_comp_90_Rd ', style = 'readonly', format_str = "%.1f")
+        plot_item_mpt = Item(name='f_Rtex_90', label='reinforcement strength per layer [kN/m]:  f_Rtex_90 ', style='readonly', format_str="%.1f"), \
+                        Item(name='sig_comp_90_Rd', label='composit tensile strength [MPa]:  sig_comp_90_Rd ', style='readonly', format_str="%.1f")
 
 
     elif eval_mode == 'eta_nm':
@@ -1372,28 +1479,39 @@ class ULS(LS):
         #
         assess_name = 'max_eta_nm_tot'
 
-        max_eta_nm_tot = Property(depends_on = '+input')
+        max_eta_nm_tot = Property(depends_on='+input')
         @cached_property
         def _get_max_eta_nm_tot(self):
             return ndmax(self.eta_nm_tot)
 
-        ls_columns = List(['beta_l_up', 'beta_q_up','k_alpha_up',
-                           'beta_l_lo', 'beta_q_lo','k_alpha_lo',
+        ls_columns = List([  # 'alpha_up', 'alpha_lo'
+                           'beta_l_up', 'beta_q_up', 'k_alpha_up',
+                           'beta_l_lo', 'beta_q_lo', 'k_alpha_lo',
                            'n_Rdt_up', 'n_Rdt_lo',
                            'm_Rd_up', 'm_Rd_lo',
-                           'eta_n_up', 'eta_m_up', 'eta_nm_up', 
-                           'eta_n_lo', 'eta_m_lo', 'eta_nm_lo', 
+                           'eta_n_up', 'eta_m_up', 'eta_nm_up',
+                           'eta_n_lo', 'eta_m_lo', 'eta_nm_lo',
+                           'eta_n2_up', 'eta_m2_up', 'eta_nm2_up',
+                           'eta_n2_lo', 'eta_m2_lo', 'eta_nm2_lo',
                            'eta_nm_tot'])
-        
+
         # specify the material properties for the view:
         #
-        plot_item_mpl = Item(name = 'n_0_Rdt', label = 'normal tensile strength [kN/m]:  n_0_Rdt ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'n_Rdc', label = 'normal compressive strength [kN/m]:  n_0_Rdc ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'm_0_Rd', label = 'bending strength [kNm/m]:  m_0_Rd ', style = 'readonly', format_str = "%.1f")
-    
-        plot_item_mpt = Item(name = 'n_90_Rdt', label = 'normal tensile strength [kN/m]:  n_90_Rd ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'n_Rdc', label = 'normal compressive strength [kN/m]:  n_0_Rdc ', style = 'readonly', format_str = "%.1f"),\
-                        Item(name = 'm_90_Rd', label = 'bending strength [kNm/m]:  m_90_Rd ', style = 'readonly', format_str = "%.1f")
+        plot_item_mpl = Item(name='n_0_Rdt', label='normal tensile strength [kN/m]:  n_0_Rdt ', style='readonly', format_str="%.1f"), \
+                        Item(name='n_Rdc', label='normal compressive strength [kN/m]:  n_0_Rdc ', style='readonly', format_str="%.1f"), \
+                        Item(name='m_0_Rd', label='bending strength [kNm/m]:  m_0_Rd ', style='readonly', format_str="%.1f")
+
+        plot_item_mpt = Item(name='n_90_Rdt', label='normal tensile strength [kN/m]:  n_90_Rd ', style='readonly', format_str="%.1f"), \
+                        Item(name='n_Rdc', label='normal compressive strength [kN/m]:  n_0_Rdc ', style='readonly', format_str="%.1f"), \
+                        Item(name='m_90_Rd', label='bending strength [kNm/m]:  m_90_Rd ', style='readonly', format_str="%.1f")
+
+#     alpha_1_up = Property(Array)
+#     def _get_alpha_1_up(self):
+#         return self.ls_values['alpha_1_up']
+# 
+#     alpha_2_up = Property(Array)
+#     def _get_alpha_2_up(self):
+#         return self.ls_values['alpha_2_up']
 
     beta_l_up = Property(Array)
     def _get_beta_l_up(self):
@@ -1439,7 +1557,7 @@ class ULS(LS):
     #------------------------------------
     # eval == 'eta_nm'
     #------------------------------------
-    
+
     n_Rdt_up = Property(Array)
     def _get_n_Rdt_up(self):
         return self.ls_values['n_Rdt_up']
@@ -1464,6 +1582,8 @@ class ULS(LS):
     def _get_k_alpha_lo(self):
         return self.ls_values['k_alpha_lo']
 
+    # 1st-principle direction
+    #
     eta_n_up = Property(Array)
     def _get_eta_n_up(self):
         return self.ls_values['eta_n_up']
@@ -1488,12 +1608,51 @@ class ULS(LS):
     def _get_eta_nm_lo(self):
         return self.ls_values['eta_nm_lo']
 
+    # max from 1st and 2nd-principle direction
+    #
     eta_nm_tot = Property(Array)
     def _get_eta_nm_tot(self):
         return self.ls_values['eta_nm_tot']
 
+    # max from 1st and 2nd-principle direction only from normal forces
+    #
+    eta_n_tot = Property(Array)
+    def _get_eta_n_tot(self):
+        return self.ls_values['eta_n_tot']
 
-    #@todo: make an automatised function calle for asses_value_max
+    # max from 1st and 2nd-principle direction only from bending moments
+    #
+    eta_m_tot = Property(Array)
+    def _get_eta_m_tot(self):
+        return self.ls_values['eta_m_tot']
+
+    # 2nd-principle direction
+    #
+    eta_n2_up = Property(Array)
+    def _get_eta_n2_up(self):
+        return self.ls_values['eta_n2_up']
+
+    eta_m2_up = Property(Array)
+    def _get_eta_m2_up(self):
+        return self.ls_values['eta_m2_up']
+
+    eta_nm2_up = Property(Array)
+    def _get_eta_nm2_up(self):
+        return self.ls_values['eta_nm2_up']
+
+    eta_n2_lo = Property(Array)
+    def _get_eta_n2_lo(self):
+        return self.ls_values['eta_n2_lo']
+
+    eta_m2_lo = Property(Array)
+    def _get_eta_m2_lo(self):
+        return self.ls_values['eta_m2_lo']
+
+    eta_nm2_lo = Property(Array)
+    def _get_eta_nm2_lo(self):
+        return self.ls_values['eta_nm2_lo']
+
+    # @todo: make an automatised function calle for asses_value_max
 #    @on_trait_change( '+input' )
 #    def set_assess_name_max( self, assess_name ):
 #        print 'set asses'
@@ -1506,30 +1665,30 @@ class ULS(LS):
     # ls view
     #-------------------------------
 
-    # @todo: the dynamic selection of the columns to be displayed 
-    # does not work in connection with the LSArrayAdapter 
+    # @todo: the dynamic selection of the columns to be displayed
+    # does not work in connection with the LSArrayAdapter
     traits_view = View(
                        VGroup(
                         HGroup(
                             VGroup(
                                 plot_item_mpl,
-                                label = 'material Properties (longitudinal)'
+                                label='material Properties (longitudinal)'
                                   ),
                             VGroup(
                                 plot_item_mpt,
-                                label = 'material Properties (transversal)'
+                                label='material Properties (transversal)'
                                   ),
                               ),
                         VGroup(
                             Include('ls_group'),
-                            Item('ls_array', show_label = False,
-                                  editor = TabularEditor(adapter = LSArrayAdapter()))
+                            Item('ls_array', show_label=False,
+                                  editor=TabularEditor(adapter=LSArrayAdapter()))
                               ),
                             ),
-                      resizable = True,
-                      scrollable = True,
-                      height = 1000,
-                      width = 1100
+                      resizable=True,
+                      scrollable=True,
+                      height=1000,
+                      width=1100
                       )
 
 LSLIST = [ SLS, ULS ]
@@ -1540,13 +1699,13 @@ class LSTable(HasTraits):
 
     is_id = Int(0)
     # geo data: coordinates and element thickness
-    # 
+    #
     geo_data = Dict
 
     #------------------------------------------------------------
     # evaluation with conservative simplification for 'k_alpha'
     #------------------------------------------------------------
-    # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are 
+    # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are
     # multiplied with the highest reduction factor 'k_alpha = 0.707', independently
     # of the true deflection angel 'beta_q' and 'beta_l'
     #
@@ -1573,8 +1732,8 @@ class LSTable(HasTraits):
         '''element thickness [m])'''
         return self.geo_data['thickness']
 
-    # state data: stress resultants 
-    # 
+    # state data: stress resultants
+    #
     state_data = Dict
 
     mx = Property(Array)
@@ -1602,13 +1761,13 @@ class LSTable(HasTraits):
         return self.state_data['nxy']
 
     # ------------------------------------------------------------
-    # Index sig: calculate principle direction of the stresses at 
+    # Index sig: calculate principle direction of the stresses at
     # the lower and upper side and get the corresponding values of
     # the stresses at the opposite side. Also get the corresponding
     # values of the normal force and the moment in this direction
     # ------------------------------------------------------------
 
-    princ_values_sig = Property(Dict, depends_on = 'data_file_stress_resultants')
+    princ_values_sig = Property(Dict, depends_on='data_file_stress_resultants')
     @cached_property
     def _get_princ_values_sig(self):
         '''principle value of the stresses for the lower ('lo') and upper ('up') face:
@@ -1647,6 +1806,9 @@ class LSTable(HasTraits):
         sigy_lo = (ny / A + my / W) / 1000.
         sigxy_lo = (nxy / A + mxy / W) / 1000.
 
+        #--------------
+        # upper face:
+        #--------------
 
         # principal stresses upper face:
         #
@@ -1656,9 +1818,18 @@ class LSTable(HasTraits):
         alpha_sig_up = pi / 2. * ones_like(sig1_up)
 
         # from mechanic formula book (cf. also InfoCAD manual)
+        #
         bool_arr = sig2_up != sigx_up
-
         alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
+
+        # mohr-circle formula
+        #
+#         bool_arr = sigx_up != sigy_up
+#         alpha_sig_up[ bool_arr ] = 0.5 * arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
+
+        # angle of principle stresses (2-direction = minimum stresses (compression))
+        #
+        alpha_sig2_up = alpha_sig_up + pi / 2
 
         # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
@@ -1675,7 +1846,19 @@ class LSTable(HasTraits):
         #
         m_sig_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
         n_sig_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+#         m_sig_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) + mxy * sin(2 * alpha_sig_up)
+#         n_sig_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) + nxy * sin(2 * alpha_sig_up)
 
+        # transform moments and normal forces in the direction of the principal stresses (1-direction)
+        #
+        m_sig2_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_up) - mxy * sin(2 * alpha_sig2_up)
+        n_sig2_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_up) - nxy * sin(2 * alpha_sig2_up)
+        #
+#         m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
+#         n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+        #
+#         m_sig2_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
+#         n_sig2_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
 
         #--------------
         # lower face:
@@ -1688,11 +1871,21 @@ class LSTable(HasTraits):
 
         alpha_sig_lo = pi / 2. * ones_like(sig1_lo)
 
-        # from mechanic formula book (cf. also InfoCAD manual)
+#        # from mechanic formula book (cf. also InfoCAD manual)
+#        #
         bool_arr = sig2_lo != sigx_lo
         alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
 
-        # RFEM-manual (NOTE that manual contains typing error!) 
+        # mohr-circle formula
+        #
+#         bool_arr = sigx_lo != sigy_lo
+#         alpha_sig_lo[ bool_arr ] = 0.5 * arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
+
+        # angle of principle stresses (2-direction = minimum stresses (compression))
+        #
+        alpha_sig2_lo = alpha_sig_lo + pi / 2
+
+        # RFEM-manual (NOTE that manual contains typing error!)
         # the formula as given below yields the same results then the used mechanic formula
 #        bool = sigx_lo != sigy_lo
 #        alpha_sig_lo[ bool ] = 0.5 * arctan( 2 * sigxy_lo[ bool ] / ( sigx_lo[ bool ] - sigy_lo[ bool ] ) )
@@ -1708,6 +1901,19 @@ class LSTable(HasTraits):
         #
         m_sig_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
         n_sig_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+#         m_sig_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) + mxy * sin(2 * alpha_sig_lo)
+#         n_sig_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) + nxy * sin(2 * alpha_sig_lo)
+
+        # transform moments and normal forces in the direction of the principal stresses (2-direction)
+        #
+        m_sig2_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_lo) - mxy * sin(2 * alpha_sig2_lo)
+        n_sig2_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_lo) - nxy * sin(2 * alpha_sig2_lo)
+        #
+#         m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
+#         n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+        #
+#         m_sig2_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
+#         n_sig2_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
 
         return {
                  'sigx_up' : sigx_up, 'sigy_up' : sigy_up, 'sigxy_up' : sigxy_up,
@@ -1715,12 +1921,14 @@ class LSTable(HasTraits):
 
                  'sig1_lo_sig_up' : sig1_lo_sig_up,
                  'm_sig_up' : m_sig_up, 'n_sig_up' : n_sig_up,
+                 'm_sig2_up' : m_sig2_up, 'n_sig2_up' : n_sig2_up,
 
                  'sigx_lo' : sigx_lo, 'sigy_lo' : sigy_lo, 'sigxy_lo' : sigxy_lo,
                  'sig1_lo' : sig1_lo, 'sig2_lo' : sig2_lo, 'alpha_sig_lo' : alpha_sig_lo_deg,
 
                  'sig1_up_sig_lo' : sig1_up_sig_lo,
                  'm_sig_lo' : m_sig_lo, 'n_sig_lo' : n_sig_lo,
+                 'm_sig2_lo' : m_sig2_lo, 'n_sig2_lo' : n_sig2_lo,
 
                }
 
@@ -1762,6 +1970,13 @@ class LSTable(HasTraits):
     def _get_n_sig_up(self):
         return self.princ_values_sig['n_sig_up']
 
+    m_sig2_up = Property(Float)
+    def _get_m_sig2_up(self):
+        return self.princ_values_sig['m_sig2_up']
+
+    n_sig2_up = Property(Float)
+    def _get_n_sig2_up(self):
+        return self.princ_values_sig['n_sig2_up']
 
     # stresses lower face:
     #
@@ -1801,6 +2016,13 @@ class LSTable(HasTraits):
     def _get_n_sig_lo(self):
         return self.princ_values_sig['n_sig_lo']
 
+    m_sig2_lo = Property(Float)
+    def _get_m_sig2_lo(self):
+        return self.princ_values_sig['m_sig2_lo']
+
+    n_sig2_lo = Property(Float)
+    def _get_n_sig2_lo(self):
+        return self.princ_values_sig['n_sig2_lo']
 
     #------------------------------------------
     # combinations of limit states, stress resultants and directions
@@ -1815,7 +2037,7 @@ class LSTable(HasTraits):
         '''ls instances, e.g. ULS()
         '''
         ls_class = self.ls_
-        return ls_class(ls_table = self)
+        return ls_class(ls_table=self)
 
     assess_value = Property
     def _get_assess_value(self):
@@ -1823,13 +2045,13 @@ class LSTable(HasTraits):
         return getattr(ls, ls.assess_name)
 
     traits_view = View(Tabbed(
-                            Item('ls_class@' , label = "ls", show_label = False),
-                            scrollable = False,
+                            Item('ls_class@' , label="ls", show_label=False),
+                            scrollable=False,
                          ),
-                      resizable = True,
-                      scrollable = True,
-                      height = 1000,
-                      width = 1100
+                      resizable=True,
+                      scrollable=True,
+                      height=1000,
+                      width=1100
                       )
 
 

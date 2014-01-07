@@ -119,16 +119,16 @@ if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
     length = 1000.
-    nx = 10000
-    random_field = RandomField(seed=True,
+    nx = 2000
+    random_field = RandomField(seed=False,
                                lacor=5.,
-                               xgrid=np.linspace(0., length, 400),
-                                nsim=1,
-                                loc=.0,
-                                shape=50.,
-                                scale=2.0,
-                                non_negative_check=True,
-                                distribution='Weibull'
+                               length=length,
+                               nx=500,
+                               nsim=1,
+                               loc=.0,
+                               shape=50.,
+                               scale=2.0,
+                               distribution='Weibull'
                                )
 
     reinf1 = ContinuousFibers(r=0.0035,

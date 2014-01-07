@@ -83,55 +83,19 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from matplotlib.font_manager import FontProperties
-font = FontProperties()
-font.set_name('Script MT')
-font.set_family('serif')
-font.set_style('normal')
-font.set_size('large')
-font.set_variant('normal')
-font.set_weight('medium')
-
-def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
-    '''format 2d-plot black and with with times legends 
-    '''
-    #-------------------------------------------------------------------
-    # configure the style of the font to be used for labels and ticks
-    #-------------------------------------------------------------------
-    #
-    from matplotlib.font_manager import FontProperties
-    font = FontProperties()
-    font.set_name('Script MT')
-    font.set_family('serif')
-    font.set_style('normal')
-#    font.set_size('small')
-    font.set_size('large')
-    font.set_variant('normal')
-    font.set_weight('medium')
-    
-    if xlim != None and ylim != None:
-        axes.axis([0, xlim, 0., ylim], fontproperties=font)
-
-    # format ticks for plot
-    #
-    locs, labels = axes.xticks()
-    axes.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-    axes.xlabel(xlabel, fontproperties=font)
-
-    locs, labels = axes.yticks()
-    axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
-    axes.ylabel(ylabel, fontproperties=font)
+from quaducom.devproc.format_plot import format_plot
 
 if __name__ == '__main__':
 
     from matresdev.db.exdb.ex_run import ExRun
     import pylab as p
 
-#    do = 'show_test_results_ST'
+#     do = 'show_test_results_ST'
 #    do = 'show_test_results_SH'
 #    do = 'show_test_results_TT-CAR'
-    do = 'show_test_results_TT'
-#    do = 'show_WA'
+#     do = 'show_test_results_TT'
+#     do = 'show_WA'
+    do = 'show_test_results_BT-3PT'
 
     if do == 'show_WA':
 
@@ -200,9 +164,10 @@ if __name__ == '__main__':
         #
         path = join(simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2')
         tests = ['ST-6c-2cm-TU_bs2.DAT']
-        
+
         for t in tests:
             ex_path = join(path, t)
+            print 'XXX', ex_path
             ex_run = ExRun(ex_path)
             ex_run.ex_type._plot_force_center_deflection(p)
 

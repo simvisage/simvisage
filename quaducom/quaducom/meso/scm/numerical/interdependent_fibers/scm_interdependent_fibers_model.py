@@ -148,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=8, n_x=500
+                            length=self.length, n_w=50, n_BC=5, n_x=500
                             )
 
     sigma_c_crack = List
@@ -255,6 +255,18 @@ class SCM(HasTraits):
                 epsf_x[left:right] = cb.get_epsf_x_w(float(load))
         return epsf_x
 
+    def epsf_x2(self, load):
+        Ec = self.CB_model.E_c
+        epsf_x = load / Ec * np.ones(len(self.x_arr))
+        cb_load = self.cb_list(load)
+        if cb_load[0] is not None:
+            for cb in cb_load:
+                crack_position_idx = np.argwhere(self.x_arr == cb.position)
+                left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
+                right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
+                epsf_x[left:right] = cb.get_epsf_x_w(float(load))
+        return epsf_x
+
     def residuum(self, q):
         '''Callback method for the identification of the
         next emerging crack calculated as the difference between
@@ -276,7 +288,7 @@ class SCM(HasTraits):
                 print 'Error: 2 cracks at same stress level at sigma_c:', sigc_min
                 sigc_min = sigc_min + 1e-12
             print 'evaluation of the next matrix crack ', t.clock() - s, 's'
-            crack_position = self.x_arr[np.argmin(self.matrix_strength -
+            crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
                      crack_load_sigma_c=sigc_min - self.load_sigma_c_arr[-1] / 1000.,
@@ -292,7 +304,7 @@ class SCM(HasTraits):
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
 #            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#            plt.plot(self.x_arr, self.sigma_m(sigc_min)/self.CB_model.E_m, color='blue', lw=2)
+#            plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
 #            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
 #            plt.show()
             if float(crack_position) == last_pos:
@@ -302,25 +314,28 @@ class SCM(HasTraits):
             last_pos = float(crack_position)
 
 if __name__ == '__main__':
+    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
+    from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
     length = 2000.
     nx = 1000
-    random_field = RandomField(seed=True,
+    random_field = RandomField(seed=False,
                                lacor=5.,
-                                xgrid=np.linspace(0., length, 400),
-                                nsim=1,
-                                loc=.0,
-                                shape=15.,
-                                scale=2.5,
-                                non_negative_check=True,
-                                distribution='Weibull'
+                               length=length,
+                               nx=500,
+                               nsim=1,
+                               loc=.0,
+                               shape=50.,
+                               scale=2.0,
+                               distribution='Weibull'
                                )
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=.26, scale=.03),
-                          V_f=0.011,
-                          E_f=240e3,
-                          xi=WeibullFibers(shape=5.0, sV0=0.0026),
-                          label='carbon')
+                          tau=RV('weibull_min', loc=0.0, shape=3., scale=0.03),
+                          V_f=0.01,
+                          E_f=180e3,
+                          xi=fibers_MC(m=5.0, sV0=0.003),
+                          label='carbon',
+                          n_int=500)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
