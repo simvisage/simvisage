@@ -148,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=500, n_BC=5, n_x=500
+                            length=self.length, n_w=500, n_BC=3, n_x=500
                             )
 
     sigma_c_crack = List
@@ -290,9 +290,7 @@ class SCM(HasTraits):
             #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
             #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
             #plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-            plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=2)
-            plt.plot(self.x_arr, self.matrix_strength, color='black', lw=2)
-            plt.show()
+            #plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
