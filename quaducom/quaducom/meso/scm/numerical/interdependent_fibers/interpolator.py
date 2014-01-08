@@ -103,6 +103,7 @@ class Interpolator(HasTraits):
                 Lr_arr = np.array([])
                 x_arr = np.array([])
                 sigma_c_arr = np.array([])
+                w_c_arr = np.array([])
                 mu_epsf_arr = np.array([])
                 epsm_arr = np.array([])
                 loops_tot = self.n_BC ** 2
@@ -120,6 +121,7 @@ class Interpolator(HasTraits):
                             Lr_arr = np.hstack((Lr_arr, lr_arr))
                             x_arr = np.hstack((x_arr, x))
                             sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
+                            w_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
                             mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
                             epsm_arr = np.hstack((epsm_arr, epsm))
                         current_loop = i * len(L_arr) + j + 1
@@ -129,11 +131,11 @@ class Interpolator(HasTraits):
                 interp_arr_points = open('interp_arr_points.pkl', 'wb')
                 pickle.dump([points, max_sigma_c_arr], interp_arr_points, -1)
                 interp_arr_points.close()
-
+ 
                 interp_arr_mu_epsf_arr = open('interp_arr_mu_epsf_arr.pkl', 'wb')
                 pickle.dump([mu_epsf_arr], interp_arr_mu_epsf_arr, -1)
                 interp_arr_mu_epsf_arr.close()
-
+ 
                 interp_arr_epsm_arr = open('interp_arr_epsm_arr.pkl', 'wb')
                 pickle.dump([epsm_arr], interp_arr_epsm_arr, -1)
                 interp_arr_epsm_arr.close()

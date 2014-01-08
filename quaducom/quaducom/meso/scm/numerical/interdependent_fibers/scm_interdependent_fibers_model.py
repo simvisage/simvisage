@@ -148,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=5, n_x=500
+                            length=self.length, n_w=500, n_BC=5, n_x=500
                             )
 
     sigma_c_crack = List
@@ -251,18 +251,6 @@ class SCM(HasTraits):
                 epsf_x[left:right] = cb.get_epsf_x_w(float(load))
         return epsf_x
 
-    def epsf_x2(self, load):
-        Ec = self.CB_model.E_c
-        epsf_x = load / Ec * np.ones(len(self.x_arr))
-        cb_load = self.cb_list(load)
-        if cb_load[0] is not None:
-            for cb in cb_load:
-                crack_position_idx = np.argwhere(self.x_arr == cb.position)
-                left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
-                right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                epsf_x[left:right] = cb.get_epsf_x_w(float(load))
-        return epsf_x
-
     def residuum(self, q):
         '''Callback method for the identification of the
         next emerging crack calculated as the difference between
@@ -299,10 +287,12 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#            plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
-#            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-#            plt.show()
+            #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+            #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
+            #plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+            plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=2)
+            plt.plot(self.x_arr, self.matrix_strength, color='black', lw=2)
+            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,

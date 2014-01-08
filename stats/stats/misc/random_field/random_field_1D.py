@@ -37,7 +37,7 @@ class RandomField(HasTraits):
     shape = Float(10., auto_set=False, enter_set=True,
                   desc='shape for Weibull distr', modified=True)
     scale = Float(5., auto_set=False, enter_set=True,
-                   desc='scale at total length L for 3 params weibull', modified=True)
+                   desc='scale for Weibull distr. corresp. to a length < lacor', modified=True)
     loc = Float(auto_set=False, enter_set=True,
                    desc='location for 3 params weibull', modified=True)
     length = Float(1000., auto_set=False, enter_set=True,
@@ -61,8 +61,7 @@ class RandomField(HasTraits):
         '''Scaling of the defined distribution to the distribution of a single
         grid point. This option is only available for Weibull random field'''
         delta_x = self.xgrid[1] - self.xgrid[0]
-        scale_rho = self.scale * (self.lacor / (self.length + self.lacor)) ** (- 1. / self.shape)
-        return scale_rho * (self.lacor / (delta_x + self.lacor)) ** (1. / self.shape)
+        return self.scale * (self.lacor / (delta_x + self.lacor)) ** (- 1. / self.shape)
 
     def acor(self, dx, lcorr):
         '''autocorrelation function'''

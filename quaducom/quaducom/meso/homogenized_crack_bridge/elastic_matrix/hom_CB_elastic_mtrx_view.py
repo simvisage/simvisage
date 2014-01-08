@@ -80,13 +80,6 @@ class CompositeCrackBridgeView(ModelView):
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_sigma_c_max(self):
-        def minfunc_sigma(w):
-            self.model.w = w
-            stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
-            if stiffness_loss > 0.90:
-                return 1. + w
-            # plt.plot(w, self.sigma_c, 'ro')
-            return -self.sigma_c
         def residuum_stiffness(w):
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
@@ -98,10 +91,19 @@ class CompositeCrackBridgeView(ModelView):
                 residuum = stiffness_loss - 0.5
             return residuum
 
-        w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+        try:
+            w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+        except:
+            return np.infty, np.infty
         w_points = np.linspace(0, w_max, 7)
         w_maxima = []
         sigma_maxima = []
+        def minfunc_sigma(w):
+            self.model.w = w
+            stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
+            if stiffness_loss > 0.90:
+                return 1. + w
+            return -self.sigma_c
         for i, w in enumerate(w_points[1:]):
             w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=5, disp=0))
             sigma_maxima.append(self.sigma_c)
