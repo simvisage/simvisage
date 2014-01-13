@@ -4,7 +4,7 @@ Created on 24.06.2011
 @author: rrypl
 '''
 
-from etsproxy.traits.api import HasTraits, Float, Array, Int, Property, \
+from etsproxy.traits.api import HasStrictTraits, Float, Array, Int, Property, \
     cached_property, Bool, Event, Enum
 from etsproxy.traits.ui.api import View, Item
 from math import e
@@ -16,7 +16,7 @@ from scipy.stats import norm, weibull_min
 import numpy as np
 
 
-class RandomField(HasTraits):
+class RandomField(HasStrictTraits):
     '''Class for generating a 1D random field by scaling a standardized
     normally distributed random field. The random field array is stored
     in the property random_field. Gaussian or Weibull local distributions
@@ -61,7 +61,7 @@ class RandomField(HasTraits):
         '''Scaling of the defined distribution to the distribution of a single
         grid point. This option is only available for Weibull random field'''
         delta_x = self.xgrid[1] - self.xgrid[0]
-        scale_rho = self.scale * (self.lacor / (self.length + self.lacor)) ** (- 1. / self.shape)
+        scale_rho = self.scale * (self.lacor / (self.length + self.lacor)) ** (-1. / self.shape)
         return scale_rho * (self.lacor / (delta_x + self.lacor)) ** (1. / self.shape)
 
     def acor(self, dx, lcorr):
@@ -101,10 +101,10 @@ class RandomField(HasTraits):
         LAMBDA = eye(len(self.xgrid)) * _lambda
         # cutting out the real part
         ydata = dot(dot(phi, (LAMBDA) ** 0.5), xi).real
-        if self.distribution == 'Gauss':
+        if self.distr_type == 'Gauss':
             # scaling the std. distribution
             scaled_ydata = ydata * self.stdev + self.mean
-        elif self.distribution == 'Weibull':
+        elif self.distr_type == 'Weibull':
             # setting Weibull params
             Pf = norm().cdf(ydata)
             scaled_ydata = weibull_min(self.shape, scale=self.gridpoint_scale, loc=self.loc).ppf(Pf)
@@ -121,6 +121,7 @@ class RandomField(HasTraits):
                        Item('scale'),
                        Item('length'),
                        Item('nx'),
+                       Item('distr_type'),
                        )
 
 if __name__ == '__main__':
@@ -135,7 +136,7 @@ if __name__ == '__main__':
                      loc=0.0,
                      seed=False)
 
-    #rf.configure_traits()
+    rf.configure_traits()
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
     print np.min(rf.random_field)
     p.legend(loc='best')
