@@ -106,7 +106,7 @@ class RandomField(HasTraits):
         elif self.distribution == 'Weibull':
             # setting Weibull params
             Pf = norm().cdf(ydata)
-            scaled_ydata = weibull_min(self.shape, scale=self.gridpoint_scale, loc=self.loc).ppf(Pf)
+            scaled_ydata = weibull_min(self.shape, scale=self.scale, loc=self.loc).ppf(Pf)
         self.reevaluate = False
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
@@ -136,7 +136,6 @@ if __name__ == '__main__':
 
     #rf.configure_traits()
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
-    print np.min(rf.random_field)
     p.legend(loc='best')
     p.ylim(0)
     p.show()
