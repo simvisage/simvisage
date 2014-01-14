@@ -50,7 +50,10 @@ class CB(HasTraits):
     max_sigma_c = Property(Float, depends_on='Ll, Lr')
     @cached_property
     def _get_max_sigma_c(self):
-        return self.interpolator.interpolate_max_sigma_c(self.Ll, self.Lr)
+        CB_strength = self.interpolator.interpolate_max_sigma_c(self.Ll, self.Lr)
+        print self.Ll, self.Lr
+        print 'strength', CB_strength 
+        return CB_strength
 
     strain_profiles = Property(depends_on='Ll, Lr')
     @cached_property
@@ -148,7 +151,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=100, n_BC=10, n_x=100
+                            length=self.length, n_w=200, n_BC=15, n_x=500
                             )
 
     sigma_c_crack = List
@@ -288,9 +291,9 @@ class SCM(HasTraits):
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
             #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-            #plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=1)
-            #plt.plot(self.x_arr, self.matrix_strength, color='black', lw=1)
-            #plt.show()
+            plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=1)
+            plt.plot(self.x_arr, self.matrix_strength, color='black', lw=1)
+            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,

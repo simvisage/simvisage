@@ -118,12 +118,12 @@ class SCMView(ModelView):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
-    length = 5000.
-    nx = 5000
+    length = 1000.
+    nx = 1000
     random_field = RandomField(seed=False,
                                lacor=5.0,
                                length=length,
-                               nx=1000,
+                               nx=700,
                                nsim=1,
                                loc=.0,
                                shape=8.,
@@ -132,10 +132,10 @@ if __name__ == '__main__':
                                )
 
     reinf1 = ContinuousFibers(r=0.0035,
-                              tau=RV('weibull_min', loc=0.0, shape=1.0, scale=0.03),
+                              tau=0.01,
                               V_f=0.01,
                               E_f=180e3,
-                              xi=fibers_MC(m=5.0, sV0=10.003),
+                              xi=fibers_MC(m=5.0, sV0=0.003),
                               label='carbon',
                               n_int=500)
 

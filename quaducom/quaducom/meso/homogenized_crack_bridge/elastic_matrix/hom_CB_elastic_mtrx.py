@@ -123,7 +123,7 @@ class CompositeCrackBridge(HasTraits):
     def _get_sorted_r(self):
         return self.sorted_theta[7]
 
-    sorted_xi_cdf = Property(depends_on='reinforcement_lst+')
+    sorted_xi_cdf = Property(depends_on='reinforcement_lst+,Ll,Lr')
     @cached_property
     def _get_sorted_xi_cdf(self):
         '''breaking strain: CDF for random and Heaviside for discrete values'''
@@ -336,7 +336,6 @@ class CompositeCrackBridge(HasTraits):
         else:
             ff = t.clock()
             try:
-
                 damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf) * 0.2,
                               method='excitingmixing', options={'maxiter':100})
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
@@ -347,7 +346,7 @@ class CompositeCrackBridge(HasTraits):
                 damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf) * 0.2,
                               method='krylov')
                 damage = damage.x
-            # print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
+            #print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
         return damage
 
 if __name__ == '__main__':

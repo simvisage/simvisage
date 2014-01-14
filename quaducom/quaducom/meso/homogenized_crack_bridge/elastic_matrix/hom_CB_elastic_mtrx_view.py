@@ -107,6 +107,7 @@ class CompositeCrackBridgeView(ModelView):
         for i, w in enumerate(w_points[1:]):
             w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=5, disp=0))
             sigma_maxima.append(self.sigma_c)
+        print sigma_maxima[np.argmax(np.array(sigma_maxima))]
         return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def w_x_results(self, w_arr, x):
@@ -215,17 +216,17 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
 
     reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.0, shape=3., scale=0.1),
-                          V_f=0.01,
-                          E_f=180e3,
-                          xi=fibers_MC(m=5.0, sV0=0.003),
-                          label='carbon',
-                          n_int=500)
+                              tau=0.01,
+                              V_f=0.01,
+                              E_f=180e3,
+                              xi=fibers_MC(m=5.0, sV0=0.003),
+                              label='carbon',
+                              n_int=500)
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=100.,
-                                 Lr=100.,
+                                 Ll=1.0,
+                                 Lr=1.0,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -282,7 +283,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     # profile(0.031)
-    w = np.linspace(0.0, 2., 200)
+    w = np.linspace(0.0, .05, 200)
     sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
