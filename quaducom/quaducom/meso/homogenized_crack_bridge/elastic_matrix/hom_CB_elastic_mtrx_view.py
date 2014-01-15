@@ -107,7 +107,6 @@ class CompositeCrackBridgeView(ModelView):
         for i, w in enumerate(w_points[1:]):
             w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=5, disp=0))
             sigma_maxima.append(self.sigma_c)
-        print sigma_maxima[np.argmax(np.array(sigma_maxima))]
         return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def w_x_results(self, w_arr, x):

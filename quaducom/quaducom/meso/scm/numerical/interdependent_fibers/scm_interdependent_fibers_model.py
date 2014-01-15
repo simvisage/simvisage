@@ -51,8 +51,6 @@ class CB(HasTraits):
     @cached_property
     def _get_max_sigma_c(self):
         CB_strength = self.interpolator.interpolate_max_sigma_c(self.Ll, self.Lr)
-        print self.Ll, self.Lr
-        print 'strength', CB_strength 
         return CB_strength
 
     strain_profiles = Property(depends_on='Ll, Lr')
@@ -103,7 +101,6 @@ class CB(HasTraits):
         evaluation of matrix strain profile
         '''
         if load > self.max_sigma_c:
-            print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
             return np.nan * np.ones_like(self.x)
         else:
             sigma_c = self.strain_profiles[0][1]
@@ -151,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=200, n_BC=15, n_x=500
+                            length=self.length, n_w=200, n_BC=15, n_x=200
                             )
 
     sigma_c_crack = List
@@ -274,7 +271,7 @@ class SCM(HasTraits):
             except:
                 print 'Error: 2 cracks at same stress level at sigma_c:', sigc_min
                 sigc_min = sigc_min + 1e-12
-            print 'evaluation of the next matrix crack ', t.clock() - s, 's'
+            print 'evaluation of matrix crack number ', len(self.cracks_list) + 1,':', t.clock() - s, 's'
             crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
@@ -291,9 +288,9 @@ class SCM(HasTraits):
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
             #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-            plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=1)
-            plt.plot(self.x_arr, self.matrix_strength, color='black', lw=1)
-            plt.show()
+            #plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=1)
+            #plt.plot(self.x_arr, self.matrix_strength, color='black', lw=1)
+            #plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,

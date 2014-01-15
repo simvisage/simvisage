@@ -118,12 +118,12 @@ class SCMView(ModelView):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
-    length = 1000.
-    nx = 1000
+    length = 5000.
+    nx = 5000
     random_field = RandomField(seed=False,
                                lacor=5.0,
                                length=length,
-                               nx=700,
+                               nx=1000,
                                nsim=1,
                                loc=.0,
                                shape=8.,
@@ -160,23 +160,23 @@ if __name__ == '__main__':
         plt.legend(loc='best')
         plt.xlabel('composite strain [-]')
         plt.ylabel('composite stress [MPa]')
-        plt.figure()
-        plt.hist(scm_view.crack_widths(5.), bins=50, range=(0, 0.3), label='load = 5 MPa')
-        plt.hist(scm_view.crack_widths(10.), bins=50, range=(0, 0.3), label='load = 10 MPa')
-        plt.hist(scm_view.crack_widths(15.), bins=50, range=(0, 0.3), label='load = 15 MPa')
-        plt.legend(loc='best')
-        plt.xlim(0)
-        plt.figure()
-        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean,
-                 color='green', lw=2, label='mean crack width')
-        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_median,
-                 color='blue', lw=2, label='median crack width')
-        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean + scm_view.w_stdev,
-                 color='black', label='stdev')
-        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean - scm_view.w_stdev,
-                 color='black')
-        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_max,
-                 ls='dashed', color='red', label='max crack width')
-        plt.legend(loc='best')
+#         plt.figure()
+#         plt.hist(scm_view.crack_widths(5.), bins=50, range=(0, 0.3), label='load = 5 MPa')
+#         plt.hist(scm_view.crack_widths(10.), bins=50, range=(0, 0.3), label='load = 10 MPa')
+#         plt.hist(scm_view.crack_widths(15.), bins=50, range=(0, 0.3), label='load = 15 MPa')
+#         plt.legend(loc='best')
+#         plt.xlim(0)
+#         plt.figure()
+#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean,
+#                  color='green', lw=2, label='mean crack width')
+#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_median,
+#                  color='blue', lw=2, label='median crack width')
+#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean + scm_view.w_stdev,
+#                  color='black', label='stdev')
+#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean - scm_view.w_stdev,
+#                  color='black')
+#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_max,
+#                  ls='dashed', color='red', label='max crack width')
+#         plt.legend(loc='best')
         plt.show()
     plot()
