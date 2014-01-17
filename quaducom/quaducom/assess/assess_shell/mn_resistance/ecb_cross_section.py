@@ -10,7 +10,7 @@ Created on Sep 4, 2012
 from etsproxy.traits.api import \
     HasStrictTraits, Float, Property, cached_property, Int, \
     Trait, Event, on_trait_change, Instance, Button, Callable, \
-    DelegatesTo
+    DelegatesTo, Constant
 
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
@@ -36,39 +36,41 @@ from cc_law import \
 import numpy as np
 
 class ECBCrossSection(HasStrictTraits):
+    '''Cross section characteristics needed for tensile specimens
+    '''
 
-    #---------------------------------------------------------------
-    # Cross section characteristics needed for tensile specimens 
-    #---------------------------------------------------------------
-
-    cs = Instance(ECBCrossSectionGeo)
-    def _cs_default(self):
-        return ECBCrossSectionGeo(notify_change=self.set_geo_modified)
+    geo = Instance(ECBCrossSectionGeo)
+    def _geo_default(self):
+        return ECBCrossSectionGeo()
 
     # thickness of reinforced cross section
     #
-    thickness = DelegatesTo('cs')
+    thickness = DelegatesTo('geo')
 
     # total number of reinforcement layers [-]
     # 
-    n_layers = DelegatesTo('cs')
-
+    n_layers = DelegatesTo('geo')
     #---------------------------------------------------------------
     # Cross section characteristics needed for bending specimens 
     #---------------------------------------------------------------
 
     # width of the cross section [m]
     #
-    width = DelegatesTo('cs')
+    width = DelegatesTo('geo')
 
     # number of rovings in 0-direction of one composite 
     # layer of the bending test [-]:
     #
-    n_rovings = DelegatesTo('cs')
+    n_rovings = DelegatesTo('geo')
 
     # cross section of one roving [mm**2]:
     #
-    A_roving = DelegatesTo('cs')
+    A_roving = DelegatesTo('geo')
+
+
+    unit_conversion_factor = Constant(1000.0)
+    '''Convert the MN to kN
+    '''
 
     #===========================================================================
     # material properties 
@@ -92,25 +94,26 @@ class ECBCrossSection(HasStrictTraits):
     #===========================================================================
     # State management
     #===========================================================================
-    geo_modified = Event
-    def set_geo_modified(self):
-        self.geo_modified = True
+    modified = Event
+    @on_trait_change('geo.modified,+eps_input,+tt_input,+cc_input, cc_modified, tt_modified')
+    def set_modified(self):
+        self.modified = True
 
     #===========================================================================
     # Distribution of reinforcement
     #===========================================================================
 
-    s_tex_z = Property(depends_on='geo_modified')
+    s_tex_z = Property(depends_on='geo.modified')
     '''spacing between the layers [m]'''
     @cached_property
     def _get_s_tex_z(self):
         return self.thickness / (self.n_layers + 1)
 
-    z_ti_arr = DelegatesTo('cs')
+    z_ti_arr = DelegatesTo('geo')
     '''distance from the top of each reinforcement layer [m]:
     '''
 
-    zz_ti_arr = DelegatesTo('cs')
+    zz_ti_arr = DelegatesTo('geo')
     '''distance of reinforcement layers from the bottom
     '''
 
@@ -126,12 +129,13 @@ class ECBCrossSection(HasStrictTraits):
     eps_up = Float(-0.0033, auto_set=False, enter_set=True, eps_input=True)
     eps_lo = Float(0.0140, auto_set=False, enter_set=True, eps_input=True)
 
-    x = Property(depends_on='+eps_input,geo_modified')
+    x = Property(depends_on='+eps_input,geo.modified')
     '''Height of the compressive zone
     '''
     @cached_property
     def _get_x(self):
         if self.eps_up == self.eps_lo:
+            # @todo: explain
             return (abs(self.eps_up) / (abs(self.eps_up - self.eps_lo * 1e-9)) *
                      self.thickness)
         else:
@@ -154,7 +158,7 @@ class ECBCrossSection(HasStrictTraits):
     # Discretization conform to the tex layers
     #===========================================================================
 
-    eps_i_arr = Property(depends_on='+eps_input,geo_modified')
+    eps_i_arr = Property(depends_on='+eps_input,geo.modified')
     '''Strain at the level of the i-th reinforcement layer
     '''
     @cached_property
@@ -168,21 +172,21 @@ class ECBCrossSection(HasStrictTraits):
         #
         return self.eps_up + (self.eps_lo - self.eps_up) * self.z_ti_arr / thickness
 
-    eps_ti_arr = Property(depends_on='+eps_input,geo_modified')
+    eps_ti_arr = Property(depends_on='+eps_input,geo.modified')
     '''Tension strain at the level of the i-th layer of the fabrics
     '''
     @cached_property
     def _get_eps_ti_arr(self):
         return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
 
-    eps_ci_arr = Property(depends_on='+eps_input,geo_modified')
+    eps_ci_arr = Property(depends_on='+eps_input,geo.modified')
     '''Compression strain at the level of the i-th layer.
     '''
     @cached_property
     def _get_eps_ci_arr(self):
         return (-np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
 
-    z_cj_arr = Property(depends_on='+eps_input,geo_modified,n_cj')
+    z_cj_arr = Property(depends_on='+eps_input,geo.modified,n_cj')
     '''Discretizaton of the  compressive zone
     '''
     @cached_property
@@ -195,7 +199,7 @@ class ECBCrossSection(HasStrictTraits):
         else: # no compression
             return np.array([0], dtype='f')
 
-    eps_cj_arr = Property(depends_on='+eps_input,geo_modified,n_cj')
+    eps_cj_arr = Property(depends_on='+eps_input,geo.modified,n_cj')
     '''Compressive strain at each integration layer of the compressive zone [-]:
     '''
     @cached_property
@@ -207,7 +211,7 @@ class ECBCrossSection(HasStrictTraits):
                      self.thickness)
         return (-np.fabs(eps_j_arr) + eps_j_arr) / 2.0
 
-    zz_cj_arr = Property(depends_on='+eps_input,geo_modified,n_cj')
+    zz_cj_arr = Property(depends_on='+eps_input,geo.modified,n_cj')
     '''Distance of reinforcement layers from the bottom
     '''
     @cached_property
@@ -287,14 +291,14 @@ class ECBCrossSection(HasStrictTraits):
 
     tt_modified = Event
 
-    sig_ti_arr = Property(depends_on='+eps_input, geo_modified, +tt_input, tt_modified')
+    sig_ti_arr = Property(depends_on='+eps_input, geo.modified, +tt_input, tt_modified')
     '''Stresses at the i-th fabric layer.
     '''
     @cached_property
     def _get_sig_ti_arr(self):
         return self.ecb_law.mfn_vct(self.eps_ti_arr)
 
-    f_ti_arr = Property(depends_on='+eps_input, geo_modified, +tt_input, tt_modified')
+    f_ti_arr = Property(depends_on='+eps_input, geo.modified, +tt_input, tt_modified')
     '''force at the height of each reinforcement layer [kN]:
     '''
     @cached_property
@@ -302,13 +306,13 @@ class ECBCrossSection(HasStrictTraits):
         sig_ti_arr = self.sig_ti_arr
         n_rovings = self.n_rovings
         A_roving = self.A_roving
-        return sig_ti_arr * n_rovings * A_roving / 1000.
+        return sig_ti_arr * n_rovings * A_roving / self.unit_conversion_factor
 
     #===========================================================================
     # Cross-sectional stress resultants
     #===========================================================================
 
-    N = Property(depends_on='geo_modified,+eps_input,+tt_input,+cc_input, cc_modified, tt_modified')
+    N = Property(depends_on='geo.modified,+eps_input,+tt_input,+cc_input, cc_modified, tt_modified')
     '''Get the resulting normal force.
     '''
     @cached_property
@@ -319,13 +323,13 @@ class ECBCrossSection(HasStrictTraits):
         N_internal = N_ck + N_tk
         return N_internal
 
-    M = Property(depends_on='geo_modified,+eps_input,+tt_input, +cc_input, cc_modified, tt_modified')
+    M = Property(depends_on='geo.modified,+eps_input,+tt_input, +cc_input, cc_modified, tt_modified')
     '''Get the resulting moment.
     '''
     @cached_property
     def _get_M(self):
         M_tk = np.dot(self.f_ti_arr, self.z_ti_arr)
-        M_ck = np.trapz(self.sig_cj_arr * self.width * self.z_cj_arr, self.z_cj_arr) * 1000.0
+        M_ck = np.trapz(self.sig_cj_arr * self.width * self.z_cj_arr, self.z_cj_arr) * self.unit_conversion_factor
         M_internal_ = M_tk + M_ck
         # moment evaluated with respect to the center line
         #

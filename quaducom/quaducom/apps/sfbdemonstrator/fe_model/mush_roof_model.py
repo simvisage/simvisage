@@ -25,31 +25,12 @@ from ibvpy.fets.fets3D.fets3D8h import \
     FETS3D8H
 from ibvpy.fets.fets3D.fets3D8h20u import \
     FETS3D8H20U
-from ibvpy.fets.fets3D.fets3D8h27u import \
-    FETS3D8H27U
-from ibvpy.fets.fets2D5.fets2D58h20u import \
-    FETS2D58H20U
-from ibvpy.mesh.fe_grid import \
-    FEGrid
 
 from numpy import \
-    diag, size, arange, append, sum, argsort, zeros_like, array, shape
-
-from matplotlib.pyplot import \
-    bar, show, axhline, ion, ioff, xlabel, ylabel, title, figure, savefig, ylim
-
-import csv
-
-from simiter.sim_pstudy import\
-    ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
+    diag, size, argsort, zeros_like
 
 # geo transform
 #
-from geo_column import GEOColumn
-from hp_shell import HPShell
-from hp_shell_conn_detail import HPShell
-
-
 class MushRoofModel(IBVModel):
     '''Basis Class for Mushroof models (mr_quarter, mr_one, mr_one_free, mr_two, mr_four)
     '''
@@ -247,7 +228,7 @@ class MushRoofModel(IBVModel):
 
     max_princ_stress = Instance(RTraceDomainListField)
     def _max_princ_stress_default(self):
-        return RTraceDomainListField(name='max principle stress' , idx=0,
+        return RTraceDomainListField(name='max principal stress' , idx=0,
                                       var='max_principle_sig', warp=True,
 #                                      position = 'int_pnts',
                                       record_on='update',)
@@ -268,6 +249,14 @@ class MushRoofModel(IBVModel):
                                       var='sig_app',
                                       record_on='update',)
 
+    eps_app = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_eps_app(self):
+        return RTraceDomainListField(name='eps_app' ,
+#                                      position = 'int_pnts',
+                                      var='eps_app',
+                                      record_on='update',)
+
     u = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
     @cached_property
     def _get_u(self):
@@ -278,9 +267,25 @@ class MushRoofModel(IBVModel):
     damage = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
     @cached_property
     def _get_damage(self):
-        return RTraceDomainListField(name='Damage' ,
+        return RTraceDomainListField(name='damage' ,
                                       var='omega_mtx', idx=0, warp=True,
                                       record_on='update')
+
+    phi_pdc = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_phi_pdc(self):
+        return RTraceDomainListField(name='principal damage' ,
+#                                      position = 'int_pnts',
+                                      var='phi_pdc',
+                                      record_on='update',)
+
+    fracture_energy = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_fracture_energy(self):
+        return RTraceDomainListField(name='Fracture energy' ,
+#                                      position = 'int_pnts',
+                                      var='fracture_energy',
+                                      record_on='update',)
 
     # sorting force of slice by number of dofs internal forces
     #

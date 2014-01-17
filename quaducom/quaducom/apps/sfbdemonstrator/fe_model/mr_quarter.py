@@ -57,9 +57,7 @@ from ibvpy.mesh.fe_grid import \
     FEGrid
 from mathkit.mfn import MFnLineArray
 
-from numpy import \
-    array, tensordot, dot, zeros, c_, ix_, shape, \
-    cos, sin, arctan, where, abs, all, any, diag
+import numpy as np
 
 from ibvpy.mats.mats3D.mats3D_tensor import map3d_sig_eng_to_mtx
 from math import sqrt, asin, acos, pi as Pi
@@ -143,7 +141,7 @@ class MRquarter(MushRoofModel):
 #    mats_roof = Property( Instance( MATS3DElastic), depends_on = '+input' )
     @cached_property
     def _get_mats_roof(self):
-#        return MATS3DElastic( E = self.E_roof, nu = self.nu )
+        #return MATS3DElastic(E=self.E_roof, nu=self.nu)
         return MATS2D5MicroplaneDamage(
                                 E=self.E_c,
                                 nu=self.nu,
@@ -186,9 +184,9 @@ class MRquarter(MushRoofModel):
         U = self.tloop.eval()
         u_center_top_z = U[ self.center_top_dof ][0, 0, 2]
         print 'u_center_top_z', u_center_top_z
-        return array([ u_center_top_z], dtype='float_')
+        return np.array([ u_center_top_z], dtype='float_')
 #        max_princ_stress = max(self.max_princ_stress._get_field_data().flatten())
-#        return array([ u_center_top_z, max_princ_stress ],
+#        return np.array([ u_center_top_z, max_princ_stress ],
 #                        dtype = 'float_')
 
     def get_sim_outputs(self):
@@ -197,7 +195,7 @@ class MRquarter(MushRoofModel):
         evaluation.
         '''
         return [ SimOut(name='u_z_free_corner', unit='m'),
-                 SimOut(name='maximum principle stress', unit='MPa'), ]
+                 SimOut(name='maximum principal stress', unit='MPa'), ]
 
     #----------------------------------------------------
     # response tracer
@@ -205,22 +203,36 @@ class MRquarter(MushRoofModel):
 
     rtrace_list = List
     def _rtrace_list_default(self):
-        return [  self.max_princ_stress, self.sig_app, self.u, self.damage ]
+        return [  self.eps_app, self.fracture_energy, self.u, self.phi_pdc ]
+
+    max_lambda = Float(1.0, input=True)
+    '''Maximum lambda factor to impose on the structure.
+    The final loading loading level is calculated
+    as the reference boundary conditions multiplied by the lambda_factor
+    and uls_factor. Thus, lambda factor defines the load level as a multiple
+    of the load level predicted by the linear analysis.
+    '''
+
+    f_w_diagram = Property(Instance(RTraceGraph), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_f_w_diagram(self):
+        domain = self.fe_grid_roof
+        w_z = domain[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
+        return RTraceGraph(name='load - corner deflection',
+                           var_x='U_k', idx_x=w_z,
+                           transform_x='-x',
+                           var_y='time', idx_y=0,
+                           #transform_y='y * %g' % self.lambda_factor,
+                           record_on='update')
 
     #----------------------------------------------------
     # time loop
     #----------------------------------------------------
 
-    lambda_factor = Float(1.0)
-
     tloop = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_tloop(self):
         domain = self.fe_grid_roof
-
-        self.center_top_dof = domain[-1, -1, -1, -1, -1, -1].dofs
-
-        lambda_factor = self.lambda_factor
 
         #----------------------------------------------------
         # loading and boundaries
@@ -229,17 +241,22 @@ class MRquarter(MushRoofModel):
         #--- LC1: dead load
         # g = 22.4 kN/m^3 
         # orientation: global z-direction; 
-        material_density_roof = -22.4e-3 * lambda_factor    # [MN/m^3]
+        material_density_roof = -22.43e-3    # [MN/m^3]
 
         #--- LC2 additional dead load 
         # gA = 0,20 kN/m^2 
         # orientation: global z-direction (following the curved structure); 
-        additional_dead_load = -0.20e-3 * lambda_factor    # [MN/m^2]
+        additional_dead_load = -0.20e-3    # [MN/m^2]
+
+        #--- LC2 additional boundary load 
+        # gA = 0,35 kN/m^2 
+        # orientation: global z-direction (following the curved structure); 
+        boundary_dead_load = -0.35e-3    # [MN/m]
 
         #--- LC3 snow
         # s = 0,79 kN/m^2 
         # orientation: global z-direction (projection); 
-        surface_load_s = -0.85e-3 * lambda_factor          # [MN/m^2]
+        surface_load_s = -0.85e-3   # [MN/m^2]
 
         #--- LC4 wind (pressure) 
         # w = 0,13 kN/m^2 
@@ -250,22 +267,44 @@ class MRquarter(MushRoofModel):
 
         upper_surface = domain[:, :, -1, :, :, -1]
         whole_domain = domain[:, :, :, :, :, :]
+        boundary_x1 = domain[-1, :, -1, -1, :, -1]
+        boundary_y1 = domain[:, -1, -1, :, -1, -1]
+
+        time_fn_load = MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 10.0],
+                                    ydata=[0.0, 1.0, 1.0 / 0.27, 1.78 / 0.27, 9.5])
+        time_fn_permanent_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 1.0])
+        time_fn_snow_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 0.0])
+
         force_bc = [
                     # own weight
                      BCSlice(var='f', value=material_density_roof, dims=[2],
-                          integ_domain='global',
-                              slice=whole_domain),
+                             integ_domain='global',
+                             time_function=time_fn_load.get_value,
+                             slice=whole_domain),
 
                      # LC2: additional dead-load
                      BCSlice(var='f', value=additional_dead_load, dims=[2],
                               integ_domain='global',
+                              time_function=time_fn_load.get_value,
                               slice=upper_surface),
 
+                     # LC2: additional boundary-load
+                     BCSlice(var='f', value=boundary_dead_load, dims=[2],
+                              integ_domain='global',
+                              time_function=time_fn_load.get_value,
+                              slice=boundary_x1),
+
+                     # LC2: additional boundary-load
+                     BCSlice(var='f', value=boundary_dead_load, dims=[2],
+                              integ_domain='global',
+                              time_function=time_fn_load.get_value,
+                              slice=boundary_y1),
                      # LC3: snow load         
                      BCSlice(var='f', value=surface_load_s, dims=[2],
                               integ_domain='global',
+                              time_function=time_fn_snow_load.get_value,
                               slice=upper_surface),
-#
+
 #                     # LC3: wind
 #                     BCSlice( var = 'f', value = surface_load_w, dims = [2],
 #                              integ_domain = 'global',
@@ -293,12 +332,13 @@ class MRquarter(MushRoofModel):
         #bc_corner_load   = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[-1,-1,-1,-1,-1,-1] )
         #bc_topface_load  = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[:,:,-1,:,:,-1] )
 
-        w_z = domain[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
-
-        self.f_w_diagram = RTraceGraph(name='load - corner deflection',
-                                       var_x='U_k', idx_x=w_z,
-                                       var_y='time', idx_y=0,
-                                       record_on='update')
+#        support_z_dofs = domain[0, 0, 0, :, : , 0].dofs[:, :, 2]
+#        support_f_w = RTraceGraph(name='force - corner deflection',
+#                           var_x='time', idx_x=0,
+#                           transform_x='x * %g' % lambda_failure,
+#                           var_y='F_int', idx_y_arr=np.unique(support_z_dofs.flatten()),
+#                           transform_y='-y',
+#                           record_on='update')
 
         rtrace_list = [ self.f_w_diagram ] + self.rtrace_list
 
@@ -310,10 +350,11 @@ class MRquarter(MushRoofModel):
                  rtrace_list=rtrace_list
                )
 
+        step = self.max_lambda / 10.0
         # Add the time-loop control
         tloop = TLoop(tstepper=ts,
                        tolerance=1e-4,
-                       tline=TLine(min=0.0, step=0.1, max=1.0))
+                       tline=TLine(min=0.0, step=step, max=self.max_lambda))
         return tloop
 
 class MRquarterDB(MRquarter):
@@ -369,7 +410,7 @@ class MRquarterDB(MRquarter):
                        depends_on='input_change,+ps_levels')
     @cached_property
     def _get_phi_fn(self):
-        return PhiFnGeneralExtendedExp(mfn=self.damage_function)
+        return PhiFnGeneralExtendedExp(mfn=self.damage_function, Dfp=0.01, Efp_frac=0.05)
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
 
@@ -405,16 +446,17 @@ if __name__ == '__main__':
 #                             calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
                              calibration_test='TT-12c-6cm-TU-SH2F-V3',
                              age=27,
-                             lambda_factor=6.,
-                             n_elems_xy_quarter=6,
+                             max_lambda=10.0,
+                             n_elems_xy_quarter=8,
                              n_elems_z=2,
                             )
+
     #sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
 #    sim_model.fe_grid_column.inactive_elems = list( interior_elems )
 
+    do = 'load_factor_plot'
     do = 'ui'
-#    do = 'eval'
 
     if do == 'eval':
 #        sim_model.tloop.eval()
@@ -430,6 +472,41 @@ if __name__ == '__main__':
     elif do == 'ps':
         sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
+
+    elif do == 'load_factor_plot':
+        import pylab as p
+
+        sim_model.tloop.eval()
+
+        f_w = sim_model.f_w_diagram
+        f_w.redraw()
+
+        #f_w.trace.plot(p, color='black')
+        w = f_w.trace.xdata
+        lambda_ = f_w.trace.ydata
+        eta_nmd = 0.27
+        chi = 0.84
+        gamma = 1.5
+
+        eta = lambda_ * eta_nmd
+        eta_el = gamma / chi
+
+        max_w = w[-1]
+        max_lambda = np.max(lambda_)
+        max_eta = np.max(eta)
+
+        fig, ax1 = p.subplots()
+
+        ax1.set_ylim(0, max_lambda * 1.1)
+        ax1.plot(w, lambda_, color='black')
+
+        ax2 = ax1.twinx()
+        ax2.set_ylim(0, max_eta * 1.1)
+
+        ax2.plot([0, max_w], [1.0, 1.0], color='black', linestyle='dashed')
+        ax2.plot([0, max_w], [eta_el, eta_el], color='black', linestyle='dashed')
+        ax2.plot([0, max_w], [ eta_nmd, eta_nmd], color='black', linestyle='dashed')
+        p.show()
 
     elif do == 'pickle':
 

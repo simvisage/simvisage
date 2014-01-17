@@ -14,3 +14,13 @@ ECBCrossSectionGeo
    :members:  
    :undoc-members:
 
+ECBCrossSection
+---------------
+
+.. inheritance-diagram:: ECBCrossSection
+	:parts: 1
+
+.. autoclass:: ECBCrossSection
+   :members:  
+   :undoc-members:
+

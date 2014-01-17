@@ -69,13 +69,10 @@ class ECBCrossSectionGeo(HasStrictTraits):
     def _get_zz_ti_arr(self):
         return self.thickness - self.z_ti_arr
 
-    notify_change = Callable
     modified = Event
     @on_trait_change('+geo_input')
     def set_modified(self):
         self.modified = True
-        if self.notify_change:
-            self.notify_change()
 
     view = View(HGroup(
                 Group(Item('thickness', springy=True),

@@ -26,7 +26,7 @@ class ECBLMNDiagram(HasTraits):
     # calibrator supplying the effective material law
     calib = Instance(ECBLCalib)
     def _calib_default(self):
-        return ECBLCalib(notify_change = self.set_modified)
+        return ECBLCalib(notify_change=self.set_modified)
     def _calib_changed(self):
         self.calib.notify_change = self.set_modified
 
@@ -38,7 +38,7 @@ class ECBLMNDiagram(HasTraits):
     # cross section
     cs = DelegatesTo('calib')
 
-    calibrated_ecb_law = Property(depends_on = 'modified')
+    calibrated_ecb_law = Property(depends_on='modified')
     @cached_property
     def _get_calibrated_ecb_law(self):
         print 'NEW CALIBRATION'
@@ -52,8 +52,8 @@ class ECBLMNDiagram(HasTraits):
     def _get_eps_tu(self):
         return self.calibrated_ecb_law.eps_tex_u
 
-    n_eps = Int(5, auto_set = False, enter_set = True)
-    eps_range = Property(depends_on = 'n_eps')
+    n_eps = Int(5, auto_set=False, enter_set=True)
+    eps_range = Property(depends_on='n_eps')
     @cached_property
     def _get_eps_range(self):
         eps_c_space = np.linspace(self.eps_cu, 0, self.n_eps)
@@ -74,7 +74,7 @@ class ECBLMNDiagram(HasTraits):
 
         return np.hstack([eps1, eps2, eps3, eps4])
 
-    n_eps_range = Property(depends_on = 'n_eps')
+    n_eps_range = Property(depends_on='n_eps')
     @cached_property
     def _get_n_eps_range(self):
         return self.eps_range.shape[1]
@@ -83,15 +83,15 @@ class ECBLMNDiagram(HasTraits):
     #===========================================================================
 
     def _get_MN_fn(self, eps_lo, eps_up):
-        self.cs.set(eps_lo = eps_lo,
-                    eps_up = eps_up)
+        self.cs.set(eps_lo=eps_lo,
+                    eps_up=eps_up)
         return (self.cs.M, self.cs.N)
 
-    MN_vct = Property(depends_on = 'modified')
+    MN_vct = Property(depends_on='modified')
     def _get_MN_vct(self):
         return np.vectorize(self._get_MN_fn)
 
-    MN_arr = Property(depends_on = 'modified')
+    MN_arr = Property(depends_on='modified')
     @cached_property
     def _get_MN_arr(self):
         return self.MN_vct(self.eps_range[0, :], self.eps_range[1, :])
@@ -106,12 +106,12 @@ class ECBLMNDiagram(HasTraits):
         self._clear_fired()
         self._replot_fired()
 
-    current_eps = Property(depends_on = 'current_eps_idx')
+    current_eps = Property(depends_on='current_eps_idx')
     @cached_property
     def _get_current_eps(self):
         return self.eps_range[(0, 1), self.current_eps_idx]
 
-    current_MN = Property(depends_on = 'current_eps_idx')
+    current_MN = Property(depends_on='current_eps_idx')
     @cached_property
     def _get_current_MN(self):
         return self._get_MN_fn(*self.current_eps)
@@ -122,7 +122,7 @@ class ECBLMNDiagram(HasTraits):
 
     figure = Instance(Figure)
     def _figure_default(self):
-        figure = Figure(facecolor = 'white')
+        figure = Figure(facecolor='white')
         figure.add_axes([0.08, 0.13, 0.85, 0.74])
         return figure
 
@@ -138,9 +138,9 @@ class ECBLMNDiagram(HasTraits):
 
         ax = self.figure.add_subplot(2, 2, 1)
 
-        ax.plot(-self.eps_range, [0, 0.06], color = 'black')
+        ax.plot(-self.eps_range, [0, 0.06], color='black')
 
-        ax.plot(-self.current_eps, [0, 0.06], lw = 3, color = 'red')
+        ax.plot(-self.current_eps, [0, 0.06], lw=3, color='red')
 
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
@@ -152,9 +152,9 @@ class ECBLMNDiagram(HasTraits):
 
         ax = self.figure.add_subplot(2, 2, 2)
 
-        ax.plot(self.MN_arr[0], -self.MN_arr[1], lw = 2, color = 'blue')
+        ax.plot(self.MN_arr[0], -self.MN_arr[1], lw=2, color='blue')
 
-        ax.plot(self.current_MN[0], -self.current_MN[1], 'g.', markersize = 20.0, color = 'red')
+        ax.plot(self.current_MN[0], -self.current_MN[1], 'g.', markersize=20.0, color='red')
 
         ax.spines['left'].set_position('zero')
         ax.spines['bottom'].set_position('zero')
@@ -164,10 +164,10 @@ class ECBLMNDiagram(HasTraits):
         ax.spines['bottom'].set_smart_bounds(True)
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
-        ax.grid(b = None, which = 'major')
+        ax.grid(b=None, which='major')
 
-        self.cs.set(eps_lo = self.current_eps[0],
-                    eps_up = self.current_eps[1])
+        self.cs.set(eps_lo=self.current_eps[0],
+                    eps_up=self.current_eps[1])
 
         ax = self.figure.add_subplot(2, 2, 3)
 
@@ -181,65 +181,65 @@ class ECBLMNDiagram(HasTraits):
 
     view = View(HSplit(Group(
                 HGroup(
-                Group(Item('n_eps', springy = True),
-                      label = 'Discretization',
-                      springy = True
+                Group(Item('n_eps', springy=True),
+                      label='Discretization',
+                      springy=True
                       ),
-                springy = True,
+                springy=True,
                 ),
                 HGroup(
                 Group(VGroup(
-                      Item('cs', label = 'Cross section', show_label = False, springy = True,
-                           editor = InstanceEditor(kind = 'live'),
+                      Item('cs', label='Cross section', show_label=False, springy=True,
+                           editor=InstanceEditor(kind='live'),
                            ),
-                      Item('calib', label = 'Calibration', show_label = False, springy = True,
-                           editor = InstanceEditor(kind = 'live'),
+                      Item('calib', label='Calibration', show_label=False, springy=True,
+                           editor=InstanceEditor(kind='live'),
                            ),
-                      springy = True,
+                      springy=True,
                       ),
-                      label = 'Cross sectoin',
-                      springy = True
+                      label='Cross sectoin',
+                      springy=True
                       ),
-                springy = True,
+                springy=True,
                 ),
-                scrollable = True,
+                scrollable=True,
                              ),
                 Group(HGroup(
-                             Item('replot', show_label = False),
-                             Item('clear', show_label = False),
+                             Item('replot', show_label=False),
+                             Item('clear', show_label=False),
                       ),
-                      Item('current_eps_idx', editor = RangeEditor(low = 0,
-                                   high_name = 'n_eps_range',
-                                   format = '(%s)',
-                                   mode = 'slider',
-                                   auto_set = False,
-                                   enter_set = False,
+                      Item('current_eps_idx', editor=RangeEditor(low=0,
+                                   high_name='n_eps_range',
+                                   format='(%s)',
+                                   mode='slider',
+                                   auto_set=False,
+                                   enter_set=False,
                                    ),
-                           show_label = False,
+                           show_label=False,
                            ),
-                      Item('figure', editor = MPLFigureEditor(),
-                           resizable = True, show_label = False),
-                      id = 'simexdb.plot_sheet',
-                      label = 'plot sheet',
-                      dock = 'tab',
+                      Item('figure', editor=MPLFigureEditor(),
+                           resizable=True, show_label=False),
+                      id='simexdb.plot_sheet',
+                      label='plot sheet',
+                      dock='tab',
                       ),
                        ),
-                width = 1.0,
-                height = 0.8,
-                resizable = True,
-                buttons = ['OK', 'Cancel'])
+                width=1.0,
+                height=0.8,
+                resizable=True,
+                buttons=['OK', 'Cancel'])
 
 if __name__ == '__main__':
     c = ECBLCalib(
-                  Mu = 3.49,
-                  width = 0.20,
-                  n_rovings = 23,
-                  ecb_law_type = 'linear',
-                  cc_law_type = 'quadratic'             #eps_tu 0.0137279096658                              
+                  Mu=3.49,
+                  width=0.20,
+                  n_rovings=23,
+                  ecb_law_type='fbm',
+                  cc_law_type='quadratic'             #eps_tu 0.0137279096658                              
                   )
 
-    mn = ECBLMNDiagram(calib = c,
-                       n_eps = 30,
+    mn = ECBLMNDiagram(calib=c,
+                       n_eps=30,
                       )
 
     mn.configure_traits()

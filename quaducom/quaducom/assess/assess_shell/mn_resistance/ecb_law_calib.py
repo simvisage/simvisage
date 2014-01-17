@@ -6,7 +6,8 @@ Created on Jun 23, 2010
 
 from etsproxy.traits.api import \
     Float, Instance, Array, Property, cached_property, \
-    HasStrictTraits, DelegatesTo, Int, Event, Callable, Button
+    HasStrictTraits, DelegatesTo, Int, Event, Callable, Button, \
+    on_trait_change
 
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, ModelView, VGroup, HGroup, RangeEditor, InstanceEditor
@@ -35,8 +36,8 @@ class ECBLCalib(HasStrictTraits):
     # rupture moment and normal force measured in the calibration experiment
     # (three point bending test)
     #
-    Mu = Float(3.5) # [kNm]
-    Nu = Float(0.0) # [kN]
+    Mu = Float(3.5, calib_input=True) # [kNm]
+    Nu = Float(0.0, calib_input=True) # [kN]
 
     #===========================================================================
     # Cross Section Specification (Geometry and Layout)
@@ -44,7 +45,7 @@ class ECBLCalib(HasStrictTraits):
 
     cs = Instance(ECBCrossSection)
     def _cs_default(self):
-        return ECBCrossSection(notify_change = self._set_modified)
+        return ECBCrossSection()
 
     ecb_law_type = DelegatesTo('cs')
     ecb_law = DelegatesTo('cs')
@@ -59,12 +60,15 @@ class ECBLCalib(HasStrictTraits):
     notify_change = Callable(None)
 
     modified = Event
+    @on_trait_change('cs.modified,+calib_input')
     def _set_modified(self):
         self.modified = True
         if self.notify_change != None:
             self.notify_change()
 
-    u0 = Property(Array(float), depends_on = 'cs.modified')
+    u0 = Property(Array(float), depends_on='cs.modified')
+    '''Construct the initial vector.
+    '''
     @cached_property
     def _get_u0(self):
         u0 = self.ecb_law.u0
@@ -75,7 +79,7 @@ class ECBLCalib(HasStrictTraits):
         print 'eps_up', eps_up
         print 'eps_lo', eps_lo
 
-        return np.array([eps_lo, u0[1] ], dtype = 'float')
+        return np.array([eps_lo, u0[1] ], dtype='float')
 
     # iteration counter
     #
@@ -93,7 +97,7 @@ class ECBLCalib(HasStrictTraits):
         eps_up = -self.cs.eps_c_u
         eps_lo = u[0]
 
-        self.cs.set(eps_lo = eps_lo, eps_up = eps_up)
+        self.cs.set(eps_lo=eps_lo, eps_up=eps_up)
 
         eps_tex_u = self.cs.convert_eps_lo_2_tex_u(u[0])
         self.cs.ecb_law.set_cparams(eps_tex_u, u[1])
@@ -104,11 +108,10 @@ class ECBLCalib(HasStrictTraits):
         d_N = N_internal - self.Nu
         d_M = M_internal - self.Mu
 
-        return np.array([ d_N, d_M ], dtype = float)
+        return np.array([ d_N, d_M ], dtype=float)
 
-    # solution vector returned by 'fit_response'
-    #
-    u_sol = Property(Array(Float), depends_on = 'cs.modified')
+    u_sol = Property(Array(Float), depends_on='cs.modified,+calib_input')
+    '''Solution vector returned by 'fit_response'.'''
     @cached_property
     def _get_u_sol(self):
         '''iterate 'eps_t' such that the lack of fit between the calculated
@@ -126,13 +129,11 @@ class ECBLCalib(HasStrictTraits):
         #   'rtol'    - relative error (not supported at the time)
         #   'maxiter' - maximum numbers of iterations used
         #
-        return fsolve(self.get_lack_of_fit, self.u0, xtol = 1.0e-5)
+        return fsolve(self.get_lack_of_fit, self.u0, xtol=1.0e-5)
 
-    #===========================================================================
-    # Calibrated ecbl_mfn
-    #===========================================================================
-
-    calibrated_ecb_law = Property(depends_on = 'modified')
+    calibrated_ecb_law = Property(depends_on='cs.modified,+calib_input')
+    '''Calibrated ecbl_mfn
+    '''
     @cached_property
     def _get_calibrated_ecb_law(self):
         print 'NEW CALIBRATION'
@@ -141,7 +142,7 @@ class ECBLCalib(HasStrictTraits):
 
     view = View(Item('Mu'),
                 Item('Nu'),
-                buttons = ['OK', 'Cancel']
+                buttons=['OK', 'Cancel']
                 )
 
 class ECBLCalibModelView(ModelView):
@@ -151,7 +152,7 @@ class ECBLCalibModelView(ModelView):
     def _model_default(self):
         return ECBLCalib()
 
-    cs_state = Property(Instance(ECBCrossSection), depends_on = 'model')
+    cs_state = Property(Instance(ECBCrossSection), depends_on='model')
     @cached_property
     def _get_cs_state(self):
         return self.model.cs
@@ -160,7 +161,7 @@ class ECBLCalibModelView(ModelView):
 
     figure = Instance(Figure)
     def _figure_default(self):
-        figure = Figure(facecolor = 'white')
+        figure = Figure(facecolor='white')
         return figure
 
     replot = Button()
@@ -174,31 +175,31 @@ class ECBLCalibModelView(ModelView):
         self.figure.clear()
         self.data_changed = True
 
-    calibrated_ecb_law = Property(Instance(ECBLBase), depends_on = 'model')
+    calibrated_ecb_law = Property(Instance(ECBLBase), depends_on='model')
     @cached_property
     def _get_calibrated_ecb_law(self):
         return self.model.calibrated_ecb_law
 
     view = View(HSplit(VGroup(
-                       Item('cs_state', label = 'Cross section', show_label = False),
-                       Item('model@', show_label = False),
-                       Item('calibrated_ecb_law@', show_label = False, resizable = True),
+                       Item('cs_state', label='Cross section', show_label=False),
+                       Item('model@', show_label=False),
+                       Item('calibrated_ecb_law@', show_label=False, resizable=True),
                        ),
                        Group(HGroup(
-                             Item('replot', show_label = False),
-                             Item('clear', show_label = False),
+                             Item('replot', show_label=False),
+                             Item('clear', show_label=False),
                       ),
-                      Item('figure', editor = MPLFigureEditor(),
-                           resizable = True, show_label = False),
-                      id = 'simexdb.plot_sheet',
-                      label = 'plot sheet',
-                      dock = 'tab',
+                      Item('figure', editor=MPLFigureEditor(),
+                           resizable=True, show_label=False),
+                      id='simexdb.plot_sheet',
+                      label='plot sheet',
+                      dock='tab',
                       ),
                        ),
-                width = 0.5,
-                height = 0.4,
-                buttons = ['OK', 'Cancel'],
-                resizable = True)
+                width=0.5,
+                height=0.4,
+                buttons=['OK', 'Cancel'],
+                resizable=True)
 
 if __name__ == '__main__':
 
@@ -216,19 +217,19 @@ if __name__ == '__main__':
     ec = ECBLCalib(# mean concrete strength after 9 days
                            # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
-                           f_ck = 55.7,
+                           f_ck=55.7,
 
                            # measured strain at bending test rupture (0-dir)
                            #
-                           eps_c_u = 3.3 / 1000.,
+                           eps_c_u=3.3 / 1000.,
 
                            # measured value in bending test [kNm]
                            # value per m: M = 5*3.49
                            #
-                           Mu = 3.49,
+                           Mu=3.49,
                        )
 
-    ecw = ECBLCalibModelView(model = ec)
+    ecw = ECBLCalibModelView(model=ec)
     ecw.configure_traits()
 
     for sig_tex_u, color in zip([1200, 1300, 1400], ['red', 'green', 'blue', 'black', 'orange', 'brown']):
@@ -242,7 +243,7 @@ if __name__ == '__main__':
             ec.cs.ecb_law.sig_tex_u = sig_tex_u
             ec.get_lack_of_fit(ec.u0)
 
-            ec.calibrated_ecb_law.mfn.plot(p, color = color, linewidth = 8)
+            ec.calibrated_ecb_law.mfn.plot(p, color=color, linewidth=8)
             print 'E_yarn', ec.calibrated_ecb_law.mfn.get_diff(0.00001)
             print 'INTEG', ec.calibrated_ecb_law.mfn.integ_value
 
@@ -254,6 +255,6 @@ if __name__ == '__main__':
 #                ec.ecbl_mfn.plot(p, color = color)
 #                print 'E_yarn', ec.ecbl_mfn.get_diff(0.00001)
 #                print 'INTEG', ec.ecbl_mfn.integ_value
-    p.plot([0.0, 0.01], [0.0, 2400], color = 'black')
+    p.plot([0.0, 0.01], [0.0, 2400], color='black')
 
     p.show()
