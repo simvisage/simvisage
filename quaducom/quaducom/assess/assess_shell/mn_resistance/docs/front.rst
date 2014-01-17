@@ -1,12 +1,12 @@
 
-oricrete User Manual
-====================
+mntrcshell User Manual
+======================
 
-Author: 	Rostislav Chudoba
+Author: 	...
             
 Version: 	Document Version 1
 
-Copyright: 	2012 Simvisage
+Copyright: 	2014 IMB/Simvisage
 
 Redistribution and use of this document in source and derived forms, with or without modification, are permitted provided that the following conditions are met:
 

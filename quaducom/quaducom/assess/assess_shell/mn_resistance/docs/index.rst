@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to mn-trc-shell documentation!
-===================================
+======================================
 
 .. default-domain:: py
 
