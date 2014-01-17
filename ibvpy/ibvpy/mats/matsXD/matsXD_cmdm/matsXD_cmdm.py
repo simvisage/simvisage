@@ -596,14 +596,12 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # Get the direction of the principle damage coordinates (pdc):
         phi_eig_value, phi_eig_mtx = eigh(phi_mtx)
         phi_eig_value_real = array([ pe.real for pe in phi_eig_value])
-        phi_pdc_mtx = zeros([self.n_dim, self.n_dim])
-        for i in range(self.n_dim):
-            phi_pdc_mtx[i, i] = phi_eig_value_real[i]
         # return the minimum value of the eigenvalues of the integrity tensor 
         # (= values of integrity in the principle direction)
         # 
-        return array([ max(phi_pdc_mtx) ])
-#        return array([ phi_pdc_mtx[0, 0] ])
+        min_phi = np.min(phi_eig_value_real)
+        max_omega = (1.0 - min_phi ** 2)
+        return array([ max_omega ])
 
     # ------------------------------------------
     # SUBSIDARY METHODS used only for the response tracer:
@@ -807,7 +805,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # sum over the first dimension (over the microplanes)
         psi_mtx = psi_mtx_arr.sum(0)
         return psi_mtx
-    
+
     #------------------------------------------------------------------------------
     #------------------------------------------------------------------------------
     # @todo: is an implicit formulation of CMDM possible? First outline see below
@@ -843,9 +841,9 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         e_equiv_arr = self._get_e_equiv_arr(e_app_vct_arr)
         # lack of fit in the state variables
         psi_arr_trial = self._get_psi_arr_cv(sctx, e_equiv_arr)
-        lof = psi_arr_trial - psi_arr 
+        lof = psi_arr_trial - psi_arr
         return lof
-        
+
     # -------------------------------------------------------------
     # Get the values of the maximum microplane strains (state variables) iteratively 
     # calculated within each iteration step of the global time loop algorithm fullfilling  
@@ -854,18 +852,18 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     # -------------------------------------------------------------    
     def get_corr_pred_cv(self, sctx, eps_app_eng, d_eps, tn, tn1, eps_avg=None):
         '''
-        Returns two arrays containing the microplane strain and stress vectors 
+        Returns two arrays containing the microplane strain and stress vectors
         consistently derived based on the specified model version, i.e. either 'stiffness' or 'compliance'
         '''
         # for compliance version only
         #
         if self.model_version != 'compliance':
             raise ExceptionError('only valid for compliance version')
-            
+
         e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(self, sctx, e_max_arr_new, eps_app_eng))
-        
+
         self.update_state_variables(e_max_arr_new)
-            
+
         # get the corresponding macroscopic stresses for D_mtx at time t_i+1 for strain
         sig_app_eng, D_mtx_cv = self.get_corr_pred(sctx, e_max_arr_new, eps_app_eng, 0, 0, 0)
 
@@ -991,7 +989,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'U_t', U_t        
 #        print 'E_t - U_t', E_t - U_t
         return E_t - U_t
-        
+
         e_max_arr = self._get_state_variables(sctx, eps_app_eng)
         fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
         fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
@@ -1020,12 +1018,12 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 
     def get_max_omega_i(self, sctx, eps_app_eng):
         '''
-        Get maximum damage at all microplanes. 
+        Get maximum damage at all microplanes.
         '''
         min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
-        max_omega = 1. - min_phi 
+        max_omega = 1. - min_phi
         return np.array([ max_omega ])
-         
+
     def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):
         '''
         Returns the 2nd order damage tensor 'phi_mtx'

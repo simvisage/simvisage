@@ -135,14 +135,14 @@ class RTraceMngr(IBVResource):
 
     def record_iter(self, sctx, U_k, *args, **kw):
         for rte in self.get_values():
-            if rte.update_on == 'iteration':
+            if rte.record_on == 'iteration':
                 rte.add_current_values(sctx, U_k,
                                        *self.tstepper.args, **self.tstepper.kw)
                 rte.add_current_displ(sctx, U_k)
 
     def record_equilibrium(self, sctx, U_k):
         for rte in self.get_values():
-            if rte.update_on == 'update':
+            if rte.record_on == 'update':
                 rte.add_current_values(sctx, U_k,
                                        *self.tstepper.args, **self.tstepper.kw)
                 rte.add_current_displ(sctx, U_k)

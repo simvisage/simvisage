@@ -228,6 +228,12 @@ class TLoop(IBVResource):
         }
 
     sync_resp_tracing = Bool(False)
+    _updated = Int(0)
+    eval_timer = Instance(CompTimer)
+    iter_timer = Instance(CompTimer)
+    crpr_timer = Instance(CompTimer)
+    solv_timer = Instance(CompTimer)
+    rtrace_mngr_timer = Instance(CompTimer)
 
     def __init__(self, *args, **kwtraits):
         super(TLoop, self).__init__(**kwtraits)

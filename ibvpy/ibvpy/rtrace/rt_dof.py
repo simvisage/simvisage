@@ -25,65 +25,64 @@ from mathkit.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
 class RTraceGraph(RTrace):
     '''
     Collects two response evaluators to make a response graph.
-    
-    The supplied strings for var_x and var_y are used to locate the rte in 
-    the current response manager. The bind method is used to navigate to 
-    the rte and is stored in here as var_x_eval and var_y_val as Callable 
+
+    The supplied strings for var_x and var_y are used to locate the rte in
+    the current response manager. The bind method is used to navigate to
+    the rte and is stored in here as var_x_eval and var_y_val as Callable
     object.
-    
-    The request for new response evaluation is launched by the time loop 
-    and directed futher by the response manager. This method is used solely 
+
+    The request for new response evaluation is launched by the time loop
+    and directed futher by the response manager. This method is used solely
     for collecting the data, not for their visualization in the viewer.
-    
+
     The timer_tick method is invoked when the visualization of the Graph
     should be synchronized with the actual contents.
     '''
 
     label = Str('RTraceGraph')
     var_x = Str('')
-    var_x_eval = Callable(trantient = True)
+    var_x_eval = Callable(trantient=True)
     idx_x_arr = Array
-    idx_x = Int(-1, enter_set = True, auto_set = False)
+    idx_x = Int(-1, enter_set=True, auto_set=False)
     var_y = Str('')
-    var_y_eval = Callable(trantient = True)
+    var_y_eval = Callable(trantient=True)
     idx_y_arr = Array
-    idx_y = Int(-1, enter_set = True, auto_set = False)
-    transform_x = Str(enter_set = True, auto_set = False)
-    transform_y = Str(enter_set = True, auto_set = False)
+    idx_y = Int(-1, enter_set=True, auto_set=False)
+    transform_x = Str(enter_set=True, auto_set=False)
+    transform_y = Str(enter_set=True, auto_set=False)
 
     trace = Instance(MFnLineArray)
     def _trace_default(self):
         return MFnLineArray()
 
     print_button = ToolbarButton('Print Values',
-                                   style = 'toolbar')
+                                   style='toolbar', trantient=True)
 
     @on_trait_change('print_button')
-    def print_values(self, event = None):
+    def print_values(self, event=None):
         print 'x:\t', self.trace.xdata, '\ny:\t', self.trace.ydata
 
-    view = View(VSplit(VGroup(HGroup (VGroup(HGroup(Spring(), Item('var_x', style = 'readonly'),
-                                                         Item('idx_x', show_label = False)),
+    view = View(VSplit(VGroup(HGroup (VGroup(HGroup(Spring(), Item('var_x', style='readonly'),
+                                                         Item('idx_x', show_label=False)),
                                                   Item('transform_x')),
-                                          VGroup(HGroup(Spring(), Item('var_y', style = 'readonly'),
-                                                         Item('idx_y', show_label = False)),
+                                          VGroup(HGroup(Spring(), Item('var_y', style='readonly'),
+                                                         Item('idx_y', show_label=False)),
                                                          Item('transform_y')),
                                           VGroup('update_on', 'clear_on')),
-                                 HGroup(Item('refresh_button', show_label = False),
-                                         Item('print_button', show_label = False)),
+                                 HGroup(Item('refresh_button', show_label=False),
+                                         Item('print_button', show_label=False)),
                                 ),
                          Item('trace@', \
-                              editor = MFnMatplotlibEditor(\
-                                        adapter = MFnPlotAdapter(var_x = 'var_x',
-                                                                  var_y = 'var_y',
-                                                                  min_size = (100, 100),
-                                                                  max_size = (350, 350))),
-                              show_label = False, resizable = True),
+                              editor=MFnMatplotlibEditor(\
+                                        adapter=MFnPlotAdapter(var_x='var_x',
+                                                                  var_y='var_y',
+                                                                  min_size=(100, 100))),
+                              show_label=False, resizable=True),
                          ),
-                 buttons = [OKButton, CancelButton],
-                 resizable = True,
-                 scrollable = True,
-                 height = 0.5, width = 0.5)
+                 buttons=[OKButton, CancelButton],
+                 resizable=True,
+                 scrollable=True,
+                 height=0.5, width=0.5)
 
     _xdata = List(Array(float))
     _ydata = List(Array(float))
@@ -138,7 +137,7 @@ class RTraceGraph(RTrace):
         self._ydata.append(np.copy(y))
 
     @on_trait_change('idx_x,idx_y')
-    def redraw(self, e = None):
+    def redraw(self, e=None):
         if ((self.idx_x < 0 and len(self.idx_x_arr) == 0) or
              (self.idx_y < 0 and len(self.idx_y_arr) == 0) or
              self._xdata == [] or
@@ -171,7 +170,7 @@ class RTraceGraph(RTrace):
         if self.transform_x:
             def transform_x_fn(x):
                 '''makes a callable function out of the Str-attribute
-                "transform_x". The vectorised version of this function is 
+                "transform_x". The vectorised version of this function is
                 then used to transform the values in "xarray". Note that
                 the function defined in "transform_x" must be defined in
                 terms of a lower case variable "x".
@@ -182,7 +181,7 @@ class RTraceGraph(RTrace):
         if self.transform_y:
             def transform_y_fn(y):
                 '''makes a callable function out of the Str-attribute
-                "transform_y". The vectorised version of this function is 
+                "transform_y". The vectorised version of this function is
                 then used to transform the values in "yarray". Note that
                 the function defined in "transform_y" must be defined in
                 terms of a lower case variable "y".
@@ -194,7 +193,7 @@ class RTraceGraph(RTrace):
         self.trace.ydata = np.array(yarray)
         self.trace.data_changed = True
 
-    def timer_tick(self, e = None):
+    def timer_tick(self, e=None):
         # @todo: unify with redraw
         pass
 
@@ -207,8 +206,8 @@ class RTraceGraph(RTrace):
 class RTraceArraySnapshot(RTrace):
     '''
     Plot the current value of the array along the x_axis
-    
-    Used currently for plotting the integrity factor over microplanes 
+
+    Used currently for plotting the integrity factor over microplanes
     '''
     var = Str('')
     var_eval = Callable
@@ -220,13 +219,13 @@ class RTraceArraySnapshot(RTrace):
 
     view = View(HSplit(VGroup (VGroup('var'),
                                   VGroup('update_on', 'clear_on')),
-                         Item('trace@', style = 'custom',
-                              editor = MFnMatplotlibEditor(\
-                                        adapter = MFnPlotAdapter(var_y = 'var')),
-                              show_label = False, resizable = True),
+                         Item('trace@', style='custom',
+                              editor=MFnMatplotlibEditor(\
+                                        adapter=MFnPlotAdapter(var_y='var')),
+                              show_label=False, resizable=True),
                          ),
-                 buttons = [OKButton, CancelButton],
-                 resizable = True)
+                 buttons=[OKButton, CancelButton],
+                 resizable=True)
 
     def bind(self):
         '''
@@ -241,11 +240,11 @@ class RTraceArraySnapshot(RTrace):
         '''
         Invoke the evaluators in the current context for the specified control vector U_k.
         '''
-        self.y = np.array(self.var_eval(sctx, U_k, *args, **kw), dtype = 'float')
-        self.x = np.arange(0, len(self.y), dtype = 'float')
+        self.y = np.array(self.var_eval(sctx, U_k, *args, **kw), dtype='float')
+        self.x = np.arange(0, len(self.y), dtype='float')
         self.redraw()
 
-    def timer_tick(self, e = None):
+    def timer_tick(self, e=None):
         self.redraw()
 
     def redraw(self):
@@ -254,15 +253,15 @@ class RTraceArraySnapshot(RTrace):
 
     def clear(self):
         # @todo: 
-        self.x = np.zeros((0,), dtype = 'float_')
-        self.y = np.zeros((0,), dtype = 'float_')
+        self.x = np.zeros((0,), dtype='float_')
+        self.y = np.zeros((0,), dtype='float_')
 
 if __name__ == '__main__':
 
-    rm1 = RTraceGraph(name = 'rte 1',
-                       idx_x = 0,
-                       idx_y = 0,
-                       transform_x = '-x')
+    rm1 = RTraceGraph(name='rte 1',
+                       idx_x=0,
+                       idx_y=0,
+                       transform_x='-x')
 #                       transform_x = lambda x: -x )
 
 #    print rm1.dir
@@ -271,3 +270,8 @@ if __name__ == '__main__':
     rm1.add_pair(np.array([2.0, 1.5]), np.array([2.0, 2.0]))
     rm1.redraw()
     rm1.configure_traits()
+
+    filename = '/tmp/testx'
+    f = open(filename, 'w')
+    pickle.dump(rm1, f)
+    f.close()

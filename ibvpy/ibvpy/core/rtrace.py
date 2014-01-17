@@ -1,6 +1,6 @@
 
 from etsproxy.traits.api import \
-    Array, Bool, Callable, Enum, File, Float, HasTraits, \
+    Array, Bool, Callable, Enum, File, Float, HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     Dict, Property, cached_property, WeakRef, Delegate, \
     ToolbarButton, on_trait_change
@@ -18,14 +18,15 @@ from mathkit.mfn import MFnLineArray
 
 #from rt_domain import RTraceDomainField
 
-class RTrace(HasTraits):
+class RTrace(HasStrictTraits):
     name = Str('unnamed')
-    update_on = Enum('update', 'iteration')
+    record_on = Enum('update', 'iteration')
     clear_on = Enum('never', 'update')
     save_on = Enum(None)
 
     #sctx = WeakRef( SContext )
-    rmgr = WeakRef(trantient = True)
+    rmgr = WeakRef(trantient=True)
+    sd = WeakRef(trantient=True)
 
     # path to directory to store the data
     dir = Property
@@ -46,11 +47,11 @@ class RTrace(HasTraits):
         pass
 
     refresh_button = ToolbarButton('Refresh',
-                                   style = 'toolbar',
-                                   trantient = True)
+                                   style='toolbar',
+                                   trantient=True)
 
     @on_trait_change('refresh_button')
-    def refresh(self, event = None):
+    def refresh(self, event=None):
         self.redraw()
 
     def add_current_values(self, sctx, U_k, *args, **kw):
@@ -62,7 +63,7 @@ class RTrace(HasTraits):
     def register_mv_pipelines(self, e):
         '''
         Eventually register pipeline components within the mayavi sceen.
-        
+
         do nothing by default
         '''
 

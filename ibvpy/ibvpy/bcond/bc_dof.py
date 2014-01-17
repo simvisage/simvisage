@@ -111,18 +111,18 @@ class BCDof(HasStrictTraits):
         n = self.link_dofs  # constraining dofs
         a_ix = ix_([a])   # constrained dof as array
         n_ix = ix_(n)   # constraining dofs as array
-        n_ix_arr = array(list(self.link_dofs), dtype = int)
+        n_ix_arr = array(list(self.link_dofs), dtype=int)
 
         #------------------------------------
         # Handle essential boundary condition
         #------------------------------------
         if self.is_essential():
-            self._constraint = K.register_constraint(a = a, u_a = self.value,
-                                                     alpha = alpha, ix_a = n_ix_arr)
+            self._constraint = K.register_constraint(a=a, u_a=self.value,
+                                                     alpha=alpha, ix_a=n_ix_arr)
 
     def apply(self, step_flag, sctx, K, R, t_n, t_n1):
         '''
-        According to the kind specification add the 
+        According to the kind specification add the
         '''
 
         a = self.dof   # affected dof
@@ -133,7 +133,7 @@ class BCDof(HasStrictTraits):
         n = self.link_dofs  # constraining dofs
         a_ix = ix_([a])   # constrained dof as array
         n_ix = ix_(n)   # constraining dofs as array
-        n_ix_arr = array(list(self.link_dofs), dtype = int)
+        n_ix_arr = array(list(self.link_dofs), dtype=int)
 
         #------------------------------------
         # Handle essential boundary condition
@@ -180,37 +180,37 @@ if __name__ == '__main__':
     from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
 
 
-    fets_eval = FETS1D2L(mats_eval = MATS1DElastic(E = 10., A = 1.))
+    fets_eval = FETS1D2L(mats_eval=MATS1DElastic(E=10., A=1.))
 
     # Discretization
-    fe_domain1 = FEGrid(coord_max = (10., 0., 0.),
-                               shape = (10,),
-                               fets_eval = fets_eval)
+    fe_domain1 = FEGrid(coord_max=(10., 0., 0.),
+                               shape=(10,),
+                               fets_eval=fets_eval)
 
-    fe_domain2 = FEGrid(coord_min = (10., 0., 0.),
-                                       coord_max = (20., 0., 0.),
-                                       shape = (10,),
-                                       fets_eval = fets_eval)
+    fe_domain2 = FEGrid(coord_min=(10., 0., 0.),
+                                       coord_max=(20., 0., 0.),
+                                       shape=(10,),
+                                       fets_eval=fets_eval)
 
-    fe_domain = FEDomainList(subdomains = [ fe_domain1, fe_domain2 ])
-    ts = TS(dof_resultants = True,
-             sdomain = fe_domain,
-             bcond_list = [ BCDof(var = 'u', dof = 0, value = 0.),
-                                   BCDof(var = 'u', dof = 5, link_dofs = [16], link_coeffs = [1.], value = 0.),
-                                   BCDof(var = 'f', dof = 21, value = 10) ],
-             rtrace_list = [ RTraceGraph(name = 'Fi,right over u_right (iteration)' ,
-                                           var_y = 'F_int', idx_y = 0,
-                                           var_x = 'U_k', idx_x = 1),
+    fe_domain = FEDomainList(subdomains=[ fe_domain1, fe_domain2 ])
+    ts = TS(dof_resultants=True,
+             sdomain=fe_domain,
+             bcond_list=[ BCDof(var='u', dof=0, value=0.),
+                                   BCDof(var='u', dof=5, link_dofs=[16], link_coeffs=[1.], value=0.),
+                                   BCDof(var='f', dof=21, value=10) ],
+             rtrace_list=[ RTraceGraph(name='Fi,right over u_right (iteration)' ,
+                                           var_y='F_int', idx_y=0,
+                                           var_x='U_k', idx_x=1),
                                            ]
                         )
 
     # Add the time-loop control
-    tloop = TLoop(tstepper = ts, tline = TLine(min = 0.0, step = 1, max = 1.0))
+    tloop = TLoop(tstepper=ts, tline=TLine(min=0.0, step=1, max=1.0))
 
 
-    ts.set(sdomain = FEDomainList(subdomains = [ fe_domain1, fe_domain2 ]))
+    ts.set(sdomain=FEDomainList(subdomains=[ fe_domain1, fe_domain2 ]))
 
-    ts.set(bcond_list = [BCDof(var = 'u', dof = 0, value = 0.),
-                          BCDof(var = 'u', dof = 5, link_dofs = [16], link_coeffs = [1.], value = 0.),
-                          BCDof(var = 'f', dof = 21, value = 10) ])
+    ts.set(bcond_list=[BCDof(var='u', dof=0, value=0.),
+                          BCDof(var='u', dof=5, link_dofs=[16], link_coeffs=[1.], value=0.),
+                          BCDof(var='f', dof=21, value=10) ])
     print tloop.eval()
