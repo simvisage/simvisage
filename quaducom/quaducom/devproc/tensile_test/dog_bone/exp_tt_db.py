@@ -36,7 +36,7 @@ from numpy import \
 import numpy as np
 
 from etsproxy.traits.ui.api \
-    import View, Item
+    import View, Item, HSplit, Group, VSplit
 
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
