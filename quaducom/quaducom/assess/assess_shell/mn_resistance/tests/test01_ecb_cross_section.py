@@ -19,7 +19,7 @@ def test_ecb_cross_section_mn():
                          width=0.1
                          )
 
-
+    print cp.M, cp.N
     assert np.allclose([cp.M, cp.N], [1.14513592334, -22.1303533699])
     cp.n_layers = 5
     assert np.allclose([cp.M, cp.N], [1.29225385264, -6.60917224146])

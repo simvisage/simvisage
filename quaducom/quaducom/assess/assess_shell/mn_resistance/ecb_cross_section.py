@@ -314,7 +314,9 @@ class ECBCrossSection(ECBCrossSectionState):
     @cached_property
     def _get_N(self):
         N_tk = sum(self.f_ti_arr)
+        print 'N_tk', N_tk
         N_ck = np.trapz(self.sig_cj_arr * self.width, self.z_cj_arr) * 1000.0
+        print 'N_tk', N_ck
 
         N_internal = N_ck + N_tk
         return N_internal
