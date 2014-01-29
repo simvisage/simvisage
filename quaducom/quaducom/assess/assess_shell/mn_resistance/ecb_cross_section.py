@@ -21,6 +21,9 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
+from ecb_cross_section_state import \
+    ECBCrossSectionState
+
 from ecb_cross_section_geo import \
     ECBCrossSectionGeo
 
@@ -35,7 +38,7 @@ from cc_law import \
 
 import numpy as np
 
-class ECBCrossSection(HasStrictTraits):
+class ECBCrossSection(ECBCrossSectionState):
     '''Cross section characteristics needed for tensile specimens
     '''
 
@@ -121,13 +124,6 @@ class ECBCrossSection(HasStrictTraits):
     #
     n_cj = Int(20, auto_set=False, enter_set=True,
                  cc_input=True, eps_input=True)
-
-    #===========================================================================
-    # Strain state
-    #===========================================================================
-
-    eps_up = Float(-0.0033, auto_set=False, enter_set=True, eps_input=True)
-    eps_lo = Float(0.0140, auto_set=False, enter_set=True, eps_input=True)
 
     x = Property(depends_on='+eps_input,geo.modified')
     '''Height of the compressive zone

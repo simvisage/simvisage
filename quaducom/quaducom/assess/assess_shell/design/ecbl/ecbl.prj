@@ -1,6 +1,6 @@
 format 74
 "ecbl"
-  revision 2
+  revision 4
   modified_by 77 "rch"
 
 
@@ -87,7 +87,6 @@ ${docstring}${members}
 	    classrelation_ref 128461 // <unidirectional association>
 	  b parent class_ref 128461 // ECBCrossSection
       end
-
     end
 
     class 128205 "ECBLaw"
@@ -174,24 +173,34 @@ ${docstring}${members}
 	  b parent class_ref 128205 // ECBLaw
       end
 
-      attribute 134733 "eps_up"
-	private explicit_type "float"
-	cpp_decl ""
-	java_decl ""
-	php_decl ""
-	python_decl "${comment}${self}${name} = ${value}
+      classrelation 142029 // <directional composition>
+	relation 142029 *-->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${type}()
 "
-	idl_decl ""
+	    classrelation_ref 142029 // <directional composition>
+	  b parent class_ref 135245 // ECBCrossSectionGeo
       end
 
-      attribute 134861 "eps_lo"
-	private explicit_type "float"
-	cpp_decl ""
-	java_decl ""
-	php_decl ""
-	python_decl "${comment}${self}${name} = ${value}
+      classrelation 142157 // <association>
+	relation 142157 ----
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
 "
-	idl_decl ""
+	    classrelation_ref 142157 // <association>
+	  b role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 142285 // <association>
+      end
+
+      classrelation 142413 // <unidirectional association>
+	relation 142285 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 142413 // <unidirectional association>
+	  b parent class_ref 135245 // ECBCrossSectionGeo
       end
     end
 
@@ -234,6 +243,82 @@ ${docstring}${members}
 	    python "${type}"
 	    classrelation_ref 128717 // <generalisation>
 	  b parent class_ref 128205 // ECBLaw
+      end
+    end
+
+    class 135245 "ECBCrossSectionGeo"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 142285 // <association>
+	relation_ref 142157 // <association>
+      end
+
+      classrelation 148941 // <unidirectional association>
+	relation 148813 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 148941 // <unidirectional association>
+	  b parent class_ref 141773 // ECBCrossSectionState
+      end
+
+      attribute 141901 "n_cj"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      classrelation 149069 // <unidirectional association>
+	relation 148941 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 149069 // <unidirectional association>
+	  b parent class_ref 128461 // ECBCrossSection
+      end
+    end
+
+    class 141773 "ECBCrossSectionState"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      attribute 141645 "eps_up"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      attribute 141773 "eps_lo"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
       end
     end
   end
