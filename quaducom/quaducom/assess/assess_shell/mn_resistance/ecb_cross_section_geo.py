@@ -8,66 +8,148 @@ Created on Sep 4, 2012
 '''
 from etsproxy.traits.api import \
     HasStrictTraits, Float, Property, cached_property, Int, \
-    Event, on_trait_change, Callable
+    Event, on_trait_change, Callable, Instance, WeakRef, Trait, Button
 
 from etsproxy.traits.ui.api import \
     View, Item, Group, HGroup
 
+from ecb_cross_section_component import \
+    ECBCrossSectionComponent, ECB_COMPONENT_DEPEND
+
+from ecb_cross_section_state import \
+    ECBCrossSectionState
+
+from util.traits.editors.mpl_figure_editor import \
+    MPLFigureEditor
+
+from matplotlib.figure import \
+    Figure
+
+from etsproxy.traits.ui.api import \
+    View, Item, Group, HSplit, VGroup, HGroup
+
+from ecb_cross_section_component import \
+    ECBCrossSectionComponent
+
+from ecb_law import \
+    ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
+
+from constitutive_law import \
+    ConstitutiveLawModelView
+
+from cc_law import \
+    CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic, CCLawQuad
+
 import numpy as np
 
-class ECBCrossSectionGeo(HasStrictTraits):
+class ECBCrossSectionGeo(ECBCrossSectionComponent):
     '''Cross section characteristics needed for tensile specimens.
     '''
-
-    thickness = Float(0.06, auto_set=False, enter_set=True, geo_input=True)
-    '''thickness of reinforced cross section
+    state = WeakRef(ECBCrossSectionState)
+    '''Strain state of a cross section
     '''
 
-    n_layers = Int(12, auto_set=False, enter_set=True, geo_input=True)
-    '''total number of reinforcement layers [-]
+    n_cj = Float(30, auto_set=False, enter_set=True, geo_input=True)
+    '''Number of integration points.
     '''
 
-    #---------------------------------------------------------------
-    # Cross section characteristics needed for bending specimens 
-    #---------------------------------------------------------------
+    f_ck = Float(55.7, auto_set=False, enter_set=True,
+                 cc_input=True)
+    '''Ultimate compression stress  [MPa]
+    '''
+
+    eps_c_u = Float(0.0033, auto_set=False, enter_set=True,
+                    cc_input=True)
+    '''Strain at failure of the matrix in compression [-]
+    '''
 
     width = Float(0.20, auto_set=False, enter_set=True, geo_input=True)
     '''width of the cross section [m]
     '''
 
-    n_rovings = Int(23, auto_set=False, enter_set=True, geo_input=True)
-    '''number of rovings in 0-direction of one composite layer of the
-    bending test [-]:
-    '''
-
-    A_roving = Float(0.461, auto_set=False, enter_set=True, geo_input=True)
-    '''cross section of one roving [mm**2]'''
-
-    #===========================================================================
-    # Derived geometric data
-    #===========================================================================
-
-    s_tex_z = Property(depends_on='+geo_input')
-    '''property: spacing between the layers [m]
-    '''
-    @cached_property
-    def _get_s_tex_z(self):
-        return self.thickness / (self.n_layers + 1)
-
-    z_ti_arr = Property(depends_on='+geo_input')
-    '''property: distance from the top of each reinforcement layer [m]:
+    z_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Discretizaton of the  compressive zone
     '''
     @cached_property
     def _get_z_ti_arr(self):
-        return np.array([ self.thickness - (i + 1) * self.s_tex_z
-                         for i in range(self.n_layers) ],
-                      dtype=float)
+        if self.state.eps_up <= 0: # bending
+            zx = min(self.state.height, self.state.x)
+            return np.linspace(0, zx, self.n_cj)
+        elif self.state.eps_lo <= 0: # bending
+            return np.linspace(self.x, self.state.height, self.n_cj)
+        else: # no compression
+            return np.array([0], dtype='f')
 
-    zz_ti_arr = Property
-    '''property: distance of reinforcement layers from the bottom
+    eps_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Compressive strain at each integration layer of the compressive zone [-]:
     '''
+    @cached_property
+    def _get_eps_ti_arr(self):
+        # for calibration us measured compressive strain
+        # @todo: use mapped traits instead
+        #
+        height = self.state.height
+        eps_up = self.state.eps_up
+        eps_lo = self.state.eps_lo
+        eps_j_arr = (eps_up + (eps_lo - eps_up) * self.z_ti_arr /
+                     height)
+        return (-np.fabs(eps_j_arr) + eps_j_arr) / 2.0
+
+    zz_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Distance of reinforcement layers from the bottom
+    '''
+    @cached_property
     def _get_zz_ti_arr(self):
-        return self.thickness - self.z_ti_arr
+        return self.thickness - self.z_cj_arr
+
+    #===========================================================================
+    # Compressive concrete constitutive law
+    #===========================================================================
+
+    cc_law_type = Trait('constant', dict(constant=CCLawBlock,
+                                         linear=CCLawLinear,
+                                         quadratic=CCLawQuadratic,
+                                         quad=CCLawQuad),
+                        cc_input=True)
+    '''Selector of the concrete compression law type
+    ['constant', 'linear', 'quadratic', 'quad']'''
+
+    cc_law = Property(Instance(CCLawBase), depends_on='+cc_input')
+    '''Compressive concrete law corresponding to cc_law_type'''
+    @cached_property
+    def _get_cc_law(self):
+        return self.cc_law_type_(f_ck=self.f_ck, eps_c_u=self.eps_c_u, cs=self)
+
+    show_cc_law = Button
+    '''Button launching a separate view of the compression law.
+    '''
+    def _show_cc_law_fired(self):
+        cc_law_mw = ConstitutiveLawModelView(model=self.cc_law)
+        cc_law_mw.edit_traits(kind='live')
+        return
+
+    cc_modified = Event
+
+    #===========================================================================
+    # Calculation of compressive stresses and forces
+    #===========================================================================
+
+    sig_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Stresses at the j-th integration point.
+    '''
+    @cached_property
+    def _get_sig_ti_arr(self):
+        return -self.cc_law.mfn_vct(-self.eps_ti_arr)
+
+    f_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Layer force corresponding to the j-th integration point.
+    '''
+    @cached_property
+    def _get_f_ti_arr(self):
+        return self.width * self.sig_ti_arr
+
+    def _get_N(self):
+        return np.trapz(self.f_ti_arr, self.z_ti_arr)
 
     modified = Event
     @on_trait_change('+geo_input')
@@ -89,6 +171,9 @@ class ECBCrossSectionGeo(HasStrictTraits):
                 buttons=['OK', 'Cancel'])
 
 if __name__ == '__main__':
-    ecs = ECBCrossSectionGeo(n_layers=3, thickness=1)
-    print 'zz_ti_arr', ecs.zz_ti_arr
-    ecs.configure_traits()
+    state = ECBCrossSectionState(eps_lo=0.02)
+    ecs = ECBCrossSectionGeo(state=state, n_layers=3, thickness=1)
+
+    print 'zz_ti_arr', ecs.zz_tj_arr
+    print 'ecb_lo', ecs.state.eps_lo
+    #ecs.configure_traits()

@@ -10,7 +10,7 @@ Created on Sep 4, 2012
 from etsproxy.traits.api import \
     HasStrictTraits, Float, Property, cached_property, Int, \
     Trait, Event, on_trait_change, Instance, Button, Callable, \
-    DelegatesTo, Constant, List
+    DelegatesTo, Constant
 
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
@@ -21,58 +21,164 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_cross_section_state import \
-    ECBCrossSectionState
+from ecb_law import \
+    ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
-from ecb_cross_section_geo import \
-    ECBCrossSectionComponent
+from constitutive_law import \
+    ConstitutiveLawModelView
+
+from ecb_cross_section_component import \
+    ECBCrossSectionComponent, ECB_COMPONENT_DEPEND
 
 import numpy as np
 
-class ECBCrossSection(ECBCrossSectionState):
+class ECBReinfTexUniform(ECBCrossSectionComponent):
     '''Cross section characteristics needed for tensile specimens
     '''
-    components = List(ECBCrossSectionComponent)
-    '''Components of the cross section including the matrix and reinforcement.
+
+    height = DelegatesTo('state')
+    '''height of reinforced cross section
     '''
 
-    components_with_state = Property(depends_on='components')
-    '''Components linked to the strain state of the cross section
+    n_layers = Int(12, auto_set=False, enter_set=True, geo_input=True)
+    '''total number of reinforcement layers [-]
     '''
-    @cached_property
-    def _get_components_with_state(self):
-        for c in self.components:
-            c.state = self
-        return self.components
+
+    n_rovings = Int(23, auto_set=False, enter_set=True, geo_input=True)
+    '''number of rovings in 0-direction of one composite layer of the
+    bending test [-]:
+    '''
+
+    A_roving = Float(0.461, auto_set=False, enter_set=True, geo_input=True)
+    '''cross section of one roving [mm**2]'''
+
+    def convert_eps_tex_u_2_lo(self, eps_tex_u):
+        '''Convert the strain in the lowest reinforcement layer at failure
+        to the strain at the bottom of the cross section'''
+        eps_up = self.state.eps_up
+        return eps_up + (eps_tex_u - eps_up) / self.z_ti_arr[0] * self.height
+
+    def convert_eps_lo_2_tex_u(self, eps_lo):
+        '''Convert the strain at the bottom of the cross section to the strain
+        in the lowest reinforcement layer at failure'''
+        eps_up = self.state.eps_up
+        return (eps_up + (eps_lo - eps_up) / self.height * self.z_ti_arr[0])
 
     unit_conversion_factor = Constant(1000.0)
-
     '''Convert the MN to kN
     '''
 
     #===========================================================================
-    # State management
-    #===========================================================================
-    modified = Event
-
-    #===========================================================================
-    # Cross-sectional stress resultants
+    # material properties 
     #===========================================================================
 
-    N = Property(depends_on='modified,+eps_input')
-    '''Get the resulting normal force.
+    sig_tex_u = Float(1216., auto_set=False, enter_set=True,
+                      tt_input=True)
+    '''Ultimate textile stress measured in the tensile test [MPa]
+    '''
+
+    #===========================================================================
+    # Distribution of reinforcement
+    #===========================================================================
+
+    s_tex_z = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''spacing between the layers [m]'''
+    @cached_property
+    def _get_s_tex_z(self):
+        return self.height / (self.n_layers + 1)
+
+
+    z_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''property: distance of each reinforcement layer from the top [m]:
     '''
     @cached_property
-    def _get_N(self):
-        return np.sum([c.N for c in self.components_with_state])
+    def _get_z_ti_arr(self):
+        return np.array([ self.height - (i + 1) * self.s_tex_z
+                         for i in range(self.n_layers) ],
+                      dtype=float)
 
-    M = Property(depends_on='modified,+eps_input')
-    '''Get the resulting moment.
+    zz_ti_arr = Property
+    '''property: distance of reinforcement layers from the bottom
+    '''
+    def _get_zz_ti_arr(self):
+        return self.height - self.z_ti_arr
+
+    #===========================================================================
+    # Discretization conform to the tex layers
+    #===========================================================================
+
+    eps_i_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Strain at the level of the i-th reinforcement layer
     '''
     @cached_property
-    def _get_M(self):
-        M = np.sum([c.M for c in self.components_with_state])
-        return M - self.N * self.height / 2.
+    def _get_eps_i_arr(self):
+        # ------------------------------------------------------------------------                
+        # geometric params independent from the value for 'eps_t'
+        # ------------------------------------------------------------------------                
+        height = self.state.height
+        eps_lo = self.state.eps_lo
+        eps_up = self.state.eps_up
+        # strain at the height of each reinforcement layer [-]:
+        #
+        return eps_up + (eps_lo - eps_up) * self.z_ti_arr / height
+
+    eps_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Tension strain at the level of the i-th layer of the fabrics
+    '''
+    @cached_property
+    def _get_eps_ti_arr(self):
+        return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
+
+    eps_ci_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Compression strain at the level of the i-th layer.
+    '''
+    @cached_property
+    def _get_eps_ci_arr(self):
+        return (-np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
+
+    #===========================================================================
+    # Effective crack bridge law
+    #===========================================================================
+    ecb_law_type = Trait('fbm', dict(fbm=ECBLFBM,
+                                  cubic=ECBLCubic,
+                                  linear=ECBLLinear,
+                                  bilinear=ECBLBilinear),
+                      tt_input=True)
+    '''Selector of the effective crack bridge law type
+    ['fbm', 'cubic', 'linear', 'bilinear']'''
+
+    ecb_law = Property(Instance(ECBLBase), depends_on='+tt_input')
+    '''Effective crack bridge law corresponding to ecb_law_type'''
+    @cached_property
+    def _get_ecb_law(self):
+        return self.ecb_law_type_(sig_tex_u=self.sig_tex_u, cs=self)
+
+    show_ecb_law = Button
+    '''Button launching a separate view of the effective crack bridge law.
+    '''
+    def _show_ecb_law_fired(self):
+        ecb_law_mw = ConstitutiveLawModelView(model=self.ecb_law)
+        ecb_law_mw.edit_traits(kind='live')
+        return
+
+    tt_modified = Event
+
+    sig_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''Stresses at the i-th fabric layer.
+    '''
+    @cached_property
+    def _get_sig_ti_arr(self):
+        return self.ecb_law.mfn_vct(self.eps_ti_arr)
+
+    f_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    '''force at the height of each reinforcement layer [kN]:
+    '''
+    @cached_property
+    def _get_f_ti_arr(self):
+        sig_ti_arr = self.sig_ti_arr
+        n_rovings = self.n_rovings
+        A_roving = self.A_roving
+        return sig_ti_arr * n_rovings * A_roving / self.unit_conversion_factor
 
     figure = Instance(Figure)
     def _figure_default(self):
@@ -103,14 +209,14 @@ class ECBCrossSection(ECBCrossSectionState):
     def plot_eps(self, ax):
         #ax = self.figure.gca()
 
-        d = self.thickness
+        d = self.height
         # eps ti
-        ax.plot([-self.eps_lo, -self.eps_up], [0, self.thickness], color='black')
+        ax.plot([-self.eps_lo, -self.eps_up], [0, self.height], color='black')
         ax.hlines(self.zz_ti_arr, [0], -self.eps_ti_arr, lw=4, color='red')
 
         # eps cj
         ec = np.hstack([self.eps_cj_arr] + [0, 0])
-        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ])
+        zz = np.hstack([self.zz_cj_arr] + [0, self.height ])
         ax.fill(-ec, zz, color='blue')
 
         # reinforcement layers
@@ -132,13 +238,13 @@ class ECBCrossSection(ECBCrossSectionState):
 
     def plot_sig(self, ax):
 
-        d = self.thickness
+        d = self.height
         # f ti
         ax.hlines(self.zz_ti_arr, [0], -self.f_ti_arr, lw=4, color='red')
 
         # f cj
         f_c = np.hstack([self.f_cj_arr] + [0, 0])
-        zz = np.hstack([self.zz_cj_arr] + [0, self.thickness ])
+        zz = np.hstack([self.zz_cj_arr] + [0, self.height ])
         ax.fill(-f_c, zz, color='blue')
 
         f_range = np.array([np.max(self.f_ti_arr), np.min(f_c)], dtype='float_')
@@ -155,7 +261,7 @@ class ECBCrossSection(ECBCrossSectionState):
 
     view = View(HSplit(Group(
                 HGroup(
-                Group(Item('thickness', springy=True),
+                Group(Item('height', springy=True),
                       Item('width'),
                       Item('n_layers'),
                       Item('n_rovings'),
@@ -218,7 +324,7 @@ class ECBCrossSection(ECBCrossSectionState):
                 buttons=['OK', 'Cancel'])
 
 if __name__ == '__main__':
-    ecs = ECBCrossSection(# 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
+    ecs = ECBReinfTexUniform(# 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
                            f_ck=55.7,
 
