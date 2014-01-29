@@ -64,7 +64,6 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
         eps_up = self.state.eps_up
         return (eps_up + (eps_lo - eps_up) / self.height * self.z_ti_arr[0])
 
-    unit_conversion_factor = Constant(1000.0)
     '''Convert the MN to kN
     '''
 

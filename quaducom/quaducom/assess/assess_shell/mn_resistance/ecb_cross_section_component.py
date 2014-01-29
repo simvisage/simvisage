@@ -8,7 +8,7 @@ Created on Sep 4, 2012
 '''
 from etsproxy.traits.api import \
     HasStrictTraits, Float, Property, cached_property, Int, \
-    Event, on_trait_change, Callable, Instance, WeakRef
+    Event, on_trait_change, Callable, Instance, WeakRef, Constant
 
 from etsproxy.traits.ui.api import \
     View, Item, Group, HGroup
@@ -27,6 +27,8 @@ class ECBCrossSectionComponent(HasStrictTraits):
     state = WeakRef(ECBCrossSectionState)
     '''Strain state of a cross section
     '''
+
+    unit_conversion_factor = Constant(1000.0)
 
     #===========================================================================
     # State management

@@ -28,9 +28,6 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_cross_section_component import \
-    ECBCrossSectionComponent
-
 from ecb_law import \
     ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
@@ -146,10 +143,13 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     '''
     @cached_property
     def _get_f_ti_arr(self):
-        return self.width * self.sig_ti_arr
+        return self.width * self.sig_ti_arr * self.unit_conversion_factor
 
     def _get_N(self):
         return np.trapz(self.f_ti_arr, self.z_ti_arr)
+
+    def _get_M(self):
+        return np.trapz(self.f_ti_arr * self.z_ti_arr, self.z_ti_arr)
 
     modified = Event
     @on_trait_change('+geo_input')
