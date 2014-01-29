@@ -13,11 +13,19 @@ def test_ecb_cross_section_mn():
     '''Test the moment and normal force calculated for a cross section.
     '''
     cp = ECBCrossSection(components=[ECBReinfTexUniform(n_layers=3),
-                                     ECBCrossSectionGeo(width=0.1, n_cj=30)],
+                                     ECBCrossSectionGeo(width=0.1, n_cj=20)],
                          eps_lo=0.014,
                          eps_up= -0.0033,
                          height=0.05,
                          )
+
+    print 'eps_ti_arr', cp.components_with_state[0].eps_ti_arr
+    print 'sig_ti_arr', cp.components_with_state[0].sig_ti_arr
+    print 'f_ti_arr', cp.components_with_state[0].f_ti_arr
+
+    print 'eps_cj_arr', cp.components_with_state[1].eps_ti_arr
+    print 'sig_cj_arr', cp.components_with_state[1].sig_ti_arr
+    print 'f_cj_arr', cp.components_with_state[1].f_ti_arr
 
     print cp.M, cp.N
     assert np.allclose([cp.M, cp.N], [1.14513592334, -22.1303533699])
