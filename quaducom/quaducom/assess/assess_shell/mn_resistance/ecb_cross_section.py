@@ -53,20 +53,28 @@ class ECBCrossSection(ECBCrossSectionState):
     #===========================================================================
     # State management
     #===========================================================================
-    modified = Event
+    changed = Event
+    '''Notifier of a changed in some component of a cross section
+    '''
+
+    @on_trait_change('+eps_input')
+    def _notify_eps_change(self):
+        self.changed = True
+        for c in self.components:
+            c.eps_changed = True
 
     #===========================================================================
     # Cross-sectional stress resultants
     #===========================================================================
 
-    N = Property(depends_on='modified,+eps_input')
+    N = Property(depends_on='changed')
     '''Get the resulting normal force.
     '''
     @cached_property
     def _get_N(self):
         return np.sum([c.N for c in self.components_with_state])
 
-    M = Property(depends_on='modified,+eps_input')
+    M = Property(depends_on='changed')
     '''Get the resulting moment.
     '''
     @cached_property

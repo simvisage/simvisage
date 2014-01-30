@@ -28,7 +28,9 @@ from constitutive_law import \
     ConstitutiveLawModelView
 
 from ecb_cross_section_component import \
-    ECBCrossSectionComponent, ECB_COMPONENT_DEPEND
+    ECBCrossSectionComponent, \
+    ECB_COMPONENT_CHANGE, \
+    ECB_COMPONENT_AND_EPS_CHANGE
 
 import numpy as np
 
@@ -80,14 +82,14 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
     # Distribution of reinforcement
     #===========================================================================
 
-    s_tex_z = Property(depends_on=ECB_COMPONENT_DEPEND)
+    s_tex_z = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''spacing between the layers [m]'''
     @cached_property
     def _get_s_tex_z(self):
         return self.height / (self.n_layers + 1)
 
 
-    z_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    z_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''property: distance of each reinforcement layer from the top [m]:
     '''
     @cached_property
@@ -106,7 +108,7 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
     # Discretization conform to the tex layers
     #===========================================================================
 
-    eps_i_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    eps_i_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Strain at the level of the i-th reinforcement layer
     '''
     @cached_property
@@ -121,14 +123,14 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
         #
         return eps_up + (eps_lo - eps_up) * self.z_ti_arr / height
 
-    eps_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    eps_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Tension strain at the level of the i-th layer of the fabrics
     '''
     @cached_property
     def _get_eps_ti_arr(self):
         return (np.fabs(self.eps_i_arr) + self.eps_i_arr) / 2.0
 
-    eps_ci_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    eps_ci_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Compression strain at the level of the i-th layer.
     '''
     @cached_property
@@ -162,14 +164,14 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
 
     tt_modified = Event
 
-    sig_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    sig_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Stresses at the i-th fabric layer.
     '''
     @cached_property
     def _get_sig_ti_arr(self):
         return self.ecb_law.mfn_vct(self.eps_ti_arr)
 
-    f_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    f_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''force at the height of each reinforcement layer [kN]:
     '''
     @cached_property

@@ -14,7 +14,9 @@ from etsproxy.traits.ui.api import \
     View, Item, Group, HGroup
 
 from ecb_cross_section_component import \
-    ECBCrossSectionComponent, ECB_COMPONENT_DEPEND
+    ECBCrossSectionComponent, \
+    ECB_COMPONENT_CHANGE, \
+    ECB_COMPONENT_AND_EPS_CHANGE
 
 from ecb_cross_section_state import \
     ECBCrossSectionState
@@ -64,7 +66,7 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     '''width of the cross section [m]
     '''
 
-    z_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    z_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Discretizaton of the  compressive zone
     '''
     @cached_property
@@ -77,7 +79,7 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
         else: # no compression
             return np.array([0], dtype='f')
 
-    eps_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    eps_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Compressive strain at each integration layer of the compressive zone [-]:
     '''
     @cached_property
@@ -92,12 +94,12 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
                      height)
         return (-np.fabs(eps_j_arr) + eps_j_arr) / 2.0
 
-    zz_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    zz_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Distance of reinforcement layers from the bottom
     '''
     @cached_property
     def _get_zz_ti_arr(self):
-        return self.thickness - self.z_cj_arr
+        return self.height - self.z_cj_arr
 
     #===========================================================================
     # Compressive concrete constitutive law
@@ -131,14 +133,14 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     # Calculation of compressive stresses and forces
     #===========================================================================
 
-    sig_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    sig_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Stresses at the j-th integration point.
     '''
     @cached_property
     def _get_sig_ti_arr(self):
         return -self.cc_law.mfn_vct(-self.eps_ti_arr)
 
-    f_ti_arr = Property(depends_on=ECB_COMPONENT_DEPEND)
+    f_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Layer force corresponding to the j-th integration point.
     '''
     @cached_property
@@ -157,7 +159,7 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
         self.modified = True
 
     view = View(HGroup(
-                Group(Item('thickness', springy=True),
+                Group(Item('height', springy=True),
                       Item('width'),
                       Item('n_layers'),
                       Item('n_rovings'),
