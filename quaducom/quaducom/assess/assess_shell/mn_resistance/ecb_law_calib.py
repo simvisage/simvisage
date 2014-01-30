@@ -20,6 +20,12 @@ from scipy.optimize import fsolve
 from ecb_cross_section import \
     ECBCrossSection
 
+from ecb_reinf_tex_uniform import \
+    ECBReinfTexUniform
+
+from ecb_cross_section_geo import \
+    ECBCrossSectionGeo
+
 from ecb_law import ECBLBase
 
 from util.traits.editors.mpl_figure_editor import  \
@@ -45,7 +51,9 @@ class ECBLCalib(HasStrictTraits):
 
     cs = Instance(ECBCrossSection)
     def _cs_default(self):
-        return ECBCrossSection()
+        components = [ECBReinfTexUniform(n_layers=3),
+                      ECBCrossSectionGeo(width=0.1, n_cj=20)],
+        return ECBCrossSection(components=components)
 
     ecb_law_type = DelegatesTo('cs')
     ecb_law = DelegatesTo('cs')

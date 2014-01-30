@@ -15,3 +15,6 @@ from ecb_reinf_tex_uniform import \
 
 from ecb_law_calib import \
     ECBLCalib
+
+from ecb_matrix_cross_section import \
+    ECBMatrixCrossSection
