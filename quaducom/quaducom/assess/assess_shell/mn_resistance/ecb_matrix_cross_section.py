@@ -41,11 +41,8 @@ from cc_law import \
 
 import numpy as np
 
-class ECBCrossSectionGeo(ECBCrossSectionComponent):
+class ECBMatrixCrossSection(ECBCrossSectionComponent):
     '''Cross section characteristics needed for tensile specimens.
-    '''
-    state = WeakRef(ECBCrossSectionState)
-    '''Strain state of a cross section
     '''
 
     n_cj = Float(30, auto_set=False, enter_set=True, geo_input=True)
@@ -62,9 +59,28 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     '''Strain at failure of the matrix in compression [-]
     '''
 
+    height = Float(0.4, auto_set=False, enter_set=True, geo_input=True)
+    '''height of the cross section [m]
+    '''
+
     width = Float(0.20, auto_set=False, enter_set=True, geo_input=True)
     '''width of the cross section [m]
     '''
+
+    x = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
+    '''Height of the compressive zone
+    '''
+    @cached_property
+    def _get_x(self):
+        eps_lo = self.state.eps_lo
+        eps_up = self.state.eps_up
+        if eps_up == eps_lo:
+            # @todo: explain
+            return (abs(eps_up) / (abs(eps_up - eps_lo * 1e-9)) *
+                     self.height)
+        else:
+            return (abs(eps_up) / (abs(eps_up - eps_lo)) *
+                     self.height)
 
     z_ti_arr = Property(depends_on=ECB_COMPONENT_AND_EPS_CHANGE)
     '''Discretizaton of the  compressive zone
@@ -72,10 +88,10 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     @cached_property
     def _get_z_ti_arr(self):
         if self.state.eps_up <= 0: # bending
-            zx = min(self.state.height, self.state.x)
+            zx = min(self.height, self.x)
             return np.linspace(0, zx, self.n_cj)
         elif self.state.eps_lo <= 0: # bending
-            return np.linspace(self.x, self.state.height, self.n_cj)
+            return np.linspace(self.x, self.height, self.n_cj)
         else: # no compression
             return np.array([0], dtype='f')
 
@@ -87,7 +103,7 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
         # for calibration us measured compressive strain
         # @todo: use mapped traits instead
         #
-        height = self.state.height
+        height = self.height
         eps_up = self.state.eps_up
         eps_lo = self.state.eps_lo
         eps_j_arr = (eps_up + (eps_lo - eps_up) * self.z_ti_arr /
@@ -99,7 +115,7 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
     '''
     @cached_property
     def _get_zz_ti_arr(self):
-        return self.height - self.z_cj_arr
+        return self.height - self.z_ti_arr
 
     #===========================================================================
     # Compressive concrete constitutive law
@@ -174,8 +190,8 @@ class ECBCrossSectionGeo(ECBCrossSectionComponent):
 
 if __name__ == '__main__':
     state = ECBCrossSectionState(eps_lo=0.02)
-    ecs = ECBCrossSectionGeo(state=state, n_layers=3, thickness=1)
+    ecs = ECBMatrixCrossSection(state=state, height=0.4)
 
-    print 'zz_ti_arr', ecs.zz_tj_arr
+    print 'zz_ti_arr', ecs.zz_ti_arr
     print 'ecb_lo', ecs.state.eps_lo
     #ecs.configure_traits()

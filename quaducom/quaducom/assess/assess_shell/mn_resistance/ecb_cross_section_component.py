@@ -29,8 +29,6 @@ class ECBCrossSectionComponent(HasStrictTraits):
     '''Strain state of a cross section
     '''
 
-    height = DelegatesTo('state')
-
     unit_conversion_factor = Constant(1000.0)
 
     eps_changed = Event

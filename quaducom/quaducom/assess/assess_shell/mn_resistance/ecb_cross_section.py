@@ -24,26 +24,43 @@ from etsproxy.traits.ui.api import \
 from ecb_cross_section_state import \
     ECBCrossSectionState
 
-from ecb_cross_section_geo import \
-    ECBCrossSectionComponent
+from ecb_matrix_cross_section import \
+    ECBMatrixCrossSection
+
+from ecb_reinf_component import \
+    ECBReinfComponent
 
 import numpy as np
 
 class ECBCrossSection(ECBCrossSectionState):
     '''Cross section characteristics needed for tensile specimens
     '''
-    components = List(ECBCrossSectionComponent)
+
+    matrix_cs = Instance(ECBMatrixCrossSection)
+    def _matrix_cs_default(self):
+        return ECBMatrixCrossSection()
+
+    reinf = List(ECBReinfComponent)
     '''Components of the cross section including the matrix and reinforcement.
     '''
 
-    components_with_state = Property(depends_on='components')
+    matrix_cs_with_state = Property(depends_on='matrix_cs')
+    @cached_property
+    def _get_matrix_cs_with_state(self):
+        self.matrix_cs.state = self
+        return self.matrix_cs
+
+    reinf_components_with_state = Property(depends_on='reinf')
     '''Components linked to the strain state of the cross section
     '''
     @cached_property
-    def _get_components_with_state(self):
-        for c in self.components:
-            c.state = self
-        return self.components
+    def _get_reinf_components_with_state(self):
+        for r in self.reinf:
+            r.state = self
+            r.matrix_cs = self.matrix_cs
+        return self.reinf
+
+    height = DelegatesTo('matrix_cs')
 
     unit_conversion_factor = Constant(1000.0)
 
@@ -60,7 +77,8 @@ class ECBCrossSection(ECBCrossSectionState):
     @on_trait_change('+eps_input')
     def _notify_eps_change(self):
         self.changed = True
-        for c in self.components:
+        self.matrix_cs.eps_changed = True
+        for c in self.reinf:
             c.eps_changed = True
 
     #===========================================================================
@@ -72,14 +90,16 @@ class ECBCrossSection(ECBCrossSectionState):
     '''
     @cached_property
     def _get_N(self):
-        return np.sum([c.N for c in self.components_with_state])
+        N_matrix = self.matrix_cs_with_state.N
+        return N_matrix + np.sum([c.N for c in self.reinf_components_with_state])
 
     M = Property(depends_on='changed')
     '''Get the resulting moment.
     '''
     @cached_property
     def _get_M(self):
-        M = np.sum([c.M for c in self.components_with_state])
+        M_matrix = self.matrix_cs_with_state.M
+        M = M_matrix + np.sum([c.M for c in self.reinf_components_with_state])
         return M - self.N * self.height / 2.
 
     figure = Instance(Figure)

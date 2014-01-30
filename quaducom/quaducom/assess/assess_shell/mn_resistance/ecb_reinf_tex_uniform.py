@@ -27,18 +27,18 @@ from ecb_law import \
 from constitutive_law import \
     ConstitutiveLawModelView
 
-from ecb_cross_section_component import \
-    ECBCrossSectionComponent, \
+from ecb_reinf_component import \
+    ECBReinfComponent, \
     ECB_COMPONENT_CHANGE, \
     ECB_COMPONENT_AND_EPS_CHANGE
 
 import numpy as np
 
-class ECBReinfTexUniform(ECBCrossSectionComponent):
+class ECBReinfTexUniform(ECBReinfComponent):
     '''Cross section characteristics needed for tensile specimens
     '''
 
-    height = DelegatesTo('state')
+    height = DelegatesTo('matrix_cs')
     '''height of reinforced cross section
     '''
 
@@ -116,7 +116,7 @@ class ECBReinfTexUniform(ECBCrossSectionComponent):
         # ------------------------------------------------------------------------                
         # geometric params independent from the value for 'eps_t'
         # ------------------------------------------------------------------------                
-        height = self.state.height
+        height = self.height
         eps_lo = self.state.eps_lo
         eps_up = self.state.eps_up
         # strain at the height of each reinforcement layer [-]:
