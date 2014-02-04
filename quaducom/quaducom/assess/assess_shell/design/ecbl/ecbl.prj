@@ -1,6 +1,6 @@
 format 74
 "ecbl"
-  revision 4
+  revision 7
   modified_by 77 "rch"
 
 
@@ -85,7 +85,7 @@ ${docstring}${members}
 	    python "${comment}${self}${name} = ${value}
 "
 	    classrelation_ref 128461 // <unidirectional association>
-	  b parent class_ref 128461 // ECBCrossSection
+	  b parent class_ref 128461 // CrossSection
       end
     end
 
@@ -109,6 +109,10 @@ ${docstring}${members}
 	python_decl "${comment}${self}${name} = ${value}
 "
 	idl_decl ""
+      end
+
+      classrelation 158541 // <aggregation>
+	relation_ref 158029 // <aggregation>
       end
     end
 
@@ -140,11 +144,11 @@ ${docstring}${members}
 	    python "${comment}${self}${name} = ${value}
 "
 	    classrelation_ref 135245 // <unidirectional association>
-	  b parent class_ref 128461 // ECBCrossSection
+	  b parent class_ref 128461 // CrossSection
       end
     end
 
-    class 128461 "ECBCrossSection"
+    class 128461 "CrossSection"
       visibility package 
       cpp_decl ""
       java_decl ""
@@ -155,15 +159,6 @@ ${docstring}${members}
       idl_decl ""
       explicit_switch_type ""
       
-      classrelation 135373 // <unidirectional association>
-	relation 135373 --->
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 135373 // <unidirectional association>
-	  b parent class_ref 128589 // CCLaw
-      end
-
       classrelation 135501 // <unidirectional association>
 	relation 135501 --->
 	  a role_name "" private
@@ -179,19 +174,7 @@ ${docstring}${members}
 	    python "${comment}${self}${name} = ${type}()
 "
 	    classrelation_ref 142029 // <directional composition>
-	  b parent class_ref 135245 // ECBCrossSectionGeo
-      end
-
-      classrelation 142157 // <association>
-	relation 142157 ----
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 142157 // <association>
-	  b role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 142285 // <association>
+	  b parent class_ref 135245 // MatrixCrossSection
       end
 
       classrelation 142413 // <unidirectional association>
@@ -200,7 +183,54 @@ ${docstring}${members}
 	    python "${comment}${self}${name} = ${value}
 "
 	    classrelation_ref 142413 // <unidirectional association>
-	  b parent class_ref 135245 // ECBCrossSectionGeo
+	  b parent class_ref 135245 // MatrixCrossSection
+      end
+
+      classrelation 155597 // <unidirectional association>
+	relation 155469 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 155597 // <unidirectional association>
+	  b parent class_ref 148301 // ReinfLayout
+      end
+
+      classrelation 157773 // <directional composition>
+	relation 157389 *-->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 157773 // <directional composition>
+	  b parent class_ref 149325 // CrossSectionComponent
+      end
+
+      classrelation 158925 // <generalisation>
+	relation 158413 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 158925 // <generalisation>
+	  b parent class_ref 141773 // CrossSectionState
+      end
+
+      classrelation 165453 // <unidirectional association>
+	relation 164941 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 165453 // <unidirectional association>
+	  b parent class_ref 135245 // MatrixCrossSection
+      end
+
+      classrelation 165581 // <composition>
+	relation 165069 *---
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 165581 // <composition>
+	  b role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 165709 // <composition>
       end
     end
 
@@ -226,7 +256,7 @@ ${docstring}${members}
       end
     end
 
-    class 128717 "ECBLawLinear"
+    class 128717 "ECBTexLawLinear"
       visibility package 
       cpp_decl ""
       java_decl ""
@@ -246,7 +276,7 @@ ${docstring}${members}
       end
     end
 
-    class 135245 "ECBCrossSectionGeo"
+    class 135245 "MatrixCrossSection"
       visibility package 
       cpp_decl ""
       java_decl ""
@@ -257,19 +287,6 @@ ${docstring}${members}
       idl_decl ""
       explicit_switch_type ""
       
-      classrelation 142285 // <association>
-	relation_ref 142157 // <association>
-      end
-
-      classrelation 148941 // <unidirectional association>
-	relation 148813 --->
-	  a role_name "" private
-	    python "${comment}${self}${name} = ${value}
-"
-	    classrelation_ref 148941 // <unidirectional association>
-	  b parent class_ref 141773 // ECBCrossSectionState
-      end
-
       attribute 141901 "n_cj"
 	private explicit_type ""
 	cpp_decl ""
@@ -280,17 +297,61 @@ ${docstring}${members}
 	idl_decl ""
       end
 
-      classrelation 149069 // <unidirectional association>
-	relation 148941 --->
+      classrelation 157517 // <generalisation>
+	relation 157133 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 157517 // <generalisation>
+	  b parent class_ref 149325 // CrossSectionComponent
+      end
+
+      classrelation 158797 // <unidirectional association>
+	relation 158285 --->
 	  a role_name "" private
 	    python "${comment}${self}${name} = ${value}
 "
-	    classrelation_ref 149069 // <unidirectional association>
-	  b parent class_ref 128461 // ECBCrossSection
+	    classrelation_ref 158797 // <unidirectional association>
+	  b parent class_ref 128589 // CCLaw
+      end
+
+      classrelation 166093 // <unidirectional association>
+	relation 165453 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 166093 // <unidirectional association>
+	  b parent class_ref 156109 // ECBCSGeo
+      end
+
+      classrelation 166221 // <generalisation>
+	relation 165581 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 166221 // <generalisation>
+	  b parent class_ref 156109 // ECBCSGeo
+      end
+
+      classrelation 166349 // <unidirectional association>
+	relation 165709 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 166349 // <unidirectional association>
+	  b parent class_ref 156109 // ECBCSGeo
+      end
+
+      attribute 155469 "height"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
       end
     end
 
-    class 141773 "ECBCrossSectionState"
+    class 141773 "CrossSectionState"
       visibility package 
       cpp_decl ""
       java_decl ""
@@ -320,6 +381,374 @@ ${docstring}${members}
 "
 	idl_decl ""
       end
+    end
+
+    class 148301 "ReinfLayout"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 155853 // <composition>
+	relation 155725 *---
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 155853 // <composition>
+	  b role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 155981 // <composition>
+      end
+
+      classrelation 157389 // <unidirectional association>
+	relation 157005 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 157389 // <unidirectional association>
+	  b parent class_ref 141773 // CrossSectionState
+      end
+
+      classrelation 157901 // <generalisation>
+	relation 157517 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 157901 // <generalisation>
+	  b parent class_ref 149325 // CrossSectionComponent
+      end
+    end
+
+    class 148429 "ReinfComponent"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 155981 // <composition>
+	relation_ref 155725 // <composition>
+      end
+
+      classrelation 156237 // <unidirectional association>
+	relation 155981 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 156237 // <unidirectional association>
+	  b parent class_ref 128205 // ECBLaw
+      end
+
+      classrelation 158029 // <generalisation>
+	relation 157645 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 158029 // <generalisation>
+	  b parent class_ref 149325 // CrossSectionComponent
+      end
+
+      classrelation 158413 // <aggregation>
+	relation 158029 o---
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 158413 // <aggregation>
+	  b role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 158541 // <aggregation>
+      end
+
+      classrelation 158669 // <unidirectional association>
+	relation 158157 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 158669 // <unidirectional association>
+	  b parent class_ref 128205 // ECBLaw
+      end
+
+      classrelation 165709 // <composition>
+	relation_ref 165069 // <composition>
+      end
+
+      classrelation 165837 // matrix_cs (<unidirectional association>)
+	relation 165197 --->
+	  a role_name "matrix_cs" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 165837 // matrix_cs (<unidirectional association>)
+	  b parent class_ref 135245 // MatrixCrossSection
+      end
+    end
+
+    class 148557 "EquidistTexLayers"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 156109 // <generalisation>
+	relation 155853 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 156109 // <generalisation>
+	  b parent class_ref 148429 // ReinfComponent
+      end
+
+      classrelation 156877 // (layers)
+	relation 156621 *--- name "layers"
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 156877 // (layers)
+	  b role_name "" private
+	    python "${comment}${self}${name} = ${type}()
+"
+	    classrelation_ref 157005 // (layers)
+      end
+    end
+
+    class 148685 "SteelBar"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 156493 // <generalisation>
+	relation 156237 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 156493 // <generalisation>
+	  b parent class_ref 148813 // Bar
+      end
+    end
+
+    class 148813 "Bar"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      attribute 148557 "position"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      classrelation 156365 // <generalisation>
+	relation 156109 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 156365 // <generalisation>
+	  b parent class_ref 148429 // ReinfComponent
+      end
+    end
+
+    class 148941 "ECBTexLawFBM"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 156621 // <generalisation>
+	relation 156365 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 156621 // <generalisation>
+	  b parent class_ref 128205 // ECBLaw
+      end
+    end
+
+    class 149069 "TexLayer"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      attribute 148685 "vertical_position"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      attribute 148813 "n_rovings"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      attribute 148941 "A_roving"
+	private explicit_type ""
+	cpp_decl ""
+	java_decl ""
+	php_decl ""
+	python_decl "${comment}${self}${name} = ${value}
+"
+	idl_decl ""
+      end
+
+      classrelation 156749 // <generalisation>
+	relation 156493 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 156749 // <generalisation>
+	  b parent class_ref 148429 // ReinfComponent
+      end
+
+      classrelation 157005 // (layers)
+	relation_ref 156621 // layers
+      end
+    end
+
+    class 149197 "FRPBar"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 157133 // <generalisation>
+	relation 156749 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 157133 // <generalisation>
+	  b parent class_ref 148813 // Bar
+      end
+    end
+
+    class 149325 "CrossSectionComponent"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 157645 // state (<unidirectional association>)
+	relation 157261 --->
+	  a role_name "state" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 157645 // state (<unidirectional association>)
+	  b parent class_ref 141773 // CrossSectionState
+      end
+
+      classrelation 158157 // <unidirectional association>
+	relation 157773 --->
+	  a role_name "" private
+	    python "${comment}${self}${name} = ${value}
+"
+	    classrelation_ref 158157 // <unidirectional association>
+	  b parent class_ref 149453 // ConstituveLaw
+      end
+    end
+
+    class 149453 "ConstituveLaw"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+    end
+
+    class 149581 "ECBGeoRI"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
+      classrelation 158285 // <generalisation>
+	relation 157901 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 158285 // <generalisation>
+	  b parent class_ref 135245 // MatrixCrossSection
+      end
+
+      classrelation 165965 // <generalisation>
+	relation 165325 ---|>
+	  a public
+	    python "${type}"
+	    classrelation_ref 165965 // <generalisation>
+	  b parent class_ref 156109 // ECBCSGeo
+      end
+    end
+
+    class 156109 "ECBCSGeo"
+      visibility package 
+      cpp_decl ""
+      java_decl ""
+      php_decl ""
+      python_2_2 python_decl "class ${name}${inherit}:
+${docstring}${members}
+"
+      idl_decl ""
+      explicit_switch_type ""
+      
     end
   end
 end

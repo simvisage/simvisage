@@ -172,9 +172,16 @@ class PhiFnGeneral(PhiFnBase):
     def get_plot_range(self):
         return self.mfn.xdata[0], self.mfn.xdata[-1]
 
+    print_button = Button
+    @on_trait_change('print_button')
+    def print_button_fired(self):
+        print 'eps:\n', [self.mfn.xdata]
+        print '1-omega:\n', [self.mfn.ydata]
+
     # Default TraitsUI view
     traits_view = View(Group(
                              Item('mfn', show_label=False, editor=mfn_editor),
+                             Item('print_button', show_label=False),
                              label='Damage law',
                              show_border=True
                              ),
@@ -301,7 +308,7 @@ class PhiFnStrainSoftening(PhiFnBase):
             gamma = 2.0
 
         Epp = f_t / ((E * (1 - md) ** 2) * (1.95 - 0.95 / (gamma - 1) ** (0.5)))
-        Efp = (G_f / ((1 - md) * h * E * Epp) + 
+        Efp = (G_f / ((1 - md) * h * E * Epp) +
                     (2.13 - 1.13 * md) * Epp) / (2.73 - md) - Epp
         self.Epp = Epp
         self.Efp = Efp
@@ -463,14 +470,14 @@ class PhiFnStrainHardeningLinear(PhiFnBase):
         epsilon = e_max
 
         if epsilon < epsilon_1:
-            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f * 
-                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f * 
-                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho * 
-                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) / 
+            return sqrt(1.0 + (sigma_0 * rho * E_f + sigma_0 * E_m - sigma_0 * rho * E_m + rho * rho * E_f * E_f *
+                alpha * epsilon + rho * E_f * alpha * epsilon * E_m - rho * rho * E_f * alpha * epsilon * E_m - rho * E_f *
+                alpha * sigma_0 - epsilon * rho * rho * E_f * E_f - 2.0 * epsilon * rho * E_f * E_m + 2.0 * epsilon * rho *
+                rho * E_f * E_m - epsilon * E_m * E_m + 2.0 * epsilon * rho * E_m * E_m - epsilon * rho * rho * E_m * E_m) /
                 pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
         else:
-            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta * 
-                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) / 
+            return sqrt(1.0 + E_m * (-E_f * rho * epsilon + epsilon * rho * rho * E_f + beta * sigma_0 - beta *
+                                  sigma_0 * rho - epsilon * E_m + 2.0 * epsilon * rho * E_m - epsilon * rho * rho * E_m) /
                                   pow(rho * E_f + E_m - rho * E_m, 2.0) / epsilon)
 
 
@@ -633,24 +640,24 @@ class PhiFnStrainHardeningBezier(PhiFnBase):
         elif epsilon_0 < epsilon and epsilon <= (epsilon_0 + epsilon_b):
             return 1 - omega_b / epsilon_b * (epsilon - epsilon_0)
         elif (epsilon_0 + epsilon_b) < epsilon and epsilon <= epsilon_0 + epsilon_b + epsilon_f:
-            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
+            MapleGenVar1 = (pow(1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b), 2.0) * omega_b)
-            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * 
-                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * 
-                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * 
-                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * 
+            MapleGenVar3 = (2.0 * (1.0 - (epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b *
+                omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t *
+                epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b *
+                omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b *
                 epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b)) * (epsilon_b * omega_t - sqrt(
-                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * 
-                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + 
+                epsilon_b * epsilon_b * omega_t * omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 *
+                epsilon_b * omega_t * epsilon_0 * omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b +
                 epsilon_f * omega_b * omega_b * epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f
                 * omega_b * omega_b * epsilon_b)) / (2.0 * epsilon_b * omega_t - epsilon_f * omega_b) * (omega_b
                 + omega_t))
-            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t * 
-                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 * 
-                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b * 
+            MapleGenVar4 = (pow(epsilon_b * omega_t - sqrt(epsilon_b * epsilon_b * omega_t *
+                omega_t - 2.0 * epsilon_b * omega_t * epsilon * omega_b + 2.0 * epsilon_b * omega_t * epsilon_0 *
+                omega_b + 2.0 * epsilon_b * epsilon_b * omega_t * omega_b + epsilon_f * omega_b * omega_b *
                 epsilon - epsilon_f * omega_b * omega_b * epsilon_0 - epsilon_f * omega_b * omega_b * epsilon_b
                  ), 2.0) / pow(2.0 * epsilon_b * omega_t - epsilon_f * omega_b, 2.0) * (omega_b + omega_f))
             MapleGenVar2 = MapleGenVar3 + MapleGenVar4
