@@ -587,7 +587,7 @@ class SimBT3PT(IBVModel):
                                        var_x='U_k'  , idx_x=center_top_dof_z,
                                        var_y='F_int', idx_y_arr=load_dofs_z,
                                        record_on='update',
-                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='-4000. * y')
@@ -599,7 +599,7 @@ class SimBT3PT(IBVModel):
                                        var_x='U_k'  , idx_x=center_top_dof_z,
                                        var_y='F_int', idx_y_arr=supprt_dofs_z,
                                        record_on='update',
-                                       transform_x='-x * 1000',  # %g * x' % ( fabs( w_max ),),
+                                       transform_x='-x * 1000', # %g * x' % ( fabs( w_max ),),
                                        # due to symmetry the total force sums up from four parts of the beam (2 symmetry axis):
                                        #
                                        transform_y='4000. * y')
@@ -792,8 +792,8 @@ if __name__ == '__main__':
     # do
     #-------------------------
 
-#    do = 'ui'
-    do = 'validation'
+    do = 'ui'
+#    do = 'validation'
 
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp

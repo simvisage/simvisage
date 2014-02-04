@@ -443,8 +443,8 @@ class MRquarterDB(MRquarter):
 
 if __name__ == '__main__':
     sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-#                             calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
-                             calibration_test='TT-12c-6cm-TU-SH2F-V3',
+                             calibration_test='TT-12c-6cm-TU-SH2F-V3_a23d_nu02_s100',
+                             #calibration_test='TT-12c-6cm-TU-SH2F-V3',
                              age=27,
                              max_lambda=10.0,
                              n_elems_xy_quarter=8,

@@ -1,18 +1,18 @@
 window_sizes 1276 997 290 980 773 144
 diagrams
   active  classdiagram_ref 128077 // effective_crack_bridge
-    980 773 100 4 2 0
+    980 773 100 4 0 0
 end
 show_stereotypes
-selected classrelation_ref 135373 // <unidirectional association>
+selected attribute_ref 155469 // height
 open
   class_ref 128077 // ECBLawCalib
   class_ref 128205 // ECBLaw
   class_ref 128333 // ECBLawMxN
-  class_ref 128461 // ECBCrossSection
+  class_ref 128461 // CrossSection
   class_ref 128589 // CCLaw
-  class_ref 135245 // ECBCrossSectionGeo
-  class_ref 141773 // ECBCrossSectionState
+  class_ref 135245 // MatrixCrossSection
+  class_ref 141773 // CrossSectionState
   class_ref 148557 // EquidistTexLayers
   class_ref 148813 // Bar
   class_ref 149069 // TexLayer
