@@ -271,7 +271,7 @@ class MRquarter(MushRoofModel):
         boundary_y1 = domain[:, -1, -1, :, -1, -1]
 
         time_fn_load = MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 10.0],
-                                    ydata=[0.0, 1.0, 1.0 / 0.27, 1.78 / 0.27, 9.5])
+                                    ydata=[0.0, 1.0, 1.0 / 0.27, 1.78 / 0.27, 9.0])
         time_fn_permanent_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 1.0])
         time_fn_snow_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 0.0])
 
