@@ -148,7 +148,7 @@ class SCM(HasTraits):
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=50, n_BC=5, n_x=500
+                            length=self.length, n_w=100, n_BC=12, n_x=500
                             )
 
     sigma_c_crack = List
@@ -286,8 +286,7 @@ class SCM(HasTraits):
             try: sigc_min = brentq(self.residuum, sigc_min, sigc_max)
             except:
                 print 'Error: 2 cracks at same stress level at sigma_c:', sigc_min
-                sigc_min = sigc_min + 1e-12
-            print 'evaluation of the next matrix crack ', t.clock() - s, 's'
+                sigc_min = sigc_min + 1e-1
             crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
@@ -299,6 +298,7 @@ class SCM(HasTraits):
                                         + [new_cb])
             else:
                 self.cracks_list.append([new_cb])
+            print 'evaluation of the matrix crack #'+str(len(self.sigma_c_crack)), t.clock() - s, 's'
             self.sort_cbs()
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
