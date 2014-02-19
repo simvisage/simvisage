@@ -220,10 +220,18 @@ if __name__ == '__main__':
                           label='carbon',
                           n_int=500)
 
+    reinf = ContinuousFibers(r=3.5e-3,
+                              tau=RV('weibull_min', loc=0.003, shape=.23, scale=0.003),
+                              V_f=0.01,
+                              E_f=180e3,
+                              xi=fibers_MC(m=5.0, sV0=0.0026),
+                              label='carbon',
+                              n_int=500)
+
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=100.,
-                                 Lr=100.,
+                                 Ll=1000.,
+                                 Lr=1000.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)

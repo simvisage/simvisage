@@ -22,10 +22,16 @@ FILE_DIR = os.path.dirname(__file__)
 
 class Model(HasTraits):
 
-    test_xdata = Array
-    test_ydata = Array
+    test_xdata1 = Array
+    test_ydata1 = Array
     test_xdata2 = Array
     test_ydata2 = Array
+    test_xdata3 = Array
+    test_ydata3 = Array
+    test_xdata4 = Array
+    test_ydata4 = Array
+    test_xdata5 = Array
+    test_ydata5 = Array
     sV0 = Float(auto_set=False, enter_set=True, params=True)
     m = Float(auto_set=False, enter_set=True, params=True)
     w_min = Float(auto_set=False, enter_set=True, params=True)
@@ -49,16 +55,34 @@ class Model(HasTraits):
     def _get_w2(self):
         return np.linspace(self.w2_min, self.w2_max, self.w2_pts)
 
-    interpolate_experiment = Property(depends_on='test_xdata, test_ydata')
+    interpolate_experiment1 = Property(depends_on='test_xdata1, test_ydata1')
     @cached_property
-    def _get_interpolate_experiment(self):
+    def _get_interpolate_experiment1(self):
         return interp1d(self.test_xdata, self.test_ydata,
                         bounds_error=False, fill_value=0.0)
         
-    interpolate_experiment2 = Property(depends_on='test_xdata, test_ydata')
+    interpolate_experiment2 = Property(depends_on='test_xdata2, test_ydata2')
     @cached_property
     def _get_interpolate_experiment2(self):
         return interp1d(self.test_xdata2, self.test_ydata2,
+                        bounds_error=False, fill_value=0.0)
+
+    interpolate_experiment3 = Property(depends_on='test_xdata3, test_ydata3')
+    @cached_property
+    def _get_interpolate_experiment3(self):
+        return interp1d(self.test_xdata3, self.test_ydata3,
+                        bounds_error=False, fill_value=0.0)
+        
+    interpolate_experiment4 = Property(depends_on='test_xdata4, test_ydata4')
+    @cached_property
+    def _get_interpolate_experiment4(self):
+        return interp1d(self.test_xdata4, self.test_ydata4,
+                        bounds_error=False, fill_value=0.0)
+        
+    interpolate_experiment5 = Property(depends_on='test_xdata5, test_ydata5')
+    @cached_property
+    def _get_interpolate_experiment5(self):
+        return interp1d(self.test_xdata5, self.test_ydata5,
                         bounds_error=False, fill_value=0.0)
 
     model_rand = Property(Array)
@@ -137,10 +161,16 @@ class CBView(ModelView):
         # plot PDF
         axes.plot(self.model.w, self.model.model_rand, lw=2.0, color='blue', \
                   label='model')
-        axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black', \
+        axes.plot(self.model.w, self.model.interpolate_experiment1(self.model.w), lw=1.0, color='black', \
                   label='experiment1')
         axes.plot(self.model.w, self.model.interpolate_experiment2(self.model.w), lw=1.0, color='black', \
-                  label='experiment2')
+                   label='experiment2')
+        axes.plot(self.model.w, self.model.interpolate_experiment3(self.model.w), lw=1.0, color='black', \
+                   label='experiment3')
+        axes.plot(self.model.w, self.model.interpolate_experiment4(self.model.w), lw=1.0, color='black', \
+                   label='experiment4')
+        axes.plot(self.model.w, self.model.interpolate_experiment5(self.model.w), lw=1.0, color='black', \
+                   label='experiment5')
         axes.legend()
         
         figure2 = fig2
@@ -216,13 +246,14 @@ if __name__ == '__main__':
                   tau_shape=0.23, tau_loc=0.006, Ef=240e3,
                   lm=20., n_int=100)
 
-    file1 = open('DATA/PO01_RYP.ASC', 'r')
+    cb1 = file1 = open('DATA/PO01_RYP.ASC', 'r')
     model.test_xdata = - np.loadtxt(file1, delimiter=';')[:,3]
     model.test_xdata = model.test_xdata - model.test_xdata[0]
     file2 = open('DATA/PO01_RYP.ASC', 'r')
     model.test_ydata = (np.loadtxt(file2, delimiter=';')[:,1] + 0.035)/0.45 * 1000
-    
+     
     file1 = open('DATA/PO03_RYP.ASC', 'r')
+     
     model.test_xdata2 = - np.loadtxt(file1, delimiter=';')[:,3]
     model.test_xdata2 = model.test_xdata2 - model.test_xdata2[0]
     file2 = open('DATA/PO03_RYP.ASC', 'r')
