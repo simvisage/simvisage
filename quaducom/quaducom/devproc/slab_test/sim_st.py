@@ -37,7 +37,7 @@ from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnGeneralExtended, \
     PhiFnGeneral, PhiFnStrainHardening, PhiFnStrainHardeningLinear, \
-    PhiFnGeneralExtendedExp
+    PhiFnGeneralExtendedExp, PhiFnStrainSoftening
 
 from mathkit.geo.geo_ndgrid import \
     GeoNDGrid
@@ -81,7 +81,7 @@ from geo_st import \
 
 from geo_lip import \
     GeoLIP
-    
+
 from geo_supprt import \
     GeoSUPPRT
 
@@ -97,7 +97,7 @@ font.set_variant('normal')
 font.set_weight('medium')
 
 def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
-    '''format 2d-plot black and with with times legends 
+    '''format 2d-plot black and with with times legends
     '''
     #-------------------------------------------------------------------
     # configure the style of the font to be used for labels and ticks
@@ -112,7 +112,7 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
     font.set_size('large')
     font.set_variant('normal')
     font.set_weight('medium')
-    
+
     if xlim != None and ylim != None:
         axes.axis([0, xlim, 0., ylim], fontproperties=font)
 
@@ -125,18 +125,18 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
     locs, labels = axes.yticks()
     axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
-        
+
 
 class SimST(IBVModel):
-    '''Slab test prepared for parametric study. Due to symmetry only a quarter of the slab is simulated. 
+    '''Slab test prepared for parametric study. Due to symmetry only a quarter of the slab is simulated.
     @params:
-    'geo_st_flag': specify weather a geometric transformation of the mesh of the slab is to be performed 
-                   in order to capture the round load introduction area  
+    'geo_st_flag': specify weather a geometric transformation of the mesh of the slab is to be performed
+                   in order to capture the round load introduction area
 
-    'elstrm_flag': specify weather a elastomer is modeled for the load introduction  
+    'elstrm_flag': specify weather a elastomer is modeled for the load introduction
 
-    'supprt_flag': specify weather the support is modeled as separate fe-grid allowing for realistic 
-                   kinematics at the support (rotation/translation in the plane between slab and support 
+    'supprt_flag': specify weather the support is modeled as separate fe-grid allowing for realistic
+                   kinematics at the support (rotation/translation in the plane between slab and support
     '''
     i = 0
     input_change = Event
@@ -182,12 +182,13 @@ class SimST(IBVModel):
     idx_supprt_center_elem = Property(Float, depends_on='shape_supprt_xy')
     @cached_property
     def _get_idx_supprt_center_elem(self):
-        return self.shape_supprt_xy / 2 
-    
+        return self.shape_supprt_xy / 2
+
     # edge length of the quadratic plate (entire length without symmetry)
     #
-    length = Float(1.25, input=True)
-    thickness = Float(0.06, input=True)
+    length = Float(0.80, input=True)
+    thickness = Float(0.01714, input=True)
+    thickness_plain_concrete = Float(0.00286, input=True)
 
     elem_length_xy = Property(Float, depends_on='shape_xy, length')
     @cached_property
@@ -210,13 +211,17 @@ class SimST(IBVModel):
 
     # specify weather rounded load introduction plate is modeled. If set to 'False' a complete square element mesh is used.
     #
+    plain_concrete_flag = True
+
+    # specify weather rounded load introduction plate is modeled. If set to 'False' a complete square element mesh is used.
+    #
     geo_st_flag = True
 
     # specify weather elastomer is to be modeled for load introduction
     #
     elstmr_flag = False
 
-    # specify weather steel support is to be modeled 
+    # specify weather steel support is to be modeled
     #
     supprt_flag = True
 
@@ -224,7 +229,7 @@ class SimST(IBVModel):
     # 'geo_transform'
     #-----------------
 
-    # geometry transformation for slab with rounded load introduction plate (called elastomer)
+    # geometry transformation for slab with rounded load introduction plate
     #
     geo_st = Property(Instance(GeoST), depends_on='+ps_levels, +input')
     @cached_property
@@ -234,7 +239,22 @@ class SimST(IBVModel):
                      shape_z=self.shape_z,
                      radius_plate=self.radius_plate,
                      length_quarter=self.length / 2.,
-                     thickness=self.thickness)
+                     thickness=self.thickness,
+                     zoffset=self.thickness_plain_concrete)
+
+    # geometry transformation for slab with rounded load introduction plate
+    # (for unreinforced concrete layer corresponding to 's_tex,z')
+    #
+    geo_st_plain_concrete = Property(Instance(GeoST), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_geo_st_plain_concrete(self):
+        return GeoST(shape_xy=self.shape_xy,
+                     shape_R=self.shape_R,
+                     shape_z=1,
+                     radius_plate=self.radius_plate,
+                     length_quarter=self.length / 2.,
+                     thickness=self.thickness_plain_concrete,
+                     zoffset=0.)
 
     # geometry transformation rounded load introduction plate (if modeled)
     #
@@ -251,8 +271,8 @@ class SimST(IBVModel):
     geo_supprt = Property(Instance(GeoSUPPRT), depends_on='+ps_levels, +input')
     @cached_property
     def _get_geo_supprt(self):
-        # element length within the range of the slab without the area of the 
-        # load introduction plate 
+        # element length within the range of the slab without the area of the
+        # load introduction plate
         #
         elem_size = (self.length / 2.0 - self.radius_plate) / (self.shape_xy - self.shape_R)
         width_supprt = self.shape_supprt_xy * elem_size
@@ -260,27 +280,27 @@ class SimST(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset=-self.thickness_supprt)
+                         zoffset= -self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats
     #----------------------------------------------------------------------------------
 
     # age of the specimen at the time of testing
-    # determines the E-modulus and nu based on the time dependent function stored 
+    # determines the E-modulus and nu based on the time dependent function stored
     # in 'CCSUniteCell' if params are not explicitly set
     #
     age = Int(28, auto_set=False, enter_set=True, input=True)
 
     # composite E-modulus / Poisson's ratio
     # NOTE 1: value are retrieved from the database
-    #         same values are used for calibration (as taken from tensile test) and for slab test  
-    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume  
-    #         an afine/proportional damage evolution for different ages, i.e. a different E would be 
-    #         used in the simulation of the slab test and within the calibration procedure. 
+    #         same values are used for calibration (as taken from tensile test) and for slab test
+    # NOTE 2: alternatively the same phi-function could be used independent of age. This would assume
+    #         an afine/proportional damage evolution for different ages, i.e. a different E would be
+    #         used in the simulation of the slab test and within the calibration procedure.
 
-    # time stepping params 
-    #  
+    # time stepping params
+    #
     tstep = Float(0.05, auto_set=False, enter_set=True, input=True)
     tmax = Float(1.0, auto_set=False, enter_set=True, input=True)
     tolerance = Float(0.001, auto_set=False, enter_set=True, input=True)
@@ -291,7 +311,7 @@ class SimST(IBVModel):
     #
     # set 'ord=np.inf' to switch norm to
     # "norm = max(abs(x_i))"
-    # 
+    #
     ord = Enum(None, np.inf)
 
     n_mp = Int(30., auto_set=False, enter_set=True, input=True)
@@ -302,15 +322,15 @@ class SimST(IBVModel):
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
     #
-    mats_eval = Property(Instance(MATS2D5MicroplaneDamage),
+    specmn_mats = Property(Instance(MATS2D5MicroplaneDamage),
                           depends_on='input_change')
     @cached_property
-    def _get_mats_eval(self):
+    def _get_specmn_mats(self):
 #        import pylab as p
 #        self.phi_fn.mfn.mpl_plot(p)
 #        p.show()
         print 'self.n_mp', self.n_mp
-        mats_eval = MATS2D5MicroplaneDamage(
+        specmn_mats = MATS2D5MicroplaneDamage(
                                 E=self.E_c,
 #                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
 #                                 E=self.E_m,  # #@todo: only available if this parameter is defined by the class
@@ -319,7 +339,26 @@ class SimST(IBVModel):
                                 symmetrization='sum-type',
                                 model_version='compliance',
                                 phi_fn=self.phi_fn)
-        return mats_eval
+        return specmn_mats
+
+    plain_concrete_mats = Property(Instance(MATS2D5MicroplaneDamage),
+                          depends_on='input_change')
+    @cached_property
+    def _get_plain_concrete_mats(self):
+#        import pylab as p
+#        self.phi_fn.mfn.mpl_plot(p)
+#        p.show()
+        print 'self.n_mp', self.n_mp
+        specmn_mats = MATS2D5MicroplaneDamage(
+                                E=self.E_c,
+#                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
+#                                 E=self.E_m,  # #@todo: only available if this parameter is defined by the class
+                                nu=self.nu,
+                                n_mp=self.n_mp,
+                                symmetrization='sum-type',
+                                model_version='compliance',
+                                phi_fn=PhiFnStrainSoftening)
+        return specmn_mats
 
     elstmr_mats = Property(Instance(MATS3DElastic),
                                     depends_on='input_change')
@@ -339,7 +378,7 @@ class SimST(IBVModel):
     # E-modulus and nu of steel support
     E_s = Float(210000., auto_set=False, enter_set=True, input=True)
     nu_s = Float(0.20, auto_set=False, enter_set=True, input=True)
-    
+
     supprt_mats = Property(Instance(MATS3DElastic),
                                     depends_on='input_change')
     @cached_property
@@ -358,10 +397,18 @@ class SimST(IBVModel):
                            depends_on='input_change')
     @cached_property
     def _get_specmn_fets(self):
-        fets = FETS2D58H20U(mats_eval=self.mats_eval)
+        fets = FETS2D58H20U(mats_eval=self.specmn_mats)
         fets.vtk_r *= self.vtk_r
         return fets
-    
+
+    plain_concrete_fets = Property(Instance(FETSEval),
+                           depends_on='input_change')
+    @cached_property
+    def _get_plain_concrete_fets(self):
+        fets = FETS2D58H20U(mats_eval=self.plain_concrete_mats)
+        fets.vtk_r *= self.vtk_r
+        return fets
+
     elstmr_fets = Property(Instance(FETSEval),
                            depends_on='input_change')
     @cached_property
@@ -399,6 +446,13 @@ class SimST(IBVModel):
                                 fets_eval=self.specmn_fets,
                                 domain=self.fe_domain)
 
+    plain_concrete_fe_level = Property(depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_plain_concrete_fe_level(self):
+        return FERefinementGrid(name='plain_concrete patch',
+                                fets_eval=self.plain_concrete_fets,
+                                domain=self.fe_domain)
+
     specmn_fe_grid = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
     def _get_specmn_fe_grid(self):
@@ -415,7 +469,7 @@ class SimST(IBVModel):
             # total effective length = 1.25m - 2*0.05m (from center supports to center support)
             width_supprt = 0.1
             length_quarter_eff = self.length / 2. - width_supprt / 2.
-            length_quarter_eff = self.length / 2. 
+            length_quarter_eff = self.length / 2.
             fe_grid = FEGrid(coord_min=(0.0, 0.0, 0.0),
                              coord_max=(length_quarter_eff, length_quarter_eff, self.thickness),
                              shape=(self.shape_xy, self.shape_xy, self.shape_z),
@@ -423,7 +477,17 @@ class SimST(IBVModel):
                              fets_eval=self.specmn_fets)
         return fe_grid
 
-#    if elstmr_flag:
+    plain_concrete_fe_grid = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_plain_concrete_fe_grid(self):
+        fe_grid = FEGrid(coord_min=(0.0, 0.0, 0.0),
+                         coord_max=(1.0, 1.0, 1.0),
+                         shape=(self.shape_xy, self.shape_xy, 1),
+                         level=self.plain_concrete_fe_level,
+                         geo_transform=self.geo_st_plain_concrete,
+                         fets_eval=self.plain_concrete_fets)
+        return fe_grid
+
     elstmr_fe_level = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_elstmr_fe_level(self):
@@ -443,11 +507,11 @@ class SimST(IBVModel):
                              shape=(self.shape_R, self.shape_R, 1),
                              geo_transform=self.geo_elstmr,
                              fets_eval=self.elstmr_fets)
-        # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab 
+        # if 'geo_st' is not used a regular rectangular grid is used as mesh for the slab
         #
         else:
             elstmr_min = self.length / 2. - self.elem_length
-            elstmr_max = self.length / 2. 
+            elstmr_max = self.length / 2.
             fe_grid = FEGrid(coord_min=(elstmr_min, elstmr_min, self.thickness),
                              coord_max=(elstmr_max, elstmr_max, self.thickness + self.thickness_elstmr),
                              level=self.elstmr_fe_level,
@@ -459,7 +523,7 @@ class SimST(IBVModel):
         supprt_fe_level = Property(depends_on='+ps_levels, +input')
         @cached_property
         def _get_supprt_fe_level(self):
-            return  FERefinementGrid(name='elastomer patch',
+            return  FERefinementGrid(name='support patch',
                                      fets_eval=self.supprt_fets,
                                      domain=self.fe_domain)
 
@@ -490,21 +554,30 @@ class SimST(IBVModel):
 
         if self.elstmr_flag:
             elstmr = self.elstmr_fe_grid
-        
+
         if self.supprt_flag:
             supprt = self.supprt_fe_grid
+
+        if self.plain_concrete_flag:
+            plain_concrete = self.plain_concrete_fe_grid
 
         self.fe_domain.n_dofs
 
         #--------------------------------------------------------------
         # boundary conditions for the symmetry planes and the support
         #--------------------------------------------------------------
-        
+
         # symmetry planes of the specimen
         #
         bc_symplane_yz = BCSlice(var='u', value=0., dims=[0], slice=specmn[-1, :, :, -1, :, :])
         bc_symplane_xz = BCSlice(var='u', value=0., dims=[1], slice=specmn[:, -1, :, :, -1, :])
-        
+
+        if self.plain_concrete_flag:
+            # symmetry planes of the plain concrete layer
+            #
+            bc_symplane_yz_plain_concrete = BCSlice(var='u', value=0., dims=[0], slice=plain_concrete[-1, :, :, -1, :, :])
+            bc_symplane_xz_plain_concrete = BCSlice(var='u', value=0., dims=[1], slice=plain_concrete[:, -1, :, :, -1, :])
+
         # tappered support with fixed node in the corner
         #
 #        if self.supprt_flag:
@@ -512,57 +585,83 @@ class SimST(IBVModel):
 #            bc_supprt_symplane_yz = BCSlice(var = 'u', value = 0., dims = [0], slice = supprt[0, :, :, 0, :, :])
 #            bc_supprt_symplane_xz = BCSlice(var = 'u', value = 0., dims = [1], slice = supprt[:, 0, :, :, 0, :])
 #            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = supprt[0, 0, 0, 0, 0, 0])
-#            link_sp_sp_z = BCSlice(var = 'u', value = 0., dims = [2],
+#            link_sp_sprt_z = BCSlice(var = 'u', value = 0., dims = [2],
 #                                   slice = specmn[0, 0, 0, :, :, 0],
 #                                   link_slice = supprt[0, 0, -1, :, :, -1],
 #                                   link_dims = [2],
 #                                   link_coeffs = [1.])
 
         # four sided tappered support with fixed node in the center
-        # use two element rows for the size of the steel plate rotation support 
+        # use two element rows for the size of the steel plate rotation support
         #
         if self.supprt_flag:
             #---------------------------
-            # fixed support with sliding connection to the plate 
+            # fixed support with sliding connection to the plate
             #---------------------------
 
             print 'four sided tappered support with center rotation'
-            # allow movement of the support's outer corner node only in the 45-degree direction 
-            # by linking the corresponding degrees of freedom 
-            # 
+            # allow movement of the support's outer corner node only in the 45-degree direction
+            # by linking the corresponding degrees of freedom
+            #
             sdofs = supprt[0, 0, 0, 0, 0, 0].dofs
             s_dof_x, s_dof_y = sdofs[0, 0, (0, 1)].flatten()
             sym_support_link = BCDof(var='u', value=0., dof=s_dof_x,
                                       link_dofs=[s_dof_y],
                                       link_coeffs=[1.0])
 
-            # link specimen bottom nodes in the slab corner with the top nodes of the tappered support in z-direction
-            # 
-            link_sp_sp_z = BCSlice(var='u', value=0., dims=[2],
-                                   slice=specmn[0:self.shape_supprt_xy, 0:self.shape_supprt_xy, 0, :, :, 0],
-                                   link_slice=supprt[:, :, -1, :, :, -1],
-                                   link_dims=[2],
-                                   link_coeffs=[1.])
-            
-            # fix bottom-middle node of the tappered support
-            # 
-            support_000 = BCSlice(var='u', value=0., dims=[0, 1, 2],
-                                  slice=supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
+            if self.plain_concrete_flag:
+                # link specimen bottom nodes with plain concrete layer for all directions
+                #
+                link_sp_pc_xyz = BCSlice(var='u', value=0., dims=[2],
+                                       slice=specmn[:, :, 1, :, :, 1],
+                                       link_slice=plain_concrete[:, :, -1, :, :, -1],
+                                       link_dims=[0, 1, 2],
+                                       link_coeffs=[1.])
 
-            supprt_dof_z = supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
-            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+                # link plain concrete layer bottom nodes in the slab corner with the top nodes of the tappered support in z-direction
+                #
+                link_pc_sprt_z = BCSlice(var='u', value=0., dims=[2],
+                                       slice=plain_concrete[0:self.shape_supprt_xy, 0:self.shape_supprt_xy, 0, :, :, 0],
+                                       link_slice=supprt[:, :, -1, :, :, -1],
+                                       link_dims=[2],
+                                       link_coeffs=[1.])
+
+                # fix bottom-middle node of the tappered support
+                #
+                support_000 = BCSlice(var='u', value=0., dims=[0, 1, 2],
+                                      slice=supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
+
+                supprt_dof_z = supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
+                print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+
+            else:
+                # link specimen bottom nodes in the slab corner with the top nodes of the tappered support in z-direction
+                #
+                link_sp_sprt_z = BCSlice(var='u', value=0., dims=[2],
+                                       slice=specmn[0:self.shape_supprt_xy, 0:self.shape_supprt_xy, 0, :, :, 0],
+                                       link_slice=supprt[:, :, -1, :, :, -1],
+                                       link_dims=[2],
+                                       link_coeffs=[1.])
+
+                # fix bottom-middle node of the tappered support
+                #
+                support_000 = BCSlice(var='u', value=0., dims=[0, 1, 2],
+                                      slice=supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
+
+                supprt_dof_z = supprt[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
+                print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
 
         else:
-            # Var_1: place support at the corner / reduce the edge length of the slab in the model to effective values, 
+            # Var_1: place support at the corner / reduce the edge length of the slab in the model to effective values,
             # i.e. l_ = length_quarter - width_supprt / 2
-            # 
+            #
 #            support_000 = BCSlice(var = 'u', value = 0., dims = [2], slice = specmn[0, 0, 0, 0, 0, 0])
 #            supprt_dof_z = specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
 #            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
-            
+
             # Var_2: place single support at the center of the support position (position defined by 'idx_supprt_center_elem'
-            # depending on the mesh fines; NOTE: mesh fines and index must correspond approximately to the correct support width 
-            # 
+            # depending on the mesh fines; NOTE: mesh fines and index must correspond approximately to the correct support width
+            #
             support_000 = BCSlice(var='u', value=0., dims=[2], slice=specmn[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
             supprt_dof_z = specmn[self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
             print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
@@ -585,7 +684,7 @@ class SimST(IBVModel):
             bc_el_symplane_yz = BCSlice(var='u', value=0., dims=[0],
                                         slice=elstmr[-1, :, :, -1, :, :])
             if self.geo_st_flag:
-                # link all elements of the load introduction area with the corresponding elements of the elastomer 
+                # link all elements of the load introduction area with the corresponding elements of the elastomer
                 #
                 link_el_sp = BCSlice(var='u', value=0., dims=[2],
                                      slice=elstmr[:, :, 0, :, :, 0],
@@ -615,15 +714,15 @@ class SimST(IBVModel):
             load_dofs_z = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
             print 'load_dofs_z', load_dofs_z
             print 'load_dofs_z.shape', load_dofs_z.shape
-            
+
         # if no elastomer is modeled
         #
         else:
-            
+
             # if geometry transformation for the slab is used
             #
             if self.geo_st_flag:
-                # z-displacement applied along the edge of the load introduction plate 
+                # z-displacement applied along the edge of the load introduction plate
                 #
                 nodes_line_Rx = specmn[-self.shape_R:, -self.shape_R, -1, :, 0, -1]
                 nodes_line_Ry = specmn[-self.shape_R, -self.shape_R:, -1, 0, :, -1]
@@ -636,7 +735,7 @@ class SimST(IBVModel):
                 dofs_line_Ry = nodes_line_Ry.dofs[:, :, 2].flatten()
                 # use 'np.unique' in order to avoid that the same 'dof' is listed twice in the
                 # array as it appears in two adjacent elements of the same slice or in both x- and y-line slice
-                load_dofs_z = np.unique(np.hstack([dofs_line_Rx, dofs_line_Ry])) 
+                load_dofs_z = np.unique(np.hstack([dofs_line_Rx, dofs_line_Ry]))
                 print 'dofs_line_Rx', dofs_line_Rx
                 print 'dofs_line_Ry', dofs_line_Ry
                 print 'load_dofs_z', load_dofs_z
@@ -644,7 +743,7 @@ class SimST(IBVModel):
             # if no geometry transformation for the slab is used (regular rectangular mesh only)
             #
             else:
-                # ## var 1: single nodal displacement applied at the center top node (one node only) 
+                # ## var 1: single nodal displacement applied at the center top node (one node only)
                 #
                 bc_w = [BCSlice(var='u', value=w_max, dims=[2],
                                           slice=specmn[-1, -1, -1, -1, -1, -1])]  # only top node
@@ -653,14 +752,14 @@ class SimST(IBVModel):
 
 #                ### var 2 displacement applied at all center nodes (all nodes in the symmetry axis)
 #                #
-#                bc_w = [BCSlice(var = 'u', value = w_max, dims = [2], 
+#                bc_w = [BCSlice(var = 'u', value = w_max, dims = [2],
 #                                          slice = specmn[-1, -1, :, -1, -1, :])] # all nodes along z-axis
 #                load_dofs_z = specmn[-1, -1, :, -1, -1, :].dofs[0, 0, 2]
 #                print 'load_dofs_z', load_dofs_z
 
-                # ## var 3: 
+                # ## var 3:
                 #
-                # displacement applied along the edge of the 2nd element row (from the middle) for 
+                # displacement applied along the edge of the 2nd element row (from the middle) for
                 # shape_xy = 10 and an edge length of L_quarter = 0.575m the distance from the center equals 0.23m
 #                nodes_line_x = specmn[-2:, -2, -1, :, 0, -1]
 #                nodes_line_y = specmn[-2, -2:, -1, 0, :, -1]
@@ -671,14 +770,14 @@ class SimST(IBVModel):
 #                #
 #                dofs_line_x = nodes_line_x.dofs[:, :, 2].flatten()
 #                dofs_line_y = nodes_line_y.dofs[:, :, 2].flatten()
-#                load_dofs_z = np.unique( np.hstack([dofs_line_x, dofs_line_y]) ) 
+#                load_dofs_z = np.unique( np.hstack([dofs_line_x, dofs_line_y]) )
 
         #--------------------------------------------------------------
         # force-displacement-diagram
         #--------------------------------------------------------------
 
         center_top_dof_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
-        print 'center_top_dof used for displacement tracing: ', center_top_dof_z 
+        print 'center_top_dof used for displacement tracing: ', center_top_dof_z
 
         self.f_w_diagram_center = RTraceGraph(name='displacement (center) - force',
                                        var_x='U_k'  , idx_x=center_top_dof_z,
@@ -690,7 +789,7 @@ class SimST(IBVModel):
                                        # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
                                        #
                                        transform_y='-4 * 1000. * y')
-        
+
         # trace support reaction
         #
         self.f_w_diagram_supprt = RTraceGraph(name='displacement (supprt) - force',
@@ -702,9 +801,9 @@ class SimST(IBVModel):
                                        # due to symmetry the total force sums up from four parts of the slab (2 symmetry axis):
                                        #
                                        transform_y='4 * 1000. * y')
-        
+
         #------------------------
-        # F-w-diagram edge and edge/center 
+        # F-w-diagram edge and edge/center
         #------------------------
 #        # get center-edge dof at the upper side of the slab
 #        #
@@ -720,7 +819,7 @@ class SimST(IBVModel):
 #            center_edge_top_dofs = specmn[x_idx_center_edge, -1, -1, 1, -1, -1].dofs
 
 #        center_edge_dof = center_edge_top_dofs[0, 0, 2]
-#        print 'center_edge_dof', center_edge_dof 
+#        print 'center_edge_dof', center_edge_dof
 #        self.f_w_diagram_center_edge = RTraceGraph(name = 'displacement (center/edge) - reaction 2',
 #                                                   var_x = 'U_k'  , idx_x = center_edge_dof,
 #                                                   var_y = 'F_int', idx_y_arr = load_dofs_z,
@@ -729,7 +828,7 @@ class SimST(IBVModel):
 #                                                   transform_y = '-4 * 1000 * y')
 #
 #        edge_dof = specmn[ 0, -1, -1, 0, -1, -1].dofs[0, 0, 2]
-#        print 'edge_dof', edge_dof 
+#        print 'edge_dof', edge_dof
 #        self.f_w_diagram_edge = RTraceGraph(name = 'displacement (edge) - reaction 2',
 #                                            var_x = 'U_k'  , idx_x = edge_dof,
 #                                            var_y = 'F_int', idx_y_arr = load_dofs_z,
@@ -738,19 +837,22 @@ class SimST(IBVModel):
 #                                            transform_y = '-4 * 1000 * y')
 
         #--------------------------------------------------------------
-        # boundary conditions 
+        # boundary conditions
         #--------------------------------------------------------------
 
         bcond_list = [ bc_symplane_yz, bc_symplane_xz, support_000 ] + bc_w
 
         if self.supprt_flag:
-            bcond_list += [ link_sp_sp_z, sym_support_link ]
+            if self.plain_concrete_flag:
+                bcond_list += [ link_sp_pc_xyz, link_pc_sprt_z, sym_support_link, bc_symplane_yz_plain_concrete, bc_symplane_xz_plain_concrete ]
+            else:
+                bcond_list += [ link_sp_sprt_z, sym_support_link ]
 
         if self.elstmr_flag:
             bcond_list += [ bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp ]
 
         #--------------------------------------------------------------
-        # ts 
+        # ts
         #--------------------------------------------------------------
 
         ts = TS(
@@ -767,11 +869,11 @@ class SimST(IBVModel):
                               RTraceDomainListField(name='Displacement' ,
                                                     var='u', idx=0, warp=True),
 #                             RTraceDomainListField(name = 'Stress' ,
-#                                            var = 'sig_app', idx = 0, warp = True, 
+#                                            var = 'sig_app', idx = 0, warp = True,
 #                                            record_on = 'update'),
 
 #                             RTraceDomainListField(name = 'Strain' ,
-#                                        var = 'eps_app', idx = 0, warp = True, 
+#                                        var = 'eps_app', idx = 0, warp = True,
 #                                        record_on = 'update'),
 #                             RTraceDomainListField(name = 'Damage' ,
 #                                        var = 'omega_mtx', idx = 0, warp = True,
@@ -783,11 +885,11 @@ class SimST(IBVModel):
 
 #                             RTraceDomainListField(name = 'IStress' ,
 #                                            position = 'int_pnts',
-#                                            var = 'sig_app', idx = 0, 
+#                                            var = 'sig_app', idx = 0,
 #                                            record_on = 'update'),
 #                             RTraceDomainListField(name = 'IStrain' ,
 #                                            position = 'int_pnts',
-#                                            var = 'eps_app', idx = 0, 
+#                                            var = 'eps_app', idx = 0,
 #                                            record_on = 'update'),
                               ]
                 )
@@ -867,13 +969,13 @@ class SimSTDB(SimST):
     material_model = Str(input=True)
     def _material_model_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
     calibration_test = Str(input=True)
     def _calibration_test_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
 
     damage_function = Property(Instance(MFnLineArray),
@@ -897,11 +999,11 @@ class SimSTDB(SimST):
         return self.phi_fn_class(mfn=self.damage_function)
 
     # @todo: is mapped traist a better alternative?
-#    phi_fn_class = Trait('PhiFnGeneral', { 'PhiFnGeneral' : PhiFnGeneral( mfn = self.damage_function ), 
-#                                           'PhiFnGeneralExtended : PhiFnGeneralExtended( mfn = self.damage_function, factor_eps_fail = self.factor_eps_fail ), 
-#                                           'PhiFnGeneralExtendedExp : PhiFnGeneralExtendedExp( mfn = self.damage_function, Efp_frac = self.Efp_frac ) }, 
+#    phi_fn_class = Trait('PhiFnGeneral', { 'PhiFnGeneral' : PhiFnGeneral( mfn = self.damage_function ),
+#                                           'PhiFnGeneralExtended : PhiFnGeneralExtended( mfn = self.damage_function, factor_eps_fail = self.factor_eps_fail ),
+#                                           'PhiFnGeneralExtendedExp : PhiFnGeneralExtendedExp( mfn = self.damage_function, Efp_frac = self.Efp_frac ) },
 #                                           input = True,)
-    
+
     #-----------------
     # phi function General:
     #-----------------
@@ -921,7 +1023,7 @@ class SimSTDB(SimST):
 #    def _get_phi_fn_ext(self):
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
-#        
+#
 #    #-----------------
 #    # phi function General Extended Exp:
 #    #-----------------
@@ -943,7 +1045,7 @@ class SimSTDB(SimST):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m 
+        print 'E_m (from ccs)', E_m
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -952,19 +1054,19 @@ class SimSTDB(SimST):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c 
+        print 'E_c (from ccs)', E_c
         return E_c
 
-    # Poisson's ratio 
+    # Poisson's ratio
     #
     nu = Property(Float, depends_on='input_change')
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu 
+        print 'nu (from ccs)', nu
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20' 
+        print 'nu set explicitly to 0.20'
         nu = 0.2
         return nu
 
@@ -980,37 +1082,37 @@ if __name__ == '__main__':
     # s_tex,z = 4.62 mm corresponds to: n_tex = 12; h = 60 mm
     #
     sim_model = SimSTDB(
-                        
+
 #                        ccs_unit_cell_key = 'FIL-10-09_2D-02-06a_0.00273_90_0',
 #                        calibration_test = 'TT11-10a-average',
-                        
+
                         ccs_unit_cell_key='barrelshell_2D-05-11_0.00286_all0',
                         calibration_test='TTb-6c-2cm-0-TU-V1_bs5_a23d-nu02',
                         thickness=0.02,
                         length=0.80,
-                        
+
 #                        ccs_unit_cell_key = 'FIL-10-09_2D-05-11_0.00462_all0',
-                        
+
                          # calibration_test = 'TT-12c-6cm-TU-SH1F-V1',
 #                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V2',
 
-                         # calibration for: age = 26d; E_m = 28400 MPa; nu = 0.25   
+                         # calibration for: age = 26d; E_m = 28400 MPa; nu = 0.25
                          #
 #                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3',
-                         
-                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25   
+
+                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25
                          #
 #                         calibration_test = 'TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02',
                          # age of the slab at the time of testing
-                         # NOTE: that the same phi-function is used independent of age. This assumes a 
+                         # NOTE: that the same phi-function is used independent of age. This assumes a
                          # an afine/proportional damage evolution for different ages. get_E_m_time(self.age)
                          #
                          age=23,
 #                         shape_xy = 10,
 #                         shape_z = 3,
                          tstep=0.05,
-                         tmax=0.4 
-#                         tstep = 0.05 
+                         tmax=0.4
+#                         tstep = 0.05
 #                         tstep = 0.025 # tmax / 34 steps with tmax = 0.85 corresponding to 1 mm / tstep
                          )
 
@@ -1025,13 +1127,13 @@ if __name__ == '__main__':
 
                         ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
 
-                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25   
+                         # calibration for: age = 23d; E_m = 28400 MPa; nu = 0.25
                          #
                          calibration_test='TT-12c-6cm-0-TU-SH2F-V3_a23d-nu02',
                          # age of the slab at the time of testing
                          age=23,
-                         # NOTE: that the same phi-function is used independent of age. This assumes a 
-                         # an afine/proportional damage evolution for different ages. 
+                         # NOTE: that the same phi-function is used independent of age. This assumes a
+                         # an afine/proportional damage evolution for different ages.
                          #
                          shape_xy=28,
                          shape_R=5,
@@ -1053,7 +1155,7 @@ if __name__ == '__main__':
 
     #------------------------------
     # ui
-    #------------------------------    
+    #------------------------------
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource=sim_model)
@@ -1072,11 +1174,11 @@ if __name__ == '__main__':
 
         p.figure(facecolor='white')  # white background
 
-        #--------------------        
+        #--------------------
         # simulation
-        #--------------------        
+        #--------------------
         sim_model.tloop.eval()
- 
+
         pickle_path = 'pickle_files'
         ccs_unit_cell_key = sim_model.ccs_unit_cell_key
         calibration_test = sim_model.calibration_test
@@ -1086,7 +1188,7 @@ if __name__ == '__main__':
         E_m = sim_model.E_m
         nu = sim_model.nu
         tolerance = sim_model.tolerance
-        param_key = ccs_unit_cell_key + '_' + calibration_test + 'L=%g h=% sxy= %g Em=%g nu=%g tol=%g' % (length, thickness, shape_xy, E_m, nu, tolerance) 
+        param_key = ccs_unit_cell_key + '_' + calibration_test + 'L=%g h=% sxy= %g Em=%g nu=%g tol=%g' % (length, thickness, shape_xy, E_m, nu, tolerance)
 
         # f-w-diagram_center
         #
@@ -1128,9 +1230,9 @@ if __name__ == '__main__':
 #        file.close()
 #        sim_model.f_w_diagram_edge.trace.mpl_plot(p, color = 'red')
 
-        #--------------------        
+        #--------------------
         # experiments
-        #--------------------        
+        #--------------------
 
         # PT-12c-6cm-TU
 #        path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU')
@@ -1151,7 +1253,7 @@ if __name__ == '__main__':
         ex_run = ExRun(ex_path)
         ex_run.ex_type._plot_force_center_deflection(p)
 
-        # plot sim curve as time new roman within the predefined limits  
+        # plot sim curve as time new roman within the predefined limits
         #
 #        format_plot(p, xlim = 34, ylim = 54, xlabel = 'displacement [mm]', ylabel = 'force [kN]')
         png_file_path = join(png_path, param_key + '.png')
@@ -1288,14 +1390,14 @@ if __name__ == '__main__':
 #        pickle_file_path = join( pickle_path, file_name )
 #        file = open( pickle_file_path, 'r' )#        trace = load( file )
 #        p.plot( trace.xdata, trace.ydata, color = 'black' )
-#        
+#
 #        # plate elem(8,8,2); w=0.08; step = 0.1; KMAX = 20, tol = 0.001, factor_eps_fail = 1.2
 #        file_name = 'f_w_diagram_c_average_step0-1_KMAX20_tol0-001_epsfactor_1-2.pickle'
 #        pickle_file_path = join( pickle_path, file_name )
 #        file = open(pickle_file_path, 'r')
 #        trace = load( file )
 #        p.plot( trace.xdata, trace.ydata, color = 'black' )
-#        
+#
 #        # plate elem(8,8,2); w=0.08; step = 0.1; KMAX = 20, tol = 0.001
 #        file_name = 'f_w_diagram_c_average_step0-1_KMAX20_tol0-001.pickle'
 #        pickle_file_path = join( pickle_path, file_name )
@@ -1336,7 +1438,7 @@ if __name__ == '__main__':
 #        file = open( pickle_file_path, 'r' )
 #        trace = load( file )
 #        p.plot( trace.xdata, trace.ydata, color = 'red' )
-#        
+#
 #        # plate elem(8,8,2); w=0.08; step = 0.1; KMAX = 20, tol = 0.001
 #        file_name = 'f_w_diagram_e_average_step0-1_KMAX20_tol0-001.pickle'
 #        pickle_file_path = join( pickle_path, file_name )
@@ -1360,7 +1462,7 @@ if __name__ == '__main__':
 #        file = open( pickle_file_path, 'r' )
 #        trace = load( file )
 #        p.plot( trace.xdata, trace.ydata, color = 'green' )
-#        
+#
 #        # plate elem(8,8,2); w=0.08; step = 0.1; KMAX = 20, tol = 0.001
 #        file_name = 'f_w_diagram_e_V1_step0-1_KMAX20_tol0-001.pickle'
 #        pickle_file_path = join( pickle_path, file_name )
@@ -1394,7 +1496,7 @@ if __name__ == '__main__':
 #        file = open( pickle_file_path, 'r' )
 #        trace = load( file )
 #        p.plot( trace.xdata, trace.ydata, color = 'green' )
-#        
+#
 #        # plate elem(8,8,2); w=0.08; step = 0.02; KMAX = 20, tol = 0.001
 #        file_name = 'f_w_diagram_V1_step0-02_KMAX20_tol0-001.pickle'
 #        pickle_file_path = join( pickle_path, file_name )
