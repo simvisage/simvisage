@@ -237,7 +237,7 @@ if __name__ == '__main__':
                             length=0.80,
                             radius_plate=0.04,  # D=8cm
                             #
-                            plain_concret_flag=True,
+                            plain_concrete_flag=False,
                             elstmr_flag=False,
                             supprt_flag=True,
                             geo_st_flag=True,
