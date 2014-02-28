@@ -58,7 +58,7 @@ class BCSlice(HasStrictTraits):
 
     var = Enum('u', 'f', 'eps', 'sig')
 
-    #slice = Instance(FEGridIdxSlice)
+    # slice = Instance(FEGridIdxSlice)
     slice = Trait()
 
     link_slice = Instance(FEGridIdxSlice)
@@ -68,10 +68,10 @@ class BCSlice(HasStrictTraits):
     # List of dofs that determine the value of the current dof
     #
     # If this list is empty, then the current dof is
-    # prescribed. Otherwise, the dof value is given by the 
+    # prescribed. Otherwise, the dof value is given by the
     # linear combination of DOFs in the list (see the example below)
     #
-    #link_dofs = List( Int )
+    # link_dofs = List( Int )
 
     # Coefficients of the linear combination of DOFs specified in the
     # above list.
@@ -125,9 +125,9 @@ class BCSlice(HasStrictTraits):
         '''
         if self.link_slice == None:
             for el, el_dofs, el_dofs_X in zip(self.slice.elems, self.slice.dofs, self.slice.dof_X):
-                #print 'el_dofs', el_dofs
+                # print 'el_dofs', el_dofs
                 for node_dofs, dof_X in zip(el_dofs, el_dofs_X):
-                    #print 'node_dofs ', node_dofs
+                    # print 'node_dofs ', node_dofs
                     for dof in node_dofs[ self.dims] :
                         self.bcdof_list.append(BCDof(var=self.var,
                                                        dof=dof,
@@ -161,6 +161,14 @@ class BCSlice(HasStrictTraits):
 
                     for node_dofs, dof_X, node_link_dofs, link_dof_X in \
                         zip(el_dofs, el_dofs_X, el_link_dofs, el_link_dofs_X):
+                        print 'zip', zip(node_dofs[ self.dims ],
+                                                 node_link_dofs[self.link_dims],
+                                                 self.link_coeffs)
+                        print 'self.dims', self.dims
+                        print 'node_dofs[ self.dims ]', node_dofs[ self.dims ]
+                        print 'node_link_dofs[self.link_dims]', node_link_dofs[self.link_dims]
+                        print 'self.link_dims', self.link_dims
+                        print 'self.link_coeffs', self.link_coeffs
                         for dof, link_dof, link_coeff in zip(node_dofs[ self.dims ],
                                                  node_link_dofs[self.link_dims],
                                                  self.link_coeffs) :
@@ -216,7 +224,7 @@ class BCSlice(HasStrictTraits):
 
                     elif self.integ_domain == 'local':
 
-                        # Integration over the parametric coordinates on the   
+                        # Integration over the parametric coordinates on the
                         # surface
                         #
                         J_det = 1.0
@@ -263,7 +271,7 @@ class BCSlice(HasStrictTraits):
                               color=(0.0, 0.0, 0.882353))
 
     def _get_mvpoints(self):
-        ## blow up
+        # # blow up
         if self.dof_X.shape[2] == 2:
             dof_X = np.hstack([self.dof_X.reshape(self.n_dof_nodes, 2),
                                np.zeros((self.n_dof_nodes, 1), dtype='f')])
@@ -275,7 +283,7 @@ class BCSlice(HasStrictTraits):
         return dof_X
 
     def _get_labels(self):
-        ## blow up
+        # # blow up
         n_points = self.n_dof_nodes
         dofs = repeat(-1., n_points * 3).reshape(n_points, 3)
         dofs[:, tuple(self.dims) ] = self.dofs
@@ -310,8 +318,8 @@ class BCSlice(HasStrictTraits):
                               color=(0.0, 0.882353, 0.0))
 
     def _get_link_mvpoints(self):
-        ## blow up
-        ## blow up
+        # # blow up
+        # # blow up
         if self.link_slice == None:
             return np.zeros((0, 3), dtype='f')
         if self.dof_X.shape[2] == 2:
@@ -325,7 +333,7 @@ class BCSlice(HasStrictTraits):
         return dof_X
 
     def _get_link_labels(self):
-        ## blow up
+        # # blow up
         if self.link_slice == None:
             return np.zeros((0, 3), dtype='f')
         n_points = self.n_link_dof_nodes
