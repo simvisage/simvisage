@@ -138,7 +138,6 @@ class BCSlice(HasStrictTraits):
             # apply the linked slice
             n_link_nodes = len(self.link_slice.dof_nodes.flatten())
             link_dofs = self.link_dofs[0, 0, self.link_dims]
-            print 'link_dofs', link_dofs
             if n_link_nodes == 1:
                 #
                 link_dof = self.link_slice.dofs.flatten()[0]
