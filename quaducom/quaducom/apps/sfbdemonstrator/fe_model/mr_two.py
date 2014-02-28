@@ -558,9 +558,8 @@ class MRtwo(MushRoofModel):
     @cached_property
     def _get_bc_plate_roof_link_list(self):
         '''
-        links all steel plate to roof
+        links the four corner nodes of the steel plate to the roof bottom
         '''
-
         bc_plate_roof_link_list = []
         n_from_center = 1 + self.not_linked_elem
 
@@ -570,11 +569,8 @@ class MRtwo(MushRoofModel):
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
                                   link_slice=plate[ 0 , 0 , -1, 0, 0, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             slice_2 = [BCSlice(var='u'  , dims=[0, 1, 2],
@@ -582,11 +578,8 @@ class MRtwo(MushRoofModel):
                                                self.n_elems_xy_quarter - n_from_center, 0,
                                                0, 0, 0 ],
                                   link_slice=plate[ -1, 0, -1, -1, 0, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             slice_3 = [BCSlice(var='u'  , dims=[0, 1, 2],
@@ -594,11 +587,8 @@ class MRtwo(MushRoofModel):
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
                                   link_slice=plate[ -1 , -1 , -1, -1, -1, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             slice_4 = [BCSlice(var='u'  , dims=[0, 1, 2],
@@ -606,11 +596,8 @@ class MRtwo(MushRoofModel):
                                                self.n_elems_xy_quarter + n_from_center, 0,
                                                0, 0, 0 ],
                                   link_slice=plate[ 0 , -1 , -1, 0, -1, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             bc_plate_roof_link_list = bc_plate_roof_link_list + \
@@ -700,43 +687,31 @@ class MRtwo(MushRoofModel):
             slice_1 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, -1, -1, 0 ],
                                   link_slice=column[ :, :, -1 , -1, -1, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
 
             slice_2 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, 0, 0, 0 ],
                                   link_slice=column[ :, :, -1 , 0, 0, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
 
             slice_3 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, 0, -1, 0 ],
                                   link_slice=column[ :, :, -1 , 0, -1, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             slice_4 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, -1, 0, 0 ],
                                   link_slice=column[ :, :, -1 , -1, 0, -1],
-                                  # ##
-                                  link_coeffs=[1.],
-#                                  link_coeffs=[1., 1., 1.],
-#                                  link_dims=[0, 1, 2],
-                                  # ##
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
                                   value=0.)]
 
             bc_plate_column_link_list = bc_plate_column_link_list + \
@@ -854,7 +829,6 @@ class MRtwo(MushRoofModel):
 
     linked_dims_coeffs = Property(List)
     def _get_linked_dims_coeffs(self):
-        print 'linked_dims_coeffs ', len(self.linked_dims[self.link_type]) * [1.]
         return len(self.linked_dims[self.link_type]) * [1.]
 
     # Set to true if the links between the roof are defined by shift_array
@@ -954,11 +928,8 @@ class MRtwo(MushRoofModel):
                                          slice=roof_0[-1, :, -1, -1, 0, -1 ],
                                          link_slice=roof_1[ 0, :, -1, 0, 0, -1],
                                          # displacements at linked nodes are set identical
-                                         # ##
-                                         link_coeffs=[1.0],
-#                                         link_dims=self.linked_dims[self.link_type],
-#                                         link_coeffs=self.linked_dims_coeffs,
-                                         # ##
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
                                          value=0.)]
 
             # center point of all roofs at symmetry axis and at 01-axis
@@ -967,11 +938,8 @@ class MRtwo(MushRoofModel):
             link_0_1_last = [BCSlice(var='u'  , dims=self.linked_dims[self.link_type],
                                          slice=roof_0[-1, -1, -1, -1, -1, -1 ],
                                          link_slice=roof_1[ 0, -1, -1, 0, -1, -1],
-                                         # ##
-                                         link_coeffs=[1.0],
-#                                         link_dims=self.linked_dims[self.link_type],
-#                                         link_coeffs=self.linked_dims_coeffs,
-                                         # ##
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
                                          value=0.)]
 
             bc_roof_link_list = constraint_0 + constraint_1 + constraint_0_1 + \
@@ -1000,11 +968,8 @@ class MRtwo(MushRoofModel):
                                          # get nodes at bottom right of elems at 0-1 axis.
                                          slice=roof_0[-1, elem, -1, -1, 0, -1 ],
                                          link_slice=roof_1[ 0, elem, -1, 0, 0, -1],
-                                         # ##
-                                         link_coeffs=[1.0],
-#                                         link_dims=self.linked_dims[self.link_type],
-#                                         link_coeffs=self.linked_dims_coeffs,
-                                         # ##
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
                                          value=0.)]
                 # symmetric constraint (symmetry axis)
                 #

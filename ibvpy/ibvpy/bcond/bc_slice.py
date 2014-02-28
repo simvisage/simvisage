@@ -137,21 +137,21 @@ class BCSlice(HasStrictTraits):
         else:
             # apply the linked slice
             n_link_nodes = len(self.link_slice.dof_nodes.flatten())
-            link_dofs = self.link_slice.dofs[0, 0, :]
+            link_dofs = self.link_dofs[0, 0, self.link_dims]
+            print 'link_dofs', link_dofs
             if n_link_nodes == 1:
-                # link it all to the single dof
                 #
                 link_dof = self.link_slice.dofs.flatten()[0]
                 link_coeffs = self.link_coeffs
                 for el, el_dofs, el_dofs_X in \
                     zip(self.slice.elems, self.slice.dofs, self.slice.dof_X):
                     for node_dofs, dof_X in zip(el_dofs, el_dofs_X):
-                        for dof, link_dof in zip(node_dofs[ self.dims ], link_dofs):
+                        for dof, link_dof, link_coeff in zip(node_dofs[ self.dims ], link_dofs, link_coeffs):
                             self.bcdof_list.append(BCDof(var=self.var,
                                                            dof=dof,
                                                            link_dofs=[ link_dof ],
                                                            value=self.value,
-                                                           link_coeffs=link_coeffs,
+                                                           link_coeffs=[link_coeff],
                                                            time_function=self.time_function))
             else:
                 for el, el_dofs, el_dofs_X, el_link, el_link_dofs, el_link_dofs_X in \
@@ -161,14 +161,7 @@ class BCSlice(HasStrictTraits):
 
                     for node_dofs, dof_X, node_link_dofs, link_dof_X in \
                         zip(el_dofs, el_dofs_X, el_link_dofs, el_link_dofs_X):
-                        print 'zip', zip(node_dofs[ self.dims ],
-                                                 node_link_dofs[self.link_dims],
-                                                 self.link_coeffs)
-                        print 'self.dims', self.dims
-                        print 'node_dofs[ self.dims ]', node_dofs[ self.dims ]
-                        print 'node_link_dofs[self.link_dims]', node_link_dofs[self.link_dims]
-                        print 'self.link_dims', self.link_dims
-                        print 'self.link_coeffs', self.link_coeffs
+
                         for dof, link_dof, link_coeff in zip(node_dofs[ self.dims ],
                                                  node_link_dofs[self.link_dims],
                                                  self.link_coeffs) :
