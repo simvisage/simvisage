@@ -140,15 +140,18 @@ class SCM(HasTraits):
     by integrating the strain profile along the composite'''
 
     length = Float(desc='composite specimen length')
-    nx = Int(desc='number of discretization points')
+    nx = Int(desc='# of discretization points for the whole specimen')
     CB_model = Instance(CompositeCrackBridge)
     load_sigma_c_arr = Array
+    n_w_CB = Int(100, desc='# of discretization points for w')
+    n_BC_CB = Int(10, desc='# of discretization points for boundary conditions')
+    n_x_CB = Int(200, desc='# of discretization points for the long. axis of a single CB')
 
     interpolator = Instance(Interpolator)
     def _interpolator_default(self):
         return Interpolator(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=100, n_BC=12, n_x=500
+                            length=self.length, n_w=self.n_w_CB, n_BC=self.n_BC_CB, n_x=self.n_x_CB
                             )
 
     sigma_c_crack = List
@@ -303,10 +306,10 @@ class SCM(HasTraits):
             cb_list = self.cracks_list[-1]
             sigc_max_lst = [cbi.max_sigma_c for cbi in cb_list]
             sigc_max = min(sigc_max_lst + [self.load_sigma_c_arr[-1]]) - 1e-10
-#            plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
-#            plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
-#            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-#            plt.show()
+            #plt.plot(self.x_arr, self.epsf_x(sigc_min), color='red', lw=2)
+            #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
+            #plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+            #plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
@@ -316,7 +319,7 @@ class SCM(HasTraits):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
-    length = 2000.
+    length = 200.
     nx = 1000
     random_field = RandomField(seed=False,
                                lacor=5.,
@@ -326,7 +329,7 @@ if __name__ == '__main__':
                                loc=.0,
                                shape=50.,
                                scale=2.0,
-                               distribution='Weibull'
+                               distr_type='Weibull'
                                )
 
     reinf = ContinuousFibers(r=0.0035,
