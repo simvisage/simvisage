@@ -123,7 +123,7 @@ class CompositeCrackBridge(HasTraits):
     def _get_sorted_r(self):
         return self.sorted_theta[7]
 
-    sorted_xi_cdf = Property(depends_on='reinforcement_lst+')
+    sorted_xi_cdf = Property(depends_on='reinforcement_lst+,Ll,Lr')
     @cached_property
     def _get_sorted_xi_cdf(self):
         '''breaking strain: CDF for random and Heaviside for discrete values'''
@@ -359,26 +359,25 @@ if __name__ == '__main__':
                           E_f=240e3,
                           xi=fibers_MC(m=10.0, sV0=10.0026),
                           label='carbon',
-                          n_int=10)
-
-    CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
-                                 )
+                          n_int=50)
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
                                  Ll=20.,
                                  Lr=20.,
-                                 w=.5)
+                                 w=.3)
 
     ccb.damage
-    plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='red', ls='dashed', label='analytical')
-    plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro')
+    plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro', label='maximum')
     for i, depsf in enumerate(ccb.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr), ccb._epsm_arr)
         # print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
-        plt.plot(ccb._x_arr, epsf_x)
+        if i == 0:
+            plt.plot(ccb._x_arr, epsf_x, color='black', label='fibers')
+        else:
+            plt.plot(ccb._x_arr, epsf_x, color='black')
+    plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='blue', label='matrix')
     plt.legend(loc='best')
-    # plt.xlim(-5,10)
-    # plt.ylim(0,0.0003)
+    plt.ylabel('matrix and fiber strain [-]')
+    plt.ylabel('long. position [mm]')
     plt.show()
