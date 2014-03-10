@@ -319,37 +319,44 @@ class SCM(HasTraits):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
-    length = 200.
-    nx = 1000
+    length = 500.
+    nx = 2000
     random_field = RandomField(seed=False,
-                               lacor=5.,
+                               lacor=1.,
                                length=length,
                                nx=500,
                                nsim=1,
                                loc=.0,
-                               shape=50.,
-                               scale=2.0,
+                               shape=15.,
+                               scale=4.0,
                                distr_type='Weibull'
                                )
 
-    reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.0, shape=3., scale=0.03),
-                          V_f=0.01,
-                          E_f=180e3,
-                          xi=fibers_MC(m=5.0, sV0=0.003),
-                          label='carbon',
-                          n_int=500)
+    reinf1 = ContinuousFibers(r=3.5e-3,
+                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
+                              V_f=0.005,
+                              E_f=200e3,
+                              xi=fibers_MC(m=7., sV0=0.005),
+                              label='carbon',
+                              n_int=500)
+
+    reinf2 = ContinuousFibers(r=3.5e-3,
+                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
+                              V_f=0.005,
+                              E_f=200e3,
+                              xi=fibers_MC(m=7., sV0=0.005),
+                              label='carbon',
+                              n_int=500)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf],
+                                 reinforcement_lst=[reinf1, reinf2],
                                  )
 
     scm = SCM(length=length,
               nx=nx,
               random_field=random_field,
               CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 25., 100),
+              load_sigma_c_arr=np.linspace(0.01, 20., 100),
               )
 
     scm.evaluate()
-
