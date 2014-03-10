@@ -46,6 +46,8 @@ from util.traits.editors.mpl_figure_editor import \
 from numpy import \
     array, ones_like, frompyfunc, linspace
 
+import numpy as np
+
 from concrete_mixture \
     import ConcreteMixture
 
@@ -108,8 +110,8 @@ ccsuc_table_editor = TableEditor(
                         reorderable=True,
                         sort_model=False,
                         auto_size=False,
-#                        filters      = [EvalFilterTemplate, 
-#                                       MenuFilterTemplate, 
+#                        filters      = [EvalFilterTemplate,
+#                                       MenuFilterTemplate,
 #                                       RuleFilterTemplate ],
 #                        search       = EvalTableFilter(),
             )
@@ -138,7 +140,7 @@ class CCSUnitCell(SimDBClass):
         return ConcreteMixture.db[ self.concrete_mixture_key ]
 
     #--------------------------------------------------------------------
-    # textile fabric layout used 
+    # textile fabric layout used
     #--------------------------------------------------------------------
     #
     fabric_layout_key = Str(simdb=True, input=True, table_field=True,
@@ -205,20 +207,20 @@ class CCSUnitCell(SimDBClass):
     #--------------------------------------------------------------------------------
     # Bag for material parameters
     #--------------------------------------------------------------------------------
-    # 
+    #
     # The material parameters are quantities to be used by models that should make
     # prognosis of the behavior in general condition. The composite cross section
-    # can be modeled by a variety of models, each of which may need different 
-    # parameters. The parameters are determined using some calibration test. 
-    # Therefore, in order to trace back the origin of the material parameters 
+    # can be modeled by a variety of models, each of which may need different
+    # parameters. The parameters are determined using some calibration test.
+    # Therefore, in order to trace back the origin of the material parameters
     # it is necessary to store the value of the material parameter together with
-    # the model that has calibrated it and by the test setup that was used 
+    # the model that has calibrated it and by the test setup that was used
     # for calibration. In this way, the range of validity of the calibrated damage
     # function is available.
     #
     # The material parameters are stored in a list with the combined key
     # containing the tuple (material model, test run).
-    #   
+    #
     damage_function_list = List(DamageFunctionEntry, input=True)
 
     def set_param(self, material_model, calibration_test, df):
@@ -246,7 +248,7 @@ class CCSUnitCell(SimDBClass):
         raise ValueError, 'no entry in unit cell with key ( %s ) for model ( %s ) and test( %s )' % (self.key, material_model, calibration_test)
 
     #-------------------------------------------------------------
-    # derive the average phi-function based on all entries 
+    # derive the average phi-function based on all entries
     # in damage_function_list
     #-------------------------------------------------------------
 
@@ -273,9 +275,9 @@ class CCSUnitCell(SimDBClass):
 
         mfn = MFnLineArray()
 
-        # take the smallest value of the strains for the average function. Beyond this value 
+        # take the smallest value of the strains for the average function. Beyond this value
         # the average does not make sense anymore because it depends on the arbitrary number
-        # of entries in the df_list  
+        # of entries in the df_list
         #
         xdata_min = min(self.damage_function_list[i].damage_function.xdata[-1] \
                          for i in range(len(self.damage_function_list)))
@@ -314,8 +316,19 @@ class CCSUnitCell(SimDBClass):
             print 'x', mp_entry.damage_function.xdata
             print 'y', mp_entry.damage_function.ydata
 
+    save_phi_fn_values = Button()
+    def _save_phi_fn_values_fired(self):
+        'save phi_fn xy-data to file'
+        print 'save phi_arr data to file'
+        for mp_entry in self.selected_dfs:
+            xdata = mp_entry.damage_function.xdata
+            ydata = mp_entry.damage_function.ydata
+            phi_arr = np.hstack([xdata[:, None], ydata[:, None]])
+            print 'phi_arr ', phi_arr.shape, ' save to file "phi_arr.csv"'
+            np.savetxt('phi_arr.csv', phi_arr, delimiter=';')
+
     # event to trigger the replotting - used by the figure editor
-    # 
+    #
     data_changed = Event
 
 #    @on_trait_change('damage_function_list')
@@ -368,6 +381,7 @@ class CCSUnitCell(SimDBClass):
                             ),
                         Group(
                               Item('print_values', show_label=False),
+                              Item('save_phi_fn_values', show_label=False),
                         Item('damage_function_list@', editor=df_table_editor,
                              resizable=True, show_label=False),
                              id='exdb.ccsuc.damage_functions',
@@ -380,11 +394,12 @@ class CCSUnitCell(SimDBClass):
                              id='exdb.ccsuc.plot_sheet',
                              label='plot sheet',
                              dock='tab',
+
                         ),
 #                        Group(
-#                        Item('rho_c', 
+#                        Item('rho_c',
 #                             style = 'readonly', show_label = True, format_str="%.4f"),
-#                        Item('E_c28', 
+#                        Item('E_c28',
 #                             style = 'readonly', show_label = True, format_str="%.0f" ),
 #                        label = 'derived params',
 #                        id = 'exdb.ccsuc.dp',
@@ -404,7 +419,7 @@ class CCSUnitCell(SimDBClass):
                         buttons=['OK', 'Cancel'],
                         )
 
-# Setup the database class extension 
+# Setup the database class extension
 #
 CCSUnitCell.db = SimDBClassExt(
             klass=CCSUnitCell,

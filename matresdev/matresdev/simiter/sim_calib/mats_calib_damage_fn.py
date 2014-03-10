@@ -71,27 +71,27 @@ class MATSCalibDamageFnController(Handler):
         fit_response = calibrator.fit_response()
 
 # ---------------------------------------------------
-# Calibrator of the damage function from uniaxial test: 
+# Calibrator of the damage function from uniaxial test:
 # ---------------------------------------------------
 
 class MATSCalibDamageFn(MATSExplore):
     '''
-    Fitting algorithm for the damage function of the 
+    Fitting algorithm for the damage function of the
     quasi-ductile anisotropic material model.
-    
-    The algorithm uses the TLoop instance to proceed step 
-    by step with the computation. The value of the damage function 
+
+    The algorithm uses the TLoop instance to proceed step
+    by step with the computation. The value of the damage function
     for the time step t_n is identified iteratively by adjusting
     the values and evaluating the corresponding equilibrated stresses.
-    
+
     The control parameters of the algorithm are:
-    
+
     @param step_size: time step for fitting the damage parameter.
-    @param tmax: end time for fitting, it might be also be set implicitly 
+    @param tmax: end time for fitting, it might be also be set implicitly
     for integrity = 1 - full damage of the material.
     '''
 
-    # store the fitted 'PhiFn' in the data base, i.e. 'CCSUniteCell' 
+    # store the fitted 'PhiFn' in the data base, i.e. 'CCSUniteCell'
     store_fitted_phi_fn = Bool(True)
 
     # default settings are overloaded with settings specified in 'ec_config'
@@ -137,7 +137,7 @@ class MATSCalibDamageFn(MATSExplore):
 
     def run_trial_step(self):
         '''Run the computation one step starting from the
-        current time t_n to iterate the value for phi_new 
+        current time t_n to iterate the value for phi_new
         which gives a fit with macroscopic stress curve.
         NOTE: The trial step does not update 'U_n' or 't_n'!
         '''
@@ -191,8 +191,10 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
-        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
+        return ctt.eps_c_interpolated, ctt.sig_c_interpolated  # original data without jumps with interpolated starting point in the origin
+#        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
 #        return ctt.eps_smooth, ctt.sig_c_smooth #smoothed data
+
 
     #--------------------------------------------------
     # interpolation function for fitting data:
@@ -202,6 +204,7 @@ class MATSCalibDamageFn(MATSExplore):
     @cached_property
     def _get_mfn_line_array_target(self):
         xdata, ydata = self.get_target_data_exdb_tensile_test()
+        print 'xdata[-1]', xdata[-1]
         return MFnLineArray(xdata=xdata, ydata=ydata)
 
     fitted_phi_fn = Instance(MFnLineArray)
@@ -219,13 +222,13 @@ class MATSCalibDamageFn(MATSExplore):
 
     def init(self):
         #--------------------------------------------------
-        # for fitting use 'General'-function for 'phi_fn': 
+        # for fitting use 'General'-function for 'phi_fn':
         #--------------------------------------------------
         # The value pair for the piecewise linear definition
         # of 'phi_fn' value consists of current strain and the
         # iterated 'phi_value'. The microplanes with a lower
-        # microplane strain level use an interpolated value 
-        # for 'phi' 
+        # microplane strain level use an interpolated value
+        # for 'phi'
         self.fitted_phi_fn = self.dim.mats_eval.phi_fn.mfn
         self.fitted_phi_fn.xdata = [0]
         self.fitted_phi_fn.ydata = [1]
@@ -243,7 +246,7 @@ class MATSCalibDamageFn(MATSExplore):
         self.tloop.tline.tolerance = self.tolerance
         self.tloop.tline.RESETMAX = self.RESETMAX
 
-    # store trial step data in the lists if trial steps are to be stored 
+    # store trial step data in the lists if trial steps are to be stored
     # for the plotting method 'plot_trail_steps'
     #
     rec_trial_steps = True
@@ -251,7 +254,7 @@ class MATSCalibDamageFn(MATSExplore):
     sig_trial_list_i = []
     phi_trial_list_n = []
     sig_trial_list_n = []
-        
+
     def get_lack_of_fit(self, phi_trial):
         '''Return the difference between the macroscopic stress calculated
         based on the value of phi_trial (damage at the next step) and the
@@ -269,50 +272,50 @@ class MATSCalibDamageFn(MATSExplore):
             print '    current_time = ', current_time
             print '    step_size    = ', self.step_size
 
-        # ------------------------------------                
-        # add new pair in fitted_phi_fn 
-        # ------------------------------------                
+        # ------------------------------------
+        # add new pair in fitted_phi_fn
+        # ------------------------------------
         # consisting of 'e_max_value_new' and 'phi_trial'
         x = hstack([ self.fitted_phi_fn.xdata[:], current_time + self.step_size ])
         y = hstack([ self.fitted_phi_fn.ydata[:], phi_trial ])
         self.fitted_phi_fn.set(xdata=x, ydata=y)
         self.fitted_phi_fn.data_changed = True
 
-        # ------------------------------------                
+        # ------------------------------------
         # get state array before trial:
-        # ------------------------------------                
+        # ------------------------------------
         mats_state_array_old = copy(self.tloop.tstepper.sctx.mats_state_array)
 
-        # ------------------------------------                
-        # run trial step: 
-        # ------------------------------------                
+        # ------------------------------------
+        # run trial step:
+        # ------------------------------------
         if self.log:
             print '    reset current_U_n   =', self.tloop.U_n
             print 'CURRENT PHI', self.dim.mats_eval.phi_fn.mfn.ydata
         # try the next equilibrium
         self.run_trial_step()
 
-        # ------------------------------------                
+        # ------------------------------------
         # reset mats_state_array:
-        # ------------------------------------                
-        # Note: the material state array (i.e. the maximum microstrains) are 
+        # ------------------------------------
+        # Note: the material state array (i.e. the maximum microstrains) are
         # updated within the iterations of each trial step, therefore a reset
-        # is necessary in order to start each trial step with the same state variables  
+        # is necessary in order to start each trial step with the same state variables
         self.tloop.tstepper.sctx.mats_state_array[:] = mats_state_array_old[:]
         if self.log:
             print '    reset state array'
 
-        # ------------------------------------                
-        # remove trial value in fitted_phi_fn 
-        # ------------------------------------                
+        # ------------------------------------
+        # remove trial value in fitted_phi_fn
+        # ------------------------------------
         x = self.fitted_phi_fn.xdata[:-1]
         y = self.fitted_phi_fn.ydata[:-1]
         self.fitted_phi_fn.set(xdata=x, ydata=y)
         self.fitted_phi_fn.data_changed = True
 
-        # ------------------------------------                
+        # ------------------------------------
         # get the lack of fit
-        # ------------------------------------                
+        # ------------------------------------
         # get calculated value for 'sig_app' based on the current value of 'phi_trial':
         # and evaluate the difference between the obtained stress and the measured response
         self.tloop.rtrace_mngr.rtrace_bound_list[0].redraw()
@@ -370,7 +373,7 @@ class MATSCalibDamageFn(MATSExplore):
             # is smaller then target value get_lack_of_fit has no sign change
             # for phi_trial = phi_old and phi_trial = 0. which is a requirement
             # for the function call 'brentq'. In this case the old value
-            # for phi_trial is used and tloop moves on one step 
+            # for phi_trial is used and tloop moves on one step
             try:
                 # The method brentq has optional arguments such as
                 #   'xtol'    - absolut error (default value = 1.0e-12)
@@ -378,11 +381,11 @@ class MATSCalibDamageFn(MATSExplore):
                 #   'maxiter' - maximum numbers of iterations used
                 #
                 # Here xtol is used to specify the allowed RELATIVE error!
-                # therefore the relative lack of fit is returned in 
-                # method 'get_lack_of_fit' 
+                # therefore the relative lack of fit is returned in
+                # method 'get_lack_of_fit'
                 _xtol = 1.0e-6
                 phi_new = brentq(self.get_lack_of_fit, 0., phi_old, xtol=_xtol)
-                # @todo: check if 'brenth' gives better fitting results; faster? 
+                # @todo: check if 'brenth' gives better fitting results; faster?
 #                phi_new = brenth( self.get_lack_of_fit, 0., phi_old )
                 print '(#) n = ', n
             except ValueError:
@@ -425,19 +428,19 @@ class MATSCalibDamageFn(MATSExplore):
                 print '### run_one_step ###'
                 print '### step', n   , '###'
                 print '### current time:', current_time
-                 
+
             if self.rec_trial_steps:
-                # add entries of the iterations ('i') in the current step ('n') 
-                # (yields a list of lists) 
+                # add entries of the iterations ('i') in the current step ('n')
+                # (yields a list of lists)
                 #
                 self.phi_trial_list_n.append(self.phi_trial_list_i)
                 self.sig_trial_list_n.append(self.sig_trial_list_i)
-                # delete the entries of the iterations ('i') in the last step ('n') 
+                # delete the entries of the iterations ('i') in the last step ('n')
                 # and fill it with the iterations of the next step ('n+1')
-                # 
+                #
                 self.phi_trial_list_i = []
                 self.sig_trial_list_i = []
-                
+
             self.run_one_step()
 #            print '(g%)' %(n)
 
@@ -458,7 +461,7 @@ class MATSCalibDamageFn(MATSExplore):
         NOTE: the global variable 'rec_trial_steps' must be set to 'True' in order to store the iteration values
               within the global variables 'phi_trial_list_n' and 'sig_trial_list_n'
         n - index of the time steps to be considered
-        i - index of the iteration steps performed in order to fit the target curve 
+        i - index of the iteration steps performed in order to fit the target curve
         '''
         #-------------------------------------------------------------------
         # configure the style of the font to be used for labels and ticks
@@ -482,24 +485,24 @@ class MATSCalibDamageFn(MATSExplore):
         # variant= ['normal', 'small-caps']
         font.set_weight('medium')
         # weight = ['light', 'normal', 'medium', 'semibold', 'bold', 'heavy', 'black']
-        
+
         #-------------------------------------------------------------------
 
         p.figure(facecolor='white')  # white background
 
         # time list corresponding to the specified numbers of steps and step size
-        # 
+        #
         step_list = [n * self.step_size for n in range(self.n_steps + 1)]
 
-        # get list of lists containing the trial values of 'sig_app' and 'phi_trail' 
+        # get list of lists containing the trial values of 'sig_app' and 'phi_trail'
         # the lists are defined as global variables of 'MATSCalibDamageFn' and are filled
         # within the iteration process when the method 'get_lack_of_fit" is called
         #
-        phi_trial_list_n = [[1.]] + self.phi_trial_list_n 
-        sig_trial_list_n = [[0.]] + self.sig_trial_list_n  
+        phi_trial_list_n = [[1.]] + self.phi_trial_list_n
+        sig_trial_list_n = [[0.]] + self.sig_trial_list_n
 
-        xrange = 7.  # plotting range for strain [mm/m]
-        yrange = 18.  # plotting range for stress [MPa]
+        xrange = 10.  # plotting range for strain [mm/m]
+        yrange = 25.  # plotting range for stress [MPa]
 
         for n in range(self.n_steps):
             for i in range(len(phi_trial_list_n[n + 1])):
@@ -517,7 +520,7 @@ class MATSCalibDamageFn(MATSExplore):
                 p.xlabel('strain [1E3]', fontproperties=font)
                 p.ylabel('stress [MPa]', fontproperties=font)
                 p.axis([0, xrange, 0., yrange], fontproperties=font)
-    
+
                 # format ticks for plot
                 #
                 locs, labels = p.xticks()
@@ -526,11 +529,11 @@ class MATSCalibDamageFn(MATSExplore):
                 locs, labels = p.yticks()
                 p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
-            
+
                 #--------------------------------------
                 # phi_trail
                 #--------------------------------------
-                # plot the fitted phi-function 
+                # plot the fitted phi-function
                 # (with trial steps)
                 #
                 p.subplot(224)
@@ -570,13 +573,13 @@ class MATSCalibDamageFn(MATSExplore):
         #--------------------------------------
         # phi_trail (final)
         #--------------------------------------
-        # plot the corresponding fitted phi-function 
+        # plot the corresponding fitted phi-function
         # (without trial steps)
         #
         p.subplot(223)
         eps = 1000. * self.fitted_phi_fn.xdata[:-1]
         phi_fn = self.fitted_phi_fn.ydata[:-1]
-        p.plot(eps, phi_fn, color='black', linewidth=1)        
+        p.plot(eps, phi_fn, color='black', linewidth=1)
         # format ticks for plot
         #
         p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
@@ -591,7 +594,7 @@ class MATSCalibDamageFn(MATSExplore):
         p.savefig('plot_trail_steps.png')
 
         p.show()
-        
+
     #-----------------------------------------------------------------------------------------
     # User interaction
     #-----------------------------------------------------------------------------------------
@@ -646,7 +649,7 @@ class MATSCalibDamageFn(MATSExplore):
 
 def run():
     #--------------------------------------------------------------------------------
-    # Example using the mats2d_explore 
+    # Example using the mats2d_explore
     #--------------------------------------------------------------------------------
     from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
     from ibvpy.mats.mats2D.mats2D_rtrace_cylinder import MATS2DRTraceCylinder
@@ -678,7 +681,8 @@ def run():
                RTraceGraph(name='stress - strain',
                            var_x='eps_app', idx_x=0,
                            var_y='sig_app', idx_y=0,
-                           update_on='iteration'),
+                           ),
+#                           update_on='iteration'),
                         ],
           }
 
@@ -721,8 +725,8 @@ def run():
         for ex_run in ex.ex_run_list:
             if ex_run.ready_for_calibration:
                 print 'FITTING', ex_run.ex_type.key
-                # 'E_c' of each test is different, therefore 'mats_eval' 
-                # needs to be defined for each test separately. 
+                # 'E_c' of each test is different, therefore 'mats_eval'
+                # needs to be defined for each test separately.
                 #
                 E_c = ex_run.ex_type.E_c
                 nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
@@ -739,8 +743,9 @@ def run():
 
         test_file = join(simdb.exdata_dir,
                               'tensile_tests',
-                              'dog_bone',
-                              
+#                              'dog_bone',
+                              'buttstrap_clamping',
+
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
 #                              'TT-10g-3cm-a-TR-average.DAT')
@@ -760,7 +765,7 @@ def run():
 
                                 #-----------------------------------
                                 # tests for 'BT-4PT-12c-6cm-TU_SH4'
-                                # tests for 'ST-12c-6cm-TU' (fresh) 
+                                # tests for 'ST-12c-6cm-TU' (fresh)
                                 #-----------------------------------
                                 # @todo: add missing front strain information from Aramis3d testing
                                 #
@@ -770,8 +775,8 @@ def run():
 #                                 '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                                 'TT-12c-6cm-0-TU-SH2-V2.DAT')
 
-                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+#                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
                                 #-----------------------------------
                                 # tests for 'BT-3PT-6c-2cm-TU_bs'
@@ -787,6 +792,20 @@ def run():
 #                                 # TT-bs3
 #                                 '2013-06-12_TT-6c-2cm-0-TU_bs3',
 #                                 'TT-6c-2cm-0-TU-V1_bs3.DAT')
+#                                 # TTb-bs4-Aramis3d
+#                                  '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
+#                                  'TTb-6c-2cm-0-TU-V2_bs4.DAT')
+
+                                #-----------------------------------
+                                # tests for 'TT-6c-2cm-90-TU'
+                                #-----------------------------------
+                                #
+                                '2013-05-22_TTb-6c-2cm-90-TU-V3_bs1',
+                                'TTb-6c-2cm-90-TU-V3_bs1.DAT')
+
+#                               '2013-05-17_TT-6c-2cm-0-TU_bs1',
+#                               'TT-6c-2cm-90-TU-V3_bs1.DAT')
+
 
 #         test_file = join(simdb.exdata_dir,
 #                               'tensile_tests',
@@ -800,16 +819,16 @@ def run():
         #
         ex_run = ExRun(data_file=test_file)
         fitter.ex_run = ex_run
-        
+
         #------------------------------------------------------------------
-        # specify the parameters used within the calibration 
+        # specify the parameters used within the calibration
         #------------------------------------------------------------------
         #
         # get the composite E-modulus and Poisson's ratio as stored
-        # in the experiment data base for the specified age of the tensile test 
+        # in the experiment data base for the specified age of the tensile test
         #
 #        E_c = ex_run.ex_type.E_c
-#        print 'E_c', E_c 
+#        print 'E_c', E_c
 
 #        # use the value as graphically determined from the tensile test (= initial stiffness for tension)
 #        E_c = 28000.
@@ -818,37 +837,55 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 26
+        age = 28
 
         # E-modulus of the concrete matrix at the age of testing
-        # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests; 
+        # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests;
         # behavior in the tensile zone is defined by calibrated 'phi_fn' with the predefined 'E_m'
-        E_m = ex_run.ex_type.ccs.get_E_m_time(age)  
-        E_c = ex_run.ex_type.ccs.get_E_c_time(age)  
-        
-        # set 'nu' 
+        E_m = ex_run.ex_type.ccs.get_E_m_time(age)
+#        E_c = ex_run.ex_type.ccs.get_E_c_time(age)
+
+        # use average E-modul from 0- and 90-degree direction for fitter in both directions
+        # this yields the correct tensile behavior and returns the best average compressive behavior
+        #
+#        E_c = 22313.4
+
+        # alternatively use maximum E-modul from 90-direction also for 0-degree direction for fitting
+        # this yields the correct tensile behavior also in the linear elastic regime for both directions corresponding to the
+        # tensile test behavior (note that the compressive E-Modulus in this case is overestimated in 0-degree direction; minor influence
+        # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
+        #
+        E_c = 22413.6
+
+        # set 'nu'
         # @todo: check values stored in 'mat_db'
         #
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
-        
-        n_steps = 100
+
+        n_steps = 200
         fitter.n_steps = n_steps
-        
+
         fitter.ex_run.ex_type.age = age
         print 'age = %g used for calibration' % age
         fitter.ex_run = ex_run
-        print 'E_m(age) = %g used for calibration' % E_m
-        fitter.dim.mats_eval.E = E_m
+
+#        print 'E_m(age) = %g used for calibration' % E_m
+#        fitter.dim.mats_eval.E = E_m
+
+        print 'E_c(age) = %g used for calibration' % E_c
+        fitter.dim.mats_eval.E = E_c
+
         print 'nu = %g used for calibration' % nu
         fitter.dim.mats_eval.nu = nu
         print 'n_steps = %g used for calibration' % n_steps
-        
+
         #------------------------------------------------------------------
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+#        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 
