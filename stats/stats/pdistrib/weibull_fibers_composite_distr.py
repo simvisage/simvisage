@@ -108,6 +108,10 @@ class fibers_MC(WeibullFibers):
 
     Ll = Float(1e10)
     Lr = Float(1e10)
+    specimen_length = 250.
+    # bit of a hack in the present form - this parameter considers the finite length of the specimen. Otherwise the multiple cracking profile
+    # would be assumed as having infinite length which weakens the specimen due to statistical size effect. Though a better
+    # implementation is needed
 
     def cdf(self, e, depsf, r, al, ar):
         '''weibull_fibers_cdf_mc'''
@@ -115,11 +119,11 @@ class fibers_MC(WeibullFibers):
         s = ((depsf*(m+1.)*sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
         a0 = (e+1e-15)/depsf
         expLfree = (e/s) ** (m + 1) * (1.-(1.-al/a0)**(m+1.))
-        expLfixed = a0 / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
+        expLfixed = np.minimum(a0, np.ones_like(a0)*self.specimen_length/2.) / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
         maskL = al < Ll
         expL = expLfree * maskL + expLfixed * (maskL == False)
         expRfree = (e/s) ** (m + 1) * (1.-(1.-ar/a0)**(m+1.))
-        expRfixed = a0 / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
+        expRfixed = np.minimum(a0, np.ones_like(a0)*self.specimen_length/2.) / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
         maskR = ar < Lr
         expR = expRfree * maskR + expRfixed * (maskR == False)
         return 1. - np.exp(- expL - expR)

@@ -60,17 +60,21 @@ class CompositeCrackBridgeView(ModelView):
     def _get_w_evaluated(self):
         return np.trapz(self.mu_epsf_arr - self.epsm_arr, self.x_arr)
 
-    def sigma_c_arr(self, w_arr, u=False):
+    def sigma_c_arr(self, w_arr, u=False, damage=False):
         sigma_c_lst = []
         u_lst = []
+        damage_lst = []
         for w in w_arr:
             self.model.w = w
             sigma_c_lst.append(self.sigma_c)
             if u == True:
                 u_lst.append(self.u_evaluated)
-        if u == True:
-            return np.array(sigma_c_lst), np.array(u_lst)
-        return np.array(sigma_c_lst)
+            if damage == True:
+                damage_lst.append(np.sum(model.damage) / len(model.damage))
+        if u == True or damage == True:
+            return np.array(sigma_c_lst), np.array(u_lst), np.array(damage_lst)
+        else:
+            return np.array(sigma_c_lst)
 
     u_evaluated = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
@@ -220,14 +224,6 @@ if __name__ == '__main__':
                           label='carbon',
                           n_int=500)
 
-    reinf = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.003, shape=.23, scale=0.003),
-                              V_f=0.01,
-                              E_f=180e3,
-                              xi=fibers_MC(m=5.0, sV0=0.0026),
-                              label='carbon',
-                              n_int=500)
-
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
                                  Ll=1000.,
@@ -244,8 +240,9 @@ if __name__ == '__main__':
         plt.ylabel('strain')
 
     def sigma_c_w(w_arr):
-        sigma_c_arr, u_arr = ccb_view.sigma_c_arr(w_arr, u=True)
+        sigma_c_arr, u_arr, damage_arr = ccb_view.sigma_c_arr(w_arr, damage=True, u=True)
         plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
+        plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
         plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
         plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
