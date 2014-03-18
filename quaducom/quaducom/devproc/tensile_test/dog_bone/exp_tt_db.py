@@ -488,6 +488,8 @@ class ExpTTDB(ExType):
         eps_c_interpolated = np.copy(self.eps_ironed)
         K_I = self.E_c  # depending of the testing age
         offset_eps_c = self.sig_c_ironed[0] / K_I
+        # remove initial strain value and shift starting point of measured curve into the analytical stiffness
+        eps_c_interpolated -= eps_c_interpolated[0]
         eps_c_interpolated += offset_eps_c
         eps_c_interpolated = np.hstack([0., eps_c_interpolated])
         return eps_c_interpolated
@@ -523,6 +525,8 @@ class ExpTTDB(ExType):
         eps_tex_interpolated = np.copy(self.eps_ironed)
         K_I = self.E_c / self.rho_c
         offset_eps_tex = self.sig_tex_ironed[0] / K_I
+        # remove initial strain value and shift starting point of measured curve into the analytical stiffness
+        eps_tex_interpolated -= eps_tex_interpolated[0]
         eps_tex_interpolated += offset_eps_tex
         eps_tex_interpolated = np.hstack([0., eps_tex_interpolated])
         return eps_tex_interpolated
