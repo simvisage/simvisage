@@ -34,22 +34,22 @@ class MATS1DElastic(MATS1DEval):
 
     implements(IMATSEval)
 
-    E = Float(1., #34e+3,
-              label = "E",
-              desc = "Young's Modulus",
-              auto_set = False, enter_set = True)
+    E = Float(1.,  # 34e+3,
+              label="E",
+              desc="Young's Modulus",
+              auto_set=False, enter_set=True)
 
     #---------------------------------------------------------------------------------
     # Piece wise linear stress strain curve
     #---------------------------------------------------------------------------------
     _stress_strain_curve = Instance(MFnLineArray)
     def __stress_strain_curve_default(self):
-        return MFnLineArray(ydata = [ 0., self.E ],
-                            xdata = [ 0., 1.])
+        return MFnLineArray(ydata=[ 0., self.E ],
+                            xdata=[ 0., 1.])
     @on_trait_change('E')
     def reset_stress_strain_curve(self):
-        self._stress_strain_curve = MFnLineArray(ydata = [ 0., self.E ],
-                                                 xdata = [ 0., 1.])
+        self._stress_strain_curve = MFnLineArray(ydata=[ 0., self.E ],
+                                                 xdata=[ 0., 1.])
 
     stress_strain_curve = Property
     def _get_stress_strain_curve(self):
@@ -129,19 +129,19 @@ class MATS1DElastic(MATS1DEval):
         '''Return the list of relevant tracers to be used in mats_explorer.
         '''
         return [
-               RTraceGraph(name = 'strain - stress',
-                            var_x = 'eps_app', idx_x = 0,
-                            var_y = 'sig_app', idx_y = 0,
-                            record_on = 'update'),
-               RTraceGraph(name = 'XXX - stress',
-                            var_x = 'eps_app', idx_x = 0,
-                            var_y = 'sig_app', idx_y = 0,
-                            record_on = 'update')
+               RTraceGraph(name='strain - stress',
+                            var_x='eps_app', idx_x=0,
+                            var_y='sig_app', idx_y=0,
+                            record_on='update'),
+               RTraceGraph(name='XXX - stress',
+                            var_x='eps_app', idx_x=0,
+                            var_y='sig_app', idx_y=0,
+                            record_on='update')
                              ]
 
 if __name__ == '__main__':
     #--------------------------------------------------------------------------------
-    # Example 
+    # Example
     #--------------------------------------------------------------------------------
 
     from ibvpy.core.tloop import TLoop, TLine
@@ -151,13 +151,13 @@ if __name__ == '__main__':
     # tseval for a material model
     #
     tseval = MATS1DElastic()
-    ts = TS(tse = tseval,
-             bcond_list = [ BCDof(var = 'u', dof = 0, value = 1.)
+    ts = TS(tse=tseval,
+             bcond_list=[ BCDof(var='u', dof=0, value=1.)
                          ],
-             rtrace_list = [ RTraceGraph(name = 'strain 0 - stress 0',
-                                  var_x = 'eps_app', idx_x = 0,
-                                  var_y = 'sig_app', idx_y = 0,
-                                  update_on = 'update')
+             rtrace_list=[ RTraceGraph(name='strain 0 - stress 0',
+                                  var_x='eps_app', idx_x=0,
+                                  var_y='sig_app', idx_y=0,
+                                  record_on='update')
                          ]
                          )
 
@@ -168,9 +168,9 @@ if __name__ == '__main__':
         # tmax = 0.0006
     n_steps = 100
 
-    tl = TLoop(tstepper = ts,
-             DT = tmax / n_steps, KMAX = 100, RESETMAX = 0,
-             tline = TLine(min = 0.0, max = tmax))
+    tl = TLoop(tstepper=ts,
+             DT=tmax / n_steps, KMAX=100, RESETMAX=0,
+             tline=TLine(min=0.0, max=tmax))
 
     # Put the whole stuff into the simulation-framework to map the
     # individual pieces of definition into the user interface.
@@ -178,5 +178,5 @@ if __name__ == '__main__':
     tl.eval()
 
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    app = IBVPyApp(tloop = tl)
+    app = IBVPyApp(tloop=tl)
     app.main()

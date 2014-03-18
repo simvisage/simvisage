@@ -33,7 +33,6 @@ from weakref import ref
 
 from math import pow, fabs
 import numpy as np
-import scipy.linalg as linalg
 
 from ibvpy.core.rtrace_mngr import RTraceMngr
 from ibvpy.core.astrategy import AStrategyBase
@@ -379,11 +378,11 @@ class TLoop(IBVResource):
                 #
                 self.crpr_timer.reset()
                 try:
-                    K, R = tstepper.eval(step_flag,
-                                          self.U_k,
-                                          self.d_U,
-                                          self.t_n,
-                                          self.t_n1)
+                    K, R, n_F_int = tstepper.eval(step_flag,
+                                                  self.U_k,
+                                                  self.d_U,
+                                                  self.t_n,
+                                                  self.t_n1)
                 except np.linalg.LinAlgError, e:
                     # abort computation due to ultimate failure
                     # might be caused by material instability
@@ -427,7 +426,9 @@ class TLoop(IBVResource):
                 # set 'ord=np.inf' to switch norm to
                 # "norm = max(abs(x_i))"
                 #
-                self.norm = linalg.norm(R, ord=self.ord)
+                if n_F_int == 0.0:
+                    n_F_int = 1.0
+                self.norm = np.linalg.norm(R, ord=self.ord) # / n_F_int
 
                 if self.debug:
                     print 'Norm:', self.norm

@@ -68,7 +68,7 @@ class RTraceGraph(RTrace):
                                           VGroup(HGroup(Spring(), Item('var_y', style='readonly'),
                                                          Item('idx_y', show_label=False)),
                                                          Item('transform_y')),
-                                          VGroup('update_on', 'clear_on')),
+                                          VGroup('record_on', 'clear_on')),
                                  HGroup(Item('refresh_button', show_label=False),
                                          Item('print_button', show_label=False)),
                                 ),
@@ -112,16 +112,16 @@ class RTraceGraph(RTrace):
         '''Generate the file name within the write_dir
         and submit the request for writing to the writer
         '''
-        #self.writer.scalars_name = self.name
+        # self.writer.scalars_name = self.name
         file_base_name = 'rtrace_diagramm_%s (%s,%s).dat' % \
             (self.label, self.var_x, self.var_y)
         # full path to the data file
         file_name = os.path.join(self.dir, file_base_name)
-        #file_rtrace = open( file_name, 'w' )
+        # file_rtrace = open( file_name, 'w' )
         self.refresh()
         np.savetxt(file_name, np.vstack([self.trace.xdata, self.trace.ydata]).T)
-        #pickle.dump( self, file_rtrace )
-        #file.close()
+        # pickle.dump( self, file_rtrace )
+        # file.close()
 
     def add_current_values(self, sctx, U_k, *args, **kw):
         '''
@@ -218,7 +218,7 @@ class RTraceArraySnapshot(RTrace):
         return MFnLineArray()
 
     view = View(HSplit(VGroup (VGroup('var'),
-                                  VGroup('update_on', 'clear_on')),
+                                  VGroup('record_on', 'clear_on')),
                          Item('trace@', style='custom',
                               editor=MFnMatplotlibEditor(\
                                         adapter=MFnPlotAdapter(var_y='var')),
@@ -252,7 +252,7 @@ class RTraceArraySnapshot(RTrace):
         self.trace.ydata = self.y
 
     def clear(self):
-        # @todo: 
+        # @todo:
         self.x = np.zeros((0,), dtype='float_')
         self.y = np.zeros((0,), dtype='float_')
 

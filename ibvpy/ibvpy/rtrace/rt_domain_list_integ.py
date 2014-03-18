@@ -46,29 +46,29 @@ import os
 
 from etsproxy.tvtk.api import tvtk
 
-class RTraceDomainListInteg( RTrace, RTraceDomainList ):
+class RTraceDomainListInteg(RTrace, RTraceDomainList):
 
 #    sd = Instance( SDomain )
-#    
+#
 #    rt_domain = Property
 #    def _get_rt_domain(self):
 #        return self.sd.rt_bg_domain
 
-    label = Str( 'RTraceDomainInteg' )
-    var = Str( '' )
-    idx = Int( -1, enter_set = True, auto_set = False )
+    label = Str('RTraceDomainInteg')
+    var = Str('')
+    idx = Int(-1, enter_set=True, auto_set=False)
 
-    save_on = Enum( 'update', 'iteration' )
-    warp = Bool( False )
-    warp_f = Float( 1. )
-    warp_var = Str( 'u' )
+    save_on = Enum('update', 'iteration')
+    warp = Bool(False)
+    warp_f = Float(1.)
+    warp_var = Str('u')
 
-    def bind( self ):
+    def bind(self):
         '''
         Locate the evaluators
         '''
 
-    def setup( self ):
+    def setup(self):
         '''
         Setup the spatial domain of the tracer
         '''
@@ -77,42 +77,42 @@ class RTraceDomainListInteg( RTrace, RTraceDomainList ):
 
     subfields = Property
     @cached_property
-    def _get_subfields( self ):
+    def _get_subfields(self):
         # construct the RTraceDomainFields
         #
-        return [ RTraceDomainInteg( var = self.var,
-                                    idx = self.idx,
-                                    position = self.position,
-                                    save_on = self.save_on,
-                                    warp = self.warp,
-                                    warp_f = self.warp_f,
-                                    sd = subdomain )
+        return [ RTraceDomainInteg(var=self.var,
+                                    idx=self.idx,
+                                    position=self.position,
+                                    save_on=self.save_on,
+                                    warp=self.warp,
+                                    warp_f=self.warp_f,
+                                    sd=subdomain)
                  for subdomain in self.sd.nonempty_subdomains ]
 
-    integ_val = Array( desc = 'Integral over the domain' )
+    integ_val = Array(desc='Integral over the domain')
 
-    def add_current_values( self, sctx, U_k, *args, **kw ):
-        integ_val = array( [0.0], 'float_' )
+    def add_current_values(self, sctx, U_k, *args, **kw):
+        integ_val = array([0.0], 'float_')
         for sf in self.subfields:
             if sf.skip_domain:
                 continue
-            sf.add_current_values( sctx, U_k, *args, **kw )
+            sf.add_current_values(sctx, U_k, *args, **kw)
             integ_val += sf.integ_val
         self.integ_val = integ_val
 
-    def timer_tick( self, e ):
+    def timer_tick(self, e):
         pass
 
-    def write( self ):
+    def write(self):
         pass
 
-    def clear( self ):
+    def clear(self):
         pass
 
-    view = View( HSplit( VSplit ( VGroup( 'var', 'idx' ),
-                                  VGroup( 'update_on', 'clear_on' ),
-                                  Item( 'integ_val', style = 'readonly',
-                                       show_label = False ),
+    view = View(HSplit(VSplit (VGroup('var', 'idx'),
+                                  VGroup('record_on', 'clear_on'),
+                                  Item('integ_val', style='readonly',
+                                       show_label=False),
                                            ),
                                            ),
-                                    resizable = True )
+                                    resizable=True)

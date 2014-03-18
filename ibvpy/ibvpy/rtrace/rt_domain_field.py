@@ -1,28 +1,10 @@
 from etsproxy.traits.api import \
-    Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
-    Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Any, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, WeakRef, implements, Property, cached_property, Tuple, \
-    Dict, TraitError
+    Trait, Str, Enum, \
+    Property, \
+    TraitError
 
 from etsproxy.traits.ui.api \
-    import Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit, TableEditor, ListEditor
-
-from etsproxy.traits.ui.menu \
-    import NoButtons, OKButton, CancelButton, \
-    Action
-
-from etsproxy.traits.ui.ui_editors.array_view_editor \
-    import ArrayViewEditor
-
-from etsproxy.traits.ui.table_column \
-    import ObjectColumn, ExpressionColumn
-
-from etsproxy.traits.ui.table_filter \
-    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+    import VGroup
 
 from numpy \
     import array, zeros, \
@@ -31,16 +13,10 @@ from numpy \
 from ibvpy.plugins.mayavi_util.pipelines \
     import MVUnstructuredGrid
 
-
-# tvtk related imports
-#
 from etsproxy.traits.ui.api import \
     View, Item, HSplit, VSplit
-from etsproxy.tvtk.api import \
-    tvtk
 
 from ibvpy.rtrace.rt_domain import RTraceDomain
-
 
 class RTraceDomainField(RTraceDomain):
     '''
@@ -94,19 +70,19 @@ class RTraceDomainField(RTraceDomain):
             return
 
         # Get the domain points
-        # TODO - make this more compact. The element list is assumed to be uniform 
-        # so that all element arrays have the same shape. Thus, use slices and vectorized 
-        # evaluation to improve the performance 
+        # TODO - make this more compact. The element list is assumed to be uniform
+        # so that all element arrays have the same shape. Thus, use slices and vectorized
+        # evaluation to improve the performance
 
         sd = self.sd
 
-        #loc_coords = self.dots.vtk_r_arr
+        # loc_coords = self.dots.vtk_r_arr
 
 #        try: loc_coords = self.fets_eval.vtk_r_arr
 #        except AttributeError:
-#            raise 'domain %s has no variable called %s' % ( sd.shape, self.var ) 
+#            raise 'domain %s has no variable called %s' % ( sd.shape, self.var )
 
-        #n_loc = loc_coords.shape[0]
+        # n_loc = loc_coords.shape[0]
         field = []
         state_array = self.sd.dots.state_array
 
@@ -119,7 +95,7 @@ class RTraceDomainField(RTraceDomain):
             mats_arr_size = self.fets_eval.m_arr_size
 
             sctx.elem_state_array = state_array[ ip_offset[e_id] * mats_arr_size\
-                                                : ip_offset[(e_id + 1)] * mats_arr_size ]#differs from the homogenous case
+                                                : ip_offset[(e_id + 1)] * mats_arr_size ]  # differs from the homogenous case
 
             # setting the spatial context should be intermediated by the fets
             sctx.X = e.get_X_mtx()
@@ -153,9 +129,9 @@ class RTraceDomainField(RTraceDomain):
         if self.var_eval == None:
             return
         # Get the domain points
-        # TODO - make this more compact. The element list is assumed to be uniform 
-        # so that all element arrays have the same shape. Thus, use slices and vectorized 
-        # evaluation to improve the performance 
+        # TODO - make this more compact. The element list is assumed to be uniform
+        # so that all element arrays have the same shape. Thus, use slices and vectorized
+        # evaluation to improve the performance
         sd = self.sd
         sctx.fets_eval = self.fets_eval
         field = []
@@ -178,7 +154,7 @@ class RTraceDomainField(RTraceDomain):
                                             [i * m_arr_size: (i + 1) * m_arr_size]
                 sctx.loc = ip
                 sctx.r_pnt = ip
-                sctx.p_id = i#TODO:check this
+                sctx.p_id = i  # TODO:check this
                 val = self.var_eval(sctx, U_k, *args, **kw)
                 field_entry.append(val)
             field += field_entry
@@ -230,7 +206,7 @@ class RTraceDomainField(RTraceDomain):
                                    )
 
     def _get_warp_data(self):
-        if self.vector_arr.shape[0] == 0:#TODO:unifi check if all elems are deactivated
+        if self.vector_arr.shape[0] == 0:  # TODO:unifi check if all elems are deactivated
             return
         w_field = zeros((self.vector_arr.shape[0], 3), float_)
         w_field[:, self.fets_eval.dim_slice] = self.vector_arr[:, self.fets_eval.dim_slice]
@@ -242,35 +218,35 @@ class RTraceDomainField(RTraceDomain):
             return
 
         shape = self.field_arr.shape[1:]
-        #print "shape ", self.var, " ",shape
-        if shape == ():#TODO: subdomain where all elems are dactivated
+        # print "shape ", self.var, " ",shape
+        if shape == ():  # TODO: subdomain where all elems are dactivated
             return
-        #recognize data type (1,) = scalar
-        if shape == (2, 2):#2D tensor - transform to 3d and flatten
+        # recognize data type (1,) = scalar
+        if shape == (2, 2):  # 2D tensor - transform to 3d and flatten
             ff = zeros((self.field_arr.shape[0], 3, 3), float_)
             ff[:, :2, :2] = self.field_arr
             field = ff.reshape(self.field_arr.shape[0], 9)
-        elif shape == (3, 3):#3D tensor - flatten
+        elif shape == (3, 3):  # 3D tensor - flatten
             field = self.field_arr.reshape(self.field_arr.shape[0], 9)
-        elif shape == (2,):#2D vector - transform to 3d
+        elif shape == (2,):  # 2D vector - transform to 3d
             field = zeros((self.field_arr.shape[0], 3), float_)
             field[:, :2] = self.field_arr
         elif shape == (1,) or shape == (3,):
-            field = self.field_arr# is scalar or 3D vector  does not need treatment
+            field = self.field_arr  # is scalar or 3D vector  does not need treatment
         else:
             raise TraitError, 'wrong field format of tracer %s: %s' % (self.var, shape)
 
         return field
 
     def timer_tick(self, e=None):
-        #self.changed = True
+        # self.changed = True
         pass
 
     def clear(self):
         pass
 
     view = View(HSplit(VSplit (VGroup('var', 'idx'),
-                                  VGroup('update_on', 'clear_on'),
+                                  VGroup('record_on', 'clear_on'),
                                    Item('refresh_button', show_label=False),
                                            ),
                                            ),
@@ -278,36 +254,36 @@ class RTraceDomainField(RTraceDomain):
 
 if __name__ == '__main__':
 
-    # Define a mesh domain adaptor as a cached property to 
+    # Define a mesh domain adaptor as a cached property to
     # be constracted on demand
 
-#    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 3, 
-#                                 # NOTE: the following properties must be defined and 
+#    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 3,
+#                                 # NOTE: the following properties must be defined and
 #                                 # must correspond to the used element formulation
-#                                 n_e_nodes_geo = (1,1,1), 
-#                                 n_e_nodes_dof = (1,1,1), 
-#                                 node_map_geo = [0,1,3,2,4,5,7,6], 
+#                                 n_e_nodes_geo = (1,1,1),
+#                                 n_e_nodes_dof = (1,1,1),
+#                                 node_map_geo = [0,1,3,2,4,5,7,6],
 #                                 node_map_dof = [0,1,3,2,4,5,7,6])
 
-    # Define a mesh domain adaptor as a cached property to 
+    # Define a mesh domain adaptor as a cached property to
     # be constracted on demand
-    #    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 2, 
-    #                                     # NOTE: the following properties must be defined and 
+    #    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 2,
+    #                                     # NOTE: the following properties must be defined and
     #                                     # must correspond to the used element formulation
-    #                                     n_e_nodes_geo = (1,1,0), 
-    #                                     n_e_nodes_dof = (3,3,0), 
-    #                                     node_map_geo = [0,1,3,2], 
+    #                                     n_e_nodes_geo = (1,1,0),
+    #                                     n_e_nodes_dof = (3,3,0),
+    #                                     node_map_geo = [0,1,3,2],
     #                                     node_map_dof = [0,3,15,12, 1,2,7,11, 14,13,8,4, 5,6,9,10] )
 
     #
-    # Define a mesh domain adaptor as a cached property to 
+    # Define a mesh domain adaptor as a cached property to
     # be constracted on demand
-    #    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 2, 
-    #                                     # NOTE: the following properties must be defined and 
+    #    mgrid_adaptor = MeshGridAdaptor( n_nodal_dofs = 2,
+    #                                     # NOTE: the following properties must be defined and
     #                                     # must correspond to the used element formulation
-    #                                     n_e_nodes_geo = (1,1,0), 
-    #                                     n_e_nodes_dof = (1,1,0), 
-    #                                     node_map_geo = [0,1,3,2], 
+    #                                     n_e_nodes_geo = (1,1,0),
+    #                                     n_e_nodes_dof = (1,1,0),
+    #                                     node_map_geo = [0,1,3,2],
     #                                     node_map_dof = [0,1,3,2] )
 
     # Discretization
