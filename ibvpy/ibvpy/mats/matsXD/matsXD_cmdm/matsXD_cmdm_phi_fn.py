@@ -248,11 +248,15 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
         if e_max <= eps_last:
             return super(PhiFnGeneralExtendedExp, self).get_value(e_max)
         else:
+            print '**** Entered softening branch ****'
             # exponential softening with residual integrity after rupture strain in the tensile test has been reached
             Dfp = self.Dfp
             Epp = eps_last
             Efp = self.Efp_frac * eps_last
-            return phi_last * ((1 - Dfp) * sqrt(Epp / e_max * exp(-(e_max - Epp) / Efp)) + Dfp)
+            print 'phi_last:', phi_last, ', eps_last:', eps_last,
+            phi = phi_last * ((1 - Dfp) * sqrt(Epp / e_max * exp(-(e_max - Epp) / Efp)) + Dfp)
+            print ', e_max:', e_max, 'phi:', phi
+            return phi
 
     def get_plot_range(self):
         '''plot the extended phi function'''

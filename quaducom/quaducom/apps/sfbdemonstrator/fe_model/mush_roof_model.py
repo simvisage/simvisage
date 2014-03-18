@@ -268,7 +268,7 @@ class MushRoofModel(IBVModel):
     @cached_property
     def _get_damage(self):
         return RTraceDomainListField(name='damage' ,
-                                      var='omega_mtx', idx=0, warp=True,
+                                      var='omega_mtx', idx=0, warp=False,
                                       record_on='update')
 
     phi_pdc = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
@@ -277,6 +277,14 @@ class MushRoofModel(IBVModel):
         return RTraceDomainListField(name='principal damage' ,
 #                                      position = 'int_pnts',
                                       var='phi_pdc',
+                                      record_on='update',)
+
+    max_omega_i = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_max_omega_i(self):
+        return RTraceDomainListField(name='max_omega_i' ,
+#                                      position = 'int_pnts',
+                                      var='max_omega_i',
                                       record_on='update',)
 
     fracture_energy = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')

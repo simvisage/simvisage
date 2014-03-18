@@ -21,20 +21,20 @@ from ibv_resource import IBVResource
 from rtrace import RTrace
 
 #----------------------------------------------------------------------------------
-# Tabular Adapter Definition 
+# Tabular Adapter Definition
 #----------------------------------------------------------------------------------
 class RTraceTableAdapter (TabularAdapter):
 
     columns = [ ('Name', 'name'),
-#                ( 'Record on',    'update_on' ),
-#                ( 'Clear on',     'clear_on' ) 
+#                ( 'Record on',    'record_on' ),
+#                ( 'Clear on',     'clear_on' )
                 ]
 
     font = 'Courier 10'
     variable_alignment = Constant('right')
 
 #----------------------------------------------------------------------------------
-# Tabular Editor Construction 
+# Tabular Editor Construction
 #----------------------------------------------------------------------------------
 rtrace_editor = TabularEditor(
     selected='current_rtrace',
@@ -91,7 +91,7 @@ class RTraceMngr(IBVResource):
             rtrace.rmgr = self
         return self.rtrace_list
 
-    # variable selectable in the table of varied params (just for viewing) 
+    # variable selectable in the table of varied params (just for viewing)
     current_rtrace = Instance(RTrace)
     def _current_rtrace_default(self):
         if len(self.rtrace_list) > 0:
@@ -104,7 +104,7 @@ class RTraceMngr(IBVResource):
         self.timer = None
 
     def setup(self, sd):
-        #self.clear()
+        # self.clear()
         if self.tstepper:
             for rtrace in self.rtrace_bound_list:
                 rtrace.bind()
@@ -179,11 +179,11 @@ class RTraceMngr(IBVResource):
 #    def _get_warp_field(self):
 #        ''' Search for the field tracer with warpable data and use it as a warp field '''
 #        for rtrace in self.rtrace_bound_list:
-#            if rtrace.label == 'RTraceDomainField' and rtrace.var == self.warp_var: 
+#            if rtrace.label == 'RTraceDomainField' and rtrace.var == self.warp_var:
 #                warp_field = zeros((rtrace.field_arr.shape[0], 3), float_)
 #                warp_field[:,rtrace.var_eval.dim_slice] = rtrace.field_arr
 #                return warp_field
-# 
+#
 #            #    raise KeyError, 'warp field not found'
 
     trait_view = View(HSplit(

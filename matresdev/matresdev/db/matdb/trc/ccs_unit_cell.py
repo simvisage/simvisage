@@ -351,7 +351,8 @@ class CCSUnitCell(SimDBClass):
     # view
     #--------------------------------------------------------------------------------
 
-    traits_view = View(Item('s_tex_z', style='readonly', format_str="%.5f"),
+    traits_view = View(Item('key', style='readonly'),
+                       Item('s_tex_z', style='readonly', format_str="%.5f"),
                         Item('orientation_fn_key', style='readonly'),
                         Item('rho', style='readonly', format_str="%.5f"),
                         VSplit(

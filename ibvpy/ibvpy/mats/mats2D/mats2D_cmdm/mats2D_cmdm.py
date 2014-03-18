@@ -112,15 +112,15 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         #     for j in range(0,3):
         #         for k in range(0,3):
         #             for l in range(0,3):
-        #                 # elasticity tensor (cf. Jir/Baz Inelastic analysis of structures Eq.D25):                 
+        #                 # elasticity tensor (cf. Jir/Baz Inelastic analysis of structures Eq.D25):
         #                 D4_e_3D[i,j,k,l] = la * delta[i,j] * delta[k,l] + \
         #                                    mu * ( delta[i,k] * delta[j,l] + delta[i,l] * delta[j,k] )
-        #                 # elastic compliance tensor (cf.):                 
+        #                 # elastic compliance tensor (cf.):
         #                 C4_e_3D[i,j,k,l] = (1+nu)/(2*E) * \
         #                                    ( delta[i,k] * delta[j,l] + delta[i,l]* delta[j,k] ) - \
-        #                                    nu / E * delta[i,j] * delta[k,l]  
+        #                                    nu / E * delta[i,j] * delta[k,l]
         #
-        # NOTE: swapaxes returns a reference not a copy!                  
+        # NOTE: swapaxes returns a reference not a copy!
         # (the index notation always refers to the initial indexing (i=0,j=1,k=2,l=3))
         delta = identity(3)
         delta_ijkl = outer(delta, delta).reshape(3, 3, 3, 3)
@@ -132,12 +132,12 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         # -----------------------------------------------------------------------------------------------------
         # Get the fourth order elasticity and compliance tensors for the 2D-case
         # -----------------------------------------------------------------------------------------------------
-        # 1. step: Get the (6x6)-elasticity and compliance matrices 
+        # 1. step: Get the (6x6)-elasticity and compliance matrices
         #          for the 3D-case:
         D2_e_3D = map3d_tns4_to_tns2(D4_e_3D)
         C2_e_3D = map3d_tns4_to_tns2(C4_e_3D)
 
-        # 2. step: Get the (3x3)-elasticity and compliance matrices 
+        # 2. step: Get the (3x3)-elasticity and compliance matrices
         #          for the 2D-cases plane stress and plane strain:
         D2_e_2D_plane_stress = get_D_plane_stress(D2_e_3D)
         D2_e_2D_plane_strain = get_D_plane_strain(D2_e_3D)
@@ -151,7 +151,7 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
             D2_e = D2_e_2D_plane_strain
 
         # 3. step: Get the fourth order elasticity and compliance tensors
-        #          for the 2D-cases plane stress and plane strain (D4.shape = (2,2,2,2)) 
+        #          for the 2D-cases plane stress and plane strain (D4.shape = (2,2,2,2))
         D4_e_2D_plane_stress = map2d_tns2_to_tns4(D2_e_2D_plane_stress)
         D4_e_2D_plane_strain = map2d_tns2_to_tns4(D2_e_2D_plane_strain)
         C4_e_2D_plane_stress = map2d_tns2_to_tns4(C2_e_2D_plane_stress)
@@ -161,12 +161,12 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         # assign the fourth order elasticity and compliance tensors as return values
         # -----------------------------------------------------------------------------------------------------
         if self.stress_state == 'plane_stress':
-            #print 'stress state:   plane-stress'
+            # print 'stress state:   plane-stress'
             D4_e = D4_e_2D_plane_stress
             C4_e = C4_e_2D_plane_stress
 
         if self.stress_state == 'plane_strain':
-            #print 'stress state:   plane-strain'
+            # print 'stress state:   plane-strain'
             D4_e = D4_e_2D_plane_strain
             C4_e = C4_e_2D_plane_strain
 
@@ -187,7 +187,7 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
                               MATS2DRTraceCylinder(name='Laterne',
                                       var_axis='time', idx_axis=0,
                                       var_surface='microplane_damage',
-                                      update_on='update'),
+                                      record_on='update'),
                         ]
 
         c['tline'] = TLine(step=0.02, max=1)

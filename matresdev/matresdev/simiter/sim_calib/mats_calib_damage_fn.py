@@ -681,8 +681,7 @@ def run():
                RTraceGraph(name='stress - strain',
                            var_x='eps_app', idx_x=0,
                            var_y='sig_app', idx_y=0,
-                           ),
-#                           update_on='iteration'),
+                           record_on='iteration'),
                         ],
           }
 
@@ -717,27 +716,27 @@ def run():
     calibrate_all = False
 
     if calibrate_all:
-        from promod.exdb.ex_run_table import \
+        from matresdev.db.exdb.ex_run_table import \
             ExRunClassExt
-        from promod.exdb.ex_composite_tensile_test import \
-            ExCompositeTensileTest
-        ex = ExRunClassExt(klass=ExCompositeTensileTest)
-        for ex_run in ex.ex_run_list:
-            if ex_run.ready_for_calibration:
-                print 'FITTING', ex_run.ex_type.key
-                # 'E_c' of each test is different, therefore 'mats_eval'
-                # needs to be defined for each test separately.
-                #
-                E_c = ex_run.ex_type.E_c
-                nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
-
-                # run calibration
-                #
-                fitter.ex_run = ex_run
-                fitter.dim.mats_eval.E = E_c
-                fitter.dim.mats_eval.nu = nu
-                fitter.init()
-                fitter.fit_response()
+#         from matresdev.db.exdb.ex_composite_tensile_test import \
+#             ExCompositeTensileTest
+#         ex = ExRunClassExt(klass=ExCompositeTensileTest)
+#         for ex_run in ex.ex_run_list:
+#             if ex_run.ready_for_calibration:
+#                 print 'FITTING', ex_run.ex_type.key
+#                 # 'E_c' of each test is different, therefore 'mats_eval'
+#                 # needs to be defined for each test separately.
+#                 #
+#                 E_c = ex_run.ex_type.E_c
+#                 nu = ex_run.ex_type.ccs.concrete_mixture_ref.nu
+#
+#                 # run calibration
+#                 #
+#                 fitter.ex_run = ex_run
+#                 fitter.dim.mats_eval.E = E_c
+#                 fitter.dim.mats_eval.nu = nu
+#                 fitter.init()
+#                 fitter.fit_response()
 
     else:
 
