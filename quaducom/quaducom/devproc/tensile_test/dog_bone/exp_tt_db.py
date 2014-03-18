@@ -12,7 +12,7 @@
 #
 # Created on Feb 15, 2010 by: rch, ascholzen
 
-# @todo - construct the class for fabric layout calculating the 
+# @todo - construct the class for fabric layout calculating the
 #         cs-area of the reinforcement.
 #       - instead of processed array - construct the array traits accessible
 #         with the name of the measured channels
@@ -20,7 +20,7 @@
 #         the link from the ex_type to the ex_run
 #       - define the exdb_browser showing the inputs and outputs in a survey
 #       - define the ExTreatment class with cumulative evaluation of the response values.
-#       
+#
 #
 
 from etsproxy.traits.api import \
@@ -140,33 +140,33 @@ class ExpTTDB(ExType):
     ready_for_calibration = Property(Bool)
     def _get_ready_for_calibration(self):
         # return False by default
-        # the subclasses shall overload this 
+        # the subclasses shall overload this
         # and define the rules
         return self.ccs.is_regular
 
     #--------------------------------------------------------------------------
-    # Get properties of the composite 
+    # Get properties of the composite
     #--------------------------------------------------------------------------
 
-    # E-modulus of the composite at the time of testing 
+    # E-modulus of the composite at the time of testing
     E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     @cached_property
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
-    # E-modulus of the concrete at the time of testing 
+    # E-modulus of the concrete at the time of testing
     E_m = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     @cached_property
     def _get_E_m(self):
         return self.ccs.get_E_m_time(self.age)
 
-    # cross-sectional-area of the composite 
+    # cross-sectional-area of the composite
     A_c = Property(Float, unit='m^2', depends_on='input_change')
     @cached_property
     def _get_A_c(self):
         return self.width * self.ccs.thickness
 
-    # total cross-sectional-area of the textile reinforcement 
+    # total cross-sectional-area of the textile reinforcement
     A_tex = Property(Float, unit='mm^2', depends_on='input_change')
     @cached_property
     def _get_A_tex(self):
@@ -175,7 +175,7 @@ class ExpTTDB(ExType):
     # E-modulus of the composite after 28 days
     E_c28 = DelegatesTo('ccs', listenable=False)
 
-    # reinforcement ration of the composite 
+    # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
     #--------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ class ExpTTDB(ExType):
             W10_re = np.copy(self.W10_re)
             W10_vo = np.copy(self.W10_vo)
 
-            # get the minimum value of the displacement gauges 
+            # get the minimum value of the displacement gauges
             # used to reset the displacement gauges if they do not start at zero
             min_W10_li = np.min(W10_li[:10])
             min_W10_re = np.min(W10_re[:10])
@@ -248,7 +248,7 @@ class ExpTTDB(ExType):
             W10_re -= min_W10_re
             W10_vo -= min_W10_vo
 
-            # measured strains 
+            # measured strains
             eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
             eps_re = W10_re / (self.gauge_length * 1000.)
             eps_vo = W10_vo / (self.gauge_length * 1000.)
@@ -266,7 +266,7 @@ class ExpTTDB(ExType):
                 print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
                 eps_vo = (eps_li + eps_re) / 2.
 
-            # average strains 
+            # average strains
             #
             eps_m = ((eps_li + eps_re) / 2. + eps_vo) / 2.
 
@@ -277,7 +277,7 @@ class ExpTTDB(ExType):
             WA_HL = np.copy(self.WA_HL)
             WA_HR = np.copy(self.WA_HR)
 
-            # get the minimum value of the displacement gauges 
+            # get the minimum value of the displacement gauges
             # used to reset the displacement gauges if they do not start at zero
             min_WA_VL = np.min(WA_VL[:10])
             min_WA_VR = np.min(WA_VR[:10])
@@ -291,12 +291,12 @@ class ExpTTDB(ExType):
             WA_HL -= min_WA_HL
             WA_HR -= min_WA_HR
 
-            # measured strains 
+            # measured strains
             #
             eps_V = (self.WA_VL + self.WA_VR) / 2. / (self.gauge_length * 1000.)  # [mm/mm]
             eps_H = (self.WA_HL + self.WA_HR) / 2. / (self.gauge_length * 1000.)
 
-            # average strains 
+            # average strains
             #
             eps_m = (eps_V + eps_H) / 2.
 
@@ -307,11 +307,11 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_sig_c(self):
         print 'CALCULATING COMPOSITE STRESS'
-        # measured force: 
+        # measured force:
         force = self.Kraft  # [kN]
-        # cross sectional area of the concrete [m^2]: 
+        # cross sectional area of the concrete [m^2]:
         A_c = self.A_c
-        # calculated stress: 
+        # calculated stress:
         sig_c = (force / 1000.) / A_c  # [MPa]
         return sig_c
 
@@ -319,9 +319,9 @@ class ExpTTDB(ExType):
                         output=True, depends_on='input_change')
     @cached_property
     def _get_sig_tex(self):
-        # measured force: 
+        # measured force:
         force = self.Kraft  # [kN]
-        # cross sectional area of the reinforcement: 
+        # cross sectional area of the reinforcement:
         A_tex = self.A_tex
         # calculated stresses:
         sig_tex = (force * 1000.) / A_tex  # [MPa]
@@ -363,7 +363,7 @@ class ExpTTDB(ExType):
     def _get_time_asc(self):
         return self.Bezugskanal[:self.max_stress_idx + 1]
 
-    jump_rtol = Float(0.005, ironing_param=True)
+    jump_rtol = Float(0.0001, ironing_param=True)
 
     F_w_ironed = Property(Array('float_'), depends_on='input_change')
     @cached_property
@@ -391,7 +391,7 @@ class ExpTTDB(ExType):
         jump_rtol = self.jump_rtol
         jump_crit = jump_rtol * F_asc[-1]
 
-        # get the indices of the measurement data at which a 
+        # get the indices of the measurement data at which a
         # force jump exceeds (last step before the jump) the defined tolerance criteria
         # i.e. negative jump that exceeds the defined tolerance magnitude
         #
@@ -400,14 +400,14 @@ class ExpTTDB(ExType):
 #        print 'jump_idx_arr', jump_idx_arr
 #        print 'F_asc[jump_idx]', F_asc[jump_idx_arr]
 
-        # index of the measurement data where the force reaches 
+        # index of the measurement data where the force reaches
         # the same magnitude before the sudden value drop due to the jump
         #
         jump_idx2_arr = np.zeros_like(jump_idx_arr)
 
-        # amount of indices between the sudden value drop of the force and 
-        # the reloading to the same load level; delta value indicates the strain 
-        # range that will be removed in order to smoothen out the influence of the 
+        # amount of indices between the sudden value drop of the force and
+        # the reloading to the same load level; delta value indicates the strain
+        # range that will be removed in order to smoothen out the influence of the
         # jump in the force curve
         #
         delta_jump_idx_arr = np.zeros_like(jump_idx_arr)
@@ -429,7 +429,7 @@ class ExpTTDB(ExType):
             delta_jump_idx_arr[ n_idx ] = delta_jump_idx
 
         # remove jumps from the jump index when a succeeding jump still lays within the influence range of an earlier jump
-        # this can happen when jumps occure within the remounting branch of the force  
+        # this can happen when jumps occure within the remounting branch of the force
         #
         remove_idx = []
         for i in range(jump_idx2_arr.shape[0] - 1):
@@ -441,11 +441,11 @@ class ExpTTDB(ExType):
         delta_jump_idx_arr = np.delete(delta_jump_idx_arr, remove_idx)
 
         # specify the factor by with the index delta range of a jump (i.e. displacement range of the jump)
-        # is multiplied, i.e. up to which index the values of the F-w- curve are removed   
+        # is multiplied, i.e. up to which index the values of the F-w- curve are removed
         #
         jump_smooth_fact = 2
 
-        # remove the values of the curve within the jump and the neighboring region   
+        # remove the values of the curve within the jump and the neighboring region
         #
         F_asc_ironed_list = []
         eps_asc_ironed_list = []
@@ -457,7 +457,7 @@ class ExpTTDB(ExType):
             F_asc_ironed_list += [ F_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
             eps_asc_ironed_list += [ eps_asc[ jump_idx_arr_[i] + jump_smooth_fact * delta_jump_idx_arr_[i] : jump_idx_arr_[i + 1]] ]
 
-        # remove the values of the curve within the jump and the neighboring region   
+        # remove the values of the curve within the jump and the neighboring region
         #
         F_asc_ironed = np.hstack(F_asc_ironed_list)
         eps_asc_ironed = np.hstack(eps_asc_ironed_list)
@@ -488,6 +488,8 @@ class ExpTTDB(ExType):
         eps_c_interpolated = np.copy(self.eps_ironed)
         K_I = self.E_c  # depending of the testing age
         offset_eps_c = self.sig_c_ironed[0] / K_I
+        # remove initial strain value and shift starting point of measured curve into the analytical stiffness
+        eps_c_interpolated -= eps_c_interpolated[0]
         eps_c_interpolated += offset_eps_c
         eps_c_interpolated = np.hstack([0., eps_c_interpolated])
         return eps_c_interpolated
@@ -523,6 +525,8 @@ class ExpTTDB(ExType):
         eps_tex_interpolated = np.copy(self.eps_ironed)
         K_I = self.E_c / self.rho_c
         offset_eps_tex = self.sig_tex_ironed[0] / K_I
+        # remove initial strain value and shift starting point of measured curve into the analytical stiffness
+        eps_tex_interpolated -= eps_tex_interpolated[0]
         eps_tex_interpolated += offset_eps_tex
         eps_tex_interpolated = np.hstack([0., eps_tex_interpolated])
         return eps_tex_interpolated
@@ -610,14 +614,14 @@ class ExpTTDB(ExType):
         '''plot force-displacement diagram
         '''
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
-            # 
+            #
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
             axes.plot(self.W10_vo, self.Kraft)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
-            # 
+            #
             axes.plot(self.WA_VL, self.Kraft)
             axes.plot(self.WA_VR, self.Kraft)
             axes.plot(self.WA_HL, self.Kraft)
@@ -629,14 +633,14 @@ class ExpTTDB(ExType):
         '''plot force-displacement diagram (only the ascending branch)
         '''
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
-            # 
+            #
             axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
-            # 
+            #
             axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc)
             axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc)
@@ -760,7 +764,7 @@ class ExpTTDB(ExType):
         # original curve
         #
 #        axes.plot(self.eps_asc, self.sig_tex_asc)
-        # plot the textile secant stiffness at fracture state 
+        # plot the textile secant stiffness at fracture state
         #
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex_arr[1] * eps_lin
@@ -774,14 +778,14 @@ class ExpTTDB(ExType):
         # original curve
         #
 #        axes.plot(self.eps_asc, self.sig_tex_asc)
-        # plot the textile secant stiffness at fracture state 
+        # plot the textile secant stiffness at fracture state
         #
         eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
         sig_lin = self.ccs.E_tex * eps_lin
         axes.plot(eps_lin, sig_lin)
 
-    # scaleable plotting methods 
-    #            
+    # scaleable plotting methods
+    #
     def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
         eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
         sig_tex_ironed = self.sig_c_ironed / self.rho_c
@@ -852,7 +856,7 @@ class ExpTTDB(ExType):
 
 ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
-#--------------------------------------------------------------    
+#--------------------------------------------------------------
 
 if __name__ == '__main__':
 

@@ -191,8 +191,10 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
-        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
+        return ctt.eps_c_interpolated, ctt.sig_c_interpolated  # original data without jumps with interpolated starting point in the origin
+#        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
 #        return ctt.eps_smooth, ctt.sig_c_smooth #smoothed data
+
 
     #--------------------------------------------------
     # interpolation function for fitting data:
@@ -202,6 +204,7 @@ class MATSCalibDamageFn(MATSExplore):
     @cached_property
     def _get_mfn_line_array_target(self):
         xdata, ydata = self.get_target_data_exdb_tensile_test()
+        print 'xdata[-1]', xdata[-1]
         return MFnLineArray(xdata=xdata, ydata=ydata)
 
     fitted_phi_fn = Instance(MFnLineArray)
@@ -498,8 +501,8 @@ class MATSCalibDamageFn(MATSExplore):
         phi_trial_list_n = [[1.]] + self.phi_trial_list_n
         sig_trial_list_n = [[0.]] + self.sig_trial_list_n
 
-        xrange = 7.  # plotting range for strain [mm/m]
-        yrange = 18.  # plotting range for stress [MPa]
+        xrange = 10.  # plotting range for strain [mm/m]
+        yrange = 25.  # plotting range for stress [MPa]
 
         for n in range(self.n_steps):
             for i in range(len(phi_trial_list_n[n + 1])):
@@ -739,7 +742,8 @@ def run():
 
         test_file = join(simdb.exdata_dir,
                               'tensile_tests',
-                              'dog_bone',
+#                              'dog_bone',
+                              'buttstrap_clamping',
 
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
@@ -770,8 +774,8 @@ def run():
 #                                 '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                                 'TT-12c-6cm-0-TU-SH2-V2.DAT')
 
-                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+#                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
                                 #-----------------------------------
                                 # tests for 'BT-3PT-6c-2cm-TU_bs'
@@ -787,6 +791,20 @@ def run():
 #                                 # TT-bs3
 #                                 '2013-06-12_TT-6c-2cm-0-TU_bs3',
 #                                 'TT-6c-2cm-0-TU-V1_bs3.DAT')
+#                                 # TTb-bs4-Aramis3d
+#                                  '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
+#                                  'TTb-6c-2cm-0-TU-V2_bs4.DAT')
+
+                                #-----------------------------------
+                                # tests for 'TT-6c-2cm-90-TU'
+                                #-----------------------------------
+                                #
+                                '2013-05-22_TTb-6c-2cm-90-TU-V3_bs1',
+                                'TTb-6c-2cm-90-TU-V3_bs1.DAT')
+
+#                               '2013-05-17_TT-6c-2cm-0-TU_bs1',
+#                               'TT-6c-2cm-90-TU-V3_bs1.DAT')
+
 
 #         test_file = join(simdb.exdata_dir,
 #                               'tensile_tests',
@@ -818,13 +836,25 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 26
+        age = 28
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests;
         # behavior in the tensile zone is defined by calibrated 'phi_fn' with the predefined 'E_m'
         E_m = ex_run.ex_type.ccs.get_E_m_time(age)
-        E_c = ex_run.ex_type.ccs.get_E_c_time(age)
+#        E_c = ex_run.ex_type.ccs.get_E_c_time(age)
+
+        # use average E-modul from 0- and 90-degree direction for fitter in both directions
+        # this yields the correct tensile behavior and returns the best average compressive behavior
+        #
+#        E_c = 22313.4
+
+        # alternatively use maximum E-modul from 90-direction also for 0-degree direction for fitting
+        # this yields the correct tensile behavior also in the linear elastic regime for both directions corresponding to the
+        # tensile test behavior (note that the compressive E-Modulus in this case is overestimated in 0-degree direction; minor influence
+        # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
+        #
+        E_c = 22413.6
 
         # set 'nu'
         # @todo: check values stored in 'mat_db'
@@ -832,14 +862,19 @@ def run():
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
 
-        n_steps = 100
+        n_steps = 200
         fitter.n_steps = n_steps
 
         fitter.ex_run.ex_type.age = age
         print 'age = %g used for calibration' % age
         fitter.ex_run = ex_run
-        print 'E_m(age) = %g used for calibration' % E_m
-        fitter.dim.mats_eval.E = E_m
+
+#        print 'E_m(age) = %g used for calibration' % E_m
+#        fitter.dim.mats_eval.E = E_m
+
+        print 'E_c(age) = %g used for calibration' % E_c
+        fitter.dim.mats_eval.E = E_c
+
         print 'nu = %g used for calibration' % nu
         fitter.dim.mats_eval.nu = nu
         print 'n_steps = %g used for calibration' % n_steps
@@ -848,7 +883,8 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+#        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 

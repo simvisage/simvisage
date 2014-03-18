@@ -17,7 +17,7 @@ Created on Jan 15, 2013
 #
 # Created on Jun 14, 2010 by: rch
 
-from quaducom.micro.resp_func.CB_rigid_mtrx import CBResidual
+from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
 import numpy as np
 from matplotlib import pyplot as plt
 from spirrid import SPIRRID
@@ -25,7 +25,7 @@ from spirrid.rv import RV
 
 if __name__ == '__main__':
     def CB_composite_stress(w, tau, E_f, V_f, r, m, sV0, Pf, n_int):
-        cb = CBResidual()
+        cb = CBClampedRandXi()
         spirrid = SPIRRID(q=cb,
                     sampling_type='PGrid',
                     eps_vars=dict(w=w),

@@ -112,15 +112,15 @@ class ExpST(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    edge_length = Float(1.25, unit='m', input=True, table_field=True,
+    edge_length = Float(0.80, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
-    thickness = Float(0.03, unit='m', input=True, table_field=True,
+    thickness = Float(0.02, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
     age = Int(28, unit='d', input=True, table_field=True,
                              auto_set=False, enter_set=True)
-    loading_rate = Float(0.50, unit='mm/min', input=True, table_field=True,
+    loading_rate = Float(2.0, unit='mm/min', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
@@ -129,17 +129,19 @@ class ExpST(ExType):
 
     ccs = Instance(CompositeCrossSection)
     def _ccs_default(self):
-        '''default settings correspond to 
+        '''default settings correspond to
         setup '7u_MAG-07-03_PZ-0708-1'
         '''
-        fabric_layout_key = 'MAG-07-03'
+        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
-        concrete_mixture_key = 'PZ-0708-1'
+#        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'FIL-10-09'
-#        orientation_fn_key = 'all0'                                           
-        orientation_fn_key = '90_0'
+        concrete_mixture_key = 'barrelshell'
+        orientation_fn_key = 'all0'
+#        orientation_fn_key = '90_0'
         n_layers = 10
-        s_tex_z = 0.030 / (n_layers + 1)
+        s_tex_z = 0.020 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list=[
                             plain_concrete(s_tex_z * 0.5),
@@ -156,10 +158,10 @@ class ExpST(ExType):
         return ccs
 
     #--------------------------------------------------------------------------
-    # Get properties of the composite 
+    # Get properties of the composite
     #--------------------------------------------------------------------------
 
-    # E-modulus of the composite at the time of testing 
+    # E-modulus of the composite at the time of testing
     E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
@@ -167,7 +169,7 @@ class ExpST(ExType):
     # E-modulus of the composite after 28 days
     E_c28 = DelegatesTo('ccs', listenable=False)
 
-    # reinforcement ration of the composite 
+    # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
     #--------------------------------------------------------------------------------
@@ -185,12 +187,12 @@ class ExpST(ExType):
                                   depends_on='data_array, +ironing_param, +axis_selection')
     @cached_property
     def _get_data_array_ironed(self):
-        '''remove the jumps in the displacement curves 
-        due to resetting the displacement gauges. 
+        '''remove the jumps in the displacement curves
+        due to resetting the displacement gauges.
         '''
         print '*** curve ironing activated ***'
 
-        # each column from the data array corresponds to a measured parameter 
+        # each column from the data array corresponds to a measured parameter
         # e.g. displacement at a given point as function of time u = f(t))
         #
         data_array_ironed = copy(self.data_array)
@@ -209,14 +211,14 @@ class ExpST(ExType):
                 # get the difference between each point and its successor
                 jump_arr = data_arr[1:] - data_arr[0:-1]
 
-                # get the range of the measured data 
+                # get the range of the measured data
                 data_arr_range = max(data_arr) - min(data_arr)
 
                 # determine the relevant criteria for a jump
                 # based on the data range and the specified tolerances:
                 jump_crit = self.jump_rtol * data_arr_range
 
-                # get the indexes in 'data_column' after which a 
+                # get the indexes in 'data_column' after which a
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
@@ -236,9 +238,9 @@ class ExpST(ExType):
     @on_trait_change('+ironing_param')
     def process_source_data(self):
         '''read in the measured data from file and assign
-        attributes after array processing.        
-        
-        NOTE: if center displacement gauge ('WA_M') is missing the measured 
+        attributes after array processing.
+
+        NOTE: if center displacement gauge ('WA_M') is missing the measured
         displacement of the cylinder ('Weg') is used instead.
         A minor mistake is made depending on how much time passes
         before the cylinder has contact with the slab.
@@ -274,7 +276,7 @@ class ExpST(ExType):
                       'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
                       'force / deflection (corner)'               : '_plot_force_corner_deflection',
                      }
-    
+
     default_plot_template = 'force / deflection (center)'
 
 
@@ -291,7 +293,7 @@ class ExpST(ExType):
     def _get_f_asc(self):
         '''get only the ascending branch of the response curve'''
         return -self.Kraft[:self.max_force_idx + 1]
-        
+
     w_asc = Property(Array)
     def _get_w_asc(self):
         '''get only the ascending branch of the response curve'''
@@ -300,7 +302,7 @@ class ExpST(ExType):
     n_points = Property(Int)
     def _get_n_points(self):
         return int(self.n_fit_window_fraction * len(self.w_asc))
-        
+
     f_smooth = Property()
     def _get_f_smooth(self):
         return smooth(self.f_asc, self.n_points, 'flat')
@@ -320,7 +322,7 @@ class ExpST(ExType):
         xdata += offset_w
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle) 
+        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
 
     def _plot_force_corner_deflection(self, axes):
         '''plot the F-w-diagramm for the corner deflection (at the center of one of the supports)
@@ -333,7 +335,7 @@ class ExpST(ExType):
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
+                       # color = c, linewidth = w, linestyle = s
                        )
 
     def _plot_force_center_deflection_smoothed(self, axes):
@@ -348,23 +350,28 @@ class ExpST(ExType):
     def _plot_force_center_deflection_interpolated(self, axes):
         '''plot the F-w-diagramm for the center (c) deflection (interpolated initial stiffness)
         '''
-                # get the index of the maximum stress
+        # get the index of the maximum stress
         max_force_idx = argmax(-self.Kraft)
         # get only the ascending branch of the response curve
         f_asc = -self.Kraft[:max_force_idx + 1]
         w_m = -self.WA_M[:max_force_idx + 1]
-        
+
 #        w_m -= 0.17
 #        axes.plot(w_m, f_asc, color = 'blue', linewidth = 1)
-        
+
         # move the starting point of the center deflection curve to the point where the force starts
         # (remove offset in measured displacement where there is still no force measured)
-        # 
-        idx_0 = np.where(f_asc > 0.05)[0][0]
+        #
+        idx_0 = np.where(f_asc > 0.0)[0][0]
 
-        f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
-        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ] 
+        f_asc_cut = np.hstack([f_asc[ idx_0: ]])
+        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ]
+#        print 'f_asc_cut.shape', f_asc_cut.shape
+#        fw_arr = np.hstack([f_asc_cut[:, None], w_m_cut[:, None]])
+#        print 'fw_arr.shape', fw_arr.shape
+#        np.savetxt('ST-6c-2cm-TU_bs2_f-w_asc.csv', fw_arr, delimiter=';')
         axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+
 
     def _plot_force_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the edge (e) deflections
@@ -431,7 +438,7 @@ class ExpST(ExType):
 
         w_m = -self.WA_M[:max_force_idx + 1]
         axes.plot(w_m, f_asc, color='blue', linewidth=1)
-        
+
         # ## center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
@@ -458,26 +465,26 @@ class ExpST(ExType):
 
     def _plot_force_deflection_avg_interpolated(self, axes):
         '''plot the average F-w-diagrams for the center(c), center-edge (ce) and edge(vh) and edge (lr) deflections
-        NOTE: center deflection curve is cut at its starting point in order to remove offset in the dispacement meassurement 
+        NOTE: center deflection curve is cut at its starting point in order to remove offset in the dispacement meassurement
         '''
         # get the index of the maximum stress
         max_force_idx = argmax(-self.Kraft)
         # get only the ascending branch of the response curve
         f_asc = -self.Kraft[:max_force_idx + 1]
         w_m = -self.WA_M[:max_force_idx + 1]
-        
+
 #        w_m -= 0.17
 #        axes.plot(w_m, f_asc, color = 'blue', linewidth = 1)
-        
+
         # move the starting point of the center deflection curve to the point where the force starts
         # (remove offset in measured displacement where there is still no force measured)
-        # 
+        #
         idx_0 = np.where(f_asc > 0.05)[0][0]
 
-        f_asc_cut = np.hstack([f_asc[ idx_0: ]]) 
-        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ] 
+        f_asc_cut = np.hstack([f_asc[ idx_0: ]])
+        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ]
         axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
-        
+
         # ## center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]

@@ -1,5 +1,5 @@
 '''
-MUSHROOF - For double symmetric loading cases, one Roof is sufficient 
+MUSHROOF - For double symmetric loading cases, one Roof is sufficient
 
 TODO: @ Andreas
      - split dead load cases, include additional dead load case
@@ -79,13 +79,13 @@ class MRtwo(MushRoofModel):
     # elements
     #----------------------------------------------------
 
-    n_elems_xy_quarter = Int(10, input = True)#, ps_levels = [4, 16, 5] )
-    n_elems_z = Int(1, input = True)#, ps_levels = [1, 2, 1] )
+    n_elems_xy_quarter = Int(10, input=True)  # , ps_levels = [4, 16, 5] )
+    n_elems_z = Int(1, input=True)  # , ps_levels = [1, 2, 1] )
 
-    n_elems_col_z = Int(10 , input = True)#, ps_levels = [5, 20, 3 ] )
-    n_elems_col_xy = Int(2 , input = True)#, ps_levels = [2,4,1]   )
+    n_elems_col_z = Int(10 , input=True)  # , ps_levels = [5, 20, 3 ] )
+    n_elems_col_xy = Int(2 , input=True)  # , ps_levels = [2,4,1]   )
 
-    scalefactor_delta_h = Float(1.0 , ps_levels = [1.0, 1.3, 3])
+    scalefactor_delta_h = Float(1.0 , ps_levels=[1.0, 1.3, 3])
 #    width_bottom_col = Float( .35, ps_levels = [0.35, 0.6, 6] )
 
 
@@ -93,13 +93,13 @@ class MRtwo(MushRoofModel):
     # fets_eval
     #----------------------------------------------------
 
-    vtk_r = Float(0.90, input = True)
+    vtk_r = Float(1.0, input=True)
 
     # fets used for roof
     #
-    fe_roof = Instance((FETSEval), depends_on = '+ps_levels, +input')
+    fe_roof = Instance((FETSEval), depends_on='+ps_levels, +input')
     def _fe_roof_default(self):
-        # fe_quad_serendipity_roof is defined in base class 
+        # fe_quad_serendipity_roof is defined in base class
         # connected with material properties of the roof
         #
         fets = self.fe_quad_serendipity_roof
@@ -108,11 +108,11 @@ class MRtwo(MushRoofModel):
 
     # fets used for steel plate
     #
-    fe_plate = Instance((FETSEval), depends_on = '+ps_levels, +input')
+    fe_plate = Instance((FETSEval), depends_on='+ps_levels, +input')
     def _fe_plate_default (self):
         fets = self.fe_quad_serendipity_plate
         # default integration scheme defined as 2x2x2
-        # use higher order integration needed to get better 
+        # use higher order integration needed to get better
         # results at connection points with the column
         #
         fets.ngp_r = 3
@@ -123,7 +123,7 @@ class MRtwo(MushRoofModel):
 
     # fets used for columns
     #
-    fe_column = Instance((FETSEval), transient = True , depends_on = '+ps_levels, +input')
+    fe_column = Instance((FETSEval), transient=True , depends_on='+ps_levels, +input')
     def _fe_column_default(self):
         # default integration (2x2x2) sufficient in case of 2x2 discretization
         # (NOTE: for 1x1 discetrization hourglassing occured)
@@ -136,7 +136,7 @@ class MRtwo(MushRoofModel):
     # geometric transformations
     #----------------------------------------------------
 
-    hp_shells = Property(depends_on = '+ps_levels, +input')
+    hp_shells = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_hp_shells(self):
         # list of local origins of each roof defined in global coordinates
@@ -145,18 +145,18 @@ class MRtwo(MushRoofModel):
         x0 = self.length_xy_quarter
         X0_list = [ [0, 0, 0], [2.0 * x0, 0, 0] ]
         return [
-                 HPShell(t_shell = self.t_shell,
-                         X0 = X,
-                         scalefactor_delta_h = self.scalefactor_delta_h,
-                         n_elems_xy_quarter = self.n_elems_xy_quarter,
-                         n_elems_z = self.n_elems_z,
-                         shift_elems = self.shift_elems,
-                         const_reinf_layer_elem = self.const_reinf_layer_elem,
-                         shift_array = self.shift_array,
-                         mushroof_part = self.mushroof_part)
+                 HPShell(t_shell=self.t_shell,
+                         X0=X,
+                         scalefactor_delta_h=self.scalefactor_delta_h,
+                         n_elems_xy_quarter=self.n_elems_xy_quarter,
+                         n_elems_z=self.n_elems_z,
+                         shift_elems=self.shift_elems,
+                         const_reinf_layer_elem=self.const_reinf_layer_elem,
+                         shift_array=self.shift_array,
+                         mushroof_part=self.mushroof_part)
                  for X in X0_list ]
 
-    columns = Property(Instance(GEOColumn) , depends_on = '+ps_levels, +input')
+    columns = Property(Instance(GEOColumn) , depends_on='+ps_levels, +input')
     @cached_property
     def _get_columns(self):
         # column heights
@@ -168,13 +168,13 @@ class MRtwo(MushRoofModel):
         x0 = self.length_xy_quarter
         X0_list = [[       x0, x0, -ch ],
                    [ 3.0 * x0, x0, -ch ]]
-        return [ GEOColumn(width_top = self.width_top_col,
-                            X0 = X,
-                            width_bottom = self.width_bottom_col,
-                            h_col = ch - self.t_plate)
+        return [ GEOColumn(width_top=self.width_top_col,
+                            X0=X,
+                            width_bottom=self.width_bottom_col,
+                            h_col=ch - self.t_plate)
                             for X in X0_list ]
 
-    plates = Property(Instance(GEOColumn) , depends_on = '+ps_levels, +input')
+    plates = Property(Instance(GEOColumn) , depends_on='+ps_levels, +input')
     @cached_property
     def _get_plates(self):
         # column transformation can be used to obtain the geometry of the plate
@@ -183,45 +183,45 @@ class MRtwo(MushRoofModel):
         x0 = self.length_xy_quarter
         X0_list = [[       x0, x0, -ch ],
                    [ 3.0 * x0, x0, -ch ]]
-        return [GEOColumn(width_top = self.width_top_col,
-                           width_bottom = self.width_top_col,
-                           X0 = X,
-                           h_col = self.t_plate)
+        return [GEOColumn(width_top=self.width_top_col,
+                           width_bottom=self.width_top_col,
+                           X0=X,
+                           h_col=self.t_plate)
                            for X in X0_list ]
     #----------------------------------------------------
-    # fe-grids 
+    # fe-grids
     #----------------------------------------------------
 
-    fe_grid_roofs = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    fe_grid_roofs = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
     def _get_fe_grid_roofs(self):
         return [
-                FEGrid(coord_min = (0.0, 0.0, 0.0),
-                       coord_max = (1.0, 1.0, 1.0),
-                       geo_transform = hp_shell,
-                       shape = (self.n_elems_xy, self.n_elems_xy, self.n_elems_z),
-                       fets_eval = self.fe_roof)
+                FEGrid(coord_min=(0.0, 0.0, 0.0),
+                       coord_max=(1.0, 1.0, 1.0),
+                       geo_transform=hp_shell,
+                       shape=(self.n_elems_xy, self.n_elems_xy, self.n_elems_z),
+                       fets_eval=self.fe_roof)
                 for hp_shell in self.hp_shells ]
 
-    fe_grid_columns = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    fe_grid_columns = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
     def _get_fe_grid_columns(self):
-        return [ FEGrid(coord_min = (0.0, 0.0, 0.0),
-                         coord_max = (1.0, 1.0, 1.0),
-                         geo_transform = column,
-                         shape = (self.n_elems_col_xy, self.n_elems_col_xy, self.n_elems_col_z),
-                         fets_eval = self.fe_column)
+        return [ FEGrid(coord_min=(0.0, 0.0, 0.0),
+                         coord_max=(1.0, 1.0, 1.0),
+                         geo_transform=column,
+                         shape=(self.n_elems_col_xy, self.n_elems_col_xy, self.n_elems_col_z),
+                         fets_eval=self.fe_column)
                          for column in self.columns ]
 
-    fe_grid_plates = Property(Instance(FEGrid), depends_on = '+ps_levels, +input')
+    fe_grid_plates = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
     def _get_fe_grid_plates(self):
         return [
-                FEGrid(coord_min = (0.0, 0.0, 0.0),
-                       coord_max = (1.0, 1.0, 1.0),
-                       geo_transform = plates,
-                       shape = (self.n_elems_col_xy, self.n_elems_col_xy, 2),
-                       fets_eval = self.fe_plate)
+                FEGrid(coord_min=(0.0, 0.0, 0.0),
+                       coord_max=(1.0, 1.0, 1.0),
+                       geo_transform=plates,
+                       shape=(self.n_elems_col_xy, self.n_elems_col_xy, 2),
+                       fets_eval=self.fe_plate)
                 for plates in self.plates ]
 
     #----------------------------------------------------
@@ -240,7 +240,7 @@ class MRtwo(MushRoofModel):
         # the data will be evaluated and for the output the dofs need to be sorted
         # numbering of dofs within one element corresponds to numbering in Belytschko...
 
-        # @TODO: 
+        # @TODO:
         #        - one array with coordinates and dof number for all necessary slices
         #          therefore no sorting necessary
 
@@ -299,7 +299,7 @@ class MRtwo(MushRoofModel):
         U = self.tloop.eval()
 
         # slice r0
-        # 
+        #
         U_r0_right = U[dofs_r0_right]
         U_r0_left = U[dofs_r0_left]
 
@@ -318,7 +318,7 @@ class MRtwo(MushRoofModel):
         F_int = self.tloop.tstepper.F_int
 
         # slice r0
-        # 
+        #
         F_int_r0_right = F_int[dofs_r0_right]
         F_int_r0_left = F_int[dofs_r0_left]
 
@@ -337,14 +337,14 @@ class MRtwo(MushRoofModel):
         # EXPORT DATA
         #----------------------------------------------------
 
-        # export of FORCE and corresponding COORDINATES 
+        # export of FORCE and corresponding COORDINATES
 
-        # coordinate of internal forces at all nodes at slices 
+        # coordinate of internal forces at all nodes at slices
         #
         X_F_export = vstack((dof_X_r0_right,
                                   dof_X_sym))
 
-        # export only linked dofs 
+        # export only linked dofs
         # position is defined by 'X_array_linked' and 'Y_array_linked'
         #
         if self.select_hinge_pos == True:
@@ -400,7 +400,7 @@ class MRtwo(MushRoofModel):
         self.F_export = F_export
 
 
-        # export of DISPLACEMENT and corresponding COORDINATES 
+        # export of DISPLACEMENT and corresponding COORDINATES
 
 
         # coordinates at all nodes at slices, here all edges of each roof
@@ -417,9 +417,9 @@ class MRtwo(MushRoofModel):
         dU_r0_left = U_r0_left[:, 1:] - U_r0_left[:, 1:]  # dUx can be neglected
         dU_bottom = zeros_like(U_bottom[:, 1:])
         dU_r1_right = zeros_like(U_r1_right[:, 1:])
-        dU_r0_right = U_r0_right[:, 1:] - U_r1_left[:, 1:] # dUx can be neglected
+        dU_r0_right = U_r0_right[:, 1:] - U_r1_left[:, 1:]  # dUx can be neglected
 
-        # some bad DATA arrangement to get all together 
+        # some bad DATA arrangement to get all together
         #
         data_U_sym = hstack((U_sym, dU_sym))
         data_U_r0_left = hstack((U_r0_left, dU_r0_left))
@@ -428,7 +428,7 @@ class MRtwo(MushRoofModel):
         data_U_r0_right = hstack((U_r0_right, dU_r0_right))
 
         # displacement at all nodes at slices, here all edges of each roof
-        #    
+        #
         self.U_export = vstack((data_U_sym,
                                 data_U_r0_left,
                                 data_U_bottom,
@@ -445,13 +445,13 @@ class MRtwo(MushRoofModel):
         Specifies the results and their order returned by the model
         evaluation.
         '''
-        return [  SimOut(name = '$u_z$', unit = '[mm]'), ]
+        return [  SimOut(name='$u_z$', unit='[mm]'), ]
 
 
     X_F_export = Array  # X, Y, Z
-    F_export = Array    # Nip, Vip, Vop order defined in peval
+    F_export = Array  # Nip, Vip, Vop order defined in peval
 
-    def export_int_force_data(self, filename = 'F_int_data.csv'):
+    def export_int_force_data(self, filename='F_int_data.csv'):
         '''exports X_F_export and F_export data to csv - worksheet
         '''
 
@@ -463,7 +463,7 @@ class MRtwo(MushRoofModel):
         data = hstack((X_data, F_data))
         file = open(filename, 'w')
 
-        writer = csv.writer(file, delimiter = ";", lineterminator = "\n")
+        writer = csv.writer(file, delimiter=";", lineterminator="\n")
         writer.writerow(['x[m]', 'y[m]', 'z[m]', 'N_ip[MN]', 'V_ip[MN]', 'V_op[MN]' ])
         writer.writerows(data)
 
@@ -472,9 +472,9 @@ class MRtwo(MushRoofModel):
 
 
     X_U_export = Array  # X, Y, Z
-    U_export = Array    # 'u-x[m]', 'u-y[m]', 'u-z[m]', 'du-y[m]', 'du-z[m]'
+    U_export = Array  # 'u-x[m]', 'u-y[m]', 'u-z[m]', 'du-y[m]', 'du-z[m]'
 
-    def export_edge_u_data(self, filename = 'U_data.csv'):
+    def export_edge_u_data(self, filename='U_data.csv'):
         '''exports X_U_export and U_export data to csv - worksheet
         '''
         print '*** writing displacement data to file,', filename, ' ***'
@@ -485,7 +485,7 @@ class MRtwo(MushRoofModel):
         data = hstack((X_data, U_data))
         file = open(filename, 'w')
 
-        writer = csv.writer(file, delimiter = ";", lineterminator = "\n")
+        writer = csv.writer(file, delimiter=";", lineterminator="\n")
         writer.writerow(['X[m]', 'Y[m]', 'Z[m]', 'u-x[m]', 'u-y[m]', 'u-z[m]', 'du-y[m]', 'du-z[m]' ])
         writer.writerows(data)
 
@@ -493,12 +493,12 @@ class MRtwo(MushRoofModel):
         return
 
 
-    X_array_linked = Property(Array, depends_on = 'shift_array, +input')
+    X_array_linked = Property(Array, depends_on='shift_array, +input')
     @cached_property
     def _get_X_array_linked(self):
         """gets the X coordinates of all linked elements depending on shift_array
         """
-        # @TODO: 
+        # @TODO:
         # make linked_array a new method of MRTwo used in multiple methods
         #
         # @todo: this is an alternative way to delete a row in 'shift_arr'
@@ -506,7 +506,7 @@ class MRtwo(MushRoofModel):
         linked_array = vstack((self.shift_array[:self.not_linked_elem],
                                self.shift_array[self.not_linked_elem + 1:]))
 
-        #global coordinates from local coordinates of one quarter
+        # global coordinates from local coordinates of one quarter
         #
         x0 = self.length_xy_quarter
 
@@ -517,26 +517,26 @@ class MRtwo(MushRoofModel):
 
         # add the midcenter of the shell to the linking array
         # only used for uneven number of linkings, e.g. 7 links
-        # for 7m x 7m shell 
+        # for 7m x 7m shell
         #
         if self.link_edge_center == True:
             x_array_linked = hstack((x_array_linked, x0))
 
         return sort(x_array_linked)
 
-    Y_array_linked = Property(Array, depends_on = 'shift_array, +input')
+    Y_array_linked = Property(Array, depends_on='shift_array, +input')
     @cached_property
     def _get_Y_array_linked(self):
         """gets the Y coordinates of all linked elements depending on shift_array
         """
 
-        # @TODO: 
+        # @TODO:
         # make linked_array a new method of MRTwo used in multiple methods
         #
         linked_array = vstack((self.shift_array[:self.not_linked_elem],
                                self.shift_array[self.not_linked_elem + 1:]))
 
-        #global coordinates from local coordinates of one quarter
+        # global coordinates from local coordinates of one quarter
         #
         y0 = self.length_xy_quarter
         y_array_linked = hstack((y0 - linked_array[:, 1],
@@ -554,103 +554,118 @@ class MRtwo(MushRoofModel):
     # boundaries
     #----------------------------------------------------
 
-    bc_plate_roof_link_list = Property(List, depends_on = '+ps_levels, +input')
+    bc_plate_roof_link_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_plate_roof_link_list(self):
         '''
-        links all steel plate to roof
+        links the four corner nodes of the steel plate to the roof bottom
         '''
-
         bc_plate_roof_link_list = []
         n_from_center = 1 + self.not_linked_elem
 
         for roof, plate in zip(self.fe_grid_roofs, self.fe_grid_plates):
-            slice_1 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = roof[self.n_elems_xy_quarter - n_from_center ,
+            slice_1 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=roof[self.n_elems_xy_quarter - n_from_center ,
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
-                                  link_slice = plate[ 0 , 0 , -1, 0, 0, -1], link_coeffs = [1.0],
-                                  value = 0.)]
-            slice_2 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = roof[self.n_elems_xy_quarter,
+                                  link_slice=plate[ 0 , 0 , -1, 0, 0, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
+
+            slice_2 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=roof[self.n_elems_xy_quarter,
                                                self.n_elems_xy_quarter - n_from_center, 0,
                                                0, 0, 0 ],
-                                  link_slice = plate[ -1, 0, -1, -1, 0, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+                                  link_slice=plate[ -1, 0, -1, -1, 0, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
 
-            slice_3 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = roof[self.n_elems_xy_quarter + n_from_center,
+            slice_3 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=roof[self.n_elems_xy_quarter + n_from_center,
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
-                                  link_slice = plate[ -1 , -1 , -1, -1, -1, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+                                  link_slice=plate[ -1 , -1 , -1, -1, -1, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
 
-            slice_4 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = roof[self.n_elems_xy_quarter ,
+            slice_4 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=roof[self.n_elems_xy_quarter ,
                                                self.n_elems_xy_quarter + n_from_center, 0,
                                                0, 0, 0 ],
-                                  link_slice = plate[ 0 , -1 , -1, 0, -1, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+                                  link_slice=plate[ 0 , -1 , -1, 0, -1, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
+
             bc_plate_roof_link_list = bc_plate_roof_link_list + \
                               slice_1 + slice_2 + slice_3 + slice_4
 
         return bc_plate_roof_link_list
 
 
-    bc_roof_top_roof_low_link_list = Property(List, depends_on = '+ps_levels, +input')
+    bc_roof_top_roof_low_link_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_roof_top_roof_low_link_list(self):
         '''
-        links vertical displacement of roof top nodes with roof bottom nodes 
+        links vertical displacement of roof top nodes with roof bottom nodes
         at the elements at the column top (4 nodes) representing the steel bolts
         resulting in a more realistic rotation/deformation at the column top elements.
         '''
         n_from_center = 1 + self.not_linked_elem
         bc_roof_top_roof_low_link_list = []
         for roof, plate in zip(self.fe_grid_roofs, self.fe_grid_plates):
-            slice_1 = [BCSlice(var = 'u'  , dims = [ 2],
-                                  link_slice = roof[self.n_elems_xy_quarter - n_from_center ,
+            slice_1 = [BCSlice(var='u'  , dims=[ 2],
+                                  link_slice=roof[self.n_elems_xy_quarter - n_from_center ,
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
-                                  slice = roof[self.n_elems_xy_quarter - n_from_center ,
+                                  slice=roof[self.n_elems_xy_quarter - n_from_center ,
                                                     self.n_elems_xy_quarter, -1,
-                                                    0, 0, -1 ], link_coeffs = [1.0],
-                                  value = 0.)]
-            slice_2 = [BCSlice(var = 'u'  , dims = [ 2],
-                                  link_slice = roof[self.n_elems_xy_quarter,
+                                                    0, 0, -1 ],
+                                  link_coeffs=[1.0],
+                                  value=0.)]
+
+            slice_2 = [BCSlice(var='u'  , dims=[ 2],
+                                  link_slice=roof[self.n_elems_xy_quarter,
                                                self.n_elems_xy_quarter - n_from_center, 0,
                                                0, 0, 0 ],
-                                  slice = roof[self.n_elems_xy_quarter ,
+                                  slice=roof[self.n_elems_xy_quarter ,
                                                     self.n_elems_xy_quarter - n_from_center, -1,
-                                                    0, 0, -1 ], link_coeffs = [1.0],
-                                  value = 0.)]
+                                                    0, 0, -1 ],
+                                  link_coeffs=[1.0],
+                                  value=0.)]
 
-            slice_3 = [BCSlice(var = 'u'  , dims = [ 2],
-                                  link_slice = roof[self.n_elems_xy_quarter + n_from_center,
+            slice_3 = [BCSlice(var='u'  , dims=[ 2],
+                                  link_slice=roof[self.n_elems_xy_quarter + n_from_center,
                                                self.n_elems_xy_quarter, 0,
                                                0, 0, 0 ],
-                                  slice = roof[self.n_elems_xy_quarter + n_from_center ,
+                                  slice=roof[self.n_elems_xy_quarter + n_from_center ,
                                                     self.n_elems_xy_quarter, -1,
-                                                    0, 0, -1 ], link_coeffs = [1.0],
-                                  value = 0.)]
+                                                    0, 0, -1 ],
+                                  link_coeffs=[1.0],
+                                  value=0.)]
 
-            slice_4 = [BCSlice(var = 'u'  , dims = [ 2],
-                                link_slice = roof[self.n_elems_xy_quarter ,
+            slice_4 = [BCSlice(var='u'  , dims=[ 2],
+                                link_slice=roof[self.n_elems_xy_quarter ,
                                              self.n_elems_xy_quarter + n_from_center, 0,
                                              0, 0, 0 ],
-                                slice = roof[self.n_elems_xy_quarter  ,
+                                slice=roof[self.n_elems_xy_quarter  ,
                                                     self.n_elems_xy_quarter + n_from_center, -1,
-                                                    0, 0, -1 ], link_coeffs = [1.0],
-                                value = 0.)]
+                                                    0, 0, -1 ],
+                                link_coeffs=[1.0],
+                                value=0.)]
 
-            slice_5 = [BCSlice(var = 'u'  , dims = [ 2],
-                                link_slice = roof[self.n_elems_xy_quarter ,
+            slice_5 = [BCSlice(var='u'  , dims=[ 2],
+                                link_slice=roof[self.n_elems_xy_quarter ,
                                              self.n_elems_xy_quarter , 0,
                                              0, 0, 0 ],
-                                slice = roof[self.n_elems_xy_quarter  ,
+                                slice=roof[self.n_elems_xy_quarter  ,
                                                     self.n_elems_xy_quarter, -1,
-                                                    0, 0, -1 ], link_coeffs = [1.0],
-                                value = 0.)]
+                                                    0, 0, -1 ],
+                                link_coeffs=[1.0],
+                                value=0.)]
 
 
             bc_roof_top_roof_low_link_list = bc_roof_top_roof_low_link_list + \
@@ -659,35 +674,45 @@ class MRtwo(MushRoofModel):
         return bc_roof_top_roof_low_link_list
 
 
-    bc_plate_column_link_list = Property(List, depends_on = '+ps_levels, +input')
+    bc_plate_column_link_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_plate_column_link_list(self):
         '''
         links all column nodes to plate nodes but only corner nodes of each element
-        for 2x2 elements 9 elements are linked
+        for 2x2 elements 9 nodes are linked
         '''
         bc_plate_column_link_list = []
         for column, plate in zip(self.fe_grid_columns, self.fe_grid_plates):
 
-            slice_1 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = plate[:, :, 0, -1, -1, 0 ],
-                                  link_slice = column[ :, :, -1 , -1, -1, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+            slice_1 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=plate[:, :, 0, -1, -1, 0 ],
+                                  link_slice=column[ :, :, -1 , -1, -1, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
 
-            slice_2 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = plate[:, :, 0, 0, 0, 0 ],
-                                  link_slice = column[ :, :, -1 , 0, 0, -1], link_coeffs = [1.0],
-                                  value = 0.)]
 
-            slice_3 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = plate[:, :, 0, 0, -1, 0 ],
-                                  link_slice = column[ :, :, -1 , 0, -1, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+            slice_2 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=plate[:, :, 0, 0, 0, 0 ],
+                                  link_slice=column[ :, :, -1 , 0, 0, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
 
-            slice_4 = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                                  slice = plate[:, :, 0, -1, 0, 0 ],
-                                  link_slice = column[ :, :, -1 , -1, 0, -1], link_coeffs = [1.0],
-                                  value = 0.)]
+
+            slice_3 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=plate[:, :, 0, 0, -1, 0 ],
+                                  link_slice=column[ :, :, -1 , 0, -1, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
+
+            slice_4 = [BCSlice(var='u'  , dims=[0, 1, 2],
+                                  slice=plate[:, :, 0, -1, 0, 0 ],
+                                  link_slice=column[ :, :, -1 , -1, 0, -1],
+                                  link_coeffs=[1., 1., 1.],
+                                  link_dims=[0, 1, 2],
+                                  value=0.)]
 
             bc_plate_column_link_list = bc_plate_column_link_list + \
                                         slice_1 + slice_2 + slice_3 + slice_4
@@ -695,16 +720,16 @@ class MRtwo(MushRoofModel):
         return bc_plate_column_link_list
 
 
-    bc_col_clamped_list = Property(List, depends_on = '+ps_levels, +input')
+    bc_col_clamped_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_col_clamped_list(self):
         '''clamped support of the columns at the bottom
         '''
         constraint = []
         for column in self.fe_grid_columns:
-            constraint = constraint + [ BCSlice(var = 'u', dims = [0, 1, 2],
-                                                slice = column[ :, :, 0, :, :, 0 ],
-                                                value = 0.0) ]
+            constraint = constraint + [ BCSlice(var='u', dims=[0, 1, 2],
+                                                slice=column[ :, :, 0, :, :, 0 ],
+                                                value=0.0) ]
         return constraint
 
 #    bc_col_link_list = Property( List, depends_on = '+ps_levels, +input' )
@@ -749,8 +774,8 @@ class MRtwo(MushRoofModel):
 
 
     # column support as hinge at bottom of column
-    # 
-    bc_col_hinge_list = Property(List, depends_on = '+ps_levels, +input')
+    #
+    bc_col_hinge_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_col_hinge_list(self):
         '''column support as hinge at the bottom
@@ -759,16 +784,16 @@ class MRtwo(MushRoofModel):
         n_el_col_xy_half = int(self.n_elems_col_xy / 2.0)
         for column in self.fe_grid_columns:
             for i in range(0, n_el_col_xy_half):
-                dof_const = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                             slice = column[i , 0 , 0, 0, 0, 0 ],
-                             link_slice = column[-1 - i , -1, 0, -1 , -1, 0], link_coeffs = [-1.0],
-                             value = 0.0)]
+                dof_const = [BCSlice(var='u'  , dims=[0, 1, 2],
+                             slice=column[i , 0 , 0, 0, 0, 0 ],
+                             link_slice=column[-1 - i , -1, 0, -1 , -1, 0], link_coeffs=[-1.0],
+                             value=0.0)]
                 constraint = constraint + dof_const
             for i in range(0, n_el_col_xy_half):
-                dof_const = [BCSlice(var = 'u'  , dims = [0, 1, 2],
-                             slice = column[0 , -1 - i , 0, 0, -1, 0 ],
-                             link_slice = column[-1, i , 0, -1, 0 , 0], link_coeffs = [-1.0],
-                             value = 0.0)]
+                dof_const = [BCSlice(var='u'  , dims=[0, 1, 2],
+                             slice=column[0 , -1 - i , 0, 0, -1, 0 ],
+                             link_slice=column[-1, i , 0, -1, 0 , 0], link_coeffs=[-1.0],
+                             value=0.0)]
                 constraint = constraint + dof_const
 
         return constraint
@@ -779,7 +804,7 @@ class MRtwo(MushRoofModel):
     #-------------------------------------
 
     # array of shape (n,3) used for shifting of shell elements
-    # example shift_array = array([2.0, 2.0, 3]) 
+    # example shift_array = array([2.0, 2.0, 3])
     # use one row for only two sections within the quarter with varying element width
     # (varying discretization).
     # first value in row of shift array := x-coordinate (e.g. 2m) of the quarter shell
@@ -787,42 +812,46 @@ class MRtwo(MushRoofModel):
     # 3rd value number of elements to be used for this section of the quarter shell
     # (e.g. 3 elements) between 0 and 2.0m.
     #
-    # NOTE: the number of elements between the given coordinates, e.g. 2.0m and 4.0m is derived based on 
+    # NOTE: the number of elements between the given coordinates, e.g. 2.0m and 4.0m is derived based on
     # the total number of elements used for one quarter defined in 'n_elems_quarter_xy'
-    # minus the number of elements used for the previous sections. 
+    # minus the number of elements used for the previous sections.
     # Make sure to define the sum of all values in the 3rd column in 'shift_array' smaller
     # then (n_elems_quarter_xy -1)
     #
-    shift_array = Array(value = [[0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1], ], input = True)
+    shift_array = Array(value=[[0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1], ], input=True)
 
     # link_type of roof connections (links)
     # in-plane degree of freedom between the roofs either linked or not
     #
-    link_type = Enum('exc_V_ip', 'inc_V_ip', input = True)
+    link_type = Enum('exc_V_ip', 'inc_V_ip', input=True)
     linked_dims = {'exc_V_ip':[0, 2],
                    'inc_V_ip':[0, 1, 2]}
 
-    # Set to true if the links between the roof are defined by shift_array 
+    linked_dims_coeffs = Property(List)
+    def _get_linked_dims_coeffs(self):
+        return len(self.linked_dims[self.link_type]) * [1.]
+
+    # Set to true if the links between the roof are defined by shift_array
     # only at the defined set of nodes
     #
-    # Set to "false" if all nodes between the roofs are to be linked at edge  
+    # Set to "false" if all nodes between the roofs are to be linked at edge
     #
-    select_hinge_pos = Bool(True, input = True)
+    select_hinge_pos = Bool(True, input=True)
 
     # used only for linking of center edge load, e.g. for
     # uneven number of links, e.g. 7 links for 7m roof
     #
-    link_edge_center = Bool(False, input = True)
+    link_edge_center = Bool(False, input=True)
 
-    # defines element of shift_array which is not linked 
+    # defines element of shift_array which is not linked
     # predefined in dictionary of shift_array_dict - either 0 or 1
-    # If set to one the node used to link the roof and the column is the first 
-    # node defined in shift array 
+    # If set to one the node used to link the roof and the column is the first
+    # node defined in shift array
     #
-    not_linked_elem = Int(0, input = True) # index of the not linked elem defined in shift array     
+    not_linked_elem = Int(0, input=True)  # index of the not linked elem defined in shift array
 
 
-    link_elem_array = Property(Array, depends_on = '+input')
+    link_elem_array = Property(Array, depends_on='+input')
     @cached_property
     def _get_link_elem_array(self):
         """ from shift_array get element number which have to be linked
@@ -830,10 +859,10 @@ class MRtwo(MushRoofModel):
         """
         # abreviation "e" = elements
         e_shifted = cumsum(self.shift_array[:, 2])
-        # create link list of elements 
+        # create link list of elements
 
         # NOTE: the definition depends directly on the definition of BCSlice
-        # used for linking. 
+        # used for linking.
         # In BCSlice the following syntax is applied:
         # [:,:,:,0,0,0] not [:,:,:,-1,-1,-1] will be linked
         # without unselected node defined by "not_linked_elem" and the
@@ -850,7 +879,7 @@ class MRtwo(MushRoofModel):
             # NOTE: this can't be defined in 'shift_array'
             e_linked = append(0, e_linked)
 
-        # for linking the global coordinate system is used 
+        # for linking the global coordinate system is used
         # respectively the coordinate system used for the slicing
         # within the BCSlice
         #
@@ -860,7 +889,7 @@ class MRtwo(MushRoofModel):
                                 self.n_elems_xy_quarter + e_linked)
         return e_linked_roof
 
-    bc_roof_link_list = Property(List, depends_on = '+ps_levels, +input')
+    bc_roof_link_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_bc_roof_link_list(self):
         '''link roof to roof
@@ -871,46 +900,47 @@ class MRtwo(MushRoofModel):
 
             # constraint at symmetric axes for roof 0 (support in global y-direction)
             #
-            constraint_0 = [BCSlice(var = 'u', dims = [1],
+            constraint_0 = [BCSlice(var='u', dims=[1],
                                      # get only every corner node at top left corner
-                                     slice = roof_0[ : , -1, -1, 0, -1, -1],
-                                     value = 0.0)]
+                                     slice=roof_0[ : , -1, -1, 0, -1, -1],
+                                     value=0.0)]
 
             # constraint at symmetric axes for roof 1 (support in global y-direction)
             #
-            constraint_1 = [BCSlice(var = 'u', dims = [1],
+            constraint_1 = [BCSlice(var='u', dims=[1],
                                      # get only every corner node at top right corner
-                                     slice = roof_1[ : , -1, -1, -1, -1, -1],
-                                     value = 0.0)]
+                                     slice=roof_1[ : , -1, -1, -1, -1, -1],
+                                     value=0.0)]
 
             # constraint for center node connecting roof 0 and 1 at symmetric axes
             # (support in global y-direction)
             #
-            constraint_0_1 = [BCSlice(var = 'u', dims = [1],
+            constraint_0_1 = [BCSlice(var='u', dims=[1],
                                      # last element at top right corner
-                                     slice = roof_0[-1 , -1, -1, -1, -1, -1],
-                                     value = 0.0)]
+                                     slice=roof_0[-1 , -1, -1, -1, -1, -1],
+                                     value=0.0)]
 
             # link of roof 0 and 1 (at the nodes at the top of the roof)
             # (kinematic constraint)
             #
-            link_0_1 = [BCSlice(var = 'u'  , dims = self.linked_dims[self.link_type],
+            link_0_1 = [BCSlice(var='u'  , dims=self.linked_dims[self.link_type],
                                          # get nodes at bottom right of elems at 0-1 axis.
-                                         slice = roof_0[-1, :, -1, -1, 0, -1 ],
-                                         link_slice = roof_1[ 0, :, -1, 0, 0, -1],
-                                         # displacements at linked nodes are set identical 
-                                         #
-                                         link_coeffs = [1.0],
-                                         value = 0.)]
+                                         slice=roof_0[-1, :, -1, -1, 0, -1 ],
+                                         link_slice=roof_1[ 0, :, -1, 0, 0, -1],
+                                         # displacements at linked nodes are set identical
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
+                                         value=0.)]
 
             # center point of all roofs at symmetry axis and at 01-axis
             # is only linked between the roofs r0 and r1
             #
-            link_0_1_last = [BCSlice(var = 'u'  , dims = self.linked_dims[self.link_type],
-                                         slice = roof_0[-1, -1, -1, -1, -1, -1 ],
-                                         link_slice = roof_1[ 0, -1, -1, 0, -1, -1],
-                                         link_coeffs = [1.0],
-                                         value = 0.)]
+            link_0_1_last = [BCSlice(var='u'  , dims=self.linked_dims[self.link_type],
+                                         slice=roof_0[-1, -1, -1, -1, -1, -1 ],
+                                         link_slice=roof_1[ 0, -1, -1, 0, -1, -1],
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
+                                         value=0.)]
 
             bc_roof_link_list = constraint_0 + constraint_1 + constraint_0_1 + \
                                 link_0_1 + link_0_1_last
@@ -923,33 +953,34 @@ class MRtwo(MushRoofModel):
 
                 # symmetric constraints at symmetry axis (at the selected positions only)
                 #
-                constraint_0 = [BCSlice(var = 'u'  , dims = [1],
+                constraint_0 = [BCSlice(var='u'  , dims=[1],
                                          # slice selects only corner nodes at top left corner
-                                         slice = roof_0[elem, -1, -1, 0, -1, -1 ],
-                                         value = 0.)]
-                constraint_1 = [BCSlice(var = 'u'  , dims = [1],
+                                         slice=roof_0[elem, -1, -1, 0, -1, -1 ],
+                                         value=0.)]
+                constraint_1 = [BCSlice(var='u'  , dims=[1],
                                          # slice selects only corner nodes at top right corner
-                                         slice = roof_1[elem, -1, -1, 0, -1, -1 ],
-                                         value = 0.)]
+                                         slice=roof_1[elem, -1, -1, 0, -1, -1 ],
+                                         value=0.)]
 
                 # link between roofs r0 and r1
-                #     
-                link_0_1 = [BCSlice(var = 'u'  , dims = self.linked_dims[self.link_type],
+                #
+                link_0_1 = [BCSlice(var='u'  , dims=self.linked_dims[self.link_type],
                                          # get nodes at bottom right of elems at 0-1 axis.
-                                         slice = roof_0[-1, elem, -1, -1, 0, -1 ],
-                                         link_slice = roof_1[ 0, elem, -1, 0, 0, -1],
-                                         link_coeffs = [1.0],
-                                         value = 0.)]
+                                         slice=roof_0[-1, elem, -1, -1, 0, -1 ],
+                                         link_slice=roof_1[ 0, elem, -1, 0, 0, -1],
+                                         link_dims=self.linked_dims[self.link_type],
+                                         link_coeffs=self.linked_dims_coeffs,
+                                         value=0.)]
                 # symmetric constraint (symmetry axis)
                 #
-                const_0 = [BCSlice(var = 'u'  , dims = [1],
-                                         # slice selects only cornernodes 
-                                         slice = roof_0[elem, -1, -1, 0, -1, -1 ],
-                                         value = 0.)]
-                const_1 = [BCSlice(var = 'u'  , dims = [1],
-                                         # slice selects only cornernodes 
-                                         slice = roof_1[elem, -1, -1, 0, -1, -1 ],
-                                         value = 0.)]
+                const_0 = [BCSlice(var='u'  , dims=[1],
+                                         # slice selects only cornernodes
+                                         slice=roof_0[elem, -1, -1, 0, -1, -1 ],
+                                         value=0.)]
+                const_1 = [BCSlice(var='u'  , dims=[1],
+                                         # slice selects only cornernodes
+                                         slice=roof_1[elem, -1, -1, 0, -1, -1 ],
+                                         value=0.)]
 
                 constraint_list = constraint_list + link_0_1 + constraint_0 + constraint_1
 
@@ -962,7 +993,7 @@ class MRtwo(MushRoofModel):
     # loading cases
     #-------------------------------------
     # @TODO: - lc_shrink not defined just empty list only possible by Bool in mushroof_model
-    #          so far would be better to be done automatically, name necessary for export 
+    #          so far would be better to be done automatically, name necessary for export
     #
 
     # load cases
@@ -980,13 +1011,14 @@ class MRtwo(MushRoofModel):
                'lc_s_sym', 'lc_s_asym',
                'lc_w_pos', 'lc_w_neg', 'lc_w_asym',
                'lc_shrink',
-               input = True)
+               input=True)
 
     # Dictionary for corresponding methods
     #
     lc_dict = Property(Dict)
     def _get_lc_dict(self):
-        return {'lc_g' : self.lc_g_list,
+        return {
+                'lc_g' : self.lc_g_list,
 
                 'lc_g_own_weight' : self.lc_g_own_weight_list,
                 'lc_g_surf_load' : self.lc_g_surf_load_list,
@@ -999,19 +1031,20 @@ class MRtwo(MushRoofModel):
                 'lc_w_pos' : self.lc_w_pos_list,
                 'lc_w_neg' : self.lc_w_neg_list,
                 'lc_w_asym' : self.lc_w_asym_list,
-                'lc_shrink' : [] }
+                'lc_shrink' : []
+                }
 
     lc_list = Property(List)
     def _get_lc_list(self):
         return self.lc_dict[self.lc]
 
 
-    lc_g_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_list(self):
         '''loading case: dead loads including self-weight, 2cm additional thickness, and edge loads.
         '''
-        # slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         col_0, col_1 = self.fe_grid_columns
@@ -1032,96 +1065,96 @@ class MRtwo(MushRoofModel):
 
         # own weight (as material density)
         #
-        material_density_roof = -22.4e-3    # [MN/m^3]
-        material_density_column = -26e-3    # [MN/m^3]
+        material_density_roof = -22.4e-3  # [MN/m^3]
+        material_density_column = -26e-3  # [MN/m^3]
 
         # additional own weight due to 2cm overthickness
         #
-        add_t = 0.02 * material_density_roof# [MN/m^2]
+        add_t = 0.02 * material_density_roof  # [MN/m^2]
 
         # Ausbaulasten
         #
-        add_surf_load = -0.2e-3             # [MN/m^2]
+        add_surf_load = -0.2e-3  # [MN/m^2]
 
         # edge load (facade clamping)
         #
-        edge_load = -0.35e-3                # [MN/m]
+        edge_load = -0.35e-3  # [MN/m]
 #        edge_load = -0.5e-3                # [MN/m]
 
         # steel links each 100 cm:
         #
-        link_load = -0.07e-3                # [MN/m]
+        link_load = -0.07e-3  # [MN/m]
 
-        return [ # own weight roof 
+        return [  # own weight roof
                  #
-                 BCSlice(var = 'f', value = material_density_roof, dims = [2],
-                          integ_domain = 'global',
-                          slice = roof_0[:, :, :, :, :, :]),
-                 BCSlice(var = 'f', value = material_density_roof, dims = [2],
-                          integ_domain = 'global',
-                          slice = roof_1[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_roof, dims=[2],
+                          integ_domain='global',
+                          slice=roof_0[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_roof, dims=[2],
+                          integ_domain='global',
+                          slice=roof_1[:, :, :, :, :, :]),
 
-                 # own weight column 
+                 # own weight column
                  #
-                 BCSlice(var = 'f', value = material_density_column, dims = [2],
-                          integ_domain = 'global',
-                          slice = col_0[:, :, :, :, :, :]),
-                 BCSlice(var = 'f', value = material_density_column, dims = [2],
-                          integ_domain = 'global',
-                          slice = col_1[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_column, dims=[2],
+                          integ_domain='global',
+                          slice=col_0[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_column, dims=[2],
+                          integ_domain='global',
+                          slice=col_1[:, :, :, :, :, :]),
 
-                 # additional surface load (Ausbaulasten) 
+                 # additional surface load (Ausbaulasten)
                  # NOTE: no unwanted additional overweight of 2cm thickness!!!
                  #
-                 BCSlice(var = 'f', value = add_surf_load, #+ add_t,
-                          dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0),
-                 BCSlice(var = 'f', value = add_surf_load, #+ add_t,
-                          dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1),
+                 BCSlice(var='f', value=add_surf_load,  # + add_t,
+                          dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0),
+                 BCSlice(var='f', value=add_surf_load,  # + add_t,
+                          dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1),
 
-                 # edge load (fassade) 
+                 # edge load (fassade)
                  #
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = bottom_edge_roof_0),
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = bottom_edge_roof_1),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=bottom_edge_roof_0),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=bottom_edge_roof_1),
 
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = left_edge_roof_0),
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = right_edge_roof_1),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=left_edge_roof_0),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=right_edge_roof_1),
 
                  # weight of linking construction:
                  #
-                 BCSlice(var = 'f', value = link_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = right_edge_roof_0),
-                 BCSlice(var = 'f', value = link_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = left_edge_roof_1),
-                 BCSlice(var = 'f', value = link_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = top_edge_roof_0),
-                 BCSlice(var = 'f', value = link_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = top_edge_roof_1)
+                 BCSlice(var='f', value=link_load, dims=[2],
+                          integ_domain='global',
+                          slice=right_edge_roof_0),
+                 BCSlice(var='f', value=link_load, dims=[2],
+                          integ_domain='global',
+                          slice=left_edge_roof_1),
+                 BCSlice(var='f', value=link_load, dims=[2],
+                          integ_domain='global',
+                          slice=top_edge_roof_0),
+                 BCSlice(var='f', value=link_load, dims=[2],
+                          integ_domain='global',
+                          slice=top_edge_roof_1)
 
                  ]
 
 
-    lc_g_own_weight_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_own_weight_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_own_weight_list(self):
         '''loading case: own weight
         '''
-        #slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         col_0, col_1 = self.fe_grid_columns
@@ -1130,34 +1163,34 @@ class MRtwo(MushRoofModel):
 
         # own weight (as material density)
         #
-        material_density_roof = -22.4e-3    # [MN/m^3]
-        material_density_column = -26e-3    # [MN/m^3]
+        material_density_roof = -22.4e-3  # [MN/m^3]
+        material_density_column = -26e-3  # [MN/m^3]
 
-        return [ # own weight roof 
+        return [  # own weight roof
                  #
-                 BCSlice(var = 'f', value = material_density_roof, dims = [2],
-                          integ_domain = 'global',
-                          slice = roof_0[:, :, :, :, :, :]),
-                 BCSlice(var = 'f', value = material_density_roof, dims = [2],
-                          integ_domain = 'global',
-                          slice = roof_1[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_roof, dims=[2],
+                          integ_domain='global',
+                          slice=roof_0[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_roof, dims=[2],
+                          integ_domain='global',
+                          slice=roof_1[:, :, :, :, :, :]),
 
-                 # own weight column 
+                 # own weight column
                  #
-                 BCSlice(var = 'f', value = material_density_column, dims = [2],
-                          integ_domain = 'global',
-                          slice = col_0[:, :, :, :, :, :]),
-                 BCSlice(var = 'f', value = material_density_column, dims = [2],
-                          integ_domain = 'global',
-                          slice = col_1[:, :, :, :, :, :]) ]
+                 BCSlice(var='f', value=material_density_column, dims=[2],
+                          integ_domain='global',
+                          slice=col_0[:, :, :, :, :, :]),
+                 BCSlice(var='f', value=material_density_column, dims=[2],
+                          integ_domain='global',
+                          slice=col_1[:, :, :, :, :, :]) ]
 
 
-    lc_g_surf_load_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_surf_load_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_surf_load_list(self):
         '''loading case: additional surface loads ('Ausbaulasten')
         '''
-        #slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         upper_surf_0 = roof_0[:, :, -1, :, :, -1]
@@ -1167,24 +1200,24 @@ class MRtwo(MushRoofModel):
 
         # Ausbaulasten
         #
-        add_surf_load = -0.2e-3             # [MN/m^2]
+        add_surf_load = -0.2e-3  # [MN/m^2]
 
-        return [ # additional surface load (Ausbaulasten) 
+        return [  # additional surface load (Ausbaulasten)
                  #
-                 BCSlice(var = 'f', value = add_surf_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0),
-                 BCSlice(var = 'f', value = add_surf_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1) ]
+                 BCSlice(var='f', value=add_surf_load, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0),
+                 BCSlice(var='f', value=add_surf_load, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1) ]
 
 
-    lc_g_tol_sym_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_tol_sym_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_tol_sym_list(self):
         '''loading case: 2cm additional concrete )
         '''
-        #slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         upper_surf_0 = roof_0[:, :, -1, :, :, -1]
@@ -1194,25 +1227,25 @@ class MRtwo(MushRoofModel):
 
         # additional own weight due to 2cm overthickness
         #
-        material_density_roof = -22.4e-3    # [MN/m^3]
-        add_t = 0.02 * material_density_roof# [MN/m^2]
+        material_density_roof = -22.4e-3  # [MN/m^3]
+        add_t = 0.02 * material_density_roof  # [MN/m^2]
 
-        return [ # additional surface load (tolerance 2cm) 
+        return [  # additional surface load (tolerance 2cm)
                  #
-                 BCSlice(var = 'f', value = add_t, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0),
-                 BCSlice(var = 'f', value = add_t, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1) ]
+                 BCSlice(var='f', value=add_t, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0),
+                 BCSlice(var='f', value=add_t, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1) ]
 
 
-    lc_g_tol_asym_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_tol_asym_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_tol_asym_list(self):
         '''loading case: 2cm additional concrete - only at one side, e.g. roof_0)
         '''
-        #slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         upper_surf_0 = roof_0[:, :, -1, :, :, -1]
@@ -1221,22 +1254,22 @@ class MRtwo(MushRoofModel):
 
         # additional own weight due to 2cm overthickness
         #
-        material_density_roof = -22.4e-3    # [MN/m^3]
-        add_t = 0.02 * material_density_roof# [MN/m^2]
+        material_density_roof = -22.4e-3  # [MN/m^3]
+        add_t = 0.02 * material_density_roof  # [MN/m^2]
 
-        return [ # additional surface load (Ausbaulasten) 
+        return [  # additional surface load (Ausbaulasten)
                  #
-                 BCSlice(var = 'f', value = add_t, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0) ]
+                 BCSlice(var='f', value=add_t, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0) ]
 
 
-    lc_g_edge_load_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_g_edge_load_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_g_edge_load_list(self):
         '''loading case: edge loads - fassade
         '''
-        #slices   
+        # slices
         #
         roof_0 , roof_1 = self.fe_grid_roofs
         bottom_edge_roof_0 = roof_0[:, 0, -1, :, 0, -1]
@@ -1251,48 +1284,48 @@ class MRtwo(MushRoofModel):
 
         # edge load (fassade clamping)
         #
-        edge_load = -0.35e-3                # [MN/m]
+        edge_load = -0.35e-3  # [MN/m]
 
-        return [ # edge load (fassade) 
+        return [  # edge load (fassade)
                  #
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = bottom_edge_roof_0),
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = bottom_edge_roof_1),
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = left_edge_roof_0),
-                 BCSlice(var = 'f', value = edge_load, dims = [2],
-                          integ_domain = 'global',
-                          slice = right_edge_roof_1)]
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=bottom_edge_roof_0),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=bottom_edge_roof_1),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=left_edge_roof_0),
+                 BCSlice(var='f', value=edge_load, dims=[2],
+                          integ_domain='global',
+                          slice=right_edge_roof_1)]
 
 
-    lc_s_sym_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_s_sym_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_s_sym_list(self):
         '''loading case: snow symmetric
         '''
-        #slices   
+        # slices
         roof_0 , roof_1 = self.fe_grid_roofs
         upper_surf_0 = roof_0[:, :, -1, :, :, -1]
         upper_surf_1 = roof_1[:, :, -1, :, :, -1]
-        #loads
-        s_sysm = -0.85e-3 # [MN/m^2] 
-        return [ BCSlice(var = 'f', value = s_sysm, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0),
-                 BCSlice(var = 'f', value = s_sysm, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1), ]
+        # loads
+        s_sysm = -0.85e-3  # [MN/m^2]
+        return [ BCSlice(var='f', value=s_sysm, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0),
+                 BCSlice(var='f', value=s_sysm, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1), ]
 
-    lc_s_asym_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_s_asym_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_s_asym_list(self):
         '''loading case: snow asymmetric
         '''
-        #slices   
+        # slices
         roof_0 , roof_1 = self.fe_grid_roofs
         upper_surf_0_l = roof_0[:self.n_elems_xy_quarter, :, -1, :, :, -1]
         upper_surf_0_r = roof_0[self.n_elems_xy_quarter:, :, -1, :, :, -1]
@@ -1300,26 +1333,26 @@ class MRtwo(MushRoofModel):
         upper_surf_1_l = roof_1[:self.n_elems_xy_quarter, :, -1, :, :, -1]
         upper_surf_1_r = roof_1[self.n_elems_xy_quarter:, :, -1, :, :, -1]
 
-        #loads
-        s_left = -0.425e-3 # [MN/m^2] 
-        s_right = -0.85e-3 # [MN/m^2] 
+        # loads
+        s_left = -0.425e-3  # [MN/m^2]
+        s_right = -0.85e-3  # [MN/m^2]
 
-        return [# left side in z-direction 
-                BCSlice(var = 'f', value = s_left, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0_l),
-                BCSlice(var = 'f', value = s_left, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1_l),
-                # right side in z-direction            
-                BCSlice(var = 'f', value = s_right, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_0_r),
-                BCSlice(var = 'f', value = s_right, dims = [2],
-                          integ_domain = 'global',
-                          slice = upper_surf_1_r), ]
+        return [  # left side in z-direction
+                BCSlice(var='f', value=s_left, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0_l),
+                BCSlice(var='f', value=s_left, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1_l),
+                # right side in z-direction
+                BCSlice(var='f', value=s_right, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_0_r),
+                BCSlice(var='f', value=s_right, dims=[2],
+                          integ_domain='global',
+                          slice=upper_surf_1_r), ]
 
-    lc_w_asym_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_w_asym_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_w_asym_list(self):
         '''loading case: wind asymmetric
@@ -1330,14 +1363,14 @@ class MRtwo(MushRoofModel):
         left_edge = r0[ 0, :, -1, 0, :, -1 ]
         right_edge = r1[-1, :, -1, 0, :, -1 ]
         # this slice corresponds to a simplification (save side)
-        # (in reality the high value of the edge wind load q_w = -1,56 kN/m is 
+        # (in reality the high value of the edge wind load q_w = -1,56 kN/m is
         # acting only on a distance of 1,60m; with this slice this value is acting up on a
         # distance of 'length_xy_quarter = 3,5!
         #
 #        bottom_edge_0_left = r0[ :n_e_q, 0, -1, :, 0, -1 ]
 #        bottom_edge_0_right = r0[n_e_q:, 0, -1, :, 0, -1]
 
-        # in reality high value of  -1,56 kN/m is acting only on a distance 
+        # in reality high value of  -1,56 kN/m is acting only on a distance
         # of 1,60m along the edge; in the model this value is acting up on a
         # distance of 'length_xy_quarter = 3,5/2 = 1,75m! (not including the last node in slice!)
         # use 'math.ceil' to round up values to the save side: ceil(13 elems/2) = ceil( 6.5 elems) = use 7 elems
@@ -1352,51 +1385,62 @@ class MRtwo(MushRoofModel):
         face_1_right = r1[ n_e_q:, :, -1, :, :, -1 ]
 
         # loads
-        w_left_edge = 0.91e-3 # [MN/m]
-        w_right_edge = 0.39e-3 # [MN/m]
-        w_bottom_edge_0_left = -1.56e-3 # [Mn/m] tension
-        w_bottom_edge_0_right = -1.04e-3 # [Mn/m] tension
-        w_bottom_edge_1 = -0.65e-3 # [Mn/m]tension
-        w_face_0_left = 0.89e-3 # MN/m^2
-        w_face_0_right = -0.13e-3 # MN/m^2
-        w_face_1_left = 0.72e-3 # MN/m^2
+        w_left_edge = 1.28e-3  # [MN/m] (=0.91*1.4)
+#        w_left_edge = 0.91e-3  # [MN/m]
+
+        w_right_edge = 0.55e-3  # [MN/m] (=0.39*1.4)
+#        w_right_edge = 0.39e-3  # [MN/m]
+
+        w_bottom_edge_0_left = -1.56e-3  # [Mn/m] tension
+        w_bottom_edge_0_right = -1.04e-3  # [Mn/m] tension
+        #
+        w_bottom_edge_1 = -0.56e-3  # [Mn/m]tension
+#        w_bottom_edge_1 = -0.65e-3  # [Mn/m]tension
+
+        w_face_0_left = 0.95e-3  # MN/m^2
+#        w_face_0_left = 0.89e-3  # MN/m^2
+
+        w_face_1_left = 0.76e-3  # MN/m^2
+#        w_face_1_left = 0.72e-3  # MN/m^2
+
+        w_face_0_right = -0.13e-3  # MN/m^2
         w_face_1_right = w_face_0_right
 
-        return [   # left edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = left_edge,
-                            value = w_left_edge),
+        return [  # left edge - x direction
+                   BCSlice(var='f'  , dims=[0],
+                            slice=left_edge,
+                            value=w_left_edge),
                    # right edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = right_edge,
-                            value = w_right_edge),
+                   BCSlice(var='f'  , dims=[0],
+                            slice=right_edge,
+                            value=w_right_edge),
                    # bottom edge - y direction
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_left,
-                            value = w_bottom_edge_0_left),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_right,
-                            value = w_bottom_edge_0_right),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_1,
-                            value = w_bottom_edge_1),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_left,
-                            value = w_face_0_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_right,
-                            value = w_face_0_right),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_left,
-                            value = w_face_1_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_right,
-                            value = w_face_1_right),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_left,
+                            value=w_bottom_edge_0_left),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_right,
+                            value=w_bottom_edge_0_right),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_1,
+                            value=w_bottom_edge_1),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_left,
+                            value=w_face_0_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_right,
+                            value=w_face_0_right),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_left,
+                            value=w_face_1_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_right,
+                            value=w_face_1_right),
                 ]
 
-    lc_w_pos_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_w_pos_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_w_pos_list(self):
         '''loading case: wind symmetric pressure
@@ -1406,7 +1450,7 @@ class MRtwo(MushRoofModel):
         n_e_q = self.n_elems_xy_quarter
         left_edge = r0[ 0, :, -1, 0, :, -1 ]
         right_edge = r1[-1, :, -1, 0, :, -1 ]
-        # the high value of  q_w = -1,56 kN/m is acting only on a distance 
+        # the high value of  q_w = -1,56 kN/m is acting only on a distance
         # of 1,60m along the edge; in the model this value is acting up on a
         # distance of 'length_xy_quarter = 3,5/2 = 1,75m! (not including the last node in slice!)
         # use 'math.ceil' to round up values to the save side, e.g.
@@ -1421,51 +1465,51 @@ class MRtwo(MushRoofModel):
         face_1_right = r1[ n_e_q:, :, -1, :, :, -1 ]
 
         # loads
-        w_left_edge = 0.91e-3 # [MN/m] pressure
-        w_right_edge = 0.39e-3 # [MN/m] tension
-        w_bottom_edge_0_left = -1.56e-3 # [Mn/m] tension
-        w_bottom_edge_0_rigth = -1.04e-3 # [Mn/m] tension
-        w_bottom_edge_1 = -0.65e-3 # [Mn/m]tension
-        w_face_0_left = 0.89e-3 # MN/m^2 tension
-        w_face_0_right = -0.13e-3 # MN/m^2 pressure
-        w_face_1_left = w_face_0_right # MN/m^2 pressure
-        w_face_1_right = w_face_0_right # MN/m^2 pressure
+        w_left_edge = 0.91e-3  # [MN/m] pressure
+        w_right_edge = 0.39e-3  # [MN/m] tension
+        w_bottom_edge_0_left = -1.56e-3  # [Mn/m] tension
+        w_bottom_edge_0_rigth = -1.04e-3  # [Mn/m] tension
+        w_bottom_edge_1 = -0.65e-3  # [Mn/m]tension
+        w_face_0_left = 0.89e-3  # MN/m^2 tension
+        w_face_0_right = -0.13e-3  # MN/m^2 pressure
+        w_face_1_left = w_face_0_right  # MN/m^2 pressure
+        w_face_1_right = w_face_0_right  # MN/m^2 pressure
 
-        return [   # left edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = left_edge,
-                            value = w_left_edge),
+        return [  # left edge - x direction
+                   BCSlice(var='f'  , dims=[0],
+                            slice=left_edge,
+                            value=w_left_edge),
                    # right edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = right_edge,
-                            value = w_right_edge),
+                   BCSlice(var='f'  , dims=[0],
+                            slice=right_edge,
+                            value=w_right_edge),
                    # bottom edge - y direction
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_left,
-                            value = w_bottom_edge_0_left),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_right,
-                            value = w_bottom_edge_0_rigth),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_1,
-                            value = w_bottom_edge_1),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_left,
-                            value = w_face_0_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_right,
-                            value = w_face_0_right),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_left,
-                            value = w_face_1_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_right,
-                            value = w_face_1_right),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_left,
+                            value=w_bottom_edge_0_left),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_right,
+                            value=w_bottom_edge_0_rigth),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_1,
+                            value=w_bottom_edge_1),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_left,
+                            value=w_face_0_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_right,
+                            value=w_face_0_right),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_left,
+                            value=w_face_1_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_right,
+                            value=w_face_1_right),
                 ]
 
-    lc_w_neg_list = Property(List, depends_on = '+ps_levels, +input')
+    lc_w_neg_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_lc_w_neg_list(self):
         '''loading case: wind symmetric suction
@@ -1475,7 +1519,7 @@ class MRtwo(MushRoofModel):
         n_e_q = self.n_elems_xy_quarter
         left_edge = r0[ 0, :, -1, 0, :, -1 ]
         right_edge = r1[-1, :, -1, 0, :, -1 ]
-        # the high value of  q_w = -1,56 kN/m is acting only on a distance 
+        # the high value of  q_w = -1,56 kN/m is acting only on a distance
         # of 1,60m along the edge; in the model this value is acting up on a
         # distance of 'length_xy_quarter = 3,5/2 = 1,75m! (not including the last node in slice!)
         # use 'math.ceil' to round up values to the save side, e.g.
@@ -1490,51 +1534,51 @@ class MRtwo(MushRoofModel):
         face_1_right = r1[ n_e_q:, :, -1, :, :, -1 ]
 
         # loads
-        w_left_edge = 0.91e-3 # [MN/m] pressure
-        w_right_edge = 0.39e-3 # [MN/m] tension
-        w_bottom_edge_0_left = -1.56e-3 # [Mn/m] tension ("Sogspitze")
-        w_bottom_edge_0_rigth = -1.04e-3 # [Mn/m] tension
-        w_bottom_edge_1 = -0.65e-3 # [Mn/m]tension
-        w_face_0_left = 0.89e-3 # [MN/m^2] tension
-        w_face_0_right = 0.39e-3 # [MN/m^2] tension
-        w_face_1_left = 0.72e-3 # [MN/m^2] tension
-        w_face_1_right = 0.39e-3 # [MN/m^2]tension
+        w_left_edge = 0.91e-3  # [MN/m] pressure
+        w_right_edge = 0.39e-3  # [MN/m] tension
+        w_bottom_edge_0_left = -1.56e-3  # [Mn/m] tension ("Sogspitze")
+        w_bottom_edge_0_rigth = -1.04e-3  # [Mn/m] tension
+        w_bottom_edge_1 = -0.65e-3  # [Mn/m]tension
+        w_face_0_left = 0.89e-3  # [MN/m^2] tension
+        w_face_0_right = 0.39e-3  # [MN/m^2] tension
+        w_face_1_left = 0.72e-3  # [MN/m^2] tension
+        w_face_1_right = 0.39e-3  # [MN/m^2]tension
 
-        return [   # left edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = left_edge,
-                            value = w_left_edge),
+        return [  # left edge - x direction
+                   BCSlice(var='f'  , dims=[0],
+                            slice=left_edge,
+                            value=w_left_edge),
                    # right edge - x direction
-                   BCSlice(var = 'f'  , dims = [0],
-                            slice = right_edge,
-                            value = w_right_edge),
+                   BCSlice(var='f'  , dims=[0],
+                            slice=right_edge,
+                            value=w_right_edge),
                    # bottom edge - y direction
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_left,
-                            value = w_bottom_edge_0_left),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_0_right,
-                            value = w_bottom_edge_0_rigth),
-                   BCSlice(var = 'f'  , dims = [1],
-                            slice = bottom_edge_1,
-                            value = w_bottom_edge_1),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_left,
-                            value = w_face_0_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_0_right,
-                            value = w_face_0_right),
-                   # upper face left - left 
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_left,
-                            value = w_face_1_left),
-                   BCSlice(var = 'f'  , dims = [2],
-                            slice = face_1_right,
-                            value = w_face_1_right),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_left,
+                            value=w_bottom_edge_0_left),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_0_right,
+                            value=w_bottom_edge_0_rigth),
+                   BCSlice(var='f'  , dims=[1],
+                            slice=bottom_edge_1,
+                            value=w_bottom_edge_1),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_left,
+                            value=w_face_0_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_0_right,
+                            value=w_face_0_right),
+                   # upper face left - left
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_left,
+                            value=w_face_1_left),
+                   BCSlice(var='f'  , dims=[2],
+                            slice=face_1_right,
+                            value=w_face_1_right),
                 ]
 
-#    
+#
 #    lc_shrinkage = Property( List, input = True, depends_on = '+ps_levels, +input' )
 #    @cached_property
 #    def _get_lc_shrinkage( self ):
@@ -1561,7 +1605,7 @@ class MRtwo(MushRoofModel):
     # time loop
     #----------------------------------------------------
 
-    tloop = Property(depends_on = '+ps_levels, +input')
+    tloop = Property(depends_on='+ps_levels, +input')
     @cached_property
     def _get_tloop(self):
 
@@ -1569,33 +1613,33 @@ class MRtwo(MushRoofModel):
         columns = self.fe_grid_columns
         plates = self.fe_grid_plates
 
-        ts = TS(sdomain = roofs + columns + plates,
-                 dof_resultants = True,
-                 bcond_list = 
+        ts = TS(sdomain=roofs + columns + plates,
+                 dof_resultants=True,
+                 bcond_list=
 
                             # boundary conditions of the selected loading case
                             # e.g "lc_g_list", "lc_s_sym_list", etc.
-                              self.lc_list + 
+                              self.lc_list +
 
                             # links (kinematic constraints and symmetric assumptions)
-                              self.bc_roof_link_list + 
-                              self.bc_plate_column_link_list + 
-                              self.bc_plate_roof_link_list + 
-                              self.bc_roof_top_roof_low_link_list + 
+                              self.bc_roof_link_list +
+                              self.bc_plate_column_link_list +
+                              self.bc_plate_roof_link_list +
+                              self.bc_roof_top_roof_low_link_list +
 
-                            # column at bottom as clamped support (compare only: hinged optional)                              
+                            # column at bottom as clamped support (compare only: hinged optional)
                               self.bc_col_clamped_list,
 #                              self.bc_col_hinge_list ,
 
-                 rtrace_list = self.rtrace_list
+                 rtrace_list=self.rtrace_list
 
                )
 
         # Add the time-loop control
         #
-        tloop = TLoop(tstepper = ts,
-                       tolerance = 1e-4,
-                       tline = self.tline)
+        tloop = TLoop(tstepper=ts,
+                       tolerance=1e-4,
+                       tline=self.tline)
 
         #----------------------------------------------------------------------------------
         # output slices
@@ -1603,10 +1647,10 @@ class MRtwo(MushRoofModel):
 
         r0, r1 = roofs
 
-        # output slices 
-        # @todo: did not manage to create external method would be 
+        # output slices
+        # @todo: did not manage to create external method would be
         #        better for input problems and long method loading before evaluation
-        # 
+        #
         # slices r0 dofs
         #
         self.dofs_r0_right = r0[-1, :, -1, -1, :, -1].dofs
@@ -1651,10 +1695,10 @@ class MRtwo(MushRoofModel):
 if __name__ == '__main__':
 
 #    do = 'export_hinge'
-#    do = 'eval' 
+#    do = 'eval'
     do = 'ui'
-#    do = 'ps' 
-#    do = 'cs' 
+#    do = 'ps'
+#    do = 'cs'
 
     # NOTE: number of elems used for last section defined in shift array is derived from n_elems_xy quarter
 
@@ -1663,45 +1707,45 @@ if __name__ == '__main__':
                       # needed for option 'shift_elem' (set to 'True' by default).
 
                       # 'link_case' = 'equal_100cm_7m'
-                      shift_array = array([   [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
+                      shift_array=array([   [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
                                  [1.0, 1.0, 2],
                                  [2.0, 2.0, 4],
                                  [3.0, 3.0, 4],
                                  ]),
 
-                      # add edge center node (e.g. position [0. 0.] in shift array) 
+                      # add edge center node (e.g. position [0. 0.] in shift array)
                       # to the linking-list that defines the connection points
                       # between the roofs
                       #
-                      link_edge_center = True,
+                      link_edge_center=True,
 
                       # 'equal_100cm_7m'
                       #
-                      n_elems_xy_quarter = 13,
+                      n_elems_xy_quarter=13,
 
-                      # the first coordinate in shift array defines 
+                      # the first coordinate in shift array defines
                       # the node needed to link the column and the roof.
-                      # It is not used for linking between the roofs.                      
+                      # It is not used for linking between the roofs.
                       #
-                      not_linked_elem = 0,
+                      not_linked_elem=0,
 
                       # specify linking dofs
                       #
-                      link_type = 'exc_V_ip',
+                      link_type='exc_V_ip',
 #                      link_type = 'inc_V_ip'
 
-                      # loading: 
+                      # loading:
                       #
-#                      lc = 'lc_w_asym' )
+                      lc='lc_w_asym')
 #                      lc = 'lc_s_asym' )
-                      lc = 'lc_g')
+#                      lc='lc_g')
 
 #                      lc = 'lc_g_own_weight' )
 #                      lc = 'lc_g_surf_load' )
 #                      lc = 'lc_g_edge_load')
 #                      lc = 'lc_g_tol_asym')
 #                      lc = 'lc_g_tol_sym')
-#                      
+#
 #                      lc =  'lc_shrink' )
 #                      lc = 'lc_s_sym' )
 #                      lc = 'lc_w_pos' )
@@ -1713,7 +1757,7 @@ if __name__ == '__main__':
         print '*** eval ***'
         sim_model.peval()
 
-        # get the internal forces at the bottom support of the columns and 
+        # get the internal forces at the bottom support of the columns and
         # calculate the resulting moments and normal forces.
         # @todo: correction needed!!!
         # the internal forces are currently scliced twice in each adjacent
@@ -1752,19 +1796,19 @@ if __name__ == '__main__':
 
         # export
         #
-        sim_model.export_edge_u_data(filename = link_type + '_' + link_case + '_u_' + lc + '.csv')
-        sim_model.export_int_force_data(filename = link_type + '_' + link_case + '_hf_' + lc + '.csv')
+#        sim_model.export_edge_u_data(filename=link_type + '_' + link_case + '_u_' + lc + '.csv')
+#        sim_model.export_int_force_data(filename=link_type + '_' + link_case + '_hf_' + lc + '.csv')
 
         # visualisation
-        # 
+        #
         from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp(ibv_resource = sim_model)
+        app = IBVPyApp(ibv_resource=sim_model)
         app.main()
 
 
     if do == 'export_hinge':
 
-        #loading cases
+        # loading cases
         #         !!!! lc_shrink not working automatically needs to be done over mushroof_model class!!!!!
         #
         lc_list = [
@@ -1811,7 +1855,7 @@ if __name__ == '__main__':
 
 
         # shift_array_dict for the different types of links
-        #       
+        #
         shift_array_dict = {'equal_88cm':
                             array([[0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
                                  [0.45, 0.45 , 1],
@@ -1981,13 +2025,13 @@ if __name__ == '__main__':
 
                         # export
                         #
-                        sim_model.export_int_force_data(filename = link_type + '_' + link_case + '_hf_' + lc + '.csv')
-                        sim_model.export_edge_u_data(filename = link_type + '_' + link_case + '_u_' + lc + '.csv')
+                        sim_model.export_int_force_data(filename=link_type + '_' + link_case + '_hf_' + lc + '.csv')
+                        sim_model.export_edge_u_data(filename=link_type + '_' + link_case + '_u_' + lc + '.csv')
 
     # parametric studies
     #
     elif do == 'ps':
         print "*** ps ***"
-        sim_ps = SimPStudy(sim_model = sim_model)
+        sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
 

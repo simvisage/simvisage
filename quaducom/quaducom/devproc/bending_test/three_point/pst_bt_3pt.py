@@ -100,8 +100,8 @@ if __name__ == '__main__':
     do = 'validation'
 #     do = 'show_last_results'
 
-    test_series = 'BT-12c'
-#     test_series = 'BT-6c'
+#    test_series = 'BT-12c'
+     test_series = 'BT-6c'
 
     #-----------------------------------------
     # BT-3PT-12c-6cm; L = 1.25m; L0 = 1.15 cm t = 6 cm
@@ -169,20 +169,20 @@ if __name__ == '__main__':
 #                               calibration_test='TT-6c-2cm-0-TU-V3_bs1_age28_Em19800_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs2_age28_Em19800_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Em19800_nu0.2_nsteps100',
-                               calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Em19800_nu0.2_nsteps100',
+#                               calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Em19800_nu0.2_nsteps100',
 
                                # Ec = 22213.2 MPa
                                #
 #                               calibration_test='TT-6c-2cm-0-TU-V3_bs1_age28_Ec22213.2_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs2_age28_Ec22213.2_nu0.2_nsteps100',
 #                               calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Ec22213.2_nu0.2_nsteps100',
-#                                calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
+                                calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
 
                                age=28,
                                #
 #                                 thickness=0.020,
 #                                 thickness=0.0186,
-                                thickness=0.0171,
+                               thickness=0.02,
                                length=0.46,
                                width=0.10,
                                #

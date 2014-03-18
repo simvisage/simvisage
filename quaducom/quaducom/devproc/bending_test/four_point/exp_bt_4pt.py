@@ -125,7 +125,7 @@ class ExpBT4PT(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    # effective length of the bending test specimen 
+    # effective length of the bending test specimen
     # (does not include the 5cm part at each side of the specimens that leaps over the support lines)
     #
     length = Float(1.50, unit='m', input=True, table_field=True,
@@ -171,10 +171,10 @@ class ExpBT4PT(ExType):
         return ccs
 
     #--------------------------------------------------------------------------
-    # Get properties of the composite 
+    # Get properties of the composite
     #--------------------------------------------------------------------------
 
-    # E-modulus of the composite at the time of testing 
+    # E-modulus of the composite at the time of testing
     E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
@@ -182,7 +182,7 @@ class ExpBT4PT(ExType):
     # E-modulus of the composite after 28 days
     E_c28 = DelegatesTo('ccs', listenable=False)
 
-    # reinforcement ration of the composite 
+    # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
 
@@ -197,15 +197,15 @@ class ExpBT4PT(ExType):
                       ironing_param=True)
 
     data_array_ironed = Property(Array(float),
-                                  depends_on='data_array, +ironing_param, +axis_selection') 
+                                  depends_on='data_array, +ironing_param, +axis_selection')
     @cached_property
     def _get_data_array_ironed(self):
-        '''remove the jumps in the displacement curves 
-        due to resetting the displacement gauges. 
+        '''remove the jumps in the displacement curves
+        due to resetting the displacement gauges.
         '''
         print '*** curve ironing activated ***'
 
-        # each column from the data array corresponds to a measured parameter 
+        # each column from the data array corresponds to a measured parameter
         # e.g. displacement at a given point as function of time u = f(t))
         #
         data_array_ironed = copy(self.data_array)
@@ -226,14 +226,14 @@ class ExpBT4PT(ExType):
                 # get the difference between each point and its successor
                 jump_arr = data_arr[1:] - data_arr[0:-1]
 
-                # get the range of the measured data 
+                # get the range of the measured data
                 data_arr_range = max(data_arr) - min(data_arr)
 
                 # determine the relevant criteria for a jump
                 # based on the data range and the specified tolerances:
                 jump_crit = self.jump_rtol * data_arr_range
 
-                # get the indexes in 'data_column' after which a 
+                # get the indexes in 'data_column' after which a
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
@@ -253,7 +253,7 @@ class ExpBT4PT(ExType):
 
     def process_source_data(self):
         '''read in the measured data from file and assign
-        attributes after array processing.        
+        attributes after array processing.
         If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
@@ -276,7 +276,7 @@ class ExpBT4PT(ExType):
         self.Kraft -= self.Kraft[0]
         self.Kraft *= -1
         # vertical displacement at midspan [mm]:
-        # (reset displacement gauge by its initial value and change sign 
+        # (reset displacement gauge by its initial value and change sign
         # in order to return a positive value for a displacement)
         self.DB_mi -= self.DB_mi[0]
         self.DB_mi *= -1
@@ -322,7 +322,7 @@ class ExpBT4PT(ExType):
         t = self.thickness
         w = self.width
         L = self.length
-        
+
         # coposite E-modulus
         #
         E_c = self.E_c
@@ -335,7 +335,7 @@ class ExpBT4PT(ExType):
 
         # [MN/m]=[kN/mm] bending stiffness with respect to a force applied at center of the beam
         #
-        K_bending_elast_c = 1 / delta_11  
+        K_bending_elast_c = 1 / delta_11
 #         print 'K_bending_elast_c', K_bending_elast_c
 
         return K_bending_elast_c
@@ -349,7 +349,7 @@ class ExpBT4PT(ExType):
         t = self.thickness
         w = self.width
         L = self.length
-        
+
         # coposite E-modulus
         #
         E_c = self.E_c
@@ -362,7 +362,7 @@ class ExpBT4PT(ExType):
 
         # [MN/m]=[kN/mm] bending stiffness with respect to a force applied at center of the beam
         #
-        K_bending_elast_thirdpoints = 1 / delta_11  
+        K_bending_elast_thirdpoints = 1 / delta_11
 #         print 'K_bending_elast', K_bending_elast
 
         return K_bending_elast_thirdpoints
@@ -390,7 +390,7 @@ class ExpBT4PT(ExType):
         '''get the index of the maximum force'''
         # NOTE: processed data returns positive values for force and displacement
         return argmax(self.Kraft)
-    
+
     def _plot_force_deflection_center(self, axes, offset_w=0.):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
@@ -434,9 +434,9 @@ class ExpBT4PT(ExType):
         '''
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
-        # displacement left 
+        # displacement left
         w_l_asc = self.DB_li[:self.max_force_idx + 1]
-        # displacement rigth 
+        # displacement rigth
         w_r_asc = self.DB_re[:self.max_force_idx + 1]
 
 #        # average
@@ -454,11 +454,11 @@ class ExpBT4PT(ExType):
         '''
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
-        # compressive strain (top) [permile] 
-        eps_c = self.DMS_o [:self.max_force_idx + 1] 
-        # tensile strain (bottom) [permile]; 
+        # compressive strain (top) [permile]
+        eps_c = self.DMS_o [:self.max_force_idx + 1]
+        # tensile strain (bottom) [permile];
         # measuring length l_0 = 0.45m
-        eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45 
+        eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45
 
         # add curves
         #
@@ -477,7 +477,7 @@ class ExpBT4PT(ExType):
         and compare with curve after data has been processed by ironing procedure
         '''
         # get only the ascending branch of the response curve
-        F_asc = self.Kraft[:self.max_force_idx + 1]    
+        F_asc = self.Kraft[:self.max_force_idx + 1]
         w_ironed_asc = self.DB_mi[:self.max_force_idx + 1]
         w_orig_asc = self.DB_mi_orig[:self.max_force_idx + 1]
 
@@ -492,6 +492,11 @@ class ExpBT4PT(ExType):
         ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
+
+#        fw_arr = np.hstack([F_asc[:, None], w_ironed_asc[:, None]])
+#        print 'fw_arr.shape', fw_arr.shape
+#        np.savetxt('BT-4PT-12c-6cm-TU-SH4-V1_f-w_interpolated.csv', fw_arr, delimiter='    ')
+
 
     def _plot_ironed_orig_force_deflection_left(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
@@ -526,7 +531,7 @@ class ExpBT4PT(ExType):
         after data has been processed by ironing procedure (remove resetting jumps of the displacement gauges)
         '''
         # get only the ascending branch of the response curve
-        F_asc = self.Kraft[:self.max_force_idx + 1]    
+        F_asc = self.Kraft[:self.max_force_idx + 1]
         w_c_ironed_asc = self.DB_mi[:self.max_force_idx + 1]
         w_l_ironed_asc = self.DB_li[:self.max_force_idx + 1]
         w_r_ironed_asc = self.DB_re[:self.max_force_idx + 1]

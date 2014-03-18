@@ -126,14 +126,16 @@ class RandomField(HasStrictTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as p
 
-    rf = RandomField(lacor=0.01,
-                     length=500.,
-                     nx=400,
-                     distribution='Weibull',
-                     shape=12.,
-                     scale=5.0,
-                     loc=0.0,
-                     seed=False)
+    rf = RandomField(seed=False,
+                    lacor=1.,
+                    length=500,
+                    nx=500,
+                    nsim=1,
+                    loc=.0,
+                    shape=100.,
+                    scale=3.4,
+                    distr_type='Weibull'
+                    )
 
     rf.configure_traits()
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
