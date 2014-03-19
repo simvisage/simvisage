@@ -786,14 +786,56 @@ class ExpTTDB(ExType):
 
     # scaleable plotting methods
     #
-    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
-        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-        sig_tex_ironed = self.sig_c_ironed / self.rho_c
-        axes.plot(eps_asc_scaled, sig_tex_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
+        if interpolated == True:
+            # use ironed date (without initial offset)
+            eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            sig_tex_interpolated = self.sig_c_interpolated / self.rho_c
+        else:
+            # use ironed date (still contains initial offset)
+            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            sig_tex_interpolated = self.sig_c_ironed / self.rho_c
+        axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        if plot_analytical_stiffness == True:
+            print 'plot analytical stiffness (K_I and K_IIb)'
+            # plot the stiffness of the composite (K_I) - uncracked state)
+            #
+            K_I = self.E_c / self.rho_c
+            eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_') * xscale
+            sig_lin = array([0, self.sig_tex_max], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+            # plot the stiffness of the garn (K_IIb - cracked state)
+            #
+            E_tex = 180000.
+            K_III = E_tex
+            eps_lin = array([0, self.eps_max], dtype='float_') * xscale
+            sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
-    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1.):
-        eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-        axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
+        if interpolated == True:
+            # use ironed date (without initial offset)
+            eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            axes.plot(eps_asc_scaled, self.sig_c_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        else:
+            # use ironed date (still contains initial offset)
+            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        if plot_analytical_stiffness == True:
+            print 'plot analytical stiffness (K_I and K_IIb)'
+            # plot analytical stiffness
+            K_I = self.E_c  # depending of the testing age
+    #        K_I = self.E_c28
+            eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
+            sig_lin = array([0, self.sig_c_max], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+            # plot the stiffness of the garn (K_IIb - cracked state)
+            #
+            E_tex = 180000.
+            K_III = E_tex * self.rho_c
+            eps_lin = array([0, self.eps_max], dtype='float_') * xscale
+            sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
 
     #---------------------------------

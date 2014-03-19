@@ -771,11 +771,14 @@ def run():
 #                               '2012-04-12_TT-12c-6cm-0-TU_SH4-Aramis3d',
 #                               'TT-12c-6cm-0-TU-SH4-V2.DAT')
 
-#                                 '2012-02-14_TT-12c-6cm-0-TU_SH2',
-#                                 'TT-12c-6cm-0-TU-SH2-V2.DAT')
+#                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                'TT-12c-6cm-0-TU-SH2-V2.DAT')
 
 #                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
+
+                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+                                'TT-12c-6cm-0-TU-SH2-V1.DAT')
 
                                 #-----------------------------------
                                 # tests for 'BT-3PT-6c-2cm-TU_bs'
@@ -799,8 +802,8 @@ def run():
                                 # tests for 'TT-6c-2cm-90-TU'
                                 #-----------------------------------
                                 #
-                                '2013-05-22_TTb-6c-2cm-90-TU-V3_bs1',
-                                'TTb-6c-2cm-90-TU-V3_bs1.DAT')
+#                                '2013-05-22_TTb-6c-2cm-90-TU-V3_bs1',
+#                                'TTb-6c-2cm-90-TU-V3_bs1.DAT')
 
 #                               '2013-05-17_TT-6c-2cm-0-TU_bs1',
 #                               'TT-6c-2cm-90-TU-V3_bs1.DAT')
@@ -856,6 +859,9 @@ def run():
         #
         E_c = 22413.6
 
+        # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
+        E_m = 18709.5
+
         # set 'nu'
         # @todo: check values stored in 'mat_db'
         #
@@ -883,8 +889,8 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-#        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
-        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
+        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
+#        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 
