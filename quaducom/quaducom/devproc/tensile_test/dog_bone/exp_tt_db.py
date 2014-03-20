@@ -797,15 +797,8 @@ class ExpTTDB(ExType):
     # scaleable plotting methods
     #
     def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
-        if interpolated == True:
-            # use ironed date (without initial offset)
-            eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = self.sig_c_interpolated / self.rho_c
-        else:
-            # use ironed date (still contains initial offset)
-            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = self.sig_c_ironed / self.rho_c
-        axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
+        '''
         if plot_analytical_stiffness == True:
             print 'plot analytical stiffness (K_I and K_IIb)'
             # plot the stiffness of the composite (K_I) - uncracked state)
@@ -821,25 +814,20 @@ class ExpTTDB(ExType):
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_III], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
-
-    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
         if interpolated == True:
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            axes.plot(eps_asc_scaled, self.sig_c_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
-
-#            idx_sig_c_mean = np.where(self.sig_c_interpolated >= 16.607)[0][0]
-#            print 'sig_c_mean = ', self.sig_c_interpolated[idx_sig_c_mean]
-#            eps_c_mean = self.eps_c_interpolated[idx_sig_c_mean]
-#            print 'eps_c_mean = ', eps_c_mean
-
-#            sig_c_interpolated_smoothed = self.sig_c_interpolated_smoothed
-#            eps_c_interpolated_smoothed = self.eps_c_interpolated_smoothed * xscale
-#            axes.plot(eps_c_interpolated_smoothed, sig_c_interpolated_smoothed, color='black', linewidth=linewidth, linestyle=linestyle, label=label)
+            sig_tex_interpolated = self.sig_c_interpolated / self.rho_c
         else:
             # use ironed date (still contains initial offset)
             eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            sig_tex_interpolated = self.sig_c_ironed / self.rho_c
+        axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+
+    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
+        '''plot the composite stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
+        '''
         if plot_analytical_stiffness == True:
             print 'plot analytical stiffness (K_I and K_IIb)'
             print 'E_c', self.E_c
@@ -858,6 +846,25 @@ class ExpTTDB(ExType):
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
+        if interpolated == True:
+            # use ironed date (without initial offset)
+            eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            axes.plot(eps_asc_scaled, self.sig_c_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+#            idx_sig_c_mean = np.where(self.sig_c_interpolated >= 16.607)[0][0]
+#            print 'sig_c_mean = ', self.sig_c_interpolated[idx_sig_c_mean]
+#            eps_c_mean = self.eps_c_interpolated[idx_sig_c_mean]
+#            print 'eps_c_mean = ', eps_c_mean
+
+#            sig_c_interpolated_smoothed = self.sig_c_interpolated_smoothed
+#            eps_c_interpolated_smoothed = self.eps_c_interpolated_smoothed * xscale
+#            axes.plot(eps_c_interpolated_smoothed, sig_c_interpolated_smoothed, color='black', linewidth=linewidth, linestyle=linestyle, label=label)
+        else:
+            # use ironed date (still contains initial offset)
+            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
 
     #---------------------------------
     # view
