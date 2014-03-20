@@ -481,6 +481,11 @@ class ExpTTDB(ExType):
         sig_c_interpolated = np.hstack([0., sig_c_ironed])
         return sig_c_interpolated
 
+    sig_c_interpolated_smoothed = Property(Float, depends_on='input_change')
+    @cached_property
+    def _get_sig_c_interpolated_smoothed(self):
+        return smooth(self.sig_c_interpolated, 15, 'flat')
+
     eps_c_interpolated = Property(Float, depends_on='input_change')
 #                                      ,output=False, table_field=False, unit='MPa')
     @cached_property
@@ -493,6 +498,11 @@ class ExpTTDB(ExType):
         eps_c_interpolated += offset_eps_c
         eps_c_interpolated = np.hstack([0., eps_c_interpolated])
         return eps_c_interpolated
+
+    eps_c_interpolated_smoothed = Property(Float, depends_on='input_change')
+    @cached_property
+    def _get_eps_c_interpolated_smoothed(self):
+        return smooth(self.eps_c_interpolated, 15, 'flat')
 
     sig_tex_ironed = Property(Float, depends_on='input_change')
 #                                      ,output=False, table_field=False, unit='MPa')
@@ -817,14 +827,25 @@ class ExpTTDB(ExType):
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
             axes.plot(eps_asc_scaled, self.sig_c_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+#            idx_sig_c_mean = np.where(self.sig_c_interpolated >= 16.607)[0][0]
+#            print 'sig_c_mean = ', self.sig_c_interpolated[idx_sig_c_mean]
+#            eps_c_mean = self.eps_c_interpolated[idx_sig_c_mean]
+#            print 'eps_c_mean = ', eps_c_mean
+
+#            sig_c_interpolated_smoothed = self.sig_c_interpolated_smoothed
+#            eps_c_interpolated_smoothed = self.eps_c_interpolated_smoothed * xscale
+#            axes.plot(eps_c_interpolated_smoothed, sig_c_interpolated_smoothed, color='black', linewidth=linewidth, linestyle=linestyle, label=label)
         else:
             # use ironed date (still contains initial offset)
             eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
             axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
         if plot_analytical_stiffness == True:
             print 'plot analytical stiffness (K_I and K_IIb)'
+            print 'E_c', self.E_c
             # plot analytical stiffness
             K_I = self.E_c  # depending of the testing age
+            print 'K_I = E_c', self.E_c
     #        K_I = self.E_c28
             eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_c_max], dtype='float_')
@@ -832,11 +853,11 @@ class ExpTTDB(ExType):
             # plot the stiffness of the garn (K_IIb - cracked state)
             #
             E_tex = 180000.
-            K_III = E_tex * self.rho_c
+            K_IIb = E_tex * self.rho_c
+            print 'K_IIb = E_tex * self.rho_c', K_IIb
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
-            sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+            sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
-
 
     #---------------------------------
     # view
