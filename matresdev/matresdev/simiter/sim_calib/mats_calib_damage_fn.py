@@ -98,7 +98,8 @@ class MATSCalibDamageFn(MATSExplore):
 
     max_eps = Property(Float)
     def _get_max_eps(self):
-        return self.mfn_line_array_target.xdata[-1]
+        return 0.007
+#        return self.mfn_line_array_target.xdata[-1]
 
     n_steps = Int(1)
 
@@ -110,8 +111,10 @@ class MATSCalibDamageFn(MATSExplore):
     tolerance = Float
     RESETMAX = Float
 
-    step_size = Property(Float)
+    step_size = Property(Float, depends_on='max_eps,n_steps')
+    @cached_property
     def _get_step_size(self):
+        print 'step_size = ', self.max_eps / self.n_steps
         return self.max_eps / self.n_steps
 
 
@@ -191,7 +194,8 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
-        return ctt.eps_c_interpolated, ctt.sig_c_interpolated  # original data without jumps with interpolated starting point in the origin
+        return ctt.eps_c_interpolated_smoothed, ctt.sig_c_interpolated_smoothed  # smoothed data without jumps with interpolated starting point in the origin
+#        return ctt.eps_c_interpolated, ctt.sig_c_interpolated  # original data without jumps with interpolated starting point in the origin
 #        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
 #        return ctt.eps_smooth, ctt.sig_c_smooth #smoothed data
 
@@ -742,8 +746,8 @@ def run():
 
         test_file = join(simdb.exdata_dir,
                               'tensile_tests',
-#                              'dog_bone',
-                              'buttstrap_clamping',
+                              'dog_bone',
+#                              'buttstrap_clamping',
 
 #                              'TT-10a',
 #                              'TT11-10a-average.DAT' )
@@ -839,7 +843,7 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 28
+        age = 26
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests;
@@ -857,10 +861,11 @@ def run():
         # tensile test behavior (note that the compressive E-Modulus in this case is overestimated in 0-degree direction; minor influence
         # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
         #
-        E_c = 22413.6
+#        E_c = 29940.2
+        E_c = 29100.
 
         # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
-        E_m = 18709.5
+#        E_m = 18709.5
 
         # set 'nu'
         # @todo: check values stored in 'mat_db'
@@ -868,7 +873,7 @@ def run():
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
 
-        n_steps = 200
+        n_steps = 100
         fitter.n_steps = n_steps
 
         fitter.ex_run.ex_type.age = age
@@ -883,14 +888,19 @@ def run():
 
         print 'nu = %g used for calibration' % nu
         fitter.dim.mats_eval.nu = nu
+
         print 'n_steps = %g used for calibration' % n_steps
+
+        max_eps = fitter.max_eps
+        print 'max_eps = %g used for calibration' % max_eps
 
         #------------------------------------------------------------------
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
 #        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
+        param_key = '_age%g_Ec%g_nu%g_nsteps%g_maxeps%g_smoothed' % (age, E_c, nu, n_steps, max_eps)
+
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
 
