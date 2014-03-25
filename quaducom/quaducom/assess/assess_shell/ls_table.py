@@ -569,21 +569,6 @@ class ULS(LS):
     #
 #    sig_comp_0_Rd = Float(6.87)
 
-    ### 'eval_mode = eta_nm' ###
-    #
-    # design values for SFB-demonstrator on specimens with thickness 6 cm
-    # evaluation of design values based on a log-normal distribution.
-    # tensile resistance as obtained in tensile test (width = 0.14 m)
-    #
-    n_0_Rdt = 412.  # = 57.7 (=F_tRd)/ 0.14 ### [kN/m] ### 413.6 = 103.4 (mean value) / 0.14 * 0.84 / 1.5
-    # compressive strength as obtained in cube test (edge length = 0.150 m) results in C55/67 with f_ck = 55 MPa
-    #
-    n_Rdc = 2200  # = ( 55 (=f_ck for C55/67) / 1.5 ) * 0.06 * 1000 ### [kN/m] ### 2980 = 74.5 (mean value cube)* 0.1 * (100. * 6.) / 1.5
-    # bending strength as obtained in bending test (width = 0.20 m)
-    #
-#    m_0_Rd = 0.49382716 * 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
-    m_0_Rd = 9.6  # = 1.93 (=M_Rd) / 0.20 ### [kNm/m] ### 9.8 = 3.5 (mean value)/ 0.20 * 0.84 / 1.5
-
     #-------------------------
     # barrelshell
     #-------------------------
@@ -613,39 +598,40 @@ class ULS(LS):
     sig_comp_90_Rd = sig_comp_0_Rd
 
     ### 'eval_mode = eta_nm' ###
-    # compressive strength
-    # take pure concrete values (design values)
-    # f_cd = 38 MPa
+
+    #-----------------------------------
+    # strength characteristics (ULS)
+    #-----------------------------------
+
+    # tensile strength (0-direction) [kN/m]
     #
-#    n_Rdc = 750. # = 38 * 0.1 * (100. * 2.) = 506.7 kN/m
+    n_0_Rdt = Property(Float)
+    def _get_n_0_Rdt(self):
+        return self.ls_table.strength_characteristics['n_0_Rdt']
 
-    # 6 layers carbon: experimental values for barrelshell on specimens with thickness 2 cm and width 10 cm
-#    n_0_Rdt = 41.1 / 0.1 # [kN/m] # 411 kN/m = tensile resistance as obtained in tensile test
-#    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 # [kNm/m]
-#    print 'experimental values used for resistance values (no gamma)'
-
-    # 6 layers carbon: design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-    # factor k_alpha_min is used if flag is set to True
+    # bending (0-direction) strength [kNm/m]
     #
-#    n_0_Rdt = 223. # [kN/m] # ZiE value
-#    m_0_Rd = 1.7 # [kNm/m] # ZiE value
+    m_0_Rd = Property(Float)
+    def _get_m_0_Rd(self):
+        return self.ls_table.strength_characteristics['m_0_Rd']
 
-# #    n_0_Rdt = 41.1 / 0.1  * 0.84 / 1.5 # [kN/m] # 230 kN/m = tensile resistance as obtained in tensile test
-# #    m_0_Rd = (3.5 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
-#
-# #    # 6 layers carbon: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-# #    n_0_Rdt = 20. / 0.1 * 0.84 / 1.5 # [kN/m]
-# #    m_0_Rd = (2.4 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
-
-#    # 6 layers AR-glas: minimal design values for barrelshell on specimens with thickness 2 cm and width 10 cm
-#    n_0_Rdt = 23.8 * 0.7 / 0.1 * 0.84 / 1.5 # [kN/m]
-#    m_0_Rd = (1.3 * 0.46 / 4. ) / 0.1 * 0.84 / 1.5 # [kNm/m]
-
-    # assume the same strength in 90-direction (safe side);
-    # simplification for deflection angle
+    # tensile strength (90-direction) [kN/m]
     #
-    n_90_Rdt = n_0_Rdt  # [kN/m]
-    m_90_Rd = m_0_Rd  # [kNm/m]
+    n_90_Rdt = Property(Float)
+    def _get_n_90_Rdt(self):
+        return self.ls_table.strength_characteristics['n_90_Rdt']
+
+    # bending (90-direction) strength [kNm/m]
+    #
+    m_90_Rd = Property(Float)
+    def _get_m_90_Rd(self):
+        return self.ls_table.strength_characteristics['m_90_Rd']
+
+    # compressive strength [kN/m]
+    #
+    n_Rdc = Property(Float)
+    def _get_n_Rdc(self):
+        return self.ls_table.strength_characteristics['n_Rdc']
 
     # ------------------------------------------------------------
     # ULS - derived params:
@@ -1508,7 +1494,7 @@ class ULS(LS):
 #     alpha_1_up = Property(Array)
 #     def _get_alpha_1_up(self):
 #         return self.ls_values['alpha_1_up']
-# 
+#
 #     alpha_2_up = Property(Array)
 #     def _get_alpha_2_up(self):
 #         return self.ls_values['alpha_2_up']
@@ -1710,6 +1696,12 @@ class LSTable(HasTraits):
     # of the true deflection angel 'beta_q' and 'beta_l'
     #
     k_alpha_min = Bool(False)
+
+    # specify the strength characteristics of the material;
+    # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
+    # this gives the possibility to specify strength values within the call of 'LCCTableULS';
+    #
+    strength_characteristics_dict = Dict
 
     elem_no = Property(Array)
     def _get_elem_no(self):
