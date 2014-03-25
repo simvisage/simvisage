@@ -44,10 +44,17 @@ from numpy import \
 
 import os.path
 
+from matresdev.db.simdb import \
+    SimDB
+
+import os
+
 from ls_table import \
     LSTable, ULS, SLS
 
 from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+
+simdb = SimDB()
 
 class LC(HasTraits):
     '''Loading case class
@@ -243,6 +250,12 @@ class LCCTable(HasTraits):
     # specify weather exact evaluation 'k_alpha' is to be used or a lower bound 'k_min_alpha = 0.707' as simplification instead
     #
     k_alpha_min = Bool(False)
+
+    # specify the strength characteristics of the material;
+    # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
+    # this gives the possibility to specify strength values within the call of 'LCCTableULS';
+    #
+    strength_characteristics = Dict
 
     # list of load cases
     #
@@ -685,10 +698,11 @@ class LCCTable(HasTraits):
                        # changes necessary to distinguish plotting functionality defined in 'ls_table'
                        # e.i. plot deformation when 'LCCReaderInfoCAD' is used
                        ls_table=LSTable(reader=self.reader,
-                                           geo_data=self.geo_data_dict,
-                                           state_data=state_data_dict,
-                                           k_alpha_min=self.k_alpha_min,
-                                           ls=self.ls)
+                                        geo_data=self.geo_data_dict,
+                                        state_data=state_data_dict,
+                                        strength_characteristics=self.strength_characteristics,
+                                        k_alpha_min=self.k_alpha_min,
+                                        ls=self.ls)
                        )
 
             for idx, lc in enumerate(self.lc_list):
@@ -697,7 +711,7 @@ class LCCTable(HasTraits):
 
             lcc_list.append(lcc)
 
-        print '################### returining lcc_list ##################'
+        print '################### returning lcc_list ##################'
 
         return lcc_list
 
@@ -784,9 +798,12 @@ class LCCTable(HasTraits):
 
         mlab.show()
 
-
-    def plot_assess_value(self, title=None, add_assess_values_from_file=None, save_assess_values_to_file=None):
+    def plot_assess_value(self, assess_name, azimuth=None, elevation=None, distance=None, focalpoint=None, title=None, save_fig_to_file=None,
+                          add_assess_values_from_file=None, save_assess_values_to_file=None):
         '''plot-3d the assess value for all loading case combinations as structure plot with color legend
+           options: - plot options for mlab
+                    - save figure with specified name within "/simdb/simdata/lcc_table/output_images/save_fig_to_file.png"
+                    - superpose data values, i.e. from imposed loads and temperature loads
         '''
         print '################### plotting assess_value ##################'
 
@@ -813,25 +830,8 @@ class LCCTable(HasTraits):
             ls_class = lcc.ls_table.ls_class
 
             # get 'assess_name'-column array
-            #
-            assess_name = ls_class.assess_name
-            if assess_name == 'max_eta_nm_tot':
-                assess_value = getattr(ls_class, 'eta_nm_tot')
+            assess_value = getattr(ls_class, assess_name)
 
-                # get only the components resulting from normal forces...
-                #
-#                assess_value = getattr(ls_class, 'eta_n_tot')
-
-                # get only the components resulting from bending moments...
-                #
-#                assess_value = getattr(ls_class, 'eta_m_tot')
-            if assess_name == 'max_n_tex':
-                assess_value = getattr(ls_class, 'n_tex')
-            if assess_name == 'max_eta_tot':
-                assess_value = getattr(ls_class, 'eta_tot')
-
-#            n_tex = ls_class.n_tex_up
-#            n_tex = ls_class.n_tex_lo
             assess_value_list.append(assess_value)
 
         # stack the list to an array in order to use ndmax-function
@@ -859,16 +859,20 @@ class LCCTable(HasTraits):
         # save assess values to file in order to superpose them later
         #
         if save_assess_values_to_file != None:
-            print 'assess_values saved to file %s' % (save_assess_values_to_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_assess_values_to_file)
             assess_value_arr = plot_col
-            np.savetxt(save_assess_values_to_file, assess_value_arr)
+            np.savetxt(filename, assess_value_arr)
+            print 'assess_values saved to file %s' % (filename)
 
         # add read in saved assess values to be superposed with currently read in assess values
         #
         if add_assess_values_from_file != None:
-            print 'superpose assess_value_arr with values read in from file %s' % (add_assess_values_from_file)
-            assess_value_arr = np.loadtxt(add_assess_values_from_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, add_assess_values_from_file)
+            assess_value_arr = np.loadtxt(filename)
             plot_col += assess_value_arr
+            print 'superpose assess_value_arr with values read in from file %s' % (filename)
 
 #        # if n_tex is negative plot 0 instead:
 #        #
@@ -885,6 +889,15 @@ class LCCTable(HasTraits):
                        scale_factor=0.10)
 
         mlab.scalarbar(title=assess_name + ' (all LCs)', orientation='vertical')
+
+        mlab.view(azimuth=azimuth, elevation=elevation, distance=distance, focalpoint=focalpoint)
+
+        if save_fig_to_file != None:
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file + '.png')
+            mlab.savefig(filename)  # , format='png')
+            print 'figure saved to file %s' % (filename)
 
         mlab.show()
 
@@ -924,7 +937,9 @@ class LCCTable(HasTraits):
             # add read in saved values to be superposed with currently read in values
             #
             if add_max_min_nm_from_file != None:
-                max_min_nm_arr = np.loadtxt(add_max_min_nm_from_file)
+                simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                filename = os.path.join(simdata_dir, add_max_min_nm_from_file)
+                max_min_nm_arr = np.loadtxt(filename)
                 max_n_arr = max_min_nm_arr[:, 0][:, None]
                 min_n_arr = max_min_nm_arr[:, 1][:, None]
                 max_m_arr = max_min_nm_arr[:, 2][:, None]
@@ -1029,8 +1044,10 @@ class LCCTable(HasTraits):
 
             # save max and min values to file
             #
-            np.savetxt(save_max_min_nm_to_file, max_min_nm_arr)
-            print 'max_min_nm_arr saved to file %s' % (save_max_min_nm_to_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_max_min_nm_to_file)
+            np.savetxt(filename, max_min_nm_arr)
+            print 'max_min_nm_arr saved to file %s' % (filename)
 
         #----------------------------------------------
         # plot
@@ -1072,8 +1089,11 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
-            p.savefig(save_fig_to_file, format='png')
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file)
+            print 'figure saved to file %s' % (filename)
+            p.savefig(filename, format='png')
 
         p.show()
 
@@ -1105,6 +1125,7 @@ class LCCTable(HasTraits):
         eta_m2_up_list = []
 
         # get envelope over all loading case combinations (lcc)
+        #
         for lcc in lcc_list:
 
             # get the ls_table object and retrieve its 'ls_class'
@@ -1130,7 +1151,9 @@ class LCCTable(HasTraits):
             #
             if add_max_min_eta_nm_from_file != None:
                 print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
-                max_min_eta_nm_arr = np.loadtxt(add_max_min_eta_nm_from_file)
+                simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                filename = os.path.join(simdata_dir, add_max_min_eta_nm_from_file)
+                max_min_eta_nm_arr = np.loadtxt(filename)
                 max_eta_n_arr = max_min_eta_nm_arr[:, 0][:, None]
                 min_eta_n_arr = max_min_eta_nm_arr[:, 1][:, None]
                 max_eta_m_arr = max_min_eta_nm_arr[:, 2][:, None]
@@ -1222,9 +1245,10 @@ class LCCTable(HasTraits):
             max_min_eta_nm_arr = np.hstack([max_eta_n_arr[:, None], min_eta_n_arr[:, None], max_eta_m_arr[:, None], min_eta_m_arr[:, None]])
             # save max values to file
             #
-            np.savetxt(save_max_min_eta_nm_to_file, max_min_eta_nm_arr)
-            print 'max_min_eta_nm_arr saved to file %s' % (save_max_min_eta_nm_to_file)
-
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_max_min_eta_nm_to_file)
+            np.savetxt(filename, max_min_eta_nm_arr)
+            print 'max_min_eta_nm_arr saved to file %s' % (filename)
 
         #----------------------------------------------
         # plot
@@ -1267,11 +1291,13 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
-            p.savefig(save_fig_to_file, format='png')
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file)
+            print 'figure saved to file %s' % (filename)
+            p.savefig(filename, format='png')
 
         p.show()
-
 
     # ------------------------------------------------------------
     # View
