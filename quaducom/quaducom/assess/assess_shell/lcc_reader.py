@@ -165,8 +165,9 @@ class LCCReaderRFEM(LCCReader):
         #
         X = gd['X'].flatten()
         Y = gd['Y'].flatten()
-        # switch orientation of the z-axis
-        Z = (-1.0) * gd['Z'].flatten()
+#        # switch orientation of the z-axis
+#        Z = (-1.0) * gd['Z'].flatten()
+        Z = gd['Z'].flatten()
 
         # plot state data in the deformed geometry
         #
