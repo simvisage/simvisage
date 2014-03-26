@@ -86,7 +86,7 @@ class LS(HasTraits):
     show_ls_columns = Bool(True)
 
     #-------------------------------
-    # geo columns form info shell
+    # geo data shown in 'geo_columns'
     #-------------------------------
 
     geo_columns = List([ 'elem_no', 'X', 'Y', 'Z', 'thickness' ])
@@ -113,7 +113,7 @@ class LS(HasTraits):
         return self.ls_table.thickness
 
     #-------------------------------
-    # state columns form info shell
+    # state data shown in 'state_columns'
     #-------------------------------
 
     state_columns = List([
@@ -156,24 +156,12 @@ class LS(HasTraits):
     def _get_nxy(self):
         return self.ls_table.nxy
 
-    n_sig_lo = Property(Array)
-    def _get_n_sig_lo(self):
-        return self.ls_table.n_sig_lo
+    #-------------------------------
+    # derived state date
+    # (upper face):
+    #-------------------------------
 
-    m_sig_lo = Property(Array)
-    def _get_m_sig_lo(self):
-        return self.ls_table.m_sig_lo
-
-    n_sig_up = Property(Array)
-    def _get_n_sig_up(self):
-        return self.ls_table.n_sig_up
-
-    m_sig_up = Property(Array)
-    def _get_m_sig_up(self):
-        return self.ls_table.m_sig_up
-
-    # evaluate principal stresses
-    # upper face:
+    # calculate global stresses from state data (upper face)
     #
     sigx_up = Property(Array)
     def _get_sigx_up(self):
@@ -187,6 +175,14 @@ class LS(HasTraits):
     def _get_sigxy_up(self):
         return self.ls_table.sigxy_up
 
+    # evaluate principal stress-direction (upper face)
+    #
+    alpha_sig_up = Property(Array)
+    def _get_alpha_sig_up(self):
+        return self.ls_table.alpha_sig_up
+
+    # evaluate principal stresses (upper face)
+    #
     sig1_up = Property(Array)
     def _get_sig1_up(self):
         return self.ls_table.sig1_up
@@ -195,11 +191,36 @@ class LS(HasTraits):
     def _get_sig2_up(self):
         return self.ls_table.sig2_up
 
-    alpha_sig_up = Property(Array)
-    def _get_alpha_sig_up(self):
-        return self.ls_table.alpha_sig_up
+    # evaluate n(alpha),m(alpha) in principal stress direction (upper face)
+    #
+    n_sig_up = Property(Array)
+    def _get_n_sig_up(self):
+        return self.ls_table.n_sig_up
 
-    # lower face:
+    m_sig_up = Property(Array)
+    def _get_m_sig_up(self):
+        return self.ls_table.m_sig_up
+
+    m_sig2_up = Property(Array)
+    def _get_m_sig2_up(self):
+        return self.ls_table.m_sig2_up
+
+    n_sig2_up = Property(Array)
+    def _get_n_sig2_up(self):
+        return self.ls_table.n_sig2_up
+
+    # calculate corresponding stresses at lower side in sig1_up-direction:
+    #
+    sig1_lo_sig_up = Property(Array)
+    def _get_sig1_lo_sig_up(self):
+        return self.ls_table.sig1_lo_sig_up
+
+    #-------------------------------
+    # derived state date
+    # (lower face):
+    #-------------------------------
+
+    # calculate global stresses from state data (lower face)
     #
     sigx_lo = Property(Float)
     def _get_sigx_lo(self):
@@ -213,6 +234,14 @@ class LS(HasTraits):
     def _get_sigxy_lo(self):
         return self.ls_table.sigxy_lo
 
+    # evaluate principal stress-direction (lower face)
+    #
+    alpha_sig_lo = Property(Float)
+    def _get_alpha_sig_lo(self):
+        return self.ls_table.alpha_sig_lo
+
+    # evaluate principal stresses (lower face)
+    #
     sig1_lo = Property(Float)
     def _get_sig1_lo(self):
         return self.ls_table.sig1_lo
@@ -221,9 +250,30 @@ class LS(HasTraits):
     def _get_sig2_lo(self):
         return self.ls_table.sig2_lo
 
-    alpha_sig_lo = Property(Float)
-    def _get_alpha_sig_lo(self):
-        return self.ls_table.alpha_sig_lo
+    # evaluate n(alpha),m(alpha) in principal stress direction (lower face)
+    #
+    n_sig_lo = Property(Array)
+    def _get_n_sig_lo(self):
+        return self.ls_table.n_sig_lo
+
+    m_sig_lo = Property(Array)
+    def _get_m_sig_lo(self):
+        return self.ls_table.m_sig_lo
+
+    n_sig2_lo = Property(Array)
+    def _get_n_sig2_lo(self):
+        return self.ls_table.n_sig2_lo
+
+    m_sig2_lo = Property(Array)
+    def _get_m_sig2_lo(self):
+        return self.ls_table.m_sig2_lo
+
+    # calculate corresponding stresses at upper side in sig1_lo-direction:
+    #
+    sig1_up_sig_lo = Property(Array)
+    def _get_sig1_up_sig_lo(self):
+        return self.ls_table.sig1_up_sig_lo
+
 
     #-------------------------------
     # ls table
@@ -376,7 +426,6 @@ class LS(HasTraits):
 class SLS(LS):
     '''Serviceability limit state
     '''
-
     # ------------------------------------------------------------
     # SLS: material parameters (Inputs)
     # ------------------------------------------------------------
@@ -385,23 +434,7 @@ class SLS(LS):
     f_ctk = Float(5.0, input=True)
 
     # flexural tensile strength [MPa]
-    f_m = Float(5.0, input=True)
-
-    # ------------------------------------------------------------
-    # SLS - derived params:
-    # ------------------------------------------------------------
-
-    # area
-    #
-    A = Property(Float)
-    def _get_A(self):
-        return self.ls_table.thickness * 1.
-
-    # moment of inertia
-    #
-    W = Property(Float)
-    def _get_W(self):
-        return 1. * self.ls_table.thickness ** 2 / 6.
+    f_m = Float(8.0, input=True)
 
     # ------------------------------------------------------------
     # SLS: outputs
@@ -420,18 +453,16 @@ class SLS(LS):
         '''
         f_ctk = self.f_ctk
         f_m = self.f_m
-        A = self.A  # [m**2/m]
-        W = self.W  # [m**3/m]
-        print 'A', A
-        print 'W', W
+        A = self.ls_table.A  # [m**2/m]
+        W = self.ls_table.W  # [m**3/m]
 
-        n_sig_lo = self.n_sig_lo  # [kN/m]
-        m_sig_lo = self.m_sig_lo  # [kNm/m]
+        n_sig_lo = self.ls_table.n_sig_lo  # [kN/m]
+        m_sig_lo = self.ls_table.m_sig_lo  # [kNm/m]
         sig_n_sig_lo = n_sig_lo / A / 1000.  # [MPa]
         sig_m_sig_lo = m_sig_lo / W / 1000.  # [MPa]
 
-        n_sig_up = self.n_sig_up
-        m_sig_up = self.m_sig_up
+        n_sig_up = self.ls_table.n_sig_up
+        m_sig_up = self.ls_table.m_sig_up
         sig_n_sig_up = n_sig_up / A / 1000.
         sig_m_sig_up = m_sig_up / W / 1000.
 
@@ -661,51 +692,6 @@ class ULS(LS):
     # ------------------------------------------------------------
     # ULS: outputs
     # ------------------------------------------------------------
-
-    # sig1_lo -direction:
-    #
-    sig1_up_sig_lo = Property(Array)
-    def _get_sig1_up_sig_lo(self):
-        return self.ls_table.sig1_up_sig_lo
-
-    m_sig_lo = Property(Array)
-    def _get_m_sig_lo(self):
-        return self.ls_table.m_sig_lo
-
-    n_sig_lo = Property(Array)
-    def _get_n_sig_lo(self):
-        return self.ls_table.n_sig_lo
-
-    m_sig2_lo = Property(Array)
-    def _get_m_sig2_lo(self):
-        return self.ls_table.m_sig2_lo
-
-    n_sig2_lo = Property(Array)
-    def _get_n_sig2_lo(self):
-        return self.ls_table.n_sig2_lo
-
-    # sig1_up -direction:
-    #
-    sig1_lo_sig_up = Property(Array)
-    def _get_sig1_lo_sig_up(self):
-        return self.ls_table.sig1_lo_sig_up
-
-    m_sig_up = Property(Array)
-    def _get_m_sig_up(self):
-        return self.ls_table.m_sig_up
-
-    n_sig_up = Property(Array)
-    def _get_n_sig_up(self):
-        return self.ls_table.n_sig_up
-
-    m_sig2_up = Property(Array)
-    def _get_m_sig2_up(self):
-        return self.ls_table.m_sig2_up
-
-    n_sig2_up = Property(Array)
-    def _get_n_sig2_up(self):
-        return self.ls_table.n_sig2_up
-
     #------------------------------------------------------------
     # choose evaluation mode to calculate the number of reinf-layers 'n_tex':
     #------------------------------------------------------------
@@ -1703,6 +1689,9 @@ class LSTable(HasTraits):
     #
     strength_characteristics_dict = Dict
 
+    #-----------------------------------
+    # geo data
+    #-----------------------------------
     elem_no = Property(Array)
     def _get_elem_no(self):
         return self.geo_data['elem_no']
@@ -1724,7 +1713,24 @@ class LSTable(HasTraits):
         '''element thickness [m])'''
         return self.geo_data['thickness']
 
+    #-----------------------------------
+    # derived geometric values
+    #-----------------------------------
+    # area
+    #
+    A = Property(Array)
+    def _get_A(self):
+        return self.thickness * 1.
+
+    # moment of inertia
+    #
+    W = Property(Array)
+    def _get_W(self):
+        return 1. * self.thickness ** 2 / 6.
+
+    #-----------------------------------
     # state data: stress resultants
+    #-----------------------------------
     #
     state_data = Dict
 
@@ -1780,9 +1786,8 @@ class LSTable(HasTraits):
 
         # geometrical properties:
         #
-        A = self.thickness * 1.0
-        W = self.thickness ** 2 * 1.0 / 6.
-
+        A = self.A
+        W = self.W
 
         # compare the formulae with the RFEM-manual p.290
 
