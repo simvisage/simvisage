@@ -726,79 +726,7 @@ class LCCTable(HasTraits):
                        mode="cube",
                        scale_factor=0.1)
 
-    def plot_n_tex(self, title=None):
-        '''plot number of textile reinforcement 'n_tex' for all loading case combinations
-        '''
-        #----------------------------------------
-        # script to get the maximum number of reinforcement ('n_tex')
-        # at all given coordinate points for all possible loading
-        # case combinations:
-        #----------------------------------------
-        # set option to "True" for surrounding
-        # evaluation of necessary layers "n_tex"
-        # needed for all loading cases
-
-        # get the list of all loading case combinations:
-        #
-        lcc_list = self.lcc_list
-
-        #----------------------------------------------
-        # run trough all loading case combinations:
-        #----------------------------------------------
-
-        n_tex_list = []
-        for lcc in lcc_list:
-
-            # get the ls_table object and retrieve its 'ls_class'
-            # (= LSTable_ULS-object)
-            #
-            ls_class = lcc.ls_table.ls_class
-
-            # get 'n_tex'-column array
-            #
-            n_tex = ls_class.n_tex
-#            n_tex = ls_class.n_tex_up
-#            n_tex = ls_class.n_tex_lo
-            n_tex_list.append(n_tex)
-
-        # stack the list to an array in order to use ndmax-function
-        #
-        n_tex_arr = hstack(n_tex_list)
-
-        #----------------------------------------------
-        # get the overall maximum values:
-        #----------------------------------------------
-
-        n_tex_max = ndmax(n_tex_arr, axis=1)[:, None]
-
-        #----------------------------------------------
-        # plot
-        #----------------------------------------------
-        #
-        X = lcc_list[0].ls_table.X[:, 0]
-        Y = lcc_list[0].ls_table.Y[:, 0]
-        Z = lcc_list[0].ls_table.Z[:, 0]
-        plot_col = n_tex_max[:, 0]
-
-        # if n_tex is negative plot 0 instead:
-        #
-        plot_col = where(plot_col < 0, 0, plot_col)
-
-        mlab.figure(figure=title,
-                     bgcolor=(1.0, 1.0, 1.0),
-                     fgcolor=(0.0, 0.0, 0.0))
-
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                       colormap="YlOrBr",
-                       mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
-
-        mlab.scalarbar(title='n_tex (all LCs)', orientation='vertical')
-
-        mlab.show()
-
-    def plot_assess_value(self, assess_name, azimuth=None, elevation=None, distance=None, focalpoint=None, title=None, save_fig_to_file=None,
+    def plot_assess_value(self, assess_name, scale_factor=0.1, scale_mode='none', azimuth=None, elevation=None, distance=None, focalpoint=None, title=None, save_fig_to_file=None,
                           add_assess_values_from_file=None, save_assess_values_to_file=None):
         '''plot-3d the assess value for all loading case combinations as structure plot with color legend
            options: - plot options for mlab
@@ -852,8 +780,6 @@ class LCCTable(HasTraits):
         X = lcc_list[0].ls_table.X[:, 0]
         Y = lcc_list[0].ls_table.Y[:, 0]
         Z = lcc_list[0].ls_table.Z[:, 0]
-        if self.reader_type == 'RFEM':
-            Z *= -1.0
         plot_col = assess_value_max[:, 0]
 
         # save assess values to file in order to superpose them later
@@ -885,8 +811,8 @@ class LCCTable(HasTraits):
         mlab.points3d(X, Y, Z, plot_col,
                        colormap="YlOrBr",
                        mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
+                       scale_mode=scale_mode,
+                       scale_factor=scale_factor)
 
         mlab.scalarbar(title=assess_name + ' (all LCs)', orientation='vertical')
 
@@ -900,7 +826,6 @@ class LCCTable(HasTraits):
             print 'figure saved to file %s' % (filename)
 
         mlab.show()
-
 
     def plot_nm_interaction(self, save_fig_to_file=None, show_tension_only=False, add_max_min_nm_from_file=None, save_max_min_nm_to_file=None):
         '''plot the nm-interaction for all loading case combinations
