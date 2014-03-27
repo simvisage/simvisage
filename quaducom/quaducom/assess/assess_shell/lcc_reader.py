@@ -39,7 +39,6 @@ class LCCReaderRFEM(LCCReader):
         to a csv-file using ';' as filed delimiter and ' ' (blank)
         as text delimiter.
         '''
-
         file_name = os.path.join(self.data_dir, f_name)
 
         print '*** read state data from file: %s ***' % (file_name)
@@ -176,7 +175,6 @@ class LCCReaderRFEM(LCCReader):
                            mode="cube",
                            scale_mode='none',
                            scale_factor=0.15)
-
 
     def check_for_consistency(self, lc_list, geo_data_dict):
 
