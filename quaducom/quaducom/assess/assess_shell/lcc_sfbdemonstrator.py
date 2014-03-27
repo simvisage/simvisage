@@ -275,7 +275,7 @@ if __name__ == '__main__':
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
     #
-    lct.plot_assess_value('eta_nm_tot')
+    lct.plot_assess_value('eta_nm_tot', scale_mode='scalar', scale_factor=0.8)
 
     #--------------------------------------------------------------
     # brows the loading case combinations within an interactive table view
