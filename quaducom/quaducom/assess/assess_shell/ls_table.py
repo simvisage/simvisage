@@ -111,13 +111,11 @@ class LS(HasTraits):
                            'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
 #                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
 #                           'sig1_lo', 'sig1_up_sig_lo',
-                            'alpha_sig_lo',
-# 'alpha_sig2_lo',
-                           'm_sig_lo', 'n_sig_lo',
+                           'm_sig1_lo', 'n_sig1_lo',
                            'm_sig2_lo', 'n_sig2_lo',
 #                           'sigx_up', 'sigy_up', 'sigxy_up',
-#                           'sig1_up', 'sig1_lo_sig_up', 'alpha_sig_up',
-                           'm_sig_up', 'n_sig_up',
+#                           'sig1_up', 'sig1_lo_sig_up', 'alpha_sig1_up',
+                           'm_sig1_up', 'n_sig1_up',
                            'm_sig2_up', 'n_sig2_up',
                             ])
 
@@ -168,9 +166,21 @@ class LS(HasTraits):
 
     # evaluate principal stress-direction (upper face)
     #
-    alpha_sig_up = Property(Array)
-    def _get_alpha_sig_up(self):
-        return self.ls_table.alpha_sig_up
+    alpha_sig1_up = Property(Array)
+    def _get_alpha_sig1_up(self):
+        return self.ls_table.alpha_sig1_up
+
+    alpha_sig2_up = Property(Array)
+    def _get_alpha_sig2_up(self):
+        return self.ls_table.alpha_sig2_up
+
+    alpha_sig1_up_deg = Property(Array)
+    def _get_alpha_sig1_up_deg(self):
+        return self.ls_table.alpha_sig1_up_deg
+
+    alpha_sig2_up_deg = Property(Array)
+    def _get_alpha_sig2_up_deg(self):
+        return self.ls_table.alpha_sig2_up_deg
 
     # evaluate principal stresses (upper face)
     #
@@ -184,27 +194,21 @@ class LS(HasTraits):
 
     # evaluate n(alpha),m(alpha) in principal stress direction (upper face)
     #
-    n_sig_up = Property(Array)
-    def _get_n_sig_up(self):
-        return self.ls_table.n_sig_up
+    n_sig1_up = Property(Array)
+    def _get_n_sig1_up(self):
+        return self.ls_table.n_sig1_up
 
-    m_sig_up = Property(Array)
-    def _get_m_sig_up(self):
-        return self.ls_table.m_sig_up
-
-    m_sig2_up = Property(Array)
-    def _get_m_sig2_up(self):
-        return self.ls_table.m_sig2_up
+    m_sig1_up = Property(Array)
+    def _get_m_sig1_up(self):
+        return self.ls_table.m_sig1_up
 
     n_sig2_up = Property(Array)
     def _get_n_sig2_up(self):
         return self.ls_table.n_sig2_up
 
-    # calculate corresponding stresses at lower side in sig1_up-direction:
-    #
-    sig1_lo_sig_up = Property(Array)
-    def _get_sig1_lo_sig_up(self):
-        return self.ls_table.sig1_lo_sig_up
+    m_sig2_up = Property(Array)
+    def _get_m_sig2_up(self):
+        return self.ls_table.m_sig2_up
 
     #-------------------------------
     # derived state date
@@ -227,9 +231,21 @@ class LS(HasTraits):
 
     # evaluate principal stress-direction (lower face)
     #
-    alpha_sig_lo = Property(Float)
-    def _get_alpha_sig_lo(self):
-        return self.ls_table.alpha_sig_lo
+    alpha_sig1_lo = Property(Float)
+    def _get_alpha_sig1_lo(self):
+        return self.ls_table.alpha_sig1_lo
+
+    alpha_sig2_lo = Property(Array)
+    def _get_alpha_sig2_lo(self):
+        return self.ls_table.alpha_sig2_lo
+
+    alpha_sig1_lo_deg = Property(Float)
+    def _get_alpha_sig1_lo_deg(self):
+        return self.ls_table.alpha_sig1_lo_deg
+
+    alpha_sig2_lo_deg = Property(Float)
+    def _get_alpha_sig2_lo_deg(self):
+        return self.ls_table.alpha_sig2_lo_deg
 
     # evaluate principal stresses (lower face)
     #
@@ -243,13 +259,13 @@ class LS(HasTraits):
 
     # evaluate n(alpha),m(alpha) in principal stress direction (lower face)
     #
-    n_sig_lo = Property(Array)
-    def _get_n_sig_lo(self):
-        return self.ls_table.n_sig_lo
+    n_sig1_lo = Property(Array)
+    def _get_n_sig1_lo(self):
+        return self.ls_table.n_sig1_lo
 
-    m_sig_lo = Property(Array)
-    def _get_m_sig_lo(self):
-        return self.ls_table.m_sig_lo
+    m_sig1_lo = Property(Array)
+    def _get_m_sig1_lo(self):
+        return self.ls_table.m_sig1_lo
 
     n_sig2_lo = Property(Array)
     def _get_n_sig2_lo(self):
@@ -258,12 +274,6 @@ class LS(HasTraits):
     m_sig2_lo = Property(Array)
     def _get_m_sig2_lo(self):
         return self.ls_table.m_sig2_lo
-
-    # calculate corresponding stresses at upper side in sig1_lo-direction:
-    #
-    sig1_up_sig_lo = Property(Array)
-    def _get_sig1_up_sig_lo(self):
-        return self.ls_table.sig1_up_sig_lo
 
     #-------------------------------
     # ls table
@@ -428,10 +438,10 @@ class SLS(LS):
     # SLS: outputs
     # ------------------------------------------------------------
 
-    ls_columns = List(['m_sig_lo', 'n_sig_lo',
-                       'm_sig_up', 'n_sig_up',
-                       'eta_n_sig_lo', 'eta_m_sig_lo', 'eta_tot_sig_lo',
-                       'eta_n_sig_up', 'eta_m_sig_up', 'eta_tot_sig_up',
+    ls_columns = List(['m_sig1_lo', 'n_sig1_lo',
+                       'm_sig1_up', 'n_sig1_up',
+                       'eta_n_sig1_lo', 'eta_m_sig1_lo', 'eta_tot_sig_lo',
+                       'eta_n_sig1_up', 'eta_m_sig1_up', 'eta_tot_sig_up',
                        'eta_tot'])
 
     ls_values = Property(depends_on='+input')
@@ -444,49 +454,49 @@ class SLS(LS):
         A = self.ls_table.A  # [m**2/m]
         W = self.ls_table.W  # [m**3/m]
 
-        n_sig_lo = self.ls_table.n_sig_lo  # [kN/m]
-        m_sig_lo = self.ls_table.m_sig_lo  # [kNm/m]
-        sig_n_sig_lo = n_sig_lo / A / 1000.  # [MPa]
-        sig_m_sig_lo = m_sig_lo / W / 1000.  # [MPa]
+        n_sig1_lo = self.ls_table.n_sig1_lo  # [kN/m]
+        m_sig1_lo = self.ls_table.m_sig1_lo  # [kNm/m]
+        sig_n_sig1_lo = n_sig1_lo / A / 1000.  # [MPa]
+        sig_m_sig1_lo = m_sig1_lo / W / 1000.  # [MPa]
 
-        n_sig_up = self.ls_table.n_sig_up
-        m_sig_up = self.ls_table.m_sig_up
-        sig_n_sig_up = n_sig_up / A / 1000.
-        sig_m_sig_up = m_sig_up / W / 1000.
+        n_sig1_up = self.ls_table.n_sig1_up
+        m_sig1_up = self.ls_table.m_sig1_up
+        sig_n_sig1_up = n_sig1_up / A / 1000.
+        sig_m_sig1_up = m_sig1_up / W / 1000.
 
-        eta_n_sig_lo = sig_n_sig_lo / f_ctk
-        eta_m_sig_lo = sig_m_sig_lo / f_m
-        eta_tot_sig_lo = eta_n_sig_lo + eta_m_sig_lo
+        eta_n_sig1_lo = sig_n_sig1_lo / f_ctk
+        eta_m_sig1_lo = sig_m_sig1_lo / f_m
+        eta_tot_sig_lo = eta_n_sig1_lo + eta_m_sig1_lo
 
-        eta_n_sig_up = sig_n_sig_up / f_ctk
-        eta_m_sig_up = sig_m_sig_up / f_m
-        eta_tot_sig_up = eta_n_sig_up + eta_m_sig_up
+        eta_n_sig1_up = sig_n_sig1_up / f_ctk
+        eta_m_sig1_up = sig_m_sig1_up / f_m
+        eta_tot_sig_up = eta_n_sig1_up + eta_m_sig1_up
 
         eta_tot = ndmax(hstack([ eta_tot_sig_up, eta_tot_sig_lo]), axis=1)[:, None]
 
-        return { 'sig_n_sig_lo':sig_n_sig_lo, 'sig_m_sig_lo':sig_m_sig_lo,
-                 'sig_n_sig_up':sig_n_sig_up, 'sig_m_sig_up':sig_m_sig_up,
-                 'eta_n_sig_lo':eta_n_sig_lo, 'eta_m_sig_lo':eta_m_sig_lo, 'eta_tot_sig_lo':eta_tot_sig_lo,
-                 'eta_n_sig_up':eta_n_sig_up, 'eta_m_sig_up':eta_m_sig_up, 'eta_tot_sig_up':eta_tot_sig_up,
+        return { 'sig_n_sig1_lo':sig_n_sig1_lo, 'sig_m_sig1_lo':sig_m_sig1_lo,
+                 'sig_n_sig1_up':sig_n_sig1_up, 'sig_m_sig1_up':sig_m_sig1_up,
+                 'eta_n_sig1_lo':eta_n_sig1_lo, 'eta_m_sig1_lo':eta_m_sig1_lo, 'eta_tot_sig_lo':eta_tot_sig_lo,
+                 'eta_n_sig1_up':eta_n_sig1_up, 'eta_m_sig1_up':eta_m_sig1_up, 'eta_tot_sig_up':eta_tot_sig_up,
                  'eta_tot':eta_tot, }
 
     # evaluate stresses at lower side:
     #
-    sig_n_sig_lo = Property
-    def _get_sig_n_sig_lo(self):
-        return self.ls_values['sig_n_sig_lo']
+    sig_n_sig1_lo = Property
+    def _get_sig_n_sig1_lo(self):
+        return self.ls_values['sig_n_sig1_lo']
 
-    sig_m_sig_lo = Property
-    def _get_sig_m_sig_lo(self):
-        return self.ls_values['sig_m_sig_lo']
+    sig_m_sig1_lo = Property
+    def _get_sig_m_sig1_lo(self):
+        return self.ls_values['sig_m_sig1_lo']
 
-    eta_n_sig_lo = Property
-    def _get_eta_n_sig_lo(self):
-        return self.ls_values['eta_n_sig_lo']
+    eta_n_sig1_lo = Property
+    def _get_eta_n_sig1_lo(self):
+        return self.ls_values['eta_n_sig1_lo']
 
-    eta_m_sig_lo = Property
-    def _get_eta_m_sig_lo(self):
-        return self.ls_values['eta_m_sig_lo']
+    eta_m_sig1_lo = Property
+    def _get_eta_m_sig1_lo(self):
+        return self.ls_values['eta_m_sig1_lo']
 
     eta_tot_sig_lo = Property
     def _get_eta_tot_sig_lo(self):
@@ -494,21 +504,21 @@ class SLS(LS):
 
     # evaluate stresses at upper side:
     #
-    sig_n_sig_up = Property
-    def _get_sig_n_sig_up(self):
-        return self.ls_values['sig_n_sig_up']
+    sig_n_sig1_up = Property
+    def _get_sig_n_sig1_up(self):
+        return self.ls_values['sig_n_sig1_up']
 
-    sig_m_sig_up = Property
-    def _get_sig_m_sig_up(self):
-        return self.ls_values['sig_m_sig_up']
+    sig_m_sig1_up = Property
+    def _get_sig_m_sig1_up(self):
+        return self.ls_values['sig_m_sig1_up']
 
-    eta_n_sig_up = Property
-    def _get_eta_n_sig_up(self):
-        return self.ls_values['eta_n_sig_up']
+    eta_n_sig1_up = Property
+    def _get_eta_n_sig1_up(self):
+        return self.ls_values['eta_n_sig1_up']
 
-    eta_m_sig_up = Property
-    def _get_eta_m_sig_up(self):
-        return self.ls_values['eta_m_sig_up']
+    eta_m_sig1_up = Property
+    def _get_eta_m_sig1_up(self):
+        return self.ls_values['eta_m_sig1_up']
 
     eta_tot_sig_up = Property
     def _get_eta_tot_sig_up(self):
@@ -608,26 +618,36 @@ class ULS(LS):
         # distinguished between longitudinal (l) and transversal (q) direction,
         # i.e. 0- and 90-direction of the textile
 
-        alpha_up = self.alpha_sig_up
-        alpha_lo = self.alpha_sig_lo
-
-        beta_l_up_deg = abs(alpha_up)  # [degree]
-        beta_q_up_deg = 90. - abs(alpha_up)  # [degree]
+        # NOTE: so far only the simplified case is handled with similar strength in 0- and 90-direction
+        # in this case no distinction needs to be made between the deflection angles
+        # and only absolute angles between 0 and 90 degrees are used on the resistance side
+        # evaluation is independent from 1st and 2nd direction stress resultants as absolute deflections
+        # and proportions stay the same
+        #
+        beta_l_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
+        bool_arr = np.where(beta_l_up_deg > 90.)[0]
+        beta_l_up_deg[bool_arr] -= 90.
+        beta_q_up_deg = 90. - beta_l_up_deg  # [degree]
         beta_l_up = beta_l_up_deg * pi / 180.  # [rad]
         beta_q_up = beta_q_up_deg * pi / 180.  # [rad]
 
-        beta_l_lo_deg = abs(alpha_lo)  # [degree]
-        beta_q_lo_deg = 90 - abs(alpha_lo)  # [degree]
+        beta_l_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
+        bool_arr = np.where(beta_l_lo_deg > 90.)[0]
+        beta_l_lo_deg[bool_arr] -= 90.
+        beta_q_lo_deg = 90 - beta_l_lo_deg  # [degree]
         beta_l_lo = beta_l_lo_deg * pi / 180.  # [rad]
         beta_q_lo = beta_q_lo_deg * pi / 180.  # [rad]
 
         #-------------------------------------------------
-        # VAR 3: NOTE: the principle tensile stresses are used to evaluate the principle direction\
+        # NOTE: the principle tensile stresses are used to evaluate the principle direction\
         # 'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)
+        # 1st-principle stress direction = maximum (tensile) stresses
+        # 2nd-principle stress direction = minimum (compressive) stresses
         #-------------------------------------------------
         #
-        print "NOTE: the principle tensile stresses are used to evaluate the deflection angle"
+        print "NOTE: the principle tensile stresses are used to evaluate the deflection angle 'beta', i.e. k_alpha(beta)"
         print "      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
+        print "      'eta_nm_tot' is evaluated both for 1st and 2nd principle direction"
 
         # simplification of the transformation formula only valid for assumption of
         # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
@@ -640,6 +660,7 @@ class ULS(LS):
                   self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
         m_Rd_up = self.m_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
                   self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
         n_Rdc = self.n_Rdc * np.ones_like(n_Rdt_lo)
 
         k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
@@ -665,41 +686,41 @@ class ULS(LS):
 
         # initialize arrays to be filled based on case distinction
         #
-        eta_n_up = np.zeros_like(self.n_sig_up)
-        eta_n_lo = np.zeros_like(self.n_sig_lo)
+        eta_n_up = np.zeros_like(self.n_sig1_up)
+        eta_n_lo = np.zeros_like(self.n_sig1_lo)
 
         # cases with a tensile normal force
         #
-        cond_nsu_ge_0 = self.n_sig_up >= 0.  # tensile force in direction of principle stress at upper side
-        cond_nsl_ge_0 = self.n_sig_lo >= 0.  # tensile force in direction of principle stress at lower side
+        cond_nsu_ge_0 = self.n_sig1_up >= 0.  # tensile force in direction of principle stress at upper side
+        cond_nsl_ge_0 = self.n_sig1_lo >= 0.  # tensile force in direction of principle stress at lower side
 
         # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
         #
         bool_arr = cond_nsu_ge_0
-        eta_n_up[bool_arr] = self.n_sig_up[bool_arr] / n_Rdt_up[bool_arr]
+        eta_n_up[bool_arr] = self.n_sig1_up[bool_arr] / n_Rdt_up[bool_arr]
 
         bool_arr = cond_nsl_ge_0
-        eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdt_lo[bool_arr]
+        eta_n_lo[bool_arr] = self.n_sig1_lo[bool_arr] / n_Rdt_lo[bool_arr]
 
         # cases with a compressive normal force
         #
-        cond_nsu_lt_0 = self.n_sig_up < 0.  # compressive force in direction of principle stress at upper side
-        cond_nsl_lt_0 = self.n_sig_lo < 0.  # compressive force in direction of principle stress at lower side
+        cond_nsu_lt_0 = self.n_sig1_up < 0.  # compressive force in direction of principle stress at upper side
+        cond_nsl_lt_0 = self.n_sig1_lo < 0.  # compressive force in direction of principle stress at lower side
 
         # compare imposed compressive normal force with 'n_Rdc' as obtained from compression test
         #
         bool_arr = cond_nsu_lt_0
-        eta_n_up[bool_arr] = self.n_sig_up[bool_arr] / n_Rdc[bool_arr]
+        eta_n_up[bool_arr] = self.n_sig1_up[bool_arr] / n_Rdc[bool_arr]
 
         bool_arr = cond_nsl_lt_0
-        eta_n_lo[bool_arr] = self.n_sig_lo[bool_arr] / n_Rdc[bool_arr]
+        eta_n_lo[bool_arr] = self.n_sig1_lo[bool_arr] / n_Rdc[bool_arr]
 
         # get 'eta_m' based on imposed moment compared with moment resistence
         # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
         #
         min_thickness = np.min(self.thickness)
-        eta_m_lo = self.m_sig_lo / (m_Rd_lo * self.thickness / min_thickness)
-        eta_m_up = self.m_sig_up / (m_Rd_up * self.thickness / min_thickness)
+        eta_m_lo = self.m_sig1_lo / (m_Rd_lo * self.thickness / min_thickness)
+        eta_m_up = self.m_sig1_up / (m_Rd_up * self.thickness / min_thickness)
 
         # get total 'eta_mn' based on imposed normal force and moment
         # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
@@ -776,10 +797,11 @@ class ULS(LS):
         #------------------------------------------------------------
         # construct a dictionary containing the return values
         #------------------------------------------------------------
-        return { 'beta_l_up':beta_l_up_deg,
-                 'beta_q_up':beta_q_up_deg,
-                 'beta_l_lo':beta_l_lo_deg,
-                 'beta_q_lo':beta_q_lo_deg,
+        return { 'beta_l_up_deg':beta_l_up_deg,
+                 'beta_q_up_deg':beta_q_up_deg,
+                 'beta_l_lo_deg':beta_l_lo_deg,
+                 'beta_q_lo_deg':beta_q_lo_deg,
+
                  'n_Rdt_up':n_Rdt_up,
                  'n_Rdt_lo':n_Rdt_lo,
                  'm_Rd_up':m_Rd_up,
@@ -820,11 +842,18 @@ class ULS(LS):
     def _get_max_eta_nm_tot(self):
         return ndmax(self.eta_nm_tot)
 
-    ls_columns = List([  # 'alpha_up', 'alpha_lo'
-                       'beta_l_up', 'beta_q_up', 'k_alpha_up',
-                       'beta_l_lo', 'beta_q_lo', 'k_alpha_lo',
+    ls_columns = List([
+                       'alpha_sig1_up_deg',
+                       'alpha_sig2_up_deg',
+                       'alpha_sig1_lo_deg',
+                       'alpha_sig2_lo_deg',
+
+                       'beta_l_up_deg', 'beta_q_up_deg', 'k_alpha_up',
+                       'beta_l_lo_deg', 'beta_q_lo_deg', 'k_alpha_lo',
+
                        'n_Rdt_up', 'n_Rdt_lo',
                        'm_Rd_up', 'm_Rd_lo',
+
                        'eta_n_up', 'eta_m_up', 'eta_nm_up',
                        'eta_n_lo', 'eta_m_lo', 'eta_nm_lo',
                        'eta_n2_up', 'eta_m2_up', 'eta_nm2_up',
@@ -841,29 +870,21 @@ class ULS(LS):
                     Item(name='n_Rdc', label='normal compressive strength [kN/m]:  n_0_Rdc ', style='readonly', format_str="%.1f"), \
                     Item(name='m_90_Rd', label='bending strength [kNm/m]:  m_90_Rd ', style='readonly', format_str="%.1f")
 
-#     alpha_1_up = Property(Array)
-#     def _get_alpha_1_up(self):
-#         return self.ls_values['alpha_1_up']
-#
-#     alpha_2_up = Property(Array)
-#     def _get_alpha_2_up(self):
-#         return self.ls_values['alpha_2_up']
+    beta_l_up_deg = Property(Array)
+    def _get_beta_l_up_deg(self):
+        return self.ls_values['beta_l_up_deg']
 
-    beta_l_up = Property(Array)
-    def _get_beta_l_up(self):
-        return self.ls_values['beta_l_up']
+    beta_q_up_deg = Property(Array)
+    def _get_beta_q_up_deg(self):
+        return self.ls_values['beta_q_up_deg']
 
-    beta_q_up = Property(Array)
-    def _get_beta_q_up(self):
-        return self.ls_values['beta_q_up']
+    beta_l_lo_deg = Property(Array)
+    def _get_beta_l_lo_deg(self):
+        return self.ls_values['beta_l_lo_deg']
 
-    beta_l_lo = Property(Array)
-    def _get_beta_l_lo(self):
-        return self.ls_values['beta_l_lo']
-
-    beta_q_lo = Property(Array)
-    def _get_beta_q_lo(self):
-        return self.ls_values['beta_q_lo']
+    beta_q_lo_deg = Property(Array)
+    def _get_beta_q_lo_deg(self):
+        return self.ls_values['beta_q_lo_deg']
 
     #------------------------------------
     # eval == 'eta_nm'
@@ -1130,7 +1151,7 @@ class LSTable(HasTraits):
 
         # compare the formulae with the RFEM-manual p.290
 
-        # stresses [MPa] upper face in global drection:
+        # stresses [MPa] upper face in global direction:
         #
         sigx_up = (nx / A - mx / W) / 1000.
         sigy_up = (ny / A - my / W) / 1000.
@@ -1146,55 +1167,58 @@ class LSTable(HasTraits):
         # upper face:
         #--------------
 
-        # principal stresses upper face:
+        # principal stresses lower face:
         #
         sig1_up = 0.5 * (sigx_up + sigy_up) + 0.5 * sqrt((sigx_up - sigy_up) ** 2 + 4 * sigxy_up ** 2)
         sig2_up = 0.5 * (sigx_up + sigy_up) - 0.5 * sqrt((sigx_up - sigy_up) ** 2 + 4 * sigxy_up ** 2)
 
-        alpha_sig_up = pi / 2. * ones_like(sig1_up)
-
-        # from mechanic formula book (cf. also InfoCAD manual)
+        # formula corresponds to Mohr-circle formula
+        # underline in the name indicates that the angle is still unsorted
+        # first angle lies within -/+45deg
         #
-        bool_arr = sig2_up != sigx_up
-        alpha_sig_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sig2_up[ bool_arr ] - sigx_up[ bool_arr ]))
-
-        # mohr-circle formula
-        #
-#         bool_arr = sigx_up != sigy_up
-#         alpha_sig_up[ bool_arr ] = 0.5 * arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
+        alpha_sig1_up_ = pi / 4. * ones_like(sig1_up)
+        bool_arr = sigx_up != sigy_up
+        alpha_sig1_up_[ bool_arr ] = 0.5 * arctan(2 * sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
-        alpha_sig2_up = alpha_sig_up + pi / 2
+        alpha_sig2_up_ = alpha_sig1_up_ + pi / 2
 
-        # RFEM-manual (NOTE that manual contains typing error!)
-        # the formula as given below yields the same results then the used mechanic formula
-#        bool = sigx_up != sigy_up
-#        alpha_sig_up[ bool ] = 0.5 * arctan( 2 * sigxy_up[ bool ] / ( sigx_up[ bool ] - sigy_up[ bool ] ) )
-
-        alpha_sig_up_deg = alpha_sig_up * 180. / pi
-
-        # transform formula taken from mechanic formula book
-        # transform the stresses at the lower face to the principle tensile direction (1-direction) of the upper stresses
-        sig1_lo_sig_up = 0.5 * (sigy_lo + sigx_lo) - 0.5 * (sigy_lo - sigx_lo) * cos(2 * alpha_sig_up) - sigxy_lo * sin(2 * alpha_sig_up)
+        # perform sorting of the principle directions angle
+        # (check if rotation leads to the same value then formula for 1st principal stress value; if not switch entries in
+        # the corresponding arrays)
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
+        # MOHR
+        sig_alpha_sig1_up_ = 0.5 * (sigx_up + sigy_up) + 0.5 * (sigx_up - sigy_up) * cos(2 * alpha_sig1_up_) + sigxy_up * sin(2 * alpha_sig1_up_)
+
+        # check if sig_up(alpha_sig1_up)==sig1_up (within a 1 permille tolerance)
         #
-        m_sig_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
-        n_sig_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
-#         m_sig_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) + mxy * sin(2 * alpha_sig_up)
-#         n_sig_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) + nxy * sin(2 * alpha_sig_up)
+        sig1_up = sig1_up
+        bool_arr_i = abs(sig_alpha_sig1_up_ / sig1_up) < 1.001
+        bool_arr_ii = abs(sig_alpha_sig1_up_ / sig1_up) > 0.999
+        bool_arr_1_up = bool_arr_i * bool_arr_ii
+
+        # sort principle angles (separate 1st and 2nd principle stress directions)
+        #
+        alpha_sig1_up = alpha_sig2_up_
+        alpha_sig1_up[bool_arr_1_up] = alpha_sig1_up_[bool_arr_1_up]
+        alpha_sig2_up = alpha_sig1_up_
+        alpha_sig2_up[bool_arr_1_up] = alpha_sig2_up_[bool_arr_1_up]
+
+        # convert units from radiant to degree
+        #
+        alpha_sig1_up_deg = alpha_sig1_up * 180. / pi
+        alpha_sig2_up_deg = alpha_sig2_up * 180. / pi
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
-        #
-        m_sig2_up = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_up) - mxy * sin(2 * alpha_sig2_up)
-        n_sig2_up = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_up) - nxy * sin(2 * alpha_sig2_up)
-        #
-#         m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
-#         n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
-        #
-#         m_sig2_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_up) - mxy * sin(2 * alpha_sig_up)
-#         n_sig2_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_up) - nxy * sin(2 * alpha_sig_up)
+        # MOHR
+        m_sig1_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig1_up) + mxy * sin(2 * alpha_sig1_up)
+        n_sig1_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig1_up) + nxy * sin(2 * alpha_sig1_up)
+
+        # MOHR
+        m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig1_up) - mxy * sin(2 * alpha_sig1_up)
+        n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig1_up) - nxy * sin(2 * alpha_sig1_up)
 
         #--------------
         # lower face:
@@ -1205,68 +1229,69 @@ class LSTable(HasTraits):
         sig1_lo = 0.5 * (sigx_lo + sigy_lo) + 0.5 * sqrt((sigx_lo - sigy_lo) ** 2 + 4 * sigxy_lo ** 2)
         sig2_lo = 0.5 * (sigx_lo + sigy_lo) - 0.5 * sqrt((sigx_lo - sigy_lo) ** 2 + 4 * sigxy_lo ** 2)
 
-        alpha_sig_lo = pi / 2. * ones_like(sig1_lo)
-
-#        # from mechanic formula book (cf. also InfoCAD manual)
-#        #
-        bool_arr = sig2_lo != sigx_lo
-        alpha_sig_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sig2_lo[ bool_arr ] - sigx_lo[ bool_arr ]))
-
-        # mohr-circle formula
+        # formula corresponds to Mohr-circle formula
+        # NOTE: underline score in the name indicates that the angle is still unsorted
+        # formula returns an angle that lies within -/+45deg
         #
-#         bool_arr = sigx_lo != sigy_lo
-#         alpha_sig_lo[ bool_arr ] = 0.5 * arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
+        alpha_sig1_lo_ = pi / 4. * ones_like(sig1_lo)
+        bool_arr = sigx_lo != sigy_lo
+        alpha_sig1_lo_[ bool_arr ] = 0.5 * arctan(2 * sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
-        alpha_sig2_lo = alpha_sig_lo + pi / 2
+        alpha_sig2_lo_ = alpha_sig1_lo_ + pi / 2
 
-        # RFEM-manual (NOTE that manual contains typing error!)
-        # the formula as given below yields the same results then the used mechanic formula
-#        bool = sigx_lo != sigy_lo
-#        alpha_sig_lo[ bool ] = 0.5 * arctan( 2 * sigxy_lo[ bool ] / ( sigx_lo[ bool ] - sigy_lo[ bool ] ) )
-
-        alpha_sig_lo_deg = alpha_sig_lo * 180. / pi
-
-        # transform the stresses at the lower face to the principle tensile direction (1-direction) of the upper stresses
-        # Note: transformation forumla taken from mechanic formula book
-        #
-        sig1_up_sig_lo = 0.5 * (sigy_up + sigx_up) - 0.5 * (sigy_up - sigx_up) * cos(2 * alpha_sig_lo) - sigxy_up * sin(2 * alpha_sig_lo)
+        # perform sorting of the principle directions angle
+        # (check if rotation leads to the same value then formula for 1st principal stress value; if not switch entries in
+        # the corresponding arrays)
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
-        #
-        m_sig_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
-        n_sig_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
-#         m_sig_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) + mxy * sin(2 * alpha_sig_lo)
-#         n_sig_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) + nxy * sin(2 * alpha_sig_lo)
+        # MOHR
+        sig_alpha_sig1_lo_ = 0.5 * (sigx_lo + sigy_lo) + 0.5 * (sigx_lo - sigy_lo) * cos(2 * alpha_sig1_lo_) + sigxy_lo * sin(2 * alpha_sig1_lo_)
 
-        # transform moments and normal forces in the direction of the principal stresses (2-direction)
+        # check if sig_lo(alpha_sig1_lo)==sig1_lo (within a 1 permille tolerance)
         #
-        m_sig2_lo = 0.5 * (my + mx) - 0.5 * (my - mx) * cos(2 * alpha_sig2_lo) - mxy * sin(2 * alpha_sig2_lo)
-        n_sig2_lo = 0.5 * (ny + nx) - 0.5 * (ny - nx) * cos(2 * alpha_sig2_lo) - nxy * sin(2 * alpha_sig2_lo)
+        sig1_lo = sig1_lo
+        bool_arr_i = abs(sig_alpha_sig1_lo_ / sig1_lo) < 1.001
+        bool_arr_ii = abs(sig_alpha_sig1_lo_ / sig1_lo) > 0.999
+        bool_arr_1_lo = bool_arr_i * bool_arr_ii
+
+        # sort principle angles (separate 1st and 2nd principle stress directions)
         #
-#         m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
-#         n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+        alpha_sig1_lo = alpha_sig2_lo_
+        alpha_sig1_lo[bool_arr_1_lo] = alpha_sig1_lo_[bool_arr_1_lo]
+        alpha_sig2_lo = alpha_sig1_lo_
+        alpha_sig2_lo[bool_arr_1_lo] = alpha_sig2_lo_[bool_arr_1_lo]
+
+        # convert units from radiant to degree
         #
-#         m_sig2_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig_lo) - mxy * sin(2 * alpha_sig_lo)
-#         n_sig2_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig_lo) - nxy * sin(2 * alpha_sig_lo)
+        alpha_sig1_lo_deg = alpha_sig1_lo * 180. / pi
+        alpha_sig2_lo_deg = alpha_sig2_lo * 180. / pi
+
+        # transform moments and normal forces in the direction of the principal stresses (1-direction)
+        # MOHR
+        m_sig1_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig1_lo) + mxy * sin(2 * alpha_sig1_lo)
+        n_sig1_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig1_lo) + nxy * sin(2 * alpha_sig1_lo)
+
+        # MOHR
+        m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig1_lo) - mxy * sin(2 * alpha_sig1_lo)
+        n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig1_lo) - nxy * sin(2 * alpha_sig1_lo)
 
         return {
                  'sigx_up' : sigx_up, 'sigy_up' : sigy_up, 'sigxy_up' : sigxy_up,
-                 'sig1_up' : sig1_up, 'sig2_up' : sig2_up, 'alpha_sig_up' : alpha_sig_up_deg,
-
-                 'sig1_lo_sig_up' : sig1_lo_sig_up,
-                 'm_sig_up' : m_sig_up, 'n_sig_up' : n_sig_up,
+                 'sig1_up' : sig1_up, 'sig2_up' : sig2_up,
+                 'alpha_sig1_up' : alpha_sig1_up, 'alpha_sig2_up' : alpha_sig2_up,
+                 'alpha_sig1_up_deg' : alpha_sig1_up_deg, 'alpha_sig2_up_deg' : alpha_sig2_up_deg,
+                 'm_sig1_up' : m_sig1_up, 'n_sig1_up' : n_sig1_up,
                  'm_sig2_up' : m_sig2_up, 'n_sig2_up' : n_sig2_up,
 
                  'sigx_lo' : sigx_lo, 'sigy_lo' : sigy_lo, 'sigxy_lo' : sigxy_lo,
-                 'sig1_lo' : sig1_lo, 'sig2_lo' : sig2_lo, 'alpha_sig_lo' : alpha_sig_lo_deg,
-
-                 'sig1_up_sig_lo' : sig1_up_sig_lo,
-                 'm_sig_lo' : m_sig_lo, 'n_sig_lo' : n_sig_lo,
+                 'sig1_lo' : sig1_lo, 'sig2_lo' : sig2_lo,
+                 'alpha_sig1_lo' : alpha_sig1_lo, 'alpha_sig2_lo' : alpha_sig2_lo,
+                 'alpha_sig1_lo_deg' : alpha_sig1_lo_deg, 'alpha_sig2_lo_deg' : alpha_sig2_lo_deg,
+                 'm_sig1_lo' : m_sig1_lo, 'n_sig1_lo' : n_sig1_lo,
                  'm_sig2_lo' : m_sig2_lo, 'n_sig2_lo' : n_sig2_lo,
-
-               }
+                }
 
     # stresses upper face:
     #
@@ -1290,21 +1315,29 @@ class LSTable(HasTraits):
     def _get_sig2_up(self):
         return self.princ_values_sig['sig2_up']
 
-    alpha_sig_up = Property(Float)
-    def _get_alpha_sig_up(self):
-        return self.princ_values_sig['alpha_sig_up']
+    alpha_sig1_up = Property(Float)
+    def _get_alpha_sig1_up(self):
+        return self.princ_values_sig['alpha_sig1_up']
 
-    sig1_lo_sig_up = Property(Float)
-    def _get_sig1_lo_sig_up(self):
-        return self.princ_values_sig['sig1_lo_sig_up']
+    alpha_sig2_up = Property(Float)
+    def _get_alpha_sig2_up(self):
+        return self.princ_values_sig['alpha_sig2_up']
 
-    m_sig_up = Property(Float)
-    def _get_m_sig_up(self):
-        return self.princ_values_sig['m_sig_up']
+    alpha_sig1_up_deg = Property(Float)
+    def _get_alpha_sig1_up_deg(self):
+        return self.princ_values_sig['alpha_sig1_up_deg']
 
-    n_sig_up = Property(Float)
-    def _get_n_sig_up(self):
-        return self.princ_values_sig['n_sig_up']
+    alpha_sig2_up_deg = Property(Float)
+    def _get_alpha_sig2_up_deg(self):
+        return self.princ_values_sig['alpha_sig2_up_deg']
+
+    m_sig1_up = Property(Float)
+    def _get_m_sig1_up(self):
+        return self.princ_values_sig['m_sig1_up']
+
+    n_sig1_up = Property(Float)
+    def _get_n_sig1_up(self):
+        return self.princ_values_sig['n_sig1_up']
 
     m_sig2_up = Property(Float)
     def _get_m_sig2_up(self):
@@ -1336,21 +1369,29 @@ class LSTable(HasTraits):
     def _get_sig2_lo(self):
         return self.princ_values_sig['sig2_lo']
 
-    alpha_sig_lo = Property(Float)
-    def _get_alpha_sig_lo(self):
-        return self.princ_values_sig['alpha_sig_lo']
+    alpha_sig1_lo = Property(Float)
+    def _get_alpha_sig1_lo(self):
+        return self.princ_values_sig['alpha_sig1_lo']
 
-    sig1_up_sig_lo = Property(Float)
-    def _get_sig1_up_sig_lo(self):
-        return self.princ_values_sig['sig1_up_sig_lo']
+    alpha_sig2_lo = Property(Float)
+    def _get_alpha_sig2_lo(self):
+        return self.princ_values_sig['alpha_sig2_lo']
 
-    m_sig_lo = Property(Float)
-    def _get_m_sig_lo(self):
-        return self.princ_values_sig['m_sig_lo']
+    alpha_sig1_lo_deg = Property(Float)
+    def _get_alpha_sig1_lo_deg(self):
+        return self.princ_values_sig['alpha_sig1_lo_deg']
 
-    n_sig_lo = Property(Float)
-    def _get_n_sig_lo(self):
-        return self.princ_values_sig['n_sig_lo']
+    alpha_sig2_lo_deg = Property(Float)
+    def _get_alpha_sig2_lo_deg(self):
+        return self.princ_values_sig['alpha_sig2_lo_deg']
+
+    m_sig1_lo = Property(Float)
+    def _get_m_sig1_lo(self):
+        return self.princ_values_sig['m_sig1_lo']
+
+    n_sig1_lo = Property(Float)
+    def _get_n_sig1_lo(self):
+        return self.princ_values_sig['n_sig1_lo']
 
     m_sig2_lo = Property(Float)
     def _get_m_sig2_lo(self):
