@@ -411,19 +411,19 @@ if __name__ == '__main__':
         #--------------------------------------------------------------
         #
 #        print 'lct.combi_arr', lct.combi_arr.shape
-        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter=';')
+#        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter=';')
 
         #--------------------------------------------------------------
         # nm-interaction plot (normal force - bending moment)
         #--------------------------------------------------------------
         #
-        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
+#        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # interaction plot of material usage 'eta_nm' (utilization ratio)
         #--------------------------------------------------------------
         #
-        lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_shell-test')
+#        lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
