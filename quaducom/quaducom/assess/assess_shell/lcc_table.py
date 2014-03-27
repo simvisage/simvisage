@@ -839,10 +839,10 @@ class LCCTable(HasTraits):
         # run trough all loading case combinations:
         #----------------------------------------------
 
-        m_sig_lo_list = []
-        n_sig_lo_list = []
-        m_sig_up_list = []
-        n_sig_up_list = []
+        m_sig1_lo_list = []
+        n_sig1_lo_list = []
+        m_sig1_up_list = []
+        n_sig1_up_list = []
         m_Ed_list = []
         n_Ed_list = []
         for lcc in lcc_list:
@@ -854,10 +854,10 @@ class LCCTable(HasTraits):
 
             # get n_Ed and m_Ed
             #
-            m_sig_lo = np.copy(getattr(ls_class, 'm_sig_lo'))
-            n_sig_lo = np.copy(getattr(ls_class, 'n_sig_lo'))
-            m_sig_up = np.copy(getattr(ls_class, 'm_sig_up'))
-            n_sig_up = np.copy(getattr(ls_class, 'n_sig_up'))
+            m_sig1_lo = np.copy(getattr(ls_class, 'm_sig1_lo'))
+            n_sig1_lo = np.copy(getattr(ls_class, 'n_sig1_lo'))
+            m_sig1_up = np.copy(getattr(ls_class, 'm_sig1_up'))
+            n_sig1_up = np.copy(getattr(ls_class, 'n_sig1_up'))
 
             # add read in saved values to be superposed with currently read in values
             #
@@ -870,55 +870,55 @@ class LCCTable(HasTraits):
                 max_m_arr = max_min_nm_arr[:, 2][:, None]
                 min_m_arr = max_min_nm_arr[:, 3][:, None]
 
-                # n_sig_lo
+                # n_sig1_lo
                 #
-                cond_n_sig_lo_ge_0 = n_sig_lo >= 0.  # tensile normal force
-                bool_arr = cond_n_sig_lo_ge_0
-                n_sig_lo[bool_arr] += max_n_arr[bool_arr]
+                cond_n_sig1_lo_ge_0 = n_sig1_lo >= 0.  # tensile normal force
+                bool_arr = cond_n_sig1_lo_ge_0
+                n_sig1_lo[bool_arr] += max_n_arr[bool_arr]
 
-                cond_n_sig_lo_lt_0 = n_sig_lo < 0.  # compressive normal force
-                bool_arr = cond_n_sig_lo_lt_0
-                n_sig_lo[bool_arr] += min_n_arr[bool_arr]
+                cond_n_sig1_lo_lt_0 = n_sig1_lo < 0.  # compressive normal force
+                bool_arr = cond_n_sig1_lo_lt_0
+                n_sig1_lo[bool_arr] += min_n_arr[bool_arr]
 
-                # n_sig_up
+                # n_sig1_up
                 #
-                cond_n_sig_up_ge_0 = n_sig_up >= 0.  # tensile normal force
-                bool_arr = cond_n_sig_up_ge_0
-                n_sig_up[bool_arr] += max_n_arr[bool_arr]
+                cond_n_sig1_up_ge_0 = n_sig1_up >= 0.  # tensile normal force
+                bool_arr = cond_n_sig1_up_ge_0
+                n_sig1_up[bool_arr] += max_n_arr[bool_arr]
 
-                cond_n_sig_up_lt_0 = n_sig_up < 0.  # compressive normal force
-                bool_arr = cond_n_sig_up_lt_0
-                n_sig_up[bool_arr] += min_n_arr[bool_arr]
+                cond_n_sig1_up_lt_0 = n_sig1_up < 0.  # compressive normal force
+                bool_arr = cond_n_sig1_up_lt_0
+                n_sig1_up[bool_arr] += min_n_arr[bool_arr]
 
-                # m_sig_lo
+                # m_sig1_lo
                 #
-                cond_m_sig_lo_ge_0 = m_sig_lo >= 0.  # positive bending moment
-                bool_arr = cond_m_sig_lo_ge_0
-                m_sig_lo[bool_arr] += max_m_arr[bool_arr]
+                cond_m_sig1_lo_ge_0 = m_sig1_lo >= 0.  # positive bending moment
+                bool_arr = cond_m_sig1_lo_ge_0
+                m_sig1_lo[bool_arr] += max_m_arr[bool_arr]
 
-                cond_m_sig_lo_lt_0 = m_sig_lo < 0.  # compressive normal force
-                bool_arr = cond_m_sig_lo_lt_0
-                m_sig_lo[bool_arr] += min_m_arr[bool_arr]
+                cond_m_sig1_lo_lt_0 = m_sig1_lo < 0.  # compressive normal force
+                bool_arr = cond_m_sig1_lo_lt_0
+                m_sig1_lo[bool_arr] += min_m_arr[bool_arr]
 
-                # m_sig_up
+                # m_sig1_up
                 #
-                cond_m_sig_up_ge_0 = m_sig_up >= 0.  # positive bending moment
-                bool_arr = cond_m_sig_up_ge_0
-                m_sig_up[bool_arr] += max_m_arr[bool_arr]
+                cond_m_sig1_up_ge_0 = m_sig1_up >= 0.  # positive bending moment
+                bool_arr = cond_m_sig1_up_ge_0
+                m_sig1_up[bool_arr] += max_m_arr[bool_arr]
 
-                cond_m_sig_up_lt_0 = m_sig_up < 0.  # compressive normal force
-                bool_arr = cond_m_sig_up_lt_0
-                m_sig_up[bool_arr] += min_m_arr[bool_arr]
+                cond_m_sig1_up_lt_0 = m_sig1_up < 0.  # compressive normal force
+                bool_arr = cond_m_sig1_up_lt_0
+                m_sig1_up[bool_arr] += min_m_arr[bool_arr]
 
             # NOTE: after the superposition only the absolute values of m_Ed are used for the plot
             #
-            m_sig_lo_list.append(abs(m_sig_lo))
-            m_sig_up_list.append(abs(m_sig_up))
-            n_sig_lo_list.append(n_sig_lo)
-            n_sig_up_list.append(n_sig_up)
+            m_sig1_lo_list.append(abs(m_sig1_lo))
+            m_sig1_up_list.append(abs(m_sig1_up))
+            n_sig1_lo_list.append(n_sig1_lo)
+            n_sig1_up_list.append(n_sig1_up)
 
-            m_Ed_list = m_sig_lo_list + m_sig_up_list
-            n_Ed_list = n_sig_lo_list + n_sig_up_list
+            m_Ed_list = m_sig1_lo_list + m_sig1_up_list
+            n_Ed_list = n_sig1_lo_list + n_sig1_up_list
 
         # stack the list to an array in order to use plot-function
         #
