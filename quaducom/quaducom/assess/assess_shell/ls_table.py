@@ -612,31 +612,152 @@ class ULS(LS):
         '''get the outputs for ULS
         '''
         #------------------------------------------------------------
-        # get angel of deflection of the textile reinforcement
+        # get angle of deflection of the textile reinforcement
         #------------------------------------------------------------
-        # angel of deflection of the textile reinforcement
+        # angle of deflection of the textile reinforcement
         # distinguished between longitudinal (l) and transversal (q) direction,
         # i.e. 0- and 90-direction of the textile
 
-        # NOTE: so far only the simplified case is handled with similar strength in 0- and 90-direction
-        # in this case no distinction needs to be made between the deflection angles
-        # and only absolute angles between 0 and 90 degrees are used on the resistance side
-        # evaluation is independent from 1st and 2nd direction stress resultants as absolute deflections
-        # and proportions stay the same
-        #
-        beta_l_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
-        bool_arr = np.where(beta_l_up_deg > 90.)[0]
-        beta_l_up_deg[bool_arr] -= 90.
-        beta_q_up_deg = 90. - beta_l_up_deg  # [degree]
-        beta_l_up = beta_l_up_deg * pi / 180.  # [rad]
-        beta_q_up = beta_q_up_deg * pi / 180.  # [rad]
+        #-------------------------------------------
+        # simplified case R_0 = R_90
+        #-------------------------------------------
+        if self.ls_table.equal_stress_characteristics:
+            # NOTE: for the simplified case for similar strength in 0- and 90-direction
+            # no distinction needs to be made between the deflection angles
+            # and only absolute angles between 0 and 90 degrees are used on the resistance side
+            # evaluation is independent from 1st and 2nd direction stress resultants as absolute deflections
+            # and proportions stay the same
+            #
+            beta_l_up_deg = beta_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
+            bool_arr = np.where(beta_l_up_deg > 90.)[0]
+            beta_l_up_deg[bool_arr] -= 90.
+            beta_q_up_deg = 90. - beta_l_up_deg  # [degree]
+            beta_l_up = beta_l_up_deg * pi / 180.  # [rad]
+            beta_q_up = beta_q_up_deg * pi / 180.  # [rad]
 
-        beta_l_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
-        bool_arr = np.where(beta_l_lo_deg > 90.)[0]
-        beta_l_lo_deg[bool_arr] -= 90.
-        beta_q_lo_deg = 90 - beta_l_lo_deg  # [degree]
-        beta_l_lo = beta_l_lo_deg * pi / 180.  # [rad]
-        beta_q_lo = beta_q_lo_deg * pi / 180.  # [rad]
+            beta_l_lo_deg = beta_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
+            bool_arr = np.where(beta_l_lo_deg > 90.)[0]
+            beta_l_lo_deg[bool_arr] -= 90.
+            beta_q_lo_deg = 90 - beta_l_lo_deg  # [degree]
+            beta_l_lo = beta_l_lo_deg * pi / 180.  # [rad]
+            beta_q_lo = beta_q_lo_deg * pi / 180.  # [rad]
+
+            # simplification of the transformation formula only valid for assumption of
+            # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
+            #
+            n_Rdt_lo_1 = n_Rdt_lo_2 = self.n_0_Rdt * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+                                      self.n_90_Rdt * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
+            n_Rdt_up_1 = n_Rdt_up_2 = self.n_0_Rdt * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+                                      self.n_90_Rdt * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+            m_Rd_lo_1 = m_Rd_lo_2 = self.m_0_Rd * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+                                    self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
+            m_Rd_up_1 = m_Rd_up_2 = self.m_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+                                    self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
+            k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
+                         cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
+            k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
+                         cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+
+        #-------------------------------------------
+        # general case R_0 != R_90
+        #-------------------------------------------
+        if self.ls_table.equal_stress_characteristics == False:
+            #----------------------------------------------------------
+            # upper side
+            #----------------------------------------------------------
+            # case where deflection angle for 0-direction is smaller then 45 degree
+            #
+            beta_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
+            beta_up = abs(self.alpha_sig1_up)  # [rad]
+            n_Rdt_up_beta0 = self.n_0_Rdt * cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                       self.n_90_Rdt * sin(beta_up) * (beta_up_deg / 90.)
+            m_Rd_up_beta0 = self.m_0_Rd * cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                      self.m_90_Rd * sin(beta_up) * (beta_up_deg / 90.)
+            k_alpha_up_beta0 = cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                         sin(beta_up) * (beta_up_deg / 90.)
+
+            # case where deflection angle for 90-direction is smaller then 45 degree
+            # for 1st principle direction angle pi/4 < alpha_sig1 < 3*pi/4
+            #
+            beta_up_deg = 90. - abs(self.alpha_sig1_up_deg)  # [degree]
+            beta_up = pi / 2. - abs(self.alpha_sig1_up)
+            n_Rdt_up_beta90 = self.n_0_Rdt * sin(beta_up) * (beta_up_deg / 90.) + \
+                       self.n_90_Rdt * cos(beta_up) * (1 - beta_up_deg / 90.)
+            m_Rd_up_beta90 = self.m_0_Rd * sin(beta_up) * (beta_up_deg / 90.) + \
+                      self.m_90_Rd * cos(beta_up) * (1 - beta_up_deg / 90.)
+            k_alpha_up_beta90 = sin(beta_up) * (beta_up_deg / 90.) + \
+                         cos(beta_up) * (1 - beta_up_deg / 90.)
+
+            # angle dependent strength for evaluation in 1st principle direction
+            #
+            n_Rdt_up_1 = n_Rdt_up_beta0
+            m_Rd_up_1 = m_Rd_up_beta0
+            bool_arr = np.where(abs(self.alpha_sig1_up_deg) > 45.)[0]
+            n_Rdt_up_1[bool_arr] = n_Rdt_up_beta90[bool_arr]
+            m_Rd_up_1[bool_arr] = m_Rd_up_beta90[bool_arr]
+
+            # angle dependent strength for evaluation in 2nd principle direction
+            #
+            n_Rdt_up_2 = n_Rdt_up_beta90
+            m_Rd_up_2 = m_Rd_up_beta90
+            bool_arr = np.where(abs(self.alpha_sig1_up_deg) > 45.)[0]
+            n_Rdt_up_2[bool_arr] = n_Rdt_up_beta0[bool_arr]
+            m_Rd_up_2[bool_arr] = m_Rd_up_beta0[bool_arr]
+
+            # k_alpha_total in 1st direction for 'simplified' case (for verification purpose only)
+            #
+            k_alpha_up = k_alpha_up_beta0
+            bool_arr = np.where(abs(self.alpha_sig1_up_deg) > 45.)[0]
+            k_alpha_up[bool_arr] = k_alpha_up_beta90[bool_arr]
+
+            #----------------------------------------------------------
+            # lower side
+            #----------------------------------------------------------
+            # case where deflection angle for 0-direction is smaller then 45 degree
+            #
+            beta_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
+            beta_lo = abs(self.alpha_sig1_lo)  # [rad]
+            n_Rdt_lo_beta0 = self.n_0_Rdt * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                       self.n_90_Rdt * sin(beta_lo) * (beta_lo_deg / 90.)
+            m_Rd_lo_beta0 = self.m_0_Rd * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                      self.m_90_Rd * sin(beta_lo) * (beta_lo_deg / 90.)
+            k_alpha_lo_beta0 = cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                         sin(beta_lo) * (beta_lo_deg / 90.)
+
+            # case where deflection angle for 90-direction is smaller then 45 degree
+            # for 1st principle direction angle pi/4 < alpha_sig1 < 3*pi/4
+            #
+            beta_lo_deg = 90. - abs(self.alpha_sig1_lo_deg)  # [degree]
+            beta_lo = pi / 2. - abs(self.alpha_sig1_lo)
+            n_Rdt_lo_beta90 = self.n_0_Rdt * sin(beta_lo) * (beta_lo_deg / 90.) + \
+                       self.n_90_Rdt * cos(beta_lo) * (1 - beta_lo_deg / 90.)
+            m_Rd_lo_beta90 = self.m_0_Rd * sin(beta_lo) * (beta_lo_deg / 90.) + \
+                      self.m_90_Rd * cos(beta_lo) * (1 - beta_lo_deg / 90.)
+            k_alpha_lo_beta90 = sin(beta_lo) * (beta_lo_deg / 90.) + \
+                         cos(beta_lo) * (1 - beta_lo_deg / 90.)
+
+            # angle dependent strength for evaluation in 1st principle direction
+            #
+            n_Rdt_lo_1 = n_Rdt_lo_beta0
+            m_Rd_lo_1 = m_Rd_lo_beta0
+            bool_arr = np.where(self.alpha_sig1_lo_deg > 45.)[0]
+            n_Rdt_lo_1[bool_arr] = n_Rdt_lo_beta90[bool_arr]
+            m_Rd_lo_1[bool_arr] = m_Rd_lo_beta90[bool_arr]
+
+            # angle dependent strength for evaluation in 2nd principle direction
+            #
+            n_Rdt_lo_2 = n_Rdt_lo_beta90
+            m_Rd_lo_2 = m_Rd_lo_beta90
+            bool_arr = np.where(self.alpha_sig1_lo_deg > 45.)[0]
+            n_Rdt_lo_2[bool_arr] = n_Rdt_lo_beta0[bool_arr]
+            m_Rd_lo_2[bool_arr] = m_Rd_lo_beta0[bool_arr]
+
+            # k_alpha_total in 1st direction for 'simplified' case (for verification purpose only)
+            #
+            k_alpha_lo = k_alpha_lo_beta0
+            bool_arr = np.where(abs(self.alpha_sig1_lo_deg) > 45.)[0]
+            k_alpha_lo[bool_arr] = k_alpha_lo_beta90[bool_arr]
 
         #-------------------------------------------------
         # NOTE: the principle tensile stresses are used to evaluate the principle direction\
@@ -649,36 +770,22 @@ class ULS(LS):
         print "      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
         print "      'eta_nm_tot' is evaluated both for 1st and 2nd principle direction"
 
-        # simplification of the transformation formula only valid for assumption of
-        # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
-        #
-        n_Rdt_lo = self.n_0_Rdt * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                   self.n_90_Rdt * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-        n_Rdt_up = self.n_0_Rdt * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                   self.n_90_Rdt * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-        m_Rd_lo = self.m_0_Rd * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                  self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-        m_Rd_up = self.m_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                  self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-
-        n_Rdc = self.n_Rdc * np.ones_like(n_Rdt_lo)
-
-        k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                     cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-        k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                     cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-
         if self.ls_table.k_alpha_min == True:
             print "minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values"
             # NOTE: conservative simplification: k_alpha_min = 0.707 used
             #
-            n_Rdt_lo = n_Rdt_up = min(self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like(n_Rdt_lo)
-            m_Rd_lo = m_Rd_up = min(self.m_0_Rd, self.m_90_Rd) * 0.707 * np.ones_like(m_Rd_lo)
+            n_Rdt_lo_1 = n_Rdt_up_1 = n_Rdt_lo_2 = n_Rdt_up_2 = min(self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like(self.elem_no)
+            m_Rd_lo_1 = m_Rd_up_1 = m_Rd_lo_2 = m_Rd_up_2 = min(self.m_0_Rd, self.m_90_Rd) * 0.707 * np.ones_like(self.elem_no)
+
+        #-------------------------------------------------
+        # compressive strength (independent from principle and evaluation direction)
+        #-------------------------------------------------
+        n_Rdc = self.n_Rdc * np.ones_like(self.elem_no)
 
         #----------------------------------------
         # caluclate eta_nm
         #----------------------------------------
-        # destinguish the sign of the normal force
+        # NOTE: destinction of the sign of the normal force necessary
 
         #---------------
         # 1-direction:
@@ -697,10 +804,10 @@ class ULS(LS):
         # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
         #
         bool_arr = cond_nsu_ge_0
-        eta_n_up[bool_arr] = self.n_sig1_up[bool_arr] / n_Rdt_up[bool_arr]
+        eta_n_up[bool_arr] = self.n_sig1_up[bool_arr] / n_Rdt_up_1[bool_arr]
 
         bool_arr = cond_nsl_ge_0
-        eta_n_lo[bool_arr] = self.n_sig1_lo[bool_arr] / n_Rdt_lo[bool_arr]
+        eta_n_lo[bool_arr] = self.n_sig1_lo[bool_arr] / n_Rdt_lo_1[bool_arr]
 
         # cases with a compressive normal force
         #
@@ -719,8 +826,8 @@ class ULS(LS):
         # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
         #
         min_thickness = np.min(self.thickness)
-        eta_m_lo = self.m_sig1_lo / (m_Rd_lo * self.thickness / min_thickness)
-        eta_m_up = self.m_sig1_up / (m_Rd_up * self.thickness / min_thickness)
+        eta_m_lo = self.m_sig1_lo / (m_Rd_lo_1 * self.thickness / min_thickness)
+        eta_m_up = self.m_sig1_up / (m_Rd_up_1 * self.thickness / min_thickness)
 
         # get total 'eta_mn' based on imposed normal force and moment
         # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
@@ -750,10 +857,10 @@ class ULS(LS):
         # compare imposed tensile normal force with 'n_Rd,t' as obtained from tensile test
         #
         bool_arr = cond_ns2u_ge_0
-        eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdt_up[bool_arr]
+        eta_n2_up[bool_arr] = self.n_sig2_up[bool_arr] / n_Rdt_up_2[bool_arr]
 
         bool_arr = cond_ns2l_ge_0
-        eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdt_lo[bool_arr]
+        eta_n2_lo[bool_arr] = self.n_sig2_lo[bool_arr] / n_Rdt_lo_2[bool_arr]
 
         # cases with a compressive normal force
         #
@@ -771,8 +878,8 @@ class ULS(LS):
         # get 'eta_m' based on imposed moment compared with moment resistence
         # NOTE: use a linear increase factor for resistance moment based on reference thickness (= minimum thickness)
         #
-        eta_m2_lo = self.m_sig2_lo / (m_Rd_lo * self.thickness / min_thickness)
-        eta_m2_up = self.m_sig2_up / (m_Rd_up * self.thickness / min_thickness)
+        eta_m2_lo = self.m_sig2_lo / (m_Rd_lo_2 * self.thickness / min_thickness)
+        eta_m2_up = self.m_sig2_up / (m_Rd_up_2 * self.thickness / min_thickness)
 
         # get total 'eta_mn' based on imposed normal force and moment
         # NOTE: if eta_n is negative (caused by a compressive normal force) take the absolute value
@@ -797,15 +904,19 @@ class ULS(LS):
         #------------------------------------------------------------
         # construct a dictionary containing the return values
         #------------------------------------------------------------
-        return { 'beta_l_up_deg':beta_l_up_deg,
-                 'beta_q_up_deg':beta_q_up_deg,
-                 'beta_l_lo_deg':beta_l_lo_deg,
-                 'beta_q_lo_deg':beta_q_lo_deg,
+        return {
+                 'beta_up_deg':beta_up_deg,
+                 'beta_lo_deg':beta_lo_deg,
 
-                 'n_Rdt_up':n_Rdt_up,
-                 'n_Rdt_lo':n_Rdt_lo,
-                 'm_Rd_up':m_Rd_up,
-                 'm_Rd_lo':m_Rd_lo,
+                 'n_Rdt_up_1':n_Rdt_up_1,
+                 'n_Rdt_lo_1':n_Rdt_lo_1,
+                 'm_Rd_up_1':m_Rd_up_1,
+                 'm_Rd_lo_1':m_Rd_lo_1,
+
+                 'n_Rdt_up_2':n_Rdt_up_2,
+                 'n_Rdt_lo_2':n_Rdt_lo_2,
+                 'm_Rd_up_2':m_Rd_up_2,
+                 'm_Rd_lo_2':m_Rd_lo_2,
 
                  'eta_n_up':eta_n_up,
                  'eta_m_up':eta_m_up,
@@ -826,7 +937,8 @@ class ULS(LS):
                  'eta_nm2_lo':eta_nm2_lo,
 
                  'k_alpha_lo' : k_alpha_lo,
-                 'k_alpha_up' : k_alpha_up}
+                 'k_alpha_up' : k_alpha_up
+                 }
 
     #-----------------------------------------------
     # LS_COLUMNS: specify the properties that are displayed in the view
@@ -848,11 +960,18 @@ class ULS(LS):
                        'alpha_sig1_lo_deg',
                        'alpha_sig2_lo_deg',
 
-                       'beta_l_up_deg', 'beta_q_up_deg', 'k_alpha_up',
-                       'beta_l_lo_deg', 'beta_q_lo_deg', 'k_alpha_lo',
+                       'beta_up_deg', 'k_alpha_up',
+                       'beta_lo_deg', 'k_alpha_lo',
 
-                       'n_Rdt_up', 'n_Rdt_lo',
-                       'm_Rd_up', 'm_Rd_lo',
+                       'n_Rdt_up_1',
+                       'n_Rdt_lo_1',
+                       'm_Rd_up_1',
+                       'm_Rd_lo_1',
+
+#                       'n_Rdt_up_2',
+#                       'n_Rdt_lo_2',
+#                       'm_Rd_up_2',
+#                       'm_Rd_lo_2',
 
                        'eta_n_up', 'eta_m_up', 'eta_nm_up',
                        'eta_n_lo', 'eta_m_lo', 'eta_nm_lo',
@@ -870,41 +989,49 @@ class ULS(LS):
                     Item(name='n_Rdc', label='normal compressive strength [kN/m]:  n_0_Rdc ', style='readonly', format_str="%.1f"), \
                     Item(name='m_90_Rd', label='bending strength [kNm/m]:  m_90_Rd ', style='readonly', format_str="%.1f")
 
-    beta_l_up_deg = Property(Array)
-    def _get_beta_l_up_deg(self):
-        return self.ls_values['beta_l_up_deg']
+    beta_up_deg = Property(Array)
+    def _get_beta_up_deg(self):
+        return self.ls_values['beta_up_deg']
 
-    beta_q_up_deg = Property(Array)
-    def _get_beta_q_up_deg(self):
-        return self.ls_values['beta_q_up_deg']
-
-    beta_l_lo_deg = Property(Array)
-    def _get_beta_l_lo_deg(self):
-        return self.ls_values['beta_l_lo_deg']
-
-    beta_q_lo_deg = Property(Array)
-    def _get_beta_q_lo_deg(self):
-        return self.ls_values['beta_q_lo_deg']
+    beta_lo_deg = Property(Array)
+    def _get_beta_lo_deg(self):
+        return self.ls_values['beta_lo_deg']
 
     #------------------------------------
     # eval == 'eta_nm'
     #------------------------------------
 
-    n_Rdt_up = Property(Array)
-    def _get_n_Rdt_up(self):
-        return self.ls_values['n_Rdt_up']
+    n_Rdt_up_1 = Property(Array)
+    def _get_n_Rdt_up_1(self):
+        return self.ls_values['n_Rdt_up_1']
 
-    n_Rdt_lo = Property(Array)
-    def _get_n_Rdt_lo(self):
-        return self.ls_values['n_Rdt_lo']
+    n_Rdt_lo_1 = Property(Array)
+    def _get_n_Rdt_lo_1(self):
+        return self.ls_values['n_Rdt_lo_1']
 
-    m_Rd_up = Property(Array)
-    def _get_m_Rd_up(self):
-        return self.ls_values['m_Rd_up']
+    m_Rd_up_1 = Property(Array)
+    def _get_m_Rd_up_1(self):
+        return self.ls_values['m_Rd_up_1']
 
-    m_Rd_lo = Property(Array)
-    def _get_m_Rd_lo(self):
-        return self.ls_values['m_Rd_lo']
+    m_Rd_lo_1 = Property(Array)
+    def _get_m_Rd_lo_1(self):
+        return self.ls_values['m_Rd_lo_1']
+
+    n_Rdt_up_2 = Property(Array)
+    def _get_n_Rdt_up_2(self):
+        return self.ls_values['n_Rdt_up_2']
+
+    n_Rdt_lo_2 = Property(Array)
+    def _get_n_Rdt_lo_2(self):
+        return self.ls_values['n_Rdt_lo_2']
+
+    m_Rd_up_2 = Property(Array)
+    def _get_m_Rd_up_2(self):
+        return self.ls_values['m_Rd_up_2']
+
+    m_Rd_lo_2 = Property(Array)
+    def _get_m_Rd_lo_2(self):
+        return self.ls_values['m_Rd_lo_2']
 
     k_alpha_up = Property(Array)
     def _get_k_alpha_up(self):
@@ -984,19 +1111,9 @@ class ULS(LS):
     def _get_eta_nm2_lo(self):
         return self.ls_values['eta_nm2_lo']
 
-    # @todo: make an automatised function calle for asses_value_max
-#    @on_trait_change( '+input' )
-#    def set_assess_name_max( self, assess_name ):
-#        print 'set asses'
-#        asses_value = ndmax( getattr( self, assess_name ) )
-#        assess_name_max = 'max_' + assess_name
-#        setattr( self, assess_name_max, asses_value )
-
-
     #-------------------------------
     # ls view
     #-------------------------------
-
     # @todo: the dynamic selection of the columns to be displayed
     # does not work in connection with the LSArrayAdapter
     traits_view = View(
@@ -1030,6 +1147,7 @@ class LSTable(HasTraits):
     '''
 
     is_id = Int(0)
+
     # geo data: coordinates and element thickness
     #
     geo_data = Dict
@@ -1039,9 +1157,14 @@ class LSTable(HasTraits):
     #------------------------------------------------------------
     # if flag is set to 'True' the resistance values 'n_Rdt' and 'm_Rd' below are
     # multiplied with the highest reduction factor 'k_alpha = 0.707', independently
-    # of the true deflection angel 'beta_q' and 'beta_l'
+    # of the true deflection angle 'beta_q' and 'beta_l'
     #
-    k_alpha_min = Bool(False)
+    k_alpha_min = Bool
+
+    # if for the ULS evaluation the same stress resultant values can be assumed
+    # a simplified calculation of the resistance values in the evaluation direction can be applied
+    #
+    equal_stress_characteristics = Bool
 
     # specify the strength characteristics of the material;
     # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
