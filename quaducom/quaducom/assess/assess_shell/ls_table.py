@@ -614,12 +614,15 @@ class ULS(LS):
         #------------------------------------------------------------
         # get angle of deflection of the textile reinforcement
         #------------------------------------------------------------
-        # angle 'beta' of deflection between the textile reinforcement and the
-        # 1st or 2nd principle stress direction
-        # by default the 0-direction coincides with the x-axis
+        # angle 'beta' denotes the absolute deflection between the textile reinforcement and the
+        # 1st or 2nd principle stress direction; no distiction of the rotation direction is necessary
+        # for orthogonal textiles (standard case);
+        # By default the 0-direction coincides with the x-axis
 
-        # @todo: introduce the angle 'alpha_tex' to define the angle between the global x-axis and the
-        # the 0-direction
+        # @todo: generalization of orientation of the 0-direction != x-axis
+        # introduce the angle 'alpha_tex' to define the angle between the global x-axis and the
+        # the 0-direction; then beta = abs(alpha_sig1 - alpha_tex); make sure that the deflection
+        # angle still lies within -/+ pi/2 otherwise rotate by substracting n*pi with n = int(beta/pi)
 
         #-------------------------------------------
         # formulas are valid for the general case R_0 != R_90
@@ -1057,11 +1060,6 @@ class LSTable(HasTraits):
     #
     k_alpha_min = Bool
 
-    # if for the ULS evaluation the same stress resultant values can be assumed
-    # a simplified calculation of the resistance values in the evaluation direction can be applied
-    #
-    equal_stress_characteristics = Bool
-
     # specify the strength characteristics of the material;
     # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
     # this gives the possibility to specify strength values within the call of 'LCCTableULS';
@@ -1193,76 +1191,24 @@ class LSTable(HasTraits):
         sig1_up = 0.5 * (sigx_up + sigy_up) + 0.5 * sqrt((sigx_up - sigy_up) ** 2 + 4 * sigxy_up ** 2)
         sig2_up = 0.5 * (sigx_up + sigy_up) - 0.5 * sqrt((sigx_up - sigy_up) ** 2 + 4 * sigxy_up ** 2)
 
-        # formula corresponds to Mohr-circle formula
-        # underline in the name indicates that the angle is still unsorted
-        # first angle lies within -/+45deg
-        #
-#        alpha_sig1_up_ = pi / 4. * ones_like(sig1_up)
-#        bool_arr = sigx_up != sigy_up
-#        alpha_sig1_up_[ bool_arr ] = 0.5 * arctan(2 * sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sigy_up[ bool_arr ]))
-
         # formula corresponds to mechanic formula with positive z-rotation for positive 'sigxy'
         # NOTE: underline score in the name indicates that the angle is still unsorted
         # formula returns an angle that lies within -/+90deg
         #
-        alpha_sig1_up_ = pi / 2. * ones_like(sig1_up)
+        alpha_sig1_up = pi / 2. * ones_like(sig1_up)
         bool_arr = sigx_up != sig2_up
-        alpha_sig1_up_[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sig2_up[ bool_arr ]))
-
-        # angle of principle stresses (2-direction = minimum stresses (compression))
-        #
-#        alpha_sig2_up_ = alpha_sig1_up_ + pi / 2
+        alpha_sig1_up[ bool_arr ] = arctan(sigxy_up[ bool_arr ] / (sigx_up[ bool_arr ] - sig2_up[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         # NOTE: formula guarantees that the 2nd principle angle returned for the first or second quadrant,
         #       i.e. abs(alpha_sig2_up_) <= pi/2
         #       i.e. if alpha_sig1_up_ lies in the first quadrant give second angle for second quadrant
-        #            and if alpha_sig1_up lies in the second quadrant give angle for first quadrant
+        #            if alpha_sig1_up lies in the second quadrant give angle for first quadrant
+        #            if alpha_sig1_up == 0. 'alpha_sig2_up' is set to pi/2
         #
-        alpha_sig2_up_ = pi / 2. * ones_like(sig1_up)
-        bool_arr = np.sign(alpha_sig1_up_) != 0.
-        alpha_sig2_up_[bool_arr] = -pi / 2 * np.sign(alpha_sig1_up_[bool_arr]) + alpha_sig1_up_[bool_arr]
-
-        if self.check_consistency_alpha:
-            # perform sorting of the principle directions angle
-            # (check if rotation leads to the same value then formula for 1st principal stress value; if not switch entries in
-            # the corresponding arrays)
-
-            # transform moments and normal forces in the direction of the principal stresses (1-direction)
-            # MOHR
-            sig_alpha_sig1_up_ = 0.5 * (sigx_up + sigy_up) + 0.5 * (sigx_up - sigy_up) * cos(2 * alpha_sig1_up_) + sigxy_up * sin(2 * alpha_sig1_up_)
-
-            # check if sig_up(alpha_sig1_up)==sig1_up (within a 1 permille tolerance)
-            #
-            bool_arr_i = abs(sig_alpha_sig1_up_ / sig1_up) < 1.001
-            bool_arr_ii = abs(sig_alpha_sig1_up_ / sig1_up) > 0.999
-            bool_arr_1_up = bool_arr_i * bool_arr_ii
-
-            # check if sig_up(alpha_sig1_up)==sig2_up (within a 1 permille tolerance)
-            #
-            bool_arr_i = abs(sig_alpha_sig1_up_ / sig2_up) < 1.001
-            bool_arr_ii = abs(sig_alpha_sig1_up_ / sig2_up) > 0.999
-            bool_arr_2_up = bool_arr_i * bool_arr_ii
-
-            # check sorting of principle angles for consistency, i.e check if all elements have been sorted
-            #
-            n_1_up = np.sum(bool_arr_1_up)
-            n_2_up = np.sum(bool_arr_2_up)
-            n_tot_up = alpha_sig1_up_.shape[0]
-            if n_1_up + n_2_up == n_tot_up:
-                print "*** sorting of principle angles ('up') checked for consistency (OK): %g + %g = %g ***" % (n_1_up, n_2_up, n_tot_up)
-            else:
-                print "*** sorting of principle angles ('up') checked for consistency (FAILED): %g + %g = %g ***" % (n_1_up, n_2_up, n_tot_up)
-
-            # sort principle angles (separate 1st and 2nd principle stress directions)
-            #
-            alpha_sig1_up = np.copy(alpha_sig2_up_)
-            alpha_sig1_up[bool_arr_1_up] = alpha_sig1_up_[bool_arr_1_up]
-            alpha_sig2_up = np.copy(alpha_sig1_up_)
-            alpha_sig2_up[bool_arr_1_up] = alpha_sig2_up_[bool_arr_1_up]
-        else:
-            alpha_sig1_up = alpha_sig2_up_
-            alpha_sig2_up = alpha_sig1_up_
+        alpha_sig2_up = pi / 2. * ones_like(sig1_up)
+        bool_arr = np.sign(alpha_sig1_up) != 0.
+        alpha_sig2_up[bool_arr] = -pi / 2 * np.sign(alpha_sig1_up[bool_arr]) + alpha_sig1_up[bool_arr]
 
         # convert units from radiant to degree
         #
@@ -1270,11 +1216,12 @@ class LSTable(HasTraits):
         alpha_sig2_up_deg = alpha_sig2_up * 180. / pi
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
-        # MOHR
+        #
         m_sig1_up = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig1_up) + mxy * sin(2 * alpha_sig1_up)
         n_sig1_up = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig1_up) + nxy * sin(2 * alpha_sig1_up)
 
-        # MOHR
+        # transform moments and normal forces in the direction of the principal stresses (2-direction)
+        #
         m_sig2_up = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig1_up) - mxy * sin(2 * alpha_sig1_up)
         n_sig2_up = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig1_up) - nxy * sin(2 * alpha_sig1_up)
 
@@ -1287,80 +1234,24 @@ class LSTable(HasTraits):
         sig1_lo = 0.5 * (sigx_lo + sigy_lo) + 0.5 * sqrt((sigx_lo - sigy_lo) ** 2 + 4 * sigxy_lo ** 2)
         sig2_lo = 0.5 * (sigx_lo + sigy_lo) - 0.5 * sqrt((sigx_lo - sigy_lo) ** 2 + 4 * sigxy_lo ** 2)
 
-        # formula corresponds to Mohr-circle formula
-        # NOTE: underline score in the name indicates that the angle is still unsorted
-        # formula returns an angle that lies within -/+45deg
-        #
-#        alpha_sig1_lo_ = pi / 4. * ones_like(sig1_lo)
-#        bool_arr = sigx_lo != sigy_lo
-#        alpha_sig1_lo_[ bool_arr ] = 0.5 * arctan(2 * sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
-
         # formula corresponds to mechanic formula with positive z-rotation for positive 'sigxy'
         # NOTE: underline score in the name indicates that the angle is still unsorted
         # formula returns an angle that lies within -/+90deg
         #
-        alpha_sig1_lo_ = pi / 2. * ones_like(sig1_lo)
+        alpha_sig1_lo = pi / 2. * ones_like(sig1_lo)
         bool_arr = sigx_lo != sig2_lo
-        alpha_sig1_lo_[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sig2_lo[ bool_arr ]))
+        alpha_sig1_lo[ bool_arr ] = arctan(sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sig2_lo[ bool_arr ]))
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         # NOTE: formula guarantees that the 2nd principle angle returned for the first or second quadrant,
         #       i.e. abs(alpha_sig2_lo_) <= pi/2
         #       i.e. if alpha_sig1_lo_ lies in the first quadrant give second angle for second quadrant
-        #            and if alpha_sig1_lo lies in the second quadrant give angle for first quadrant
+        #            if alpha_sig1_lo lies in the second quadrant give angle for first quadrant
+        #            if alpha_sig1_lo == 0. 'alpha_sig2_lo' is set to pi/2
         #
-        alpha_sig2_lo_ = pi / 2. * ones_like(sig1_lo)
-        bool_arr = np.sign(alpha_sig1_lo_) != 0.
-        alpha_sig2_lo_[bool_arr] = -pi / 2 * np.sign(alpha_sig1_lo_[bool_arr]) + alpha_sig1_lo_[bool_arr]
-
-        if self.check_consistency_alpha:
-            # angle of principle stresses (2-direction = minimum stresses (compression))
-            # NOTE: formula guarantees that the 2nd principle angle returned for the first or second quadrant,
-            #       i.e. abs(alpha_sig2_lo_) <= pi/2
-            #       i.e. if alpha_sig1_lo_ lies in the first quadrant give second angle for second quadrant
-            #            and if alpha_sig1_lo lies in the second quadrant give angle for first quadrant
-            #
-            alpha_sig2_lo_ = -pi / 2 * np.sign(alpha_sig1_lo_) + alpha_sig1_lo_
-
-            # perform sorting of the principle directions angle
-            # (check if rotation leads to the same value then formula for 1st principal stress value; if not switch entries in
-            # the corresponding arrays)
-
-            # transform moments and normal forces in the direction of the principal stresses (1-direction)
-            # MOHR
-            sig_alpha_sig1_lo_ = 0.5 * (sigx_lo + sigy_lo) + 0.5 * (sigx_lo - sigy_lo) * cos(2 * alpha_sig1_lo_) + sigxy_lo * sin(2 * alpha_sig1_lo_)
-
-            # check if sig_lo(alpha_sig1_lo)==sig1_lo (within a 1 permille tolerance)
-            #
-            bool_arr_i = abs(sig_alpha_sig1_lo_ / sig1_lo) < 1.001
-            bool_arr_ii = abs(sig_alpha_sig1_lo_ / sig1_lo) > 0.999
-            bool_arr_1_lo = bool_arr_i * bool_arr_ii
-
-            # check if sig_lo(alpha_sig1_lo)==sig2_lo (within a 1 permille tolerance)
-            #
-            bool_arr_i = abs(sig_alpha_sig1_lo_ / sig2_lo) < 1.001
-            bool_arr_ii = abs(sig_alpha_sig1_lo_ / sig2_lo) > 0.999
-            bool_arr_2_lo = bool_arr_i * bool_arr_ii
-
-            # check sorting of principle angles for consistency, i.e check if all elements have been sorted
-            #
-            n_1_lo = np.sum(bool_arr_1_lo)
-            n_2_lo = np.sum(bool_arr_2_lo)
-            n_tot_lo = alpha_sig1_lo_.shape[0]
-            if n_1_lo + n_2_lo == n_tot_lo:
-                print "*** sorting of principle angles ('lo') checked for consistency (OK): %g + %g = %g ***" % (n_1_lo, n_2_lo, n_tot_lo)
-            else:
-                print "*** sorting of principle angles ('up') checked for consistency (FAILED): %g + %g = %g ***" % (n_1_up, n_2_up, n_tot_up)
-
-            # sort principle angles (separate 1st and 2nd principle stress directions)
-            #
-            alpha_sig1_lo = np.copy(alpha_sig2_lo_)
-            alpha_sig1_lo[bool_arr_1_lo] = alpha_sig1_lo_[bool_arr_1_lo]
-            alpha_sig2_lo = np.copy(alpha_sig1_lo_)
-            alpha_sig2_lo[bool_arr_1_lo] = alpha_sig2_lo_[bool_arr_1_lo]
-        else:
-            alpha_sig1_lo = alpha_sig2_lo_
-            alpha_sig2_lo = alpha_sig1_lo_
+        alpha_sig2_lo = pi / 2. * ones_like(sig1_lo)
+        bool_arr = np.sign(alpha_sig1_lo) != 0.
+        alpha_sig2_lo[bool_arr] = -pi / 2 * np.sign(alpha_sig1_lo[bool_arr]) + alpha_sig1_lo[bool_arr]
 
         # convert units from radiant to degree
         #
@@ -1368,11 +1259,12 @@ class LSTable(HasTraits):
         alpha_sig2_lo_deg = alpha_sig2_lo * 180. / pi
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
-        # MOHR
+        #
         m_sig1_lo = 0.5 * (mx + my) + 0.5 * (mx - my) * cos(2 * alpha_sig1_lo) + mxy * sin(2 * alpha_sig1_lo)
         n_sig1_lo = 0.5 * (nx + ny) + 0.5 * (nx - ny) * cos(2 * alpha_sig1_lo) + nxy * sin(2 * alpha_sig1_lo)
 
-        # MOHR
+        # transform moments and normal forces in the direction of the principal stresses (2-direction)
+        #
         m_sig2_lo = 0.5 * (mx + my) - 0.5 * (mx - my) * cos(2 * alpha_sig1_lo) - mxy * sin(2 * alpha_sig1_lo)
         n_sig2_lo = 0.5 * (nx + ny) - 0.5 * (nx - ny) * cos(2 * alpha_sig1_lo) - nxy * sin(2 * alpha_sig1_lo)
 
