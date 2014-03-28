@@ -251,11 +251,6 @@ class LCCTable(HasTraits):
     #
     k_alpha_min = Bool(False)
 
-    # if for the ULS evaluation the same stress resultant values can be assumed
-    # a simplified calculation of the resistance values in the evaluation direction can be applied
-    #
-    equal_stress_characteristics = Bool(False)
-
     # specify the strength characteristics of the material;
     # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
     # this gives the possibility to specify strength values within the call of 'LCCTableULS';
@@ -706,7 +701,6 @@ class LCCTable(HasTraits):
                                         geo_data=self.geo_data_dict,
                                         state_data=state_data_dict,
                                         strength_characteristics=self.strength_characteristics,
-                                        equal_stress_characteristics=self.equal_stress_characteristics,
                                         k_alpha_min=self.k_alpha_min,
                                         ls=self.ls)
                        )
