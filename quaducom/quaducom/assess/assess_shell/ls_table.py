@@ -622,72 +622,70 @@ class ULS(LS):
         # simplified case R_0 = R_90
         #-------------------------------------------
         if self.ls_table.equal_stress_characteristics:
+            print 'NOTE: equal_stress_characteristics == True'
             # NOTE: for the simplified case for similar strength in 0- and 90-direction
             # no distinction needs to be made between the deflection angles
             # and only absolute angles between 0 and 90 degrees are used on the resistance side
             # evaluation is independent from 1st and 2nd direction stress resultants as absolute deflections
             # and proportions stay the same
             #
-            beta_l_up_deg = beta_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
-            bool_arr = np.where(beta_l_up_deg > 90.)[0]
-            beta_l_up_deg[bool_arr] -= 90.
-            beta_q_up_deg = 90. - beta_l_up_deg  # [degree]
-            beta_l_up = beta_l_up_deg * pi / 180.  # [rad]
-            beta_q_up = beta_q_up_deg * pi / 180.  # [rad]
+            beta_up_deg = beta_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
+            bool_arr = np.where(beta_up_deg > 90.)[0]
+            beta_up_deg[bool_arr] -= 90.
+            beta_up = beta_up_deg * pi / 180.  # [rad]
 
-            beta_l_lo_deg = beta_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
-            bool_arr = np.where(beta_l_lo_deg > 90.)[0]
-            beta_l_lo_deg[bool_arr] -= 90.
-            beta_q_lo_deg = 90 - beta_l_lo_deg  # [degree]
-            beta_l_lo = beta_l_lo_deg * pi / 180.  # [rad]
-            beta_q_lo = beta_q_lo_deg * pi / 180.  # [rad]
+            beta_lo_deg = beta_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
+            bool_arr = np.where(beta_lo_deg > 90.)[0]
+            beta_lo_deg[bool_arr] -= 90.
+            beta_lo = beta_lo_deg * pi / 180.  # [rad]
 
             # simplification of the transformation formula only valid for assumption of
             # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
             #
-            n_Rdt_lo_1 = n_Rdt_lo_2 = self.n_0_Rdt * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                                      self.n_90_Rdt * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            n_Rdt_up_1 = n_Rdt_up_2 = self.n_0_Rdt * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                                      self.n_90_Rdt * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
-            m_Rd_lo_1 = m_Rd_lo_2 = self.m_0_Rd * cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                                    self.m_90_Rd * cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            m_Rd_up_1 = m_Rd_up_2 = self.m_0_Rd * cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                                    self.m_90_Rd * cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+            n_Rdt_lo_1 = n_Rdt_lo_2 = self.n_0_Rdt * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                                      self.n_90_Rdt * sin(beta_lo) * (beta_lo_deg / 90.)
+            n_Rdt_up_1 = n_Rdt_up_2 = self.n_0_Rdt * cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                                      self.n_90_Rdt * sin(beta_up) * (beta_up_deg / 90.)
+            m_Rd_lo_1 = m_Rd_lo_2 = self.m_0_Rd * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                                    self.m_90_Rd * sin(beta_lo) * (beta_lo_deg / 90.)
+            m_Rd_up_1 = m_Rd_up_2 = self.m_0_Rd * cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                                    self.m_90_Rd * sin(beta_up) * (beta_up_deg / 90.)
 
-            k_alpha_lo = cos(beta_l_lo) * (1 - beta_l_lo_deg / 90.) + \
-                         cos(beta_q_lo) * (1 - beta_q_lo_deg / 90.)
-            k_alpha_up = cos(beta_l_up) * (1 - beta_l_up_deg / 90.) + \
-                         cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
+            k_alpha_lo = cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
+                         sin(beta_lo) * (beta_lo_deg / 90.)
+            k_alpha_up = cos(beta_up) * (1 - beta_up_deg / 90.) + \
+                         sin(beta_up) * (beta_up_deg / 90.)
 
         #-------------------------------------------
         # general case R_0 != R_90
         #-------------------------------------------
         if self.ls_table.equal_stress_characteristics == False:
+            print 'NOTE: equal_stress_characteristics == False'
             #----------------------------------------------------------
             # upper side
             #----------------------------------------------------------
             # case where deflection angle for 0-direction is smaller then 45 degree
             #
-            beta_up_deg = abs(self.alpha_sig1_up_deg)  # [degree]
-            beta_up = abs(self.alpha_sig1_up)  # [rad]
-            n_Rdt_up_beta0 = self.n_0_Rdt * cos(beta_up) * (1 - beta_up_deg / 90.) + \
-                       self.n_90_Rdt * sin(beta_up) * (beta_up_deg / 90.)
-            m_Rd_up_beta0 = self.m_0_Rd * cos(beta_up) * (1 - beta_up_deg / 90.) + \
-                      self.m_90_Rd * sin(beta_up) * (beta_up_deg / 90.)
-            k_alpha_up_beta0 = cos(beta_up) * (1 - beta_up_deg / 90.) + \
-                         sin(beta_up) * (beta_up_deg / 90.)
+            beta_up_deg_beta0 = abs(self.alpha_sig1_up_deg)  # [degree]
+            beta_up_beta0 = abs(self.alpha_sig1_up)  # [rad]
+            n_Rdt_up_beta0 = self.n_0_Rdt * cos(beta_up_beta0) * (1 - beta_up_deg_beta0 / 90.) + \
+                       self.n_90_Rdt * sin(beta_up_beta0) * (beta_up_deg_beta0 / 90.)
+            m_Rd_up_beta0 = self.m_0_Rd * cos(beta_up_beta0) * (1 - beta_up_deg_beta0 / 90.) + \
+                      self.m_90_Rd * sin(beta_up_beta0) * (beta_up_deg_beta0 / 90.)
+            k_alpha_up_beta0 = cos(beta_up_beta0) * (1 - beta_up_deg_beta0 / 90.) + \
+                         sin(beta_up_beta0) * (beta_up_deg_beta0 / 90.)
 
             # case where deflection angle for 90-direction is smaller then 45 degree
             # for 1st principle direction angle pi/4 < alpha_sig1 < 3*pi/4
             #
-            beta_up_deg = 90. - abs(self.alpha_sig1_up_deg)  # [degree]
-            beta_up = pi / 2. - abs(self.alpha_sig1_up)
-            n_Rdt_up_beta90 = self.n_0_Rdt * sin(beta_up) * (beta_up_deg / 90.) + \
-                       self.n_90_Rdt * cos(beta_up) * (1 - beta_up_deg / 90.)
-            m_Rd_up_beta90 = self.m_0_Rd * sin(beta_up) * (beta_up_deg / 90.) + \
-                      self.m_90_Rd * cos(beta_up) * (1 - beta_up_deg / 90.)
-            k_alpha_up_beta90 = sin(beta_up) * (beta_up_deg / 90.) + \
-                         cos(beta_up) * (1 - beta_up_deg / 90.)
+            beta_up_deg_beta90 = abs(abs(self.alpha_sig1_up_deg) - 90.)  # [degree]
+            beta_up_beta90 = abs(abs(self.alpha_sig1_up) - pi / 2.)
+            n_Rdt_up_beta90 = self.n_0_Rdt * sin(beta_up_beta90) * (beta_up_deg_beta90 / 90.) + \
+                       self.n_90_Rdt * cos(beta_up_beta90) * (1 - beta_up_deg_beta90 / 90.)
+            m_Rd_up_beta90 = self.m_0_Rd * sin(beta_up_beta90) * (beta_up_deg_beta90 / 90.) + \
+                      self.m_90_Rd * cos(beta_up_beta90) * (1 - beta_up_deg_beta90 / 90.)
+            k_alpha_up_beta90 = sin(beta_up_beta90) * (beta_up_deg_beta90 / 90.) + \
+                         cos(beta_up_beta90) * (1 - beta_up_deg_beta90 / 90.)
 
             # angle dependent strength for evaluation in 1st principle direction
             #
@@ -705,6 +703,15 @@ class ULS(LS):
             n_Rdt_up_2[bool_arr] = n_Rdt_up_beta0[bool_arr]
             m_Rd_up_2[bool_arr] = m_Rd_up_beta0[bool_arr]
 
+            # beta_up = beta_up_0
+            # NOTE: deflection angle with respect to the 0-direction = x-direction
+            #
+            beta_up = beta_up_beta0
+            beta_up_deg = beta_up_deg_beta0
+            bool_arr = np.where(abs(self.alpha_sig1_up_deg) > 45.)[0]
+            beta_up[bool_arr] = pi / 2. - beta_up_beta90[bool_arr]
+            beta_up_deg[bool_arr] = 90. - beta_up_deg_beta90[bool_arr]
+
             # k_alpha_total in 1st direction for 'simplified' case (for verification purpose only)
             #
             k_alpha_up = k_alpha_up_beta0
@@ -716,26 +723,26 @@ class ULS(LS):
             #----------------------------------------------------------
             # case where deflection angle for 0-direction is smaller then 45 degree
             #
-            beta_lo_deg = abs(self.alpha_sig1_lo_deg)  # [degree]
-            beta_lo = abs(self.alpha_sig1_lo)  # [rad]
-            n_Rdt_lo_beta0 = self.n_0_Rdt * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
-                       self.n_90_Rdt * sin(beta_lo) * (beta_lo_deg / 90.)
-            m_Rd_lo_beta0 = self.m_0_Rd * cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
-                      self.m_90_Rd * sin(beta_lo) * (beta_lo_deg / 90.)
-            k_alpha_lo_beta0 = cos(beta_lo) * (1 - beta_lo_deg / 90.) + \
-                         sin(beta_lo) * (beta_lo_deg / 90.)
+            beta_lo_deg_beta0 = abs(self.alpha_sig1_lo_deg)  # [degree]
+            beta_lo_beta0 = abs(self.alpha_sig1_lo)  # [rad]
+            n_Rdt_lo_beta0 = self.n_0_Rdt * cos(beta_lo_beta0) * (1 - beta_lo_deg_beta0 / 90.) + \
+                       self.n_90_Rdt * sin(beta_lo_beta0) * (beta_lo_deg_beta0 / 90.)
+            m_Rd_lo_beta0 = self.m_0_Rd * cos(beta_lo_beta0) * (1 - beta_lo_deg_beta0 / 90.) + \
+                      self.m_90_Rd * sin(beta_lo_beta0) * (beta_lo_deg_beta0 / 90.)
+            k_alpha_lo_beta0 = cos(beta_lo_beta0) * (1 - beta_lo_deg_beta0 / 90.) + \
+                         sin(beta_lo_beta0) * (beta_lo_deg_beta0 / 90.)
 
             # case where deflection angle for 90-direction is smaller then 45 degree
             # for 1st principle direction angle pi/4 < alpha_sig1 < 3*pi/4
             #
-            beta_lo_deg = 90. - abs(self.alpha_sig1_lo_deg)  # [degree]
-            beta_lo = pi / 2. - abs(self.alpha_sig1_lo)
-            n_Rdt_lo_beta90 = self.n_0_Rdt * sin(beta_lo) * (beta_lo_deg / 90.) + \
-                       self.n_90_Rdt * cos(beta_lo) * (1 - beta_lo_deg / 90.)
-            m_Rd_lo_beta90 = self.m_0_Rd * sin(beta_lo) * (beta_lo_deg / 90.) + \
-                      self.m_90_Rd * cos(beta_lo) * (1 - beta_lo_deg / 90.)
-            k_alpha_lo_beta90 = sin(beta_lo) * (beta_lo_deg / 90.) + \
-                         cos(beta_lo) * (1 - beta_lo_deg / 90.)
+            beta_lo_deg_beta90 = abs(abs(self.alpha_sig1_lo_deg) - 90.)  # [degree]
+            beta_lo_beta90 = abs(abs(self.alpha_sig1_lo) - pi / 2.)
+            n_Rdt_lo_beta90 = self.n_0_Rdt * sin(beta_lo_beta90) * (beta_lo_deg_beta90 / 90.) + \
+                       self.n_90_Rdt * cos(beta_lo_beta90) * (1 - beta_lo_deg_beta90 / 90.)
+            m_Rd_lo_beta90 = self.m_0_Rd * sin(beta_lo_beta90) * (beta_lo_deg_beta90 / 90.) + \
+                      self.m_90_Rd * cos(beta_lo_beta90) * (1 - beta_lo_deg_beta90 / 90.)
+            k_alpha_lo_beta90 = sin(beta_lo_beta90) * (beta_lo_deg_beta90 / 90.) + \
+                         cos(beta_lo_beta90) * (1 - beta_lo_deg_beta90 / 90.)
 
             # angle dependent strength for evaluation in 1st principle direction
             #
@@ -752,6 +759,15 @@ class ULS(LS):
             bool_arr = np.where(self.alpha_sig1_lo_deg > 45.)[0]
             n_Rdt_lo_2[bool_arr] = n_Rdt_lo_beta0[bool_arr]
             m_Rd_lo_2[bool_arr] = m_Rd_lo_beta0[bool_arr]
+
+            # beta_lo
+            # NOTE: deflection angle with respect to the 0-direction = x-direction
+            #
+            beta_lo = beta_lo_beta0
+            beta_lo_deg = beta_lo_deg_beta0
+            bool_arr = np.where(abs(self.alpha_sig1_up_deg) > 45.)[0]
+            beta_lo[bool_arr] = pi / 2. - beta_lo_beta90[bool_arr]
+            beta_lo_deg[bool_arr] = 90. - beta_lo_deg_beta90[bool_arr]
 
             # k_alpha_total in 1st direction for 'simplified' case (for verification purpose only)
             #
@@ -1317,17 +1333,23 @@ class LSTable(HasTraits):
 
         # check if sig_up(alpha_sig1_up)==sig1_up (within a 1 permille tolerance)
         #
-        sig1_up = sig1_up
         bool_arr_i = abs(sig_alpha_sig1_up_ / sig1_up) < 1.001
         bool_arr_ii = abs(sig_alpha_sig1_up_ / sig1_up) > 0.999
         bool_arr_1_up = bool_arr_i * bool_arr_ii
+        print 'sum(bool_arr_1_up)', sum(bool_arr_1_up)
 
         # sort principle angles (separate 1st and 2nd principle stress directions)
         #
-        alpha_sig1_up = alpha_sig2_up_
+        alpha_sig1_up = np.copy(alpha_sig2_up_)
         alpha_sig1_up[bool_arr_1_up] = alpha_sig1_up_[bool_arr_1_up]
-        alpha_sig2_up = alpha_sig1_up_
+        alpha_sig2_up = np.copy(alpha_sig1_up_)
         alpha_sig2_up[bool_arr_1_up] = alpha_sig2_up_[bool_arr_1_up]
+        print 'alpha_sig1_up_[:4]', alpha_sig1_up_[:4]
+        print 'alpha_sig2_up_[:4]', alpha_sig2_up_[:4]
+        print 'bool_arr_1_up[:4]', bool_arr_1_up[:4]
+        print 'sum(bool_arr_1_up)', sum(bool_arr_1_up)
+        print 'alpha_sig1_up[:4]', alpha_sig1_up[:4]
+        print 'alpha_sig2_up[:4]', alpha_sig2_up[:4]
 
         # convert units from radiant to degree
         #
@@ -1359,10 +1381,12 @@ class LSTable(HasTraits):
         alpha_sig1_lo_ = pi / 4. * ones_like(sig1_lo)
         bool_arr = sigx_lo != sigy_lo
         alpha_sig1_lo_[ bool_arr ] = 0.5 * arctan(2 * sigxy_lo[ bool_arr ] / (sigx_lo[ bool_arr ] - sigy_lo[ bool_arr ]))
+        print 'alpha_sig1_lo_[:4]', alpha_sig1_lo_[:4]
 
         # angle of principle stresses (2-direction = minimum stresses (compression))
         #
         alpha_sig2_lo_ = alpha_sig1_lo_ + pi / 2
+        print 'alpha_sig2_lo_[:4]', alpha_sig2_lo_[:4]
 
         # perform sorting of the principle directions angle
         # (check if rotation leads to the same value then formula for 1st principal stress value; if not switch entries in
@@ -1374,22 +1398,26 @@ class LSTable(HasTraits):
 
         # check if sig_lo(alpha_sig1_lo)==sig1_lo (within a 1 permille tolerance)
         #
-        sig1_lo = sig1_lo
         bool_arr_i = abs(sig_alpha_sig1_lo_ / sig1_lo) < 1.001
         bool_arr_ii = abs(sig_alpha_sig1_lo_ / sig1_lo) > 0.999
         bool_arr_1_lo = bool_arr_i * bool_arr_ii
+        print 'bool_arr_1_lo[:4]', bool_arr_1_lo[:4]
 
         # sort principle angles (separate 1st and 2nd principle stress directions)
         #
-        alpha_sig1_lo = alpha_sig2_lo_
+        alpha_sig1_lo = np.copy(alpha_sig2_lo_)
         alpha_sig1_lo[bool_arr_1_lo] = alpha_sig1_lo_[bool_arr_1_lo]
-        alpha_sig2_lo = alpha_sig1_lo_
+        alpha_sig2_lo = np.copy(alpha_sig1_lo_)
         alpha_sig2_lo[bool_arr_1_lo] = alpha_sig2_lo_[bool_arr_1_lo]
 
         # convert units from radiant to degree
         #
         alpha_sig1_lo_deg = alpha_sig1_lo * 180. / pi
         alpha_sig2_lo_deg = alpha_sig2_lo * 180. / pi
+
+        print 'sum(bool_arr_1_lo)', sum(bool_arr_1_lo)
+        print 'alpha_sig1_lo[:4]', alpha_sig1_lo[:4]
+        print 'alpha_sig2_lo[:4]', alpha_sig2_lo[:4]
 
         # transform moments and normal forces in the direction of the principal stresses (1-direction)
         # MOHR
