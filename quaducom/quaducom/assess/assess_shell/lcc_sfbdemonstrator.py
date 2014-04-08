@@ -11,10 +11,16 @@ if __name__ == '__main__':
 
     from lcc_table import LCCTableULS, LC
 
+    # Access to the top level directory of the database
+    #
+    simdb = SimDB()
+
+    #---------------------------------------------
+    # define filter:
+    #---------------------------------------------
+
     # remove only the lowest point = connection shell/column
     # as this is a singularity of the FE-shell-model
-    #
-    #                       cut_z_fraction = 0.01,
     #                       cut_z_fraction = 0.05, # corresponds to 50cm x 50cm
     #                       cut_z_fraction = 0.10, # corresponds to 75cm x 75cm
     cut_z_fraction = 0.15,  # corresponds to 100cm x 100cm
@@ -28,14 +34,9 @@ if __name__ == '__main__':
         z_active_idx = np.where(Zp >= (min_Z + cut_z_fraction * h))[0]
         return arr[ z_active_idx ]
 
-    # Access to the top level directory of the database
-    #
-    simdb = SimDB()
-
-
     #---------------------------------------------
-    # 2 shells:
-    # new geometry with new loading cases plus waterfilling
+    # define data directory for evaluation of two shells with
+    # new geometry and new loading cases (plus waterfilling)
     #---------------------------------------------
 
     data_dir = os.path.join(simdb.simdb_dir,
@@ -45,7 +46,6 @@ if __name__ == '__main__':
     #------------------------
     # define loading cases:
     #------------------------
-    # NOTE:
     #
     #---------------------------------------------------------
     # "staendige und voruebergehende Bemessungssitauation":
@@ -194,65 +194,97 @@ if __name__ == '__main__':
 #               ]
 
 #--------------------------------------------------------
-# evaluation for number of reinforcement layers
-#--------------------------------------------------------
-#    lct = LCCTableULS(data_dir = data_dir,
-#                      data_filter = remove_midpoints,
-#                      lc_list = lc_list,
-#                      show_lc_characteristic = False
-#                      )
-#
-# #    lct.configure_traits()
-#    lct.plot_assess_value()
-# #    lct.plot_n_tex()
-
-
-#--------------------------------------------------------
 # evaluation for eta_n-eta_m-interaction with varying angle of deflection
 #--------------------------------------------------------
 
-    # NOTE: resistance values in 'ls_table' file need to be set to sfb-demonstrator values!
+#    do = 'ZiE'
+    do = 'QS'
+
+    #--------------------------------------------------------
+    # strength characteristics of the material:
+    #--------------------------------------------------------
+    # NOTE: the same strength in 90-direction has been assumed (safe side);
+
+    if do == 'ZiE':
+        #--------------------------------------------------------
+        # (a) design values for SFB-demonstrator (ZiE)
+        #--------------------------------------------------------
+        # tensile strength [kN/m]
+        #
+        n_0_Rdt = n_90_Rdt = 412.  # = 57.7 (=F_tRd)/ 0.14 m ###  F_tm = 103.4 kN (mean value)
+
+        # compressive strength [kN/m]
+        #
+        n_Rdc = 2200  # = ( 55 (=f_ck for C55/67) / 1.5 ) * 0.06 m * 1000 ### f_cm = 74.5 MPa (mean value)
+
+        # bending strength [kNm/m]
+        #
+        m_0_Rd = m_90_Rd = 9.6  # = 1.93 (=M_Rd) / 0.20 m ### 3.5 kNm (mean value)
+
+    if do == 'QS':
+        #--------------------------------------------------------
+        # (b) design values for SFB-demonstrator (QS)
+        #--------------------------------------------------------
+        # design values for quality tests of SFB-demonstrator (TT-SH2 and BT-SH4) on specimens with thickness 6 cm
+
+        # tensile strength [kN/m]
+        #
+        n_0_Rdt = n_90_Rdt = 538.6  # = 75.4 (=F_tRd)/ 0.14 ### F_Rtm = 139.5 kN (mean value)
+
+        # compressive strength [kN/m]
+        #
+        n_Rdc = 2200  # C55/67
+
+        # bending strength [kNm/m]
+        #
+        m_0_Rd = m_90_Rd = 8.3  # = 1.66 (=M_Rd) / 0.20 ### M_Rm = 3.1 kNm (mean value)
+
+    #--------------------------------------------------------
+    # ULS evaluation
+    #--------------------------------------------------------
     lct = LCCTableULS(data_dir=data_dir,
                       data_filter=remove_midpoints,
                       lc_list=lc_list,
                       show_lc_characteristic=False,
+                      strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
+                                                'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
                       k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
                       )
-#     lct.plot_n_tex()
+
     #--------------------------------------------------------------
     # 'combi_arr': array with indices of all loading case combinations
     #--------------------------------------------------------------
     #
-#     print 'lct.combi_arr', lct.combi_arr.shape
+    print 'lct.combi_arr', lct.combi_arr.shape, '\n'
 #     np.savetxt('combi_arr_LC1-12', lct.combi_arr, delimiter=';')
 
     #--------------------------------------------------------------
     # nm-interaction plot (normal force - bending moment)
     #--------------------------------------------------------------
     #
-#    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12')
+    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12_' + do)
 
     #--------------------------------------------------------------
     # interaction plot of material usage 'eta_nm' (utilization ratio)
     #--------------------------------------------------------------
     #
-#     lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12')
+    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12_' + do)
 
     #--------------------------------------------------------------
-    # plot of structure with color indication of material usage 'eta_nm' (Ausnutzungsgrad)
+    # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
     #
-#     lct.plot_assess_value()
+    lct.plot_assess_value('eta_nm_tot', scale_mode='scalar', scale_factor=0.8)
 
     #--------------------------------------------------------------
     # brows the loading case combinations within an interactive table view
     #--------------------------------------------------------------
     lct.configure_traits()
 
-
-
-#--------------------------------------------------------------
+#--------------------------------------------------------
+# SLS evaluation
+#--------------------------------------------------------
 #    lct = LCCTableSLS( data_dir = data_dir,
 #                      data_filter = remove_midpoints,
 #                       lc_list = lc_list,
@@ -261,13 +293,3 @@ if __name__ == '__main__':
 # #                       combination_SLS = 'perm',
 # #                       show_lc_characteristic = True
 #                        )
-
-
-
-
-#    print 'lc_arr', lct.lc_arr
-#    print 'lc_list[0].sr_arr.shape[0]', lct.lc_list[0].sr_arr.shape[0]
-#    print 'lc_arr.shape', lct.lc_arr.shape
-#    print 'combi_arr', lct.combi_arr
-#    print 'combi_arr.shape', lct.combi_arr.shape
-#    print 'lcc_arr', lct.lcc_arr

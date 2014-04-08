@@ -93,6 +93,7 @@ if __name__ == '__main__':
     import pylab as p
 
     do = 'show_test_results_TT-CAR-mr'
+#    do = 'show_stiffness_TT-CAR-mr'
 #    do = 'show_test_results_TT-CAR'
 #     do = 'show_test_results_TT'
 #     do = 'show_WA'
@@ -109,7 +110,7 @@ if __name__ == '__main__':
         # plot composite or textile stress-strain curve
         #
         stress_flag = 'comp'
-        stress_flag = 'tex'
+#        stress_flag = 'tex'
 
         plot_method_str = '_plot_' + stress_flag + '_stress_strain_asc'
         fig = p.figure(facecolor='white')
@@ -121,42 +122,19 @@ if __name__ == '__main__':
         path_6cm = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-6cm-0-TU_SH3')
         path_4cm = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3')
 
-        tests = ['TT-12c-6cm-0-TU-SH2F-V3.DAT']
+        tests = ['TT-12c-4cm-TU-0-SH3-V1.DAT', 'TT-12c-4cm-TU-0-SH3-V2.DAT', 'TT-12c-4cm-TU-0-SH3-V3.DAT']
         for t in tests:
-            ex_path = join(path_6cmSH2, t)
+            ex_path = join(path_4cm, t)
             ex_run = ExRun(ex_path)
             plot_method = getattr(ex_run.ex_type, plot_method_str)
-            plot_method(p, color='red', linewidth=1.3, linestyle='-', label='bs2', xscale=1000., plot_analytical_stiffness=True, interpolated=True)
+            plot_method(p, color='grey', linewidth=1., linestyle='-', label='bs2', xscale=1000., plot_analytical_stiffness=True, interpolated=True)
 
         tests = ['TT-12c-6cm-0-TU-SH2-V1.DAT', 'TT-12c-6cm-0-TU-SH2-V2.DAT', 'TT-12c-6cm-0-TU-SH2-V3.DAT']
         for t in tests:
             ex_path = join(path_6cmSH2, t)
             ex_run = ExRun(ex_path)
             plot_method = getattr(ex_run.ex_type, plot_method_str)
-            plot_method(p, color='green', linewidth=1.3, linestyle='-', label='bs2', xscale=1000., plot_analytical_stiffness=True, interpolated=True)
-
-#
-#        tests = ['TT-12c-6cm-TU-0-SH3-V2.DAT', 'TT-12c-6cm-TU-0-SH3-V1.DAT', 'TT-12c-6cm-TU-0-SH3-V3.DAT']
-#        for t in tests:
-#            ex_path = join(path_6cm, t)
-#            ex_run = ExRun(ex_path)
-#            plot_method = getattr(ex_run.ex_type, plot_method_str)
-#            plot_method(p, color='black', linewidth=1.3, linestyle='-', label='bs2', xscale=1000.)
-
-        tests = ['TT-12c-4cm-TU-0-SH3-V3.DAT', 'TT-12c-4cm-TU-0-SH3-V1.DAT', 'TT-12c-4cm-TU-0-SH3-V2.DAT']
-        for t in tests:
-            ex_path = join(path_4cm, t)
-            ex_run = ExRun(ex_path)
-            plot_method = getattr(ex_run.ex_type, plot_method_str)
-            plot_method(p, color='grey', linewidth=1., linestyle='-', label='bs2', xscale=1000.)
-
-
-#        tests = ['TT-12c-6cm-0-TU-SH2-V1.DAT']
-#        for t in tests:
-#            ex_path = join(path_6cmSH2, t)
-#            ex_run = ExRun(ex_path)
-#            ex_run.ex_type._plot_comp_stress_strain_asc(p, color='blue', linewidth=1.3, linestyle='-', label='bs2', xscale=1000.)
-# #            ex_run.ex_type._plot_tex_stress_strain_asc(p, color='red', linewidth=1.3, linestyle='-', label='bs2', xscale=1000.)
+            plot_method(p, color='black', linewidth=1., linestyle='-', label='bs2', xscale=1000., plot_analytical_stiffness=True, interpolated=True)
 
         # set ranges and labels
         #
@@ -166,6 +144,46 @@ if __name__ == '__main__':
             format_plot(p, xlabel='strain [1E-3]', ylabel='composite stress [MPa]', xlim=8., ylim=25.)
 
         p.show()
+
+    #---------------------------
+    # experimentally observed stiffness of tensile test results (CAR-800tex-TU-mushroof)
+    #---------------------------
+    #
+    if do == 'show_stiffness_TT-CAR-mr':
+
+        # select test TT-SH2-V1
+        #
+        ex_path = join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V1.DAT')
+        ex_run = ExRun(ex_path)
+        ex_type = ex_run.ex_type
+
+        # get original stress-strain curve
+        #
+        sig_c_interpolated = ex_type.sig_c_interpolated
+        eps_c_interpolated = ex_type.eps_c_interpolated * 1000.
+        p.plot(eps_c_interpolated, sig_c_interpolated, color='red')
+
+        # get smoothed stress-strain curve
+        #
+        sig_c_interpolated_smoothed = ex_type.sig_c_interpolated_smoothed
+        eps_c_interpolated_smoothed = ex_type.eps_c_interpolated_smoothed * 1000.
+        p.plot(eps_c_interpolated_smoothed, sig_c_interpolated_smoothed, color='black')
+
+#        n_p = len(sig_c_interpolated_smoothed)
+#        radius = int(0.02 * n_p)
+#        print 'eps at smoothing radius', eps_c_interpolated_smoothed[radius] * 1000
+#        sig_c_jumps = sig_c_interpolated_smoothed[radius:] - sig_c_interpolated_smoothed[:-radius]
+#        eps_c_jumps = eps_c_interpolated_smoothed[radius:] - eps_c_interpolated_smoothed[:-radius]
+#        stiffness_arr = sig_c_jumps / eps_c_jumps / 1000.  # [GPa]
+#        p.plot(eps_c_interpolated_smoothed[:-radius] * 1000., stiffness_arr, color='black')
+
+        E_c = 29.1  # [GPa] compare this stiffness visually with the scattering experimental curve giving good agreement
+        eps_lin = np.array([0., 1.])
+        sig_lin = np.array([0., E_c])
+        p.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
+        p.show()
+
 
 
     #---------------------------

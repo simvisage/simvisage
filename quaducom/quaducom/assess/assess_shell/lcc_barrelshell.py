@@ -23,10 +23,11 @@ if __name__ == '__main__':
     def remove_support_elems(lcc_table, arr):
         '''filter for barrel shell used to remove the elements
         in direct contact to the support nodes
+        (only valid for the specific discretization fines given,
+        i.e. fine regular mesh (5cmx5cm-elements)
+        as stored in '2cm-feines-Netz')
         '''
         elem_no = lcc_table.geo_data_orig['elem_no']
-        # support elements for fine regular mesh (5cmx5cm-elements)
-        # as stored in '2cm-feines-Netz'
 
         # first row elements (direct contact to support node)
         #
@@ -36,20 +37,6 @@ if __name__ == '__main__':
                               691, 694, 2323, 2326, 743, 746, 2375, 2378 ]
         cond_arr = np.array([elem_no != support_elem_number for support_elem_number in support_elems_list])
         cond_elem_active = np.product(cond_arr, axis=0)
-
-#        X = lcc_table.geo_data_orig['X']
-#        Y = lcc_table.geo_data_orig['Y']
-#        elem_size = Y[1] - Y[2]
-#        print 'elem_size', elem_size
-#        cond_X1 = X < -1.03 + 2. * elem_size
-#        cond_X2 = X > 1.03 - 2. * elem_size
-#        cond_Y1a = Y > -0.40 - 2. * elem_size
-#        cond_Y1b = Y < -0.40 + 2. * elem_size
-#        cond_Y2a = Y > -3.00 - 2. * elem_size
-#        cond_Y2b = Y < -3.00 + 2. * elem_size
-#        cond_X = cond_X1 + cond_X2
-#        cond_Y = cond_Y1a * cond_Y1b + cond_Y2a * cond_Y2b
-#        cond_elem_active = np.where( 1 - cond_X * cond_Y )[0]
 
         elem_active_idx = np.where(cond_elem_active)[0]
         if np.all(arr == lcc_table.geo_data_orig['t_elem_node_map'])\
@@ -68,10 +55,22 @@ if __name__ == '__main__':
     # define directory:
     #------------------------
 
+#    do = 'shell-test'
 #    do = 'predimensioning'
     do = 'dimensioning'
 
-    # Vorbemessung
+    # experimental evaluation of shell strength
+    # (surface load = 1kN/m^2,  along 10cm width, 30 cm free space from edges)
+    #
+    if do == 'shell-test':
+        data_dir = os.path.join(simdb.simdb_dir,
+                                'simdata',
+                                'input_data_barrelshell',
+                                '2cm-feines-Netz',
+                                )
+
+    # predimensioning of barrel shells for all main loading cases
+    # (without superposition of temperature loading cases)
     #
     if do == 'predimensioning':
         data_dir = os.path.join(simdb.simdb_dir,
@@ -80,7 +79,8 @@ if __name__ == '__main__':
                                 '2cm-feines-Netz',
                                 )
 
-    # Bemessung
+    # dimensioning of barrel shells for all loading cases
+    # (incl. superposition of temperature loading cases)
     #
     if do == 'dimensioning':
         data_dir = os.path.join(simdb.simdb_dir,
@@ -92,9 +92,24 @@ if __name__ == '__main__':
     #------------------------
     # define loading cases:
     #------------------------
-    #
+
+    #----------------------------------------------------------------------
+    # (a) cable load (experimental test setup)
+    #----------------------------------------------------------------------
+    if do == 'shell-test':
+
+        lc_list = [
+                     LC(name='cable-FL-m3', category='imposed-load', file_name='LC22.txt',
+                        # loading case only used for evaluation of experimental test setup
+                        # (estimation of load-bearing capacity)
+                        # scale load factor in order to get evaluation within relevant values (>>0)
+                        gamma_unf=1000.0, gamma_fav=1.0,
+                        psi_0=1.0,
+                        ),
+                   ]
+
     #---------------------------------------------------------
-    # "staendige und voruebergehende Bemessungssitauation":
+    # (b) predimensioning
     #---------------------------------------------------------
     if do == 'predimensioning':
 
@@ -122,20 +137,20 @@ if __name__ == '__main__':
                         psi_0=0.5, psi_1=0.2, psi_2=0.0
                         ),
                      # LC4:
-#                     LC(name = 's_vorne', category = 'imposed-load', file_name = 'LC4.txt',
-#                        exclusive_to = ['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
-#                        psi_0 = 0.5, psi_1 = 0.2, psi_2 = 0.0
+#                     LC(name='s_vorne', category='imposed-load', file_name='LC4.txt',
+#                        exclusive_to=['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
+#                        psi_0=0.5, psi_1=0.2, psi_2=0.0
 #                        ),
-#                     # LC5:
+                     # LC5:
                      LC(name='s_links', category='imposed-load', file_name='LC5.txt',
                         exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_rechts', 's_komplett'],
                         psi_0=0.5, psi_1=0.2, psi_2=0.0
                         ),
                      # LC6:
-                     LC(name='s_rechts', category='imposed-load', file_name='LC6.txt',
-                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
-                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-                        ),
+#                     LC(name='s_rechts', category='imposed-load', file_name='LC6.txt',
+#                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
+#                        psi_0=0.5, psi_1=0.2, psi_2=0.0
+#                        ),
                      # LC7:
                      LC(name='s_komplett', category='imposed-load', file_name='LC7.txt',
                         exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_rechts'],
@@ -160,16 +175,16 @@ if __name__ == '__main__':
 #                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
 #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
 #                        ),
-    #                 # LC11:
-    #                 LC(name = 'Q_feld_re', category = 'imposed-load', file_name = 'LC11.txt',
-    #                    exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
-    #                    psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-    #                    ),
-    #                 # LC12:
-    #                 LC(name = 'Q_vorne_mitte', category = 'imposed-load', file_name = 'LC12.txt',
-    #                    exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_feld_re'],
-    #                    psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-    #                    ),
+#                     # LC11:
+#                     LC(name = 'Q_feld_re', category = 'imposed-load', file_name = 'LC11.txt',
+#                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
+#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+#                        ),
+#                     # LC12:
+#                     LC(name = 'Q_vorne_mitte', category = 'imposed-load', file_name = 'LC12.txt',
+#                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_feld_re'],
+#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+#                        ),
 
                      #----------------------------------------------------------------------
                      # temperature
@@ -199,10 +214,10 @@ if __name__ == '__main__':
                      #----------------------------------------------------------------------
                      # shrinkage
                      #----------------------------------------------------------------------
-    #                 # LC17:
-                     LC(name='T_schwinden', category='imposed-load', file_name='LC17.txt',
-                        psi_0=0.8, psi_1=0.7, psi_2=0.5,
-                        ),
+                     # LC17:
+#                     LC(name='T_schwinden', category='imposed-load', file_name='LC17.txt',
+#                        psi_0=0.8, psi_1=0.7, psi_2=0.5,
+#                        ),
 
                      #----------------------------------------------------------------------
                      # wind load
@@ -212,11 +227,11 @@ if __name__ == '__main__':
                         exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
                         psi_0=0.6, psi_1=0.2, psi_2=0.0
                         ),
-#                     # LC43:
-                     LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC43.txt',
-                        exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-                        psi_0=0.6, psi_1=0.2, psi_2=0.0
-                        ),
+                     # LC43:
+#                     LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC43.txt',
+#                        exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+#                        psi_0=0.6, psi_1=0.2, psi_2=0.0
+#                        ),
                      # LC44:
                      LC(name='w_sog_komplett', category='imposed-load', file_name='LC44.txt',
                         exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
@@ -229,9 +244,8 @@ if __name__ == '__main__':
                         ),
                    ]
 
-
     #----------------------------------------------------------------------
-    # loads according to DIN EN 1991-1-3 (snow) and DIN EN 1991-1-4 (wind)
+    # (c) dimensioning with loads according to DIN EN 1991-1-3 (snow) and DIN EN 1991-1-4 (wind)
     #----------------------------------------------------------------------
 
     if do == 'dimensioning':
@@ -321,7 +335,6 @@ if __name__ == '__main__':
                     exclusive_to=[ 'Q_hinten', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
                     psi_0=0.0, psi_1=0.2, psi_2=0.0
                     ),
-
                  #----------------------------------------------------------------------
                  # shrinkage
                  #----------------------------------------------------------------------
@@ -329,9 +342,7 @@ if __name__ == '__main__':
                  LC(name='T_schwinden', category='imposed-load', file_name='LC14.txt',
                     psi_0=0.8, psi_1=0.7, psi_2=0.5,
                     ),
-
                ]
-
 
         lc_list_T = [
 
@@ -359,14 +370,156 @@ if __name__ == '__main__':
                     exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_pos'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
                     ),
-
                ]
 
+    #--------------------------------------------------------------
+    # ULS evaluation
+    #--------------------------------------------------------------
 
-#--------------------------------------------------------------
+    if do == 'shell-test':
+        #--------------------------------------------------------
+        # strength characteristics for experimental (mean) values for barrelshell
+        # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
+        #--------------------------------------------------------
 
+        # tensile strength [kN/m]
+        #
+        n_0_Rdt = n_90_Rdt = 41.1 / 0.10  # [kN/m]
+
+        # bending strength [kNm/m]
+        #
+        m_0_Rd = m_90_Rd = (3.5 * 0.46 / 4.) / 0.10  # [kNm/m]
+        print 'experimental values used for resistance values (no gamma_M)'
+
+        # compressive strength [kN/m]
+        # (design value; f_cd = 37,5 MPa)
+        #
+        n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
+
+        lct = LCCTableULS(data_dir=data_dir,
+                          reader_type='InfoCAD',
+                          data_filter=remove_support_elems,
+                          lc_list=lc_list,
+                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
+                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
+                          k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
+                          show_lc_characteristic=True
+                          )
+
+        #--------------------------------------------------------------
+        # 'combi_arr': array with indices of all loading case combinations
+        #--------------------------------------------------------------
+        #
+#        print 'lct.combi_arr', lct.combi_arr.shape
+#        np.savetxt('combi_arr_wo_temp_LCs', lct.combi_arr, delimiter=';')
+
+        #--------------------------------------------------------------
+        # nm-interaction plot (normal force - bending moment)
+        #--------------------------------------------------------------
+        #
+#        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
+
+        #--------------------------------------------------------------
+        # interaction plot of material usage 'eta_nm' (utilization ratio)
+        #--------------------------------------------------------------
+        #
+#        lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_shell-test')
+
+        #--------------------------------------------------------------
+        # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
+        # (surrounding values of all loading cases)
+        #--------------------------------------------------------------
+        #
+        lct.plot_assess_value('eta_nm_tot',
+                              save_fig_to_file='eta_nm_tot_shell-test')
+
+        #--------------------------------------------------------------
+        # brows the loading case combinations within an interactive table view
+        #--------------------------------------------------------------
+        lct.configure_traits()
+
+    if do == 'predimensioning':
+        #--------------------------------------------------------
+        # strength characteristics (design) values for barrelshell
+        # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
+        #--------------------------------------------------------
+
+        # tensile strength [kN/m]
+        #
+        n_0_Rdt = n_90_Rdt = 223.  # [kN/m] # ZiE value
+
+        # bending strength [kNm/m]
+        #
+        m_0_Rd = m_90_Rd = 1.7  # [kNm/m] # ZiE value
+
+        # compressive strength [kN/m]
+        # (design value; f_cd = 37,5 MPa)
+        #
+        n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
+
+        print 'design values used for strength characteristics'
+
+        lct = LCCTableULS(data_dir=data_dir,
+                          reader_type='InfoCAD',
+                          data_filter=remove_support_elems,
+                          lc_list=lc_list,
+                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
+                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
+                          k_alpha_min=True,  # NO simplification used for 'k_alpha' on the resistance side
+                          show_lc_characteristic=False
+                          )
+
+        #--------------------------------------------------------------
+        # 'combi_arr': array with indices of all loading case combinations
+        #--------------------------------------------------------------
+        #
+        print 'lct.combi_arr', lct.combi_arr.shape
+#        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
+
+        #--------------------------------------------------------------
+        # nm-interaction plot (normal force - bending moment)
+        #--------------------------------------------------------------
+        #
+        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC22')
+
+        #--------------------------------------------------------------
+        # interaction plot of material usage 'eta_nm' (utilization ratio)
+        #--------------------------------------------------------------
+        #
+        lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC22')
+
+        #--------------------------------------------------------------
+        # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
+        # (surrounding values of all loading cases)
+        #--------------------------------------------------------------
+        #
+        lct.plot_assess_value('eta_nm_tot')
+
+        #--------------------------------------------------------------
+        # brows the loading case combinations within an interactive table view
+        #--------------------------------------------------------------
+        lct.configure_traits()
 
     if do == 'dimensioning':
+        #--------------------------------------------------------
+        # strength characteristics (design) values for barrelshell
+        # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
+        #--------------------------------------------------------
+
+        # tensile strength [kN/m]
+        #
+        n_0_Rdt = n_90_Rdt = 223.  # [kN/m] # ZiE value
+
+        # bending strength [kNm/m]
+        #
+        m_0_Rd = m_90_Rd = 1.7  # [kNm/m] # ZiE value
+
+        # compressive strength [kN/m]
+        # (design value; f_cd = 37,5 MPa)
+        #
+        n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
+
+        print 'design values used for strength characteristics'
 
         # LCCTable for imposed loads (without temperature)
         #
@@ -374,6 +527,8 @@ if __name__ == '__main__':
                           reader_type='InfoCAD',
                           data_filter=remove_support_elems,
                           lc_list=lc_list_Q,
+                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
+                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
                           k_alpha_min=True,  # simplification: use the minimum value for k_alpha on the resistance side
 #                          show_lc_characteristic = True
                           )
@@ -384,6 +539,8 @@ if __name__ == '__main__':
                           reader_type='InfoCAD',
                           data_filter=remove_support_elems,
                           lc_list=lc_list_T,
+                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
+                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
                           k_alpha_min=True,  # simplification: use the minimum value for k_alpha on the resistance side
 #                          show_lc_characteristic = True
                           )
@@ -392,37 +549,35 @@ if __name__ == '__main__':
         # 'combi_arr': array with indices of all loading case combinations
         #--------------------------------------------------------------
         #
-#        print 'lct_Q.combi_arr', lct_Q.combi_arr.shape
-#        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
+        print 'lct_Q.combi_arr', lct_Q.combi_arr.shape, '\n'
+        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter=';')
 
         #--------------------------------------------------------------
         # nm-interaction plot (normal force - bending moment)
         #--------------------------------------------------------------
         #
-#        lct_T.plot_nm_interaction( save_max_min_nm_to_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC15-18')
-#        lct_Q.plot_nm_interaction( save_fig_to_file = 'nm_interaction_LC1-14' )
-#        lct_Q.plot_nm_interaction( add_max_min_nm_from_file = 'max_min_nm_arr_LC15-18', save_fig_to_file = 'nm_interaction_LC1-18' )
+        lct_T.plot_nm_interaction(save_max_min_nm_to_file='max_min_nm_arr_LC15-18', save_fig_to_file='nm_interaction_LC15-18')
+        lct_Q.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-14')
+        lct_Q.plot_nm_interaction(add_max_min_nm_from_file='max_min_nm_arr_LC15-18', save_fig_to_file='nm_interaction_LC1-18')
 
         #--------------------------------------------------------------
-        # interaction plot of material usage 'eta_nm' (Ausnutzungsgrad)
+        # interaction plot of material usage 'eta_nm' (utilization ratio)
         #--------------------------------------------------------------
         #
-#        lct_T.plot_eta_nm_interaction( save_max_min_eta_nm_to_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC15-18' )
-#        lct_Q.plot_eta_nm_interaction( save_fig_to_file = 'eta_nm_interaction_LC1-14')
-#        lct_Q.plot_eta_nm_interaction( add_max_min_eta_nm_from_file = 'max_min_eta_nm_arr_LC15-18', save_fig_to_file = 'eta_nm_interaction_LC1-18')
+        lct_T.plot_eta_nm_interaction(save_max_min_eta_nm_to_file='max_min_eta_nm_arr_LC15-18', save_fig_to_file='eta_nm_interaction_LC15-18')
+        lct_Q.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-14')
+        lct_Q.plot_eta_nm_interaction(add_max_min_eta_nm_from_file='max_min_eta_nm_arr_LC15-18', save_fig_to_file='eta_nm_interaction_LC1-18')
 
         #--------------------------------------------------------------
-        # plot of structure with color indication of material usage 'eta_nm' (Ausnutzungsgrad)
+        # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
         # (surrounding values of all loading cases)
         #--------------------------------------------------------------
         #
-#        lct_T.plot_assess_value( save_assess_values_to_file = 'eta_nm_tot_LC15-18' )
-#        lct_Q.plot_assess_value( add_assess_values_from_file = 'eta_nm_tot_LC15-18' )
+        lct_T.plot_assess_value('eta_nm_tot', save_assess_values_to_file='eta_nm_tot_LC15-18')
+        lct_Q.plot_assess_value('eta_nm_tot', add_assess_values_from_file='eta_nm_tot_LC15-18')
 
         #--------------------------------------------------------------
         # brows the loading case combinations within an interactive table view
         #--------------------------------------------------------------
 #        lct_Q.configure_traits()
-        lct_T.configure_traits()
-
-
+#        lct_T.configure_traits()
