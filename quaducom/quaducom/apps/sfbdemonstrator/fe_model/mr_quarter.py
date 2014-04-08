@@ -129,7 +129,7 @@ class MRquarter(MushRoofModel):
     def _get_mats_roof(self):
         # return MATS3DElastic(E=self.E_roof, nu=self.nu)
         return MATS2D5MicroplaneDamage(
-                                E=28427.0,
+                                E=29100.0,
                                 nu=0.2,
                                 n_mp=30,
                                 symmetrization='sum-type',
@@ -189,7 +189,7 @@ class MRquarter(MushRoofModel):
 
     rtrace_list = List
     def _rtrace_list_default(self):
-        return [  self.eps_app, self.max_omega_i, self.phi_pdc ]
+        return [  self.eps_app, self.sig_app, self.max_omega_i, self.phi_pdc ]
 
     max_lambda = Float(1.0, input=True)
     '''Maximum lambda factor to impose on the structure.
@@ -214,8 +214,13 @@ class MRquarter(MushRoofModel):
     n_steps = Int(15.0, auto_set=False, enter_set=False, input=True)
     time_fn_load = Instance(MFnLineArray, input=True)
     def _time_fn_load_default(self):
-        return MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 8.0, 15.0],
-                            ydata=[0.0, 1.0, 1.0 / 0.27, 1.78 / 0.27, 8.0, 9.13])
+        return MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 15.0],
+                            ydata=[0.0, 1.0, 1.0 / 0.22, 1.78 / 0.22, 9.45])
+
+    boundary_x1 = Property(depends_on='+input')
+    @cached_property
+    def _get_boundary_x1(self):
+        return self.fe_grid_roof.domain[-1, :, -1, -1, :, -1]
 
     #----------------------------------------------------
     # time loop
@@ -342,7 +347,7 @@ class MRquarter(MushRoofModel):
                  rtrace_list=rtrace_list
                )
 
-        step = self.max_lambda / self.n_steps
+        step = self.n_steps
         # Add the time-loop control
         tloop = TLoop(tstepper=ts, RESETMAX=0, KMAX=70,
                        tolerance=0.5e-3,
@@ -435,22 +440,77 @@ class MRquarterDB(MRquarter):
 
 
 if __name__ == '__main__':
-    sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                             calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_Em28427_nu0.2_nsteps100',
-                             # calibration_test='TT-12c-6cm-TU-SH2F-V3',
-                             age=27,
-                             max_lambda=15.0,
-                             n_steps=15,
-                             n_elems_xy_quarter=12,
-                             n_elems_z=2,
-                            )
+
+    do = 'load_factor_plot'
+    # do = 'ui'
+    do = 'mxn_cut'
+
+    if do == 'mxn_cut':
+        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                                age=26,
+                                max_lambda=1.0,
+                                n_steps=1,
+                                n_elems_xy_quarter=2,
+                                n_elems_z=1,
+                                )
+
+        u = sim_model.tloop.eval()
+        F_int = sim_model.tloop.tstepper.F_int
+
+        dof_X = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dof_X
+        dof_X_1 = dof_X[:, :, 1].flatten()
+        dof_X_2 = dof_X[:, :, 2].flatten()
+        dofs = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dofs
+        dofs_0 = dofs[:, :, 0].flatten()
+        dof_X_1_idx_sorted = np.argsort(dof_X_1)
+        dof_X_1_sorted = dof_X_1[dof_X_1_idx_sorted]
+        dof_X_2_sorted = dof_X_2[dof_X_1_idx_sorted]
+        dofs_0_sorted = dofs_0[dof_X_1_idx_sorted]
+
+        print 'dof_X_1'
+        print dof_X_1
+
+        print 'dof_X_2'
+        print dof_X_2
+
+        print 'dofs_0'
+        print dofs_0
+
+        print 'dof_X_1_sorted'
+        print dof_X_1_sorted
+
+        print 'dof_X_2_sorted'
+        print dof_X_2_sorted
+
+        print 'dofs_0_sorted'
+        print dofs_0_sorted
+
+        dofs_0_idx_unique = np.argsort(dofs_0_sorted)
+        dofs_0_unique = dofs_0_sorted[dofs_0_idx_unique]
+        print 'dofs_0_idx_unique'
+        print dofs_0_idx_unique
+        print 'dofs_0_unique'
+        print dofs_0_unique
+
+        print 'F_int_sorted'
+        F_int_unique = F_int[np.unique(dofs_0_unique)]
+        print F_int_unique
+
+
+    else:
+        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                                age=26,
+                                max_lambda=15.0,
+                                n_steps=15,
+                                n_elems_xy_quarter=6,
+                                n_elems_z=2,
+                                )
 
     # sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
 #    sim_model.fe_grid_column.inactive_elems = list( interior_elems )
-
-    do = 'load_factor_plot'
-    do = 'ui'
 
     if do == 'eval':
 #        sim_model.tloop.eval()
@@ -485,8 +545,8 @@ if __name__ == '__main__':
         lambda_ = sim_model.time_fn_load.get_values(time_)
         print 'lambda_', lambda_
 
-        eta_nmd = 0.27
-        chi = 0.84
+        eta_nmd = 0.22
+        chi = 0.81
         gamma = 1.5
 
         eta = lambda_ * eta_nmd
