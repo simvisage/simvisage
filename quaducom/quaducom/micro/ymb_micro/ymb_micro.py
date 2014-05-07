@@ -30,7 +30,6 @@ from ymb_cross_correl import YMBCrossCorrel
 from ymb_view3d import YMBView3D
 from ymb_view2d import YMBView2D
 from ymb_pullout import YMBPullOut
-from ymb_pdistrib import YMBDistrib
 
 import os
 # os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'

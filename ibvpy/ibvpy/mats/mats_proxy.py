@@ -63,8 +63,8 @@ class VariedParam(HasTraits):
     def adjust_for_sctx(self, sctx):
         if self.switch == 'varied':
             X_pnt = sctx.fets_eval.get_X_pnt(sctx)
-            #X_coord = zeros(3)
-            #X_coord[0:2] = X_pnt
+            # X_coord = zeros(3)
+            # X_coord[0:2] = X_pnt
             coeff = self.spatial_fn(X_pnt)
             self.variable = self.reference_value * coeff
 
@@ -76,7 +76,7 @@ class VariedParam(HasTraits):
                         height=800)
 
 #----------------------------------------------------------------------------------
-# Tabular Adapter Definition 
+# Tabular Adapter Definition
 #----------------------------------------------------------------------------------
 class VariedParamAdapter (TabularAdapter):
 
@@ -87,7 +87,7 @@ class VariedParamAdapter (TabularAdapter):
     variable_alignment = Constant('right')
 
 #----------------------------------------------------------------------------------
-# Tabular Editor Construction 
+# Tabular Editor Construction
 #----------------------------------------------------------------------------------
 varpar_editor = TabularEditor(
     selected='current_varpar',
@@ -238,7 +238,7 @@ class MATSProxy(MATSEval):
     def _get_varpar_list(self):
         return self.varpars.values()
 
-    # variable selectable in the table of varied params (just for viewing) 
+    # variable selectable in the table of varied params (just for viewing)
     current_varpar = Instance(VariedParam)
     def _current_varpar_default(self):
         return self.varpar_list[0]
@@ -276,11 +276,11 @@ class MATSProxy(MATSEval):
         @param eps_app_eng input variable - engineering strain
         '''
         #
-        # Reset the parameter values for the material model according to the 
+        # Reset the parameter values for the material model according to the
         # current spatial context
         #
 
-        #        @todo check whether or not to put this into the spatial context - the X_pnt 
+        #        @todo check whether or not to put this into the spatial context - the X_pnt
         #        is needed only for certain configurations. If implemented as a cached functor
         #        it could be constructed on demand for all gauss points as a cached property
         #        and the material models could reuse it without repeated evalution of this operation.
@@ -337,21 +337,21 @@ class MATSProxy(MATSEval):
 
 
 #--------------------------------------------------------------------------------
-# Example 
+# Example
 #--------------------------------------------------------------------------------
 
 from ibvpy.core.tloop import TLoop, TLine
 from ibvpy.api import BCDof
 from ibvpy.core.ibvp_solve import IBVPSolve as IS
 from mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
-#from mats1D.mats1D_damage.mats_damage1d import MATS1DDamage  
+# from mats1D.mats1D_damage.mats_damage1d import MATS1DDamage
 from mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
 
 
 if __name__ == '__main__':
     # tseval for a material model
     #
-    #tseval  = MATSProxy(  mats_eval_type = 'MATS1DElastic' )
+    # tseval  = MATSProxy(  mats_eval_type = 'MATS1DElastic' )
     tseval = MATSProxy()
     E_mod_varpar = tseval.varpars['E']
     E_mod_varpar.spatial_fn = MFnNDGrid(shape=(10, 10, 1),
@@ -363,7 +363,7 @@ if __name__ == '__main__':
              rtrace_list=[ RTraceGraph(name='strain 0 - stress 0',
                                   var_x='eps_app', idx_x=0,
                                   var_y='sig_app', idx_y=0,
-                                  update_on='update')
+                                  record_on='update')
                          ]
                          )
     # Put the time-stepper into the time-loop

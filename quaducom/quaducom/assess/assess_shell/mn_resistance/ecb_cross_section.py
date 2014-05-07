@@ -129,7 +129,7 @@ class ECBCrossSection(ECBCrossSectionState):
         self.data_changed = True
 
     def plot_eps(self, ax):
-        #ax = self.figure.gca()
+        # ax = self.figure.gca()
 
         d = self.thickness
         # eps ti
@@ -248,8 +248,7 @@ class ECBCrossSection(ECBCrossSectionState):
 if __name__ == '__main__':
     ecs = ECBCrossSection(# 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                            # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
-                           f_ck=55.7,
-
+#                           f_ck=55.7,
                            ecb_law_type='fbm',
                            cc_law_type='quadratic'
                            )

@@ -15,7 +15,7 @@ from etsproxy.traits.ui.menu import \
      NoButtons, OKButton, CancelButton, \
      Action
 
-from numpy import zeros, float_, ndarray
+import numpy as np
 
 from i_sdomain import ISDomain
 from sdomain import SDomain
@@ -333,7 +333,7 @@ class TStepper(IBVResource):
         # @todo use coerce in order to hide this conversions.
         # or is adapter concept of traits a possibility?
         #
-        if isinstance(K_mtx, ndarray):
+        if isinstance(K_mtx, np.ndarray):
             self.K.add_mtx(K_mtx)
         elif isinstance(K_mtx, SysMtxArray):
             self.K.sys_mtx_arrays.append(K_mtx)
@@ -342,6 +342,7 @@ class TStepper(IBVResource):
         elif isinstance(K_mtx, SysMtxAssembly):
             self.K.sys_mtx_arrays = K_mtx.sys_mtx_arrays
 
+        norm_F_int = np.linalg.norm(F_int)
         # Switch off the global update flag
         #
         sctx.update_state_on = False
@@ -376,7 +377,7 @@ class TStepper(IBVResource):
 
             # Return the system matrix assembly K and the residuum
             #
-            return self.K, self.F_ext - self.F_int
+            return self.K, self.F_ext - self.F_int, norm_F_int
 
         else:
 
@@ -394,7 +395,7 @@ class TStepper(IBVResource):
             # The subtraction F_ext - F_int has then been performed implicitly
             # and the residuum can be returned by issuing
             #
-            return self.K, F_int
+            return self.K, F_int, norm_F_int
 
     def update_state(self, U):
         '''

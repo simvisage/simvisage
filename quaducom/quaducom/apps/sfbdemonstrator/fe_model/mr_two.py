@@ -93,7 +93,7 @@ class MRtwo(MushRoofModel):
     # fets_eval
     #----------------------------------------------------
 
-    vtk_r = Float(0.90, input=True)
+    vtk_r = Float(1.0, input=True)
 
     # fets used for roof
     #
@@ -1385,14 +1385,25 @@ class MRtwo(MushRoofModel):
         face_1_right = r1[ n_e_q:, :, -1, :, :, -1 ]
 
         # loads
-        w_left_edge = 0.91e-3  # [MN/m]
-        w_right_edge = 0.39e-3  # [MN/m]
+        w_left_edge = 1.28e-3  # [MN/m] (=0.91*1.4)
+#        w_left_edge = 0.91e-3  # [MN/m]
+
+        w_right_edge = 0.55e-3  # [MN/m] (=0.39*1.4)
+#        w_right_edge = 0.39e-3  # [MN/m]
+
         w_bottom_edge_0_left = -1.56e-3  # [Mn/m] tension
         w_bottom_edge_0_right = -1.04e-3  # [Mn/m] tension
-        w_bottom_edge_1 = -0.65e-3  # [Mn/m]tension
-        w_face_0_left = 0.89e-3  # MN/m^2
+        #
+        w_bottom_edge_1 = -0.56e-3  # [Mn/m]tension
+#        w_bottom_edge_1 = -0.65e-3  # [Mn/m]tension
+
+        w_face_0_left = 0.95e-3  # MN/m^2
+#        w_face_0_left = 0.89e-3  # MN/m^2
+
+        w_face_1_left = 0.76e-3  # MN/m^2
+#        w_face_1_left = 0.72e-3  # MN/m^2
+
         w_face_0_right = -0.13e-3  # MN/m^2
-        w_face_1_left = 0.72e-3  # MN/m^2
         w_face_1_right = w_face_0_right
 
         return [  # left edge - x direction

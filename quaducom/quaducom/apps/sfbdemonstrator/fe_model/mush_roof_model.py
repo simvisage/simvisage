@@ -14,11 +14,11 @@ from ibvpy.api import \
     TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
     TLine, BCDof, BCDofGroup, BCSlice, IBVModel
 
-#material model
+# material model
 from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
     MATS3DElastic
 
-#elements
+# elements
 from ibvpy.fets.fets_eval import \
     FETSEval
 from ibvpy.fets.fets3D.fets3D8h import \
@@ -48,17 +48,17 @@ class MushRoofModel(IBVModel):
         alpha, t_up, t_lo = self.alpha, self.t_up, self.t_lo
         delta_t = t_lo + (t_up - t_lo) * x_pnt[2]
         epsilon_0 = alpha * delta_t
-        # return the initial volumetric strain tensor with n_dims  
+        # return the initial volumetric strain tensor with n_dims
         return diag([ epsilon_0 for i in range(3) ])
 
     #===========================================================================
     # material model
     #===========================================================================
 
-    E_roof = Float(28700) # [MN/m^2]
-    E_column = Float(32800) # [MN/m^2] E_cm for concrete C45/55 
-    E_plate = Float(210000) # [MN/m^2] steel plate
-    nu = Float(0.2) # [-]
+    E_roof = Float(28700)  # [MN/m^2]
+    E_column = Float(32800)  # [MN/m^2] E_cm for concrete C45/55
+    E_plate = Float(210000)  # [MN/m^2] steel plate
+    nu = Float(0.2)  # [-]
 
     mats_roof = Property(Instance(MATS3DElastic), depends_on='+input')
     @cached_property
@@ -111,8 +111,8 @@ class MushRoofModel(IBVModel):
 
     # dimensions of one quarter of the shell structure [m]
     #
-    length_xy_quarter = Float(3.5, input=True)#, ps_levels = [4, 16, 5] )
-    length_z = Float(0.927, input=True)#, ps_levels = [1, 2, 1] )
+    length_xy_quarter = Float(3.5, input=True)  # , ps_levels = [4, 16, 5] )
+    length_z = Float(0.927, input=True)  # , ps_levels = [1, 2, 1] )
 
     # shell thickness is used only by option 'const_reinf_layer_elem'
     #
@@ -134,8 +134,8 @@ class MushRoofModel(IBVModel):
 
 #    r_pipe = Float( 0.1, unit = 'm', input = True )
 
-    scalefactor_delta_h = Float(1.00, input=True) # [-]
-    scalefactor_length_xy = Float(1.00, input=True) # [-] 
+    scalefactor_delta_h = Float(1.00, input=True)  # [-]
+    scalefactor_length_xy = Float(1.00, input=True)  # [-]
 
 
     #-----------------------------------------------------------------
@@ -170,7 +170,7 @@ class MushRoofModel(IBVModel):
     def _get_n_elems_xy_dict(self):
         return  {'quarter': self.n_elems_xy_quarter,
                  'one'    : self.n_elems_xy_quarter * 2,
-                 #@todo: include "scale_size" parameter used by HPShell!
+                 # @todo: include "scale_size" parameter used by HPShell!
                  'detail' : self.n_elems_xy_quarter * 2  }
 
     n_elems_xy = Property(Int , depends_on='+ps_levels, +input')
@@ -180,7 +180,7 @@ class MushRoofModel(IBVModel):
 
     # column discretization:
     #
-    n_elems_col_xy = Int(2, input=True)#, ps_levels = [5, 20, 3 ] )
+    n_elems_col_xy = Int(2, input=True)  # , ps_levels = [5, 20, 3 ] )
 
     #-----------------------------------------------------------------
     # option 'shift_elem'
@@ -215,7 +215,7 @@ class MushRoofModel(IBVModel):
     # geometric transformations
     #-----------------------------------------------------------------
 
-    #@todo: remove! geo_transforme is performed in the subclass 'MRTwo'
+    # @todo: remove! geo_transforme is performed in the subclass 'MRTwo'
 
 
     #===========================================================================
@@ -245,7 +245,7 @@ class MushRoofModel(IBVModel):
     @cached_property
     def _get_sig_app(self):
         return RTraceDomainListField(name='sig_app' ,
-#                                      position = 'int_pnts',
+                                      # position='int_pnts',
                                       var='sig_app',
                                       record_on='update',)
 
@@ -268,7 +268,7 @@ class MushRoofModel(IBVModel):
     @cached_property
     def _get_damage(self):
         return RTraceDomainListField(name='damage' ,
-                                      var='omega_mtx', idx=0, warp=True,
+                                      var='omega_mtx', idx=0, warp=False,
                                       record_on='update')
 
     phi_pdc = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
@@ -277,6 +277,14 @@ class MushRoofModel(IBVModel):
         return RTraceDomainListField(name='principal damage' ,
 #                                      position = 'int_pnts',
                                       var='phi_pdc',
+                                      record_on='update',)
+
+    max_omega_i = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_max_omega_i(self):
+        return RTraceDomainListField(name='max_omega_i' ,
+#                                      position = 'int_pnts',
+                                      var='max_omega_i',
                                       record_on='update',)
 
     fracture_energy = Property(Instance(RTraceDomainListField), depends_on='+ps_levels, +input')
@@ -304,7 +312,7 @@ class MushRoofModel(IBVModel):
         """
         if size(unsorted) != size(dofs):
             raise "--- array must have same size ---"
-        #order of dofs
+        # order of dofs
         order = argsort(dofs, axis=1)[:, :, 0]
         sorted = zeros_like(unsorted)
         for i, elem in enumerate(order):

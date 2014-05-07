@@ -1,4 +1,3 @@
-
 #-------------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
@@ -59,25 +58,12 @@ from mathkit.mfn import MFnLineArray
 
 import numpy as np
 
-from ibvpy.mats.mats3D.mats3D_tensor import map3d_sig_eng_to_mtx
-from math import sqrt, asin, acos, pi as Pi
-
-from rsurface_reader import \
-    read_rsurface, normalize_rsurfaces
-
 # Interpolation
-from scipy.interpolate import Rbf
-
-from geo_column import GEOColumn
-
 from simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
 
 from hp_shell import HPShell
 
 from mush_roof_model import MushRoofModel
-
-from simiter.sim_pstudy import \
-    SimPStudy, SimOut, ISimModel
 
 from matresdev.db.exdb.ex_run_view import \
     ExRunView
@@ -110,7 +96,7 @@ class MRquarter(MushRoofModel):
     #----------------------------------------------------
     vtk_r = Float(0.9)
 
-    #default roof
+    # default roof
     fe_roof = Instance(FETSEval,
                         ps_levels=['fe2d5_quad_serendipity',
                                      'fe_quad_serendipity',
@@ -141,9 +127,9 @@ class MRquarter(MushRoofModel):
 #    mats_roof = Property( Instance( MATS3DElastic), depends_on = '+input' )
     @cached_property
     def _get_mats_roof(self):
-        #return MATS3DElastic(E=self.E_roof, nu=self.nu)
+        # return MATS3DElastic(E=self.E_roof, nu=self.nu)
         return MATS2D5MicroplaneDamage(
-                                E=28427.0,
+                                E=29100.0,
                                 nu=0.2,
                                 n_mp=30,
                                 symmetrization='sum-type',
@@ -203,7 +189,7 @@ class MRquarter(MushRoofModel):
 
     rtrace_list = List
     def _rtrace_list_default(self):
-        return [  self.eps_app, self.fracture_energy, self.u, self.phi_pdc ]
+        return [  self.eps_app, self.sig_app, self.max_omega_i, self.phi_pdc ]
 
     max_lambda = Float(1.0, input=True)
     '''Maximum lambda factor to impose on the structure.
@@ -222,8 +208,19 @@ class MRquarter(MushRoofModel):
                            var_x='U_k', idx_x=w_z,
                            transform_x='-x',
                            var_y='time', idx_y=0,
-                           #transform_y='y * %g' % self.lambda_factor,
+                           # transform_y='y * %g' % self.lambda_factor,
                            record_on='update')
+
+    n_steps = Int(15.0, auto_set=False, enter_set=False, input=True)
+    time_fn_load = Instance(MFnLineArray, input=True)
+    def _time_fn_load_default(self):
+        return MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 15.0],
+                            ydata=[0.0, 1.0, 1.0 / 0.22, 1.78 / 0.22, 9.45])
+
+    boundary_x1 = Property(depends_on='+input')
+    @cached_property
+    def _get_boundary_x1(self):
+        return self.fe_grid_roof.domain[-1, :, -1, -1, :, -1]
 
     #----------------------------------------------------
     # time loop
@@ -239,68 +236,68 @@ class MRquarter(MushRoofModel):
         #----------------------------------------------------
 
         #--- LC1: dead load
-        # g = 22.4 kN/m^3 
-        # orientation: global z-direction; 
-        material_density_roof = -22.43e-3    # [MN/m^3]
+        # g = 22.4 kN/m^3
+        # orientation: global z-direction;
+        material_density_roof = -22.43e-3  # [MN/m^3]
 
-        #--- LC2 additional dead load 
-        # gA = 0,20 kN/m^2 
-        # orientation: global z-direction (following the curved structure); 
-        additional_dead_load = -0.20e-3    # [MN/m^2]
+        #--- LC2 additional dead load
+        # gA = 0,20 kN/m^2
+        # orientation: global z-direction (following the curved structure);
+        additional_dead_load = -0.20e-3  # [MN/m^2]
 
-        #--- LC2 additional boundary load 
-        # gA = 0,35 kN/m^2 
-        # orientation: global z-direction (following the curved structure); 
-        boundary_dead_load = -0.35e-3    # [MN/m]
+        #--- LC2 additional boundary load
+        # gA = 0,35 kN/m^2
+        # orientation: global z-direction (following the curved structure);
+        boundary_dead_load = -0.35e-3  # [MN/m]
 
         #--- LC3 snow
-        # s = 0,79 kN/m^2 
-        # orientation: global z-direction (projection); 
-        surface_load_s = -0.85e-3   # [MN/m^2]
+        # s = 0,79 kN/m^2
+        # orientation: global z-direction (projection);
+        surface_load_s = -0.85e-3  # [MN/m^2]
 
-        #--- LC4 wind (pressure) 
-        # w = 0,13 kN/m^2 
-        # orientation: local t-direction (surface normal); 
-        surface_load_w = -0.13e-3 # [MN/m^2]
+        #--- LC4 wind (pressure)
+        # w = 0,13 kN/m^2
+        # orientation: local t-direction (surface normal);
+        surface_load_w = -0.13e-3  # [MN/m^2]
 
-        # NOTE: additional line-loads at the edge of the roof need to be considered!  
+        # NOTE: additional line-loads at the edge of the roof need to be considered!
 
         upper_surface = domain[:, :, -1, :, :, -1]
         whole_domain = domain[:, :, :, :, :, :]
         boundary_x1 = domain[-1, :, -1, -1, :, -1]
         boundary_y1 = domain[:, -1, -1, :, -1, -1]
 
-        time_fn_load = MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 10.0],
-                                    ydata=[0.0, 1.0, 1.0 / 0.27, 1.78 / 0.27, 9.0])
+        time_fn_load = self.time_fn_load
+
         time_fn_permanent_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 1.0])
         time_fn_snow_load = MFnLineArray(xdata=[0.0, 1.0], ydata=[0.0, 0.0])
 
         force_bc = [
                     # own weight
-                     BCSlice(var='f', value=material_density_roof, dims=[2],
+                     BCSlice(name='self weight', var='f', value=material_density_roof, dims=[2],
                              integ_domain='global',
                              time_function=time_fn_load.get_value,
                              slice=whole_domain),
 
                      # LC2: additional dead-load
-                     BCSlice(var='f', value=additional_dead_load, dims=[2],
+                     BCSlice(name='additional load', var='f', value=additional_dead_load, dims=[2],
                               integ_domain='global',
                               time_function=time_fn_load.get_value,
                               slice=upper_surface),
 
                      # LC2: additional boundary-load
-                     BCSlice(var='f', value=boundary_dead_load, dims=[2],
+                     BCSlice(name='additional boundary load 1', var='f', value=boundary_dead_load, dims=[2],
                               integ_domain='global',
                               time_function=time_fn_load.get_value,
                               slice=boundary_x1),
 
                      # LC2: additional boundary-load
-                     BCSlice(var='f', value=boundary_dead_load, dims=[2],
+                     BCSlice(name='additional boundary load 2', var='f', value=boundary_dead_load, dims=[2],
                               integ_domain='global',
                               time_function=time_fn_load.get_value,
                               slice=boundary_y1),
-                     # LC3: snow load         
-                     BCSlice(var='f', value=surface_load_s, dims=[2],
+                     # LC3: snow load
+                     BCSlice(name='snow load', var='f', value=surface_load_s, dims=[2],
                               integ_domain='global',
                               time_function=time_fn_snow_load.get_value,
                               slice=upper_surface),
@@ -329,8 +326,8 @@ class MRquarter(MushRoofModel):
 #                                           - 1, 0, 0],
 #                            value = 0. )]
 
-        #bc_corner_load   = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[-1,-1,-1,-1,-1,-1] )
-        #bc_topface_load  = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[:,:,-1,:,:,-1] )
+        # bc_corner_load   = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[-1,-1,-1,-1,-1,-1] )
+        # bc_topface_load  = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = domain[:,:,-1,:,:,-1] )
 
 #        support_z_dofs = domain[0, 0, 0, :, : , 0].dofs[:, :, 2]
 #        support_f_w = RTraceGraph(name='force - corner deflection',
@@ -350,10 +347,10 @@ class MRquarter(MushRoofModel):
                  rtrace_list=rtrace_list
                )
 
-        step = self.max_lambda / 10.0
+        step = self.n_steps
         # Add the time-loop control
-        tloop = TLoop(tstepper=ts,
-                       tolerance=1e-4,
+        tloop = TLoop(tstepper=ts, RESETMAX=0, KMAX=70,
+                       tolerance=0.5e-3,
                        tline=TLine(min=0.0, step=step, max=self.max_lambda))
         return tloop
 
@@ -387,19 +384,20 @@ class MRquarterDB(MRquarter):
     material_model = Str(input=True)
     def _material_model_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].material_model
 
     calibration_test = Str(input=True)
     def _calibration_test_default(self):
         # return the material model key of the first DamageFunctionEntry
-        # This is necessary to avoid an ValueError at setup  
+        # This is necessary to avoid an ValueError at setup
         return self.ccs_unit_cell_ref.damage_function_list[0].calibration_test
 
     damage_function = Property(Instance(MFnLineArray),
-                                depends_on='input_change')
+                                depends_on='+input')
     @cached_property
     def _get_damage_function(self):
+        print 'getting damage function'
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------
@@ -407,10 +405,10 @@ class MRquarterDB(MRquarter):
     #-----------------
     #
     phi_fn = Property(Instance(PhiFnGeneralExtended),
-                       depends_on='input_change,+ps_levels')
+                       depends_on='+input,+ps_levels')
     @cached_property
     def _get_phi_fn(self):
-        return PhiFnGeneralExtendedExp(mfn=self.damage_function, Dfp=0.01, Efp_frac=0.05)
+        return PhiFnGeneralExtendedExp(mfn=self.damage_function, Dfp=0.01, Efp_frac=0.007)
 #        return PhiFnGeneralExtended( mfn = self.damage_function,
 #                                     factor_eps_fail = self.factor_eps_fail )
 
@@ -419,22 +417,22 @@ class MRquarterDB(MRquarter):
     #----------------------------------------------------------------------------------
 
     # age of the plate at the time of testing
-    # NOTE: that the same phi-function is used independent of age. This assumes a 
-    # an afine/proportional damage evolution for different ages. 
+    # NOTE: that the same phi-function is used independent of age. This assumes a
+    # an afine/proportional damage evolution for different ages.
     #
-    age = Int(28, #input = True
+    age = Int(28,  # input = True
                 )
 
-    # composite E-modulus 
+    # composite E-modulus
     #
-    E_c = Property(Float, depends_on='input_change')
+    E_c = Property(Float, depends_on='+input')
     @cached_property
     def _get_E_c(self):
         return self.ccs_unit_cell_ref.get_E_c_time(self.age)
 
-    # Poisson's ratio 
+    # Poisson's ratio
     #
-    nu = Property(Float, depends_on='input_change')
+    nu = Property(Float, depends_on='+input')
     @cached_property
     def _get_nu(self):
         return self.ccs_unit_cell_ref.nu
@@ -442,29 +440,86 @@ class MRquarterDB(MRquarter):
 
 
 if __name__ == '__main__':
-    sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                             calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age26_nu28427_Em0.2_nsteps100',
-                             #calibration_test='TT-12c-6cm-TU-SH2F-V3',
-                             age=27,
-                             max_lambda=10.0,
-                             n_elems_xy_quarter=8,
-                             n_elems_z=2,
-                            )
 
-    #sim_model.initial_strain_roof = True
+    do = 'load_factor_plot'
+    # do = 'ui'
+    do = 'mxn_cut'
+
+    if do == 'mxn_cut':
+        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                                age=26,
+                                max_lambda=1.0,
+                                n_steps=1,
+                                n_elems_xy_quarter=2,
+                                n_elems_z=1,
+                                )
+
+        u = sim_model.tloop.eval()
+        F_int = sim_model.tloop.tstepper.F_int
+
+        dof_X = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dof_X
+        dof_X_1 = dof_X[:, :, 1].flatten()
+        dof_X_2 = dof_X[:, :, 2].flatten()
+        dofs = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dofs
+        dofs_0 = dofs[:, :, 0].flatten()
+        dof_X_1_idx_sorted = np.argsort(dof_X_1)
+        dof_X_1_sorted = dof_X_1[dof_X_1_idx_sorted]
+        dof_X_2_sorted = dof_X_2[dof_X_1_idx_sorted]
+        dofs_0_sorted = dofs_0[dof_X_1_idx_sorted]
+
+        print 'dof_X_1'
+        print dof_X_1
+
+        print 'dof_X_2'
+        print dof_X_2
+
+        print 'dofs_0'
+        print dofs_0
+
+        print 'dof_X_1_sorted'
+        print dof_X_1_sorted
+
+        print 'dof_X_2_sorted'
+        print dof_X_2_sorted
+
+        print 'dofs_0_sorted'
+        print dofs_0_sorted
+
+        dofs_0_idx_unique = np.argsort(dofs_0_sorted)
+        dofs_0_unique = dofs_0_sorted[dofs_0_idx_unique]
+        print 'dofs_0_idx_unique'
+        print dofs_0_idx_unique
+        print 'dofs_0_unique'
+        print dofs_0_unique
+
+        print 'F_int_sorted'
+        F_int_unique = F_int[np.unique(dofs_0_unique)]
+        print F_int_unique
+
+
+    else:
+        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                                age=26,
+                                max_lambda=15.0,
+                                n_steps=15,
+                                n_elems_xy_quarter=6,
+                                n_elems_z=2,
+                                )
+
+    # sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
 #    sim_model.fe_grid_column.inactive_elems = list( interior_elems )
 
-    do = 'load_factor_plot'
-    do = 'ui'
-
     if do == 'eval':
 #        sim_model.tloop.eval()
+
         print 'eval', sim_model.peval()
 
     if do == 'ui':
         sim_model.tloop.eval()
-#        sim_model.peval()
+        # sim_model.peval()
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource=sim_model)
         app.main()
@@ -476,16 +531,22 @@ if __name__ == '__main__':
     elif do == 'load_factor_plot':
         import pylab as p
 
+        sim_model.time_fn_load.plot(p)
+        p.show()
+
         sim_model.tloop.eval()
 
         f_w = sim_model.f_w_diagram
         f_w.redraw()
 
-        #f_w.trace.plot(p, color='black')
+        # f_w.trace.plot(p, color='black')
         w = f_w.trace.xdata
-        lambda_ = f_w.trace.ydata
-        eta_nmd = 0.27
-        chi = 0.84
+        time_ = f_w.trace.ydata
+        lambda_ = sim_model.time_fn_load.get_values(time_)
+        print 'lambda_', lambda_
+
+        eta_nmd = 0.22
+        chi = 0.81
         gamma = 1.5
 
         eta = lambda_ * eta_nmd
@@ -508,14 +569,18 @@ if __name__ == '__main__':
         ax2.plot([0, max_w], [ eta_nmd, eta_nmd], color='black', linestyle='dashed')
         p.show()
 
+        from ibvpy.plugins.ibvpy_app import IBVPyApp
+        app = IBVPyApp(ibv_resource=sim_model)
+        app.main()
+
     elif do == 'pickle':
 
         import pickle
         filename = '/tmp/sim.pickle'
-        file = open(filename, 'w')
-        pickle.dump(sim_model, file)
-        file.close()
-        file = open(filename, 'r')
-        sm = pickle.load(file)
-        file.close()
+        fl = open(filename, 'w')
+        pickle.dump(sim_model, fl)
+        fl.close()
+        fl = open(filename, 'r')
+        sm = pickle.load(fl)
+        fl.close()
 

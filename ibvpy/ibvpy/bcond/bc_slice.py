@@ -12,31 +12,26 @@
 #
 # Created on May 26, 2009 by: rchx
 
-from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
+from etsproxy.traits.api import Float, HasStrictTraits, \
                                  Instance, Int, Trait, Str, Enum, \
-                                 Callable, List, TraitDict, Any, Range, \
-                                 Delegate, Event, on_trait_change, Button, \
-                                 Interface, implements, Property, cached_property
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
-     Action
-from etsproxy.traits.ui.api \
-    import View, Item, VSplit, TableEditor, ListEditor
+                                 Callable, List, \
+                                 Button, \
+                                 implements, Property
+from etsproxy.traits.ui.api import \
+     HSplit, Group, \
+     View, Item, TableEditor
 from etsproxy.traits.ui.table_column \
-    import ObjectColumn, ExpressionColumn
+    import ObjectColumn
 from numpy import \
     ix_, dot, repeat, zeros
 
 import numpy as np
-
 from scipy.linalg import \
      det, norm
 from ibvpy.api import \
     IBCond
 from bc_dof import BCDof
 from ibvpy.mesh.fe_grid_idx_slice import FEGridIdxSlice
-
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
@@ -55,6 +50,8 @@ class BCSlice(HasStrictTraits):
     Implements the IBC functionality for a constrained dof.
     '''
     implements(IBCond)
+
+    name = Str('<unnamed>')
 
     var = Enum('u', 'f', 'eps', 'sig')
 

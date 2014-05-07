@@ -44,10 +44,17 @@ from numpy import \
 
 import os.path
 
+from matresdev.db.simdb import \
+    SimDB
+
+import os
+
 from ls_table import \
     LSTable, ULS, SLS
 
 from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+
+simdb = SimDB()
 
 class LC(HasTraits):
     '''Loading case class
@@ -243,6 +250,12 @@ class LCCTable(HasTraits):
     # specify weather exact evaluation 'k_alpha' is to be used or a lower bound 'k_min_alpha = 0.707' as simplification instead
     #
     k_alpha_min = Bool(False)
+
+    # specify the strength characteristics of the material;
+    # necessary parameter in order to pass values from 'LCCTableULS' to 'ls_table' and as WeekRef to 'ULS';
+    # this gives the possibility to specify strength values within the call of 'LCCTableULS';
+    #
+    strength_characteristics = Dict
 
     # list of load cases
     #
@@ -685,10 +698,11 @@ class LCCTable(HasTraits):
                        # changes necessary to distinguish plotting functionality defined in 'ls_table'
                        # e.i. plot deformation when 'LCCReaderInfoCAD' is used
                        ls_table=LSTable(reader=self.reader,
-                                           geo_data=self.geo_data_dict,
-                                           state_data=state_data_dict,
-                                           k_alpha_min=self.k_alpha_min,
-                                           ls=self.ls)
+                                        geo_data=self.geo_data_dict,
+                                        state_data=state_data_dict,
+                                        strength_characteristics=self.strength_characteristics,
+                                        k_alpha_min=self.k_alpha_min,
+                                        ls=self.ls)
                        )
 
             for idx, lc in enumerate(self.lc_list):
@@ -697,7 +711,7 @@ class LCCTable(HasTraits):
 
             lcc_list.append(lcc)
 
-        print '################### returining lcc_list ##################'
+        print '################### returning lcc_list ##################'
 
         return lcc_list
 
@@ -712,81 +726,12 @@ class LCCTable(HasTraits):
                        mode="cube",
                        scale_factor=0.1)
 
-    def plot_n_tex(self, title=None):
-        '''plot number of textile reinforcement 'n_tex' for all loading case combinations
-        '''
-        #----------------------------------------
-        # script to get the maximum number of reinforcement ('n_tex')
-        # at all given coordinate points for all possible loading
-        # case combinations:
-        #----------------------------------------
-        # set option to "True" for surrounding
-        # evaluation of necessary layers "n_tex"
-        # needed for all loading cases
-
-        # get the list of all loading case combinations:
-        #
-        lcc_list = self.lcc_list
-
-        #----------------------------------------------
-        # run trough all loading case combinations:
-        #----------------------------------------------
-
-        n_tex_list = []
-        for lcc in lcc_list:
-
-            # get the ls_table object and retrieve its 'ls_class'
-            # (= LSTable_ULS-object)
-            #
-            ls_class = lcc.ls_table.ls_class
-
-            # get 'n_tex'-column array
-            #
-            n_tex = ls_class.n_tex
-#            n_tex = ls_class.n_tex_up
-#            n_tex = ls_class.n_tex_lo
-            n_tex_list.append(n_tex)
-
-        # stack the list to an array in order to use ndmax-function
-        #
-        n_tex_arr = hstack(n_tex_list)
-
-        #----------------------------------------------
-        # get the overall maximum values:
-        #----------------------------------------------
-
-        n_tex_max = ndmax(n_tex_arr, axis=1)[:, None]
-
-        #----------------------------------------------
-        # plot
-        #----------------------------------------------
-        #
-        X = lcc_list[0].ls_table.X[:, 0]
-        Y = lcc_list[0].ls_table.Y[:, 0]
-        Z = lcc_list[0].ls_table.Z[:, 0]
-        plot_col = n_tex_max[:, 0]
-
-        # if n_tex is negative plot 0 instead:
-        #
-        plot_col = where(plot_col < 0, 0, plot_col)
-
-        mlab.figure(figure=title,
-                     bgcolor=(1.0, 1.0, 1.0),
-                     fgcolor=(0.0, 0.0, 0.0))
-
-        mlab.points3d(X, Y, (-1.0) * Z, plot_col,
-                       colormap="YlOrBr",
-                       mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
-
-        mlab.scalarbar(title='n_tex (all LCs)', orientation='vertical')
-
-        mlab.show()
-
-
-    def plot_assess_value(self, title=None, add_assess_values_from_file=None, save_assess_values_to_file=None):
+    def plot_assess_value(self, assess_name, scale_factor=0.1, scale_mode='none', azimuth=None, elevation=None, distance=None, focalpoint=None, title=None, save_fig_to_file=None,
+                          add_assess_values_from_file=None, save_assess_values_to_file=None):
         '''plot-3d the assess value for all loading case combinations as structure plot with color legend
+           options: - plot options for mlab
+                    - save figure with specified name within "/simdb/simdata/lcc_table/output_images/save_fig_to_file.png"
+                    - superpose data values, i.e. from imposed loads and temperature loads
         '''
         print '################### plotting assess_value ##################'
 
@@ -813,25 +758,8 @@ class LCCTable(HasTraits):
             ls_class = lcc.ls_table.ls_class
 
             # get 'assess_name'-column array
-            #
-            assess_name = ls_class.assess_name
-            if assess_name == 'max_eta_nm_tot':
-                assess_value = getattr(ls_class, 'eta_nm_tot')
+            assess_value = getattr(ls_class, assess_name)
 
-                # get only the components resulting from normal forces...
-                #
-#                assess_value = getattr(ls_class, 'eta_n_tot')
-
-                # get only the components resulting from bending moments...
-                #
-#                assess_value = getattr(ls_class, 'eta_m_tot')
-            if assess_name == 'max_n_tex':
-                assess_value = getattr(ls_class, 'n_tex')
-            if assess_name == 'max_eta_tot':
-                assess_value = getattr(ls_class, 'eta_tot')
-
-#            n_tex = ls_class.n_tex_up
-#            n_tex = ls_class.n_tex_lo
             assess_value_list.append(assess_value)
 
         # stack the list to an array in order to use ndmax-function
@@ -852,23 +780,25 @@ class LCCTable(HasTraits):
         X = lcc_list[0].ls_table.X[:, 0]
         Y = lcc_list[0].ls_table.Y[:, 0]
         Z = lcc_list[0].ls_table.Z[:, 0]
-        if self.reader_type == 'RFEM':
-            Z *= -1.0
         plot_col = assess_value_max[:, 0]
 
         # save assess values to file in order to superpose them later
         #
         if save_assess_values_to_file != None:
-            print 'assess_values saved to file %s' % (save_assess_values_to_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_assess_values_to_file)
             assess_value_arr = plot_col
-            np.savetxt(save_assess_values_to_file, assess_value_arr)
+            np.savetxt(filename, assess_value_arr)
+            print 'assess_values saved to file %s' % (filename)
 
         # add read in saved assess values to be superposed with currently read in assess values
         #
         if add_assess_values_from_file != None:
-            print 'superpose assess_value_arr with values read in from file %s' % (add_assess_values_from_file)
-            assess_value_arr = np.loadtxt(add_assess_values_from_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, add_assess_values_from_file)
+            assess_value_arr = np.loadtxt(filename)
             plot_col += assess_value_arr
+            print 'superpose assess_value_arr with values read in from file %s' % (filename)
 
 #        # if n_tex is negative plot 0 instead:
 #        #
@@ -881,13 +811,21 @@ class LCCTable(HasTraits):
         mlab.points3d(X, Y, Z, plot_col,
                        colormap="YlOrBr",
                        mode="cube",
-                       scale_mode='none',
-                       scale_factor=0.10)
+                       scale_mode=scale_mode,
+                       scale_factor=scale_factor)
 
         mlab.scalarbar(title=assess_name + ' (all LCs)', orientation='vertical')
 
-        mlab.show()
+        mlab.view(azimuth=azimuth, elevation=elevation, distance=distance, focalpoint=focalpoint)
 
+        if save_fig_to_file != None:
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file + '.png')
+            mlab.savefig(filename)  # , format='png')
+            print 'figure saved to file %s' % (filename)
+
+        mlab.show()
 
     def plot_nm_interaction(self, save_fig_to_file=None, show_tension_only=False, add_max_min_nm_from_file=None, save_max_min_nm_to_file=None):
         '''plot the nm-interaction for all loading case combinations
@@ -901,10 +839,10 @@ class LCCTable(HasTraits):
         # run trough all loading case combinations:
         #----------------------------------------------
 
-        m_sig_lo_list = []
-        n_sig_lo_list = []
-        m_sig_up_list = []
-        n_sig_up_list = []
+        m_sig1_lo_list = []
+        n_sig1_lo_list = []
+        m_sig1_up_list = []
+        n_sig1_up_list = []
         m_Ed_list = []
         n_Ed_list = []
         for lcc in lcc_list:
@@ -916,69 +854,71 @@ class LCCTable(HasTraits):
 
             # get n_Ed and m_Ed
             #
-            m_sig_lo = np.copy(getattr(ls_class, 'm_sig_lo'))
-            n_sig_lo = np.copy(getattr(ls_class, 'n_sig_lo'))
-            m_sig_up = np.copy(getattr(ls_class, 'm_sig_up'))
-            n_sig_up = np.copy(getattr(ls_class, 'n_sig_up'))
+            m_sig1_lo = np.copy(getattr(ls_class, 'm_sig1_lo'))
+            n_sig1_lo = np.copy(getattr(ls_class, 'n_sig1_lo'))
+            m_sig1_up = np.copy(getattr(ls_class, 'm_sig1_up'))
+            n_sig1_up = np.copy(getattr(ls_class, 'n_sig1_up'))
 
             # add read in saved values to be superposed with currently read in values
             #
             if add_max_min_nm_from_file != None:
-                max_min_nm_arr = np.loadtxt(add_max_min_nm_from_file)
+                simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                filename = os.path.join(simdata_dir, add_max_min_nm_from_file)
+                max_min_nm_arr = np.loadtxt(filename)
                 max_n_arr = max_min_nm_arr[:, 0][:, None]
                 min_n_arr = max_min_nm_arr[:, 1][:, None]
                 max_m_arr = max_min_nm_arr[:, 2][:, None]
                 min_m_arr = max_min_nm_arr[:, 3][:, None]
 
-                # n_sig_lo
+                # n_sig1_lo
                 #
-                cond_n_sig_lo_ge_0 = n_sig_lo >= 0.  # tensile normal force
-                bool_arr = cond_n_sig_lo_ge_0
-                n_sig_lo[bool_arr] += max_n_arr[bool_arr]
+                cond_n_sig1_lo_ge_0 = n_sig1_lo >= 0.  # tensile normal force
+                bool_arr = cond_n_sig1_lo_ge_0
+                n_sig1_lo[bool_arr] += max_n_arr[bool_arr]
 
-                cond_n_sig_lo_lt_0 = n_sig_lo < 0.  # compressive normal force
-                bool_arr = cond_n_sig_lo_lt_0
-                n_sig_lo[bool_arr] += min_n_arr[bool_arr]
+                cond_n_sig1_lo_lt_0 = n_sig1_lo < 0.  # compressive normal force
+                bool_arr = cond_n_sig1_lo_lt_0
+                n_sig1_lo[bool_arr] += min_n_arr[bool_arr]
 
-                # n_sig_up
+                # n_sig1_up
                 #
-                cond_n_sig_up_ge_0 = n_sig_up >= 0.  # tensile normal force
-                bool_arr = cond_n_sig_up_ge_0
-                n_sig_up[bool_arr] += max_n_arr[bool_arr]
+                cond_n_sig1_up_ge_0 = n_sig1_up >= 0.  # tensile normal force
+                bool_arr = cond_n_sig1_up_ge_0
+                n_sig1_up[bool_arr] += max_n_arr[bool_arr]
 
-                cond_n_sig_up_lt_0 = n_sig_up < 0.  # compressive normal force
-                bool_arr = cond_n_sig_up_lt_0
-                n_sig_up[bool_arr] += min_n_arr[bool_arr]
+                cond_n_sig1_up_lt_0 = n_sig1_up < 0.  # compressive normal force
+                bool_arr = cond_n_sig1_up_lt_0
+                n_sig1_up[bool_arr] += min_n_arr[bool_arr]
 
-                # m_sig_lo
+                # m_sig1_lo
                 #
-                cond_m_sig_lo_ge_0 = m_sig_lo >= 0.  # positive bending moment
-                bool_arr = cond_m_sig_lo_ge_0
-                m_sig_lo[bool_arr] += max_m_arr[bool_arr]
+                cond_m_sig1_lo_ge_0 = m_sig1_lo >= 0.  # positive bending moment
+                bool_arr = cond_m_sig1_lo_ge_0
+                m_sig1_lo[bool_arr] += max_m_arr[bool_arr]
 
-                cond_m_sig_lo_lt_0 = m_sig_lo < 0.  # compressive normal force
-                bool_arr = cond_m_sig_lo_lt_0
-                m_sig_lo[bool_arr] += min_m_arr[bool_arr]
+                cond_m_sig1_lo_lt_0 = m_sig1_lo < 0.  # compressive normal force
+                bool_arr = cond_m_sig1_lo_lt_0
+                m_sig1_lo[bool_arr] += min_m_arr[bool_arr]
 
-                # m_sig_up
+                # m_sig1_up
                 #
-                cond_m_sig_up_ge_0 = m_sig_up >= 0.  # positive bending moment
-                bool_arr = cond_m_sig_up_ge_0
-                m_sig_up[bool_arr] += max_m_arr[bool_arr]
+                cond_m_sig1_up_ge_0 = m_sig1_up >= 0.  # positive bending moment
+                bool_arr = cond_m_sig1_up_ge_0
+                m_sig1_up[bool_arr] += max_m_arr[bool_arr]
 
-                cond_m_sig_up_lt_0 = m_sig_up < 0.  # compressive normal force
-                bool_arr = cond_m_sig_up_lt_0
-                m_sig_up[bool_arr] += min_m_arr[bool_arr]
+                cond_m_sig1_up_lt_0 = m_sig1_up < 0.  # compressive normal force
+                bool_arr = cond_m_sig1_up_lt_0
+                m_sig1_up[bool_arr] += min_m_arr[bool_arr]
 
             # NOTE: after the superposition only the absolute values of m_Ed are used for the plot
             #
-            m_sig_lo_list.append(abs(m_sig_lo))
-            m_sig_up_list.append(abs(m_sig_up))
-            n_sig_lo_list.append(n_sig_lo)
-            n_sig_up_list.append(n_sig_up)
+            m_sig1_lo_list.append(abs(m_sig1_lo))
+            m_sig1_up_list.append(abs(m_sig1_up))
+            n_sig1_lo_list.append(n_sig1_lo)
+            n_sig1_up_list.append(n_sig1_up)
 
-            m_Ed_list = m_sig_lo_list + m_sig_up_list
-            n_Ed_list = n_sig_lo_list + n_sig_up_list
+            m_Ed_list = m_sig1_lo_list + m_sig1_up_list
+            n_Ed_list = n_sig1_lo_list + n_sig1_up_list
 
         # stack the list to an array in order to use plot-function
         #
@@ -1029,8 +969,10 @@ class LCCTable(HasTraits):
 
             # save max and min values to file
             #
-            np.savetxt(save_max_min_nm_to_file, max_min_nm_arr)
-            print 'max_min_nm_arr saved to file %s' % (save_max_min_nm_to_file)
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_max_min_nm_to_file)
+            np.savetxt(filename, max_min_nm_arr)
+            print 'max_min_nm_arr saved to file %s' % (filename)
 
         #----------------------------------------------
         # plot
@@ -1072,8 +1014,11 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
-            p.savefig(save_fig_to_file, format='png')
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file)
+            print 'figure saved to file %s' % (filename)
+            p.savefig(filename, format='png')
 
         p.show()
 
@@ -1105,6 +1050,7 @@ class LCCTable(HasTraits):
         eta_m2_up_list = []
 
         # get envelope over all loading case combinations (lcc)
+        #
         for lcc in lcc_list:
 
             # get the ls_table object and retrieve its 'ls_class'
@@ -1130,7 +1076,9 @@ class LCCTable(HasTraits):
             #
             if add_max_min_eta_nm_from_file != None:
                 print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
-                max_min_eta_nm_arr = np.loadtxt(add_max_min_eta_nm_from_file)
+                simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                filename = os.path.join(simdata_dir, add_max_min_eta_nm_from_file)
+                max_min_eta_nm_arr = np.loadtxt(filename)
                 max_eta_n_arr = max_min_eta_nm_arr[:, 0][:, None]
                 min_eta_n_arr = max_min_eta_nm_arr[:, 1][:, None]
                 max_eta_m_arr = max_min_eta_nm_arr[:, 2][:, None]
@@ -1222,9 +1170,10 @@ class LCCTable(HasTraits):
             max_min_eta_nm_arr = np.hstack([max_eta_n_arr[:, None], min_eta_n_arr[:, None], max_eta_m_arr[:, None], min_eta_m_arr[:, None]])
             # save max values to file
             #
-            np.savetxt(save_max_min_eta_nm_to_file, max_min_eta_nm_arr)
-            print 'max_min_eta_nm_arr saved to file %s' % (save_max_min_eta_nm_to_file)
-
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            filename = os.path.join(simdata_dir, save_max_min_eta_nm_to_file)
+            np.savetxt(filename, max_min_eta_nm_arr)
+            print 'max_min_eta_nm_arr saved to file %s' % (filename)
 
         #----------------------------------------------
         # plot
@@ -1267,11 +1216,13 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
-            p.savefig(save_fig_to_file, format='png')
+            simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            img_dir = os.path.join(simdata_dir, 'output_images')
+            filename = os.path.join(img_dir, save_fig_to_file)
+            print 'figure saved to file %s' % (filename)
+            p.savefig(filename, format='png')
 
         p.show()
-
 
     # ------------------------------------------------------------
     # View

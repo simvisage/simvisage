@@ -42,36 +42,36 @@ class MATS2DPlastic(MATS2DEval):
     algorithm = Enum("closest point", "cutting plane")
 
     #---------------------------------------------------------------------------
-    # Material parameters 
+    # Material parameters
     #---------------------------------------------------------------------------
-    yf = EitherType(klasses = [J2, DruckerPrager, Gurson, CamClay],
-                     label = "Yield Face",
-                     desc = "Yield Face Definition"
+    yf = EitherType(klasses=[J2, DruckerPrager, Gurson, CamClay],
+                     label="Yield Face",
+                     desc="Yield Face Definition"
                      )
 #    yf = Instance( IYieldFace2D,
 #                 label = "Yield Face",
 #                 desc = "Yield Face Definition")
     E = Float(210.0e+3,
-                 label = "E",
-                 desc = "Young's Modulus")
+                 label="E",
+                 desc="Young's Modulus")
     nu = Float(0.2,
-                 label = 'nu',
-                 desc = "Poison's ratio")
+                 label='nu',
+                 desc="Poison's ratio")
     K_bar = Float(0.,
-                 label = 'K',
-                 desc = "isotropic softening parameter")
+                 label='K',
+                 desc="isotropic softening parameter")
     H_bar = Float(0.,
-                 label = 'H',
-                 desc = "kinematic softening parameter")
+                 label='H',
+                 desc="kinematic softening parameter")
     tolerance = Float(1.0e-4,
-                 label = 'TOL',
-                 desc = "tolerance of return mapping")
+                 label='TOL',
+                 desc="tolerance of return mapping")
 
     max_iter = Int(20,
-                    label = 'Iterations',
-                    desc = "maximal number of iterations")
+                    label='Iterations',
+                    desc="maximal number of iterations")
 
-    D_el = Property(Array(float), depends_on = 'E, nu')
+    D_el = Property(Array(float), depends_on='E, nu')
     @cached_property
     def _get_D_el(self):
         if self.stress_state == "plane_stress":
@@ -79,7 +79,7 @@ class MATS2DPlastic(MATS2DEval):
         else:
             return self._get_D_plane_strain()
 
-    H_mtx = Property(Array(float), depends_on = 'K_bar, H_bar')
+    H_mtx = Property(Array(float), depends_on='K_bar, H_bar')
     @cached_property
     def _get_H_mtx(self):
         H_mtx = diag([self.K_bar, self.H_bar, self.H_bar, self.H_bar])
@@ -100,13 +100,13 @@ class MATS2DPlastic(MATS2DEval):
                                       Item('H_bar'),
                                       Item('tolerance'),
                                       Item('max_iter')),
-                                Group(Item('stress_state', style = 'custom'),
-                                       Item('algorithm', style = 'custom'),
-                                       Spring(resizable = True),
-                                       label = 'Configuration parameters', show_border = True,
+                                Group(Item('stress_state', style='custom'),
+                                       Item('algorithm', style='custom'),
+                                       Spring(resizable=True),
+                                       label='Configuration parameters', show_border=True,
                                        ),
                                 ),
-                        resizable = True
+                        resizable=True
                         )
 
     #-----------------------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ class MATS2DPlastic(MATS2DEval):
         '''
         delta_gamma = 0.
         if sctx.update_state_on:
-            #print "in us"
+            # print "in us"
             eps_n = eps_app_eng - d_eps
             sigma, f_trial, epsilon_p, q_1, q_2 = self._get_state_variables(sctx, eps_n)
 
@@ -159,7 +159,7 @@ class MATS2DPlastic(MATS2DEval):
 
         diff1s = zeros([3])
         sigma, f_trial, epsilon_p, q_1, q_2 = self._get_state_variables(sctx, eps_app_eng)
-        diff2ss = self.yf.get_diff2ss(eps_app_eng, self.E, self.nu, sctx)#Note: the state variables are not needed here, just gamma
+        diff2ss = self.yf.get_diff2ss(eps_app_eng, self.E, self.nu, sctx)  # Note: the state variables are not needed here, just gamma
         Xi_mtx = inv(inv(self.D_el) + delta_gamma * diff2ss * f_trial)
         N_mtx_denom = sqrt(dot(dot(diff1s, Xi_mtx), diff1s))
         if N_mtx_denom == 0.:
@@ -168,8 +168,8 @@ class MATS2DPlastic(MATS2DEval):
             N_mtx = dot(Xi_mtx, self.diff1s) / N_mtx_denom
         D_mtx = Xi_mtx - vdot(N_mtx, N_mtx)
 
-        #print "sigma ",sigma
-        #print "D_mtx ",D_mtx
+        # print "sigma ",sigma
+        # print "D_mtx ",D_mtx
         return  sigma, D_mtx
 
     #---------------------------------------------------------------------------------------------
@@ -183,7 +183,7 @@ class MATS2DPlastic(MATS2DEval):
         sigma = dot(self.D_el, (eps_app_eng - epsilon_p))
         xi_trial = sigma - q_2
         f_trial = self.yf.get_f_trial(xi_trial, q_1)
-        #print "f_trial", f_trial
+        # print "f_trial", f_trial
         R_k = zeros(3)
         int_count = 1
         while f_trial > self.tolerance or norm(R_k) > self.tolerance :
@@ -212,7 +212,7 @@ class MATS2DPlastic(MATS2DEval):
                     diff2ss = self.yf.get_diff2ss(eps_app_eng, self.E, self.nu, sctx)
                     diff2sq = self.yf.get_diff2sq(eps_app_eng, self.E, self.nu, sctx)
                     A_mtx_inv = inv(self.D_el) + delta_gamma * diff2ss
-                                        #self.delta_gamma *  diff2sq))
+                                        # self.delta_gamma *  diff2sq))
                     A_mtx = inv(A_mtx_inv)
                     delta_gamma_2 = ((f_trial - dot(dot(diff1s, A_mtx), R_k)) /
                                       (dot(dot(diff1s, A_mtx), diff1s)))
@@ -235,7 +235,7 @@ class MATS2DPlastic(MATS2DEval):
             xi_trial = sigma - q_2
 
             f_trial = self.yf.get_f_trial(xi_trial, q_1)
-            #print "f_trial_after", self.f_trial
+            # print "f_trial_after", self.f_trial
             int_count += 1
         return sigma, f_trial, epsilon_p, q_1, q_2
 
@@ -272,7 +272,7 @@ class MATS2DPlastic(MATS2DEval):
 
 
     def get_eps_p(self, sctx, eps_app_eng):
-        #print "eps tracer ", sctx.mats_state_array[:3]
+        # print "eps tracer ", sctx.mats_state_array[:3]
         return sctx.mats_state_array[:3]
 
     # Declare and fill-in the rte_dict - it is used by the clients to
@@ -287,48 +287,48 @@ class MATS2DPlastic(MATS2DEval):
 
 if __name__ == '__main__':
     #--------------------------------------------------------------------------------
-    # Example using the mats2d_explore 
+    # Example using the mats2d_explore
     #--------------------------------------------------------------------------------
     from ibvpy.api import RTraceGraph
     from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
     from yield_face2D import J2
     mats2D_explore = \
-    MATS2DExplore(mats2D_eval = MATS2DPlastic(yf = J2()),
-                    rtrace_list = [ RTraceGraph(name = 'strain 0 - stress 0',
-                                                   var_x = 'eps_app', idx_x = 0,
-                                                   var_y = 'sig_app', idx_y = 0,
-                                                   update_on = 'update'),
-                                    RTraceGraph(name = 'strain 0 - strain 1',
-                                                   var_x = 'eps_app', idx_x = 0,
-                                                   var_y = 'eps_app', idx_y = 1,
-                                                   update_on = 'update'),
-                                    RTraceGraph(name = 'stress 0 - stress 1',
-                                                   var_x = 'sig_app', idx_x = 0,
-                                                   var_y = 'sig_app', idx_y = 1,
-                                                   update_on = 'update'),
-                                    RTraceGraph(name = 'time - sig_norm',
-                                                   var_x = 'time', idx_x = 0,
-                                                   var_y = 'sig_norm', idx_y = 0,
-                                                   update_on = 'update')
+    MATS2DExplore(mats2D_eval=MATS2DPlastic(yf=J2()),
+                    rtrace_list=[ RTraceGraph(name='strain 0 - stress 0',
+                                                   var_x='eps_app', idx_x=0,
+                                                   var_y='sig_app', idx_y=0,
+                                                   record_on='update'),
+                                    RTraceGraph(name='strain 0 - strain 1',
+                                                   var_x='eps_app', idx_x=0,
+                                                   var_y='eps_app', idx_y=1,
+                                                   record_on='update'),
+                                    RTraceGraph(name='stress 0 - stress 1',
+                                                   var_x='sig_app', idx_x=0,
+                                                   var_y='sig_app', idx_y=1,
+                                                   record_on='update'),
+                                    RTraceGraph(name='time - sig_norm',
+                                                   var_x='time', idx_x=0,
+                                                   var_y='sig_norm', idx_y=0,
+                                                   record_on='update')
 
                                     ])
 
     mats2D_explore.tloop.eval()
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    ibvpy_app = IBVPyApp(ibv_resource = mats2D_explore)
+    ibvpy_app = IBVPyApp(ibv_resource=mats2D_explore)
     ibvpy_app.main()
 #    from ibvpy.core.sdomain import SDomain
 #    mm = MATS2DPlastic(E = 1.,
 #                       nu = 0.,
 #                       yf = J2(sigma_y = 1.))
-#    
+#
 #    eps_app_eng = array([1.5,0.,0.])
 #    d_eps = array([1.,0.,0.])
 #    sctx = SDomain()
 #    sctx.update_state_on = False
 #    sctx.mats_state_array = zeros(7)
 #    tn = tn1 = 0.
-#    
+#
 #    sig, D = mm.get_corr_pred(sctx, eps_app_eng, d_eps, tn, tn1)
 #
 #    print sig
