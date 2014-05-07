@@ -83,9 +83,15 @@ class SFC_Hui(HasTraits):
         return self.p2(2 * x, x)
 
     def p11(self, s, x):
+        '''
+        density of number of fragments of length L > s
+        '''
         return s ** (2.*self.rho) * np.exp(self.lambd * s ** (self.rho + 1) - 2.*self.lambd * (0.577215664901532 + np.log(s ** (self.rho + 1) / 2.) - expi(-s ** (self.rho + 1) / 2.)) - s ** self.rho * x)
 
     def p22(self, s, x):
+        '''
+        density of number of fragments of length s/2 < L < s
+        '''
         def integ_scalar(s, x):
             t = np.linspace(x, s, 500)
             def integrant(t):
@@ -95,6 +101,9 @@ class SFC_Hui(HasTraits):
         return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p11(x, x))
 
     def p33(self, x):
+        '''
+        density of number of fragments of length L < s/2
+        '''
         return self.p22(2 * x, x)
 
     def p_x(self, s, x):
