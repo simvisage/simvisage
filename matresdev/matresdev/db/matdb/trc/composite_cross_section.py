@@ -153,10 +153,10 @@ class CompositeCrossSection(SimDBClass):
         '''
         return array([flu.a_tex for flu in self.fabric_layup_list ], dtype='float_')
 
-    a_tex = Property(Float, unit='mm^2', depends_on='input_change')
+    a_tex = Property(Float, unit='mm^2/m', depends_on='input_change')
     @cached_property
     def _get_a_tex(self):
-        '''textile cross section of the entire cross section.
+        '''textile cross section of the entire cross section per meter width.
         '''
         return sum(self.a_tex_arr)
 
