@@ -338,6 +338,7 @@ class ExpBT4PT(ExType):
         K_bending_elast_c = 1 / delta_11
 #         print 'K_bending_elast_c', K_bending_elast_c
 
+        print 'K_bending_elast_c', K_bending_elast_c
         return K_bending_elast_c
 
     K_bending_elast_thirdpoints = Property(Array('float_'), depends_on='input_change')
@@ -365,6 +366,7 @@ class ExpBT4PT(ExType):
         K_bending_elast_thirdpoints = 1 / delta_11
 #         print 'K_bending_elast', K_bending_elast
 
+        print 'K_bending_elast_thirdpoints', K_bending_elast_thirdpoints
         return K_bending_elast_thirdpoints
 
     #--------------------------------------------------------------------------------
@@ -406,8 +408,9 @@ class ExpBT4PT(ExType):
         ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
-        w_linear = 2 * np.array([0., 1.])
-        F_linear = 2 * np.array([0., self.K_bending_elast_c])
+        # draw linear stiffness for 2 mm range
+        w_linear = np.array([0., 2.])
+        F_linear = self.K_bending_elast_c * w_linear
         axes.plot(w_linear, F_linear, linestyle='--')
 
 
