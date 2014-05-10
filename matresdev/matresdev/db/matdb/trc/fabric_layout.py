@@ -177,15 +177,15 @@ FabricLayOut.db = SimDBClassExt(
                # 1 x 1200 tex in 90-direction (1v1l): effective spacing of 7.7 mm!
                #
                '2D-09-12' : FabricLayOut(
-                                           a_tex_0=55.4,
-                                           a_tex_90=60.,  # 55.0 * 8.4mm / 7.7mm
+                                           a_tex_0=54.0,
+#                                           a_tex_0=55.4,
+                                           a_tex_90=58.2,  # 0.448mm2 / 7.7mm
+#                                           a_tex_90=60.,  # 55.0 * 8.4mm / 7.7mm
                                            E_tex_0=70000.,
                                            E_tex_90=70000.,
                                            s_tex_0=8.3,
                                            s_tex_90=7.6,  # input for manufacturing machine was 8.4 mm!
                                            ),
-
-
 
 
                # carbon textile (heavy tow 3300 tex): Trikot binding
