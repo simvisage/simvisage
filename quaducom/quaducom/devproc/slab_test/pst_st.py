@@ -109,13 +109,13 @@ if __name__ == '__main__':
     # do
     #------------------------------
 #    do = 'show_phi_fn'
-    do = 'ui'
-#    do = 'validation'
+#    do = 'ui'
+    do = 'validation'
 #    do = 'show_last_results'
 
 #    test_series = 'ST-10g'
-#    test_series = 'ST-12c'
-    test_series = 'ST-6c'
+    test_series = 'ST-12c'
+#    test_series = 'ST-6c'
 
     #-----------------------------------------------
     # ST-10g: AG-glas slab tests (125 cm / 3 cm) with tricot-binding:
@@ -170,12 +170,18 @@ if __name__ == '__main__':
                             # fresh-in-fresh fabrication
                             #
 #                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age23_Em27975.8_nu0.2_nsteps100',
-                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age23_Ec29494_nu0.2_nsteps100',
+#                            calibration_test='TT-12c-6cm-0-TU-SH2F-V3_age23_Ec29494_nu0.2_nsteps100',
+
+                            # initial stiffness corresponds to tensile test; cut of at eps=0.007; based on smoothed experimental curve without oscillation
+                            #
+                            calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+
+                            # number of microplanes
                             #
                             n_mp=30,
 
                             # age of the slab at the time of testing
-                            age=23,
+                            age=26,
                             # NOTE: that the same phi-function is used independent of age. This assumes a
                             # an afine/proportional damage evolution for different ages.
                             #
@@ -184,21 +190,21 @@ if __name__ == '__main__':
                             geo_st_flag=True,
                             #
                             # coarse mesh:
-#                            shape_xy=10,
-#                            shape_R=2,
-#                            shape_z=3,
-#                            shape_supprt_xy=2,
+                            shape_xy=10,
+                            shape_R=2,
+                            shape_z=2,
+                            shape_supprt_xy=2,
                             #
                             # fine mesh:
-                            shape_z=2,
-                            shape_xy=26,
-                            shape_R=4,
-                            shape_supprt_xy=4,
+#                            shape_z=2,
+#                            shape_xy=26,
+#                            shape_R=4,
+#                            shape_supprt_xy=4,
                             #
                             w_max= -0.040,
-                            tstep=0.02,
+                            tstep=0.05,
 #                            tstep = 1.00,
-                            tmax=1.00,
+                            tmax=0.85,
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
                             tolerance=0.0001,  # #[MN]0.0001#1e-6#1e-8#0.0005
                             ord=np.inf,  # "norm = max(abs(x_i))"
@@ -367,7 +373,11 @@ if __name__ == '__main__':
 #                       'TT-6c-2cm-0-TU-V3_bs1_age28_Ec22213.2_nu0.2_nsteps100',
 #                       'TT-6c-2cm-0-TU-V1_bs2_age28_Ec22213.2_nu0.2_nsteps100',
 #                       'TT-6c-2cm-0-TU-V1_bs3_age28_Ec22213.2_nu0.2_nsteps100',
-                       'TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100'
+#                       'TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100'
+
+                       # initial stiffness corresponds to tensile test; cut of at eps=0.007; based on smoothed experimental curve without oscillation
+                       #
+                       'TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
                    ]
 
         # pstudy: phi_fn
@@ -401,8 +411,8 @@ if __name__ == '__main__':
             shape_xy = sim_model.shape_xy
             shape_z = sim_model.shape_z
             shape_R = sim_model.shape_R
-            E_m = sim_model.E_m
             E = sim_model.specmn_mats.E
+            print 'E', E
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
