@@ -684,6 +684,10 @@ class ExpBT3PT(ExType):
 #        print 'fw_arr.shape', fw_arr.shape
 #        np.savetxt('BT-3PT-6c-2cm-TU_f-w_interpolated.csv', fw_arr, delimiter=';')
 
+        xdata = self.w_raw
+        ydata = self.F_raw
+        axes.plot(xdata, ydata, color='blue', linewidth=linewidth, linestyle=linestyle)
+
         axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
