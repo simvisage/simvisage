@@ -1219,7 +1219,7 @@ class LCCTable(HasTraits):
         # plot
         #----------------------------------------------
         #
-        p.figure(facecolor='white')  # white background
+        p.figure(facecolor='white', figsize=(5.6, 10))  # white background
 
         p.plot(eta_m_arr, eta_n_arr, 'wo', markersize=3)  # blue dots
         x = np.array([0, 1. ])
