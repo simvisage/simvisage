@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event
+     cached_property, Float, Int, Instance, Event, List
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
 from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
@@ -22,16 +22,8 @@ FILE_DIR = os.path.dirname(__file__)
 
 class Model(HasTraits):
 
-    test_xdata1 = Array
-    test_ydata1 = Array
-    test_xdata2 = Array
-    test_ydata2 = Array
-    test_xdata3 = Array
-    test_ydata3 = Array
-    test_xdata4 = Array
-    test_ydata4 = Array
-    test_xdata5 = Array
-    test_ydata5 = Array
+    test_xdata = List(Array)
+    test_ydata = List(Array)
     sV0 = Float(auto_set=False, enter_set=True, params=True)
     m = Float(auto_set=False, enter_set=True, params=True)
     w_min = Float(auto_set=False, enter_set=True, params=True)
@@ -46,6 +38,9 @@ class Model(HasTraits):
     tau_shape = Float(auto_set=False, enter_set=True, params=True)
     Ef = Float(auto_set=False, enter_set=True, params=True)
     lm = Float(auto_set=False, enter_set=True, params=True)
+    V_f = Float(1.0, params=True)
+    r = Float(3.5e-3, params=True)
+        
 
     w = Property(Array)
     def _get_w(self):
@@ -55,57 +50,28 @@ class Model(HasTraits):
     def _get_w2(self):
         return np.linspace(self.w2_min, self.w2_max, self.w2_pts)
 
-    interpolate_experiment1 = Property(depends_on='test_xdata1, test_ydata1')
+    interpolate_experiment = Property(depends_on='test_xdata, test_ydata')
     @cached_property
-    def _get_interpolate_experiment1(self):
-        return interp1d(self.test_xdata, self.test_ydata,
-                        bounds_error=False, fill_value=0.0)
-        
-    interpolate_experiment2 = Property(depends_on='test_xdata2, test_ydata2')
-    @cached_property
-    def _get_interpolate_experiment2(self):
-        return interp1d(self.test_xdata2, self.test_ydata2,
-                        bounds_error=False, fill_value=0.0)
-
-    interpolate_experiment3 = Property(depends_on='test_xdata3, test_ydata3')
-    @cached_property
-    def _get_interpolate_experiment3(self):
-        return interp1d(self.test_xdata3, self.test_ydata3,
-                        bounds_error=False, fill_value=0.0)
-        
-    interpolate_experiment4 = Property(depends_on='test_xdata4, test_ydata4')
-    @cached_property
-    def _get_interpolate_experiment4(self):
-        return interp1d(self.test_xdata4, self.test_ydata4,
-                        bounds_error=False, fill_value=0.0)
-        
-    interpolate_experiment5 = Property(depends_on='test_xdata5, test_ydata5')
-    @cached_property
-    def _get_interpolate_experiment5(self):
-        return interp1d(self.test_xdata5, self.test_ydata5,
-                        bounds_error=False, fill_value=0.0)
-
+    def _get_interpolate_experiment(self):
+        interp_lst = []
+        for i in range(len(self.test_xdata)):
+            interp_lst.append(interp1d(self.test_xdata[i], self.test_ydata[i],
+                        bounds_error=False, fill_value=0.0))
+        return interp_lst
+            
     model_rand = Property(Array)
     def _get_model_rand(self):
         cb = CBClampedRandXi()
         spirrid = SPIRRID(q=cb, sampling_type='PGrid')
-        sV0 = self.sV0
-        tau_scale = self.tau_scale
-        V_f = 1.0
-        r = 3.5e-3
-        m = self.m
-        tau = RV('weibull_min', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
-        n_int = self.n_int
-        w = self.w
-        lm = 1e10
-        spirrid.eps_vars=dict(w=w)
-        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
-        spirrid.n_int=n_int
-        if isinstance(r, RV):
-            r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
-            Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
+        tau = RV('weibull_min', shape=self.tau_shape, scale=self.tau_scale, loc=self.tau_loc)
+        spirrid.eps_vars=dict(w=self.w)
+        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=self.V_f, r=self.r, m=self.m, sV0=self.sV0, lm=1e10)
+        spirrid.n_int=self.n_int
+        if isinstance(self.r, RV):
+            r_arr = np.linspace(self.r.ppf(0.001), self.r.ppf(0.999), 300)
+            Er = np.trapz(r_arr ** 2 * self.r.pdf(r_arr), r_arr)
         else:
-            Er = r ** 2
+            Er = self.r ** 2
         sigma_c = spirrid.mu_q_arr / Er
         return sigma_c
 
@@ -113,23 +79,15 @@ class Model(HasTraits):
     def _get_model_extrapolate(self):
         cb = CBClampedRandXi()
         spirrid = SPIRRID(q=cb, sampling_type='PGrid')
-        sV0 = self.sV0
-        tau_scale = self.tau_scale
-        V_f = 1.0
-        r = 3.5e-3
-        m = self.m
-        tau = RV('weibull_min', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
-        n_int = 100
-        w = self.w2
-        lm = self.lm
-        spirrid.eps_vars=dict(w=w)
-        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
-        spirrid.n_int=n_int
-        if isinstance(r, RV):
-            r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
-            Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
+        tau = RV('weibull_min', shape=self.tau_shape, scale=self.tau_scale, loc=self.tau_loc)
+        spirrid.eps_vars=dict(w=self.w2)
+        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=self.V_f, r=self.r, m=self.m, sV0=self.sV0, lm=self.lm)
+        spirrid.n_int=self.n_int
+        if isinstance(self.r, RV):
+            r_arr = np.linspace(self.r.ppf(0.001), self.r.ppf(0.999), 300)
+            Er = np.trapz(r_arr ** 2 * self.r.pdf(r_arr), r_arr)
         else:
-            Er = r ** 2
+            Er = self.r ** 2
         sigma_c = spirrid.mu_q_arr / Er
         return sigma_c
 
@@ -161,16 +119,8 @@ class CBView(ModelView):
         # plot PDF
         axes.plot(self.model.w, self.model.model_rand, lw=2.0, color='blue', \
                   label='model')
-        axes.plot(self.model.w, self.model.interpolate_experiment1(self.model.w), lw=1.0, color='black', \
-                  label='experiment1')
-        axes.plot(self.model.w, self.model.interpolate_experiment2(self.model.w), lw=1.0, color='black', \
-                   label='experiment2')
-        axes.plot(self.model.w, self.model.interpolate_experiment3(self.model.w), lw=1.0, color='black', \
-                   label='experiment3')
-        axes.plot(self.model.w, self.model.interpolate_experiment4(self.model.w), lw=1.0, color='black', \
-                   label='experiment4')
-        axes.plot(self.model.w, self.model.interpolate_experiment5(self.model.w), lw=1.0, color='black', \
-                   label='experiment5')
+        for i in range(len(self.model.test_xdata)):
+            axes.plot(self.model.w, self.model.interpolate_experiment[i](self.model.w), lw=1.0, color='black')
         axes.legend()
         
         figure2 = fig2
@@ -239,26 +189,4 @@ class CBView(ModelView):
                         )
 
 if __name__ == '__main__':
-
-    model = Model(w_min=0.0, w_max=8.0, w_pts=200,
-                  w2_min=0.0, w2_max=.5, w2_pts=200,
-                  sV0=2.6e-3, m=5.0, tau_scale=0.03,
-                  tau_shape=0.23, tau_loc=0.006, Ef=240e3,
-                  lm=20., n_int=100)
-
-    cb1 = file1 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_xdata = - np.loadtxt(file1, delimiter=';')[:,3]
-    model.test_xdata = model.test_xdata - model.test_xdata[0]
-    file2 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_ydata = (np.loadtxt(file2, delimiter=';')[:,1] + 0.035)/0.45 * 1000
-     
-    file1 = open('DATA/PO03_RYP.ASC', 'r')
-     
-    model.test_xdata2 = - np.loadtxt(file1, delimiter=';')[:,3]
-    model.test_xdata2 = model.test_xdata2 - model.test_xdata2[0]
-    file2 = open('DATA/PO03_RYP.ASC', 'r')
-    model.test_ydata2 = (np.loadtxt(file2, delimiter=';')[:,1] + 0.035)/0.45 * 1000
-    
-    cb = CBView(model=model)
-    cb.refresh()
-    cb.configure_traits()
+    pass
