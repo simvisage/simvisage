@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event
+     cached_property, Float, Int, Instance, Event, List
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
 from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
@@ -22,16 +22,8 @@ FILE_DIR = os.path.dirname(__file__)
 
 class Model(HasTraits):
 
-    test_xdata1 = Array
-    test_ydata1 = Array
-    test_xdata2 = Array
-    test_ydata2 = Array
-    test_xdata3 = Array
-    test_ydata3 = Array
-    test_xdata4 = Array
-    test_ydata4 = Array
-    test_xdata5 = Array
-    test_ydata5 = Array
+    test_xdata = List(Array)
+    test_ydata = List(Array)
     sV0 = Float(auto_set=False, enter_set=True, params=True)
     m = Float(auto_set=False, enter_set=True, params=True)
     w_min = Float(auto_set=False, enter_set=True, params=True)
@@ -46,6 +38,9 @@ class Model(HasTraits):
     tau_shape = Float(auto_set=False, enter_set=True, params=True)
     Ef = Float(auto_set=False, enter_set=True, params=True)
     lm = Float(auto_set=False, enter_set=True, params=True)
+    V_f = Float(1.0, params=True)
+    r = Float(3.5e-3, params=True)
+
 
     w = Property(Array)
     def _get_w(self):
@@ -55,7 +50,7 @@ class Model(HasTraits):
     def _get_w2(self):
         return np.linspace(self.w2_min, self.w2_max, self.w2_pts)
 
-    interpolate_experiment1 = Property(depends_on='test_xdata1, test_ydata1')
+    interpolate_experiment1 = Property(depends_on='test_xdata, test_ydata')
     @cached_property
     def _get_interpolate_experiment1(self):
         return interp1d(self.test_xdata, self.test_ydata,
@@ -105,7 +100,7 @@ class Model(HasTraits):
             r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
             Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
         else:
-            Er = r ** 2
+            Er = self.r ** 2
         sigma_c = spirrid.mu_q_arr / Er
         return sigma_c
 
@@ -129,7 +124,7 @@ class Model(HasTraits):
             r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
             Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
         else:
-            Er = r ** 2
+            Er = self.r ** 2
         sigma_c = spirrid.mu_q_arr / Er
         return sigma_c
 

@@ -44,6 +44,9 @@ from matplotlib.figure import Figure
 
 import os
 
+from matresdev.db.simdb import SimDB
+simdb = SimDB()
+
 import csv
 
 from numpy import array, fabs, where, copy, ones, argsort
@@ -265,16 +268,18 @@ class ExpST(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection (center)'               : '_plot_force_center_deflection',
+    plot_templates = {'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
+                      'force / deflection (center)'               : '_plot_force_center_deflection',
                       'smoothed force / deflection (center)'      : '_plot_force_center_deflection_smoothed',
                       'force / deflection (edges)'                : '_plot_force_edge_deflection',
                       'force / deflection (center-edges)'         : '_plot_force_center_edge_deflection',
                       'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
                       'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
                       'force / average deflection (c; ce; e)'     : '_plot_force_deflection_avg',
-                      'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
                       'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
                       'force / deflection (corner)'               : '_plot_force_corner_deflection',
+                      'edge_deflection_avg (front/back) / edge_deflection_avg (left/right)' : '_plot_edge_deflection_edge_deflection_avg',
+
                      }
 
     default_plot_template = 'force / deflection (center)'
@@ -403,6 +408,21 @@ class ExpST(ExType):
         axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
         axes.legend()
 
+    def _plot_edge_deflection_edge_deflection_avg(self, axes):
+        '''plot the average edge (e) deflections for the front/back and left/right
+        '''
+        max_force_idx = self.max_force_idx
+        w_v_asc = -self.WA_V[:max_force_idx + 1]
+        w_h_asc = -self.WA_H[:max_force_idx + 1]
+        w_l_asc = -self.WA_L[:max_force_idx + 1]
+        w_r_asc = -self.WA_R[:max_force_idx + 1]
+        # get the average displacement values of the corresponding displacement gauges
+        w_vh_asc = (w_v_asc + w_h_asc) / 2
+        w_lr_asc = (w_l_asc + w_r_asc) / 2
+        axes.plot(w_vh_asc, w_lr_asc, color='blue', linewidth=1, label='w_vh / w_lr')
+        axes.plot(np.array([0, w_vh_asc[-1]]), np.array([0, w_vh_asc[-1]]), color='k', linewidth=1, linestyle='-')
+        axes.legend()
+
     def _plot_force_center_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the center-edge (ce) deflections
         '''
@@ -481,9 +501,14 @@ class ExpST(ExType):
         #
         idx_0 = np.where(f_asc > 0.05)[0][0]
 
-        f_asc_cut = np.hstack([f_asc[ idx_0: ]])
-        w_m_cut = np.hstack([w_m[ idx_0: ]]) - w_m[ idx_0 ]
+        f_asc_cut = f_asc[ idx_0: ]
+        w_m_cut = w_m[ idx_0: ] - w_m[ idx_0 ]
         axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+
+        # plot machine displacement (hydraulic cylinder)
+        #
+        Weg_asc = -self.Weg[ :max_force_idx + 1 ]
+        axes.plot(Weg_asc, f_asc, color='k', linewidth=1.5)
 
         # ## center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
@@ -503,6 +528,16 @@ class ExpST(ExType):
         axes.plot(w_vh_asc, f_asc, color='green', linewidth=1, label='w_vh')
         axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
 
+        # save 'F-w-arr_m-mlmr-vh-lr' in directory "/simdb/simdata/exp_st"
+        simdata_dir = os.path.join(simdb.simdata_dir, 'exp_st')
+        if os.path.isdir(simdata_dir) == False:
+            os.makedirs(simdata_dir)
+        filename = os.path.join(simdata_dir, 'F-w-arr_m-mlmr-vh-lr_' + self.key + '.csv')
+
+        Fw_m_mlmr_vh_lr_arr = np.hstack([f_asc[:, None], w_m[:, None] - w_m[ idx_0 ], w_mlmr_asc[:, None], w_vh_asc[:, None], w_lr_asc[:, None]])
+        print 'Fw_m_mlmr_vh_lr_arr'
+        np.savetxt(filename, Fw_m_mlmr_vh_lr_arr, delimiter=';')
+        print 'F-w-curves for center, middle, edges saved to file %s' % (filename)
 
     #--------------------------------------------------------------------------------
     # view
