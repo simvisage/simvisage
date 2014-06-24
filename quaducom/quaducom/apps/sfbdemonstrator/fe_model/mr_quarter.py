@@ -55,6 +55,7 @@ from ibvpy.mesh.fe_grid import \
 from mathkit.mfn import MFnLineArray
 
 import numpy as np
+import pylab as p
 
 # Interpolation
 from simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
@@ -210,8 +211,8 @@ class MRquarter(MushRoofModel):
     time_fn_load = Instance(MFnLineArray, input=True)
     def _time_fn_load_default(self):
         eta = 0.27 * 1.2
-        return MFnLineArray(xdata=[0.0, 1.0, 3.0, 6.0, 15.0],
-                            ydata=[0.0, 1.0, 1.0 / eta, 1.78 / eta, 10.0])
+        return MFnLineArray(xdata=[0.0, 1.0, 3.0, 5.0, 8.0, 15.0],
+                            ydata=[0.0, 1.0, 1.0 / eta, 1.78 / eta, 8.0, 9.05])
 
     boundary_x1 = Property(depends_on='+input')
     @cached_property
@@ -347,7 +348,7 @@ class MRquarter(MushRoofModel):
         # Add the time-loop control
         tloop = TLoop(tstepper=ts, RESETMAX=0, KMAX=70,
                        tolerance=0.5e-3,
-                       tline=TLine(min=0.0, step=step, max=self.max_lambda))
+                       tline=TLine(min=0.0, step=step, max=1.0))  # self.max_lambda))
         return tloop
 
 class MRquarterDB(MRquarter):
@@ -433,136 +434,42 @@ class MRquarterDB(MRquarter):
     def _get_nu(self):
         return self.ccs_unit_cell_ref.nu
 
+def load_factor_plot(ax1, max_w):
+
+    eta_nmd = 0.22  # * 1.2
+    chi = 0.81
+    gamma = 1.5
+
+    eta = lambda_ * eta_nmd
+    eta_el = gamma / chi
+
+    max_eta = np.max(eta)
+
+    ax2 = ax1.twinx()
+    ax2.set_ylim(0, max_eta * 1.1)
+
+    ax2.plot([0, max_w], [1.0, 1.0], color='black', linestyle='dashed')
+    ax2.plot([0, max_w], [eta_el, eta_el], color='black', linestyle='dashed')
+    ax2.plot([0, max_w], [eta_nmd, eta_nmd], color='black', linestyle='dashed')
+    p.show()
 
 
 if __name__ == '__main__':
 
-    do = 'load_factor_plot'
-    # do = 'ui'
-    # do = 'mxn_cut'
-    # do = 'mxn_cut_ing_sig'
+    # do = 'load_factor'
+    do = 'ui'
 
-    if do == 'mxn_cut':
-        n_elems_xy = 6
-        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
-                                age=26,
-                                max_lambda=1.0,
-                                n_steps=1,
-                                n_elems_xy_quarter=n_elems_xy,
-                                n_elems_z=1,
-                                )
+    sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                            calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                            age=26,
+                            max_lambda=15.0,
+                            n_steps=15,
+                            n_elems_xy_quarter=12,
+                            n_elems_z=1,
+                            )
 
-        u = sim_model.tloop.eval()
-        F_int = sim_model.tloop.tstepper.F_int
-
-        dof_X = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dof_X
-        # y-coordinates
-        dof_X_1 = dof_X[:, :, 1].flatten()
-        # z-coordinates
-        dof_X_2 = dof_X[:, :, 2].flatten()
-        dofs = sim_model.fe_grid_roof[ 0, :, :, 0, :, : ].dofs
-        # dofs in x-direction
-        dofs_0 = dofs[:, :, 0].flatten()
-        # get the idx sorted acoording the y coordinate
-        dof_X_1_idx_sorted = np.argsort(dof_X_1)
-        dof_X_1_sorted = dof_X_1[dof_X_1_idx_sorted]
-        # get the corresponding ordering of z-coordinates
-        dof_X_2_sorted = dof_X_2[dof_X_1_idx_sorted]
-        # get the corresponding ordering of x-dofs
-        dofs_0_sorted = dofs_0[dof_X_1_idx_sorted]
-
-        print 'dof_X_1'
-        print dof_X_1
-
-        print 'dof_X_2'
-        print dof_X_2
-
-        print 'dofs_0'
-        print dofs_0
-
-        print 'dof_X_1_sorted'
-        print dof_X_1_sorted
-
-        print 'dof_X_2_sorted'
-        print dof_X_2_sorted
-
-        print 'dofs_0_sorted'
-        print dofs_0_sorted
-
-        F_1_sorted = F_int[dofs_0_sorted]
-        print 'F_1_sorted'
-        print F_1_sorted
-
-        dofs_0_idx_unique = np.argsort(dofs_0_sorted)
-        dofs_0_unique = dofs_0_sorted[dofs_0_idx_unique]
-        print 'dofs_0_idx_unique'
-        print dofs_0_idx_unique
-        print 'dofs_0_unique'
-        print dofs_0_unique
-
-        doubled_dofs = np.where(dofs_0_unique[:-1] == dofs_0_unique[1:])[0]
-        print 'doubled_dofs', doubled_dofs
-        mask_doubled = np.ones_like(dofs_0_unique, dtype='bool')
-        mask_doubled[doubled_dofs] = False
-        print 'mask_doubled', mask_doubled
-
-        print 'F_int_sorted'
-        F_int_unique = F_int[dofs_0_unique]
-        print F_int_unique
-        print 'F_int_unique2'
-        print F_int_unique[mask_doubled]
-
-        n_entries = len(dof_X_1_sorted)
-        jumps = np.where(dof_X_1_sorted[:-1] < dof_X_1_sorted[1:])[0]
-        jumps = np.append(jumps + 1, [n_entries])
-
-        ix_map = np.zeros((n_entries,), dtype='int_')
-        for i in range(len(jumps) - 1):
-            ix_map[jumps[i]:jumps[i + 1]] = i + 1
-        print 'ix_map'
-        print ix_map
-        print 'ix_map2'
-        ix_map_agg = ix_map[mask_doubled]
-        print 'ix_map_agg'
-        print ix_map_agg
-
-        dof_X_1_agg = dof_X_1_sorted[jumps - 1]
-        print 'dof_X_1_agg'
-        print dof_X_1_agg
-
-        F_0_agg = np.bincount(ix_map_agg, weights=F_int_unique[mask_doubled])
-        print 'F_0_agg'
-        print F_0_agg
-        print 'sum F_agg', np.sum(F_0_agg)
-
-        h = 3.5 / float(n_elems_xy)
-        print 'h', h
-        F_0_agg_normed = F_0_agg / h
-        F_0_agg_normed[0] *= 2.0
-        F_0_agg_normed[-1] *= 2.0
-
-        print 'F_normed', np.sum(F_0_agg_normed)
-
-        import pylab as p
-        p.plot(dof_X_1_agg, F_0_agg)
-        p.plot(dof_X_1_agg, F_0_agg_normed)
-        p.show()
-
-        from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp(ibv_resource=sim_model)
-        app.main()
-
-
-    else:
-        sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
-                                calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
-                                age=26,
-                                max_lambda=15.0,
-                                n_steps=10,
-                                n_elems_xy_quarter=6,
-                                n_elems_z=1,
-                                )
+#     sim_model.time_fn_load.plot(p)
+#     p.show()
 
     # sim_model.initial_strain_roof = True
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
@@ -584,54 +491,6 @@ if __name__ == '__main__':
         sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
 
-    elif do == 'load_factor_plot':
-        import pylab as p
-
-        sim_model.time_fn_load.plot(p)
-        p.show()
-
-        try:
-            sim_model.tloop.eval()
-        except ValueError:
-            pass
-
-        f_w = sim_model.f_w_diagram
-        # f_w.redraw()
-
-        # f_w.trace.plot(p, color='black')
-        w = f_w.trace.xdata
-        time_ = f_w.trace.ydata
-        lambda_ = sim_model.time_fn_load.get_values(time_)
-        print 'lambda_', lambda_
-
-        eta_nmd = 0.27 * 1.2
-        chi = 0.81
-        gamma = 1.5
-
-        eta = lambda_ * eta_nmd
-        eta_el = gamma / chi
-
-        max_w = w[-1]
-        max_lambda = np.max(lambda_)
-        max_eta = np.max(eta)
-
-        fig, ax1 = p.subplots()
-
-        ax1.set_ylim(0, max_lambda * 1.1)
-        ax1.plot(w, lambda_, color='black')
-
-        ax2 = ax1.twinx()
-        ax2.set_ylim(0, max_eta * 1.1)
-
-        ax2.plot([0, max_w], [1.0, 1.0], color='black', linestyle='dashed')
-        ax2.plot([0, max_w], [eta_el, eta_el], color='black', linestyle='dashed')
-        ax2.plot([0, max_w], [ eta_nmd, eta_nmd], color='black', linestyle='dashed')
-        p.show()
-
-        from ibvpy.plugins.ibvpy_app import IBVPyApp
-        app = IBVPyApp(ibv_resource=sim_model)
-        app.main()
-
     elif do == 'pickle':
 
         import pickle
@@ -643,3 +502,85 @@ if __name__ == '__main__':
         sm = pickle.load(fl)
         fl.close()
 
+    elif do == 'load_factor':
+
+        do_more = 'pstudy'
+
+        if do_more == 'pstudy':
+
+            n_elems_list = [4, 6, 8, 10, 12, 13, 14, 16, 18, 20]
+            n_elems_list = [13]
+
+            import matresdev.db.simdb as simdb
+            import pickle
+            import os
+
+            db = simdb.SimDB()
+            data_dir = os.path.join(db.simdata_dir, 'SFB-demonstrator')
+            if not os.path.exists(data_dir):
+                os.mkdir(data_dir)
+
+            filename = os.path.join(data_dir, 'fw.pickle')
+
+            fw_diags = {}
+            if os.path.exists(filename):
+                fl = open(filename, 'r')
+                fw_diags = pickle.load(fl)
+                fl.close()
+
+            for n_elems in n_elems_list:
+                if fw_diags.get(n_elems, None) == None:  # or \
+                    # n_elems in [12, 13]:
+
+                    sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
+                                            calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+                                            age=26,
+                                            max_lambda=15.0,
+                                            n_steps=15,
+                                            n_elems_xy_quarter=n_elems,
+                                            n_elems_z=1,
+                                            )
+
+                    try:sim_model.tloop.eval()
+                    except ValueError:
+                        pass
+
+                    f_w = sim_model.f_w_diagram
+                    f_w.redraw()
+
+                    w = f_w.trace.xdata
+                    time_ = f_w.trace.ydata
+
+                    lambda_ = sim_model.time_fn_load.get_values(time_)
+
+                    fw_diags[n_elems] = (w, lambda_)
+
+            fl = open(filename, 'w')
+            pickle.dump(fw_diags, fl)
+            fl.close()
+
+            fig, ax1 = p.subplots()
+
+            for n_elems in n_elems_list:
+                fw_diag = fw_diags.get(n_elems, None)
+                if fw_diag == None: continue
+                w, lambda_ = fw_diag
+                p.plot(w, lambda_, color='black', label='n_elems=%d' % n_elems)
+
+            # p.legend(loc=4)
+
+            max_w = w[-1]
+            max_lambda = np.max(lambda_)
+            ax1.set_ylim(0, max_lambda * 1.1)
+
+            f_diag = fw_diags.values()[-1]
+            # f_w.trace.plot(p, color='black')
+            w, lambda_ = f_diag
+            load_factor_plot(ax1, max_w)
+
+            p.show()
+
+            max_lambda = np.array([ lambda_[-1] for (w, lambda_) in fw_diags.values() ], dtype='f')
+            n_elems_arr = np.array(n_elems_list, dtype='f')
+            p.plot(n_elems_arr, max_lambda)
+            p.show()

@@ -60,7 +60,7 @@ class Model(HasTraits):
     def _get_interpolate_experiment1(self):
         return interp1d(self.test_xdata, self.test_ydata,
                         bounds_error=False, fill_value=0.0)
-        
+
     interpolate_experiment2 = Property(depends_on='test_xdata2, test_ydata2')
     @cached_property
     def _get_interpolate_experiment2(self):
@@ -72,13 +72,13 @@ class Model(HasTraits):
     def _get_interpolate_experiment3(self):
         return interp1d(self.test_xdata3, self.test_ydata3,
                         bounds_error=False, fill_value=0.0)
-        
+
     interpolate_experiment4 = Property(depends_on='test_xdata4, test_ydata4')
     @cached_property
     def _get_interpolate_experiment4(self):
         return interp1d(self.test_xdata4, self.test_ydata4,
                         bounds_error=False, fill_value=0.0)
-        
+
     interpolate_experiment5 = Property(depends_on='test_xdata5, test_ydata5')
     @cached_property
     def _get_interpolate_experiment5(self):
@@ -98,9 +98,9 @@ class Model(HasTraits):
         n_int = self.n_int
         w = self.w
         lm = 1e10
-        spirrid.eps_vars=dict(w=w)
-        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
-        spirrid.n_int=n_int
+        spirrid.eps_vars = dict(w=w)
+        spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
+        spirrid.n_int = n_int
         if isinstance(r, RV):
             r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
             Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
@@ -122,9 +122,9 @@ class Model(HasTraits):
         n_int = 100
         w = self.w2
         lm = self.lm
-        spirrid.eps_vars=dict(w=w)
-        spirrid.theta_vars=dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
-        spirrid.n_int=n_int
+        spirrid.eps_vars = dict(w=w)
+        spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
+        spirrid.n_int = n_int
         if isinstance(r, RV):
             r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
             Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
@@ -146,7 +146,7 @@ class CBView(ModelView):
     def _figure_default(self):
         figure = Figure(facecolor='white')
         return figure
-    
+
     figure2 = Instance(Figure)
     def _figure2_default(self):
         figure = Figure(facecolor='white')
@@ -165,21 +165,21 @@ class CBView(ModelView):
                   label='experiment1')
         axes.plot(self.model.w, self.model.interpolate_experiment2(self.model.w), lw=1.0, color='black', \
                    label='experiment2')
-        axes.plot(self.model.w, self.model.interpolate_experiment3(self.model.w), lw=1.0, color='black', \
-                   label='experiment3')
-        axes.plot(self.model.w, self.model.interpolate_experiment4(self.model.w), lw=1.0, color='black', \
-                   label='experiment4')
-        axes.plot(self.model.w, self.model.interpolate_experiment5(self.model.w), lw=1.0, color='black', \
-                   label='experiment5')
+#         axes.plot(self.model.w, self.model.interpolate_experiment3(self.model.w), lw=1.0, color='black', \
+#                    label='experiment3')
+#         axes.plot(self.model.w, self.model.interpolate_experiment4(self.model.w), lw=1.0, color='black', \
+#                    label='experiment4')
+#         axes.plot(self.model.w, self.model.interpolate_experiment5(self.model.w), lw=1.0, color='black', \
+#                    label='experiment5')
         axes.legend()
-        
-        figure2 = fig2
-        figure2.clear()
-        axes = figure2.gca()
-        # plot PDF
-        axes.plot(self.model.w2, self.model.model_extrapolate, lw=2.0, color='red', \
-                  label='model')
-        axes.legend()
+
+#         figure2 = fig2
+#         figure2.clear()
+#         axes = figure2.gca()
+#         # plot PDF
+#         axes.plot(self.model.w2, self.model.model_extrapolate, lw=2.0, color='red', \
+#                   label='model')
+#         axes.legend()
 
     def refresh(self):
         self.plot(self.figure, self.figure2)
@@ -247,18 +247,18 @@ if __name__ == '__main__':
                   lm=20., n_int=100)
 
     cb1 = file1 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_xdata = - np.loadtxt(file1, delimiter=';')[:,3]
+    model.test_xdata = -np.loadtxt(file1, delimiter=';')[:, 3]
     model.test_xdata = model.test_xdata - model.test_xdata[0]
     file2 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_ydata = (np.loadtxt(file2, delimiter=';')[:,1] + 0.035)/0.45 * 1000
-     
+    model.test_ydata = (np.loadtxt(file2, delimiter=';')[:, 1] + 0.035) / 0.45 * 1000
+
     file1 = open('DATA/PO03_RYP.ASC', 'r')
-     
-    model.test_xdata2 = - np.loadtxt(file1, delimiter=';')[:,3]
+
+    model.test_xdata2 = -np.loadtxt(file1, delimiter=';')[:, 3]
     model.test_xdata2 = model.test_xdata2 - model.test_xdata2[0]
     file2 = open('DATA/PO03_RYP.ASC', 'r')
-    model.test_ydata2 = (np.loadtxt(file2, delimiter=';')[:,1] + 0.035)/0.45 * 1000
-    
+    model.test_ydata2 = (np.loadtxt(file2, delimiter=';')[:, 1] + 0.035) / 0.45 * 1000
+
     cb = CBView(model=model)
     cb.refresh()
     cb.configure_traits()
