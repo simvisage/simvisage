@@ -973,8 +973,6 @@ class ExpTTDB(ExType):
 
 ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
-#--------------------------------------------------------------
-
 if __name__ == '__main__':
 
 #    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
