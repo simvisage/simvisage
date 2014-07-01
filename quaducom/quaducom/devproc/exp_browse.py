@@ -23,6 +23,8 @@ from matresdev.db.exdb.ex_run_view import ExRunView
 
 ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
                                        'BT-6c-2cm-0-TU-V1_bs4.DAT')
+ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
+                                       'BTT-4c-2cm-TU-0-V01_MxN2.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
 #                                       'BT-3PT-12c-6cm-0-Tu-V1.raw')
 
