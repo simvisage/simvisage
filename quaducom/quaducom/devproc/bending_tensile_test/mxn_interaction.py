@@ -20,3 +20,19 @@ if __name__ == '__main__':
     e1 = ExpBTTDB(data_file=test_file)
     e1.process_source_data()
     print 'F_max1', e1.F_max1
+
+
+    e1.extended_data_cfg
+
+    aramis_data = e1.cache_data('19s15')
+
+    # call the processor
+
+    from aramis_cdt.aramis_bsa import AramisBSA
+
+    aramis_bsa = AramisBSA(aramis_data=aramis_data)
+
+    aramis_bsa.d_ux_arr2
+
+    # ExpBTTDB.db.configure_traits()
+
