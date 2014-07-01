@@ -786,6 +786,10 @@ class LCCTable(HasTraits):
         #
         if save_assess_values_to_file != None:
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, save_assess_values_to_file)
             assess_value_arr = plot_col
             np.savetxt(filename, assess_value_arr)
@@ -795,6 +799,10 @@ class LCCTable(HasTraits):
         #
         if add_assess_values_from_file != None:
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, add_assess_values_from_file)
             assess_value_arr = np.loadtxt(filename)
             plot_col += assess_value_arr
@@ -820,7 +828,15 @@ class LCCTable(HasTraits):
 
         if save_fig_to_file != None:
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             img_dir = os.path.join(simdata_dir, 'output_images')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(img_dir) == False:
+                os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file + '.png')
             mlab.savefig(filename)  # , format='png')
             print 'figure saved to file %s' % (filename)
@@ -863,6 +879,10 @@ class LCCTable(HasTraits):
             #
             if add_max_min_nm_from_file != None:
                 simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                # check if directory exist otherwise create
+                #
+                if os.path.isdir(simdata_dir) == False:
+                    os.makedirs(simdata_dir)
                 filename = os.path.join(simdata_dir, add_max_min_nm_from_file)
                 max_min_nm_arr = np.loadtxt(filename)
                 max_n_arr = max_min_nm_arr[:, 0][:, None]
@@ -970,6 +990,10 @@ class LCCTable(HasTraits):
             # save max and min values to file
             #
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, save_max_min_nm_to_file)
             np.savetxt(filename, max_min_nm_arr)
             print 'max_min_nm_arr saved to file %s' % (filename)
@@ -1015,7 +1039,15 @@ class LCCTable(HasTraits):
         #
         if save_fig_to_file != None:
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             img_dir = os.path.join(simdata_dir, 'output_images')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(img_dir) == False:
+                os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file)
             print 'figure saved to file %s' % (filename)
             p.savefig(filename, format='png')
@@ -1077,6 +1109,10 @@ class LCCTable(HasTraits):
             if add_max_min_eta_nm_from_file != None:
                 print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
                 simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+                # check if directory exist otherwise create
+                #
+                if os.path.isdir(simdata_dir) == False:
+                    os.makedirs(simdata_dir)
                 filename = os.path.join(simdata_dir, add_max_min_eta_nm_from_file)
                 max_min_eta_nm_arr = np.loadtxt(filename)
                 max_eta_n_arr = max_min_eta_nm_arr[:, 0][:, None]
@@ -1171,6 +1207,10 @@ class LCCTable(HasTraits):
             # save max values to file
             #
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, save_max_min_eta_nm_to_file)
             np.savetxt(filename, max_min_eta_nm_arr)
             print 'max_min_eta_nm_arr saved to file %s' % (filename)
@@ -1179,7 +1219,7 @@ class LCCTable(HasTraits):
         # plot
         #----------------------------------------------
         #
-        p.figure(facecolor='white')  # white background
+        p.figure(facecolor='white', figsize=(5.6, 10))  # white background
 
         p.plot(eta_m_arr, eta_n_arr, 'wo', markersize=3)  # blue dots
         x = np.array([0, 1. ])
@@ -1217,7 +1257,15 @@ class LCCTable(HasTraits):
         #
         if save_fig_to_file != None:
             simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
             img_dir = os.path.join(simdata_dir, 'output_images')
+            # check if directory exist otherwise create
+            #
+            if os.path.isdir(img_dir) == False:
+                os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file)
             print 'figure saved to file %s' % (filename)
             p.savefig(filename, format='png')

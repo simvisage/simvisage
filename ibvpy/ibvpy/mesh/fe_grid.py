@@ -32,7 +32,7 @@ from fe_grid_idx_slice import FEGridIdxSlice
 from fe_grid_ls_slice import FEGridLevelSetSlice
 from math import pi
 #-----------------------------------------------------------------------------
-# Adaptor for tables showing the cell point distributions 
+# Adaptor for tables showing the cell point distributions
 #-----------------------------------------------------------------------------
 class PointListTabularAdapter (TabularAdapter):
 
@@ -159,7 +159,7 @@ class FEGrid(FEGridActivationMap):
 
     # dof offset within the global enumeration
     dof_offset = Property(Int, depends_on='prev_grid.dof_offset,level.dof_offset')
-    #cached_property
+    # cached_property
     def _get_dof_offset(self):
         if self.prev_grid:
             return self.prev_grid.dof_offset + self.prev_grid.n_dofs
@@ -236,8 +236,8 @@ class FEGrid(FEGridActivationMap):
     # Derived properties
     #-----------------------------------------------------------------------------
     # dof point distribution within the cell converted into the CellSpec format
-    # CellSpec can derive the shape of the single grid cell, i.e. 
-    # the number of points specified in the individual directions. 
+    # CellSpec can derive the shape of the single grid cell, i.e.
+    # the number of points specified in the individual directions.
     #
     dof_grid_spec = Property(Instance(CellSpec), depends_on='fets_eval.dof_r')
     def _get_dof_grid_spec(self):
@@ -249,9 +249,9 @@ class FEGrid(FEGridActivationMap):
     def _get_geo_grid_spec(self):
         return CellSpec(node_coords=self.geo_r)
 
-    # dof_grid is represented by the DofCellGrid class maintaining 
-    # the internal data structure to retrieve the element mappings 
-    # within the grid. 
+    # dof_grid is represented by the DofCellGrid class maintaining
+    # the internal data structure to retrieve the element mappings
+    # within the grid.
     #
     dof_grid = Property(Instance(DofCellGrid),
                          depends_on='fets_eval.dof_r,shape,coord_min,coord_max')
@@ -281,17 +281,17 @@ class FEGrid(FEGridActivationMap):
     def get_cell_point_X_arr(self, elem):
         return self.geo_grid.get_cell_point_X_arr(elem)
 
-    # geo_grid is represented by the GeoCellGrid class maintaining 
-    # the internal data structure to retrieve the element mappings 
-    # within the grid. 
+    # geo_grid is represented by the GeoCellGrid class maintaining
+    # the internal data structure to retrieve the element mappings
+    # within the grid.
     #
     geo_grid = Property(Instance(GeoCellGrid),
                          depends_on='fets_eval.geo_r,shape,coord_min,coord_max')
     def _get_geo_grid(self):
         return self._grids[1]
 
-    traits_view = View(#Include( 'assemb_view' ),
-#                        Group( 
+    traits_view = View(# Include( 'assemb_view' ),
+#                        Group(
 #                               Item( 'shape' ),
 #                               Item( 'coord_min' ),
 #                               Item( 'coord_max' ),
@@ -315,7 +315,7 @@ class FEGrid(FEGridActivationMap):
             raise TypeError(type(idx), 'is unsupported type for slicing')
 
     #-------------------------------------------------------------
-    # Implement the FEDomain interface 
+    # Implement the FEDomain interface
     #-------------------------------------------------------------
 
     n_dofs = Property(Int)
@@ -337,7 +337,7 @@ class FEGrid(FEGridActivationMap):
         self.level.set_changed_structure()
 
     #-------------------------------------------------------------
-    # Implement the IFEUniformDomain interface 
+    # Implement the IFEUniformDomain interface
     #-------------------------------------------------------------
 
     # Full elem dof map ignoring masked elements.
@@ -420,7 +420,7 @@ class FEGrid(FEGridActivationMap):
         @param ip_mask: specifies the local coordinates within the element.
         '''
         X_el = self.elem_X_map
-        # test call to the function with single output - to get the shape of the result.        
+        # test call to the function with single output - to get the shape of the result.
         out_single = fn(ip_mask[0], X_el[0])
         out_grid_shape = (X_el.shape[0], ip_mask.shape[0],) + out_single.shape
         out_grid = zeros(out_grid_shape)
@@ -438,7 +438,7 @@ class FEGrid(FEGridActivationMap):
         @param ip_mask: specifies the local coordinates within the element.
         '''
         X_el = self.geo_grid.elem_X_map
-        # test call to the function with single output - to get the shape of the result.        
+        # test call to the function with single output - to get the shape of the result.
         out_single = fn(ip_mask[0], X_el[0])
         out_grid_shape = (X_el.shape[0], ip_mask.shape[0],) + out_single.shape
         out_grid = zeros(out_grid_shape)
@@ -450,7 +450,7 @@ class FEGrid(FEGridActivationMap):
         return out_grid
 
     #-------------------------------------------------------------
-    # Queries 
+    # Queries
     #-------------------------------------------------------------
     # The delegation had to be replaced with explicit calls to functions.
     # The reason is lost binding if a method
@@ -458,45 +458,45 @@ class FEGrid(FEGridActivationMap):
     # fe_domain.get_left_dofs
     #
     # If the discretization parameter changed, then a new dof_grid was generated
-    # but the call fe_domain.get_left_dofs went to the original dof_grid. 
+    # but the call fe_domain.get_left_dofs went to the original dof_grid.
     #
-    #get_all_dofs   = DelegatesTo('dof_grid')
+    # get_all_dofs   = DelegatesTo('dof_grid')
     def get_all_dofs(self): return self.dof_grid.get_all_dofs()
-    #get_left_dofs   = Delegate('dof_grid')
+    # get_left_dofs   = Delegate('dof_grid')
     def get_left_dofs(self): return self.dof_grid.get_left_dofs()
-    #get_right_dofs  = Delegate('dof_grid')
+    # get_right_dofs  = Delegate('dof_grid')
     def get_right_dofs(self): return self.dof_grid.get_right_dofs()
-    #get_top_dofs    = Delegate('dof_grid')
+    # get_top_dofs    = Delegate('dof_grid')
     def get_top_dofs(self):  return self.dof_grid.get_top_dofs()
-    #get_bottom_dofs = Delegate('dof_grid')
+    # get_bottom_dofs = Delegate('dof_grid')
     def get_bottom_dofs(self): return self.dof_grid.get_bottom_dofs()
-    #get_front_dofs  = Delegate('dof_grid')
+    # get_front_dofs  = Delegate('dof_grid')
     def get_front_dofs(self): return self.dof_grid.get_front_dofs()
-    #get_back_dofs   = Delegate('dof_grid')
+    # get_back_dofs   = Delegate('dof_grid')
     def get_back_dofs(self): return self.dof_grid.get_back_dofs()
-    #get_bottom_left_dofs   = Delegate('dof_grid')
+    # get_bottom_left_dofs   = Delegate('dof_grid')
     def get_bottom_left_dofs(self): return self.dof_grid.get_bottom_left_dofs()
-    #get_bottom_front_dofs   = Delegate('dof_grid')
+    # get_bottom_front_dofs   = Delegate('dof_grid')
     def get_bottom_front_dofs(self): return self.dof_grid.get_bottom_front_dofs()
-    #get_bottom_back_dofs   = Delegate('dof_grid')
+    # get_bottom_back_dofs   = Delegate('dof_grid')
     def get_bottom_back_dofs(self): return self.dof_grid.get_bottom_back_dofs()
-    #get_top_left_dofs   = Delegate('dof_grid')
+    # get_top_left_dofs   = Delegate('dof_grid')
     def get_top_left_dofs(self): return self.dof_grid.get_top_left_dofs()
-    #get_bottom_right_dofs  = Delegate('dof_grid')
+    # get_bottom_right_dofs  = Delegate('dof_grid')
     def get_bottom_right_dofs(self): return self.dof_grid.get_bottom_right_dofs()
-    #get_top_right_dofs  = Delegate('dof_grid')
+    # get_top_right_dofs  = Delegate('dof_grid')
     def get_top_right_dofs(self): return self.dof_grid.get_top_right_dofs()
-    #get_bottom_middle_dofs  = Delegate('dof_grid')
+    # get_bottom_middle_dofs  = Delegate('dof_grid')
     def get_bottom_middle_dofs(self): return self.dof_grid.get_bottom_middle_dofs()
-    #get_top_middle_dofs  = Delegate('dof_grid')
+    # get_top_middle_dofs  = Delegate('dof_grid')
     def get_top_middle_dofs(self): return self.dof_grid.get_top_middle_dofs()
-    #get_left_middle_dofs  = Delegate('dof_grid')
+    # get_left_middle_dofs  = Delegate('dof_grid')
     def get_left_middle_dofs(self): return self.dof_grid.get_left_middle_dofs()
-    #get_right_middle_dofs  = Delegate('dof_grid')
+    # get_right_middle_dofs  = Delegate('dof_grid')
     def get_right_middle_dofs(self): return self.dof_grid.get_right_middle_dofs()
-    #get_left_front_bottom_dof  = Delegate('dof_grid')
+    # get_left_front_bottom_dof  = Delegate('dof_grid')
     def get_left_front_bottom_dofs(self): return self.dof_grid.get_left_front_bottom_dofs()
-    #get_left_front_middle_dof  = Delegate('dof_grid')
+    # get_left_front_middle_dof  = Delegate('dof_grid')
     def get_left_front_middle_dofs(self): return self.dof_grid.get_left_front_middle_dofs()
 
     #-------------------------------------------------------------
@@ -580,7 +580,7 @@ class FEGrid(FEGridActivationMap):
         '''
 
     def get_ls_value(self, X_pnt):
-        #@TODO: make it work for 3d
+        # @TODO: make it work for 3d
         return self.ls_function.level_set_fn(X_pnt[0], X_pnt[1])
 
     #-----------------------------------------------------------------
@@ -592,9 +592,6 @@ class FEGrid(FEGridActivationMap):
     def _get_rt_bg_domain(self):
         return RTraceDomain(sd=self)
 
-    def redraw(self):
-        self.rt_bg_domain.redraw()
-
     mesh_plot_button = Button('Draw mesh')
     def _mesh_plot_button_fired(self):
         self.rt_bg_domain.redraw()
@@ -605,7 +602,6 @@ class FEGrid(FEGridActivationMap):
         '''Redraw the point grid.
         '''
         self.rt_bg_domain.redraw()
-        #self.geo_grid.redraw()
 
     fe_cell_array = Button('Browse elements')
     def _fe_cell_array_fired(self):
@@ -633,8 +629,8 @@ class FEGrid(FEGridActivationMap):
                                   n_nodal_dofs=self.n_nodal_dofs,
                                   dof_offset=self.dof_offset)
 
-        #if self.dof_r.all() != self.geo_r.all():
-        # 
+        # if self.dof_r.all() != self.geo_r.all():
+        #
         # @todo check whether this is universally valid (tolerance of coordinate values)
         #
         if not array_equal(self.dof_r, self.geo_r):

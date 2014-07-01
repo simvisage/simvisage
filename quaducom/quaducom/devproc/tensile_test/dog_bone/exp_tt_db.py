@@ -84,7 +84,7 @@ class ExpTTDB(ExType):
                            auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
-    age = Int(28, unit='d', input=True, table_field=True,
+    age = Int(29, unit='d', input=True, table_field=True,
                            auto_set=False, enter_set=True)
     loading_rate = Float(2.0, unit='mm/min', input=True, table_field=True,
                            auto_set=False, enter_set=True)
@@ -107,9 +107,11 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
         fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
         concrete_mixture_key = 'barrelshell'
+#        concrete_mixture_key = 'sto-100'
 #        concrete_mixture_key = 'FIL-10-09'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
@@ -611,6 +613,7 @@ class ExpTTDB(ExType):
                       'composite stress / strain'              : '_plot_sigc_eps',
                       'ironed composite stress / strain'       : '_plot_sigc_eps_ironed',
                       'interpolated composite stress / strain' : '_plot_sigc_eps_interpolated',
+                      'interpolated composite stress / strain (smoothed)' : '_plot_sigc_eps_interpolated_smoothed',
                       'ironed textile stress / strain'         : '_plot_sigtex_eps_ironed',
                       'interpolated textile stress / strain'   : '_plot_sigtex_eps_interpolated',
                       'smoothed composite stress / strain'     : '_plot_sigc_eps_smoothed',
@@ -698,7 +701,7 @@ class ExpTTDB(ExType):
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
-        E_tex = 180000.
+        E_tex = self.ccs.E_tex
         K_III = E_tex * self.A_tex / (self.A_c * 1000000.)
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
@@ -724,11 +727,36 @@ class ExpTTDB(ExType):
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
-        E_tex = 180000.
+        E_tex = self.ccs.E_tex
         K_III = E_tex * self.rho_c
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
+    def _plot_sigc_eps_interpolated_smoothed(self, axes):
+        '''plot ironed composite stress-strain diagram starting at the origin,
+        i.e. shift the strain by the offset resulting from the
+        initial strain and the analytic composite stiffness
+        '''
+        axes.plot(self.eps_c_interpolated, self.sig_c_interpolated, color='black')
+        axes.plot(self.eps_c_interpolated_smoothed, self.sig_c_interpolated_smoothed, color='green')
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('composite stress [MPa]')
+        # plot the stiffness of the composite (K_I) - uncracked state)
+        #
+        K_I = self.E_c  # depending of the testing age
+#        K_I = self.E_c28
+        eps_lin = array([0, self.sig_c_max / K_I], dtype='float_')
+        sig_lin = array([0, self.sig_c_max], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        # plot the stiffness of the garn (K_IIb - cracked state)
+        #
+        E_tex = self.ccs.E_tex
+        K_III = E_tex * self.rho_c
+        eps_lin = array([0, self.eps_max], dtype='float_')
+        sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+        axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+
 
     def _plot_sigtex_eps_ironed(self, axes):
         '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths
@@ -739,7 +767,7 @@ class ExpTTDB(ExType):
         axes.set_ylabel('textile stress [MPa]')
         # yarn stiffness
         #
-        E_tex = 180000.
+        E_tex = self.ccs.E_tex
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * E_tex], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
@@ -760,7 +788,7 @@ class ExpTTDB(ExType):
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         # plot the stiffness of the garn (K_IIb - cracked state)
         #
-        E_tex = 180000.
+        E_tex = self.ccs.E_tex
         K_III = E_tex
         eps_lin = array([0, self.eps_max], dtype='float_')
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
@@ -803,25 +831,30 @@ class ExpTTDB(ExType):
             print 'plot analytical stiffness (K_I and K_IIb)'
             # plot the stiffness of the composite (K_I) - uncracked state)
             #
-            K_I = self.E_c / self.rho_c
+            K_I = self.E_c / self.rho_c * 1.055
+            print 'K_I = E_c (simdb)', self.E_c
+            rho_new = self.rho_c / 1.055
+            K_I = self.E_c / rho_new
+            print 'K_I = E_c (new)', K_I
             eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_tex_max], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
             # plot the stiffness of the garn (K_IIb - cracked state)
             #
-            E_tex = 180000.
-            K_III = E_tex
+            E_tex = self.ccs.E_tex
+            K_IIb = E_tex
+            print 'K_IIb = E_tex ', K_IIb
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
-            sig_lin = array([0, self.eps_max * K_III], dtype='float_')
+            sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         if interpolated == True:
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = self.sig_c_interpolated / self.rho_c
+            sig_tex_interpolated = 1.055 * self.sig_c_interpolated / self.rho_c
         else:
             # use ironed date (still contains initial offset)
             eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = self.sig_c_ironed / self.rho_c
+            sig_tex_interpolated = 1.055 * self.sig_c_ironed / self.rho_c
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
 
@@ -830,19 +863,27 @@ class ExpTTDB(ExType):
         '''
         if plot_analytical_stiffness == True:
             print 'plot analytical stiffness (K_I and K_IIb)'
-            print 'E_c', self.E_c
             # plot analytical stiffness
             K_I = self.E_c  # depending of the testing age
-            print 'K_I = E_c', self.E_c
+            print 'K_I = E_c (simdb)', self.E_c
+            print 'E_tex (simdb)', self.ccs.E_tex
+            print 'E_m (simdb)', self.E_m
+            print 'age (simdb)', self.age
+            rho_new = self.ccs.rho_c / 1.055
+            K_I = (1 - rho_new) * self.E_m + rho_new * self.ccs.E_tex
+            print 'K_I (new)', K_I
+            print 'rho_c (new)', self.ccs.rho_c / 1.055
     #        K_I = self.E_c28
             eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_c_max], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
             # plot the stiffness of the garn (K_IIb - cracked state)
             #
-            E_tex = 180000.
+            E_tex = self.ccs.E_tex
             K_IIb = E_tex * self.rho_c
             print 'K_IIb = E_tex * self.rho_c', K_IIb
+            K_IIb = E_tex * rho_new
+            print 'K_IIb = E_tex * rho_new', K_IIb
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
@@ -851,6 +892,12 @@ class ExpTTDB(ExType):
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
             axes.plot(eps_asc_scaled, self.sig_c_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+            xdata = eps_asc_scaled
+            ydata = self.sig_c_interpolated
+            TT_arr = np.hstack([xdata[:, None], ydata[:, None]])
+            print 'TT_arr ', TT_arr.shape, ' save to file "TT_arr.csv"'
+            np.savetxt('TT_arr.csv', TT_arr, delimiter=';')
 
 #            idx_sig_c_mean = np.where(self.sig_c_interpolated >= 16.607)[0][0]
 #            print 'sig_c_mean = ', self.sig_c_interpolated[idx_sig_c_mean]

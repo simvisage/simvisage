@@ -1021,7 +1021,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         Get maximum damage at all microplanes.
         '''
         min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
-        max_omega = 1. - min_phi
+        max_omega = 1. - min_phi ** 2
         return np.array([ max_omega ])
 
     def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):

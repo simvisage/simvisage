@@ -49,6 +49,8 @@ from copy import copy
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+import os
+
 import pylab as p
 import numpy as np
 
@@ -98,7 +100,7 @@ class MATSCalibDamageFn(MATSExplore):
 
     max_eps = Property(Float)
     def _get_max_eps(self):
-        return 0.007
+        return 0.007  # set explicit value when calibration is aborted (mean value of strain)
 #        return self.mfn_line_array_target.xdata[-1]
 
     n_steps = Int(1)
@@ -194,6 +196,20 @@ class MATSCalibDamageFn(MATSExplore):
         '''Use the data from the ExDB
         '''
         ctt = self.composite_tensile_test
+
+        # save 'sig_eps_arr' in directory "/simdb/simdata/mats_calib_damage_fn"
+        simdata_dir = os.path.join(simdb.simdata_dir, 'mats_calib_damage_fn')
+        if os.path.isdir(simdata_dir) == False:
+            os.makedirs(simdata_dir)
+        ctt_key = str(self.composite_tensile_test.key)
+        filename = os.path.join(simdata_dir, 'eps-sig-arr_' + ctt_key + '.csv')
+
+        xdata, ydata = ctt.eps_c_interpolated_smoothed[:, None], ctt.sig_c_interpolated_smoothed[:, None]
+        eps_sig_arr = np.hstack([xdata, ydata])
+        print 'eps_sig_arr'
+        np.savetxt(filename, eps_sig_arr, delimiter=';')
+        print 'eps-sig-data saved to file %s' % (filename)
+
         return ctt.eps_c_interpolated_smoothed, ctt.sig_c_interpolated_smoothed  # smoothed data without jumps with interpolated starting point in the origin
 #        return ctt.eps_c_interpolated, ctt.sig_c_interpolated  # original data without jumps with interpolated starting point in the origin
 #        return ctt.eps_ironed, ctt.sig_c_ironed  # original data without smoothing (without jumps)
@@ -457,8 +473,19 @@ class MATSCalibDamageFn(MATSExplore):
             self.composite_cross_section.set_param(mats_key, ctt_key + self.param_key,
 #            self.composite_cross_section.set_param(mats_key, ctt_key,
                                                    copy(self.fitted_phi_fn))
+            # save 'sig_eps_arr' in directory "/simdb/simdata/mats_calib_damage_fn"
+            simdata_dir = os.path.join(simdb.simdata_dir, 'mats_calib_damage_fn')
+            if os.path.isdir(simdata_dir) == False:
+                os.makedirs(simdata_dir)
+            ctt_key = str(self.composite_tensile_test.key)
+            filename = os.path.join(simdata_dir, 'eps-phi-arr_' + ctt_key + self.param_key + '.csv')
 
+            xdata, ydata = self.fitted_phi_fn.xdata[:, None], self.fitted_phi_fn.ydata[:, None]
+            eps_phi_arr = np.hstack([xdata, ydata])
+            np.savetxt(filename, eps_phi_arr, delimiter=';')
+            print 'eps-phi-data saved to file %s' % (filename)
 
+    format_ticks = Bool(False)
     def plot_trial_steps(self):
         '''Plot target (sig-eps-curve of the tensile test) and trial curves
         and corresponding phi function together with trail steps from the iteration process.
@@ -521,18 +548,15 @@ class MATSCalibDamageFn(MATSExplore):
                 sig_trail = np.array([sig_trial_list_n[n][-1], sig_trial_list_n[n + 1][i]])
                 p.subplot(222)
                 p.plot(eps, sig_trail, color='k', linewidth=1)
-                p.xlabel('strain [1E3]', fontproperties=font)
-                p.ylabel('stress [MPa]', fontproperties=font)
-                p.axis([0, xrange, 0., yrange], fontproperties=font)
-
-                # format ticks for plot
-                #
-                locs, labels = p.xticks()
-                p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-                locs, labels = p.yticks()
-                p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
+                if self.format_ticks:
+                    # format ticks for plot
+                    p.axis([0, xrange, 0., yrange], fontproperties=font)
+                    locs, labels = p.xticks()
+                    p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+                    locs, labels = p.yticks()
+                    p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
 
                 #--------------------------------------
                 # phi_trail
@@ -543,17 +567,16 @@ class MATSCalibDamageFn(MATSExplore):
                 p.subplot(224)
                 phi_trail = np.array([phi_trial_list_n[n][-1], phi_trial_list_n[n + 1][i]])
                 p.plot(eps, phi_trail, color='k', linewidth=1)
-
-                # format ticks for plot
-                #
-                p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-                p.axis([0, xrange, 0., 1.])
-                locs, labels = p.xticks()
-                p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
                 p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-                locs, labels = p.yticks()
-                p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
                 p.ylabel('integrity $\phi$ [-]', fontproperties=font)
+                if self.format_ticks:
+                    # format ticks for plot
+                    p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+                    p.axis([0, xrange, 0., 1.])
+                    locs, labels = p.xticks()
+                    p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+                    locs, labels = p.yticks()
+                    p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
 
         #--------------------------------------
         # sig-eps target
@@ -564,15 +587,15 @@ class MATSCalibDamageFn(MATSExplore):
         eps = 1000. * self.mfn_line_array_target.xdata[:-1]
         sig_target = self.mfn_line_array_target.ydata[:-1]
         p.plot(eps, sig_target, color='black', linewidth=1)
-        # format ticks for plot
-        #
-        p.axis([0, xrange, 0., yrange])
-        locs, labels = p.xticks()
-        p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-        locs, labels = p.yticks()
-        p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.ylabel('stress $\sigma$ [MPa]', fontproperties=font)
+        if self.format_ticks:
+            # format ticks for plot
+            p.axis([0, xrange, 0., yrange])
+            locs, labels = p.xticks()
+            p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+            locs, labels = p.yticks()
+            p.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
 
         #--------------------------------------
         # phi_trail (final)
@@ -584,18 +607,27 @@ class MATSCalibDamageFn(MATSExplore):
         eps = 1000. * self.fitted_phi_fn.xdata[:-1]
         phi_fn = self.fitted_phi_fn.ydata[:-1]
         p.plot(eps, phi_fn, color='black', linewidth=1)
-        # format ticks for plot
-        #
-        p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
-        p.axis([0, xrange, 0., 1.])
-        locs, labels = p.xticks()
-        p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
         p.xlabel(r'strain $\varepsilon$ [1E-3]', fontproperties=font)
-        locs, labels = p.yticks()
-        p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
         p.ylabel('integrity $\phi$ [-]', fontproperties=font)
+        if self.format_ticks:
+            # format ticks for plot
+            p.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+            p.axis([0, xrange, 0., 1.])
+            locs, labels = p.xticks()
+            p.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+            locs, labels = p.yticks()
+            p.yticks(locs, map(lambda x: "%.1f" % x, locs), fontproperties=font)
 
-        p.savefig('plot_trail_steps.png')
+        # save figure with calibration process in directory "/simdb/simdata/lcc_table/output_images/save_fig_to_file.png"
+        simdata_dir = os.path.join(simdb.simdata_dir, 'mats_calib_damage_fn')
+        if os.path.isdir(simdata_dir) == False:
+            os.makedirs(simdata_dir)
+
+        ctt_key = str(self.composite_tensile_test.key)
+        filename = os.path.join(simdata_dir, ctt_key + self.param_key + '.png')
+
+        p.savefig(filename)
+        print 'plot_trail_steps.png saved to file %s' % (filename)
 
         p.show()
 
@@ -812,12 +844,18 @@ def run():
 #                               '2013-05-17_TT-6c-2cm-0-TU_bs1',
 #                               'TT-6c-2cm-90-TU-V3_bs1.DAT')
 
-
-#         test_file = join(simdb.exdata_dir,
+#        test_file = join(simdb.exdata_dir,
 #                               'tensile_tests',
 #                               'buttstrap_clamping',
 #                               '2013-07-18_TTb-6c-2cm-0-TU_bs5',
-#                               'TTb-6c-2cm-0-TU-V3_bs5.DAT')
+#                               'TTb-6c-2cm-0-TU-V1_bs5.DAT')
+# #                               'TTb-6c-2cm-0-TU-V3_bs5.DAT')
+#
+#        test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
+#                               'TTb-6c-2cm-0-TU-V2_bs4.DAT')
 
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
@@ -833,8 +871,8 @@ def run():
         # get the composite E-modulus and Poisson's ratio as stored
         # in the experiment data base for the specified age of the tensile test
         #
-#        E_c = ex_run.ex_type.E_c
-#        print 'E_c', E_c
+        E_c = ex_run.ex_type.E_c
+        print 'E_c', E_c
 
 #        # use the value as graphically determined from the tensile test (= initial stiffness for tension)
 #        E_c = 28000.
@@ -843,13 +881,13 @@ def run():
         # calibration parameters. Those are used for calibration and are store in the 'param_key'
         # appendet to the calibration-test-key
         #
-        age = 26
+        age = 28
 
         # E-modulus of the concrete matrix at the age of testing
         # NOTE: value is more relevant as compression behavior is determined by it in the bending tests and slab tests;
         # behavior in the tensile zone is defined by calibrated 'phi_fn' with the predefined 'E_m'
-        E_m = ex_run.ex_type.ccs.get_E_m_time(age)
-#        E_c = ex_run.ex_type.ccs.get_E_c_time(age)
+#        E_m = ex_run.ex_type.ccs.get_E_m_time(age)
+        E_c = ex_run.ex_type.ccs.get_E_c_time(age)
 
         # use average E-modul from 0- and 90-degree direction for fitter in both directions
         # this yields the correct tensile behavior and returns the best average compressive behavior
@@ -862,7 +900,10 @@ def run():
         # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
         #
 #        E_c = 29940.2
-        E_c = 29100.
+#        E_c = 29100.
+#        E_c = 22390.4
+#        E_c = 18709.5
+        E_c = 28700.
 
         # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
 #        E_m = 18709.5
@@ -875,6 +916,8 @@ def run():
 
         n_steps = 100
         fitter.n_steps = n_steps
+
+        fitter.format_ticks = True
 
         fitter.ex_run.ex_type.age = age
         print 'age = %g used for calibration' % age
@@ -898,8 +941,9 @@ def run():
         # set 'param_key' of 'fitter' to store calibration params in the name
         #------------------------------------------------------------------
         #
-#        param_key = '_age%g_Ec%g_nu%g_nsteps%g' % (age, E_c, nu, n_steps)
+#        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
         param_key = '_age%g_Ec%g_nu%g_nsteps%g_maxeps%g_smoothed' % (age, E_c, nu, n_steps, max_eps)
+#        param_key = '_age%g_Ec%g_nu%g_nsteps%g_smoothed' % (age, E_c, nu, n_steps)
 
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key

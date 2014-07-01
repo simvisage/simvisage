@@ -211,7 +211,7 @@ class SimST(IBVModel):
 
     # specify weather rounded load introduction plate is modeled. If set to 'False' a complete square element mesh is used.
     #
-    plain_concrete_flag = True
+    plain_concrete_flag = False
 
     # specify weather rounded load introduction plate is modeled. If set to 'False' a complete square element mesh is used.
     #
@@ -316,8 +316,7 @@ class SimST(IBVModel):
 
     n_mp = Int(30., auto_set=False, enter_set=True, input=True)
 
-# @todo: make the setting which E-modulus to be chosen a parameter to set
-#     E_mats = Trait('E_c', {'E_c':self.E_c, 'E_m':self.E_m})
+#    E_specmn_mats = Float(input=True)
 
     # @todo: for mats_eval the information of the unit cell should be used
     # in order to use the same number of microplanes and model version etc...
@@ -332,6 +331,7 @@ class SimST(IBVModel):
         print 'self.n_mp', self.n_mp
         specmn_mats = MATS2D5MicroplaneDamage(
                                 E=self.E_c,
+#                                E=self.E_specmn_mats,
 #                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
 #                                 E=self.E_m,  # #@todo: only available if this parameter is defined by the class
                                 nu=self.nu,
@@ -1046,6 +1046,8 @@ class SimSTDB(SimST):
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
         print 'E_m (from ccs)', E_m
+        E_m = 29100.
+        print 'E_m set explicitly to ', E_m
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')

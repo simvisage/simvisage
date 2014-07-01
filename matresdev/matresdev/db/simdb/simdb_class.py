@@ -13,7 +13,7 @@
 # Created on Apr 15, 2010 by: rch
 
 from etsproxy.traits.api import \
-    HasTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
+    HasTraits, HasStrictTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
     Directory, List, Property, Float, cached_property, Constant
 
 from etsproxy.traits.ui.api import \
@@ -52,7 +52,7 @@ class SimDBTableAdapter (TabularAdapter):
     # EXTRACT FACTOR NAMES AS COLUMNS FOR TABLE EDITOR
     #-------------------------------------------------------------------
     def _get_columns(self):
-        cols = [ ('index', 'index') ] # , ('key', 'dbkey') ]
+        cols = [ ('index', 'index') ]  # , ('key', 'dbkey') ]
         obj = self.object
         for field_name in obj.field_names:
             cols.append((field_name, field_name))
@@ -77,8 +77,8 @@ class SimDBTableAdapter (TabularAdapter):
         value = self.object.instances[ self.row, factor_idx ]
         return str(value)
 
-simdb_table_editor = TabularEditor(adapter = SimDBTableAdapter(),
-                                    selected = 'selected_instance'
+simdb_table_editor = TabularEditor(adapter=SimDBTableAdapter(),
+                                    selected='selected_instance'
                                      )
 
 class SimDBClass(HasTraits):
@@ -99,7 +99,7 @@ class SimDBClass(HasTraits):
 #------------------------------------------------------------------------------------------
 # Class Extension - global persistent container of class instances
 #------------------------------------------------------------------------------------------
-class SimDBClassExt(HasTraits):
+class SimDBClassExt(HasStrictTraits):
 
     category = Enum('matdata', 'exdata')
     def _category_default(self):
@@ -107,16 +107,16 @@ class SimDBClassExt(HasTraits):
 
     path = List([])
 
-    # dictionary of predefined instances - used for 
+    # dictionary of predefined instances - used for
     # debugging and early stages of class developmemnt.
     #
     klass = Type
 
     # Verbose mode either none, or upon write/save pickle file
-    # or upon deletion of pickle files. 
+    # or upon deletion of pickle files.
     verbose = Enum('none', 'io', 'del')
-    
-    classname = Property(depends_on = 'klass')
+
+    classname = Property(depends_on='klass')
     @cached_property
     def _get_classname(self):
         return self.klass.__name__
@@ -125,15 +125,15 @@ class SimDBClassExt(HasTraits):
     def _get_field_names(self):
         '''
         Get the dictionary of factors provided by the simulation model.
-        
+
         The factors are identified by the factor_levels metadata in the trait
         definition. For example
-        
+
         my_param = Float( 20, factor_levels = (0, 10, 6) )
-        
+
         specifies a float factor with  the levels [0,2,4,6,8,10]
         '''
-        traits = self.klass.class_traits(simdb = lambda x: x != None)
+        traits = self.klass.class_traits(simdb=lambda x: x != None)
         return traits.keys()
 
     constants = Dict({})
@@ -183,16 +183,16 @@ class SimDBClassExt(HasTraits):
             obj_file = open(path, 'r')
             key_list = string.split(obj_file_name, '.')[:-1]
             key = reduce(lambda x, y: x + '.' + y, key_list)
-            
+
             if self.verbose == 'io':
                 print '%s.db: reading %s' % (self.klass.__name__, key)
-            
+
             try:
                 instances[ key ] = pickle.load(obj_file)
             except ImportError, e:
                 print 'file name %s' % obj_file
                 raise ImportError, e
-            
+
             # let the object know its key
             instances[ key ].key = key
             obj_file.close()
@@ -223,10 +223,10 @@ class SimDBClassExt(HasTraits):
         '''
         # check if the key corresponds to a constant
         # if yes, report an error
-        
+
         if key in self.keys():
             raise IndexError, 'an object with key %s already exists' % key
-        
+
         it = self.keyed_constants.get(key, None)
         if it:
             raise ValueError, 'attempting to change a constant %s' % key
@@ -239,14 +239,14 @@ class SimDBClassExt(HasTraits):
         for x in string.whitespace:
             key = key.replace(x, "_")
         # write to the database
-        #value.key = key
+        # value.key = key
         obj_file_name = os.path.join(self.dir, key + '.pickle')
         obj_file = open(obj_file_name, 'w')
-        
+
         if self.verbose == 'io':
             print '%s.db: writing %s' % (self.klass.__name__, key)
-        
-        pickle.dump(value, obj_file, protocol = 0) # slow text mode
+
+        pickle.dump(value, obj_file, protocol=0)  # slow text mode
         obj_file.close()
 
     def __getitem__(self, key):
@@ -287,40 +287,40 @@ class SimDBClassExt(HasTraits):
                            VSplit(
                                    VGroup(
                                          HGroup(Item('classname',
-                                                     style = 'readonly',
-                                                     label = 'database extension class')
+                                                     style='readonly',
+                                                     label='database extension class')
                                                 ),
                                          Item('inst_list',
-                                               editor = simdb_table_editor,
-                                               show_label = False,
-                                               style = 'custom'),
-                                         label = 'database table',
-                                         id = 'simbd.table.instances',
-                                         dock = 'tab',
+                                               editor=simdb_table_editor,
+                                               show_label=False,
+                                               style='custom'),
+                                         label='database table',
+                                         id='simbd.table.instances',
+                                         dock='tab',
                                          ),
-                                   id = 'simdb.table.left',
+                                   id='simdb.table.left',
                                  ),
                            VGroup(
                                VGroup(
                                      Item('selected_instance@',
-                                           resizable = True,
-                                           show_label = False),
-                                     label = 'instance',
-                                     id = 'simdb.table.instance',
-                                     dock = 'tab',
-                                     scrollable = True,
+                                           resizable=True,
+                                           show_label=False),
+                                     label='instance',
+                                     id='simdb.table.instance',
+                                     dock='tab',
+                                     scrollable=True,
                                      ),
-                                id = 'simdb.table.right',
-                                layout = 'split',
-                                label = 'selected instance',
-                                dock = 'tab',
+                                id='simdb.table.right',
+                                layout='split',
+                                label='selected instance',
+                                dock='tab',
                                 ),
-                            id = 'simdb.table.splitter',
+                            id='simdb.table.splitter',
                         ),
-                        id = 'simdb.table',
-                        dock = 'tab',
-                        resizable = True,
-                        buttons = ['OK', 'Cancel'],
-                        height = 0.8, width = 0.8,
+                        id='simdb.table',
+                        dock='tab',
+                        resizable=True,
+                        buttons=['OK', 'Cancel'],
+                        height=0.8, width=0.8,
                         )
 

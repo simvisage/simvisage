@@ -42,6 +42,7 @@ if __name__ == '__main__':
     data_dir = os.path.join(simdb.simdb_dir,
                             'simdata', 'input_data_mushroof_stb',
                             'ZiE_state_data_2shells_delta_h_865mm_2011-08-16')
+#                            'state_data_2shells_delta_h_865mm_fine_mesh')
 
     #------------------------
     # define loading cases:
@@ -229,7 +230,9 @@ if __name__ == '__main__':
 
         # tensile strength [kN/m]
         #
-        n_0_Rdt = n_90_Rdt = 538.6  # = 75.4 (=F_tRd)/ 0.14 ### F_Rtm = 139.5 kN (mean value)
+        # use strength reduction factor 'k_b' for discontinuities in the fabric layers due to butt joints:
+        # i.e. k_b = 10/12 = 0.833333
+        n_0_Rdt = n_90_Rdt = 0.833333 * 538.6  # = 75.4 (=F_tRd)/ 0.14 ### F_Rtm = 139.5 kN (mean value)
 
         # compressive strength [kN/m]
         #
@@ -237,7 +240,7 @@ if __name__ == '__main__':
 
         # bending strength [kNm/m]
         #
-        m_0_Rd = m_90_Rd = 8.3  # = 1.66 (=M_Rd) / 0.20 ### M_Rm = 3.1 kNm (mean value)
+        m_0_Rd = m_90_Rd = 0.833333 * 8.3  # = 1.66 (=M_Rd) / 0.20 ### M_Rm = 3.1 kNm (mean value)
 
     #--------------------------------------------------------
     # ULS evaluation
@@ -245,7 +248,7 @@ if __name__ == '__main__':
     lct = LCCTableULS(data_dir=data_dir,
                       data_filter=remove_midpoints,
                       lc_list=lc_list,
-                      show_lc_characteristic=False,
+                      show_lc_characteristic=True,
                       strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
                                                 'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
                       k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
@@ -274,7 +277,7 @@ if __name__ == '__main__':
     # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
-    #
+
     lct.plot_assess_value('eta_nm_tot', scale_mode='scalar', scale_factor=0.8)
 
     #--------------------------------------------------------------

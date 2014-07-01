@@ -115,7 +115,7 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         #                 # elasticity tensor (cf. Jir/Baz Inelastic analysis of structures Eq.D25):
         #                 D4_e_3D[i,j,k,l] = la * delta[i,j] * delta[k,l] + \
         #                                    mu * ( delta[i,k] * delta[j,l] + delta[i,l] * delta[j,k] )
-        #                 # elastic compliance tensor (cf.):
+        #                 # elastic compliance tensor (cf. Simo, Computational Inelasticity, Eq.(2.7.16) AND (2.1.16)):
         #                 C4_e_3D[i,j,k,l] = (1+nu)/(2*E) * \
         #                                    ( delta[i,k] * delta[j,l] + delta[i,l]* delta[j,k] ) - \
         #                                    nu / E * delta[i,j] * delta[k,l]

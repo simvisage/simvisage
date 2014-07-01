@@ -189,8 +189,8 @@ class BCSlice(HasStrictTraits):
 
         r_arr, w_arr, ix = fets_eval.get_sliced_ip_scheme(n_idx)
 
-        slicegeo_X = self.slice.fe_grid.elem_X_map[ self.slice.elems ]
-        slicedofs = self.slice.fe_grid.elem_dof_map[ self.slice.elems ]
+        slice_geo_X = self.slice.fe_grid.elem_X_map[ self.slice.elems ]
+        slice_dofs = self.slice.fe_grid.elem_dof_map[ self.slice.elems ]
 
         p_value = self.value * float(self.time_function(t_n1))
 
@@ -198,7 +198,7 @@ class BCSlice(HasStrictTraits):
         for d in self.dims:
             p_vct[d] = p_value
 
-        for el, el_dofs, el_geo_X in zip(self.slice.elems, slicedofs, slicegeo_X):
+        for el, el_dofs, el_geo_X in zip(self.slice.elems, slice_dofs, slice_geo_X):
             f_vct = zeros((fets_eval.n_e_dofs,), dtype='float_')
             for r_pnt, w in zip(r_arr, w_arr):
                 if len(ix) > 0:
@@ -414,7 +414,7 @@ if __name__ == '__main__':
                           fets_eval=fets_eval)
 
         bcs = [BCSlice(var='u', value=0., dims=[0, 1], slice=fe_grid[ :, 0, :, 0 ]),
-               BCSlice(var='f', value= -1., dims=[1], slice=fe_grid[ :, :, :, : ]) ]
+               BCSlice(var='f', value=-1., dims=[1], slice=fe_grid[ :, :, :, : ]) ]
 
     ts = TS(sdomain=fe_grid, bcond_list=bcs,
             rtrace_list=[

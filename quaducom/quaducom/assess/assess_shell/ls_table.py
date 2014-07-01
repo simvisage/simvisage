@@ -109,11 +109,11 @@ class LS(HasTraits):
 
     state_columns = List([
                            'mx', 'my', 'mxy', 'nx', 'ny', 'nxy',
-#                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
+                           'sigx_lo', 'sigy_lo', 'sigxy_lo',
 #                           'sig1_lo', 'sig1_up_sig_lo',
                            'm_sig1_lo', 'n_sig1_lo',
                            'm_sig2_lo', 'n_sig2_lo',
-#                           'sigx_up', 'sigy_up', 'sigxy_up',
+                           'sigx_up', 'sigy_up', 'sigxy_up',
 #                           'sig1_up', 'sig1_lo_sig_up', 'alpha_sig1_up',
                            'm_sig1_up', 'n_sig1_up',
                            'm_sig2_up', 'n_sig2_up',

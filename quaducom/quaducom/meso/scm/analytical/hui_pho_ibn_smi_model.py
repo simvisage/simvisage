@@ -12,6 +12,11 @@ from scipy.special import expi
 from scipy.integrate import cumtrapz
 
 class SFC_Hui(HasTraits):
+    '''
+    This class includes a method for the evaluation of fragment length distribution
+    in a composite with homogeneous interface bond.
+    The stress is normalized by sigmac and the fragment lengths by deltac.
+    '''
 
     l0 = Float
     d = Float
@@ -78,9 +83,15 @@ class SFC_Hui(HasTraits):
         return self.p2(2 * x, x)
 
     def p11(self, s, x):
+        '''
+        density of number of fragments of length L > s
+        '''
         return s ** (2.*self.rho) * np.exp(self.lambd * s ** (self.rho + 1) - 2.*self.lambd * (0.577215664901532 + np.log(s ** (self.rho + 1) / 2.) - expi(-s ** (self.rho + 1) / 2.)) - s ** self.rho * x)
 
     def p22(self, s, x):
+        '''
+        density of number of fragments of length s/2 < L < s
+        '''
         def integ_scalar(s, x):
             t = np.linspace(x, s, 500)
             def integrant(t):
@@ -90,9 +101,16 @@ class SFC_Hui(HasTraits):
         return 2. * self.rho * integ_vect(s, x) + np.nan_to_num(self.p11(x, x))
 
     def p33(self, x):
+        '''
+        density of number of fragments of length L < s/2
+        '''
         return self.p22(2 * x, x)
 
     def p_x(self, s, x):
+        '''
+        Hui et al. gives the PDF of the number of breaks. This multiplied by the
+        corresponding length results in the PDF of the fragment length.
+        '''
         p1 = np.nan_to_num(self.p11(s, x)) * (x >= s)
         p2 = np.nan_to_num(self.p22(s, x)) * (x < s) * (x >= s / 2.)
         p3 = np.nan_to_num(self.p33(x)) * (x < s / 2.)
@@ -102,17 +120,13 @@ class SFC_Hui(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
-
-    for rho in np.array([10.]):
-        sfc.rho = rho
-        x = np.linspace(0.4, 1.5, 300)
-        pdf_x = sfc.p_x(10., x)
-        # Widom limiting case
-        print 'mean distance between fragment centroids = ', 2. / np.trapz(pdf_x, x)
-        #cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
-        plt.plot(x, pdf_x, label=str(rho))
-        #plt.plot(x, cdf_x, label=str(rho))
-    #plt.legend()
-    plt.title('PDF of number of fragments per unit length')
+    x = np.linspace(0.1, 2.5, 300)
+    pdf_x = sfc.p_x(10., x)
+    print 'mean distance between fragment centroids = ', 2. / np.trapz(pdf_x, x)
+    cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
+    plt.plot(x, pdf_x, label='PDF')
+    plt.plot(x, cdf_x, label='CDF')
+    plt.legend()
+    plt.title('PDF and CDF of fragment length')
     plt.show()
 
