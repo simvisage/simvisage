@@ -42,6 +42,7 @@ from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
 from mathkit.array.smoothing import smooth
+from mathkit.mfn import MFnLineArray
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -283,6 +284,47 @@ class ExpBTTDB(ExType):
         elif self.F_max1 <= self.F_max_threshold:
             # maximum load is determined by the normal force
             return self.u[:self.max_N_idx + 1]
+
+    #-------------------------------------------------------------------------------
+    # Cut the displacement curve when the gradient is to big
+    #-------------------------------------------------------------------------------
+
+    gra_max_threshold = Float(0.3, auto_set=False, enter_set=True)
+    '''Threshold to limit the gradient of the displacement curve at the end.
+    '''
+
+    w_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_w_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+
+        w_asc = self.w_asc
+        t_asc = self.t_asc
+
+        delta_w_arr = w_asc[1:] - w_asc[0:-1]
+        delta_t_arr = t_asc[1:] - t_asc[0:-1]
+
+        # Calculate the gradient for every index
+        gra_arr = delta_w_arr[:] / delta_t_arr[:]
+
+        # Examine the indices where the gradient is bigger than the threshold gradient
+        gra_idx_arr = np.where(gra_arr > self.gra_max_threshold)[0]
+
+        print '*** gradient is to big at the following indices and time: ***'
+        print 'gra_idx_arr', gra_idx_arr
+        print 'gra_arr', gra_arr[gra_idx_arr]
+        print 'w_asc[jump_idx]', w_asc[gra_idx_arr]
+
+        # Examine the first index where the gradient is bigger than the threshold gradient
+        gra_idx = gra_idx_arr[0]
+
+        print 'gra_idx', gra_idx
+
+        w_cut_asc = w_asc[0:gra_idx]
+
+        return w_cut_asc
 
     #-------------------------------------------------------------------------------
     # Get the moment arrays
