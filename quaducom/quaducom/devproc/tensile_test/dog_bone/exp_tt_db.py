@@ -973,8 +973,6 @@ class ExpTTDB(ExType):
 
 ExpTTDB.db = ExRunClassExt(klass=ExpTTDB)
 
-#--------------------------------------------------------------
-
 if __name__ == '__main__':
 
 #    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
@@ -984,4 +982,6 @@ if __name__ == '__main__':
 #        print inst.production_date
 #        inst.save()
 
-    ExpTTDB.db.configure_traits()
+    print ExpTTDB.db['TT-12c-6cm-0-TU-WMTC'].sig_c_interpolated_smoothed
+
+    # ExpTTDB.db.configure_traits()

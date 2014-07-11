@@ -175,6 +175,8 @@ class SimDBClassExt(HasStrictTraits):
         '''Read the content of the directory
         '''
         instances = {}
+        print self.dir
+        print os.listdir(self.dir)
         for obj_file_name in os.listdir(self.dir):
             # check to see whether the file is pickle or not
             path = os.path.join(self.dir, obj_file_name)
@@ -194,6 +196,7 @@ class SimDBClassExt(HasStrictTraits):
                 raise ImportError, e
 
             # let the object know its key
+            print key
             instances[ key ].key = key
             obj_file.close()
         return instances

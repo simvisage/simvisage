@@ -26,6 +26,11 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-1
 #
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
+
+ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
+                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
+ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
+                                       'BTT-4c-2cm-TU-0-V01_MxN2.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE',
 #                                       'BT-3PT-12c-6cm-0-Tu-V1.raw')
 
@@ -34,9 +39,6 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-1
 #
 # ex_path = os.path.join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU',
 #                                       'ST-12c-6cm-u-TU.DAT')
-
-
-
 
 print os.path.exists(ex_path)
 
