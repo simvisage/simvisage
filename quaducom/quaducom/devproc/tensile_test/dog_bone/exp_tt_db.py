@@ -550,7 +550,7 @@ class ExpTTDB(ExType):
                               output=True, table_field=True, unit='MPa')
     @cached_property
     def _get_eps_max(self):
-        return self.eps_asc[-1]
+        return np.max(self.eps_asc)
 
     sig_c_max = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='MPa')
@@ -824,16 +824,16 @@ class ExpTTDB(ExType):
 
     # scaleable plotting methods
     #
-    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness=True, interpolated=True):
         '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
         if plot_analytical_stiffness == True:
             print 'plot analytical stiffness (K_I and K_IIb)'
             # plot the stiffness of the composite (K_I) - uncracked state)
             #
-            K_I = self.E_c / self.rho_c * 1.055
+            K_I = self.E_c / self.rho_c * k_rho
             print 'K_I = E_c (simdb)', self.E_c
-            rho_new = self.rho_c / 1.055
+            rho_new = self.rho_c / k_rho
             K_I = self.E_c / rho_new
             print 'K_I = E_c (new)', K_I
             eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_') * xscale
@@ -850,15 +850,15 @@ class ExpTTDB(ExType):
         if interpolated == True:
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = 1.055 * self.sig_c_interpolated / self.rho_c
+            sig_tex_interpolated = k_rho * self.sig_c_interpolated / self.rho_c
         else:
             # use ironed date (still contains initial offset)
             eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = 1.055 * self.sig_c_ironed / self.rho_c
+            sig_tex_interpolated = k_rho * self.sig_c_ironed / self.rho_c
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
 
-    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., plot_analytical_stiffness=True, interpolated=True):
+    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness=True, interpolated=True):
         '''plot the composite stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
         if plot_analytical_stiffness == True:
@@ -869,10 +869,10 @@ class ExpTTDB(ExType):
             print 'E_tex (simdb)', self.ccs.E_tex
             print 'E_m (simdb)', self.E_m
             print 'age (simdb)', self.age
-            rho_new = self.ccs.rho_c / 1.055
+            rho_new = self.ccs.rho_c / k_rho
             K_I = (1 - rho_new) * self.E_m + rho_new * self.ccs.E_tex
             print 'K_I (new)', K_I
-            print 'rho_c (new)', self.ccs.rho_c / 1.055
+            print 'rho_c (new)', self.ccs.rho_c / k_rho
     #        K_I = self.E_c28
             eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_c_max], dtype='float_')
@@ -895,9 +895,9 @@ class ExpTTDB(ExType):
 
             xdata = eps_asc_scaled
             ydata = self.sig_c_interpolated
-            TT_arr = np.hstack([xdata[:, None], ydata[:, None]])
-            print 'TT_arr ', TT_arr.shape, ' save to file "TT_arr.csv"'
-            np.savetxt('TT_arr.csv', TT_arr, delimiter=';')
+#            TT_arr = np.hstack([xdata[:, None], ydata[:, None]])
+#            print 'TT_arr ', TT_arr.shape, ' save to file "TT_arr.csv"'
+#            np.savetxt('TT_arr.csv', TT_arr, delimiter=';')
 
 #            idx_sig_c_mean = np.where(self.sig_c_interpolated >= 16.607)[0][0]
 #            print 'sig_c_mean = ', self.sig_c_interpolated[idx_sig_c_mean]

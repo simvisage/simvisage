@@ -140,12 +140,12 @@ class PhiFnGeneral(PhiFnBase):
         # get the values smaller then the current e_max
         _xdata_ = _xdata[ where(_xdata < e_max)[0] ]
         _ydata_ = _ydata[ :len(_xdata_) ]
-#        print '_xdata_' , _xdata_ 
+#        print '_xdata_' , _xdata_
 
         # add the value pair for e_max
         _xdata_emax = hstack([_xdata_, e_max])
         _ydata_emax = hstack([_ydata_, self.mfn.get_value(e_max)])
-#        print '_xdata_emax' , _xdata_emax 
+#        print '_xdata_emax' , _xdata_emax
 
         # assume an uncoupled relation (e.g. direct link) between the microplane
         # strains (e) and microplane stresses (s), e.g. s = phi * E * phi * e;
@@ -153,19 +153,19 @@ class PhiFnGeneral(PhiFnBase):
         # which is multiplied in 'PhiFnPolar';
         # _ydata_integ = phi * phi * e
         #
-        # @todo: this is only approximately true!; the correct evaluation 
+        # @todo: this is only approximately true!; the correct evaluation
         # takes the version consistend (stiffness/compliance) pairs for
-        # the microplane strains and stresses (work conjugates) 
+        # the microplane strains and stresses (work conjugates)
         _ydata_integ = _ydata_emax * _ydata_emax * _xdata_emax
 
         # integral under the stress-strain curve
         E_t = trapz(_ydata_integ, _xdata_emax)
-        # area of the stored elastic energy  
+        # area of the stored elastic energy
         U_t = 0.0
         if len(_xdata_emax) != 0:
             U_t = 0.5 * _ydata_integ[-1] * _xdata_emax[-1]
 #        print 'E_t', E_t
-#        print 'U_t', U_t        
+#        print 'U_t', U_t
 #        print 'E_t - U_t', E_t - U_t
         return E_t - U_t
 
@@ -249,6 +249,7 @@ class PhiFnGeneralExtendedExp(PhiFnGeneral):
             return super(PhiFnGeneralExtendedExp, self).get_value(e_max)
         else:
             print '**** Entered softening branch ****'
+            raise ValueError, "Entered softening branch"
             # exponential softening with residual integrity after rupture strain in the tensile test has been reached
             Dfp = self.Dfp
             Epp = eps_last
@@ -317,7 +318,7 @@ class PhiFnStrainSoftening(PhiFnBase):
         self.Epp = Epp
         self.Efp = Efp
         # @todo - plotting must be done separately
-        # self.refresh_plot()        
+        # self.refresh_plot()
 
     def _polar_discr_changed(self):
         self.polar_discr.regularization = True
@@ -362,7 +363,7 @@ class PhiFnStrainSoftening(PhiFnBase):
             return 1.0
 #        #@todo: check if this is necessary:
 #        # if values smaller then 1.e-310 are returned
-#        # a zero division error occures otherwise!  
+#        # a zero division error occures otherwise!
 #        elif (e_max-Epp)/Efp >= 50:
 #            return 1e-200
         else:
@@ -553,7 +554,7 @@ class PhiFnStrainHardening(PhiFnBase):
         Efp = self.Efp * c_list[1]
         Dfp = self.Dfp * c_list[2]
         Elimit = self.Elimit * c_list[3]
-        # @todo: modify this for the case tension stiffening 
+        # @todo: modify this for the case tension stiffening
         if e_max <= Epp:
             return 0
         else:
@@ -585,7 +586,7 @@ class PhiFnStrainHardening(PhiFnBase):
             return 1.0e-100
 #        #@todo: check if this is neccessary:
 #        # if values smaller then 1.e-310 are returned
-#        # a zero division error occures otherwise for Dfp=0!  
+#        # a zero division error occures otherwise for Dfp=0!
 #        elif (e_max-Epp)/Efp >= 50:
 #            return Dfp
         else:

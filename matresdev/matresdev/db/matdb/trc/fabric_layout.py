@@ -86,8 +86,8 @@ FabricLayOut.db = SimDBClassExt(
                'MAG-07-03' : FabricLayOut(
                                            a_tex_0=107.89,
                                            a_tex_90=106.61,
-                                           E_tex_0=70000.,
-                                           E_tex_90=70000.,
+                                           E_tex_0=72000.,
+                                           E_tex_90=72000.,
                                            s_tex_0=8.3,
                                            s_tex_90=8.4,
                                            ),
@@ -97,8 +97,8 @@ FabricLayOut.db = SimDBClassExt(
                '2D-15-10' : FabricLayOut(
                                            a_tex_0=107.89,
                                            a_tex_90=106.61,
-                                           E_tex_0=70000.,
-                                           E_tex_90=70000.,
+                                           E_tex_0=72000.,
+                                           E_tex_90=72000.,
                                            s_tex_0=8.3,
                                            s_tex_90=8.4,
                                            ),
@@ -109,8 +109,8 @@ FabricLayOut.db = SimDBClassExt(
                '2D-02-06a' : FabricLayOut(
                                            a_tex_0=71.65,
                                            a_tex_90=53.31,
-                                           E_tex_0=70000.,
-                                           E_tex_90=70000.,
+                                           E_tex_0=72000.,
+                                           E_tex_90=72000.,
                                            s_tex_0=12.5,
                                            s_tex_90=8.4,
                                            ),
@@ -122,8 +122,8 @@ FabricLayOut.db = SimDBClassExt(
                '2D-14-10' : FabricLayOut(
                                            a_tex_0=73.89,
                                            a_tex_90=58.,  # 53.9 * 8.4mm / 7.7mm
-                                           E_tex_0=180000.,  # stiffness value taken from yarn tests #165000.,
-                                           E_tex_90=180000.,
+                                           E_tex_0=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;
+                                           E_tex_90=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;
                                            s_tex_0=12.5,
                                            s_tex_90=5.83,  # input for manufacturing machine was 8.4 mm!
                                            ),
@@ -135,10 +135,10 @@ FabricLayOut.db = SimDBClassExt(
                '2D-04-11' : FabricLayOut(
                                            a_tex_0=53.9,
                                            a_tex_90=58.,  # 53.9 * 8.4mm / 7.7mm
-                                           E_tex_0=180000.,  # stiffness value taken from yarn tests #165000.,
-                                           E_tex_90=180000.,
+                                           E_tex_0=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;# yarn tests with l=125mm: E=165GPa
+                                           E_tex_90=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;
                                            s_tex_0=8.3,
-                                           s_tex_90=7.6,  # input for manufacturing machine was 8.4 mm!
+                                           s_tex_90=7.7,  # input for manufacturing machine was 8.4 mm!
                                            ),
 
                # carbon textile / tricot binding ("Trikot") with defect
@@ -149,10 +149,10 @@ FabricLayOut.db = SimDBClassExt(
                '2D-04-11_defect' : FabricLayOut(
                                            a_tex_0=53.9,
                                            a_tex_90=58.,  # 53.9 * 8.4mm / 7.7mm
-                                           E_tex_0=180000.,  # stiffness value taken from yarn tests #165000.,
-                                           E_tex_90=180000.,
+                                           E_tex_0=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;# yarn tests with l=125mm: E=165GPa
+                                           E_tex_90=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;
                                            s_tex_0=8.3,
-                                           s_tex_90=7.6,  # input for manufacturing machine was 8.4 mm!
+                                           s_tex_90=7.7,  # input for manufacturing machine was 8.4 mm!
                                            ),
 
                # demonstrator textile (carbon)
@@ -165,10 +165,10 @@ FabricLayOut.db = SimDBClassExt(
 #                                           a_tex_0 = 55.4,
                                            a_tex_90=58.,  # 53.9 * 8.4mm / 7.7mm
 #                                           a_tex_90=60.,  # 55.0 * 8.4mm / 7.7mm
-                                           E_tex_0=180000.,  # stiffness value taken from yarn tests #165000.,
-                                           E_tex_90=180000.,
+                                           E_tex_0=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;# yarn tests with l=125mm: E=165GPa
+                                           E_tex_90=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm;
                                            s_tex_0=8.3,
-                                           s_tex_90=7.6,  # input for manufacturing machine was 8.4 mm!
+                                           s_tex_90=7.7,  # input for manufacturing machine was 8.4 mm!
                                            ),
 
                # AR-glass tissue binding (barrel shell)
@@ -181,10 +181,10 @@ FabricLayOut.db = SimDBClassExt(
 #                                           a_tex_0=55.4,
                                            a_tex_90=58.2,  # 0.448mm2 / 7.7mm
 #                                           a_tex_90=60.,  # 55.0 * 8.4mm / 7.7mm
-                                           E_tex_0=70000.,
-                                           E_tex_90=70000.,
+                                           E_tex_0=72000.,
+                                           E_tex_90=72000.,
                                            s_tex_0=8.3,
-                                           s_tex_90=7.6,  # input for manufacturing machine was 8.4 mm!
+                                           s_tex_90=7.7,  # input for manufacturing machine was 8.4 mm!
                                            ),
 
 
@@ -193,18 +193,19 @@ FabricLayOut.db = SimDBClassExt(
                #
                '2D-18-10' : FabricLayOut(
                                            a_tex_0=76.96,
-                                           a_tex_90=110,
-                                           E_tex_0=107500.,
-                                           E_tex_90=107500.,
-                                           s_tex_0=25.0,
-                                           s_tex_90=16.8,
+                                           a_tex_90=123,
+                                           E_tex_0=180862.,  # stiffness value taken from yarn tests 1600tex, l=300mmm; # yarn tests with l=125mm: E=107500 MPa
+                                           E_tex_90=180862.,
+                                           s_tex_0=24.0,
+                                           s_tex_90=15.0,
                                            ),
 
                # carbon with epoxid rasin:
+               # 3300 tex
                #
                'C-Grid-C50' : FabricLayOut(
-                                           a_tex_0=37.53,
-                                           a_tex_90=42.03,
+                                           a_tex_0=40.0,
+                                           a_tex_90=44.9,
                                            E_tex_0=234500.,
                                            E_tex_90=234500.,
                                            s_tex_0=46.0,
@@ -233,8 +234,8 @@ FabricLayOut.db = SimDBClassExt(
                                            a_tex_90=102.,
                                            E_tex_0=180000.,  # stiffness value taken from yarn tests #165000.,
                                            E_tex_90=180000.,
-                                           s_tex_0=10.,
-                                           s_tex_90=14.,
+                                           s_tex_0=10.8,
+                                           s_tex_90=18.,
                                            ),
 
                # SBR coated carbon textile
