@@ -21,7 +21,7 @@ if __name__ == '__main__':
     test_file = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
                              '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
-                             'BTT-4c-2cm-TU-0-V02_MxN2.DAT')
+                             'BTT-4c-2cm-TU-0-V01_MxN2.DAT')
 
     e1 = ExpBTTDB(data_file=test_file)
     e1.process_source_data()

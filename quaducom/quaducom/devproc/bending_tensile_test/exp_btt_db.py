@@ -380,7 +380,7 @@ class ExpBTTDB(ExType):
         F = self.F_cut_asc
 
         # get the indices for the force smaller than force threshold
-        idx_F_lim = where(F <= self.F_lim_threshold)[0]
+        idx_F_lim = np.where(F <= self.F_lim_threshold)[0]
 
         if len(idx_F_lim) > 0:
             idx = idx_F_lim[-1]
