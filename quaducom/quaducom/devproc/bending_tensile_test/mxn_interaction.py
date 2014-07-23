@@ -12,48 +12,68 @@ if __name__ == '__main__':
     from aramis_cdt import AramisInfo, AramisData, AramisBSA
     simdb = SimDB()
     import os
+    import numpy as np
 
     import pylab as p
 
-    test_files = ['BTT-4c-2cm-TU-0-V14_MxN2',
-                  'BTT-4c-2cm-TU-0-V13_MxN2']
+    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
 
-    test_file = os.path.join(simdb.exdata_dir,
+    test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
-                             '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
-                             'BTT-4c-2cm-TU-0-V01_MxN2.DAT')
+                             '2014-06-12_BTT-4c-2cm-0-TU_MxN2')
 
-    e1 = ExpBTTDB(data_file=test_file)
-    e1.process_source_data()
-    print 'F_max1', e1.F_max1
+    e_list = [ExpBTTDB(data_file=os.path.join(test_file_path, test_file),
+                    delta_t_aramis=5)
+           for test_file in test_files]
+    for e in e_list:
+        e.process_source_data()
+        print 'w_idx_cut', e.t[e.w_cut_idx]
+        print 'F_max1', e.F_max1
 
-    print '4' * 20
-    p.plot(e1.t_aramis, e1.w_t_aramis, color='blue')
-    p.plot(e1.t, e1.w, color='red')
-    p.show()
+    p.subplot(221)
+    for e in e_list:
+        p.plot(e.t_aramis, e.F_t_aramis, color='blue', label='F')
+        p.plot(e.t_aramis, e.N_t_aramis, color='red', label='N')
+    p.legend()
 
-    aramis_file_path = e1.get_cached_aramis_file('Xf15s3-Yf15s3')
+    p.subplot(222)
 
-    # @todo:
-    # 1) define the mapping between astage_idx(t).
-    # 2) define a method evaluating strain profile within the object.
+    for e in e_list:
+        p.plot(e.t_aramis, e.eps_t_aramis[0], color='blue', label='eps_tension')
+        p.plot(e.t_aramis, e.eps_t_aramis[1], color='green', label='eps_compression')
+        p.twinx()
+        p.plot(e.t_aramis, e.w_t_aramis, color='black', label='w')
+        p.legend()
 
-    AI = AramisInfo(data_dir=aramis_file_path)
-    AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
+    p.subplot(223)
 
-    print AI.number_of_steps
+    for e in e_list:
+        p.plot(e.t_cut_asc, e.M, color='blue', label='eps_tension')
+        p.twinx()
+        p.plot(e.t_cut_asc, e.N_cut_asc, color='black', label='w')
+        p.legend()
 
-    AC = AramisBSA(aramis_info=AI,
-                   aramis_data=AD,
-                   integ_radius=10)
 
-    print AC.d_ux_arr2.shape
-    mid_idx = AC.d_ux_arr2.shape[1] / 2
-    # eps = np.mean(AC.d_ux_arr2[:, mid_idx - 0:mid_idx + 1], axis=1)
-    eps = AC.d_ux_arr2[:, mid_idx]
-    y = AD.y_arr_undeformed[:, mid_idx]
-    p.plot(eps, y)
-#     p.plot([-0.004, 0.014], [0, 0], color='black')
-#     p.plot([0, 0], [-10, 10], color='black')
-    p.show()
-    # AC.configure_traits()
+    p.subplot(224)
+
+    for e in e_list:
+
+        aramis_file_path = e.get_cached_aramis_file('Xf15s3-Yf15s3')
+
+        # @todo:
+        # 1) define the mapping between astage_idx(t).
+        # 2) define a method evaluating strain profile within the object.
+
+        AI = AramisInfo(data_dir=aramis_file_path)
+        AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
+
+        ac = AramisBSA(aramis_info=AI,
+                       aramis_data=AD,
+                       integ_radius=10)
+
+        mid_idx = ac.d_ux_arr2.shape[1] / 2
+        eps_range = 10
+        eps = np.mean(ac.d_ux_arr2[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
+        y = AD.y_arr_undeformed[:, mid_idx]
+        p.plot(eps, y)
+        p.show()

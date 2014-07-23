@@ -615,7 +615,9 @@ class ExpBTTDB(ExType):
         start_t = self.start_t_aramis
         delta_t = self.delta_t_aramis
         n_steps = self.n_steps_aramis
-        return np.linspace(start_t, start_t + n_steps * delta_t, n_steps)
+        t_max = self.t[self.w_cut_idx]
+        t_aramis_full_range = np.linspace(start_t, start_t + n_steps * delta_t, n_steps)
+        return t_aramis_full_range[t_aramis_full_range < t_max]
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
@@ -626,6 +628,34 @@ class ExpBTTDB(ExType):
     w_t_aramis = Property
     def _get_w_t_aramis(self):
         return np.interp(self.t_aramis, self.t, self.w)
+
+    F_t_aramis = Property
+    def _get_F_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.F)
+
+    N_t_aramis = Property
+    def _get_N_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.N)
+
+    eps_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    @cached_property
+    def _get_eps_t_aramis(self):
+        ad = AramisData(aramis_info=self.aramis_info)
+        absa = AramisBSA(aramis_info=self.aramis_info,
+                         aramis_data=ad,
+                         integ_radius=10)
+
+        eps_t_list = []
+        eps_c_list = []
+        for step, t in enumerate(self.t_aramis):
+            ad.evaluated_step_idx = step
+            mid_idx = absa.d_ux_arr2.shape[1] / 2
+            eps_range = 10
+            eps = np.mean(absa.d_ux_arr2[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
+            eps_t_list.append(np.max(eps))
+            eps_c_list.append(np.min(eps))
+
+        return np.array(eps_t_list, dtype='f'), np.array(eps_c_list, dtype='f')
 
     #---------------------------------
     # view
