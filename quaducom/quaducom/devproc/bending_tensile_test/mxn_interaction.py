@@ -28,7 +28,9 @@ if __name__ == '__main__':
     print 'F_max1', e1.F_max1
 
     print '4' * 20
-    print e1.t_aramis
+    p.plot(e1.t_aramis, e1.w_t_aramis, color='blue')
+    p.plot(e1.t, e1.w, color='red')
+    p.show()
 
     aramis_file_path = e1.get_cached_aramis_file('Xf15s3-Yf15s3')
 

@@ -427,28 +427,35 @@ class ExpBTTDB(ExType):
     '''Specification of the resolution of the measured aramis field
     '''
 
-    start_t = Float(5.0)
+    start_t_aramis = Float(5.0)
     '''Start time of aramis measurement.
     '''
 
-    delta_t = Float(1.0)
+    delta_t_aramis = Float(1.0)
     '''Delta between aramis snapshots.
     '''
 
-    n_steps = Property(Int)
-    def _get_n_steps(self):
+    n_steps_aramis = Property(Int)
+    def _get_n_steps_aramis(self):
         return self.aramis_info.number_of_steps
 
     t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis(self):
-        return np.linspace(self.start_t, self.start_t + self.n_steps * self.delta_t, self.n_steps)
+        start_t = self.start_t_aramis
+        delta_t = self.delta_t_aramis
+        n_steps = self.n_steps_aramis
+        return np.linspace(start_t, start_t + n_steps * delta_t, n_steps)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_aramis_info(self):
         af = self.get_cached_aramis_file(self.aramis_resolution_key)
         return AramisInfo(data_dir=af)
+
+    w_t_aramis = Property
+    def _get_w_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.w)
 
     #---------------------------------
     # view
