@@ -393,14 +393,14 @@ class ExpBT4PT(ExType):
         # NOTE: processed data returns positive values for force and displacement
         return argmax(self.Kraft)
 
-    def _plot_force_deflection_center(self, axes, offset_w=0.):
+    def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1.):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot(w_asc, f_asc, color='black')
+        axes.plot(w_asc, f_asc, color='black', linewidth=linewidth)
 
         # add axes labels
         #
@@ -409,9 +409,11 @@ class ExpBT4PT(ExType):
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
         # draw linear stiffness for 2 mm range
-        w_linear = np.array([0., 2.])
-        F_linear = self.K_bending_elast_c * w_linear
-        axes.plot(w_linear, F_linear, linestyle='--')
+        f_max = f_asc[-1]
+        K_c = self.K_bending_elast_c
+        w_linear = np.array([0., f_max / K_c])
+        F_linear = np.array([0., f_max])
+        axes.plot(w_linear, F_linear, linestyle='--', color='black', linewidth=linewidth)
 
 
     n_fit_window_fraction = Float(0.1)

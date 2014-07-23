@@ -28,10 +28,7 @@ from etsproxy.traits.api import \
     on_trait_change, Instance, \
     Array, Property, cached_property, \
     Bool, Event, implements, \
-    DelegatesTo, Date
-
-from numpy import \
-    array, where, argmax
+    DelegatesTo, Str
 
 import numpy as np
 
@@ -41,8 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from mathkit.array.smoothing import smooth
-from mathkit.mfn import MFnLineArray
+from aramis_cdt import AramisInfo, AramisData, AramisBSA
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -212,12 +208,12 @@ class ExpBTTDB(ExType):
     max_F_idx = Property(Int, depends_on='input_change')
     @cached_property
     def _get_max_F_idx(self):
-        return argmax(self.F)
+        return np.argmax(self.F)
 
     max_N_idx = Property(Int, depends_on='input_change')
     @cached_property
     def _get_max_N_idx(self):
-        return argmax(self.N)
+        return np.argmax(self.N)
 
     F_max1 = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='kN')
@@ -593,13 +589,44 @@ class ExpBTTDB(ExType):
         axes.set_ylim(0, 7)
         axes.set_xlim(-2, 10)
 
+    #===========================================================================
+    # ARAMIS PROCESSING
+    #===========================================================================
+
+    aramis_resolution_key = Str('Xf15s3-Yf15s3')
+    '''Specification of the resolution of the measured aramis field
+    '''
+
+    start_t = Float(5.0)
+    '''Start time of aramis measurement.
+    '''
+
+    delta_t = Float(1.0)
+    '''Delta between aramis snapshots.
+    '''
+
+    n_steps = Property(Int)
+    def _get_n_steps(self):
+        return self.aramis_info.number_of_steps
+
+    t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
+    @cached_property
+    def _get_t_aramis(self):
+        return np.linspace(self.start_t, self.start_t + self.n_steps * self.delta_t, self.n_steps)
+
+    aramis_info = Property(depends_on='data_file,aramis_resolution_key')
+    @cached_property
+    def _get_aramis_info(self):
+        af = self.get_cached_aramis_file(self.aramis_resolution_key)
+        return AramisInfo(data_dir=af)
+
     #---------------------------------
     # view
     #---------------------------------
 
     traits_view = View(VSplit(
                          HSplit(Group(
-                                  Item('width'       , format_str="%.3f"),
+                                  Item('width', format_str="%.3f"),
                                   Item('length', format_str="%.3f"),
                                   springy=True,
                                   label='geometry',

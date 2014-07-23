@@ -131,6 +131,19 @@ if __name__ == '__main__':
     print ymb_pd.interp_pdf(-1)
     print ymb_pd.interp_pdf(0.1)
 
+    import pylab as p
+    x = np.linspace(0, ymb_pd.x_array[-1], 10000)
+    y = ymb_pd.interp_pdf(x)
+    p.plot(x, y)
+    x = ymb_pd.x_array
+    dx = x[1] - x[0]
+    x -= dx / 2.0
+
+    y = ymb_pd.interp_pdf(x)
+    print 'integ', np.trapz(y, x)
+    p.plot(x, y)
+    p.show()
+
     ymb_pd.configure_traits()
 
 

@@ -40,10 +40,6 @@ Repository of raw data
     def _get_simdb_dir(self):
         return join(self.home_dir, 'simdb')
 
-    simdb_cache_dir = Property
-    def _get_simdb_cache_dir(self):
-        return join(self.home_dir, '.simdb_cache')
-
     exdata_dir = Property
     def _get_exdata_dir(self):
         return join(self.simdb_dir, 'exdata')
@@ -60,7 +56,20 @@ Repository of raw data
     -remote data
     '''
     server_username = Str('simdb')
+    '''User name to access data on the remote data server.
+    '''
 
     server_host = Str('mordred.imb.rwth-aachen.de')
+    '''Host name of the data repository.
+    '''
 
     simdb_cache_remote_dir = Str('/home/simdb/simdb/')
+    '''Root directory on the remote server.
+    '''
+
+    simdb_cache_dir = Property
+    '''Cache directory for downloaded data.
+    '''
+    def _get_simdb_cache_dir(self):
+        return join(self.home_dir, '.simdb_cache')
+

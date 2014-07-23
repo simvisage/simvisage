@@ -101,7 +101,7 @@ class MATSCalibDamageFn(MATSExplore):
     max_eps = Property(Float)
     def _get_max_eps(self):
         return 0.007  # set explicit value when calibration is aborted (mean value of strain)
-#        return self.mfn_line_array_target.xdata[-1]
+        return self.mfn_line_array_target.xdata[-1]
 
     n_steps = Int(1)
 
@@ -519,7 +519,7 @@ class MATSCalibDamageFn(MATSExplore):
 
         #-------------------------------------------------------------------
 
-        p.figure(facecolor='white')  # white background
+        p.figure(facecolor='white', dpi=600, figsize=(8, 6))  # white background
 
         # time list corresponding to the specified numbers of steps and step size
         #
@@ -532,8 +532,8 @@ class MATSCalibDamageFn(MATSExplore):
         phi_trial_list_n = [[1.]] + self.phi_trial_list_n
         sig_trial_list_n = [[0.]] + self.sig_trial_list_n
 
-        xrange = 10.  # plotting range for strain [mm/m]
-        yrange = 25.  # plotting range for stress [MPa]
+        xrange = 8.  # plotting range for strain [mm/m]
+        yrange = 20.  # plotting range for stress [MPa]
 
         for n in range(self.n_steps):
             for i in range(len(phi_trial_list_n[n + 1])):
@@ -624,9 +624,11 @@ class MATSCalibDamageFn(MATSExplore):
             os.makedirs(simdata_dir)
 
         ctt_key = str(self.composite_tensile_test.key)
-        filename = os.path.join(simdata_dir, ctt_key + self.param_key + '.png')
-
+        filename = os.path.join(simdata_dir, ctt_key + self.param_key + '.pdf')
         p.savefig(filename)
+        print 'plot_trail_steps.png saved to file %s' % (filename)
+        filename = os.path.join(simdata_dir, ctt_key + self.param_key + '.png')
+        p.savefig(filename, dpi=600)
         print 'plot_trail_steps.png saved to file %s' % (filename)
 
         p.show()
@@ -857,6 +859,25 @@ def run():
 #                               '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
 #                               'TTb-6c-2cm-0-TU-V2_bs4.DAT')
 
+                                #-----------------------------------
+                                # tests for 'TT-6g-2cm-0-TU' (ARG-1200-TU)
+                                #-----------------------------------
+                                #
+        # test series no.1
+        #
+#        test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'dog_bone',
+#                               '2012-12-10_TT-6g-2cm-0-TU_bs',
+#                               'TT-6g-2cm-0-V2.DAT')
+        # test series no.3
+        #
+#        test_file = join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2013-07-09_TTb-6g-2cm-0-TU_bs4-Aramis3d',
+#                               'TTb-6g-2cm-0-TU-V1_bs4.DAT')
+
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
         #------------------------------------------------------------------
@@ -900,10 +921,10 @@ def run():
         # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
         #
 #        E_c = 29940.2
-#        E_c = 29100.
+        E_c = 29100.
 #        E_c = 22390.4
 #        E_c = 18709.5
-        E_c = 28700.
+#        E_c = 28700.
 
         # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
 #        E_m = 18709.5
@@ -914,7 +935,7 @@ def run():
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
 
-        n_steps = 100
+        n_steps = 50
         fitter.n_steps = n_steps
 
         fitter.format_ticks = True
@@ -942,8 +963,8 @@ def run():
         #------------------------------------------------------------------
         #
 #        param_key = '_age%g_Em%g_nu%g_nsteps%g' % (age, E_m, nu, n_steps)
-        param_key = '_age%g_Ec%g_nu%g_nsteps%g_maxeps%g_smoothed' % (age, E_c, nu, n_steps, max_eps)
-#        param_key = '_age%g_Ec%g_nu%g_nsteps%g_smoothed' % (age, E_c, nu, n_steps)
+#        param_key = '_age%g_Ec%g_nu%g_nsteps%g__smoothed' % (age, E_c, nu, n_steps, max_eps)
+        param_key = '_age%g_Ec%g_nu%g_nsteps%g_smoothed' % (age, E_c, nu, n_steps)
 
         fitter.param_key = param_key
         print 'param_key = %s used in calibration name' % param_key
