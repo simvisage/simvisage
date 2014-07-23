@@ -456,8 +456,8 @@ def load_factor_plot(ax1, max_w):
 
 if __name__ == '__main__':
 
-    # do = 'load_factor'
-    do = 'ui'
+    do = 'load_factor'
+#    do = 'ui'
 
     sim_model = MRquarterDB(ccs_unit_cell_key='FIL-10-09_2D-05-11_0.00462_all0',
                             calibration_test='TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',

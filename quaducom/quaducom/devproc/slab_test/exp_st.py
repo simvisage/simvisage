@@ -375,8 +375,25 @@ class ExpST(ExType):
 #        fw_arr = np.hstack([f_asc_cut[:, None], w_m_cut[:, None]])
 #        print 'fw_arr.shape', fw_arr.shape
 #        np.savetxt('ST-6c-2cm-TU_bs2_f-w_asc.csv', fw_arr, delimiter=';')
-        axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+        axes.plot(w_m_cut, f_asc_cut, color='k', linewidth=1.5)
 
+        # composite E-modulus
+        #
+        E_c = self.E_c
+        print 'E_c', E_c
+
+        if self.thickness == 0.02 and self.edge_length == 0.80:
+            K_linear = E_c / 24900. * 1.056  # [MN/m]=[kN/mm] bending stiffness with respect to center force
+            max_f = f_asc_cut[-1]
+            w_linear = np.array([0., max_f / K_linear])
+            f_linear = np.array([0., max_f])
+            axes.plot(w_linear, f_linear, linestyle='--', color='k')
+        if self.thickness == 0.06 and self.edge_length == 1.25:
+            K_linear = E_c / 24900. * 10.14  # [MN/m]=[kN/mm] bending stiffness with respect to center force
+            max_f = f_asc_cut[-1]
+            w_linear = np.array([0., max_f / K_linear])
+            f_linear = np.array([0., max_f])
+            axes.plot(w_linear, f_linear, linestyle='--', color='k')
 
     def _plot_force_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the edge (e) deflections
@@ -483,7 +500,7 @@ class ExpST(ExType):
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
-    def _plot_force_deflection_avg_interpolated(self, axes):
+    def _plot_force_deflection_avg_interpolated(self, axes, linewidth=1):
         '''plot the average F-w-diagrams for the center(c), center-edge (ce) and edge(vh) and edge (lr) deflections
         NOTE: center deflection curve is cut at its starting point in order to remove offset in the dispacement meassurement
         '''
@@ -503,41 +520,47 @@ class ExpST(ExType):
 
         f_asc_cut = f_asc[ idx_0: ]
         w_m_cut = w_m[ idx_0: ] - w_m[ idx_0 ]
-        axes.plot(w_m_cut, f_asc_cut, color='blue', linewidth=1.5)
+        axes.plot(w_m_cut, f_asc_cut, color='k', linewidth=linewidth)
 
         # plot machine displacement (hydraulic cylinder)
         #
-        Weg_asc = -self.Weg[ :max_force_idx + 1 ]
-        axes.plot(Weg_asc, f_asc, color='k', linewidth=1.5)
+#        Weg_asc = -self.Weg[ :max_force_idx + 1 ]
+#        axes.plot(Weg_asc, f_asc, color='k', linewidth=1.5)
 
         # ## center-edge deflection (ce)
         w_ml_asc = -self.WA_ML[:max_force_idx + 1]
         w_mr_asc = -self.WA_MR[:max_force_idx + 1]
         # get the average displacement values of the corresponding displacement gauges
         w_mlmr_asc = (w_ml_asc + w_mr_asc) / 2
-        axes.plot(w_mlmr_asc, f_asc, color='red', linewidth=1)
+#        axes.plot(w_mlmr_asc, f_asc, color='red', linewidth=1)
+        axes.plot(w_ml_asc, f_asc, color='k', linewidth=linewidth)
+        axes.plot(w_mr_asc, f_asc, color='k', linewidth=linewidth)
 
         # ## edge deflections (e)
         w_v_asc = -self.WA_V[:max_force_idx + 1]
         w_h_asc = -self.WA_H[:max_force_idx + 1]
         w_l_asc = -self.WA_L[:max_force_idx + 1]
         w_r_asc = -self.WA_R[:max_force_idx + 1]
+        axes.plot(w_v_asc, f_asc, color='k', linewidth=linewidth)
+        axes.plot(w_h_asc, f_asc, color='k', linewidth=linewidth)
+        axes.plot(w_l_asc, f_asc, color='k', linewidth=linewidth)
+        axes.plot(w_r_asc, f_asc, color='k', linewidth=linewidth)
+
         # get the average displacement values of the corresponding displacement gauges
-        w_vh_asc = (w_v_asc + w_h_asc) / 2
-        w_lr_asc = (w_l_asc + w_r_asc) / 2
-        axes.plot(w_vh_asc, f_asc, color='green', linewidth=1, label='w_vh')
-        axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
+#        w_vh_asc = (w_v_asc + w_h_asc) / 2
+#        w_lr_asc = (w_l_asc + w_r_asc) / 2
+#        axes.plot(w_vh_asc, f_asc, color='green', linewidth=1, label='w_vh')
+#        axes.plot(w_lr_asc, f_asc, color='blue', linewidth=1, label='w_lr')
 
         # save 'F-w-arr_m-mlmr-vh-lr' in directory "/simdb/simdata/exp_st"
-        simdata_dir = os.path.join(simdb.simdata_dir, 'exp_st')
-        if os.path.isdir(simdata_dir) == False:
-            os.makedirs(simdata_dir)
-        filename = os.path.join(simdata_dir, 'F-w-arr_m-mlmr-vh-lr_' + self.key + '.csv')
-
-        Fw_m_mlmr_vh_lr_arr = np.hstack([f_asc[:, None], w_m[:, None] - w_m[ idx_0 ], w_mlmr_asc[:, None], w_vh_asc[:, None], w_lr_asc[:, None]])
-        print 'Fw_m_mlmr_vh_lr_arr'
-        np.savetxt(filename, Fw_m_mlmr_vh_lr_arr, delimiter=';')
-        print 'F-w-curves for center, middle, edges saved to file %s' % (filename)
+#        simdata_dir = os.path.join(simdb.simdata_dir, 'exp_st')
+#        if os.path.isdir(simdata_dir) == False:
+#            os.makedirs(simdata_dir)
+#        filename = os.path.join(simdata_dir, 'F-w-arr_m-mlmr-vh-lr_' + self.key + '.csv')
+#        Fw_m_mlmr_vh_lr_arr = np.hstack([f_asc[:, None], w_m[:, None] - w_m[ idx_0 ], w_mlmr_asc[:, None], w_vh_asc[:, None], w_lr_asc[:, None]])
+#        print 'Fw_m_mlmr_vh_lr_arr'
+#        np.savetxt(filename, Fw_m_mlmr_vh_lr_arr, delimiter=';')
+#        print 'F-w-curves for center, middle, edges saved to file %s' % (filename)
 
     #--------------------------------------------------------------------------------
     # view

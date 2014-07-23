@@ -45,17 +45,17 @@ if __name__ == '__main__':
 
                                # measured strain at bending test rupture (0-dir)
                                #
-#                               eps_c_fail=3.0 / 1000.,
-                               eps_c_fail=3.3 / 1000.,
+#                               eps_c_fail=3.3 / 1000.,
+                               eps_c_fail=3.0 / 1000.,
 
                                # measured value in bending test [kNm]
                                # value per m: M = 5*3.49
                                #
-                               M_fail=3.49,
-#                               M_fail=3.5,
+#                               M_fail=3.49,
+                               M_fail=0.12,
 
-                               sig_tex_fail=1569.,
                                A_roving=0.446,
+                               sig_tex_fail=1569.,
 
                                # values for experiment beam with width = 0.20 m
                                #
@@ -71,13 +71,14 @@ if __name__ == '__main__':
 #                               calib_config = 'quadratic_monoton',
 #                               calib_config = 'quadratic_TT',
 #                               calib_config = 'plastic',
+#                               calib_config='bilinear',
 #                               calib_config='cubic',
                                calib_config='fbm',
 
                                # define shape of the concrete stress-strain-law ('block', 'bilinear' or 'quadratic')
                                #
-#                               sig_c_config='quadratic'
-                               sig_c_config='bilinear'
+                               sig_c_config='quadratic'
+#                               sig_c_config = 'bilinear'
 #                               sig_c_config = 'block'
                               )
 
@@ -196,12 +197,17 @@ if __name__ == '__main__':
        #  possible options: 'linear','cubic','fbm','bilinear'
 
 
-        for  calib_config in [ 'fbm']:
+        for  calib_config in [ 'fbm']:  # , 'cubic', 'bilinear']:
 
             sig_fl_calib.calib_config = calib_config
             sig_fl_calib.calib_sig_t_mfn()
             u_sol = sig_fl_calib.u_sol
+            print "u_sol", u_sol
             max_sig = sig_fl_calib.get_sig_max(u_sol)
+
+#            x, eps_t_i_arr, eps_c_i_arr, sig_t_mfn, eps_t, eps_c = sig_fl_calib.eval_layer_response_f(u_sol)
+            eps_t1 = sig_fl_calib.eps_t1
+
 # #
 ####################################################################################
 #        #
@@ -275,40 +281,49 @@ if __name__ == '__main__':
 
                 eps_compression = -0.002
 
+
             ##########################################################################
 
+#            eps_compression = -sig_fl_calib.eps_c_fail
+
+#            eps_c_fail = 3.3 / 1000.
             eps_c_fail = sig_fl_calib.eps_c_fail
             eps_t_fail = sig_fl_calib.eps_t_fail
+
             print'eps_t_fail ', eps_t_fail
-            eps_t_i_fail = sig_fl_calib.eps_t_i_fail
-            print'eps_t_i_fail ', eps_t_i_fail
+#            # mainly tension
+#            eps_lo_arr_A1 = np.linspace(eps_t_fail, eps_t_fail, n_A)
+#            eps_up_arr_A1 = np.linspace(eps_t_fail, 0, n_A)
+#
+#            #  flexion2
+#            eps_lo_arr_A2 = np.linspace(eps_t_fail, eps_t_fail, n_A)
+#            eps_up_arr_A2 = np.linspace(0, -eps_c_fail, n_A)
 
             # mainly tension
-            eps_up_arr_A1 = np.linspace(eps_t_i_fail, 0, n_A)
-            eps_lo_arr_A1 = np.linspace(eps_t_i_fail, eps_t_i_fail, n_A)
+            eps_lo_arr_A1 = np.linspace(eps_t1, eps_t1, n_A)
+            eps_up_arr_A1 = np.linspace(eps_t1, 0, n_A)
 
             #  flexion2
+            eps_lo_arr_A2 = np.linspace(eps_t1, eps_t_fail, n_A)
             eps_up_arr_A2 = np.linspace(0, -eps_c_fail, n_A)
-            eps_lo_arr_A2 = np.linspace(eps_t_i_fail, eps_t_fail, n_A)
 
             #  flexion3
-            eps_up_arr_B = np.linspace(-eps_c_fail, -eps_c_fail, n_B)
             eps_lo_arr_B = np.linspace(eps_t_fail, 0., n_B)
+            eps_up_arr_B = np.linspace(-eps_c_fail, -eps_c_fail, n_B)
 
             # pure compression
-            eps_up_arr_C = np.linspace(-eps_c_fail, eps_compression, n_C)
             eps_lo_arr_C = np.linspace(0., eps_compression, n_C)
+            eps_up_arr_C = np.linspace(-eps_c_fail, eps_compression, n_C)
 
             # plot stress cases
+            eps_lo_arr_psc = np.array  ([ 0., 0., 0., eps_t_fail, 0. , eps_t_fail, 0.])
             eps_up_arr_psc = np.array  ([ 0., -eps_c_fail, 0., -eps_c_fail, 0. , 0., 0.])
-            eps_lo_arr_psc = np.array  ([ 0., 0.   , 0., eps_t_fail, 0. , eps_t_i_fail, 0.])
 
-            # all stress cases
+        #    all stress cases
             eps_lo_arr = np.hstack([ eps_lo_arr_A1, eps_lo_arr_A2, eps_lo_arr_B, eps_lo_arr_C ])
             eps_up_arr = np.hstack([ eps_up_arr_A1, eps_up_arr_A2, eps_up_arr_B, eps_up_arr_C ])
-
-#            psc = 'True'
-            psc = 'False'
+# #
+            psc = 'True'
             eps_lo_arr_psc = ([ eps_lo_arr_psc])
             eps_up_arr_psc = ([ eps_up_arr_psc])
 
@@ -322,12 +337,13 @@ if __name__ == '__main__':
         #    eps_lo_arr = np.hstack([ eps_lo_arr_C ])
         #    eps_up_arr = np.hstack([ eps_up_arr_C ])
 
-        #    flexion2
+            #    flexion2
 
         #    eps_lo_arr = np.hstack([ eps_lo_arr_A2 ])
         #    eps_up_arr = np.hstack([ eps_up_arr_A2 ])
 
-        #    flexion3
+             #    flexion3
+
         #    eps_lo_arr = np.hstack([ eps_lo_arr_B ])
         #    eps_up_arr = np.hstack([ eps_up_arr_B ])
 
@@ -348,8 +364,6 @@ if __name__ == '__main__':
             #
 #            c1 = 1000. * t * b * f_ck
 #            c2 = 1000. * t ** 2. * b * f_ck
-#            c1 = 0.2
-#            c2 = 0.2
             c1 = 1.
             c2 = 1.
             #
@@ -370,11 +384,6 @@ if __name__ == '__main__':
 
             #############################################
             # plot nu-mu-interaction
-            eps_up_arr_psc = np.array([ 0., -eps_c_fail, 0., -eps_c_fail, 0. , 0., 0.])
-            eps_lo_arr_psc = np.array([ 0., 0., 0., eps_t_fail, 0. , eps_t_fail, 0.])
-            p.plot (mu_arr_psc[0, [0, 1]], nu_arr_psc[0, [0, 1]], 'k--', color='grey', linewidth=2.0)
-            p.plot (mu_arr_psc[0, [2, 3]], nu_arr_psc[0, [2, 3]], 'k--', color='grey', linewidth=2.0)
-            p.plot (mu_arr_psc[0, [4, 5]], nu_arr_psc[0, [4, 5]], 'k--', color='grey', linewidth=2.0)
 
             if psc == 'True' and sig_fl_calib.calib_config == 'fbm':
                     p.plot (mu_arr_psc[0, :], nu_arr_psc[0, :], 'k--',
@@ -419,8 +428,7 @@ if __name__ == '__main__':
 
                 elif sig_fl_calib.calib_config == 'fbm':
                     p.plot(mu_arr, nu_arr, label='fbm',
-                            color='grey',
-#                            color='turquoise',
+                            color='turquoise',
                             linewidth=2.0)
 
             else:
@@ -442,7 +450,7 @@ if __name__ == '__main__':
                 elif sig_fl_calib.calib_config == 'fbm':
                     p.plot(mu_arr, nu_arr, label='fbm',
                             color='turquoise',
-                            linewidth=1.1)
+                            linewidth=1.0)
 #
 
 
@@ -546,17 +554,14 @@ if __name__ == '__main__':
         # ## TICKS
         # nu-mu-interaction
 #        p.axis([0, 0.15, 0.5 , -1.25])
-#        ax.set_xticks([0., 0.015, 0.03, 0.045, 0.06, 0.075, 0.09,0.105,0.12,0.135,0.15])
-#        ax.set_yticks([0.4,0.2,0.,-0.2,-0.4,-0.6,-0.8,-1,-1.2])
+#        ax.set_xticks([0., 0.015, 0.03, 0.045, 0.06, 0.075, 0.09, 0.105, 0.12, 0.135, 0.15])
+#        ax.set_yticks([0.4, 0.2, 0., -0.2, -0.4, -0.6, -0.8, -1, -1.2])
 
         # n-m-interaction
-#        p.axis([0, 30., 1000 , -4000])
-#        p.xticks([0., 5, 10, 15, 20, 25., 30.])
-#        p.yticks([1000., 500., 0, -500., -1000., -1500., -2000., -2500., -3000., -3500., -4000., ])
+        p.axis([0, 6.4, 250 , -900])
+        p.xticks([0., 0.8, 1.6, 2.4, 3.2, 4., 4.8, 5.6, 6.4])
+        p.yticks([300., 150., 0., -150., -300., -450., -600., -750.])
 
-        p.axis([0, 6., 200 , -800])
-#        p.xticks([0., 5, 10, 15, 20, 25., 30.])
-#        p.yticks([1000., 500., 0, -500., -1000., -1500., -2000., -2500., -3000., -3500., -4000., ])
 
 
 # #      for automatic ticks
@@ -585,10 +590,9 @@ if __name__ == '__main__':
 #        p.ylabel('N ',fontstyle='italic', fontsize = '15')
 
         # mu-nu
-#        p.xlabel(r'$\mu$', fontsize='20',
-#        p.ylabel(r'$\nu$ ', fontsize=20)
-        p.xlabel(r'$m$', fontsize='20',
+
+        p.xlabel(r'$\mu$', fontsize='20',
                  verticalalignment='top',
                  horizontalalignment='left')
-        p.ylabel(r'$n$ ', fontsize=20)
+        p.ylabel(r'$\nu$ ', fontsize=20)
         p.show()
