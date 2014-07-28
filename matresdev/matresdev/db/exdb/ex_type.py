@@ -15,26 +15,11 @@
 # @todo: introduce the activation of filters - ironing, smoothing
 
 from etsproxy.traits.api import \
-    HasTraits, Directory, List, Int, Float, Any, \
-    on_trait_change, File, Constant, Instance, Trait, \
-    Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Bool, Enum, Event, implements
+    File, \
+    Array, Str, Property, cached_property, \
+    Dict, Bool, implements
 
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
-    View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
-    TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group
-
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
+import ConfigParser
 
 from matresdev.db import SimDBClass
 
@@ -43,35 +28,24 @@ import os
 from numpy import \
     loadtxt
 
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
 from os.path import exists
 
 from loadtxt_novalue import loadtxt_novalue
-
-#-----------------------------------------------------------------------------------
-# ExDesignReader
-#-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
-from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
 
 from string import split
 
 from i_ex_type import \
     IExType
 
+from matresdev.db.simdb import SFTPServer
+
+import zipfile
+
+from matresdev.db.simdb import SimDB
+simdb = SimDB()
+
 class ExType(SimDBClass):
-    '''Read the data from the_ directory
+    '''Read the data from the directory
     '''
 
     implements(IExType)
@@ -175,7 +149,6 @@ class ExType(SimDBClass):
         print 'names, units', names, units
         return names, units
 
-
     def _set_array_attribs(self):
         '''Set the measured data as named attributes defining slices into
         the processed data array.
@@ -216,3 +189,106 @@ class ExType(SimDBClass):
 
             self.data_array = _data_array
 
+    data_dir = Property()
+    '''Local directory path of the data file.
+    '''
+    def _get_data_dir(self):
+        return os.path.dirname(self.data_file)
+
+    relative_path = Property
+    '''Relative path inside database structure - the path is same for experiment
+    in both database structures (remote and local)
+    '''
+    def _get_relative_path(self):
+        return self.data_dir.replace(simdb.simdb_dir, '')[1:]
+
+    hook_up_file = Property
+    '''File specifying the access to extended data.
+    The cfg file is used to hook up arbitrary type
+    of data stored anywhere that can be downloaded
+    on demand to the local cache.
+    '''
+    def _get_hook_up_file(self):
+        dir_path = os.path.dirname(self.data_file)
+        file_name = os.path.basename(self.data_file)
+        file_split = file_name.split('.')
+        file_name = os.path.join(dir_path,
+                                 file_split[0] + '.cfg')
+        if not os.path.exists(file_name):
+            file_name = ''
+        return file_name
+
+    aramis_files = Property(depends_on='data_file')
+    '''Get the list of available aramis files specified in the hookup file.
+    '''
+    @cached_property
+    def _get_aramis_files(self):
+        # hook_up an extended file if available.
+        aramis_files = []
+        if self.hook_up_file:
+            config = ConfigParser.ConfigParser()
+            config.read(self.hook_up_file)
+            aramis_files = config.get('aramis_data', 'aramis_files').split(',\n')
+        return aramis_files
+
+    aramis_dict = Property(depends_on='data_file')
+    '''Use the last two specifiers of the aramis file name as a key to access the proper file.
+    '''
+    @cached_property
+    def _get_aramis_dict(self):
+        # hook_up an extended file if available.
+        af_dict = {}
+        for af in self.aramis_files:
+            fx, fy = af.split('-')[-2:]
+            af_dict[ fx + '-' + fy] = af
+        return af_dict
+
+    def download_aramis_file(self, arkey):
+        af = self.aramis_dict[arkey]
+        af_rel_dir = os.path.join(self.relative_path, 'aramis')
+        af_local_dir = os.path.join(simdb.simdb_cache_dir, af_rel_dir)
+        if not os.path.exists(af_local_dir):
+            os.makedirs(af_local_dir)
+        try:
+            s = SFTPServer(simdb.server_username, '', simdb.server_host)
+            if hasattr(s, 'sftp'):
+                zip_filename = af + '.zip'
+                zipfile_server = os.path.join(simdb.simdb_cache_remote_dir, af_rel_dir, zip_filename)
+                zipfile_local = os.path.join(af_local_dir, zip_filename)
+
+                print 'downloading', zipfile_server
+                print 'destination', zipfile_local
+
+                s.download(zipfile_server, zipfile_local)
+                s.sftp.stat(zipfile_server)
+                s.close()
+        except IOError, e:
+            raise IOError, e
+
+    def uncompress_aramis_file(self, arkey):
+        af = self.aramis_dict[arkey]
+        af_rel_dir = os.path.join(self.relative_path, 'aramis')
+        af_local_dir = os.path.join(simdb.simdb_cache_dir, af_rel_dir)
+        zip_filename = af + '.zip'
+        zipfile_local = os.path.join(af_local_dir, zip_filename)
+        if not os.path.exists(zipfile_local):
+            self.download_aramis_file(arkey)
+
+        print 'uncompressing'
+        zf = zipfile.ZipFile(zipfile_local, 'r')
+        zf.extractall(af_local_dir)
+        zf.close()
+
+    def get_cached_aramis_file(self, arkey):
+        '''For the psecified aramis resolution key check if the file
+        has already been downloaded.
+        '''
+        af = self.aramis_dict[arkey]
+        af_path = os.path.join(simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
+
+        print 'cache_remote', simdb.simdb_cache_remote_dir
+
+        if not os.path.exists(af_path):
+            self.uncompress_aramis_file(arkey)
+
+        return af_path

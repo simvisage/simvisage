@@ -28,10 +28,7 @@ from etsproxy.traits.api import \
     on_trait_change, Instance, \
     Array, Property, cached_property, \
     Bool, Event, implements, \
-    DelegatesTo, Date
-
-from numpy import \
-    array, where, argmax
+    DelegatesTo, Str
 
 import numpy as np
 
@@ -41,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from mathkit.array.smoothing import smooth
+from aramis_cdt import AramisInfo, AramisData, AramisBSA
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -211,12 +208,12 @@ class ExpBTTDB(ExType):
     max_F_idx = Property(Int, depends_on='input_change')
     @cached_property
     def _get_max_F_idx(self):
-        return argmax(self.F)
+        return np.argmax(self.F)
 
     max_N_idx = Property(Int, depends_on='input_change')
     @cached_property
     def _get_max_N_idx(self):
-        return argmax(self.N)
+        return np.argmax(self.N)
 
     F_max1 = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='kN')
@@ -285,23 +282,140 @@ class ExpBTTDB(ExType):
             return self.u[:self.max_N_idx + 1]
 
     #-------------------------------------------------------------------------------
+    # Cut the curves at the end when the gradient of displacement is to big
+    #-------------------------------------------------------------------------------
+
+    gra_max_threshold = Float(0.12, auto_set=False, enter_set=True)
+    '''Threshold to limit the gradient of the displacement curve at the end.
+    '''
+
+    w_cut_idx = Property(Int, depends_on='input_change')
+    @cached_property
+    def _get_w_cut_idx(self):
+
+        w_asc = self.w_asc
+        t_asc = self.t_asc
+
+        # Calculate the deltas with beginning at indize 840 that is equivalent to t = 420 sec,
+        delta_w_arr = w_asc[841:] - w_asc[840:-1]
+        delta_t_arr = t_asc[841:] - t_asc[840:-1]
+
+        # Calculate the gradient for every index
+        gra_arr = delta_w_arr[:] / delta_t_arr[:]
+
+        # Examine the indices where the gradient is bigger than the threshold gradient
+        gra_idx_arr = np.where(gra_arr > self.gra_max_threshold)[0]
+
+#        print '*** gradient is bigger than the threshold gradient at the following indices and time: ***'
+#        print 'gra_idx_arr', gra_idx_arr
+#        print 'gra_rr', gra_arr[gra_idx_arr]
+#        print 'w_asc[gra_idx_arr]', w_asc[gra_idx_arr]
+
+        if len(gra_idx_arr) > 0:
+            return gra_idx_arr[0] + 840
+        else:
+            return len(self.w_asc)
+
+    w_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_w_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+        return self.w_asc[:self.w_cut_idx]
+
+    u_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_u_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+        return self.u_asc[:self.w_cut_idx]
+
+    F_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_F_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+        return self.F[:self.w_cut_idx]
+
+    N_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_N_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+        return self.N[:self.w_cut_idx]
+
+    t_cut_asc = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_t_cut_asc(self):
+        ''' Method to cut the end of the displacement curve if the gradient is to big
+        due to the kind of failure in the testing
+        '''
+        return self.t[:self.w_cut_idx]
+
+    #-------------------------------------------------------------------------------
+    # Method to eliminate the negative or positive deformation at the beginning of the experiment
+    # due to predeformation of the specimen
+    #-------------------------------------------------------------------------------
+
+    # get the minimum value of deformation that is equivalent to the predeformation
+    w_pred = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_w_pred(self):
+        w_pred = min(self.w_cut_asc)
+        return w_pred
+
+    F_lim_threshold = Float(0.142, auto_set=False, enter_set=True)
+    '''Threshold for the lower limit of force. For all force values smaller than this limit,
+        equate the deformation value with zero
+    '''
+
+    w_el_pred = Property(Array('float_'), depends_on='input_change')
+    @cached_property
+    def _get_w_el_pred(self):
+        w = self.w_cut_asc
+        F = self.F_cut_asc
+
+        # get the indices for the force smaller than force threshold
+        idx_F_lim = np.where(F <= self.F_lim_threshold)[0]
+
+        if len(idx_F_lim) > 0:
+            idx = idx_F_lim[-1]
+
+            w_lim = w[idx_F_lim[-1]]
+
+            w_0 = w[0:idx]
+            w_0 = np.zeros_like(w_0)
+            w_1 = w[idx:]
+            w_1 = w_1 - w_lim
+            w_el_pred = np.append(w_0, w_1)
+
+            return w_el_pred
+
+        else:
+            return w
+
+    #-------------------------------------------------------------------------------
     # Get the moment arrays
     #-------------------------------------------------------------------------------
 
     M = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_M(self):
-        return self.F_asc * self.length / 4 - self.N_asc * self.w_asc / 1000
+        return self.F_cut_asc * self.length / 4 - self.N_cut_asc * self.w_el_pred / 1000
 
     MN = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_MN(self):
-        return self.N_asc * self.w_asc / 1000 * -1
+        return self.N_cut_asc * self.w_el_pred / 1000 * -1
 
     MF = Property(Array('float_'), depends_on='input_change')
     @cached_property
     def _get_MF(self):
-        return self.F_asc * self.length / 4
+        return self.F_cut_asc * self.length / 4
 
     #-------------------------------------------------------------------------------
     # Get maximum values of the variables
@@ -311,25 +425,25 @@ class ExpBTTDB(ExType):
                               output=True, table_field=True, unit='kN')
     @cached_property
     def _get_N_max(self):
-        return self.N_asc[-1]
+        return self.N_cut_asc[-1]
 
     F_max = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='kN')
     @cached_property
     def _get_F_max(self):
-        return self.F_asc[-1]
+        return self.F_cut_asc[-1]
 
     w_max = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='mm')
     @cached_property
     def _get_w_max(self):
-        return self.w_asc[-1]
+        return self.w_el_pred[-1]
 
     u_max = Property(Float, depends_on='input_change',
                             output=True, table_field=True, unit='mm')
     @cached_property
     def _get_u_max(self):
-        return self.u_asc[-1]
+        return self.u_cut_asc[-1]
 
     M_max = Property(Float, depends_on='input_change',
                               output=True, table_field=True, unit='kNm')
@@ -353,17 +467,22 @@ class ExpBTTDB(ExType):
                             output=True, table_field=True, unit='kNm')
     @cached_property
     def _get_t_max(self):
-        return self.t_asc[-1]
+        return self.t_cut_asc[-1]
 
     #--------------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------------
 
     plot_templates = {'N(t), F(t)' : '_plot_N_F_t',
+                      'N_cut(t), F_cut(t)' : '_plot_N_F_t_cut',
                       'M(t), MN(t), MF(t)' : '_plot_M_MN_MF_t',
                       'N(M), N(MN), N(MF)' : '_plot_N_M_MN_MF',
                       'w(t)' : '_plot_w_t',
-                      'u(t)' : '_plot_u_t'
+                      'w_cut(t)' : '_plot_w_t_cut',
+                      'u(t)' : '_plot_u_t',
+                      'u_cut(t)' : '_plot_u_t_cut',
+                      'F(w)_cut' : '_plot_F_w_cut',
+                      'F(w)_el_pred' : '_plot_F_w_el_pred',
                                              }
 
     default_plot_template = 'N(t), F(t)'
@@ -381,12 +500,22 @@ class ExpBTTDB(ExType):
         axes.set_ylim(0, 50)
         # ax.set_ylim(0, 5)
 
+    def _plot_N_F_t_cut(self, axes):
+        '''Normal force_cut versus time_cut
+        '''
+        axes.plot(self.t_cut_asc, self.N_cut_asc, color='blue')
+        axes.plot(self.t_cut_asc, self.F_cut_asc, color='red')
+
+        axes.set_xlabel('t [sec]')
+        axes.set_ylabel('N / F [kN]')
+        axes.set_ylim(0, 50)
+
     def _plot_M_MN_MF_t(self, axes):
         '''Moment versus time
         '''
-        axes.plot(self.t_asc, self.M, color='green')
-        axes.plot(self.t_asc, self.MN, color='blue')
-        axes.plot(self.t_asc, self.MF, color='red')
+        axes.plot(self.t_cut_asc, self.M, color='green')
+        axes.plot(self.t_cut_asc, self.MN, color='blue')
+        axes.plot(self.t_cut_asc, self.MF, color='red')
 
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('M / MN / MF [kNm]')
@@ -395,9 +524,9 @@ class ExpBTTDB(ExType):
     def _plot_N_M_MN_MF(self, axes):
         '''Normal force versus moment
         '''
-        axes.plot(self.M, self.N_asc, color='green')
-        axes.plot(self.MN, self.N_asc, color='blue')
-        axes.plot(self.MF, self.N_asc, color='red')
+        axes.plot(self.M, self.N_cut_asc, color='green')
+        axes.plot(self.MN, self.N_cut_asc, color='blue')
+        axes.plot(self.MF, self.N_cut_asc, color='red')
 
         axes.set_xlabel('M / MN / MF [kNm]')
         axes.set_ylabel('N [kN]')
@@ -413,6 +542,15 @@ class ExpBTTDB(ExType):
         axes.set_ylabel('w [mm]')
         axes.set_ylim(0, 10)
 
+    def _plot_w_t_cut(self, axes):
+        '''displacement_cut versus time_cut
+        '''
+        axes.plot(self.t_cut_asc, self.w_cut_asc, color='black')
+
+        axes.set_xlabel('t [sec]')
+        axes.set_ylabel('w [mm]')
+        axes.set_ylim(0, 10)
+
     def _plot_u_t(self, axes):
         '''displacement versus time
         '''
@@ -422,13 +560,110 @@ class ExpBTTDB(ExType):
         axes.set_ylabel('u [mm]')
         axes.set_ylim(0, 30)
 
+    def _plot_u_t_cut(self, axes):
+        '''displacement_cut versus time_cut
+        '''
+        axes.plot(self.t_cut_asc, self.u_cut_asc, color='black')
+
+        axes.set_xlabel('t [sec]')
+        axes.set_ylabel('u [mm]')
+        axes.set_ylim(0, 30)
+
+    def _plot_F_w_cut(self, axes):
+        '''Normal force_cut versus displacement_cut
+        '''
+        axes.plot(self.w_cut_asc, self.F_cut_asc, color='blue')
+
+        axes.set_xlabel('w [mm]')
+        axes.set_ylabel('F [kN]')
+        axes.set_ylim(0, 7)
+        axes.set_xlim(-2, 10)
+
+    def _plot_F_w_el_pred(self, axes):
+        '''Normal force_cut versus displacement with eliminated predeformation
+        '''
+        axes.plot(self.w_el_pred, self.F_cut_asc, color='blue')
+
+        axes.set_xlabel('w [mm]')
+        axes.set_ylabel('F [kN]')
+        axes.set_ylim(0, 7)
+        axes.set_xlim(-2, 10)
+
+    #===========================================================================
+    # ARAMIS PROCESSING
+    #===========================================================================
+
+    aramis_resolution_key = Str('Xf15s3-Yf15s3')
+    '''Specification of the resolution of the measured aramis field
+    '''
+
+    start_t_aramis = Float(5.0)
+    '''Start time of aramis measurement.
+    '''
+
+    delta_t_aramis = Float(1.0)
+    '''Delta between aramis snapshots.
+    '''
+
+    n_steps_aramis = Property(Int)
+    def _get_n_steps_aramis(self):
+        return self.aramis_info.number_of_steps
+
+    t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
+    @cached_property
+    def _get_t_aramis(self):
+        start_t = self.start_t_aramis
+        delta_t = self.delta_t_aramis
+        n_steps = self.n_steps_aramis
+        t_max = self.t[self.w_cut_idx]
+        t_aramis_full_range = np.linspace(start_t, start_t + n_steps * delta_t, n_steps)
+        return t_aramis_full_range[t_aramis_full_range < t_max]
+
+    aramis_info = Property(depends_on='data_file,aramis_resolution_key')
+    @cached_property
+    def _get_aramis_info(self):
+        af = self.get_cached_aramis_file(self.aramis_resolution_key)
+        return AramisInfo(data_dir=af)
+
+    w_t_aramis = Property
+    def _get_w_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.w)
+
+    F_t_aramis = Property
+    def _get_F_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.F)
+
+    N_t_aramis = Property
+    def _get_N_t_aramis(self):
+        return np.interp(self.t_aramis, self.t, self.N)
+
+    eps_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    @cached_property
+    def _get_eps_t_aramis(self):
+        ad = AramisData(aramis_info=self.aramis_info)
+        absa = AramisBSA(aramis_info=self.aramis_info,
+                         aramis_data=ad,
+                         integ_radius=10)
+
+        eps_t_list = []
+        eps_c_list = []
+        for step, t in enumerate(self.t_aramis):
+            ad.evaluated_step_idx = step
+            mid_idx = absa.d_ux_arr2.shape[1] / 2
+            eps_range = 10
+            eps = np.mean(absa.d_ux_arr2[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
+            eps_t_list.append(np.max(eps))
+            eps_c_list.append(np.min(eps))
+
+        return np.array(eps_t_list, dtype='f'), np.array(eps_c_list, dtype='f')
+
     #---------------------------------
     # view
     #---------------------------------
 
     traits_view = View(VSplit(
                          HSplit(Group(
-                                  Item('width'       , format_str="%.3f"),
+                                  Item('width', format_str="%.3f"),
                                   Item('length', format_str="%.3f"),
                                   springy=True,
                                   label='geometry',
@@ -469,11 +704,13 @@ class ExpBTTDB(ExType):
                                Item('u_max', visible_when='derived_data_available',
                                                 style='readonly', emphasized=True , format_str="%.2f"),
                                Item('M_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
+                                                style='readonly', emphasized=True , format_str="%.3f"),
                                Item('MN_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
+                                                style='readonly', emphasized=True , format_str="%.3f"),
                                Item('MF_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
+                                                style='readonly', emphasized=True , format_str="%.3f"),
+                               Item('w_pred', visible_when='derived_data_available',
+                                                style='readonly', emphasized=True , format_str="%.3f"),
                                label='output characteristics',
                                id='matresdev.db.exdb.ex_composite_bending_tensile_test.vgroup.outputs',
                                dock='tab',
@@ -504,15 +741,27 @@ if __name__ == '__main__':
 #        print inst.production_date
 #        inst.save()
 
+    import pylab as p
+
+
     from matresdev.db.simdb import SimDB
+    from matresdev.db.exdb import ExRunView
     simdb = SimDB()
     import os
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
                            '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                           'BTT-6c-2cm-TU-0-V14_MxN2.DAT')
+                           'BTT-6c-2cm-TU-0-V03_MxN2.DAT')
 
-    e1 = ExpBTTDB(data_file=test_file)
-    e1.process_source_data()
-    print 'F_max1', e1.F_max1
+#     e1 = ExpBTTDB(data_file=test_file)
+#     e1.process_source_data()
+#     e1
+#     print 'F_max1', e1.F_max1
+#
+#     p.plot(e1.w_cut_asc, e1.F_cut_asc, linewidth=3)
+#     p.plot(e1.w_asc, e1.F_asc)
+#     p.show()
+
+    doe_reader = ExRunView(data_file=test_file)
+    doe_reader.configure_traits()

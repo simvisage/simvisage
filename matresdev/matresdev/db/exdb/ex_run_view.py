@@ -13,44 +13,28 @@
 # Created on Jan 19, 2010 by: rch
 
 from etsproxy.traits.api import \
-    HasTraits, Float, Property, cached_property, \
-    Instance, File, List, on_trait_change, Int, Tuple, Bool, \
-    DelegatesTo, Event, Str, Button, Dict, Array, Any, Enum, Callable
+    Instance, File, List, on_trait_change, Bool, \
+    Event, Enum
 
 from etsproxy.traits.ui.api import \
-    View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
-    CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
+    View, Item, ModelView, HSplit, VSplit, \
     Group, FileEditor
 
 from etsproxy.traits.ui.menu import \
-    Action, CloseAction, HelpAction, Menu, \
-    MenuBar, NoButtons, Separator, ToolBar
+    Action, HelpAction, Menu, \
+    MenuBar, ToolBar
 
 from etsproxy.traits.ui.key_bindings import \
     KeyBinding, KeyBindings
 
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
 from etsproxy.pyface.api import \
-    ImageResource, confirm, error, information, warning, YES, NO, CANCEL
-
-from etsproxy.traits.ui.menu import \
-    OKButton
+    ImageResource, confirm, YES
 
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
 
 from matplotlib.figure import \
     Figure
-
-from numpy import \
-    array, linspace, frompyfunc, zeros, column_stack, \
-    log as ln, append, logspace, hstack, sign, trapz, mgrid, c_, \
-    zeros
-
-from math import \
-    exp, e, sqrt, log, pi
 
 from ex_run import \
     ExRun
