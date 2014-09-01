@@ -3,7 +3,7 @@ Created on 25.10.2013
 
 @author: alexander
 '''
-def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
+def format_plot(axes, fontsize=16, xformat="%.0f", yformat="%.0f", xlim=None, ylim=None, xlabel='', ylabel=''):
     '''format 2d-plot black and with with times font
     '''
     #-------------------------------------------------------------------
@@ -18,8 +18,8 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
     font.set_style('normal')
 #    font.set_size('small')
 #    font.set_size('large')
-    font.set_size('xx-large')
-    font.set_size(24)
+#    font.set_size('xx-large')
+    font.set_size(fontsize)
     font.set_variant('normal')
     font.set_weight('medium')
 
@@ -29,10 +29,10 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
     # format ticks for plot
     #
     locs, labels = axes.xticks()
-    axes.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+    axes.xticks(locs, map(lambda x: xformat % x, locs), fontproperties=font)
     axes.xlabel(xlabel, fontproperties=font)
 
     locs, labels = axes.yticks()
-    axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+    axes.yticks(locs, map(lambda x: yformat % x, locs), fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
 

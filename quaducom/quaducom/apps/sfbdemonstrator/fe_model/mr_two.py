@@ -93,7 +93,7 @@ class MRtwo(MushRoofModel):
     # fets_eval
     #----------------------------------------------------
 
-    vtk_r = Float(1.0, input=True)
+    vtk_r = Float(0.9, input=True)
 
     # fets used for roof
     #
@@ -356,14 +356,14 @@ class MRtwo(MushRoofModel):
             for X in self.X_array_linked:
                 # due to round of errors small epsilon introduced to find the necessary values
                 #
-                 idx = idx + list(where(abs(X_F_export[:, 0] - X) <= 0.00001)[0])
+                idx = idx + list(where(abs(X_F_export[:, 0] - X) <= 0.00001)[0])
 
             # Y value corresponds to Y array linked
             #
             for Y in self.Y_array_linked:
                 # due to round of errors small epsilon introduced to find the necessary values
                 #
-                 idx = idx + list(where(abs(X_F_export[:, 1] - Y) <= 0.00001)[0])
+                idx = idx + list(where(abs(X_F_export[:, 1] - Y) <= 0.00001)[0])
 
             X_F_export = X_F_export[idx, :]
 
@@ -506,7 +506,7 @@ class MRtwo(MushRoofModel):
         linked_array = vstack((self.shift_array[:self.not_linked_elem],
                                self.shift_array[self.not_linked_elem + 1:]))
 
-        # global coordinates from local coordinates of one quarter
+        # global coordinates from length of one quarter
         #
         x0 = self.length_xy_quarter
 
@@ -515,12 +515,12 @@ class MRtwo(MushRoofModel):
                                    3 * x0 - linked_array[:, 0],
                                    3 * x0 + linked_array[:, 0]))
 
-        # add the midcenter of the shell to the linking array
+        # add the midcenter of the shell to the linking array AND midcenter of second roof
         # only used for uneven number of linkings, e.g. 7 links
         # for 7m x 7m shell
         #
         if self.link_edge_center == True:
-            x_array_linked = hstack((x_array_linked, x0))
+            x_array_linked = hstack((x_array_linked, x0, 3 * x0))
 
         return sort(x_array_linked)
 
@@ -691,14 +691,12 @@ class MRtwo(MushRoofModel):
                                   link_dims=[0, 1, 2],
                                   value=0.)]
 
-
             slice_2 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, 0, 0, 0 ],
                                   link_slice=column[ :, :, -1 , 0, 0, -1],
                                   link_coeffs=[1., 1., 1.],
                                   link_dims=[0, 1, 2],
                                   value=0.)]
-
 
             slice_3 = [BCSlice(var='u'  , dims=[0, 1, 2],
                                   slice=plate[:, :, 0, 0, -1, 0 ],
@@ -1706,7 +1704,9 @@ if __name__ == '__main__':
 
                       # needed for option 'shift_elem' (set to 'True' by default).
 
+                      #------------------------------------
                       # 'link_case' = 'equal_100cm_7m'
+                      #------------------------------------
                       shift_array=array([   [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
                                  [1.0, 1.0, 2],
                                  [2.0, 2.0, 4],
@@ -1719,15 +1719,40 @@ if __name__ == '__main__':
                       #
                       link_edge_center=True,
 
-                      # 'equal_100cm_7m'
-                      #
+#                      # 'equal_100cm_7m'
+#                      #
                       n_elems_xy_quarter=13,
+
+                      #------------------------------------
+                      # 'link_case' = 'equal_25cm_7m'
+                      #------------------------------------
+                      #
+#                      shift_array=array([[0.125 , 0.125, 1],
+#                                  [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
+#                                  [0.375, 0.375, 1],
+#                                  [0.625, 0.625, 1],
+#                                  [0.875, 0.875, 1],
+#                                  [1.125, 1.125, 1],
+#                                  [1.375, 1.375, 1],
+#                                  [1.625, 1.625, 1],
+#                                  [1.875, 1.875, 1],
+#                                  [2.125, 2.125, 1],
+#                                  [2.375, 2.375, 1],
+#                                  [2.625, 2.625, 1],
+#                                  [2.875, 2.875, 1],
+#                                  [3.125, 3.125, 1],
+#                                  [3.375, 3.375, 1]]),
+#                      link_edge_center=False,
+#                      n_elems_xy_quarter=16,
+#                      not_linked_elem=1,
+                      #------------------------------------
+
 
                       # the first coordinate in shift array defines
                       # the node needed to link the column and the roof.
                       # It is not used for linking between the roofs.
                       #
-                      not_linked_elem=0,
+#                      not_linked_elem=0,
 
                       # specify linking dofs
                       #
@@ -1736,11 +1761,11 @@ if __name__ == '__main__':
 
                       # loading:
                       #
-                      lc='lc_w_asym')
+#                      lc='lc_w_asym')
 #                      lc = 'lc_s_asym' )
 #                      lc='lc_g')
 
-#                      lc = 'lc_g_own_weight' )
+                      lc='lc_g_own_weight')
 #                      lc = 'lc_g_surf_load' )
 #                      lc = 'lc_g_edge_load')
 #                      lc = 'lc_g_tol_asym')
@@ -1785,6 +1810,7 @@ if __name__ == '__main__':
 
         link_type = sim_model.link_type
         link_case = 'equal_100cm_7m'
+#        link_case = 'equal_25cm_7m'
         lc = sim_model.lc
         print 'link_type', link_type
         print 'link_case', link_case
@@ -1797,7 +1823,7 @@ if __name__ == '__main__':
         # export
         #
 #        sim_model.export_edge_u_data(filename=link_type + '_' + link_case + '_u_' + lc + '.csv')
-#        sim_model.export_int_force_data(filename=link_type + '_' + link_case + '_hf_' + lc + '.csv')
+        sim_model.export_int_force_data(filename=link_type + '_' + link_case + '_hf_' + lc + '.csv')
 
         # visualisation
         #
@@ -1814,7 +1840,7 @@ if __name__ == '__main__':
         lc_list = [
 #                   'lc_shrink' ,
 
-                   'lc_g',
+#                   'lc_g',
 #                    'lc_g_own_weight',
 #                    'lc_g_surf_load',
 #                    'lc_g_edge_load',
@@ -1825,16 +1851,18 @@ if __name__ == '__main__':
 #                   'lc_s_asym',
 #                   'lc_w_pos',
 #                   'lc_w_neg',
-#                   'lc_w_asym'
+                   'lc_w_asym'
                    ]
 
         # link_cases
         #
         link_case_list = [
                           # 45 / 87 / 87 / 87 / 44 = Lange 350 cm  = 7m / 2
-                          'equal_88cm',
+#                          'equal_88cm',
 #                          'equal_40-90cm',
+
 #                          'equal_100cm_7m',
+                          'equal_25cm_7m',
 
 #                          'equal_25cm',
 #                          'equal_50cm',
@@ -1852,7 +1880,6 @@ if __name__ == '__main__':
                           'exc_V_ip',
 #                          'inc_V_ip'
                           ]
-
 
         # shift_array_dict for the different types of links
         #
@@ -1895,6 +1922,22 @@ if __name__ == '__main__':
                                   [3.375, 3.375, 1],
                                   [3.625, 3.625, 1],
                                   [3.875, 3.875, 1], ]),
+                            'equal_25cm_7m':
+                           array([[0.125 , 0.125, 1],
+                                  [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
+                                  [0.375, 0.375, 1],
+                                  [0.625, 0.625, 1],
+                                  [0.875, 0.875, 1],
+                                  [1.125, 1.125, 1],
+                                  [1.375, 1.375, 1],
+                                  [1.625, 1.625, 1],
+                                  [1.875, 1.875, 1],
+                                  [2.125, 2.125, 1],
+                                  [2.375, 2.375, 1],
+                                  [2.625, 2.625, 1],
+                                  [2.875, 2.875, 1],
+                                  [3.125, 3.125, 1],
+                                  [3.375, 3.375, 1]]),
                            'equal_50cm':
                            array([[0.25 , 0.25, 1],
                                  [0.45 / 2 ** 0.5, 0.45 / 2 ** 0.5, 1],
@@ -1959,6 +2002,7 @@ if __name__ == '__main__':
                            }
 
         n_elems_quarter_xy_dict = {'equal_100cm_7m': 13,
+                                   'equal_25cm_7m': 16,
                                    'equal_40-90cm' : 16,
                                    'equal_88cm' : 16,
 
@@ -1972,6 +2016,7 @@ if __name__ == '__main__':
                                    'middle_0to2_25cm':18}
 
         not_linked_dict = {'equal_100cm_7m': 0,
+                           'equal_25cm_7m': 1,
                            'equal_40-90cm' : 0,
                            'equal_88cm' : 0,
 
@@ -1984,9 +2029,7 @@ if __name__ == '__main__':
                            'middle_0to3_25cm':1,
                            'middle_0to2_25cm':1}
 
-
         sim_model.select_hinge_pos = True
-
 
         for link_type in link_type_list:
 

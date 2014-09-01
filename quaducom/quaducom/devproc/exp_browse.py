@@ -41,6 +41,9 @@ ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT
 # ex_path = os.path.join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU',
 #                                       'ST-12c-6cm-u-TU.DAT')
 
+ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2014-04-30_TTb-6c-2cm-0-TU_NxM1',
+                                       'TTb-6c-2cm-0-TU-V16_NxM1.DAT')
+
 print os.path.exists(ex_path)
 
 doe_reader = ExRunView(data_file=ex_path)
