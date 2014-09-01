@@ -35,4 +35,8 @@ if __name__ == '__main__':
 
         AUI = AramisUI(aramis_info=e.aramis_info)
         AUI.aramis_data.evaluated_step_idx = e.n_steps - 2
-        AUI.configure_traits()
+        x = AUI.aramis_data.x_arr_undeformed
+        y = AUI.aramis_data.y_arr_undeformed
+        print 'Measuring field length =', x[0, -1] - x[0, 0], x[-1, -1] - x[-1, 0]
+        print 'Measuring field height =', y[0, 0] - y[-1, 0], y[0, -1] - y[-1, -1]
+        # AUI.configure_traits()
