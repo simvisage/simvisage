@@ -17,7 +17,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-4c-2cm-TU-0-V08_MxN2.DAT']
+    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
@@ -106,17 +106,16 @@ if __name__ == '__main__':
 
             AD.evaluated_step_idx = step
 
-
             # y = AD.y_arr_undeformed[:, mid_idx]
 
             a = e.crack_bridge_strain_all
             n_fa = ac.d_ux_arr.shape[0]
+            h = np.linspace(e.pos_fa[0], e.pos_fa[1], num=n_fa)
 
             if a == None:
                 mid_idx = ac.d_ux_arr.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ac.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-                h = np.linspace(e.pos_fa_no[0], e.pos_fa_no[1], num=n_fa)
 
                 step_time = e.t_aramis[step]
                 p.plot(eps * 1000, h, label='%i' % step_time)
@@ -132,8 +131,6 @@ if __name__ == '__main__':
                 idx_border2 = e.idx_failure_crack[2]
 
                 eps = np.mean(ac.d_ux_arr[:, idx_border1:idx_border2], axis=1)
-                h = np.linspace(e.pos_fa_no[0], e.pos_fa_no[1], num=n_fa)
-                # print h
 
                 step_time = e.t_aramis[step]
                 p.plot(eps * 1000, h, label='%i' % step_time)
