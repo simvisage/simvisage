@@ -17,7 +17,10 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
+    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT',
+                  'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
+                  'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+                  ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
@@ -116,7 +119,7 @@ if __name__ == '__main__':
                 mid_idx = ac.d_ux_arr.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ac.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-
+                eps_rev = eps[::-1]
                 step_time = e.t_aramis[step]
                 p.plot(eps * 1000, h, label='%i' % step_time)
                 p.xlim(-5, 25)
