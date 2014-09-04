@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     import pylab as p
 
-    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
+    test_files = ['BTT-4c-2cm-TU-0-V01_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
@@ -30,11 +30,8 @@ if __name__ == '__main__':
         # print 'w_idx_cut', e.t[e.w_cut_idx]
         # print 'F_max1', e.F_max1
         print 'crack filter', e.crack_filter_avg
-
-
-
         AUI = AramisUI(aramis_info=e.aramis_info)
-        AUI.aramis_data.evaluated_step_idx = e.n_steps - 2
+        AUI.aramis_data.evaluated_step_idx = e.n_steps
         x = AUI.aramis_data.x_arr_undeformed
         y = AUI.aramis_data.y_arr_undeformed
         print 'Measuring field length (bottom, top) =', x[0, -1] - x[0, 0], x[-1, -1] - x[-1, 0]
