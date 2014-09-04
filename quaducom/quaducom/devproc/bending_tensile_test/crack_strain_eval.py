@@ -39,4 +39,4 @@ if __name__ == '__main__':
         y = AUI.aramis_data.y_arr_undeformed
         print 'Measuring field length =', x[0, -1] - x[0, 0], x[-1, -1] - x[-1, 0]
         print 'Measuring field height =', y[0, 0] - y[-1, 0], y[0, -1] - y[-1, -1]
-        # AUI.configure_traits()
+        AUI.configure_traits()
