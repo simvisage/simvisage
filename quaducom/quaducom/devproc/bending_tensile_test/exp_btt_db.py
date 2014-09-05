@@ -38,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from aramis_cdt import AramisInfo, AramisData, AramisBSA, AramisUI
+from aramis_cdt import AramisInfo, AramisData, AramisCDT, AramisUI
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -737,7 +737,7 @@ class ExpBTTDB(ExType):
             return None
         ad = AramisData(aramis_info=self.aramis_info,
                         evaluated_step_idx=self.n_steps)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          crack_detect_idx=self.n_steps,
                          aramis_data=ad,
                          integ_radius=10)
@@ -759,7 +759,7 @@ class ExpBTTDB(ExType):
         if ai == None:
             return None
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -862,7 +862,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -965,7 +965,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1086,7 +1086,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1158,7 +1158,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1201,7 +1201,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
