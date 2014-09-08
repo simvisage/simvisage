@@ -17,9 +17,9 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT',
-                  'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
-                  'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+    test_files = ['BTT-4c-2cm-TU-0-V02_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
                   ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
@@ -97,7 +97,8 @@ if __name__ == '__main__':
         # 2) define a method evaluating strain profile within the object.
 
         AI = AramisInfo(data_dir=aramis_file_path)
-        AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
+        # AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
+        AD = AramisData(aramis_info=AI)
 
         ac = AramisBSA(aramis_info=AI,
                         aramis_data=AD,
@@ -109,8 +110,6 @@ if __name__ == '__main__':
 
             AD.evaluated_step_idx = step
 
-            # y = AD.y_arr_undeformed[:, mid_idx]
-
             a = e.crack_bridge_strain_all
             n_fa = ac.d_ux_arr.shape[0]
             h = np.linspace(e.pos_fa[0], e.pos_fa[1], num=n_fa)
@@ -119,9 +118,20 @@ if __name__ == '__main__':
                 mid_idx = ac.d_ux_arr.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ac.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-                eps_rev = eps[::-1]
+
+                x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+                eps_ed_up = x + eps[-1]
+                eps_ed_lo = eps[0] - x
+                eps_to1 = np.append(eps, eps_ed_lo)
+                eps_to2 = np.append(eps_ed_up, eps_to1)
+
+                h_1 = np.append(h, 0)
+                h_2 = np.append(20, h_1)
+
+                eps_rev = eps_to2[::-1]
+
                 step_time = e.t_aramis[step]
-                p.plot(eps * 1000, h, label='%i' % step_time)
+                p.plot(eps_rev * 1000, h_2, label='%i' % step_time)
                 p.xlim(-5, 25)
                 p.ylim(0, 20)
                 p.xlabel('strain [1*E-3]')
@@ -132,11 +142,21 @@ if __name__ == '__main__':
             else:
                 idx_border1 = e.idx_failure_crack[1]
                 idx_border2 = e.idx_failure_crack[2]
-
                 eps = np.mean(ac.d_ux_arr[:, idx_border1:idx_border2], axis=1)
 
+                x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+                eps_ed_up = x + eps[-1]
+                eps_ed_lo = eps[0] - x
+                eps_to1 = np.append(eps, eps_ed_lo)
+                eps_to2 = np.append(eps_ed_up, eps_to1)
+
+                h_1 = np.append(h, 0)
+                h_2 = np.append(20, h_1)
+
+                eps_rev = eps_to2[::-1]
+
                 step_time = e.t_aramis[step]
-                p.plot(eps * 1000, h, label='%i' % step_time)
+                p.plot(eps_rev * 1000, h_2, label='%i' % step_time)
                 p.xlim(-5, 25)
                 p.ylim(0, 20)
                 p.xlabel('strain [1*E-3]')

@@ -38,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from aramis_cdt import AramisInfo, AramisData, AramisBSA, AramisUI
+from aramis_cdt import AramisInfo, AramisData, AramisCDT, AramisUI
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -737,7 +737,7 @@ class ExpBTTDB(ExType):
             return None
         ad = AramisData(aramis_info=self.aramis_info,
                         evaluated_step_idx=self.n_steps)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          crack_detect_idx=self.n_steps,
                          aramis_data=ad,
                          integ_radius=10)
@@ -762,7 +762,7 @@ class ExpBTTDB(ExType):
         if ai == None:
             return None
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -853,7 +853,47 @@ class ExpBTTDB(ExType):
 
 
     #--------------------------------------------------------------------------------
-    # get tensile strain in first reinforcement layer
+    # get max and min strain of cross section
+    #--------------------------------------------------------------------------------
+
+    '''eps_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    @cached_property
+    def _get_eps_t_aramis(self):
+
+        ai = self.aramis_info
+        if ai == None:
+            return None
+
+        ad = AramisData(aramis_info=self.aramis_info)
+        absa = AramisCDT(aramis_info=self.aramis_info,
+                         aramis_data=ad,
+                         integ_radius=10)
+
+        a = self.crack_bridge_strain_all
+        eps_t_list = []
+        eps_c_list = []
+
+        for step, t in enumerate(self.t_aramis_cut):
+            ad.evaluated_step_idx = step
+            if a == None:
+                mid_idx = absa.d_ux_arr.shape[1] / 2
+                eps_range = 3
+                eps = np.mean(absa.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
+                eps_t_list.append(np.max(eps))
+                eps_c_list.append(np.min(eps))
+
+            else:
+                idx_border1 = self.idx_failure_crack[1]
+                idx_border2 = self.idx_failure_crack[2]
+                eps = np.mean(absa.d_ux_arr[:, idx_border1:idx_border2], axis=1)
+                eps_t_list.append(np.max(eps))
+                eps_c_list.append(np.min(eps))
+
+            # print 'np.array', np.array(eps_t_list, dtype='f')
+        return np.array(eps_t_list, dtype='f'), np.array(eps_c_list, dtype='f')'''
+
+    #--------------------------------------------------------------------------------
+    # get max tensile strain in first reinforcement layer
     #--------------------------------------------------------------------------------
 
     h_re1_6_threshold = Float(2.86, auto_set=False, enter_set=True)
@@ -928,7 +968,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1139,7 +1179,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1200,7 +1240,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1269,7 +1309,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
