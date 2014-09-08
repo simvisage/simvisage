@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     import pylab as p
 
-    test_files = ['BTT-4c-2cm-TU-0-V02_MxN2.DAT']
+    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
