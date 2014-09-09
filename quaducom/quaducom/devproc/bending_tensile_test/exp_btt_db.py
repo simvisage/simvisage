@@ -676,7 +676,7 @@ class ExpBTTDB(ExType):
     def _get_n_steps(self):
         'number of time steps in aramis after limiting the steps with t_max'
         # print 'n_steps', len(self.t_aramis_cut)
-        return len(self.t_aramis_cut)
+        return self.aramis_info.number_of_steps - 1  # len(self.t_aramis_cut)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
