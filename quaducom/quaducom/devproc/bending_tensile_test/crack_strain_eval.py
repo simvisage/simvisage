@@ -32,10 +32,11 @@ if __name__ == '__main__':
         print 'crack filter', e.crack_filter_avg
         AUI = AramisUI(aramis_info=e.aramis_info)
         print e.n_steps
-        AUI.aramis_cdt.integ_radius = 10
+        AUI.aramis_cdt.integ_radius = 5
         AUI.aramis_data.evaluated_step_idx = e.n_steps
         AUI.aramis_cdt.crack_detect_idx = e.n_steps
-
+        AUI.aramis_cdt.ddd_ux_avg_threshold = -1e-4
+        AUI.aramis_cdt.ddd_ux_threshold = -1e-4
 
         x = AUI.aramis_data.x_arr_undeformed
         y = AUI.aramis_data.y_arr_undeformed

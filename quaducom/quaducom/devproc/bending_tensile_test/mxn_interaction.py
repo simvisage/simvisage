@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     from exp_btt_db import ExpBTTDB
     from matresdev.db.simdb import SimDB
-    from aramis_cdt import AramisInfo, AramisData, AramisUI, AramisCDT, AramisBSA
+    from aramis_cdt import AramisInfo, AramisData, AramisBSA
     simdb = SimDB()
     import os
     import numpy as np
