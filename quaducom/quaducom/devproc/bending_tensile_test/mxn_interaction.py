@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     from exp_btt_db import ExpBTTDB
     from matresdev.db.simdb import SimDB
-    from aramis_cdt import AramisInfo, AramisData, AramisBSA, AramisUI
+    from aramis_cdt import AramisInfo, AramisData, AramisUI, AramisCDT, AramisBSA
     simdb = SimDB()
     import os
     import numpy as np
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-4c-2cm-TU-0-V02_MxN2.DAT',
+    test_files = ['BTT-4c-2cm-TU-0-V01_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
                   ]
@@ -100,69 +100,56 @@ if __name__ == '__main__':
         # AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
         AD = AramisData(aramis_info=AI)
 
-        ac = AramisBSA(aramis_info=AI,
+        ac = AramisCDT(aramis_info=AI,
                         aramis_data=AD,
                         integ_radius=10)
 
         max_step = e.n_steps
+        a = e.crack_bridge_strain_all
+        n_fa = ac.d_ux_arr.shape[0]
+        h = np.linspace(e.pos_fa[0], e.pos_fa[1], num=n_fa)
+        # print 'h', h
 
         for step in range(0, max_step, 5):
 
             AD.evaluated_step_idx = step
 
-            a = e.crack_bridge_strain_all
-            n_fa = ac.d_ux_arr.shape[0]
-            h = np.linspace(e.pos_fa[0], e.pos_fa[1], num=n_fa)
-
             if a == None:
                 mid_idx = ac.d_ux_arr.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ac.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-
-                x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
-                eps_ed_up = x + eps[-1]
-                eps_ed_lo = eps[0] - x
-                eps_to1 = np.append(eps, eps_ed_lo)
-                eps_to2 = np.append(eps_ed_up, eps_to1)
-
-                h_1 = np.append(h, 0)
-                h_2 = np.append(20, h_1)
-
-                eps_rev = eps_to2[::-1]
-
-                step_time = e.t_aramis[step]
-                p.plot(eps_rev * 1000, h_2, label='%i' % step_time)
-                p.xlim(-5, 25)
-                p.ylim(0, 20)
-                p.xlabel('strain [1*E-3]')
-                p.ylabel('h [mm]')
-                p.legend(bbox_to_anchor=(0.66, 0.02), borderaxespad=0., ncol=2, loc=3)
+                # print 'eps', eps
                 p.title('strain in the middle of the measuring field')
 
             else:
                 idx_border1 = e.idx_failure_crack[1]
                 idx_border2 = e.idx_failure_crack[2]
                 eps = np.mean(ac.d_ux_arr[:, idx_border1:idx_border2], axis=1)
-
-                x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
-                eps_ed_up = x + eps[-1]
-                eps_ed_lo = eps[0] - x
-                eps_to1 = np.append(eps, eps_ed_lo)
-                eps_to2 = np.append(eps_ed_up, eps_to1)
-
-                h_1 = np.append(h, 0)
-                h_2 = np.append(20, h_1)
-
-                eps_rev = eps_to2[::-1]
-
-                step_time = e.t_aramis[step]
-                p.plot(eps_rev * 1000, h_2, label='%i' % step_time)
-                p.xlim(-5, 25)
-                p.ylim(0, 20)
-                p.xlabel('strain [1*E-3]')
-                p.ylabel('h [mm]')
-                p.legend(bbox_to_anchor=(0.66, 0.02), borderaxespad=0., ncol=2, loc=3)
                 p.title('strain in the failure crack')
+
+            x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+            # print 'x', x
+            eps_ed_up = x + eps[-1]
+            # print 'eps_ed_up', eps_ed_up
+            eps_ed_lo = eps[0] - x
+            # print 'eps_ed_lo', eps_ed_lo
+            eps_to1 = np.append(eps, eps_ed_lo)
+            eps_to2 = np.append(eps_ed_up, eps_to1)
+            # print 'eps_to2', eps_to2
+
+            h_1 = np.append(h, 0)
+            h_2 = np.append(20, h_1)
+            # print 'h_2', h_2
+
+            eps_rev = eps_to2[::-1]
+
+            step_time = e.t_aramis[step]
+            p.plot(eps_rev * 1000, h_2, label='%i' % step_time)
+            p.xlim(-5, 25)
+            p.ylim(0, 20)
+            p.xlabel('strain [1*E-3]')
+            p.ylabel('h [mm]')
+            p.legend(bbox_to_anchor=(0.66, 0.02), borderaxespad=0., ncol=2, loc=3)
 
         p.show()
 

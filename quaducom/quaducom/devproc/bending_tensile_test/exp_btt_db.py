@@ -38,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from aramis_cdt import AramisInfo, AramisData, AramisCDT, AramisUI
+from aramis_cdt import AramisInfo, AramisData, AramisCDT, AramisUI, AramisBSA
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -668,13 +668,14 @@ class ExpBTTDB(ExType):
     t_aramis_cut = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis_cut(self):
-        return self.t_aramis[ :-2]
+        # print 't_aramis_cut', self.t_aramis[: ]
+        return self.t_aramis[ :]
 
     n_steps = Property
     @cached_property
     def _get_n_steps(self):
         'number of time steps in aramis after limiting the steps with t_max'
-        # print 'n_steps', len(self.t_aramis)
+        # print 'n_steps', len(self.t_aramis_cut)
         return len(self.t_aramis_cut)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -742,13 +743,13 @@ class ExpBTTDB(ExType):
                          aramis_data=ad,
                          integ_radius=10)
 
-        print 'crack detect step', absa.crack_detect_idx
-        print 'testing n_cracks', absa.number_of_cracks_avg
+        # print 'crack detect step', absa.crack_detect_idx
+        # print 'testing n_cracks', absa.number_of_cracks_avg
         # print 'ad.x_arr_undeformed', ad.x_arr_undeformed [0]
-        print 'ad.x_arr_undeformed[0, absa.crack_filter_avg]', ad.x_arr_undeformed[0, absa.crack_filter_avg]
         # print 'ad.length_x_undeformed', ad.length_x_undeformed
         # print 'ad.length_y_undeformed', ad.length_y_undeformed
         # print absa.crack_filter_avg
+        print 'ad.x_arr_undeformed[0, absa.crack_filter_avg]', ad.x_arr_undeformed[0, absa.crack_filter_avg]
         return ad.x_arr_undeformed[0, absa.crack_filter_avg]
 
 
@@ -775,7 +776,7 @@ class ExpBTTDB(ExType):
             crack_idx_list.append(crack_idx[0])
 
         crack_idx_arr1 = np.array(crack_idx_list)
-        # print 'crack_idx_arr1', crack_idx_arr1
+        print 'crack_idx_arr1', crack_idx_arr1
         crack_idx_arr2 = np.rollaxis(crack_idx_arr1, 1, 0)
         # print 'crack_idx_arr2', crack_idx_arr2
         crack_idx_arr = crack_idx_arr2[0]
@@ -798,7 +799,7 @@ class ExpBTTDB(ExType):
             for i in range(0, i_max - 1, 1):
                 eps_crack_bridge_i = np.mean(absa.d_ux_arr[:, crack_mid_idx_arr[i]:crack_mid_idx_arr[i + 1]], axis=1)
                 eps_list.append(eps_crack_bridge_i)
-            # print 'np.array', np.array(eps_list, dtype='f')
+            print 'crack_bridge_strain_all', np.array(eps_list, dtype='f')
         return np.array(eps_list, dtype='f')
 
 
@@ -850,47 +851,6 @@ class ExpBTTDB(ExType):
         # print 'idx_border2 ', idx_border2
 
         return idx_failure_crack, idx_border1, idx_border2
-
-
-    #--------------------------------------------------------------------------------
-    # get max and min strain of cross section
-    #--------------------------------------------------------------------------------
-
-    '''eps_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
-    @cached_property
-    def _get_eps_t_aramis(self):
-
-        ai = self.aramis_info
-        if ai == None:
-            return None
-
-        ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisCDT(aramis_info=self.aramis_info,
-                         aramis_data=ad,
-                         integ_radius=10)
-
-        a = self.crack_bridge_strain_all
-        eps_t_list = []
-        eps_c_list = []
-
-        for step, t in enumerate(self.t_aramis_cut):
-            ad.evaluated_step_idx = step
-            if a == None:
-                mid_idx = absa.d_ux_arr.shape[1] / 2
-                eps_range = 3
-                eps = np.mean(absa.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-                eps_t_list.append(np.max(eps))
-                eps_c_list.append(np.min(eps))
-
-            else:
-                idx_border1 = self.idx_failure_crack[1]
-                idx_border2 = self.idx_failure_crack[2]
-                eps = np.mean(absa.d_ux_arr[:, idx_border1:idx_border2], axis=1)
-                eps_t_list.append(np.max(eps))
-                eps_c_list.append(np.min(eps))
-
-            # print 'np.array', np.array(eps_t_list, dtype='f')
-        return np.array(eps_t_list, dtype='f'), np.array(eps_c_list, dtype='f')'''
 
     #--------------------------------------------------------------------------------
     # get max tensile strain in first reinforcement layer
@@ -1053,7 +1013,7 @@ class ExpBTTDB(ExType):
             return None
 
         ad = AramisData(aramis_info=self.aramis_info)
-        absa = AramisBSA(aramis_info=self.aramis_info,
+        absa = AramisCDT(aramis_info=self.aramis_info,
                          aramis_data=ad,
                          integ_radius=10)
 
@@ -1095,35 +1055,32 @@ class ExpBTTDB(ExType):
     F_beg_threshold = Float(0.11, auto_set=False, enter_set=True)
     '''Threshold to find the beginning of raising F
     '''
-
-    t_F_beg = Property(depends_on='data_file,aramis_resolution_key')
+    F_beg_idx = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
-    def _get_t_F_beg(self):
-        # get the time of the the beginning of raising F
-
+    def _get_F_beg_idx(self):
+        # get the index where the raising of F begins
         ai = self.aramis_info
         if ai == None:
             return None
 
-        F = self.F_t_aramis
-        # print 'F', F
-        N = self.N_t_aramis
-        # print 'N', N
-        t = self.t_aramis_cut
-        # print 't', t
+        # print 'F', self.F_t_aramis
+        # print 'N', self.N_t_aramis
+        # print 't', self.t_aramis
 
-        F_idx = np.where(F > self.F_beg_threshold)[0]
+        F_idx = np.where(self.F_t_aramis > self.F_beg_threshold)[0]
         # print 'F_idx', F_idx
 
         if len(F_idx) == 0:
-            # print 't_F_beg', []
-            return []
-        elif max(N) <= 2:
-            # print 't_F_beg', t[0]
-            return t[0]
+            F_beg_idx = []
+
+        elif max(self.N_t_aramis) <= 2:
+            F_beg_idx = 0
         else:
-            # print 't_F_beg', t[F_idx[0]]
-            return t[F_idx[0]]
+            return F_idx[0]
+
+        # print 'F_beg_idx', F_beg_idx
+        return F_beg_idx
+
 
     t_N_arr = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
@@ -1134,18 +1091,17 @@ class ExpBTTDB(ExType):
         if ai == None:
             return None
 
-        t = self.t_aramis_cut
-
-        if self.t_F_beg == 0:
+        if self.F_beg_idx == 0:
             t_N = []
-        elif self.t_F_beg == []:
-            t_N = t
+        elif self.F_beg_idx == []:
+            t_N = self.t_aramis_cut
         else:
-            t_N_end = self.t_F_beg - 5
-            t_N = t [t <= t_N_end]
+            N_end_idx = self.F_beg_idx
+            t_N = self.t_aramis_cut[0: N_end_idx]
 
         # print 't_N_arr', t_N
         return t_N
+
 
     t_F_arr = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
@@ -1156,14 +1112,12 @@ class ExpBTTDB(ExType):
         if ai == None:
             return None
 
-        t = self.t_aramis_cut
-
-        if self.t_F_beg == 0:
-            t_F = t
-        elif self.t_F_beg == []:
+        if self.F_beg_idx == 0:
+            t_F = self.t_aramis_cut
+        elif self.F_beg_idx == []:
             t_F = []
         else:
-            t_F = t[t >= self.t_F_beg]
+            t_F = self.t_aramis_cut[self.F_beg_idx:]
 
         # print 't_F_arr', t_F
         return t_F
@@ -1184,15 +1138,7 @@ class ExpBTTDB(ExType):
                          integ_radius=10)
 
         a = self.crack_bridge_strain_all
-
-        t = self.t_aramis_cut
         t_N = self.t_N_arr
-
-        if len(self.t_N_arr) == 0:
-            N_end_idx = []
-        else:
-            N_end_idx = np.where(t == self.t_N_arr[-1]) [0]
-
         eps_N_list = []
 
         if t_N != []:
@@ -1219,16 +1165,15 @@ class ExpBTTDB(ExType):
     def _get_N_t_N(self):
         # get N in the area of t_N
 
-        t = self.t_aramis_cut
-
         if len(self.t_N_arr) == 0:
             # print 'self.N_t_aramis[0:t_N_idx]', []
             return []
         else:
-            N_end_idx = np.where(t == self.t_N_arr[-1]) [0]
+            N_end_idx = np.shape(self.t_N_arr) [0]
             # print 'N_end_idx' , N_end_idx
-            # print 'self.N_t_aramis[0:t_N_idx+1]', self.N_t_aramis[0:N_end_idx + 1]
-            return self.N_t_aramis[0:N_end_idx + 1]
+            # print 'self.N_t_aramis[0:t_N_idx]', self.N_t_aramis[0:N_end_idx]
+            return self.N_t_aramis[0:N_end_idx]
+
 
     eps_M = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
@@ -1245,19 +1190,11 @@ class ExpBTTDB(ExType):
                          integ_radius=10)
 
         a = self.crack_bridge_strain_all
-
-        t = self.t_aramis_cut
         t_F = self.t_F_arr
-
-        if len(self.t_F_arr) == 0:
-            F_beg_idx = []
-        else:
-            F_beg_idx = np.where(t == self.t_F_arr[0]) [0]
-
         eps_M_max_list = []
         eps_M_min_list = []
 
-        step_1 = F_beg_idx
+        step_1 = self.F_beg_idx
         max_step = self.n_steps
 
         if t_F != []:
@@ -1285,16 +1222,12 @@ class ExpBTTDB(ExType):
     def _get_F_t_F(self):
         # get F in the area of t_F
 
-        t = self.t_aramis_cut
-
-        if self.t_F_arr == []:
-            # print 'self.F_t_aramis[F_beg_idx:]', []
+        if self.F_beg_idx == []:
+            # print 'F_tF', []
             return []
         else:
-            F_beg_idx = np.where(t == self.t_F_arr[0]) [0]
-            # print 'F_beg_idx', F_beg_idx
-            # print 'self.F_t_aramis[F_beg_idx:]', self.F_t_aramis[F_beg_idx:]
-            return self.F_t_aramis[F_beg_idx:]
+            # print 'self.F_t_aramis[self.F_beg_idx:]', self.F_t_aramis[self.F_beg_idx:]
+            return self.F_t_aramis[self.F_beg_idx:]
 
     #--------------------------------------------------------------------------------
     # get height of compression zone
@@ -1343,10 +1276,10 @@ class ExpBTTDB(ExType):
             eps_to1 = np.append(eps, eps_ed_lo)
             eps_to2 = np.append(eps_ed_up, eps_to1)
 
-            print 'eps_to2', eps_to2
+            # print 'eps_to2', eps_to2
 
             idx_neg = np.array(np.where(eps_to2 < 0) [0])
-            print 'idx_neg', idx_neg
+            # print 'idx_neg', idx_neg
             d = idx_neg.shape [0]
             # print 'shape', d
 
@@ -1365,13 +1298,13 @@ class ExpBTTDB(ExType):
                 idx_2 = idx_1 - 1
                 # print 'idx_2', idx_2
 
-                x_a = (dis_fa * abs(eps_to2[idx_1])) / (eps_to2[idx_2] - eps[idx_1])
+                x_a = (dis_fa * abs(eps_to2[idx_1])) / (eps_to2[idx_2] - eps_to2[idx_1])
                 # print 'x_a', x_a
                 x = h_2[idx_1] + x_a
                 # print 'x', x
 
             x_list.append(x)
-            print 'x', np.array(x_list, dtype='f')
+            # print 'x', np.array(x_list, dtype='f')
 
         return np.array(x_list, dtype='f')
 
@@ -1379,6 +1312,7 @@ class ExpBTTDB(ExType):
     # get curvature of the specimen
     #--------------------------------------------------------------------------------
 
+    # TO-DO: check if correct
     cu_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_cu_t_aramis(self):
@@ -1386,10 +1320,27 @@ class ExpBTTDB(ExType):
         ai = self.aramis_info
         if ai == None:
             return None
-        z = 20 - self.x_t_aramis
 
-        cu = self.eps1_t_aramis[0] / z
-        return cu
+        a = self.crack_bridge_strain_all
+        eps = self.eps1_t_aramis[0]
+        z_arr = 20 - self.x_t_aramis
+        cu_list = []
+        # print 'self.x_t_aramis', self.x_t_aramis
+        # print 'z_arr', z_arr
+        # print 'self.eps1_t_aramis[0]', self.eps1_t_aramis[0]
+
+        if a == None:
+            return None
+
+        else:
+            for i in z_arr:
+                if i == 0:
+                    cu = 0
+                else:
+                    cu = eps[i] / z_arr[i]
+                cu_list.append(cu)
+
+        return np.array(cu_list, dtype='f')
 
     #---------------------------------
     # view
@@ -1487,7 +1438,7 @@ if __name__ == '__main__':
     ex_path = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
                            '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
-                           'BTT-4c-2cm-TU-0-V02_MxN2.DAT')
+                           'BTT-4c-2cm-TU-0-V03_MxN2.DAT')
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
