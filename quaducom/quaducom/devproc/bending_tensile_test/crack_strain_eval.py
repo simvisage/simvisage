@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     import pylab as p
 
-    test_files = ['BTT-4c-2cm-TU-0-V03_MxN2.DAT']
+    test_files = ['BTT-4c-2cm-TU-0-V05_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
@@ -32,10 +32,11 @@ if __name__ == '__main__':
         print 'crack filter', e.crack_filter_avg
         AUI = AramisUI(aramis_info=e.aramis_info)
         print e.n_steps
-        AUI.aramis_cdt.integ_radius = 10
+        AUI.aramis_cdt.integ_radius = 5
         AUI.aramis_data.evaluated_step_idx = e.n_steps
         AUI.aramis_cdt.crack_detect_idx = e.n_steps
-
+        AUI.aramis_cdt.ddd_ux_avg_threshold = -1e-4
+        AUI.aramis_cdt.ddd_ux_threshold = -1e-4
 
         x = AUI.aramis_data.x_arr_undeformed
         y = AUI.aramis_data.y_arr_undeformed

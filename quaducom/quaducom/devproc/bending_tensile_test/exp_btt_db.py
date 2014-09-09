@@ -740,7 +740,9 @@ class ExpBTTDB(ExType):
         absa = AramisCDT(aramis_info=self.aramis_info,
                          crack_detect_idx=self.n_steps,
                          aramis_data=ad,
-                         integ_radius=10)
+                         integ_radius=5,
+                         ddd_ux_avg_threshold=-1e-4,
+                         ddd_ux_threshold=-1e-4)
 
         print 'crack detect step', absa.crack_detect_idx
         print 'testing n_cracks', absa.number_of_cracks_avg
