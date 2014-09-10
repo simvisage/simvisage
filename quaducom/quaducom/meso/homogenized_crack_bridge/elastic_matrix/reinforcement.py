@@ -11,7 +11,7 @@ can be used by the composite crack bridge model.
 import numpy as np
 from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
-    Float, Property, Int, Str, on_trait_change
+    Float, Property, Int, Str, on_trait_change, Array
 from types import FloatType
 from util.traits.either_type import EitherType
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
@@ -168,3 +168,50 @@ class ShortFibers(Reinforcement):
     @cached_property
     def _get_r_arr(self):
         return self.results[3]
+    
+
+class FiberBundle(Reinforcement):
+    
+#===============================================================================
+# Parameters
+#===============================================================================        
+    E_f = Float(180e3) # the elastic modulus of the fiber
+    V_f = Float # volume fraction
+#     tau = EitherType(klasses=[FloatType, Array, RV]) # bond stiffness
+    tau = Array
+    tau_weights =Array # the weights for tau, applicable when tau is an array
+    xi = EitherType(klasses=[FloatType, RV, WeibullFibers]) # breaking strain
+    r = EitherType(klasses=[FloatType, RV]) # fiber radius
+    n_int = Int(10) # number of integration points
+    
+#===============================================================================
+# Sampling
+#===============================================================================        
+    samples = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    @cached_property
+    def _get_samples(self):
+        if isinstance(self.tau, np.ndarray):
+            tau_arr = self.tau
+            stat_weights = self.tau_weights
+        return 2*tau_arr/self.r/self.E_f, stat_weights, \
+               np.ones_like(tau_arr), self.r*np.ones_like(tau_arr)
+               
+    depsf_arr = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    @cached_property
+    def _get_depsf_arr(self):
+        return self.samples[0]
+
+    stat_weights = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    @cached_property
+    def _get_stat_weights(self):
+        return self.samples[1]
+
+    nu_r = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    @cached_property
+    def _get_nu_r(self):
+        return self.samples[2]
+
+    r_arr = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    @cached_property
+    def _get_r_arr(self):
+        return self.samples[3]
