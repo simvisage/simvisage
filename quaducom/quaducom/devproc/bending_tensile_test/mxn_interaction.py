@@ -17,7 +17,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-4c-2cm-TU-0-V01_MxN2.DAT',
+    test_files = ['BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
                   ]
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         p.plot(e.t_aramis_cut, e.eps1_t_aramis * 1000, color='black', label='eps_tension_1re')
         p.plot(e.t_aramis_cut, e.eps_t_aramis[1] * 1000, color='green', label='eps_compression')
         p.xlim(0, 500)
-        p.ylim(-4, 20)
+        p.ylim(-5, 30)
         p.xlabel('t [sec]')
         p.ylabel('strain [1*E-3]')
         p.legend(loc=2)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         p.ylabel('w [mm]')
         p.legend(loc=1)
         print 'max tension strain', max(e.eps_t_aramis[0] * 1000)
-        print 'max compression strain', max(e.eps_t_aramis[1] * 1000)
+        print 'min compression strain', min(e.eps_t_aramis[1] * 1000)
         print 'max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000)
 
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         # AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
         AD = AramisData(aramis_info=AI)
 
-        ac = AramisCDT(aramis_info=AI,
+        ac = AramisBSA(aramis_info=AI,
                         aramis_data=AD,
                         integ_radius=10)
 
@@ -149,7 +149,9 @@ if __name__ == '__main__':
             p.ylim(0, 20)
             p.xlabel('strain [1*E-3]')
             p.ylabel('h [mm]')
-            p.legend(bbox_to_anchor=(0.66, 0.02), borderaxespad=0., ncol=2, loc=3)
+            # p.legend(bbox_to_anchor=(0.66, 0.02), borderaxespad=0., ncol=2, loc=3)
+            p.legend(bbox_to_anchor=(0.99, 0.98), borderaxespad=0., ncol=2, loc=1)
+
 
         p.show()
 

@@ -16,11 +16,11 @@ if __name__ == '__main__':
 
     import pylab as p
 
-    test_files = ['BTT-4c-2cm-TU-0-V02_MxN2.DAT']
+    test_files = ['BTT-6c-2cm-TU-0-V13_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
-                             '2014-06-12_BTT-4c-2cm-0-TU_MxN2')
+                             '2014-06-12_BTT-6c-2cm-0-TU_MxN2')
 
     e_list = [ExpBTTDB(data_file=os.path.join(test_file_path, test_file),
                        delta_t_aramis=5)

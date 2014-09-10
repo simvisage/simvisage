@@ -400,6 +400,7 @@ class ExpBTTDB(ExType):
 
             return w_el_pred
 
+
         else:
             return w
 
@@ -637,7 +638,7 @@ class ExpBTTDB(ExType):
     '''Specification of the resolution of the measured aramis field
     '''
 
-    start_t_aramis = Float(5.0)
+    start_t_aramis = Float(10.0)
     '''Start time of aramis measurement.
     '''
 
@@ -668,14 +669,14 @@ class ExpBTTDB(ExType):
     t_aramis_cut = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis_cut(self):
-        # print 't_aramis_cut', self.t_aramis[: ]
+        # print 't_aramis_cut', self.t_aramis[: -1]
         return self.t_aramis[ :]
 
     n_steps = Property
     @cached_property
     def _get_n_steps(self):
         'number of time steps in aramis after limiting the steps with t_max'
-        # print 'n_steps', len(self.t_aramis_cut)
+        print 'n_steps', len(self.t_aramis_cut)
         return len(self.t_aramis_cut)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -751,7 +752,7 @@ class ExpBTTDB(ExType):
         # print 'ad.length_x_undeformed', ad.length_x_undeformed
         # print 'ad.length_y_undeformed', ad.length_y_undeformed
         # print absa.crack_filter_avg
-        print 'ad.x_arr_undeformed[0, absa.crack_filter_avg]', ad.x_arr_undeformed[0, absa.crack_filter_avg]
+        # print 'ad.x_arr_undeformed[0, absa.crack_filter_avg]', ad.x_arr_undeformed[0, absa.crack_filter_avg]
         return ad.x_arr_undeformed[0, absa.crack_filter_avg]
 
 
@@ -778,17 +779,15 @@ class ExpBTTDB(ExType):
             crack_idx_list.append(crack_idx[0])
 
         crack_idx_arr1 = np.array(crack_idx_list)
-        print 'crack_idx_arr1', crack_idx_arr1
         crack_idx_arr2 = np.rollaxis(crack_idx_arr1, 1, 0)
-        # print 'crack_idx_arr2', crack_idx_arr2
         crack_idx_arr = crack_idx_arr2[0]
-        # print 'crack_idx_arr', crack_idx_arr
+        print 'crack_idx_arr', crack_idx_arr
 
         # get the indices of the middle between two cracks
         crack_mid_idx_arr = (crack_idx_arr[0:-1] + crack_idx_arr[1:]) / 2
-        # print 'crack_mid_idx_arr', crack_mid_idx_arr
+        print 'crack_mid_idx_arr', crack_mid_idx_arr
         i_max = len(crack_mid_idx_arr)
-        # print 'i_max', i_max
+        print 'i_max', i_max
 
         if i_max <= 1:
             # print ' less than three cracks'
@@ -801,7 +800,7 @@ class ExpBTTDB(ExType):
             for i in range(0, i_max - 1, 1):
                 eps_crack_bridge_i = np.mean(absa.d_ux_arr[:, crack_mid_idx_arr[i]:crack_mid_idx_arr[i + 1]], axis=1)
                 eps_list.append(eps_crack_bridge_i)
-            print 'crack_bridge_strain_all', np.array(eps_list, dtype='f')
+            # print 'crack_bridge_strain_all', np.array(eps_list, dtype='f')
         return np.array(eps_list, dtype='f')
 
 
@@ -819,14 +818,14 @@ class ExpBTTDB(ExType):
 
         # identify failure crack
         a = self.crack_bridge_strain_all  # only strain in the last step
-
+        # print 'a', a
         if a == None:
             return None
 
         max_strain = a.max()
         # print 'max_strain', max_strain
         max_idx = np.where(a == max_strain)[0]
-        # print 'max_idx', max_idx
+        print 'max_idx', max_idx
 
         # get the indices oft all cracks
         b = ad.x_arr_undeformed [0]
@@ -846,11 +845,13 @@ class ExpBTTDB(ExType):
         # print 'crack_mid_idx_arr', crack_mid_idx_arr
 
         idx_failure_crack = crack_idx_arr[max_idx + 1]
-        # print 'idx_failure_crack', idx_failure_crack
+        print 'idx_failure_crack', idx_failure_crack
+        print 'shape_ad.x_arr_undeformed [0]', np.shape(ad.x_arr_undeformed)
+        print 'crack_number', max_idx + 2
         idx_border1 = crack_mid_idx_arr[max_idx]
-        # print 'idx_border1 ', idx_border1
+        print 'idx_border1 ', idx_border1
         idx_border2 = crack_mid_idx_arr[max_idx + 1]
-        # print 'idx_border2 ', idx_border2
+        print 'idx_border2 ', idx_border2
 
         return idx_failure_crack, idx_border1, idx_border2
 
@@ -1315,7 +1316,7 @@ class ExpBTTDB(ExType):
     #--------------------------------------------------------------------------------
 
     # TO-DO: check if correct
-    cu_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    '''cu_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_cu_t_aramis(self):
 
@@ -1342,7 +1343,7 @@ class ExpBTTDB(ExType):
                     cu = eps[i] / z_arr[i]
                 cu_list.append(cu)
 
-        return np.array(cu_list, dtype='f')
+        return np.array(cu_list, dtype='f')'''
 
     #---------------------------------
     # view
@@ -1439,8 +1440,8 @@ if __name__ == '__main__':
 
     ex_path = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
-                           '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
-                           'BTT-4c-2cm-TU-0-V03_MxN2.DAT')
+                           '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
+                           'BTT-6c-2cm-TU-0-V02_MxN2.DAT')
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
