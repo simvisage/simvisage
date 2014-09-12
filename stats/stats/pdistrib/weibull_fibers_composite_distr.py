@@ -126,7 +126,8 @@ class fibers_MC(WeibullFibers):
         expRfixed = np.minimum(a0, np.ones_like(a0)*self.specimen_length/2.) / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
         maskR = ar < Lr
         expR = expRfree * maskR + expRfixed * (maskR == False)
-        return 1. - np.exp(- expL - expR)
+        CDF = 1. - np.exp(-expR - expL)
+        return CDF
 
     def cdf2(self, e, depsf, r):
         lm, m, sV0 = 2*self.Ll, self.m, self.sV0
@@ -193,6 +194,8 @@ if __name__ == '__main__':
     #plt.plot(rat, CDF, label='MC')
     #plt.plot(rat, CDFexct, label='exact')
     #plt.ylim(0)
+    plt.xlabel('peak fiber strain (at z=0)')
+    plt.ylabel('probability of failure')
     plt.legend(loc='best')
     plt.show()
 

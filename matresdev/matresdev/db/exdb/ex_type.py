@@ -280,10 +280,13 @@ class ExType(SimDBClass):
         zf.close()
 
     def get_cached_aramis_file(self, arkey):
-        '''For the psecified aramis resolution key check if the file
+        '''For the specified aramis resolution key check if the file
         has already been downloaded.
         '''
-        af = self.aramis_dict[arkey]
+        af = self.aramis_dict.get(arkey, None)
+        if af == None:
+            print 'Aramis data not available for resolution %s of the test data\n%s' % (arkey, self.data_file)
+            return None
         af_path = os.path.join(simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
 
         print 'cache_remote', simdb.simdb_cache_remote_dir
