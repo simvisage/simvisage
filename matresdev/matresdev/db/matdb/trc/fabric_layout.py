@@ -86,8 +86,10 @@ FabricLayOut.db = SimDBClassExt(
                'MAG-07-03' : FabricLayOut(
                                            a_tex_0=107.89,
                                            a_tex_90=106.61,
-                                           E_tex_0=72000.,
-                                           E_tex_90=72000.,
+#                                           E_tex_0=72000.,
+#                                           E_tex_90=72000.,
+                                           E_tex_0=66831.,  # (l=500mm;2400tex;200mm/min)
+                                           E_tex_90=66831.,  # (l=500mm;2400tex;200mm/min)
                                            s_tex_0=8.3,
                                            s_tex_90=8.4,
                                            ),
@@ -97,8 +99,10 @@ FabricLayOut.db = SimDBClassExt(
                '2D-15-10' : FabricLayOut(
                                            a_tex_0=107.89,
                                            a_tex_90=106.61,
-                                           E_tex_0=72000.,
-                                           E_tex_90=72000.,
+#                                           E_tex_0=72000.,
+#                                           E_tex_90=72000.,
+                                           E_tex_0=66831.,  # (l=500mm;2400tex;200mm/min)
+                                           E_tex_90=66831.,  # (l=500mm;2400tex;200mm/min)
                                            s_tex_0=8.3,
                                            s_tex_90=8.4,
                                            ),
@@ -109,8 +113,10 @@ FabricLayOut.db = SimDBClassExt(
                '2D-02-06a' : FabricLayOut(
                                            a_tex_0=71.65,
                                            a_tex_90=53.31,
-                                           E_tex_0=72000.,
-                                           E_tex_90=72000.,
+#                                           E_tex_0=72000.,
+#                                           E_tex_90=72000.,
+                                           E_tex_0=66831.,  # (l=500mm;2400tex;200mm/min)
+                                           E_tex_90=66831.,  # (l=500mm;2400tex;200mm/min)
                                            s_tex_0=12.5,
                                            s_tex_90=8.4,
                                            ),
@@ -181,8 +187,10 @@ FabricLayOut.db = SimDBClassExt(
 #                                           a_tex_0=55.4,
                                            a_tex_90=58.2,  # 0.448mm2 / 7.7mm
 #                                           a_tex_90=60.,  # 55.0 * 8.4mm / 7.7mm
-                                           E_tex_0=72000.,
-                                           E_tex_90=72000.,
+#                                           E_tex_0=72000.,
+#                                           E_tex_90=72000.,
+                                           E_tex_0=66831.,  # (l=500mm;2400tex;200mm/min)
+                                           E_tex_90=66831.,  # (l=500mm;2400tex;200mm/min)
                                            s_tex_0=8.3,
                                            s_tex_90=7.7,  # input for manufacturing machine was 8.4 mm!
                                            ),
