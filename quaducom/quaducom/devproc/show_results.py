@@ -110,8 +110,17 @@ if __name__ == '__main__':
     #---------------------------
     # CAR-800-TU-1v1l, tissue, 800tex
     #
-    test_series_name = 'ST-12c-6cm-0-TU_SH2'
-    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
+#    test_series_name = 'ST-12c-6cm-0-TU_SH2'
+#    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
+
+#    test_series_name = 'ST-12c-6cm-u-TR_V2'
+#    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2011-05-25_ST-12c-6cm-u-TR', 'ST-12c-6cm-u-TR_V2.DAT')
+
+    test_series_name = 'ST-10g-3cm-a-TR'
+#    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2010-03-08_ST-10g-3cm-a-FR_TRC10', 'ST-10g-3cm-a-FR-TRC10.DAT')
+#    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2010-03-09_ST-10g-3cm-a-FR_TRC11', 'ST-10g-3cm-a-FR-TRC11.DAT')
+    path_V1 = os.path.join(simdb.exdata_dir, 'slab_tests', '2010-03-10_ST-10g-3cm-a-FR_TRC12', 'ST-10g-3cm-a-FR-TRC12.DAT')
+
     path_list = [path_V1]
     label_list = [None]
     color_list = ['k']
@@ -121,12 +130,12 @@ if __name__ == '__main__':
 #    #---------------------------
 #    # CAR-800-TU-1v1l, tissue, 800tex
 #    #
-    test_series_name = 'BT-4PT-12c-6cm-0-TU'
-    path_V1 = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
-    path_V2 = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V2.DAT')
-    path_list = [path_V1, path_V2]
-    label_list = [None, None]
-    color_list = ['k', 'k']
+#    test_series_name = 'BT-4PT-12c-6cm-0-TU'
+#    path_V1 = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V1.DAT')
+#    path_V2 = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2012-04-03_BT-4PT-12c-6cm-0-TU', 'BT-4PT-12c-6cm-SH4', 'BT-4PT-12c-6cm-SH4-V2.DAT')
+#    path_list = [path_V1, path_V2]
+#    label_list = [None, None]
+#    color_list = ['k', 'k']
 
     # --------------------------------
     # plot sig-eps-curves
@@ -141,8 +150,9 @@ if __name__ == '__main__':
 #        ex_run.ex_type._plot_tex_stress_strain_asc(p, k_rho=k_rho, color=color_list, linewidth=2., linestyle='-', label=label_list[i], xscale=1000.)
 #        ex_run.ex_type._plot_comp_stress_strain_asc(p, k_rho=k_rho, color=color_list[i], linewidth=2., linestyle='-', label=label_list[i], xscale=1000.)
 #        ex_run.ex_type._plot_force_center_deflection_interpolated_avg(p)
-#        ex_run.ex_type._plot_force_deflection_avg_interpolated(p, linewidth=2.)
-        ex_run.ex_type._plot_force_deflection_center(p, linewidth=2.)
+        ex_run.ex_type._plot_force_deflection_avg_interpolated(p, linewidth=2.)
+#        ex_run.ex_type._plot_force_center_deflection(p)
+#        ex_run.ex_type._plot_force_deflection_center(p, linewidth=2.)
 
     format_plot(p, xlabel='Durchbiegung $w$ [mm]', ylabel='Kraft $F$ [kN]', xlim=60., ylim=14.)
 #    format_plot(p, xlabel='Dehnung [1E-3]', ylabel='Kompositspannung [MPa]', xlim=xlim, ylim=ylim)
