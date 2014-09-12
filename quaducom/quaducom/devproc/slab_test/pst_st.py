@@ -110,8 +110,8 @@ if __name__ == '__main__':
     #------------------------------
 #    do = 'show_phi_fn'
 #    do = 'ui'
-    do = 'validation'
-#    do = 'show_last_results'
+#    do = 'validation'
+    do = 'show_last_results'
 
 #    test_series = 'ST-10g'
     test_series = 'ST-12c'
@@ -127,23 +127,35 @@ if __name__ == '__main__':
                             # calibration for: age = XXd; E_m = XX MPa; nu = XX
                             #
                             ccs_unit_cell_key='FIL-10-09_2D-02-06a_0.00273_90_0',
-                            calibration_test='TT11-10a-average',
+#                            calibration_test='TT11-10a-average',
+#                            calibration_test='TT-10g-3cm-a-TR-average_age28_Ec18709.5_nu0.2_nsteps200_smoothed',
+                            calibration_test='TT-10g-3cm-a-TR-average_age28_Ec28700_nu0.2_nsteps200_smoothed',
 #                            age = 23,
                             #
                             thickness=0.03,
                             length=1.25,
                             #
-                            elstmr_flag=False,
-                            supprt_flag=False,
-                            geo_st_flag=False,
+                            radius_plate=0.095,  # D=8cm
                             #
+                            elstmr_flag=False,
+                            supprt_flag=True,
+                            geo_st_flag=True,
+#                            supprt_flag=False,
+#                            geo_st_flag=False,
+                            #
+                            # coarse mesh:
                             shape_xy=10,
+                            shape_R=2,
                             shape_z=2,
+                            shape_supprt_xy=2,
                             #
                             tstep=0.05,
-                            tmax=1.00,
-                            tolerance=0.0005,
-                            ord=np.inf
+                            tmax=1.0,
+                            #
+                            w_max= -0.055,
+                            # 'NOTE: tloop.norm switched to "max(abs(x))"'
+                            tolerance=0.0001,  # #[MN]0.0001#1e-6#1e-8#0.0005
+                            ord=np.inf,  # "norm = max(abs(x_i))"
                             )
 
     #-----------------------------------------
@@ -153,9 +165,9 @@ if __name__ == '__main__':
 
         sim_model = SimSTDB(
 
-#                             thickness=0.06,
+                             thickness=0.06,
 #                             thickness=0.0577,
-                            thickness=0.0554,
+#                            thickness=0.0554,
 
                             length=1.25,
                             radius_plate=0.095,  # D=8cm
@@ -201,10 +213,10 @@ if __name__ == '__main__':
 #                            shape_R=4,
 #                            shape_supprt_xy=4,
                             #
-                            w_max= -0.040,
-                            tstep=0.05,
-#                            tstep = 1.00,
-                            tmax=0.85,
+                            w_max= -0.035,
+                            tstep=0.01,
+#                            tstep=1.00,
+                            tmax=1.00,
                             # 'NOTE: tloop.norm switched to "max(abs(x))"'
                             tolerance=0.0001,  # #[MN]0.0001#1e-6#1e-8#0.0005
                             ord=np.inf,  # "norm = max(abs(x_i))"
@@ -234,12 +246,14 @@ if __name__ == '__main__':
 #                             calibration_test='TT-6c-2cm-0-TU-V3_bs1_age28_Ec22213.2_nu0.2_nsteps100',
 #                             calibration_test='TT-6c-2cm-0-TU-V1_bs2_age28_Ec22213.2_nu0.2_nsteps100',
 #                             calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Ec22213.2_nu0.2_nsteps100',
-                             calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
+#                             calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
+
+                             calibration_test='TTb-6c-2cm-0-TU-V2_bs4_age28_Ec18709.5_nu0.2_nsteps200_smoothed',
 #
                             age=28,
                             #
-                            thickness=0.01714,
-                            thickness_plain_concrete=0.00286,
+                            thickness=0.02,
+#                            thickness_plain_concrete=0.00286,
                             length=0.80,
                             radius_plate=0.04,  # D=8cm
                             #
@@ -250,14 +264,14 @@ if __name__ == '__main__':
                             #
                             shape_xy=10,
                             shape_R=2,
-                            shape_z=3,
+                            shape_z=2,
                             #
-                            w_max= -0.040,
+                            w_max= -0.060,
                             tstep=0.02,
-                            tmax=0.02,
+                            tmax=1.0,
                             #
                             ord=np.inf,  # "norm = max(abs(x_i))"
-                            tolerance=0.0001,  # [MN]0.0001#1e-6#1e-8#0.0005
+                            tolerance=0.00005,  # [MN]0.0001#1e-6#1e-8#0.0005
                             #
                             # 'factor_eps_fail' = 1.0 (default)
                             phi_fn_class=PhiFnGeneralExtended
@@ -350,7 +364,8 @@ if __name__ == '__main__':
 
         # pstudy: thickness
         #
-#         pst_list = [ 0.06 ]  # 0.0554,
+        pst_list = [ 0.0554 ]  # 0.06, ]
+#        pst_list = [ 0.01714 ]  # 0.02 ]
 
         # pstudy: n_mp
         #
@@ -360,7 +375,7 @@ if __name__ == '__main__':
         #
 #        pst_list = [ 'TT-12c-6cm-0-TU-SH2F-V3_a23d_nu02_s100' , 'TT-12c-6cm-TU-SH1F-V1' ]
 
-        pst_list = [
+#        pst_list = [
 #                       # Em = 19800. MPa
 #                       #
 #                       'TT-6c-2cm-0-TU-V3_bs1_age28_Em19800_nu0.2_nsteps100',
@@ -377,8 +392,8 @@ if __name__ == '__main__':
 
                        # initial stiffness corresponds to tensile test; cut of at eps=0.007; based on smoothed experimental curve without oscillation
                        #
-                       'TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
-                   ]
+#                       'TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed',
+#                   ]
 
         # pstudy: phi_fn
         #
@@ -387,9 +402,9 @@ if __name__ == '__main__':
 
         for pst_param in pst_list:
 
-#            sim_model.thickness = pst_param
+            sim_model.thickness = pst_param
 #            sim_model.n_mp = pst_param
-            sim_model.calibration_test = pst_param
+#            sim_model.calibration_test = pst_param
 #            sim_model.phi_fn_class = pst_param
 
             p.figure(facecolor='white', figsize=(12, 9))  # white background for diagram
@@ -437,7 +452,7 @@ if __name__ == '__main__':
             dump(sim_model.f_w_diagram_center.trace, file)
             print 'pickle file saved to file: %s' % file_name
             file.close()
-            sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
+            sim_model.f_w_diagram_center.trace.mpl_plot(p, color='grey')
 
             # f-w-diagram_supprt
             #
@@ -448,7 +463,7 @@ if __name__ == '__main__':
             dump(sim_model.f_w_diagram_supprt.trace, file)
             print 'pickle file saved to file: %s' % file_name
             file.close()
-            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
+#            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='grey')
 
             w_asc = sim_model.f_w_diagram_supprt.trace.xdata
             f_asc = sim_model.f_w_diagram_supprt.trace.ydata
@@ -468,8 +483,7 @@ if __name__ == '__main__':
                 ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
                 ex_run = ExRun(ex_path)
                 ex_run.ex_type._plot_force_center_deflection_interpolated(p)
-
-                format_plot(p, xlim=35, ylim=70, xlabel='displacement [mm]', ylabel='force [kN]')
+                format_plot(p, xlim=35, ylim=100, xlabel='$w_\mathrm{Mitte}$ [mm]', ylabel='$F$ [kN]')
 
             if test_series == 'ST-10g':
                 # ST-10a
@@ -499,10 +513,13 @@ if __name__ == '__main__':
             #----------------------------------------------------------------------
             #
             png_file_path = join(png_path, param_key + '.png')
-            p.title(param_key, fontsize=8)
-            p.savefig(png_file_path, dpi=300.)
+            pdf_file_path = join(png_path, param_key + '.pdf')
+#            p.title(param_key, fontsize=8)
+            p.savefig(png_file_path, dpi=600.)
+            p.savefig(pdf_file_path)
             print 'png-file saved to file: %s' % png_file_path
-            p.show()
+            print 'pdf-file saved to file: %s' % pdf_file_path
+#            p.show()
 
         app.main()
 
@@ -513,6 +530,8 @@ if __name__ == '__main__':
     if do == 'show_last_results':
         from matresdev.db.exdb.ex_run import ExRun
         import pylab as p
+
+        p.figure(facecolor='white', figsize=(12, 9))  # white background for diagram
 
         pickle_path = join(simdb.simdata_dir, 'pickle_files')
         png_path = join(simdb.simdata_dir, 'png_files')
@@ -569,10 +588,22 @@ if __name__ == '__main__':
             # f-w-diagram_supprt
             #
             file_name = 'f_w_diagram_supprt_' + param_key + '.pickle'
+
+#            # h_eff = 0.0554 m
+#            file_name = 'f_w_diagram_supprt_SimSTDB_FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed_PhiFnGeneralExtended_L1.25h0.0554R0.095_sxy10z2R2_sTgT_E29100_nu0.2_tol0.0001_w-0.035_ts0.01_nmp30.pickle'
+#            pickle_file_path = join(pickle_path, file_name)
+#            file = open(pickle_file_path, 'r')
+#            trace = load(file)
+#            n_max = -28
+#            p.plot(trace.xdata[:n_max], trace.ydata[:n_max], color='grey', linestyle='--', linewidth=2.)
+
+            # h = 0.06 m
+            file_name = 'f_w_diagram_supprt_SimSTDB_FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed_PhiFnGeneralExtended_L1.25h0.06R0.095_sxy10z2R2_sTgT_E29100_nu0.2_tol0.0001_w-0.035_ts0.01_nmp30.pickle'
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'r')
             trace = load(file)
-            p.plot(trace.xdata, trace.ydata, color='blue')
+            n_max = -30
+            p.plot(trace.xdata[:n_max], trace.ydata[:n_max], color='grey', linestyle='-', linewidth=2.)
 
 #        # f-w-diagram_center
 #        #
@@ -587,14 +618,10 @@ if __name__ == '__main__':
         #--------------------
 
         if test_series == 'ST-12c':
-            # PT-12c-6cm-TU
-            #
             ex_path = join(simdb.exdata_dir, 'slab_tests', '2011-12-15_ST-12c-6cm-u-TU', 'ST-12c-6cm-u-TU.DAT')
             ex_run = ExRun(ex_path)
-            ex_run.ex_type._plot_force_center_deflection(p)
-            # plot sim curve as time new roman within the predefined limits
-            #
-            format_plot(p, xlim=35, ylim=70, xlabel='displacement [mm]', ylabel='force [kN]')
+            ex_run.ex_type._plot_force_center_deflection_interpolated(p, linewidth=2., plot_elastic_stiffness=False)
+            format_plot(p, xlim=35, ylim=70, xlabel='$w_\mathrm{Mitte}$ [mm]', ylabel='$F$ [kN]')  # PT-12c-6cm-TU
 
         if test_series == 'ST-10g':
             # PT-10a
@@ -608,7 +635,7 @@ if __name__ == '__main__':
                 ex_run.ex_type._plot_force_center_deflection(p)
             # plot sim curve as time new roman within the predefined limits
             #
-            format_plot(p, xlim=34, ylim=54, xlabel='displacement [mm]', ylabel='force [kN]')
+            format_plot(p, xlim=34, ylim=54, xlabel='Durchbiegung [mm]', ylabel='Kraft [kN]')
 
         if test_series == 'ST-6c':
             # ST-6c-2cm-TU_bs2
@@ -619,9 +646,21 @@ if __name__ == '__main__':
             # shift experimental curve to simulation curve value for the displacement at this load level
             # corresponding to linear elastic approximation of slab stiffness;
             #
-            ex_run.ex_type._plot_force_center_deflection(p, offset_w=0.0385, color='black')
+#            ex_run.ex_type._plot_force_center_deflection(p, offset_w=0.0385, color='black', linewidth=1.2)
+            ex_run.ex_type._plot_force_center_deflection_interpolated(p)
+
+            ex_path = join(simdb.exdata_dir, 'slab_tests', '2013-07-11_ST-6c-2cm-TU_bs3-4-5-Aramis3d', 'ST-6c-2cm-TU_bs5.DAT')
+            ex_run = ExRun(ex_path)
+            # specify offset as displacement measurement starts a little to late at a small force > 0
+            # shift experimental curve to simulation curve value for the displacement at this load level
+            # corresponding to linear elastic approximation of slab stiffness;
+            #
+#            ex_run.ex_type._plot_force_center_deflection(p, offset_w=0.0385, color='black', linewidth=1.2)
+            ex_run.ex_type._plot_force_center_deflection_interpolated(p)
+
             # plot sim curve as time new roman within the predefined limits
             #
-            format_plot(p, xlim=80, ylim=20, xlabel='displacement [mm]', ylabel='force [kN]')
+            format_plot(p, xlim=80, ylim=20, xlabel='Durchbiegung [mm]', ylabel='Kraft [kN]')
 
+        p.plot(np.array([0, 1]), np.array([0, 1]), color='grey', linestyle='--', linewidth=1.5)
         p.show()
