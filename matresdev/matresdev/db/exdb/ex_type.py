@@ -74,7 +74,7 @@ class ExType(SimDBClass):
     def _set_key(self, value):
         genkey = split(os.path.basename(self.data_file), '.')[0]
         if genkey != value:
-            raise KeyError, 'key mismatch %s != %s' % (genkey, self.value)
+            raise KeyError, 'key mismatch %s != %s' % (genkey, value)
 
     # indicate whether the test is suitable and prepared for
     # calibration.

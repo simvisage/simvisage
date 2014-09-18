@@ -73,6 +73,9 @@ class ExpBTTDB(ExType):
                            auto_set=False, enter_set=True)
     length = Float(0.35, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
+    # start of 2D-Aramis
+    start_time_aramis = Float(5, unit='m', input=True, table_field=True,
+                           auto_set=False, enter_set=True)
     # age of the concrete at the time of testing
     age = Int(28, unit='d', input=True, table_field=True,
                            auto_set=False, enter_set=True)
@@ -654,8 +657,11 @@ class ExpBTTDB(ExType):
     t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis(self):
-        step_times = self.aramis_field_data.step_times
+        step_times = self.aramis_field_data.step_times + 5
+        print 'step_times', step_times
+        print 'last_step_times', step_times[-1]
         t_max = self.t[self.w_cut_idx]
+        print 't_max', t_max
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
@@ -664,7 +670,7 @@ class ExpBTTDB(ExType):
     def _get_t_aramis_cut(self):
         # print 't_aramis', self.t_aramis
         # print 't_aramis_cut', self.t_aramis[:-1]
-        return self.t_aramis[ :-1]
+        return self.t_aramis[ :]
 
     n_steps = Property
     @cached_property
@@ -673,6 +679,7 @@ class ExpBTTDB(ExType):
         x = self.n_steps_aramis - len(self.t_aramis_cut)
         if x == 0:
             x = 1
+        # print 'len(self.t_aramis_cut)', len(self.t_aramis_cut)
         # print 'x = ', x
         # print 'self.aramis_info.number_of_steps - x', self.aramis_info.number_of_steps - x
         return self.aramis_info.number_of_steps - x
@@ -691,12 +698,11 @@ class ExpBTTDB(ExType):
     '''
     def _get_aramis_field_data(self):
         t_fail = self.t_cut_asc[-1]
+        # t_fail = self.t_aramis_cut[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
                                integ_radius=3)
         current_step = np.abs(ad.step_times - t_fail).argmin()
-        'CURRENT STEP', current_step
         ad.current_step = current_step
-        # ad.current_time = t_fail
         return ad
 
     aramis_cdt = Property
@@ -762,6 +768,7 @@ class ExpBTTDB(ExType):
             return None
         field_data = self.aramis_field_data
         cdt = self.aramis_cdt
+        # print field_data.x_arr_0[0, cdt.crack_filter_avg]
         return field_data.x_arr_0[0, cdt.crack_filter_avg]
 
     crack_bridge_strain_all = Property  # (depends_on='data_file,aramis_resolution_key')
@@ -898,7 +905,7 @@ class ExpBTTDB(ExType):
             return None
 
         field_data = self.aramis_field_data
-        field_data.current_step = self.n_steps - 2
+        field_data.current_step = self.n_steps
 
         x = field_data.x_arr_0
         y = field_data.y_arr_0
@@ -1483,6 +1490,7 @@ class ExpBTTDB(ExType):
                          HSplit(Group(
                                   Item('width', format_str="%.3f"),
                                   Item('length', format_str="%.3f"),
+                                  Item('start_time_aramis', format_str="%.0f"),
                                   springy=True,
                                   label='geometry',
                                   id='matresdev.db.exdb.ex_composite_bending_tensile_test.geometry',
@@ -1553,16 +1561,6 @@ ExpBTTDB.db = ExRunClassExt(klass=ExpBTTDB)
 
 if __name__ == '__main__':
 
-#    ExpTTDB.add_class_trait('production_date', Date(input=True, table_field=True,))
-#    for inst in ExpTTDB.db.inst_list:
-#        print inst.key
-#        print inst.add_trait('production_date', Date('14/9/2011', input=True, table_field=True,))
-#        print inst.production_date
-#        inst.save()
-
-    import pylab as p
-
-
     from matresdev.db.simdb import SimDB
     from matresdev.db.exdb import ExRunView
     simdb = SimDB()
@@ -1571,7 +1569,7 @@ if __name__ == '__main__':
     ex_path = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
                            '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                           'BTT-6c-2cm-TU-0-V08_MxN2.DAT')
+                           'BTT-6c-2cm-TU-0-V01_MxN2.DAT')
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',

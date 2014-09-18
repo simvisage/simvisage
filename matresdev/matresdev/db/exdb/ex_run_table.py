@@ -71,7 +71,7 @@ class ExRunTableAdapter (TabularAdapter):
     # EXTRACT FACTOR NAMES AS COLUMNS FOR TABLE EDITOR
     #-------------------------------------------------------------------
     def _get_columns(self):
-        cols = [ ('index', 'index') ] # , ('key', 'key') ]
+        cols = [ ('index', 'index') ]  # , ('key', 'key') ]
         obj = self.object
         for field_name in obj.field_names:
             cols.append((field_name, field_name))
@@ -130,7 +130,7 @@ class ExRunClassExt(SimDBClassExt):
 
     path = List([])
 
-    # dictionary of predefined inst_list - used for 
+    # dictionary of predefined inst_list - used for
     # debugging and early stages of class developmemnt.
     #
     klass = Type
@@ -160,7 +160,7 @@ class ExRunClassExt(SimDBClassExt):
         columns += [ ObjectColumn(name=field_name,
                                editable=False,
                                horizontal_alignment='center',
-                               #width = 100 
+                               # width = 100
                                ) for field_name in self.field_names ]
         return columns
 
@@ -175,19 +175,22 @@ class ExRunClassExt(SimDBClassExt):
     def _get_file_list(self):
         '''Populate the inst_list with the values
         '''
-        # walk through the directories and read the 
+        # walk through the directories and read the
         # values
         #
+        print 'file list', self.dir
         for root, sub_folders, files in os.walk(self.dir):
             for folder in sub_folders:
+                print 'folder', folder
                 ex_type_file = os.path.join(root, folder, 'ex_type.cls')
                 if os.path.exists(ex_type_file):
 
+                    print 'ex_type_file', ex_type_file
                     # check if the class specification coincides with
                     # the klass trait of this table
                     #
                     f = open(ex_type_file, 'r')
-                    ex_type_klass = f.read().split('\n')[0] # use trim here
+                    ex_type_klass = f.read().split('\n')[0]  # use trim here
                     f.close()
 
                     klass = _find_class(ex_type_klass)
@@ -202,10 +205,12 @@ class ExRunClassExt(SimDBClassExt):
 
     ex_run_list = List
     def _ex_run_list_default(self):
+        print 'file_list', self._get_file_list()
         return [ ExRun(ex_run_file) for ex_run_file in self._get_file_list() ]
 
     inst_list = List
     def _inst_list_default(self):
+        print 'ex_run_list', self.ex_run_list
         return [ ex_run.ex_type for ex_run in self.ex_run_list ]
 
     selected_inst_list = List
@@ -241,19 +246,19 @@ class ExRunClassExt(SimDBClassExt):
     figure = Instance(Figure)
     def _figure_default(self):
         figure = Figure(facecolor='white')
-        #figure.add_axes( [0.08, 0.13, 0.85, 0.74] )
+        # figure.add_axes( [0.08, 0.13, 0.85, 0.74] )
         figure.add_axes([0.15, 0.15, 0.75, 0.75])
         return figure
 
     # event to trigger the replotting - used by the figure editor
-    # 
+    #
     data_changed = Event
 
     # selected plot template
     #
     plot_template = Enum(values='plot_template_list')
 
-    # list of availble plot templates 
+    # list of availble plot templates
     # (gets extracted from the model whenever it's been changed)
     #
     plot_template_list = Property(depends_on='klass')
@@ -278,7 +283,7 @@ class ExRunClassExt(SimDBClassExt):
         axes = figure.gca()
         axes.clear()
 
-        # get the labels (keys) of the selected inst_list for 
+        # get the labels (keys) of the selected inst_list for
         # attibution of the legends in matplotlib:
         #
 

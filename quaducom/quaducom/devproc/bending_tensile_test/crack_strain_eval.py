@@ -14,7 +14,7 @@ if __name__ == '__main__':
     import os
     import numpy as np
 
-    test_files = ['BTT-6c-2cm-TU-0-V06_MxN2.DAT']
+    test_files = ['BTT-6c-2cm-TU-0-V07_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',

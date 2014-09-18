@@ -18,7 +18,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V06_MxN2.DAT',
+    test_files = ['BTT-6c-2cm-TU-0-V07_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
                   ]
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
         # print 'crack filter', e.crack_filter_avg
 
-        for step in range(0, max_step, 5):
+        for step in range(0, max_step, 10):
 
             ad.current_step = step
 
