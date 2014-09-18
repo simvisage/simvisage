@@ -749,6 +749,10 @@ class SimST(IBVModel):
                                           slice=specmn[-1, -1, -1, -1, -1, -1])]  # only top node
                 load_dofs_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
                 print 'load_dofs_z', load_dofs_z
+                print 'load_dofs_z.shape', load_dofs_z.shape
+                load_dofs_z = array([specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]])
+                print 'load_dofs_z', load_dofs_z
+                print 'load_dofs_z.shape', load_dofs_z.shape
 
 #                ### var 2 displacement applied at all center nodes (all nodes in the symmetry axis)
 #                #
@@ -875,13 +879,26 @@ class SimST(IBVModel):
 #                             RTraceDomainListField(name = 'Strain' ,
 #                                        var = 'eps_app', idx = 0, warp = True,
 #                                        record_on = 'update'),
-#                             RTraceDomainListField(name = 'Damage' ,
-#                                        var = 'omega_mtx', idx = 0, warp = True,
-#                                        record_on = 'update'),
+                             RTraceDomainListField(name='Damage' ,
+                                        var='omega_mtx', idx=0, warp=True,
+                                        record_on='update'),
 
+                             # max[omega_i for i = 1..Nmp]
                              RTraceDomainListField(name='max_omega_i', warp=True,
                                         var='max_omega_i', idx=0,
                                         record_on='update'),
+#                             RTraceDomainListField(name='max_omega_i2', warp=True,
+#                                        var='max_omega_i2', idx=0,
+#                                        record_on='update'),
+
+                             # value in phi_mtx for 1st principle damage direction
+                             RTraceDomainListField(name='phi_pdc', warp=True,
+                                        var='phi_pdc', idx=0,
+                                        record_on='update'),
+#                             RTraceDomainListField(name='phi_pdc2', warp=True,
+#                                        var='phi_pdc2', idx=0,
+#                                        record_on='update'),
+
 
 #                             RTraceDomainListField(name = 'IStress' ,
 #                                            position = 'int_pnts',
@@ -1057,6 +1074,10 @@ class SimSTDB(SimST):
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
         print 'E_c (from ccs)', E_c
+        print 'E_c set explicitly to 18709.5'
+        E_c = 18709.5
+        print 'E_c set explicitly to 29100.'
+        E_c = 29100.
         return E_c
 
     # Poisson's ratio

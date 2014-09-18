@@ -12,7 +12,8 @@ def format_plot(axes, fontsize=16, xformat="%.0f", yformat="%.0f", xlim=None, yl
     #
     from matplotlib.font_manager import FontProperties
     font = FontProperties()
-    font.set_name('Script MT')
+#    font.set_name('Script MT')
+#    font.set_name('Times')
     font.set_family('serif')
 #    font.set_family('sans-serif')
     font.set_style('normal')
@@ -20,8 +21,8 @@ def format_plot(axes, fontsize=16, xformat="%.0f", yformat="%.0f", xlim=None, yl
 #    font.set_size('large')
 #    font.set_size('xx-large')
     font.set_size(fontsize)
-    font.set_variant('normal')
-    font.set_weight('medium')
+#    font.set_variant('small-caps')
+#    font.set_weight('ultralight')
 
     if xlim != None and ylim != None:
         axes.axis([0, xlim, 0., ylim], fontproperties=font)

@@ -70,7 +70,7 @@ class CompositeCrackBridgeView(ModelView):
             if u == True:
                 u_lst.append(self.u_evaluated)
             if damage == True:
-                damage_lst.append(np.sum(model.damage) / len(model.damage))
+                damage_lst.append(np.sum(self.model.damage) / len(self.model.damage))
         if u == True or damage == True:
             return np.array(sigma_c_lst), np.array(u_lst), np.array(damage_lst)
         else:
@@ -83,7 +83,7 @@ class CompositeCrackBridgeView(ModelView):
 
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
-    def _get_sigma_c_max(self):
+    def _get_sigma_c_max(self):    
         def minfunc_sigma(w):
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
@@ -91,9 +91,11 @@ class CompositeCrackBridgeView(ModelView):
                 return 1. + w
             # plt.plot(w, self.sigma_c, 'ro')
             return -self.sigma_c
+        
         def residuum_stiffness(w):
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
+            print stiffness_loss
             if stiffness_loss > 0.90:
                 return 1. + w
             if stiffness_loss < 0.65 and stiffness_loss > 0.45:
@@ -102,14 +104,20 @@ class CompositeCrackBridgeView(ModelView):
                 residuum = stiffness_loss - 0.5
             return residuum
 
-        w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
-        w_points = np.linspace(0, w_max, 7)
-        w_maxima = []
-        sigma_maxima = []
-        for i, w in enumerate(w_points[1:]):
-            w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=5, disp=0))
-            sigma_maxima.append(self.sigma_c)
-        return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
+        if len(self.model.reinforcement_lst) == 1:
+            '''one reinforcement type'''
+            maximum_w = fminbound(minfunc_sigma, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.), maxfun=20, disp=0)
+            return self.sigma_c, maximum_w
+        else:
+            '''multiple reinforcement types (has to be debugged yet)'''
+            w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+            w_points = np.linspace(0, w_max, 7)
+            w_maxima = []
+            sigma_maxima = []
+            for i, w in enumerate(w_points[1:]):
+                w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=5, disp=0))
+                sigma_maxima.append(self.sigma_c)
+            return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def w_x_results(self, w_arr, x):
         epsm = np.zeros((len(w_arr), len(x)))
@@ -216,13 +224,13 @@ if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
     from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers, fibers_MC
 
-    reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.0, shape=3., scale=0.1),
-                          V_f=0.01,
-                          E_f=180e3,
-                          xi=fibers_MC(m=5.0, sV0=0.003),
-                          label='carbon',
-                          n_int=500)
+    reinf = ContinuousFibers(r=3.5e-3,
+                              tau=RV('weibull_min', loc=0.002, scale=.1, shape=1.5),
+                              V_f=0.01,
+                              E_f=200e3,
+                              xi=fibers_MC(m=9.0, sV0=0.005),
+                              label='carbon',
+                              n_int=500)
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],

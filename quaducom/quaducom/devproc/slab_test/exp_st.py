@@ -352,7 +352,7 @@ class ExpST(ExType):
 #        f0_lin = array([0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_')
         # axes.plot( w0_lin, f0_lin, color = 'black' )
 
-    def _plot_force_center_deflection_interpolated(self, axes):
+    def _plot_force_center_deflection_interpolated(self, axes, linestyle='-', linewidth=1.5, plot_elastic_stiffness=True):
         '''plot the F-w-diagramm for the center (c) deflection (interpolated initial stiffness)
         '''
         # get the index of the maximum stress
@@ -375,25 +375,31 @@ class ExpST(ExType):
 #        fw_arr = np.hstack([f_asc_cut[:, None], w_m_cut[:, None]])
 #        print 'fw_arr.shape', fw_arr.shape
 #        np.savetxt('ST-6c-2cm-TU_bs2_f-w_asc.csv', fw_arr, delimiter=';')
-        axes.plot(w_m_cut, f_asc_cut, color='k', linewidth=1.5)
+        axes.plot(w_m_cut, f_asc_cut, color='k', linewidth=linewidth, linestyle=linestyle)
 
         # composite E-modulus
         #
         E_c = self.E_c
         print 'E_c', E_c
 
-        if self.thickness == 0.02 and self.edge_length == 0.80:
+        if self.thickness == 0.02 and self.edge_length == 0.80 and plot_elastic_stiffness == True:
             K_linear = E_c / 24900. * 1.056  # [MN/m]=[kN/mm] bending stiffness with respect to center force
             max_f = f_asc_cut[-1]
             w_linear = np.array([0., max_f / K_linear])
             f_linear = np.array([0., max_f])
-            axes.plot(w_linear, f_linear, linestyle='--', color='k')
-        if self.thickness == 0.06 and self.edge_length == 1.25:
+            axes.plot(w_linear, f_linear, linewidth=linewidth, linestyle='--', color='k')
+        if self.thickness == 0.03 and self.edge_length == 1.25 and plot_elastic_stiffness == True:
+            K_linear = E_c / 24900. * 1.267  # [MN/m]=[kN/mm] bending stiffness with respect to center force
+            max_f = f_asc_cut[-1]
+            w_linear = np.array([0., max_f / K_linear])
+            f_linear = np.array([0., max_f])
+            axes.plot(w_linear, f_linear, linewidth=linewidth, linestyle='--', color='k')
+        if self.thickness == 0.06 and self.edge_length == 1.25 and plot_elastic_stiffness == True:
             K_linear = E_c / 24900. * 10.14  # [MN/m]=[kN/mm] bending stiffness with respect to center force
             max_f = f_asc_cut[-1]
             w_linear = np.array([0., max_f / K_linear])
             f_linear = np.array([0., max_f])
-            axes.plot(w_linear, f_linear, linestyle='--', color='k')
+            axes.plot(w_linear, f_linear, linewidth=linewidth, linestyle='--', color='k')
 
     def _plot_force_edge_deflection(self, axes):
         '''plot the F-w-diagramm for the edge (e) deflections
@@ -541,8 +547,8 @@ class ExpST(ExType):
         w_h_asc = -self.WA_H[:max_force_idx + 1]
         w_l_asc = -self.WA_L[:max_force_idx + 1]
         w_r_asc = -self.WA_R[:max_force_idx + 1]
-        axes.plot(w_v_asc, f_asc, color='k', linewidth=linewidth)
-        axes.plot(w_h_asc, f_asc, color='k', linewidth=linewidth)
+        axes.plot(w_v_asc, f_asc, color='grey', linewidth=linewidth)
+        axes.plot(w_h_asc, f_asc, color='grey', linewidth=linewidth)
         axes.plot(w_l_asc, f_asc, color='k', linewidth=linewidth)
         axes.plot(w_r_asc, f_asc, color='k', linewidth=linewidth)
 
