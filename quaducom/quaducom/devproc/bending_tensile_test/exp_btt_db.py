@@ -659,14 +659,12 @@ class ExpBTTDB(ExType):
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
-    # TO-DO: def some method to cut the time at a variable position, depending on strains at the end
-    # cut the last values from t_aramis,because of very high strains at the end due to failure -> see "eps_cut_idx"
     t_aramis_cut = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis_cut(self):
         # print 't_aramis', self.t_aramis
         # print 't_aramis_cut', self.t_aramis[:-1]
-        return self.t_aramis[ :-2]
+        return self.t_aramis[ :-1]
 
     n_steps = Property
     @cached_property
@@ -677,7 +675,7 @@ class ExpBTTDB(ExType):
             x = 1
         # print 'x = ', x
         # print 'self.aramis_info.number_of_steps - x', self.aramis_info.number_of_steps - x
-        return self.aramis_info.number_of_steps - x  # len(self.t_aramis_cut)
+        return self.aramis_info.number_of_steps - x
 
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -707,7 +705,7 @@ class ExpBTTDB(ExType):
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
-        print 'CRACK DETECTION STEP', crack_detection_step
+        # print 'CRACK DETECTION STEP', crack_detection_step
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,

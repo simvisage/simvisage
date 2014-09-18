@@ -18,7 +18,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V11_MxN2.DAT',
+    test_files = ['BTT-6c-2cm-TU-0-V06_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
                   ]
@@ -32,10 +32,8 @@ if __name__ == '__main__':
            for test_file in test_files]
     for e in e_list:
         e.process_source_data()
-        # print 'w_idx_cut', e.t[e.w_cut_idx]
-        # print 'F_max1', e.F_max1
-        print 'step_times', e.aramis_field_data.step_times
-        print 'crack filter', e.crack_filter_avg
+        # print 'step_times', e.aramis_field_data.step_times
+        # print 'crack filter', e.crack_filter_avg
 
     p.subplot(231)
     for e in e_list:
@@ -50,7 +48,7 @@ if __name__ == '__main__':
         p.plot(e.t_aramis_cut, e.F_t_aramis, color='red', label='F')
         p.ylabel('F [kN]')
         p.ylim(0, 6)
-        p.xlim(0, 900)
+        # p.xlim(0, 900)
         p.title(test_files)
         p.legend()
 
@@ -83,7 +81,7 @@ if __name__ == '__main__':
         p.twinx()
         p.plot(e.t_aramis_cut, e.w_t_aramis, color='darkred', label='w')
         p.ylim(0, 10)
-        p.xlim(0, 900)
+        # p.xlim(0, 900)
         p.ylabel('w [mm]')
         p.legend(loc=1)
         print 'max tension strain', (e.eps_t_aramis[0] * 1000)[-1]
@@ -225,7 +223,7 @@ if __name__ == '__main__':
 
         # print 'crack filter', e.crack_filter_avg
 
-        for step in range(0, max_step, 10):
+        for step in range(0, max_step, 5):
 
             ad.current_step = step
 

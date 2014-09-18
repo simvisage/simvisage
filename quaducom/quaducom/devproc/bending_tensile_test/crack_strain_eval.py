@@ -14,7 +14,7 @@ if __name__ == '__main__':
     import os
     import numpy as np
 
-    test_files = ['BTT-6c-2cm-TU-0-V11_MxN2.DAT']
+    test_files = ['BTT-6c-2cm-TU-0-V06_MxN2.DAT']
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
@@ -25,8 +25,6 @@ if __name__ == '__main__':
            for test_file in test_files]
     for e in e_list:
         e.process_source_data()
-        # print 'w_idx_cut', e.t[e.w_cut_idx]
-        # print 'F_max1', e.F_max1
         print 'crack filter', e.crack_filter_avg
         print e.n_steps
         e.aramis_field_data.integ_radius = 3
