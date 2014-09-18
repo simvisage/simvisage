@@ -43,5 +43,7 @@ if __name__ == '__main__':
         dist = x[:, 1:] - x[:, :-1]
         print 'Mean, std, min, max of facets center distance [mm]: ', np.mean(dist), np.std(dist), np.min(dist), np.max(dist)
         print 'Mean and std of pixel size [mm]', np.mean(dist / xs), np.std(dist / xs)
-        aui = AramisUI(aramis_info=e.aramis_info)
+        aui = AramisUI(aramis_info=e.aramis_info,
+                       aramis_data=e.aramis_field_data,
+                       aramis_cdt=e.aramis_cdt)
         aui.configure_traits()

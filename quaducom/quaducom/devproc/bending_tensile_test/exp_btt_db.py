@@ -711,8 +711,8 @@ class ExpBTTDB(ExType):
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
-                         ddd_ux_avg_threshold=-1e-3,
-                         ddd_ux_threshold=-1e-3)
+                         ddd_ux_avg_threshold=-0.5e-3,
+                         ddd_ux_threshold=-0.5e-3)
 
     N_t_aramis = Property
     @cached_property
