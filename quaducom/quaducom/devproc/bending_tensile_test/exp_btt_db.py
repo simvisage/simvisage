@@ -10,7 +10,7 @@
 #
 # Thanks for using Simvisage open source!
 #
-# Created on Feb 15, 2010 by: rch, ascholzen
+# Created on Feb 15, 2010 by: rch, ascholzen, laura-si
 
 # @todo - construct the class for fabric layout calculating the
 #         cs-area of the reinforcement.
@@ -75,7 +75,7 @@ class ExpBTTDB(ExType):
                            auto_set=False, enter_set=True)
     # start of 2D-Aramis
     start_time_aramis = Float(5, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                          auto_set=False, enter_set=True)
     # age of the concrete at the time of testing
     age = Int(28, unit='d', input=True, table_field=True,
                            auto_set=False, enter_set=True)
@@ -487,18 +487,18 @@ class ExpBTTDB(ExType):
     #--------------------------------------------------------------------------
 
     plot_templates = {'N(t), F(t)' : '_plot_N_F_t',
-                      'N_cut(t), F_cut(t)' : '_plot_N_F_t_cut',
-                      'N(u)_cut': '_plot_N_u_cut',
-                      'w(t)' : '_plot_w_t',
-                      'w_cut(t)' : '_plot_w_t_cut',
-                      'w_el_pred(t)' : '_plot_w_el_pred_t',
-                      'u(t)' : '_plot_u_t',
-                      'u_cut(t)' : '_plot_u_t_cut',
-                      'F(w)_cut' : '_plot_F_w_cut',
-                      'F(w_el_pred)' : '_plot_F_w_el_pred',
-                      'M(t), M_II(t), M_0(t)' : '_plot_M_MN_MF_t',
-                      'N(M), N(M_II), N(M_0)' : '_plot_N_M_MN_MF',
-                                             }
+                        'N_cut(t), F_cut(t)' : '_plot_N_F_t_cut',
+                        'N(u)_cut': '_plot_N_u_cut',
+                        'w(t)' : '_plot_w_t',
+                        'w_cut(t)' : '_plot_w_t_cut',
+                        'w_el_pred(t)' : '_plot_w_el_pred_t',
+                        'u(t)' : '_plot_u_t',
+                        'u_cut(t)' : '_plot_u_t_cut',
+                        'F(w)_cut' : '_plot_F_w_cut',
+                        'F(w_el_pred)' : '_plot_F_w_el_pred',
+                        'M(t), M_II(t), M_0(t)' : '_plot_M_MN_MF_t',
+                        'N(M), N(M_II), N(M_0)' : '_plot_N_M_MN_MF',
+                    }
 
     default_plot_template = 'N(t), F(t)'
 
@@ -683,9 +683,10 @@ class ExpBTTDB(ExType):
             return None
         return AramisInfo(data_dir=af)
 
-    aramis_field_data = Property
+    aramis_field_data = Property(depends_on='data_file,aramis_resolution_key')
     '''Field data including strains and displacements.
     '''
+    @cached_property
     def _get_aramis_field_data(self):
         t_fail = self.t_cut_asc[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
@@ -695,9 +696,10 @@ class ExpBTTDB(ExType):
         ad.current_step = current_step
         return ad
 
-    aramis_cdt = Property
+    aramis_cdt = Property(depends_on='data_file,aramis_resolution_key')
     '''Field data including strains and displacements.
     '''
+    @cached_property
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
@@ -708,38 +710,38 @@ class ExpBTTDB(ExType):
                          ddd_ux_avg_threshold=-0.5e-3,
                          ddd_ux_threshold=-0.5e-3)
 
-    N_t_aramis = Property
+    N_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_N_t_aramis(self):
         'normal force interpolated to the time steps of aramis'
         # print 'np.interp(self.t_aramis, self.t, self.N)', np.interp(self.t_aramis, self.t, self.N)
         return np.interp(self.t_aramis_cut, self.t, self.N)
 
-    F_t_aramis = Property
+    F_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_F_t_aramis(self):
         'bending force interpolated to the time steps of aramis'
         return np.interp(self.t_aramis_cut, self.t, self.F)
 
-    w_t_aramis = Property
+    w_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_w_t_aramis(self):
         'displacement (with eliminated predeformation) interpolated to the time steps of aramis'
         return np.interp(self.t_aramis_cut, self.t_cut_asc, self.w_el_pred)
 
-    M_t_aramis = Property
+    M_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_M_t_aramis(self):
         'resulting moment interpolated to the time steps of aramis'
         return self.F_t_aramis * self.length / 4 - self.N_t_aramis * self.w_t_aramis / 1000
 
-    MN_t_aramis = Property
+    MN_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_MN_t_aramis(self):
         'moment due to normal force interpolated to the time steps of aramis'
         return self.N_t_aramis * self.w_t_aramis / 1000 * -1
 
-    MF_t_aramis = Property
+    MF_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_MF_t_aramis(self):
         'moment due to bending force interpolated to the time steps of aramis'
@@ -761,7 +763,7 @@ class ExpBTTDB(ExType):
         # print field_data.x_arr_0[0, cdt.crack_filter_avg]
         return field_data.x_arr_0[0, cdt.crack_filter_avg]
 
-    crack_bridge_strain_all = Property  # (depends_on='data_file,aramis_resolution_key')
+    crack_bridge_strain_all = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_crack_bridge_strain_all(self):
         '''method to get crack bridge strain for the cracks determined by crack_filter_avg
@@ -822,7 +824,7 @@ class ExpBTTDB(ExType):
         return np.array(eps_list, dtype='f')
 
 
-    idx_failure_crack = Property  # (depends_on='data_file,aramis_resolution_key')
+    idx_failure_crack = Property(depends_on='data_file,aramis_resolution_key')
     @cached_property
     def _get_idx_failure_crack(self):
         '''method to get the index of the failure crack and the index of the corresponding
@@ -880,15 +882,16 @@ class ExpBTTDB(ExType):
     h_re1_6_threshold = Float(2.86, auto_set=False, enter_set=True)
     '''Threshold for position of first reinforcement layer (6 layers).
     '''
+
     h_re1_4_threshold = Float(4.0, auto_set=False, enter_set=True)
     '''Threshold for position of first reinforcement layer (4 layers).
     '''
 
-    meas_field = Property
+    meas_field = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get length and height of measuring field (calculated from the center of the facets)
+    '''
     @cached_property
     def _get_meas_field(self):
-        '''method to get length and height of measuring field (calculated from the center of the facets)
-        '''
         ai = self.aramis_info
         if ai == None:
             return None
@@ -910,11 +913,11 @@ class ExpBTTDB(ExType):
         # print 'meas_field', l_mf, h_mf
         return l_mf, h_mf
 
-    h_dis = Property
+    h_dis = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get the distance between specimen edge and first / last facet node in y-direction.
+    '''
     @cached_property
     def _get_h_dis(self):
-        ''' method to get distance between specimen edge and first / last facet node in y-direction
-        '''
         ai = self.aramis_info
         if ai == None:
             return None
@@ -923,11 +926,11 @@ class ExpBTTDB(ExType):
         # print 'h_dis', h_dis
         return h_dis
 
-    pos_fa = Property
+    pos_fa = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get position of first and last facet-node in y-direction
+    '''
     @cached_property
     def _get_pos_fa(self):
-        # method to get position of first and last facet-node in y-direction
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -940,10 +943,10 @@ class ExpBTTDB(ExType):
         return pos_no_f, pos_no_l
 
     eps1_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    '''Tensile strain in first reinforcement layer
+    '''
     @cached_property
     def _get_eps1_t_aramis(self):
-        '''method to get tensile strain in first reinforcement layer
-        '''
         ai = self.aramis_info
         if ai == None:
             return None
@@ -1158,10 +1161,10 @@ class ExpBTTDB(ExType):
 
 
     t_N_arr = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get the time where N rises
+    '''
     @cached_property
     def _get_t_N_arr(self):
-        # get the time where N rises
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -1180,10 +1183,10 @@ class ExpBTTDB(ExType):
 
 
     t_F_arr = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get the time where F rises
+    '''
     @cached_property
     def _get_t_F_arr(self):
-        # get the time where F rises
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -1198,12 +1201,11 @@ class ExpBTTDB(ExType):
         # print 't_F_arr', t_F
         return t_F
 
-
     eps_N = Property(depends_on='data_file,aramis_resolution_key')
+    '''get the strain corresponding to N
+    '''
     @cached_property
     def _get_eps_N(self):
-        # get the strain corresponding to N
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -1255,11 +1257,12 @@ class ExpBTTDB(ExType):
 
 
     N_t_N = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get N in the range of t_N
+    '''
     @cached_property
     def _get_N_t_N(self):
-        # get N in the area of t_N
 
-        if len(self.t_N_arr) == 0:
+        if self.t_N_arr == None or len(self.t_N_arr) == 0:
             # print 'self.N_t_aramis[0:t_N_idx]', []
             return []
         elif self.F_beg_idx == []:
@@ -1275,10 +1278,10 @@ class ExpBTTDB(ExType):
 
 
     eps_M = Property(depends_on='data_file,aramis_resolution_key')
+    '''Get the strain corresponding to M
+    '''
     @cached_property
     def _get_eps_M(self):
-        # get the strain corresponding to M
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -1508,24 +1511,15 @@ class ExpBTTDB(ExType):
 #                               scrollable = True,
 #                               ),
                          Group(
-                               Item('E_c', visible_when='derived_data_available',
-                                                style='readonly', show_label=True , format_str="%.0f"),
-                               Item('N_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
-                               Item('F_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
-                               Item('w_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
-                               Item('u_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.2f"),
-                               Item('M_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.3f"),
-                               Item('MN_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.3f"),
-                               Item('MF_max', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.3f"),
-                               Item('w_pred', visible_when='derived_data_available',
-                                                style='readonly', emphasized=True , format_str="%.3f"),
+                               Item('E_c', style='readonly', show_label=True , format_str="%.0f"),
+                                Item('N_max', style='readonly', emphasized=True , format_str="%.2f"),
+                                Item('F_max', style='readonly', emphasized=True , format_str="%.2f"),
+                                Item('w_max', style='readonly', emphasized=True , format_str="%.2f"),
+                                Item('u_max', style='readonly', emphasized=True , format_str="%.2f"),
+                                Item('M_max', style='readonly', emphasized=True , format_str="%.3f"),
+                                Item('MN_max', style='readonly', emphasized=True , format_str="%.3f"),
+                                Item('MF_max', style='readonly', emphasized=True , format_str="%.3f"),
+                                Item('w_pred', style='readonly', emphasized=True , format_str="%.3f"),
                                label='output characteristics',
                                id='matresdev.db.exdb.ex_composite_bending_tensile_test.vgroup.outputs',
                                dock='tab',
@@ -1568,5 +1562,5 @@ if __name__ == '__main__':
     doe_reader = ExRunView(data_file=ex_path)
     doe_reader.configure_traits()
 
-    # ExpBTTDB.db.configure_traits()
+#    ExpBTTDB.db.configure_traits()
     # to see all experiments in one picture
