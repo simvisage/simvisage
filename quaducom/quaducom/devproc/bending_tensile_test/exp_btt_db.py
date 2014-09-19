@@ -38,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT, AramisUI
+from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -641,27 +641,17 @@ class ExpBTTDB(ExType):
     '''Specification of the resolution of the measured aramis field
     '''
 
-    start_t_aramis = Float(5.0)
-    '''Start time of aramis measurement.
-    '''
-
-    delta_t_aramis = Float(5.0)
-    '''Delta between aramis snapshots.
-    '''
-
     n_steps_aramis = Property(Int)
     def _get_n_steps_aramis(self):
-        # print 'self.aramis_info.number_of_steps', self.aramis_info.number_of_steps
         return self.aramis_info.number_of_steps
 
     t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis(self):
         step_times = self.aramis_field_data.step_times + 5
-        print 'step_times', step_times
-        print 'last_step_times', step_times[-1]
+        print '-----------------------------t_max_ARAMIS', step_times[-1]
         t_max = self.t[self.w_cut_idx]
-        print 't_max', t_max
+        print '-----------------------------t_max_ASCII', t_max
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
@@ -669,20 +659,20 @@ class ExpBTTDB(ExType):
     @cached_property
     def _get_t_aramis_cut(self):
         # print 't_aramis', self.t_aramis
-        # print 't_aramis_cut', self.t_aramis[:-1]
+        # print 't_aramis_cut', self.t_aramis[:]
         return self.t_aramis[ :]
 
     n_steps = Property
     @cached_property
     def _get_n_steps(self):
         'number of time steps in aramis after limiting the steps with t_max'
-        x = self.n_steps_aramis - len(self.t_aramis_cut)
-        if x == 0:
-            x = 1
-        # print 'len(self.t_aramis_cut)', len(self.t_aramis_cut)
-        # print 'x = ', x
-        # print 'self.aramis_info.number_of_steps - x', self.aramis_info.number_of_steps - x
-        return self.aramis_info.number_of_steps - x
+        # x = self.n_steps_aramis - len(self.t_aramis_cut)
+        # if x == 0:
+            # x = 1
+        # print 'x ', x
+        # return self.aramis_info.number_of_steps - x
+        print '-----------------------------n_steps_cut2', len(self.t_aramis_cut)
+        return len(self.t_aramis_cut)
 
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -698,10 +688,10 @@ class ExpBTTDB(ExType):
     '''
     def _get_aramis_field_data(self):
         t_fail = self.t_cut_asc[-1]
-        # t_fail = self.t_aramis_cut[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
                                integ_radius=3)
-        current_step = np.abs(ad.step_times - t_fail).argmin()
+        current_step = (np.abs(ad.step_times - t_fail).argmin())
+        # print 'ad.step_times - t_fail', ad.step_times - t_fail
         ad.current_step = current_step
         return ad
 
@@ -711,7 +701,7 @@ class ExpBTTDB(ExType):
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
-        # print 'CRACK DETECTION STEP', crack_detection_step
+        print '---------------------CRACK DETECTION STEP', crack_detection_step
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
@@ -802,16 +792,15 @@ class ExpBTTDB(ExType):
         # print 'i_max', i_max
 
         if i_max <= 1:
-            # print ' less than three cracks'
             return None
 
-        ux = field_data.ux_arr
-        x_0 = field_data.x_arr_0
+        # ux = field_data.ux_arr
+        # x_0 = field_data.x_arr_0
 
         # get crack bridge strain
         for step, t in enumerate(self.t_aramis_cut):
             field_data.current_step = step
-            eps_range = 1
+            # eps_range = 1
             eps_list = []
             for i in range(0, i_max - 1, 1):
                 # ux1 = np.mean(ux[:, crack_mid_idx_arr[i] - eps_range : crack_mid_idx_arr[i] + eps_range ], axis=1)
@@ -875,8 +864,8 @@ class ExpBTTDB(ExType):
 
         idx_failure_crack = crack_idx_arr[max_idx + 1]
         print 'idx_failure_crack', idx_failure_crack
-        print 'shape_ad.x_arr_0 [0]', np.shape(field_data.x_arr_0)
-        print 'crack_number', max_idx + 2
+        print 'shape_ad.x_arr_0', np.shape(field_data.x_arr_0)
+        print 'number_failure_crack', max_idx + 2
         idx_border1 = crack_mid_idx_arr[max_idx]
         print 'idx_border1 ', idx_border1
         idx_border2 = crack_mid_idx_arr[max_idx + 1]
@@ -1301,11 +1290,11 @@ class ExpBTTDB(ExType):
         h = np.linspace(self.pos_fa[0], self.pos_fa[1], num=n_fa)
         t_F = self.t_F_arr
         F_beg_idx = self.F_beg_idx
-        print 'F_beg_idx', F_beg_idx
+        # print 'F_beg_idx', F_beg_idx
         eps_min_M_list = []
         eps_max_M_list = []
         max_step = self.n_steps
-        print 'max_step', max_step
+        # print 'max_step', max_step
 
         if t_F != []:
             for step in range(F_beg_idx, max_step , 1):
@@ -1569,7 +1558,7 @@ if __name__ == '__main__':
     ex_path = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
                            '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                           'BTT-6c-2cm-TU-0-V01_MxN2.DAT')
+                           'BTT-6c-2cm-TU-0-V02_MxN2.DAT')
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',

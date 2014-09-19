@@ -17,7 +17,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V06_MxN2.DAT']
+    test_files = ['BTT-6c-2cm-TU-0-V04_MxN2.DAT']
 
 
     test_file_path = os.path.join(simdb.exdata_dir,
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     for e in e_list:
         e.process_source_data()
 
+    p.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.14, hspace=0.2)
 
     p.subplot(221)
     for e in e_list:
@@ -73,7 +74,7 @@ if __name__ == '__main__':
                 mid_idx = ad.d_ux.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ad.d_ux[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-                p.title('eps(N) in the middle of the measuring field')
+                p.title('crack bridge strain (N) in the middle of the measuring field')
             else:
                 ux = ad.ux_arr
                 x_0 = ad.x_arr_0
@@ -87,7 +88,7 @@ if __name__ == '__main__':
 
                 eps = (ux2 - ux1) / (x_0_2 - x_0_1)
                 # eps = np.mean(ad.d_ux[:, idx_border1:idx_border2], axis=1)
-                p.title('eps(N) in the failure crack')
+                p.title('crack bridge strain (N) in the failure crack')
 
             x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
             eps_ed_up = x + eps[-1]
@@ -117,7 +118,7 @@ if __name__ == '__main__':
             p.tick_params
             p.plot(e.eps_M[0] * 1000, e.M_t_F, color='grey', label='eps_M_max')
             p.plot(e.eps_M[1] * 1000, e.M_t_F, color='black', label='eps_M_min')
-            p.ylim(0, 0.4)
+            p.ylim(0, 0.45)
             p.grid()
             p.xlabel('strain [1*E-3]')
             p.ylabel('M [kNm]')
@@ -161,7 +162,7 @@ if __name__ == '__main__':
                 mid_idx = ad.d_ux.shape[1] / 2
                 eps_range = 3
                 eps = np.mean(ad.d_ux[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-                p.title('eps(M)in the middle of the measuring field')
+                p.title('crack bridge strain (M)in the middle of the measuring field')
             else:
                 ux = ad.ux_arr
                 x_0 = ad.x_arr_0
@@ -173,7 +174,7 @@ if __name__ == '__main__':
                 x_0_1 = np.mean(x_0[:, idx_border1 - eps_range: idx_border1 + eps_range ], axis=1)
                 x_0_2 = np.mean(x_0[:, idx_border2 - eps_range: idx_border2 + eps_range ], axis=1)
                 eps = np.mean(ad.d_ux[:, idx_border1:idx_border2], axis=1)
-                p.title('eps(M) in the failure crack')
+                p.title('crack bridge strain (M) in the failure crack')
 
             x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
             eps_ed_up = x + eps[-1]

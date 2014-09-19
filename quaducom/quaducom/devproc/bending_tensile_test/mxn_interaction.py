@@ -18,9 +18,36 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V07_MxN2.DAT',
+    test_files = ['BTT-6c-2cm-TU-0-V09_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V02_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V03_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V04_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V05_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V06_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V07_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V08_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V09_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V10_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V11_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V12_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V14_MxN2.DAT',
+                  # 'BTT-6c-2cm-TU-0-V15_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V01_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V02_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V03_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V04_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V05_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V06_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V07_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V08_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V10_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V11_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V12_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V14_MxN2.DAT',
+                  # 'BTT-4c-2cm-TU-0-V15_MxN2.DAT',
                   ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
@@ -84,6 +111,8 @@ if __name__ == '__main__':
         # p.xlim(0, 900)
         p.ylabel('w [mm]')
         p.legend(loc=1)
+        print '-----------------------------n_steps', e.aramis_info.number_of_steps
+        print '-----------------------------n_steps_cut1', len(e.t_aramis)
         print 'max tension strain', (e.eps_t_aramis[0] * 1000)[-1]
         print 'min compression strain', (e.eps_t_aramis[1] * 1000)[-1]
         print 'max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000)
@@ -93,6 +122,8 @@ if __name__ == '__main__':
         # p.plot(e.MF_t_aramis, e.N_t_aramis, color='red', label='M0')
         # p.plot(e.MN_t_aramis, e.N_t_aramis, color='aqua', label='MII')
         p.plot()
+        # p.axes([0, 1, 0, 0])
+        # p.twinx
         p.plot(e.M_t_aramis, e.N_t_aramis, color='black', label='M')
         # print 'e.M_t_aramis', e.M_t_aramis
         # print 'e.M', e.M
