@@ -67,7 +67,7 @@ class ExType(SimDBClass):
 
     # specify inputs
     #
-    key = Property(Str, depends_on='data_file')
+    key = Property(Str, trantient=True, depends_on='data_file')
     def _get_key(self):
         return split(os.path.basename(self.data_file), '.')[0]
 
@@ -75,6 +75,11 @@ class ExType(SimDBClass):
         genkey = split(os.path.basename(self.data_file), '.')[0]
         if genkey != value:
             raise KeyError, 'key mismatch %s != %s' % (genkey, value)
+
+    def __setstate__ (self, state, kw={}):
+        if state.has_key('key'):
+            del state['key']
+        super(SimDBClass, self).__setstate__(state, **kw)
 
     # indicate whether the test is suitable and prepared for
     # calibration.
