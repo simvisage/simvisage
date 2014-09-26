@@ -38,7 +38,7 @@ from etsproxy.traits.ui.api \
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
 
-from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT, AramisUI
+from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
 
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
@@ -501,6 +501,7 @@ class ExpBTTDB(ExType):
                         'F(w_el_pred)' : '_plot_F_w_el_pred',
                         'M(t), M_II(t), M_0(t)' : '_plot_M_MN_MF_t',
                         'N(M), N(M_II), N(M_0)' : '_plot_N_M_MN_MF',
+                        'N-M' : '_plot_N_M',
                     }
 
     default_plot_template = 'N(t), F(t)'
@@ -508,14 +509,12 @@ class ExpBTTDB(ExType):
     def _plot_N_F_t(self, axes):
         '''Normal force and bending force versus time
         '''
-        # ax1 = axes
         axes.plot(self.t_asc, self.N_asc, color='blue', label='N')
+        axes.plot(self.t_asc, self.F_asc, color='red', label='F')
         axes.xaxis.tick_bottom()
         axes.set_ylim(0, 50)
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('N / F[kN]')
-        # ax2 = axes.twinx()
-        axes.plot(self.t_asc, self.F_asc, color='red', label='F')
         # ax2.set_ylim(0, 3)
         # ax2.set_ylabel('F [kN]')
         axes.legend(loc=2)
@@ -523,17 +522,18 @@ class ExpBTTDB(ExType):
     def _plot_N_F_t_cut(self, axes):
         '''Normal force_cut and bending force_cut versus time_cut
         '''
-        # ax1 = axes
-        axes.plot(self.t_cut_asc, self.N_cut_asc, color='blue', label='N')
-        axes.xaxis.tick_bottom()
+        axes.plot(self.t_cut_asc, self.N_cut_asc, color='darkblue', label='N')
+        axes.grid()
+        axes.set_ylim(0, 55)
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('N [kN]')
-        axes.set_ylim(0, 50)
         # ax2 = axes.twinx()
-        axes.plot(self.t_cut_asc, self.F_cut_asc, color='red', label='F')
-        # ax2.set_ylim(0, 3)
-        # ax2.set_ylabel('F [kN]')
+        axes.plot(self.t_cut_asc, self.F_cut_asc, color='darkred', label='F')
+        # axes.set_ylim(0, 5.5)
+        axes.set_ylabel('F [kN]')
+        # axes.legend(loc=9)
         axes.legend(loc=2)
+
 
     def _plot_N_u_cut(self, axes):
         '''Normal force_cut versus displacement_u_cut
@@ -614,14 +614,21 @@ class ExpBTTDB(ExType):
     def _plot_M_MN_MF_t(self, axes, *args, **kw):
         '''Moment versus time
         '''
-        axes.plot(self.t_cut_asc, self.M, color='green', label='M')
-        axes.plot(self.t_cut_asc, self.MN, color='blue', label='M_II')
-        axes.plot(self.t_cut_asc, self.MF, color='red', label='M_0')
-        axes.xaxis.tick_bottom()
+        axes.plot(self.t_cut_asc, self.N_cut_asc, color='darkblue', label='N')
+        axes.grid()
+        axes.set_ylim(0, 55)
         axes.set_xlabel('t [sec]')
-        axes.set_ylabel('M / M_II / M_0 [kNm]')
-        axes.set_ylim(-0.25, 0.45)
+        axes.set_ylabel('N [kN]')
         axes.legend(loc=2)
+        ax2 = axes.twinx()
+        ax2.plot(self.t_cut_asc, self.M, color='green', label='M')
+        ax2.plot(self.t_cut_asc, self.MF, color='darkred', label='M_0')
+        ax2.plot(self.t_cut_asc, self.MN, color='aqua', label='M_II')
+        ax2.set_ylabel(' M [kNm]')
+        ax2.set_ylim(-0.33, 0.58)
+        ax2.legend(loc=1)
+        ax2.legend(ncol=3)
+
 
     def _plot_N_M_MN_MF(self, axes):
         '''Normal force versus moment
@@ -629,13 +636,30 @@ class ExpBTTDB(ExType):
         axes.plot(self.MF, self.N_cut_asc, color='red', label='M_0')
         axes.plot(self.MN, self.N_cut_asc, color='blue', label='M_II')
         axes.plot(self.M, self.N_cut_asc, color='green', label='M')
-        axes.xaxis.tick_top()
+        # axes.xaxis.tick_top()
         axes.set_xlabel('M / M_II / M_0 [kNm]')
         axes.xaxis.set_label_position('top')
         axes.set_ylabel('N [kN]')
         axes.set_ylim(24, 0)
         axes.set_xlim(-0.25, 0.45)
         axes.legend(loc=2)
+
+    # def _plot_N_M(self, axes):
+        '''M-M-interaction diagramm
+        '''
+        '''axes.plot(self.M, self.N_cut_asc, color='green', label='M')
+        x = [0, 0.35]
+        y = [44, 0]
+        axes.plot(x, y, color='grey', linestyle='--', label='M-N-Interaction')
+        axes.grid()
+        axes.xaxis.tick_top()
+        axes.xaxis.set_label_position('top')
+        axes.set_ylim(55 , -1)
+        axes.set_xlim(-0.01 , 0.4)
+        axes.set_xlabel('M [kNm]')
+        axes.set_ylabel('N [kN]')
+        axes.legend(loc=4)'''
+
 
     #===========================================================================
     # 2D-ARAMIS PROCESSING
@@ -645,27 +669,19 @@ class ExpBTTDB(ExType):
     '''Specification of the resolution of the measured aramis field
     '''
 
-    start_t_aramis = Float(5.0)
-    '''Start time of aramis measurement.
-    '''
-
-    delta_t_aramis = Float(5.0)
-    '''Delta between aramis snapshots.
-    '''
-
     n_steps_aramis = Property(Int)
     def _get_n_steps_aramis(self):
-        # print 'self.aramis_info.number_of_steps', self.aramis_info.number_of_steps
         return self.aramis_info.number_of_steps
 
     t_aramis = Property(Array('float'), depends_on='data_file, start_t, delta_t, aramis_resolution_key')
     @cached_property
     def _get_t_aramis(self):
         step_times = self.aramis_field_data.step_times + 5
-        print 'step_times', step_times
-        print 'last_step_times', step_times[-1]
+        # step_times = self.aramis_field_data.step_times + self.start_time_aramis
+        print 'self.start_time_aramis', self.start_time_aramis
+        print '-----------------------------t_max_ARAMIS', step_times[-1]
         t_max = self.t[self.w_cut_idx]
-        print 't_max', t_max
+        print '-----------------------------t_max_ASCII', t_max
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
@@ -673,20 +689,20 @@ class ExpBTTDB(ExType):
     @cached_property
     def _get_t_aramis_cut(self):
         # print 't_aramis', self.t_aramis
-        # print 't_aramis_cut', self.t_aramis[:-1]
-        return self.t_aramis[ :]
+        # print 't_aramis_cut', self.t_aramis[:]
+        return self.t_aramis[ :-1]
 
     n_steps = Property
     @cached_property
     def _get_n_steps(self):
         'number of time steps in aramis after limiting the steps with t_max'
-        x = self.n_steps_aramis - len(self.t_aramis_cut)
-        if x == 0:
-            x = 1
-        # print 'len(self.t_aramis_cut)', len(self.t_aramis_cut)
-        # print 'x = ', x
-        # print 'self.aramis_info.number_of_steps - x', self.aramis_info.number_of_steps - x
-        return self.aramis_info.number_of_steps - x
+        # x = self.n_steps_aramis - len(self.t_aramis_cut)
+        # if x == 0:
+            # x = 1
+        # print 'x ', x
+        # return self.aramis_info.number_of_steps - x
+        print '-----------------------------n_steps_cut2', len(self.t_aramis_cut)
+        return len(self.t_aramis_cut)
 
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -703,10 +719,10 @@ class ExpBTTDB(ExType):
     @cached_property
     def _get_aramis_field_data(self):
         t_fail = self.t_cut_asc[-1]
-        # t_fail = self.t_aramis_cut[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
                                integ_radius=3)
-        current_step = np.abs(ad.step_times - t_fail).argmin()
+        current_step = (np.abs(ad.step_times - t_fail).argmin())
+        # print 'ad.step_times - t_fail', ad.step_times - t_fail
         ad.current_step = current_step
         return ad
 
@@ -717,7 +733,7 @@ class ExpBTTDB(ExType):
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
-        # print 'CRACK DETECTION STEP', crack_detection_step
+        print '---------------------CRACK DETECTION STEP', crack_detection_step
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
@@ -808,16 +824,15 @@ class ExpBTTDB(ExType):
         # print 'i_max', i_max
 
         if i_max <= 1:
-            # print ' less than three cracks'
             return None
 
-        ux = field_data.ux_arr
-        x_0 = field_data.x_arr_0
+        # ux = field_data.ux_arr
+        # x_0 = field_data.x_arr_0
 
         # get crack bridge strain
         for step, t in enumerate(self.t_aramis_cut):
             field_data.current_step = step
-            eps_range = 1
+            # eps_range = 1
             eps_list = []
             for i in range(0, i_max - 1, 1):
                 # ux1 = np.mean(ux[:, crack_mid_idx_arr[i] - eps_range : crack_mid_idx_arr[i] + eps_range ], axis=1)
@@ -881,8 +896,8 @@ class ExpBTTDB(ExType):
 
         idx_failure_crack = crack_idx_arr[max_idx + 1]
         print 'idx_failure_crack', idx_failure_crack
-        print 'shape_ad.x_arr_0 [0]', np.shape(field_data.x_arr_0)
-        print 'crack_number', max_idx + 2
+        print 'shape_ad.x_arr_0', np.shape(field_data.x_arr_0)
+        print 'number_failure_crack', max_idx + 2
         idx_border1 = crack_mid_idx_arr[max_idx]
         print 'idx_border1 ', idx_border1
         idx_border2 = crack_mid_idx_arr[max_idx + 1]
@@ -1253,6 +1268,7 @@ class ExpBTTDB(ExType):
                     idx_border1 = self.idx_failure_crack[1]
                     idx_border2 = self.idx_failure_crack[2]
                     eps = np.mean(field_data.d_ux[:, idx_border1:idx_border2], axis=1)
+                    # print 'eps', eps
 
                     # extrapolate eps for the specimen edges
                     x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
@@ -1308,11 +1324,11 @@ class ExpBTTDB(ExType):
         h = np.linspace(self.pos_fa[0], self.pos_fa[1], num=n_fa)
         t_F = self.t_F_arr
         F_beg_idx = self.F_beg_idx
-        print 'F_beg_idx', F_beg_idx
+        # print 'F_beg_idx', F_beg_idx
         eps_min_M_list = []
         eps_max_M_list = []
         max_step = self.n_steps
-        print 'max_step', max_step
+        # print 'max_step', max_step
 
         if t_F != []:
             for step in range(F_beg_idx, max_step , 1):
@@ -1567,7 +1583,7 @@ if __name__ == '__main__':
     ex_path = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
                            '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                           'BTT-6c-2cm-TU-0-V01_MxN2.DAT')
+                           'BTT-6c-2cm-TU-0-V03_MxN2.DAT')
 
     test_file = os.path.join(simdb.exdata_dir,
                            'bending_tensile_test',
@@ -1577,5 +1593,5 @@ if __name__ == '__main__':
     doe_reader = ExRunView(data_file=ex_path)
     doe_reader.configure_traits()
 
-#    ExpBTTDB.db.configure_traits()
+    # ExpBTTDB.db.configure_traits()
     # to see all experiments in one picture

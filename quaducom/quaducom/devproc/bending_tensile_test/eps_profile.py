@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     from exp_btt_db import ExpBTTDB
     from matresdev.db.simdb import SimDB
-    from aramis_cdt import AramisInfo, AramisData, AramisBSA
+    from aramis_cdt import AramisInfo, AramisUI, AramisFieldData, AramisCDT, AramisUI
     simdb = SimDB()
     import os
     import numpy as np
@@ -17,9 +17,7 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V02_MxN2.DAT',
-                  # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
-                  # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+    test_files = ['BTT-6c-2cm-TU-0-V09_MxN2.DAT',
                   ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
@@ -34,6 +32,8 @@ if __name__ == '__main__':
         # print 'w_idx_cut', e.t[e.w_cut_idx]
         # print 'F_max1', e.F_max1
         # print 'crack filter', e.crack_filter_avg
+
+    p.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.2, hspace=0.2)
 
     p.subplot(221)
     for e in e_list:
@@ -68,6 +68,9 @@ if __name__ == '__main__':
         # p.xlim(0, 950)
         p.ylabel('w [mm]')
         p.legend(loc=1)
+
+        print '-----------------------------n_steps', e.aramis_info.number_of_steps
+        print '-----------------------------n_steps_cut1', len(e.t_aramis)
         print 'max tension strain', max(e.eps_t_aramis[0] * 1000)
         print 'min compression strain', min(e.eps_t_aramis[1] * 1000)
         print 'max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000)
@@ -94,62 +97,38 @@ if __name__ == '__main__':
     p.subplot(224)
     for e in e_list:
         aramis_file_path = e.get_cached_aramis_file('Xf15s3-Yf15s3')
-
-        # @todo:
-        # 1) define the mapping between astage_idx(t).
-        # 2) define a method evaluating strain profile within the object.
-
         AI = AramisInfo(data_dir=aramis_file_path)
-        # AD = AramisData(aramis_info=AI, evaluated_step_idx=60)
-        AD = AramisData(aramis_info=AI)
-
-        ac = AramisBSA(aramis_info=AI,
-                        aramis_data=AD,
-                        integ_radius=10)
+        ad = AramisFieldData(aramis_info=AI, integ_radius=3)
 
         max_step = e.n_steps
         a = e.crack_bridge_strain_all
-        n_fa = ac.d_ux_arr.shape[0]
+        n_fa = ad.d_ux.shape[0]
         h = np.linspace(e.pos_fa[0], e.pos_fa[1], num=n_fa)
         # print 'h', h
 
         for step in range(0, max_step, 10):
 
-            AD.evaluated_step_idx = step
+            ad.current_step = step
 
             if a == None:
-                mid_idx = ac.d_ux_arr.shape[1] / 2
+                mid_idx = ad.d_ux.shape[1] / 2
                 eps_range = 3
-                eps = np.mean(ac.d_ux_arr[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
+                eps = np.mean(ad.d_ux[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
                 # print 'eps', eps
                 p.title('strain in the middle of the measuring field')
 
             else:
-                ux = AD.ux_arr
-                x_und = AD.x_arr_undeformed
+                ux = ad.ux_arr
+                x_und = ad.x_arr_0
                 idx_border1 = e.idx_failure_crack[1]
                 idx_border2 = e.idx_failure_crack[2]
                 eps_range = 1
                 ux1 = np.mean(ux[:, idx_border1 - eps_range: idx_border1 + eps_range ], axis=1)
                 ux2 = np.mean(ux[:, idx_border2 - eps_range: idx_border2 + eps_range ], axis=1)
-                x_und1 = np.mean(x_und [:, idx_border1 - eps_range: idx_border1 + eps_range ], axis=1)
-                x_und2 = np.mean(x_und [:, idx_border2 - eps_range: idx_border2 + eps_range ], axis=1)
-                eps = (ux2 - ux1) / (x_und2 - x_und1)
+                x_01 = np.mean(x_und [:, idx_border1 - eps_range: idx_border1 + eps_range ], axis=1)
+                x_02 = np.mean(x_und [:, idx_border2 - eps_range: idx_border2 + eps_range ], axis=1)
+                eps = (ux2 - ux1) / (x_02 - x_01)
 
-                u_left, u_right = ux[0, (idx_border1, idx_border2) ]
-                print 'u', u_left, u_right
-                x_left, x_right = x_und[0, (idx_border1, idx_border2) ]
-                print 'x', x_left, x_right
-                eps_cb = np.fabs(u_right - u_left) / np.fabs(x_right - x_left)
-                print 'eps', eps_cb
-                # print 'x_und[0, idx_border1:idx_border2', x_und[0, idx_border1:idx_border2]
-                # print 'ux1', ux1
-                # print 'ux[:, idx_border2]', ux[:, idx_border2]
-                # print 'x_und [:, idx_border1]', x_und [:, idx_border1]
-                # print 'x_und [:, idx_border2]', x_und [:, idx_border2]
-                # print 'eps', eps
-
-                # eps = np.mean(ac.d_ux_arr[:, idx_border1:idx_border2], axis=1)
                 p.title('strain in the failure crack')
 
             x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])

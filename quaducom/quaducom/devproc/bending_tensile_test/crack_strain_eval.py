@@ -17,19 +17,20 @@ if __name__ == '__main__':
     test_files = [
                   # 'BTT-6c-2cm-TU-0-V07_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
-#                  'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
-                  'BT-6c-2cm-0-TU-V4_bs4.DAT'
+                  # 'BTT-6c-2cm-TU-0-V08_MxN2.DAT']
+                  'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
+#                  'BT-6c-2cm-0-TU-V4_bs4.DAT'
                   ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
-#                             '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                             '2013-07-09_BT-6c-2cm-0-TU_bs4-Aramis3d'
+                             '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
+#                             '2013-07-09_BT-6c-2cm-0-TU_bs4-Aramis3d'
                              )
 
     res_key = 'Xf19s15-Yf19s15'
-    res_key = 'Xf15s3-Yf15s3'
     res_key = 'Xf19s1-Yf5s4'
+    res_key = 'Xf15s3-Yf15s3'
 
     e_list = [ExpBTTDB(data_file=os.path.join(test_file_path, test_file),
                        aramis_resolution_key=res_key,
@@ -42,8 +43,8 @@ if __name__ == '__main__':
         e.aramis_field_data.integ_radius = 3
         e.aramis_field_data.current_step = e.n_steps
         e.aramis_cdt.crack_detection_step = e.n_steps
-        e.aramis_cdt.ddd_ux_avg_threshold = -1e-4
-        e.aramis_cdt.ddd_ux_threshold = -1e-4
+        e.aramis_cdt.ddd_ux_avg_threshold = -0.5e-3
+        e.aramis_cdt.ddd_ux_threshold = -0.5e-3
 
         x = e.aramis_field_data.x_arr_0
         y = e.aramis_field_data.y_arr_0
