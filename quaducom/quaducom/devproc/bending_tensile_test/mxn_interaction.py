@@ -18,20 +18,31 @@ if __name__ == '__main__':
     import pylab as p
 
 
-    test_files = ['BTT-6c-2cm-TU-0-V07_MxN2.DAT',
+    test_files = [
+                  # 'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
-                  # 'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+#                  'BTT-4c-2cm-TU-0-V13_MxN2.DAT',
+                  'BT-6c-2cm-0-TU-V4_bs4.DAT'
                   ]
 
     test_file_path = os.path.join(simdb.exdata_dir,
                              'bending_tensile_test',
-                             '2014-06-12_BTT-6c-2cm-0-TU_MxN2')
+#                             '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
+                             '2013-07-09_BT-6c-2cm-0-TU_bs4-Aramis3d'
+                             )
 
+#    res_key = 'Xf19s15-Yf19s15'
+    res_key = 'Xf15s3-Yf15s3'
+    res_key = 'Xf19s1-Yf5s4'
     e_list = [ExpBTTDB(data_file=os.path.join(test_file_path, test_file),
-                    delta_t_aramis=5)
+#                       aramis_resolution_key=res_key,
+                       delta_t_aramis=5,
+                       )
            for test_file in test_files]
     for e in e_list:
         e.process_source_data()
+        e.aramis_cdt.ddd_ux_avg_threshold = -5e-4
+
         # print 'step_times', e.aramis_field_data.step_times
         # print 'crack filter', e.crack_filter_avg
 
@@ -54,7 +65,8 @@ if __name__ == '__main__':
 
     p.subplot(232)
     for e in e_list:
-        aramis_file_path = e.get_cached_aramis_file('Xf15s3-Yf15s3')
+        aramis_file_path = e.get_cached_aramis_file(res_key)
+        print 'aramis_file_path', aramis_file_path
         AI = AramisInfo(data_dir=aramis_file_path)
         ad = AramisFieldData(aramis_info=AI, integ_radius=3)
         ac = AramisCDT(aramis_info=AI,
@@ -115,7 +127,7 @@ if __name__ == '__main__':
 
     p.subplot(235)
     for e in e_list:
-        aramis_file_path = e.get_cached_aramis_file('Xf15s3-Yf15s3')
+        aramis_file_path = e.get_cached_aramis_file(res_key)
         AI = AramisInfo(data_dir=aramis_file_path)
         ad = AramisFieldData(aramis_info=AI, integ_radius=3)
         ac = AramisCDT(aramis_info=AI,
@@ -209,7 +221,7 @@ if __name__ == '__main__':
 
     p.subplot(236)
     for e in e_list:
-        aramis_file_path = e.get_cached_aramis_file('Xf15s3-Yf15s3')
+        aramis_file_path = e.get_cached_aramis_file(res_key)
         AI = AramisInfo(data_dir=aramis_file_path)
         ad = AramisFieldData(aramis_info=AI, integ_radius=3)
         ac = AramisCDT(aramis_info=AI,

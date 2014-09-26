@@ -191,6 +191,9 @@ class ExpBTTDB(ExType):
         else:
             self.w = np.zeros_like(self.F)
 
+        print 'wwww',
+        print self.w
+
         if hasattr(self, 'Weg'):
             self.u = self.Weg
         else:
@@ -232,7 +235,7 @@ class ExpBTTDB(ExType):
     #--------------------------------------------------------------------------
 
     F_max_threshold = Float(0.15, auto_set=False, enter_set=True)
-    '''Threshold to distniguish between pure tensile test and bending test.
+    '''Threshold to distinguish between pure tensile test and bending test.
     '''
 
     N_asc = Property(Array('float_'), depends_on='input_change')
@@ -546,6 +549,7 @@ class ExpBTTDB(ExType):
     def _plot_w_t(self, axes):
         '''Displacement versus time
         '''
+        print 'self.w_asc', self.w_asc
         axes.plot(self.t_asc, self.w_asc, color='black')
         axes.xaxis.tick_bottom()
         axes.set_xlabel('t [sec]')
