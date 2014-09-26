@@ -30,8 +30,8 @@ if __name__ == '__main__':
         e.aramis_field_data.integ_radius = 3
         e.aramis_field_data.current_step = e.n_steps
         e.aramis_cdt.crack_detection_step = e.n_steps
-        e.aramis_cdt.ddd_ux_avg_threshold = -1e-3
-        e.aramis_cdt.ddd_ux_threshold = -1e-3
+        e.aramis_cdt.ddd_ux_avg_threshold = -0.5e-3
+        e.aramis_cdt.ddd_ux_threshold = -0.5e-3
 
         x = e.aramis_field_data.x_arr_0
         y = e.aramis_field_data.y_arr_0
