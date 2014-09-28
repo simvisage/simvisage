@@ -61,7 +61,7 @@ if __name__ == '__main__':
     #
 
     do = 'N_ip'
-    do = 'V_op'
+#    do = 'V_op'
 
     fontsize = 20
     color = 'grey'
@@ -96,7 +96,8 @@ if __name__ == '__main__':
         ax1.bar(ind * step + step / 2. - width / 2., V_op_sym, width, color=color, edgecolor='none', linewidth=0)
         format_plot(p, fontsize=fontsize, yformat="%.1f", xlabel='$X\,\mathrm{[m]}$', ylabel='$V_\mathrm{op}\,\mathrm{[kN]}$')
 
-    fig.tight_layout()
+    p.ylim([-20., 20.])
+#    fig.tight_layout()
     simdata_dir = os.path.join(simdb.simdata_dir, 'show_results')
     p.savefig(os.path.join(simdata_dir, filename + '_' + do), format='pdf', dpi=600.)
     print 'png saved to file ' + filename

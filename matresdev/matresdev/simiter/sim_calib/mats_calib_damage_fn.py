@@ -100,7 +100,7 @@ class MATSCalibDamageFn(MATSExplore):
 
     max_eps = Property(Float)
     def _get_max_eps(self):
-        return 0.007  # set explicit value when calibration is aborted (mean value of strain)
+#        return 0.007  # set explicit value when calibration is aborted (mean value of strain)
         return self.mfn_line_array_target.xdata[-1]
 
     n_steps = Int(1)
@@ -532,8 +532,8 @@ class MATSCalibDamageFn(MATSExplore):
         phi_trial_list_n = [[1.]] + self.phi_trial_list_n
         sig_trial_list_n = [[0.]] + self.sig_trial_list_n
 
-        xrange = 8.  # plotting range for strain [mm/m]
-        yrange = 20.  # plotting range for stress [MPa]
+        xrange = 10.  # plotting range for strain [mm/m]
+        yrange = 15.  # plotting range for stress [MPa]
 
         for n in range(self.n_steps):
             for i in range(len(phi_trial_list_n[n + 1])):
@@ -783,9 +783,9 @@ def run():
                               'dog_bone',
 #                              'buttstrap_clamping',
 
-#                              'TT-10a',
+                              '2010-02-09_TT-10g-3cm-a-TR_TRC11',
 #                              'TT11-10a-average.DAT' )
-#                              'TT-10g-3cm-a-TR-average.DAT')
+                              'TT-10g-3cm-a-TR-average.DAT')
 
                                #-----------------------------------
                                # tests for 'BT-3PT-12c-6cm-TU_ZiE'
@@ -815,8 +815,9 @@ def run():
 #                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                                'TT-12c-6cm-0-TU-SH2F-V3.DAT')
 
-                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
-                                'TT-12c-6cm-0-TU-SH2-V1.DAT')
+                                # used for suco(!)
+#                                '2012-02-14_TT-12c-6cm-0-TU_SH2',
+#                                'TT-12c-6cm-0-TU-SH2-V1.DAT')
 
                                 #-----------------------------------
                                 # tests for 'BT-3PT-6c-2cm-TU_bs'
@@ -878,6 +879,14 @@ def run():
 #                               '2013-07-09_TTb-6g-2cm-0-TU_bs4-Aramis3d',
 #                               'TTb-6g-2cm-0-TU-V1_bs4.DAT')
 
+        # test series NxM_1
+        #
+#        test_file = join(simdb.exdata_dir,
+#                          'tensile_tests',
+#                          'buttstrap_clamping',
+#                          '2014-04-30_TTb-6c-2cm-0-TU_NxM1',
+#                          'TTb-6c-2cm-0-TU-V16_NxM1.DAT')
+
         #------------------------------------------------------------------
         # set 'ex_run' of 'fitter' to selected calibration test
         #------------------------------------------------------------------
@@ -921,10 +930,10 @@ def run():
         # assumed as behavior is governed by inelastic tensile behavior and anisotropic redistrirbution;
         #
 #        E_c = 29940.2
-        E_c = 29100.
+#        E_c = 29100.
 #        E_c = 22390.4
 #        E_c = 18709.5
-#        E_c = 28700.
+        E_c = 28700.
 
         # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
 #        E_m = 18709.5
@@ -935,7 +944,7 @@ def run():
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
 
-        n_steps = 50
+        n_steps = 200
         fitter.n_steps = n_steps
 
         fitter.format_ticks = True

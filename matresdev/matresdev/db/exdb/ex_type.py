@@ -67,14 +67,19 @@ class ExType(SimDBClass):
 
     # specify inputs
     #
-    key = Property(Str, depends_on='data_file')
+    key = Property(Str, trantient=True, depends_on='data_file')
     def _get_key(self):
         return split(os.path.basename(self.data_file), '.')[0]
 
     def _set_key(self, value):
         genkey = split(os.path.basename(self.data_file), '.')[0]
         if genkey != value:
-            raise KeyError, 'key mismatch %s != %s' % (genkey, self.value)
+            raise KeyError, 'key mismatch %s != %s' % (genkey, value)
+
+    def __setstate__ (self, state, kw={}):
+        if state.has_key('key'):
+            del state['key']
+        super(SimDBClass, self).__setstate__(state, **kw)
 
     # indicate whether the test is suitable and prepared for
     # calibration.
@@ -280,10 +285,13 @@ class ExType(SimDBClass):
         zf.close()
 
     def get_cached_aramis_file(self, arkey):
-        '''For the psecified aramis resolution key check if the file
+        '''For the specified aramis resolution key check if the file
         has already been downloaded.
         '''
-        af = self.aramis_dict[arkey]
+        af = self.aramis_dict.get(arkey, None)
+        if af == None:
+            print 'Aramis data not available for resolution %s of the test data\n%s' % (arkey, self.data_file)
+            return None
         af_path = os.path.join(simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
 
         print 'cache_remote', simdb.simdb_cache_remote_dir

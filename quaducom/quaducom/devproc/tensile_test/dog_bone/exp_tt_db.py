@@ -426,6 +426,8 @@ class ExpTTDB(ExType):
             bool_arr_t = delta_t > 0.
             bool_arr = bool_arr_F * bool_arr_eps * bool_arr_t
             jump_idx2 = np.where(bool_arr)[0][1]
+#            print 'bool_arr', bool_arr
+#            print 'np.where(bool_arr)', np.where(bool_arr)
             delta_jump_idx = jump_idx2 - jump_idx
             jump_idx2_arr[ n_idx ] = jump_idx2
             delta_jump_idx_arr[ n_idx ] = delta_jump_idx
@@ -824,70 +826,93 @@ class ExpTTDB(ExType):
 
     # scaleable plotting methods
     #
-    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness=True, interpolated=True):
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
         '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
+        #---------------
+        # plot stiffness KI and KII if option is set to True
+        #---------------
+        K_I = self.E_c / self.rho_c * k_rho
+        print 'K_I = E_c (simdb)', self.E_c
+        rho_new = self.rho_c / k_rho
+        K_I = self.E_c / rho_new
+        print 'K_I = E_c (new)', K_I
+        E_tex = self.ccs.E_tex
+        K_IIb = E_tex
+        print 'K_IIb = E_tex ', K_IIb
+        #---------------
         if plot_analytical_stiffness == True:
-            print 'plot analytical stiffness (K_I and K_IIb)'
+            plot_analytical_stiffness_I = True
+            plot_analytical_stiffness_II = True
+        #---------------
+        if plot_analytical_stiffness_I == True:
+            print 'plot analytical stiffness (K_I)'
             # plot the stiffness of the composite (K_I) - uncracked state)
-            #
-            K_I = self.E_c / self.rho_c * k_rho
-            print 'K_I = E_c (simdb)', self.E_c
-            rho_new = self.rho_c / k_rho
-            K_I = self.E_c / rho_new
-            print 'K_I = E_c (new)', K_I
             eps_lin = array([0, self.sig_tex_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_tex_max], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        if plot_analytical_stiffness_II == True:
+            print 'plot analytical stiffness (K_IIb)'
             # plot the stiffness of the garn (K_IIb - cracked state)
-            #
-            E_tex = self.ccs.E_tex
-            K_IIb = E_tex
-            print 'K_IIb = E_tex ', K_IIb
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        # plot stress-strain curves
+        #---------------
         if interpolated == True:
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
             sig_tex_interpolated = k_rho * self.sig_c_interpolated / self.rho_c
         else:
             # use ironed date (still contains initial offset)
-            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            sig_tex_interpolated = k_rho * self.sig_c_ironed / self.rho_c
+            eps_asc_scaled = self.eps_asc * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            sig_tex_interpolated = k_rho * self.sig_c_asc / self.rho_c
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
 
-    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness=True, interpolated=True):
+    def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
         '''plot the composite stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
+        #---------------
+        # plot stiffness KI and KII if option is set to True
+        #---------------
+        K_I = self.E_c  # depending of the testing age
+        print 'K_I = E_c (simdb)', self.E_c
+        print 'E_tex (simdb)', self.ccs.E_tex
+        print 'E_m (simdb)', self.E_m
+        print 'age (simdb)', self.age
+        rho_new = self.ccs.rho_c / k_rho
+        K_I = (1 - rho_new) * self.E_m + rho_new * self.ccs.E_tex
+        print 'K_I (new)', K_I
+        print 'rho_c (new)', self.ccs.rho_c / k_rho
+#        K_I = self.E_c28
+        E_tex = self.ccs.E_tex
+        K_IIb = E_tex * self.rho_c
+        print 'K_IIb = E_tex * self.rho_c', K_IIb
+        K_IIb = E_tex * rho_new
+        print 'K_IIb = E_tex * rho_new', K_IIb
+        #---------------
         if plot_analytical_stiffness == True:
-            print 'plot analytical stiffness (K_I and K_IIb)'
-            # plot analytical stiffness
-            K_I = self.E_c  # depending of the testing age
-            print 'K_I = E_c (simdb)', self.E_c
-            print 'E_tex (simdb)', self.ccs.E_tex
-            print 'E_m (simdb)', self.E_m
-            print 'age (simdb)', self.age
-            rho_new = self.ccs.rho_c / k_rho
-            K_I = (1 - rho_new) * self.E_m + rho_new * self.ccs.E_tex
-            print 'K_I (new)', K_I
-            print 'rho_c (new)', self.ccs.rho_c / k_rho
-    #        K_I = self.E_c28
+            plot_analytical_stiffness_I = True
+            plot_analytical_stiffness_II = True
+        #---------------
+        if plot_analytical_stiffness_I == True:
+            print 'plot analytical stiffness (K_I)'
             eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_c_max], dtype='float_')
-            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--', linewidth=linewidth)
+        #---------------
+        if plot_analytical_stiffness_II == True:
+            print 'plot analytical stiffness (K_IIb)'
             # plot the stiffness of the garn (K_IIb - cracked state)
-            #
-            E_tex = self.ccs.E_tex
-            K_IIb = E_tex * self.rho_c
-            print 'K_IIb = E_tex * self.rho_c', K_IIb
-            K_IIb = E_tex * rho_new
-            print 'K_IIb = E_tex * rho_new', K_IIb
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
-            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
-
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--', linewidth=linewidth)
+        #---------------
+        # plot stress-strain curves
+        #---------------
         if interpolated == True:
             # use ironed date (without initial offset)
             eps_asc_scaled = self.eps_c_interpolated * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
@@ -909,8 +934,10 @@ class ExpTTDB(ExType):
 #            axes.plot(eps_c_interpolated_smoothed, sig_c_interpolated_smoothed, color='black', linewidth=linewidth, linestyle=linestyle, label=label)
         else:
             # use ironed date (still contains initial offset)
-            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
-            axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            eps_asc_scaled = self.eps_asc * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+            axes.plot(eps_asc_scaled, self.sig_c_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+#            eps_asc_scaled = self.eps_ironed * xscale  # scale by scale-factor scale_factor = 1000. for setting strain unite to "permile"
+#            axes.plot(eps_asc_scaled, self.sig_c_ironed, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
 
     #---------------------------------
