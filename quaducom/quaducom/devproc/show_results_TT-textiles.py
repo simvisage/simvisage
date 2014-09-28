@@ -37,6 +37,7 @@ if __name__ == '__main__':
     stiffness_flag_II = False
     plot_sigtex_flag = True
     legend_flag = False
+    legend_loc = 1  # upper right # set to "legend_loc = 4" for lower right
     sig_flag = 'comp'
 #    sig_flag = 'tex'
 
@@ -48,13 +49,13 @@ if __name__ == '__main__':
 #    test_series_name = 'ARG-1200-TU-1v1l'
 #    test_series_name = 'CAR-800-TR-2v1l'
 #    test_series_name = 'CAR-800-TR-1v1l'
-#    test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
+    test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-2cm'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-6cm'
 #    test_series_name = 'CAR-3300-TR-3v3l'
     #---------------------------
 #    test_series_name = 'compare_CAR'
-    test_series_name = 'compare_ARG'
+#    test_series_name = 'compare_ARG'
 #    test_series_name = 'compare_ARG-CAR'
 
     #---------------------------
@@ -201,7 +202,7 @@ if __name__ == '__main__':
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
         #
-        k_rho = 0.99  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =31,8mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,1mm2)
+        k_rho = 1.007  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
 
         # specify limits for the plot
         xlim = 9.
@@ -228,11 +229,11 @@ if __name__ == '__main__':
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
         #
-        k_rho = 0.99  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =31,8mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,1mm2)
+        k_rho = 1.007  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
 
         # specify limits for the plot
-        xlim = 8.
-        ylim = 22.
+        xlim = 9.
+        ylim = 30.
         #
         path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-10-09_TT-6c-2cm-0-TU_bs', 'TT-6c-2cm-0-TU-V1.DAT')
         path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-10-09_TT-6c-2cm-0-TU_bs', 'TT-6c-2cm-0-TU-V2.DAT')
@@ -373,12 +374,14 @@ if __name__ == '__main__':
         interpolated_flag = False
         stiffness_flag = False
         stiffness_flag_I = False
-        stiffness_flag_II = False
+        stiffness_flag_II = True
         plot_sigtex_flag = False
+        legend_flag = True
+        legend_loc = 1
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
         #
-        k_rho = 1.057  # ignor correction factor
+        k_rho = 1.057  # correction factor
 
         # specify limits for the plot
         xlim = 18.
@@ -387,40 +390,40 @@ if __name__ == '__main__':
         if sig_flag == 'tex':
             ylim = 1700.
         #
-        # TR1
-        path_V1_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V1.DAT')
-        path_V2_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V2.DAT')
-        path_V3_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V3.DAT')
-
-        # TR2
-        path_V1_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V1.DAT')
-        path_V2_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V2.DAT')
-        path_V3_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V3.DAT')
-
         # TU
         path_V1_TU = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V1.DAT')
         path_V2_TU = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V2.DAT')
         path_V3_TU = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V3.DAT')
+
+        # TR-1v1l
+        path_V1_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V1.DAT')
+        path_V2_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V2.DAT')
+        path_V3_TR2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-05-23_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V3.DAT')
+
+        # TR-2v1l
+        path_V1_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V1.DAT')
+        path_V2_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V2.DAT')
+        path_V3_TR1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-03-22_TT-12c-6cm-0-TR', 'TT-12c-6cm-0-TR-V3.DAT')
 
         # HT
         path_V1_HT = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-12-12_TT-6c-3cm-0-HT', 'TT-6c-3cm-0-HT-V1.DAT')
         path_V2_HT = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-12-12_TT-6c-3cm-0-HT', 'TT-6c-3cm-0-HT-V2.DAT')
         path_V3_HT = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2010-12-12_TT-6c-3cm-0-HT', 'TT-6c-3cm-0-HT-V3.DAT')
 
-        path_list = [path_V1_TR1, path_V2_TR1, path_V3_TR1,
+        path_list = [path_V1_TU, path_V2_TU, path_V3_TU,
                      path_V1_TR2, path_V2_TR2, path_V3_TR2,
-                     path_V1_TU, path_V2_TU, path_V3_TU,
+                     path_V1_TR1, path_V2_TR1, path_V3_TR1,
                      path_V1_HT, path_V2_HT, path_V3_HT
                     ]
 
-        label_list = ['CAR-800-TR-2v1l', None, None,
+        label_list = ['CAR-800-TU-1v1l', None, None,
                       'CAR-800-TR-1v1l', None, None,
-                      'CAR-800-TU-1v1l', None, None,
+                      'CAR-800-TR-2v1l', None, None,
                       'CAR-3300-TR-3v3l', None, None]
 
-        color_list = ['silver', 'silver', 'silver',
+        color_list = ['k', 'k', 'k',
                       'grey', 'grey', 'grey',
-                      'k', 'k', 'k',
+                      'silver', 'silver', 'silver',
                       'k', 'k', 'k']
 
         linestyle_list = ['-', '-', '-',
@@ -625,7 +628,7 @@ if __name__ == '__main__':
         font.set_variant('normal')
 #        font.set_weight('ultralight')
         #
-        leg = p.legend(prop=font, loc=4)  # (loc=4: lower right) (7: center right)
+        leg = p.legend(prop=font, loc=legend_loc)  # (loc=4: lower right) (7: center right)
         frame = leg.get_frame()
         frame.set_facecolor('white')
         frame.set_edgecolor('white')
