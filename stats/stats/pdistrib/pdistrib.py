@@ -21,7 +21,7 @@ import scipy.stats as stats
 distr_dict = {}
 distr_enum = []
 
-for distr in stats.distributions.__all__[2:84]:
+for distr in stats.distributions.__all__:
     d = stats.distributions.__dict__[distr]
     if hasattr(d, 'numargs'):
         if d.numargs == 0:
