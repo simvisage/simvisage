@@ -124,7 +124,7 @@ class CBClampedRandXi(RF):
         else:
             return mu_int * E_f * V_f * r**2
     
-    def __call__2(self, w, tau, E_f, V_f, r, m, sV0):
+    def free_deb(self, w, tau, E_f, V_f, r, m, sV0):
         '''free debonding only = __call__ with lm=infty'''
         T = 2. * tau / r
         #scale parameter with respect to a reference volume
