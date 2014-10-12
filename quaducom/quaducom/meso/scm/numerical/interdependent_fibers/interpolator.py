@@ -1,3 +1,4 @@
+
 '''
 Created on 11 May 2013
 
@@ -80,47 +81,64 @@ class Interpolator(HasTraits):
     result_values = Property(Array, depends_on='CB_model, load_sigma_c_arr, n_w, n_x, n_BC')
     @cached_property
     def _get_result_values(self):
-        L_arr = self.BC_range
-        Ll_arr = np.array([])
-        Lr_arr = np.array([])
-        x_arr = np.array([])
-        sigma_c_arr = np.array([])
-        mu_epsf_arr = np.array([])
-        epsm_arr = np.array([])
-        loops_tot = self.n_BC ** 2
-        max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
-        for i, ll in enumerate(L_arr):
-            for j, lr in enumerate(L_arr):
-                if j >= i:
-                    # find maximum
-                    sigma_c_max, wmax = self.max_sigma_w(ll, lr)
-                    max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
-                    w_arr = np.linspace(0.0, wmax, self.n_w)
-                    mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.w_x_res(w_arr, ll, lr, self.length)
-                    # store the particular result for BC ll and lr into the result array
-                    Ll_arr = np.hstack((Ll_arr, ll_arr))
-                    Lr_arr = np.hstack((Lr_arr, lr_arr))
-                    x_arr = np.hstack((x_arr, x))
-                    sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
-                    mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
-                    epsm_arr = np.hstack((epsm_arr, epsm))
-                current_loop = i * len(L_arr) + j + 1
-                print 'progress: %2.1f %%' % \
-                (current_loop / float(loops_tot) * 100.)
-        points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
-        interp_arr_points = open('interp_arr_points.pkl', 'wb')
-        pickle.dump([points, max_sigma_c_arr], interp_arr_points, -1)
-        interp_arr_points.close()
+            if os.path.isdir('InterpolatorData'):os.chdir('InterpolatorData')
+            else:
+                os.mkdir('InterpolatorData')
+                os.chdir('InterpolatorData')
+            try:
+                points_max_sigma_c_arr = open('interp_arr_points.pkl', 'rb')
+                pmsc_arr = pickle.load(points_max_sigma_c_arr)
+                points_max_sigma_c_arr.close()
+                interp_arr_mu_epsf_arr = open('interp_arr_mu_epsf_arr.pkl', 'rb')
+                mu_epsf_arr = pickle.load(interp_arr_mu_epsf_arr)
+                interp_arr_mu_epsf_arr.close()
+                interp_arr_epsm_arr = open('interp_arr_epsm_arr.pkl', 'rb')
+                epsm_arr = pickle.load(interp_arr_epsm_arr)
+                interp_arr_epsm_arr.close()
+                os.chdir(os.pardir)
+                return [ pmsc_arr[0], mu_epsf_arr[0], epsm_arr[0], pmsc_arr[1] ]
+            except:
+                L_arr = self.BC_range
+                Ll_arr = np.array([])
+                Lr_arr = np.array([])
+                x_arr = np.array([])
+                sigma_c_arr = np.array([])
+                mu_epsf_arr = np.array([])
+                epsm_arr = np.array([])
+                loops_tot = self.n_BC ** 2
+                max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
+                for i, ll in enumerate(L_arr):
+                    for j, lr in enumerate(L_arr):
+                        if j >= i:
+                            # find maximum
+                            sigma_c_max, wmax = self.max_sigma_w(ll, lr)
+                            max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
+                            w_arr = np.linspace(0.0, wmax, self.n_w)
+                            mu_sigma_c, x, mu_epsf, epsm, ll_arr, lr_arr = self.w_x_res(w_arr, ll, lr, self.length)
+                            # store the particular result for BC ll and lr into the result array
+                            Ll_arr = np.hstack((Ll_arr, ll_arr))
+                            Lr_arr = np.hstack((Lr_arr, lr_arr))
+                            x_arr = np.hstack((x_arr, x))
+                            sigma_c_arr = np.hstack((sigma_c_arr, mu_sigma_c))
+                            mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
+                            epsm_arr = np.hstack((epsm_arr, epsm))
+                        current_loop = i * len(L_arr) + j + 1
+                        print 'progress: %2.1f %%' % \
+                        (current_loop / float(loops_tot) * 100.)
+                points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
+                interp_arr_points = open('interp_arr_points.pkl', 'wb')
+                pickle.dump([points, max_sigma_c_arr], interp_arr_points, -1)
+                interp_arr_points.close()
 
-        interp_arr_mu_epsf_arr = open('interp_arr_mu_epsf_arr.pkl', 'wb')
-        pickle.dump([mu_epsf_arr], interp_arr_mu_epsf_arr, -1)
-        interp_arr_mu_epsf_arr.close()
+                interp_arr_mu_epsf_arr = open('interp_arr_mu_epsf_arr.pkl', 'wb')
+                pickle.dump([mu_epsf_arr], interp_arr_mu_epsf_arr, -1)
+                interp_arr_mu_epsf_arr.close()
 
-        interp_arr_epsm_arr = open('interp_arr_epsm_arr.pkl', 'wb')
-        pickle.dump([epsm_arr], interp_arr_epsm_arr, -1)
-        interp_arr_epsm_arr.close()
-        os.chdir(os.pardir)
-        return [points, mu_epsf_arr, epsm_arr, max_sigma_c_arr]
+                interp_arr_epsm_arr = open('interp_arr_epsm_arr.pkl', 'wb')
+                pickle.dump([epsm_arr], interp_arr_epsm_arr, -1)
+                interp_arr_epsm_arr.close()
+                os.chdir(os.pardir)
+                return [points, mu_epsf_arr, epsm_arr, max_sigma_c_arr]
 
     def interpolate_max_sigma_c(self, Ll, Lr):
         L_l, L_r = self.get_L(Ll, Lr)

@@ -17,17 +17,20 @@ import tempfile
 ''' a dictionary filled with distribution names (keys) and
     scipy.stats.distribution attributes having None
     or 1 shape parameters (values)'''
-import scipy.stats
+import scipy.stats as stats
 distr_dict = {}
 distr_enum = []
-for distr in scipy.stats.distributions.__all__[2:84]:
-   if scipy.stats.distributions.__dict__[distr].numargs == 0:
-       distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
-       distr_enum.append(distr)
 
-   elif scipy.stats.distributions.__dict__[distr].numargs == 1:
-       distr_dict[distr] = scipy.stats.distributions.__dict__[distr]
-       distr_enum.append(distr)
+for distr in stats.distributions.__all__:
+    d = stats.distributions.__dict__[distr]
+    if hasattr(d, 'numargs'):
+        if d.numargs == 0:
+            distr_dict[distr] = d
+            distr_enum.append(distr)
+
+        elif d.numargs == 1:
+            distr_dict[distr] = d
+            distr_enum.append(distr)
 
 class IPDistrib(Interface):
 
