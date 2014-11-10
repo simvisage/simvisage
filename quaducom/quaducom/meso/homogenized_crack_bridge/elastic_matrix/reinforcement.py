@@ -50,7 +50,7 @@ class ContinuousFibers(Reinforcement):
             #tau_max = self.tau.ppf(1. - 0.5/self.n_int)
             #tau = np.linspace(tau_max/self.n_int, tau_max, self.n_int)
             #CDF_midpoint = np.hstack((0.0, self.tau.cdf(tau[:-1] + tau[1]/2.), 1.0))
-            #stat_weights = np.diff(CDF_midpoint)
+            stat_weights = np.diff(CDF_midpoint)
             nu_r_tau = np.ones_like(tau)
             stat_weights = np.ones_like(tau) / self.n_int
             print 'mean tau = ', np.sum(tau * stat_weights), 'real value = ', self.tau._distr.mean
