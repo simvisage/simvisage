@@ -18,6 +18,8 @@ from util.traits.either_type import EitherType
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
 
+from matplotlib import pyplot as plt
+
 class Reinforcement(HasTraits):
     '''common class for all reinforcement types'''
     label = Str('reinforcement')
@@ -42,16 +44,17 @@ class ContinuousFibers(Reinforcement):
     def _get_results(self):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
-            tau = []
-            p_arr = np.linspace(.005, 0.995, self.n_int + 1)
-            for i, p in enumerate(p_arr[1:]):
-                tau_arr = self.tau.ppf(np.linspace(p_arr[i], p, 500))
-                pdf = self.tau.pdf(tau_arr)
-                tau.append(np.trapz(tau_arr * pdf, tau_arr) / (p - p_arr[i]))
-            tau = np.array(tau)
-
-            stat_weights *= 1. / self.n_int
+            p_arr = np.linspace(0.5/self.n_int, 1 - 0.5/self.n_int, self.n_int)
+            #p_arr = np.random.rand(self.n_int)
+            tau = self.tau.ppf(p_arr) + 1e-10 # to eliminate zeros
+            #tau_max = self.tau.ppf(1. - 0.5/self.n_int)
+            #tau = np.linspace(tau_max/self.n_int, tau_max, self.n_int)
+            #CDF_midpoint = np.hstack((0.0, self.tau.cdf(tau[:-1] + tau[1]/2.), 1.0))
+            #stat_weights = np.diff(CDF_midpoint)
             nu_r_tau = np.ones_like(tau)
+            stat_weights = np.ones_like(tau) / self.n_int
+            print 'mean tau = ', np.sum(tau * stat_weights), 'real value = ', self.tau._distr.mean
+            print 'var tau = ', np.sum(tau**2 * stat_weights) - np.sum(tau * stat_weights)**2, 'real value = ', self.tau._distr.variance()
         else:
             tau = self.tau
             nu_r_tau = 1.0

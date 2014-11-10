@@ -16,7 +16,7 @@ from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array
 from types import FloatType
-from reinforcement import Reinforcement, ContinuousFibers
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
 from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC, WeibullFibers
 from scipy.optimize import root
 import time as t
@@ -30,6 +30,7 @@ class CompositeCrackBridge(HasTraits):
     E_m = Float
     Ll = Float
     Lr = Float
+    damage_initial_value = Array
 
     V_f_tot = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -65,8 +66,9 @@ class CompositeCrackBridge(HasTraits):
             V_f_arr = np.hstack((V_f_arr, np.repeat(reinf.V_f, n_int)))
             E_f_arr = np.hstack((E_f_arr, np.repeat(reinf.E_f, n_int)))
             xi_arr = np.hstack((xi_arr, np.repeat(reinf.xi, n_int)))
-            stat_weights_arr = np.hstack((stat_weights_arr,
-                                          np.repeat(reinf.stat_weights, n_int)))
+#            stat_weights_arr = np.hstack((stat_weights_arr,
+#                                          np.repeat(reinf.stat_weights, n_int)))
+            stat_weights_arr = np.hstack((stat_weights_arr, reinf.stat_weights))
             nu_r_arr = np.hstack((nu_r_arr, reinf.nu_r))
             r_arr = np.hstack((r_arr, reinf.r_arr))
         argsort = np.argsort(depsf_arr)[::-1]
@@ -224,7 +226,7 @@ class CompositeCrackBridge(HasTraits):
         F = self.F(dems, amin)
         # a1 is a(depsf) for double sided pullout
         a1 = amin * np.exp(F / 2.)
-        aX = np.exp((-np.log(np.abs(self.sorted_depsf) + dems) + np.log(self.w)) / 2.)
+        #aX = np.exp((-np.log(np.abs(self.sorted_depsf) + dems) + np.log(self.w)) / 2.)
         if Lmin < a1[0] and Lmax < a1[0]:
             # all fibers debonded up to Lmin and Lmax
             a, em, epsf0 = self.clamped(Lmin, Lmax, init_dem)
@@ -342,6 +344,7 @@ class CompositeCrackBridge(HasTraits):
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
                 damage = damage.x
+                self.damage_initial_value = damage
             except:
                 print 'fast opt method does not converge: switched to a slower, robust method for this step'
                 damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf) * 0.2,
@@ -353,25 +356,31 @@ class CompositeCrackBridge(HasTraits):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-    reinf = ContinuousFibers(r=0.0035,
-                          tau=RV('weibull_min', loc=0.006, shape=3., scale=1.3),
-                          V_f=0.1,
-                          E_f=240e3,
-                          xi=fibers_MC(m=10.0, sV0=10.0026),
-                          label='carbon',
-                          n_int=50)
+    tau_scale = 0.559582502104
+    tau_shape = 0.120746270203
+    tau_loc = 0.00
+    xi_shape = 9.0
+    xi_scale = 0.0075
+
+    reinf = ContinuousFibers(r=3.5e-3,
+                              tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
+                              V_f=0.01,
+                              E_f=200e3,
+                              xi=fibers_MC(m=xi_shape, sV0=xi_scale),
+                              label='carbon',
+                              n_int=100)
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
-                                 Ll=20.,
-                                 Lr=20.,
-                                 w=.3)
+                                 Ll=500.,
+                                 Lr=500.,
+                                 w=6.)
 
     ccb.damage
     plt.plot(np.zeros_like(ccb._epsf0_arr), ccb._epsf0_arr, 'ro', label='maximum')
     for i, depsf in enumerate(ccb.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[i] - depsf * np.abs(ccb._x_arr), ccb._epsm_arr)
-        # print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
+        #print np.trapz(epsf_x - ccb._epsm_arr, ccb._x_arr)
         if i == 0:
             plt.plot(ccb._x_arr, epsf_x, color='black', label='fibers')
         else:
