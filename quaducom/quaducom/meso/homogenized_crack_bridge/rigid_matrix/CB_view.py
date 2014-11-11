@@ -20,6 +20,7 @@ from etsproxy.util.home_directory import get_home_directory
 from scipy.special import gamma as gamma_func
 from scipy.optimize import newton
 from matplotlib import pyplot as plt
+from scipy.stats import gamma
 
 
 class Model(HasTraits):
@@ -43,25 +44,29 @@ class Model(HasTraits):
     V_f = Float(.01, params=True)
     r = Float(3.5e-3, params=True)
     CS = Float(8.0, auto_set=False, enter_set=True, params=True)
+    sigmamu = Float(3.0, auto_set=False, enter_set=True, params=True)
 
-    tau_scale = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS')
-    @cached_property
-    def _get_tau_scale(self):
-        w_hat = 0.075
-        sigmaf_hat = self.interpolate_experiment(w_hat)
-        mu_sqrt_tau = sigmaf_hat / np.sqrt(2. * self.Ef * w_hat / self.r)
-        mu_tau = 1.3 * self.r *3.0* (1.-self.V_f) / (2. * self.V_f * self.CS)
-        def scale_res(scale):
-            res = scale - ((mu_sqrt_tau) / (gamma_func(mu_tau/scale + 0.5)/gamma_func(mu_tau/scale)))**2
-            return res
-        scale = newton(scale_res, 0.52)
-        return scale
+#     tau_scale = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS')
+#     @cached_property
+#     def _get_tau_scale(self):
+#         w_hat = 0.075
+#         sigmaf_hat = self.interpolate_experiment(w_hat)
+#         mu_sqrt_tau = sigmaf_hat / np.sqrt(2. * self.Ef * w_hat / self.r)
+#         mu_tau = 1.3 * self.r *self.sigmamu* (1.-self.V_f) / (2. * self.V_f * self.CS)
+#         def scale_res(scale):
+#             res = scale - ((mu_sqrt_tau) / (gamma_func(mu_tau/scale + 0.5)/gamma_func(mu_tau/scale)))**2
+#             return res
+#         scale = newton(scale_res, 0.52)
+#         return scale
+#     
+#     tau_shape = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS')
+#     @cached_property
+#     def _get_tau_shape(self):
+#         mu_tau = 1.3 * self.r * self.sigmamu * (1.-self.V_f) / (2. * self.V_f * self.CS)
+#         return mu_tau/self.tau_scale
     
-    tau_shape = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS')
-    @cached_property
-    def _get_tau_shape(self):
-        mu_tau = 1.3 * self.r * 3.0 * (1.-self.V_f) / (2. * self.V_f * self.CS)
-        return mu_tau/self.tau_scale
+    tau_scale = Float(1.06921207, auto_set=False, enter_set=True, params=True)
+    tau_shape = Float(0.07714463, auto_set=False, enter_set=True, params=True)
 
     w = Property(Array)
     def _get_w(self):
@@ -86,7 +91,7 @@ class Model(HasTraits):
         V_f = 1.0
         r = 3.5e-3
         m = self.m
-        tau = RV('gamma', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
+        tau = RV('powerlaw', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
         n_int = self.n_int
         w = self.w
         lm = 1000.
@@ -173,6 +178,7 @@ class CBView(ModelView):
                                            Item('model.w2_pts'),
                                            Item('model.lm'),
                                            Item('model.CS'),
+                                           Item('model.sigmamu'),
                                            ),
                                       id='pdistrib.distr_type.pltctrls',
                                       label='Distribution parameters',
@@ -217,7 +223,7 @@ if __name__ == '__main__':
     model = Model(w_min=0.0, w_max=3.0, w_pts=200,
                   w2_min=0.0, w2_max=.5, w2_pts=200,
                   sV0=7.7e-3, m=9.0, tau_loc=0.0, Ef=200e3,
-                  lm=20., n_int=100, CS=13.0)
+                  lm=20., n_int=100, CS=10.0, sigmamu=3.4)
 
     home_dir = get_home_directory()
     path = [home_dir, 'git',  # the path of the data file
