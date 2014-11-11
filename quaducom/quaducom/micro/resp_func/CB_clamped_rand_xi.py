@@ -90,13 +90,13 @@ class CBClampedRandXi(RF):
         e_arr = e * fact
         a0 = (e_arr+1e-15)/depsf
         mask = a0 < lm/2.0
-        pdf = np.gradient(self.cdf(e_arr, depsf, r, lm, m, sV0, mask), e/float(n))
+        pdf = np.gradient(self.cdf(e_arr, depsf, r, lm, m, sV0), e/float(n))
         if isinstance(pdf, list):
             pdf = pdf[-1]
         e_broken = e_arr/(m+1) * mask + e_arr / 2. * (mask == False)
         return np.trapz(np.nan_to_num(pdf) * e_broken, e_arr)
 
-    def cdf(self, e, depsf, r, lm, m, sV0, mask):
+    def cdf(self, e, depsf, r, lm, m, sV0):
         '''weibull_fibers_cdf_mc'''
         s = ((depsf*(m+1.)*sV0**m)/(2.*pi*r**2.))**(1./(m+1.))
         a0 = (e+1e-15)/depsf
@@ -108,7 +108,7 @@ class CBClampedRandXi(RF):
 
     def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
         '''free and fixed fibers combined'''
-        T = 2. * tau / r
+        T = 2. * tau / r + 1e-10
         k = np.sqrt(T/E_f)
         ef0cb = k*np.sqrt(w)  
         ef0lin = w/lm + T*lm/4./E_f
@@ -116,7 +116,7 @@ class CBClampedRandXi(RF):
         a0 = ef0cb/depsf
         mask = a0 < lm/2.0
         e = ef0cb * mask + ef0lin * (mask == False)
-        Gxi = self.cdf(e, depsf, r, lm, m, sV0, mask)
+        Gxi = self.cdf(e, depsf, r, lm, m, sV0)
         mu_int = e * (1.-Gxi)
         mu_broken = self.mu_broken(e, depsf, r, lm, m, sV0, mask)
         if self.pullout:
