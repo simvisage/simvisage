@@ -12,13 +12,11 @@ can be used by the composite crack bridge model.
 import numpy as np
 from spirrid.rv import RV
 from etsproxy.traits.api import HasTraits, cached_property, \
-    Float, Property, Int, Str, on_trait_change
+    Float, Property, Int, Str, on_trait_change, Enum
 from types import FloatType
 from util.traits.either_type import EitherType
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
-
-from matplotlib import pyplot as plt
 
 class Reinforcement(HasTraits):
     '''common class for all reinforcement types'''
@@ -33,8 +31,8 @@ class Reinforcement(HasTraits):
     @on_trait_change('n_int')
     def check(self):
         if self.n_int < 50:
-            print 'Warning: integration with', self.n_int, 'points might not be precise enough'
-            print 'a minimum of 50 integration points is recomended'
+            print 'Warning: integration with', self.n_int, 'points might not be accurate enough'
+            print 'a minimum of 50 integration points is recommended'
 
 
 class ContinuousFibers(Reinforcement):
@@ -45,16 +43,9 @@ class ContinuousFibers(Reinforcement):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
             p_arr = np.linspace(0.5/self.n_int, 1 - 0.5/self.n_int, self.n_int)
-            #p_arr = np.random.rand(self.n_int)
             tau = self.tau.ppf(p_arr) + 1e-10 # to eliminate zeros
-            #tau_max = self.tau.ppf(1. - 0.5/self.n_int)
-            #tau = np.linspace(tau_max/self.n_int, tau_max, self.n_int)
-            #CDF_midpoint = np.hstack((0.0, self.tau.cdf(tau[:-1] + tau[1]/2.), 1.0))
-            #stat_weights = np.diff(CDF_midpoint)
             nu_r_tau = np.ones_like(tau)
             stat_weights = np.ones_like(tau) / self.n_int
-            print 'mean tau = ', np.sum(tau * stat_weights), 'real value = ', self.tau._distr.mean
-            print 'var tau = ', np.sum(tau**2 * stat_weights) - np.sum(tau * stat_weights)**2, 'real value = ', self.tau._distr.variance()
         else:
             tau = self.tau
             nu_r_tau = 1.0
@@ -119,56 +110,20 @@ class ContinuousFibers(Reinforcement):
 
 class ShortFibers(Reinforcement):
     '''implements short fiber reinforcement'''
-    results = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+    phi = EitherType(klasses=[FloatType, RV]) #inclination of short fibers to the crack plane normal
+    Lf = Float #length of short fibers
+    bond_law = Enum('plastic', 'elasto-plastic') 
+    tau_fr = Float # frictional bond at debonded interface
+    k_tau = Float #stiffness of the elastic adhesive bond
+    beta = Float #slip hardening coefficient
+    snub = Float # snubbing coefficient
+    
+    le=Property(depends_on='Lf')
     @cached_property
-    def _get_results(self):
-        stat_weights = 1.0
-        if isinstance(self.tau, RV):
-            tau = self.tau.ppf(
-                np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
-            stat_weights *= 1. / self.n_int
-            nu_r_tau = np.ones_like(tau)
-        else:
-            tau = self.tau
-            nu_r_tau = 1.0
-        if isinstance(self.r, RV):
-            r = self.r.ppf(
-                np.linspace(.5 / self.n_int, 1. - .5 / self.n_int, self.n_int))
-            stat_weights *= 1. / self.n_int
-            r2 = r ** 2
-            nu_r = r2 / np.mean(r2)
-        else:
-            r = self.r
-            r2 = r ** 2
-            nu_r = nu_r_tau * 1.0
-        if isinstance(tau, np.ndarray) and isinstance(r, np.ndarray):
-            r = r.reshape(1, self.n_int)
-            tau = tau.reshape(self.n_int, 1)
-            nu_r_r = (r2 / np.mean(r2)).reshape(1, self.n_int)
-            nu_r_tau = np.ones(self.n_int).reshape(self.n_int, 1)
-            nu_r = nu_r_r * nu_r_tau
-            r_arr = (nu_r * np.mean(r2)) ** 0.5
-            return (2. * tau / r / self.E_f).flatten(), stat_weights, nu_r.flatten(), r_arr.flatten()
-        else:
-            r_arr = (nu_r * np.mean(r2)) ** 0.5
-            return 2. * tau / r / self.E_f, stat_weights, nu_r, r_arr
-
-    depsf_arr = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
-    @cached_property
-    def _get_depsf_arr(self):
-        return self.results[0]
-
-    stat_weights = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
-    @cached_property
-    def _get_stat_weights(self):
-        return self.results[1]
-
-    nu_r = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
-    @cached_property
-    def _get_nu_r(self):
-        return self.results[2]
-
-    r_arr = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
-    @cached_property
-    def _get_r_arr(self):
-        return self.results[3]
+    def _get_le(self):
+        return RV('uniform', loc=0.0, scale=self.Lf/2.)
+    
+if __name__ == '__main__':
+    pass
+    
+    
