@@ -21,24 +21,20 @@ class SCMView(ModelView):
 
     model = Instance(SCM)
 
-    def crack_widths(self, sigma_c):
-        # find the index of the nearest value in the load range
-        idx = np.abs(self.model.load_sigma_c_arr - sigma_c).argmin()
+    def crack_widths(self, load):
         # pick the cracks that emerged at the given load
-        current_cb_list = self.model.cb_list(sigma_c)
-        if current_cb_list[0] is not None:
-            w_lst = []
-            for CB in current_cb_list:
-                w_lst.append(CB.get_w_sigma_c(sigma_c))
+        current_cracking_state = self.model.get_current_cracking_state(load)
+        if current_cracking_state[0] is not None:
+            w_lst = [cb.get_w(load) for cb in current_cracking_state]
             return np.array(w_lst)
         else:
             return np.array(0.0, ndmin=1)
     
-    def crack_density(self, sigma_c):
+    def crack_density(self, load):
         # pick the cracks that emerged at the given load
-        cb_load = self.model.cb_list(sigma_c)
-        if cb_load[0] is not None:
-            return float(len(cb_load)) / self.model.length
+        current_cracking_state = self.model.get_current_cracking_state(load)
+        if current_cracking_state[0] is not None:
+            return float(len(current_cracking_state)) / self.model.length
         else:
             return np.array(0.0, ndmin=1) / self.model.length
 
@@ -97,7 +93,7 @@ class SCMView(ModelView):
     def _get_eps_sigma(self):
         eps_lst = []
         u_m_tot = np.trapz(self.eps_m_x, self.x_area, axis=1)
-        for i, sig in enumerate(self.model.load_sigma_c_arr):
+        for i, sig in enumerate(self.model.load_sigma_c_arr): 
             w_arr_i = np.array(self.eval_w[i])
             eps_lst.append((np.sum(w_arr_i) + u_m_tot[i])/self.model.length)
         eps = np.array(eps_lst)
@@ -112,28 +108,27 @@ class SCMView(ModelView):
 
 if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
-    length = 500.
+    length = 200.
     nx = 2000
-    random_field = RandomField(seed=False,
-                               lacor=1.,
-                               length=length,
-                               nx=500,
-                               nsim=1,
-                               loc=.0,
-                               shape=15.,
-                               scale=4.0,
-                               distr_type='Weibull'
-                               )
+    random_field = RandomField(seed=True,
+                           lacor=1.,
+                           length=length,
+                           nx=1000,
+                           nsim=1,
+                           loc=.0,
+                           shape=50.,
+                           scale=3.4,
+                           distr_type='Weibull')
 
     reinf1 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
+                              V_f=0.01,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
                               n_int=500)
 
-    reinf2 = ContinuousFibers(r=3.5e-3,
+    reinf2 = ContinuousFibers(r=3.6e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
                               V_f=0.005,
                               E_f=200e3,
@@ -142,7 +137,7 @@ if __name__ == '__main__':
                               n_int=500)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
+                                 reinforcement_lst=[reinf1],# reinf2],
                                  )
 
     scm = SCM(length=length,
@@ -158,37 +153,37 @@ if __name__ == '__main__':
     def plot():
         eps, sigma = scm_view.eps_sigma
         plt.plot(eps, sigma, color='black', lw=2, label='model')
-#         plt.legend(loc='best')
-#         plt.xlabel('composite strain [-]')
-#         plt.ylabel('composite stress [MPa]')
-#         plt.figure()
-#         plt.hist(scm_view.crack_widths(15.), bins=20, label='load = 15 MPa')
-#         plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
-#         plt.hist(scm_view.crack_widths(5.), bins=20, label='load = 5 MPa')
-#         plt.ylabel('frequency [-]')
-#         plt.xlabel('crack width [mm]') 
-#         plt.legend(loc='best')
-#         plt.xlim(0)
-#         plt.figure()
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean,
-#                  color='green', lw=2, label='mean crack width')
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_median,
-#                 color='blue', lw=2, label='median crack width')
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean + scm_view.w_stdev,
-#                 color='black', label='stdev')
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean - scm_view.w_stdev,
-#                 color='black')
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_max,
-#                  ls='dashed', color='red', label='max crack width')
-#         plt.ylabel('crack width [mm]')
-#         plt.xlabel('composite stress [MPa]')
-#         plt.legend(loc='best')
-#         plt.figure()
-#         plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_density,
-#                  color='black', lw=2, label='crack density')
-#         plt.legend(loc='best')
-#         plt.ylabel('crack density [1/mm]')
-#         plt.xlabel('composite stress [MPa]')
+        plt.legend(loc='best')
+        plt.xlabel('composite strain [-]')
+        plt.ylabel('composite stress [MPa]')
+        plt.figure()
+        plt.hist(scm_view.crack_widths(15.), bins=20, label='load = 15 MPa')
+        plt.hist(scm_view.crack_widths(10.), bins=20, label='load = 10 MPa')
+        plt.hist(scm_view.crack_widths(5.), bins=20, label='load = 5 MPa')
+        plt.ylabel('frequency [-]')
+        plt.xlabel('crack width [mm]') 
+        plt.legend(loc='best')
+        plt.xlim(0)
+        plt.figure()
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean,
+                 color='green', lw=2, label='mean crack width')
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_median,
+                color='blue', lw=2, label='median crack width')
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean + scm_view.w_stdev,
+                color='black', label='stdev')
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_mean - scm_view.w_stdev,
+                color='black')
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_max,
+                 ls='dashed', color='red', label='max crack width')
+        plt.ylabel('crack width [mm]')
+        plt.xlabel('composite stress [MPa]')
+        plt.legend(loc='best')
+        plt.figure()
+        plt.plot(scm_view.model.load_sigma_c_arr, scm_view.w_density,
+                 color='black', lw=2, label='crack density')
+        plt.legend(loc='best')
+        plt.ylabel('crack density [1/mm]')
+        plt.xlabel('composite stress [MPa]')
         plt.show()
 
     plot()

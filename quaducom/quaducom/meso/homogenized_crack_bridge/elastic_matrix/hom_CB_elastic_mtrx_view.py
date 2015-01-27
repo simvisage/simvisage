@@ -95,7 +95,7 @@ class CompositeCrackBridgeView(ModelView):
             w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
         except:
             w_max = 0.03 * (self.model.Ll + self.model.Lr)
-        w_points = np.linspace(0, w_max, 4)
+        w_points = np.linspace(0, w_max, 5)
         w_maxima = []
         sigma_maxima = []
         for i, w in enumerate(w_points[1:]):
@@ -232,7 +232,7 @@ if __name__ == '__main__':
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1, reinf2],
-                                 Ll=1.,
+                                 Ll=500.,
                                  Lr=500.,
                                  )
 
@@ -291,7 +291,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     # profile(0.031)
-    w = np.linspace(0.0, 6., 100)
+    w = np.linspace(0.0, .1, 300)
     sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm

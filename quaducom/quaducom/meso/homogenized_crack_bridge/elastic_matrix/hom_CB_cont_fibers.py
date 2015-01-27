@@ -6,7 +6,7 @@ Created on Jan 21, 2015
 
 from traits.api import HasTraits, List, Property, cached_property, Instance, Array, Float
 from types import FloatType
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers
+from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from scipy.optimize import root
 import time as t
@@ -174,28 +174,34 @@ class CrackBridgeContFibers(HasTraits):
         return mu_T / E_mtrx
 
     def F(self, dems, amin):
-        '''Auxiliary function (see Part II, appendix B)
-        '''
-        F = np.zeros_like(self.sorted_depsf)
-        for i, mask in enumerate(self.sorted_masks):
-            depsfi = self.sorted_depsf[mask]
-            demsi = dems[mask]
-            fi = 1. / (depsfi + demsi)
-            F[mask] = np.hstack((np.array([0.0]), cumtrapz(fi, -depsfi)))
-            if i == 0:
-                C = 0.0
-            else:
-                depsf0 = self.sorted_depsf[self.sorted_masks[i - 1]]
-                depsf1 = depsfi[0]
-                idx = np.sum(depsf0 > depsf1) - 1
-                depsf2 = depsf0[idx]
-                a1 = np.exp(F[self.sorted_masks[i - 1]][idx] / 2. + np.log(amin))
-                p = depsf2 - depsf1
-                q = depsf1 + demsi[0]
-                amin_i = np.sqrt(a1 ** 2 + p / q * a1 ** 2)
-                C = np.log(amin_i / amin)
-            F[mask] += 2 * C
+        '''Eq.(D.21)'''
+        f = 1. / (self.sorted_depsf + dems)
+        F = np.hstack((0., cumtrapz(f, -self.sorted_depsf)))
         return F
+
+#     def F(self, dems, amin):
+#         '''Auxiliary function (see Part II, appendix B)
+#         '''
+#         F = np.zeros_like(self.sorted_depsf)
+#         for i, mask in enumerate(self.sorted_masks):
+#             depsfi = self.sorted_depsf[mask]
+#             demsi = dems[mask]
+#             fi = 1. / (depsfi + demsi)
+#             F[mask] = np.hstack((np.array([0.0]), cumtrapz(fi, -depsfi)))
+#             if i == 0:
+#                 C = 0.0
+#             else:
+#                 depsf0 = self.sorted_depsf[self.sorted_masks[i - 1]]
+#                 depsf1 = depsfi[0]
+#                 idx = np.sum(depsf0 > depsf1) - 1
+#                 depsf2 = depsf0[idx]
+#                 a1 = np.exp(F[self.sorted_masks[i - 1]][idx] / 2. + np.log(amin))
+#                 p = depsf2 - depsf1
+#                 q = depsf1 + demsi[0]
+#                 amin_i = np.sqrt(a1 ** 2 + p / q * a1 ** 2)
+#                 C = np.log(amin_i / amin)
+#             F[mask] += 2 * C
+#         return F
 
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
@@ -251,16 +257,17 @@ class CrackBridgeContFibers(HasTraits):
             # boundary condition position
             idx1 = np.sum(a1 <= Lmin)
             # a(T) for one sided pullout
-            # first debonded length amin for one sided PO
-            depsfLmin = self.sorted_depsf[idx1]
-            p = (depsfLmin + dems[idx1])
-            a_short = np.hstack((a1[:idx1], Lmin))
-            em_short = np.cumsum(np.diff(np.hstack((0.0, a_short))) * dems[:idx1 + 1])
-            emLmin = em_short[-1]
-            umLmin = np.trapz(np.hstack((0.0, em_short)), np.hstack((0.0, a_short)))
-            amin = -Lmin + np.sqrt(4 * Lmin ** 2 * p ** 2 - 4 * p * emLmin * Lmin + 4 * p * umLmin - 2 * p * Lmin ** 2 * depsfLmin + 2 * p * self.w) / p
-            C = np.log(amin ** 2 + 2 * amin * Lmin - Lmin ** 2)
-            a2 = (np.sqrt(2 * Lmin ** 2 + np.exp(F + C - F[idx1])) - Lmin)[idx1:]
+            # first debonded length amin for one sided pull out
+#             depsfLmin = self.sorted_depsf[idx1]
+#             p = (depsfLmin + dems[idx1])
+#             a_short = np.hstack((a1[:idx1], Lmin))
+#             em_short = np.cumsum(np.diff(np.hstack((0.0, a_short))) * dems[:idx1 + 1]) 
+#             emLmin = em_short[-1]
+#             umLmin = np.trapz(np.hstack((0.0, em_short)), np.hstack((0.0, a_short)))
+#             amin = -Lmin + np.sqrt(4 * Lmin ** 2 * p ** 2 - 4 * p * emLmin * Lmin + 4 * p * umLmin - 2 * p * Lmin ** 2 * depsfLmin + 2 * p * self.w) / p
+#             C = np.log(amin ** 2 + 2 * amin * Lmin - Lmin ** 2)
+#             a2 = (np.sqrt(2 * Lmin ** 2 + np.exp(F + C - F[idx1])) - Lmin)[idx1:]
+            a2 = np.sqrt(2 * Lmin ** 2 + np.exp(F[idx1:])*2*self.w/(self.sorted_depsf[0] + init_dem))-Lmin
             # matrix strain profiles - shorter side
             a_short = np.hstack((-Lmin, -a1[:idx1][::-1], 0.0))
             dems_short = np.hstack((dems[:idx1], dems[idx1]))

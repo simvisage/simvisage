@@ -23,12 +23,9 @@ from quaducom.meso.scm.numerical.interdependent_fibers.representative_CB import 
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np
-from scipy.interpolate import interp1d
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from scipy.optimize import brentq, newton
 import copy
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
-from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from spirrid.rv import RV
 from matplotlib import pyplot as plt
@@ -55,22 +52,17 @@ class CB(HasTraits):
         '''
         return self.representative_cb.interpolate_max_sigma_c(self.Ll, self.Lr)
 
-    def get_w_sigma_c(self, load):
+    def get_w(self, load):
         '''
-        evaluates the crack width at a particular load
+        evaluates the crack width at given load
         '''
-        if load > self.max_sigma_c:
-            print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
-            return np.nan * np.ones_like(self.x)
-        else:
-            return self.representative_cb.interpolate_w(self.Ll, self.Lr, load)
+        return self.representative_cb.interpolate_w(self.Ll, self.Lr, load)
             
-    def get_epsm_x_w(self, load):
+    def get_epsm_x(self, load):
         '''
-        evaluates the matrix strain profile
+        evaluates the matrix strain profile at given load
         '''
         if load > self.max_sigma_c:
-            print 'Warning: applied load', load, 'MPa higher then strength ', self.max_sigma_c, 'MPa'
             return np.nan * np.ones_like(self.x)
         else:
             return self.representative_cb.interpolate_epsm(self.Ll, self.Lr, load, self.x)
@@ -87,19 +79,21 @@ class SCM(HasTraits):
     CB_model = Instance(CompositeCrackBridge)
     load_sigma_c_arr = Array
     n_w_CB = Int(100, desc='# of discretization points for w')
-    n_BC_CB = Int(10, desc='# of discretization points for boundary conditions')
-    n_x_CB = Int(200, desc='# of discretization points for the long. axis of a single CB')
+    n_BC_CB = Int(20, desc='# of discretization points for boundary conditions')
 
     representative_cb = Instance(RepresentativeCB)
     def _representative_cb_default(self):
         return RepresentativeCB(CB_model=self.CB_model,
                             load_sigma_c_arr=self.load_sigma_c_arr,
-                            length=self.length, n_w=self.n_w_CB, n_BC=self.n_BC_CB, n_x=self.n_x_CB
+                            length=self.length, n_w=self.n_w_CB, n_BC=self.n_BC_CB
                             )
 
-    sigma_c_crack = List
-    # @todo: rr comment - what's the difference between sigma_c_crack and cracks_list 
-    cracks_list = List
+    # list of composite stress at which cracks occur
+    cracking_stress_lst = List
+    
+    # list of lists of CB objects
+    # at the state of N cracks, the cracking state list has N lists of i elements with i from 1 to N
+    cracking_state = List
 
     x_arr = Property(Array, depends_on='length, nx')
     @cached_property
@@ -121,7 +115,7 @@ class SCM(HasTraits):
     def sort_cbs(self):
         # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
-        cb_list = self.cracks_list[-1]
+        cb_list = self.cracking_state[-1]
         crack_position = cb_list[-1].position
         cb_list = sorted(cb_list, key=attrgetter('position'))
         # find idx of the new crack
@@ -161,18 +155,17 @@ class SCM(HasTraits):
                 mask1[0] = True
             mask2 = self.x_arr <= (cb_list[idx].position + cb_list[idx].Lr)
             cb_list[idx].x = self.x_arr[mask1 * mask2] - cb_list[idx].position
-        self.cracks_list[-1] = cb_list
+        self.cracking_state[-1] = cb_list
 
-    def cb_list(self, load):
-        '''Get the number of cracks initiated below the supplied load.
-        @todo: rename cracks_list with cracking_state
+    def get_current_cracking_state(self, load):
+        '''Get the list of CB objects that have been formed up to the current load
         '''
-        if len(self.cracks_list) is not 0:
-            idx = np.sum(np.array(self.sigma_c_crack) < load) - 1
+        if len(self.cracking_state) is not 0:
+            idx = np.sum(np.array(self.cracking_stress_lst) < load) - 1
             if idx == -1:
                 return [None]
             else:
-                return self.cracks_list[idx]
+                return self.cracking_state[idx]
         else:
             return [None]
 
@@ -180,21 +173,35 @@ class SCM(HasTraits):
         Em = self.CB_model.E_m
         Ec = self.CB_model.E_c
         sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
-        cb_load = self.cb_list(load)
+        cb_load = self.get_current_cracking_state(load)
         if cb_load[0] is not None:
             for cb in cb_load:
                 crack_position_idx = np.argwhere(self.x_arr == cb.position)
                 left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
                 right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                sigma_m[left:right] = cb.get_epsm_x_w(float(load)) * Em
+                sigma_m[left:right] = cb.get_epsm_x(float(load)) * Em
         return sigma_m
+    
+    def sigma_m_given_crack_lst(self, load):
+        Em = self.CB_model.E_m
+        Ec = self.CB_model.E_c
+        sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
+        if len(self.cracking_state) != 0:
+            cb_load = self.cracking_state[-1]
+            for cb in cb_load:
+                crack_position_idx = np.argwhere(self.x_arr == cb.position)
+                left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
+                right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
+                sigma_m[left:right] = cb.get_epsm_x(float(load)) * Em
+        return sigma_m
+    
 
     def residuum(self, q):
         '''Callback method for the identification of the
         next emerging crack calculated as the difference between
         the current matrix stress and strength. See the np.brentq call below.
         '''
-        residuum = np.min(self.matrix_strength - self.sigma_m(q))
+        residuum = np.min(self.matrix_strength - self.sigma_m_given_crack_lst(q))
         return residuum
 
     def evaluate(self):
@@ -205,8 +212,13 @@ class SCM(HasTraits):
         while True:
             try:
                 s = t.clock()
-                sigc_min = newton(self.residuum, sigc_min)
-                print 'evaluation of the matrix crack #'+str(len(self.sigma_c_crack)), t.clock() - s, 's'
+                sigc_min = newton(self.residuum, 0.95 * sigc_min, tol=0.001)
+                try:
+                    sigc_min = brentq(self.residuum, 0.0, sigc_min - 1e-10)
+                    print 'another root found!!!'
+                except:
+                    pass
+                print 'evaluation of the matrix crack #'+str(len(self.cracking_stress_lst)), t.clock() - s, 's'
             except:
                 print 'composite saturated'
                 break
@@ -215,12 +227,12 @@ class SCM(HasTraits):
             new_cb = CB(position=float(crack_position),
                      crack_load_sigma_c=sigc_min - self.load_sigma_c_arr[-1] / 1000.,
                      representative_cb=self.representative_cb)
-            self.sigma_c_crack.append(sigc_min - 1e-10)
-            if len(self.cracks_list) is not 0:
-                self.cracks_list.append(copy.copy(self.cracks_list[-1])
+            self.cracking_stress_lst.append(sigc_min - 1e-10)
+            if len(self.cracking_state) is not 0:
+                self.cracking_state.append(copy.copy(self.cracking_state[-1])
                                         + [new_cb])
             else:
-                self.cracks_list.append([new_cb])
+                self.cracking_state.append([new_cb])
             
             self.sort_cbs()
             #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
@@ -234,11 +246,11 @@ class SCM(HasTraits):
                 
 
 if __name__ == '__main__':
-    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
+    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
     length = 500.
     nx = 2000
-    random_field = RandomField(seed=False,
+    random_field = RandomField(seed=True,
                                lacor=1.,
                                length=length,
                                nx=500,
@@ -250,23 +262,35 @@ if __name__ == '__main__':
                                )
 
     reinf1 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.02, shape=2.),
-                              V_f=0.03,
+                              tau=RV('weibull_min', loc=0.01, scale=.01, shape=2.),
+                              V_f=0.01,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.01),
                               label='carbon',
-                              n_int=500)
-
+                              n_int=100)
+    
     reinf2 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
+                              tau=RV('weibull_min', loc=0.01, scale=.02, shape=2.),
+                              V_f=0.008,
                               E_f=200e3,
-                              xi=fibers_MC(m=7., sV0=0.005),
+                              xi=fibers_MC(m=7., sV0=0.011),
                               label='carbon',
-                              n_int=500)
+                              n_int=100)   
+
+    reinf_short = ShortFibers(bond_law = 'plastic',
+                        r=.1,
+                        tau=.1,
+                        V_f=0.01,
+                        E_f=200e3,
+                        xi=10.,
+                        snub=0.5,
+                        phi=RV('sin2x', scale=1.0, shape=0.0),
+                        Lf=14.,
+                        label='carbon',
+                        n_int=50)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1],
+                                 reinforcement_lst=[reinf1, reinf2],
                                  )
 
     scm = SCM(length=length,

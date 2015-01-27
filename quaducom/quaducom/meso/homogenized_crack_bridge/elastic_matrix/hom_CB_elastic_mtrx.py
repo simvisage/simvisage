@@ -160,14 +160,22 @@ if __name__ == '__main__':
     xi_scale = 0.0075
 
     reinf1 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
-                              V_f=0.1,
+                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
+                              V_f=0.01,
                               E_f=200e3,
-                              xi=fibers_MC(m=xi_shape, sV0=xi_scale),
+                              xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
-                              n_int=100)
+                              n_int=21)
+
+    reinf2 = ContinuousFibers(r=3.6e-3,
+                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
+                              V_f=0.005,
+                              E_f=200e3,
+                              xi=fibers_MC(m=7., sV0=0.005),
+                              label='carbon',
+                              n_int=21)
     
-    reinf2 = ShortFibers(bond_law = 'plastic',
+    reinf_short = ShortFibers(bond_law = 'plastic',
                          r=3.5e-3,
                         tau=.1,
                         V_f=0.01,
@@ -177,13 +185,13 @@ if __name__ == '__main__':
                         phi=RV('sin2x', scale=1.0, shape=0.0),
                         Lf=14.,
                         label='carbon',
-                        n_int=100)
+                        n_int=50)
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1, reinf2],
                                  Ll=500.,
                                  Lr=500.,
-                                 w=.1)
+                                 w=.07)
     
     epsf0_combined = np.hstack((ccb._epsf0_arr[0], ccb._epsf0_arr[1]))
     plt.plot(np.zeros_like(epsf0_combined), epsf0_combined, 'ro', label='maximum')
