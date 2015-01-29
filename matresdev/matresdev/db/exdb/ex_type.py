@@ -17,7 +17,7 @@
 from etsproxy.traits.api import \
     File, \
     Array, Str, Property, cached_property, \
-    Dict, Bool, implements
+    Dict, Bool, implements, Float
 
 import ConfigParser
 
@@ -234,6 +234,19 @@ class ExType(SimDBClass):
         if not os.path.exists(file_name):
             file_name = ''
         return file_name
+
+    aramis_start_time = Property(Float, depends_on='data_file')
+    '''Get time of aramis start specified in the hookup file.
+    '''
+    @cached_property
+    def _get_aramis_start_time(self):
+        # hook_up an extended file if available.
+        if self.hook_up_file:
+            config = ConfigParser.ConfigParser()
+            config.read(self.hook_up_file)
+            aramis_start_time = config.get(
+                'aramis_data', 'aramis_start_time')
+        return float(aramis_start_time)
 
     aramis_files = Property(depends_on='data_file')
     '''Get the list of available aramis files specified in the hookup file.

@@ -21,6 +21,7 @@ from traitsui.api \
     import View, Item, HSplit, Group, VSplit
 
 import numpy as np
+from scipy.interpolate import interp1d
 
 from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
 
@@ -31,6 +32,12 @@ from matresdev.db.exdb.ex_run_table import ExRunClassExt
 DEPENDENCY_STR = 'data_file, start_t, delta_t, aramis_resolution_key'
 
 
+def f_interp1d(x, xp, yp):
+    F_t_interp = interp1d(xp, yp, bounds_error=False,
+                          fill_value=0)
+    return F_t_interp(x)
+
+
 class ExpATTDB(ExpTTDB):
 
     '''Tensile test with aramis data
@@ -39,10 +46,6 @@ class ExpATTDB(ExpTTDB):
     # =========================================================================
     # 2D-ARAMIS PROCESSING
     # =========================================================================
-
-    # start of 2D-Aramis
-    start_time_aramis = Float(5, unit='m', input=True, table_field=True,
-                              auto_set=False, enter_set=True)
 
     aramis_resolution_key = Str('Xf15s3-Yf15s3')
     '''Specification of the resolution of the measured aramis field
@@ -60,8 +63,8 @@ class ExpATTDB(ExpTTDB):
 
     @cached_property
     def _get_t_aramis(self):
-        step_times = self.aramis_field_data.step_times + 5
-        print 'self.start_time_aramis', self.start_time_aramis
+        step_times = self.aramis_field_data.step_times + self.aramis_start_time
+        print 'self.aramis_start_time', self.aramis_start_time
         print '-----------------------------t_max_ARAMIS', step_times[-1]
         t_max = self.time_asc[-1]
         print '-----------------------------t_max_ASCII', t_max
@@ -132,8 +135,8 @@ class ExpATTDB(ExpTTDB):
 
     @cached_property
     def _get_F_t_aramis(self):
-        ''''bending force interpolated to the time steps of aramis'''
-        return np.interp(self.t_aramis_cut, self.time_asc, self.F_asc)
+        '''force interpolated to the time steps of aramis'''
+        return f_interp1d(self.t_aramis_cut, self.time_asc, self.F_asc)
 
     # ---------------------------------
     # view
@@ -143,7 +146,7 @@ class ExpATTDB(ExpTTDB):
         HSplit(Group(
             Item('width', format_str="%.3f"),
             Item('length', format_str="%.3f"),
-            Item('start_time_aramis', format_str="%.0f"),
+            Item('aramis_start_time', format_str="%.0f"),
             springy=True,
             label='geometry',
             id='matresdev.db.exdb.ex_composite_bending_tensile_test.geometry',
@@ -219,8 +222,8 @@ if __name__ == '__main__':
     import os
 
     ex_path = os.path.join(simdb.exdata_dir,
-                           'tensile_test', 'buttstrap_clamping',
-                           '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
+                           'tensile_tests', 'buttstrap_clamping',
+                           '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR',
                            'TTb-4c-2cm-0-TU-V1.DAT')
 
     doe_reader = ExRunView(data_file=ex_path)
