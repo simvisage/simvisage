@@ -63,8 +63,9 @@ class ExpATTDB(ExpTTDB):
 
     @cached_property
     def _get_t_aramis(self):
-        step_times = self.aramis_field_data.step_times + self.aramis_start_time
-        print 'self.aramis_start_time', self.aramis_start_time
+        step_times = self.aramis_field_data.step_times + \
+            self.aramis_start_offset
+        print 'self.aramis_start_offset', self.aramis_start_offset
         print '-----------------------------t_max_ARAMIS', step_times[-1]
         t_max = self.time_asc[-1]
         print '-----------------------------t_max_ASCII', t_max
@@ -146,7 +147,7 @@ class ExpATTDB(ExpTTDB):
         HSplit(Group(
             Item('width', format_str="%.3f"),
             Item('length', format_str="%.3f"),
-            Item('aramis_start_time', format_str="%.0f"),
+            Item('aramis_start_offset', format_str="%.0f"),
             springy=True,
             label='geometry',
             id='matresdev.db.exdb.ex_composite_bending_tensile_test.geometry',

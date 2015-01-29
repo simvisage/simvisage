@@ -235,22 +235,22 @@ class ExType(SimDBClass):
             file_name = ''
         return file_name
 
-    aramis_start_time = Property(Float, depends_on='data_file')
-    '''Get time of aramis start specified in the hookup file.
+    aramis_start_offset = Property(Float, depends_on='data_file')
+    '''Get time offset of aramis start specified in the hookup file.
     '''
     @cached_property
-    def _get_aramis_start_time(self):
+    def _get_aramis_start_offset(self):
         # hook_up an extended file if available.
-        aramis_start_time = 0.0
+        aramis_start_offset = 0.0
         if self.hook_up_file:
             config = ConfigParser.ConfigParser()
             config.read(self.hook_up_file)
-            try:
-                aramis_start_time = config.get('aramis_data',
-                                               'aramis_start_time')
-            except ConfigParser.NoOptionError:
-                pass
-        return float(aramis_start_time)
+        try:
+            aramis_start_offset = config.get('aramis_data',
+                                             'aramis_start_offset')
+        except ConfigParser.NoOptionError:
+            pass
+        return float(aramis_start_offset)
 
     aramis_files = Property(depends_on='data_file')
     '''Get the list of available aramis files specified in the hookup file.

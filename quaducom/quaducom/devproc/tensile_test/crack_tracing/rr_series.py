@@ -62,7 +62,7 @@ def plot_all():
         axes.plot(e.t_aramis_cut, e.F_t_aramis, color='darkblue', label='F')
         axes.plot(e.time_asc, e.F_asc, color='gray', label='F2')
 
-        x = e.aramis_cdt.aramis_data.step_times + e.aramis_start_time
+        x = e.aramis_cdt.aramis_data.step_times + e.aramis_start_offset
         stress = e.aramis_cdt.aramis_data.ad_channels_arr[:, 1]
         axes.plot(x, stress, color='red')
         axes.grid()
@@ -88,7 +88,7 @@ def plot_all():
         axes.plot(-e.eps_asc, e.F_asc, color='darkblue', label='eps')
         axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], e.aramis_cdt.force[:idx + 1],
                   color='lightblue', label='aramis eps')
-        axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], f_interp1d(e.aramis_cdt.aramis_data.step_times[:idx + 1] + e.aramis_start_time, e.time_asc, e.F_asc),
+        axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], f_interp1d(e.aramis_cdt.aramis_data.step_times[:idx + 1] + e.aramis_start_offset, e.time_asc, e.F_asc),
                   color='red', label='aramis eps')
         axes.grid()
         axes.set_xlabel('eps [-]')
