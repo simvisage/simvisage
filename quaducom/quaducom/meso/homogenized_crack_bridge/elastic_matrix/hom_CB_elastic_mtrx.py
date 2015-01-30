@@ -56,62 +56,69 @@ class CompositeCrackBridge(HasTraits):
                 short_reinf_lst.append(reinf)
         return cont_reinf_lst, short_reinf_lst
     
-    cont_fibers = Property(Instance(CrackBridgeContFibers), depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
+    cont_fibers = Property(Instance(CrackBridgeContFibers), depends_on = 'reinforcement_lst+,Ll,Lr,E_m,w')
     @cached_property
     def _get_cont_fibers(self):
         cbcf = CrackBridgeContFibers(w=self.w,
                                      Ll=self.Ll,
                                      Lr=self.Lr,
                                      E_m=self.E_m,
+                                     E_c=self.E_c,
                                      cont_reinf_lst=self.sorted_reinf_lst[0])
         return cbcf
 
-    short_fibers = Property(Instance(CrackBridgeShortFibers), depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
-    @cached_property
-    def _get_short_fibers(self):
-        cbsf = CrackBridgeShortFibers(w=self.w,
-                                     Ll=self.Ll,
-                                     Lr=self.Lr,
-                                     E_m=self.E_m,
-                                     short_reinf_lst=self.sorted_reinf_lst[1])
+    short_fibers = Instance(CrackBridgeShortFibers)
+    def _short_fibers_default(self):
+        cbsf = CrackBridgeShortFibers(E_m=self.E_m,
+                                      E_c=self.E_c,
+                                      short_reinf_lst=self.sorted_reinf_lst[1])
         return cbsf
     
     _x_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
     def _get__x_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
+            self.cont_fibers.w = self.w
+            self.short_fibers.w = self.w
             added_x = np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr))
-            return np.sort(added_x)
+            sorted_unique_x = np.unique(added_x)
+            return sorted_unique_x
         elif len(self.sorted_reinf_lst[0]) != 0:
+            self.cont_fibers.w = self.w
             return self.cont_fibers.x_arr
         elif len(self.sorted_reinf_lst[1]) != 0:
+            self.short_fibers.w = self.w
             return self.short_fibers.x_arr
         
     _epsm_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
     def _get__epsm_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
+            self.short_fibers.w = self.w
             epsm_cont_interp = MFnLineArray(xdata=self.cont_fibers.x_arr, ydata=self.cont_fibers.epsm_arr)
             epsm_short_interp = MFnLineArray(xdata=self.short_fibers.x_arr, ydata=self.short_fibers.epsm_arr)
             added_epsm_cont = self.cont_fibers.epsm_arr + epsm_short_interp.get_values(self.cont_fibers.x_arr) 
             added_epsm_short = self.short_fibers.epsm_arr + epsm_cont_interp.get_values(self.short_fibers.x_arr) 
-            sorted_idx = np.argsort(np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr)))
-            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_idx]
+            sorted_unique_idx = np.unique(np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr)), return_index=True)[1]
+            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_unique_idx]
         elif len(self.sorted_reinf_lst[0]) != 0:
             return self.cont_fibers.epsm_arr
         elif len(self.sorted_reinf_lst[1]) != 0:
+            self.short_fibers.w = self.w
             return self.short_fibers.epsm_arr
         
     _epsf0_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
     def _get__epsf0_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
+            self.short_fibers.w = self.w
             epsf0_cont = self.cont_fibers.epsf0_arr
             epsf0_short = self.short_fibers.epsf0_arr
         elif len(self.sorted_reinf_lst[0]) != 0:
             epsf0_cont = self.cont_fibers.epsf0_arr
             epsf0_short = np.array([])
         elif len(self.sorted_reinf_lst[1]) != 0:
+            self.short_fibers.w = self.w
             epsf0_cont = np.array([])
             epsf0_short = self.short_fibers.epsf0_arr
         return epsf0_cont, epsf0_short
@@ -153,45 +160,31 @@ if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
     from spirrid.rv import RV
 
-    tau_scale = 0.559582502104
-    tau_shape = 0.120746270203
-    tau_loc = 0.00
-    xi_shape = 9.0
-    xi_scale = 0.0075
-
     reinf1 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.01,
+                              V_f=0.05,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
-                              n_int=21)
-
-    reinf2 = ContinuousFibers(r=3.6e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
-                              E_f=200e3,
-                              xi=fibers_MC(m=7., sV0=0.005),
-                              label='carbon',
-                              n_int=21)
+                              n_int=100)
     
     reinf_short = ShortFibers(bond_law = 'plastic',
                          r=3.5e-3,
-                        tau=.1,
-                        V_f=0.01,
+                        tau=2.1,
+                        V_f=0.03,
                         E_f=200e3,
-                        xi=RV('weibull_min', scale=20., shape=5.),
+                        xi=20.,
                         snub=0.5,
                         phi=RV('sin2x', scale=1.0, shape=0.0),
-                        Lf=14.,
+                        Lf=5.,
                         label='carbon',
-                        n_int=50)
+                        n_int=201)
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
-                                 Ll=500.,
-                                 Lr=500.,
-                                 w=.07)
+                                 reinforcement_lst=[reinf1, reinf_short],
+                                 Ll=100.,
+                                 Lr=100.,
+                                 w=.01)
     
     epsf0_combined = np.hstack((ccb._epsf0_arr[0], ccb._epsf0_arr[1]))
     plt.plot(np.zeros_like(epsf0_combined), epsf0_combined, 'ro', label='maximum')

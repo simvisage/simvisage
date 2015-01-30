@@ -7,9 +7,11 @@ Created on Jan 21, 2015
 from traits.api import HasTraits, List, Instance, Float, Array, Property, cached_property, implements
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement
 import numpy as np
-from spirrid import SPIRRID, RV
+from spirrid import SPIRRID
 from spirrid.i_rf import IRF
 from spirrid.rf import RF
+from scipy.optimize import fminbound
+from scipy.interpolate.interpolate import interp2d
 from matplotlib import pyplot as plt
 
 
@@ -65,64 +67,28 @@ class CrackBridgeShortFibers(HasTraits):
     
     short_reinf_lst = List(Instance(Reinforcement))
     w = Float
+    E_c = Float
     E_m = Float
-    Ll = Float
-    Lr = Float
-    
-    x_arr_lst = Property(Array, depends_on='short_reinf_lst,w,E_m')
-    @cached_property
-    def _get_x_arr_lst(self):
-        x_arr_lst = []
-        for reinf in self.short_reinf_lst: 
-            if self.Ll < reinf.Lf/2.:
-                x_left = np.linspace(-self.Ll, 0.0, 100)
-            else:
-                x_left = np.hstack((-self.Ll, np.linspace(-reinf.Lf/2., 0.0, 99)))
-            if self.Lr < reinf.Lf/2.:
-                x_right = np.linspace(1e-10, self.Lr, 100)
-            else:
-                x_right = np.hstack((np.linspace(1e-10, reinf.Lf/2., 99), self.Lr))
-            x_arr_lst.append(np.hstack((x_left, x_right)))
-        return x_arr_lst
-    
-    x_arr = Property(Array, depends_on='short_reinf_lst,w,E_m')
+        
+    x_arr = Property(Array, depends_on='short_reinf_lst+')
     @cached_property
     def _get_x_arr(self):
-        x_arr = np.array([])
-        for x in self.x_arr_lst:
-            x_arr = np.hstack((x_arr, x))
+        Lf_lst = []
+        for reinf in self.short_reinf_lst:
+            Lf_lst.append(reinf.Lf)
+        max_Lf = np.max(np.array(Lf_lst))
+        # !!! an even number has to be set as step for the zero position to be in the linspace !!!
+        x_arr = np.linspace(-max_Lf/2., max_Lf/2.,61)
         return x_arr
 
-    epsf0_arr = Property(Array, depends_on='short_reinf_lst,w,E_m')
+    spirrid_lst = Property(List(Instance(SPIRRID)), depends_on='short_reinf_lst+')
     @cached_property
-    def _get_epsf0_arr(self):
-        epsf0_arr = np.zeros(len(self.short_reinf_lst))
-        for i, reinf in enumerate(self.short_reinf_lst):
-            cb = CBShortFiber()
-            spirrid = SPIRRID(q=cb,
-                              sampling_type='PGrid',
-                              eps_vars=dict(w=np.array([self.w])),
-                              theta_vars=dict(tau=reinf.tau,
-                                              E_f=reinf.E_f,
-                                              r=reinf.r,
-                                              xi=reinf.xi,
-                                              snub=reinf.snub,
-                                              le=reinf.le,
-                                              phi=reinf.phi),
-                              n_int=reinf.n_int)
-            epsf0_arr[i] = spirrid.mu_q_arr        
-        return epsf0_arr
-
-    epsm_arr = Property(Array, depends_on='short_reinf_lst,w,E_m')
-    @cached_property
-    def _get_epsm_arr(self):
-        epsm_x_arr_lst = []
-        for i, reinf in enumerate(self.short_reinf_lst):
+    def _get_spirrid_lst(self):
+        spirrid_epsm_list = []
+        for reinf in self.short_reinf_lst:
             cb = CBShortFiberSP()
             spirrid = SPIRRID(q=cb,
-                              sampling_type='PGrid',
-                              eps_vars=dict(w=np.array([self.w]),
-                                            x=self.x_arr_lst[i]),
+                              sampling_type='LHS',
                               theta_vars=dict(tau=reinf.tau,
                                               E_f=reinf.E_f,
                                               r=reinf.r,
@@ -131,28 +97,53 @@ class CrackBridgeShortFibers(HasTraits):
                                               le=reinf.le,
                                               phi=reinf.phi),
                               n_int=reinf.n_int)
-            sigf_x_i = spirrid.mu_q_arr
-            Ff_x_i = sigf_x_i * reinf.V_f
+            spirrid_epsm_list.append(spirrid)
+        return spirrid_epsm_list
+
+    spirrid_evaluation_cached = Property(Array, depends_on='short_reinf_lst+')
+    @cached_property
+    def _get_spirrid_evaluation_cached(self):
+        interpolators_lst = []
+        for i, spirr in enumerate(self.spirrid_lst):
+            Lfi = self.short_reinf_lst[i].Lf
+            def minfunc_short_fibers(w):
+                spirr.eps_vars=dict(w=np.array([w]),
+                                    x=np.array([0.0]))
+                return -spirr.mu_q_arr.flatten()
+            w_maxi = fminbound(minfunc_short_fibers, 0.0, Lfi/3., maxfun=20, disp=0)
+            w_arri = np.hstack((np.linspace(0.0, w_maxi, 15),np.linspace(w_maxi + 1e-10, Lfi/2., 15)))
+            spirr.eps_vars = dict(w=w_arri,
+                                  x=self.x_arr)
+            interpolators_lst.append(interp2d(self.x_arr, w_arri, spirr.mu_q_arr, fill_value=0.0))
+        return interpolators_lst
+
+    epsm_arr = Property(Array, depends_on='short_reinf_lst+,w,E_m')
+    @cached_property
+    def _get_epsm_arr(self):
+        epsm_x_arr = np.zeros(len(self.x_arr))
+        for i, interpolator in enumerate(self.spirrid_evaluation_cached):
+            sigf_x_i = interpolator(self.x_arr, self.w)
+            Ff_x_i = sigf_x_i * self.sorted_V_f[i]
             Fmax_i = np.max(Ff_x_i)
-            epsm_x_i = (Fmax_i - Ff_x_i) / (1. - reinf.V_f) / self.E_m 
-            epsm_x_arr_lst.append(epsm_x_i.flatten())
-        return epsm_x_arr_lst[0]
-        
-    sorted_V_f = Property(depends_on='short_reinf_lst')
+            epsm_x_i = (Fmax_i - Ff_x_i) / self.E_c
+            epsm_x_arr += epsm_x_i.flatten()      
+        return epsm_x_arr       
+
+    epsf0_arr = Property(Array, depends_on='short_reinf_lst+,w')
+    @cached_property
+    def _get_epsf0_arr(self):
+        return np.array([interpolator(0.,self.w) / self.sorted_E_f[i] for i, interpolator
+                         in enumerate(self.spirrid_evaluation_cached)]).flatten()
+
+    sorted_V_f = Property(depends_on='short_reinf_lst+')
     @cached_property
     def _get_sorted_V_f(self):
-        sorted_V_f = np.array([])
-        for reinf in self.short_reinf_lst:
-            sorted_V_f = np.hstack((sorted_V_f,reinf.V_f))
-        return sorted_V_f
-    
-    sorted_E_f = Property(depends_on='short_reinf_lst')
+        return np.array([reinf.V_f for reinf in self.short_reinf_lst])
+   
+    sorted_E_f = Property(depends_on='short_reinf_lst+')
     @cached_property
     def _get_sorted_E_f(self):
-        sorted_E_f = np.array([])
-        for reinf in self.short_reinf_lst:
-            sorted_E_f = np.hstack((sorted_E_f,reinf.E_f))
-        return sorted_E_f        
+        return np.array([reinf.E_f for reinf in self.short_reinf_lst])        
             
 if __name__ == '__main__':
     pass
