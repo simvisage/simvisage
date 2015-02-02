@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -14,7 +14,7 @@
 #
 
 from traits.api import \
-    Int, Float, Str, \
+    Int, Str, \
     Array, Property, cached_property
 
 from traitsui.api \
@@ -46,6 +46,54 @@ class ExpATTDB(ExpTTDB):
     # =========================================================================
     # 2D-ARAMIS PROCESSING
     # =========================================================================
+
+    eps = Property(Array('float_'), output=True,
+                   depends_on='input_change')
+    '''Strain calculated using the displacement gauges
+    placed along the edges of the specimen.
+    '''
+    @cached_property
+    def _get_eps(self):
+
+        print 'GETTING THE RIGHT EPSILON'
+        print '--------------------------'
+        W10_li = np.copy(self.W10_li)
+        W10_re = np.copy(self.W10_re)
+
+        # get the minimum value of the displacement gauges
+        # used to reset the displacement gauges if they do not start at
+        # zero
+        min_W10_li = np.min(W10_li[:10])
+        min_W10_re = np.min(W10_re[:10])
+
+        # reset displacement gauges
+        #
+        W10_li -= min_W10_li
+        W10_re -= min_W10_re
+
+        # measured strains
+        eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
+        eps_re = W10_re / (self.gauge_length * 1000.)
+
+        # NOTE: if only 2 displacement gauges are used instead of 3
+        # (only 'WA_re' for front and 'WA_li' for back)
+        # below the average is performed
+        # as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
+        #
+        if np.average(eps_re) < 0.0001:
+            print "displacement gauge 'WA_re' has not been used. Use value of \
+                'WA_li' instead"
+            eps_re = eps_li
+        if np.average(eps_li) < 0.0001:
+            print "displacement gauge 'WA_li' has not been used. Use value of\
+                 'WA_re' instead"
+            eps_li = eps_re
+
+        # average strains
+        #
+        eps_m = (eps_li + eps_re) / 2.
+
+        return eps_m
 
     aramis_resolution_key = Str('Xf15s3-Yf15s3')
     '''Specification of the resolution of the measured aramis field
@@ -194,7 +242,8 @@ class ExpATTDB(ExpTTDB):
             Item('w_pred', style='readonly',
                  emphasized=True, format_str="%.3f"),
             label='output characteristics',
-            id='matresdev.db.exdb.ex_composite_bending_tensile_test.vgroup.outputs',
+            id='matresdev.db.exdb.ex_composite_bending_tensile_test.\
+                vgroup.outputs',
             dock='tab',
             scrollable=True,
         ),
