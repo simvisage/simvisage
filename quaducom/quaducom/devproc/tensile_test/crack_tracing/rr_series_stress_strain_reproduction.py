@@ -4,14 +4,13 @@ Created on Jan 28, 2015
 
 '''
 
-from exp_att_db import ExpATTDB, ExpTTDB
 from matresdev.db.simdb import SimDB
 from matresdev.db.exdb import ExRun
 simdb = SimDB()
 import os
 import pylab as p
 params = {'legend.fontsize': 10,
-          #'legend.linewidth': 2
+          # 'legend.linewidth': 2
           }
 p.rcParams.update(params)
 
@@ -56,7 +55,6 @@ def plot_all():
 
     for idx, ex_run in enumerate(e_list_4c):
         e = ex_run.ex_type
-        print 'reinf', e.ccs.rho_c
         axes.plot(e.eps_ironed, e.sig_c_ironed, color='blue')
         axes.legend()
 

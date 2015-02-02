@@ -272,9 +272,6 @@ class ExpTTDB(ExType):
     @cached_property
     def _get_eps(self):
 
-        print 'GETTING THE WRONG EPSILON'
-        print '!!!!!!!!!!!!!!!!!!!!!!!!!'
-
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and \
                 hasattr(self, "W10_vo"):
             W10_li = np.copy(self.W10_li)

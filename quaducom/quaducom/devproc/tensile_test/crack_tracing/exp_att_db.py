@@ -55,8 +55,6 @@ class ExpATTDB(ExpTTDB):
     @cached_property
     def _get_eps(self):
 
-        print 'GETTING THE RIGHT EPSILON'
-        print '--------------------------'
         W10_li = np.copy(self.W10_li)
         W10_re = np.copy(self.W10_re)
 
