@@ -67,25 +67,23 @@ class ExpATTDB(ExpTTDB):
             self.aramis_start_offset
         print 'self.aramis_start_offset', self.aramis_start_offset
         print '-----------------------------t_max_ARAMIS', step_times[-1]
+        return step_times
+
+    t_aramis_asc = Property(Array('float'),
+                            depends_on=DEPENDENCY_STR)
+
+    @cached_property
+    def _get_t_aramis_asc(self):
         t_max = self.time_asc[-1]
         print '-----------------------------t_max_ASCII', t_max
         # @todo: make this using the first occurrence
         # of the condition and cut the array using slice
-        return step_times[np.where(step_times < t_max)]
+        return self.t_aramis[np.where(self.t_aramis <= t_max)]
 
-    t_aramis_cut = Property(Array('float'),
-                            depends_on=DEPENDENCY_STR)
-
-    @cached_property
-    def _get_t_aramis_cut(self):
-        # print 't_aramis', self.t_aramis
-        # print 't_aramis_cut', self.t_aramis[:]
-        return self.t_aramis[:-1]
-
-    n_steps = Property
+    n_steps_asc = Property
 
     @cached_property
-    def _get_n_steps(self):
+    def _get_n_steps_asc(self):
         'number of time steps in aramis after limiting the steps with t_max'
         # x = self.n_steps_aramis - len(self.t_aramis_cut)
         # if x == 0:
@@ -93,8 +91,8 @@ class ExpATTDB(ExpTTDB):
         # print 'x ', x
         # return self.aramis_info.number_of_steps - x
         print '-----------------------------n_steps_cut2', \
-            len(self.t_aramis_cut)
-        return len(self.t_aramis_cut)
+            len(self.t_aramis_asc)
+        return len(self.t_aramis_asc)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
 
@@ -132,12 +130,40 @@ class ExpATTDB(ExpTTDB):
                          ddd_ux_avg_threshold=-0.5e-3,
                          ddd_ux_threshold=-0.5e-3)
 
-    F_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+    F_t_aramis_asc = Property(depends_on='data_file,aramis_resolution_key')
 
     @cached_property
-    def _get_F_t_aramis(self):
+    def _get_F_t_aramis_asc(self):
         '''force interpolated to the time steps of aramis'''
-        return f_interp1d(self.t_aramis_cut, self.time_asc, self.F_asc)
+        return f_interp1d(self.t_aramis_asc, self.time_asc, self.F_asc)
+
+    eps_aramis = Property(depends_on='data_file,aramis_resolution_key')
+
+    @cached_property
+    def _get_eps_aramis(self):
+        '''strain from aramis'''
+        return self.aramis_cdt.control_strain_t
+
+    eps_aramis_asc = Property(depends_on='data_file,aramis_resolution_key')
+
+    @cached_property
+    def _get_eps_aramis_asc(self):
+        '''strain from aramis'''
+        t_max = self.time_asc[-1]
+        return self.eps_aramis[np.where(self.t_aramis <= t_max)]
+
+    def process_aramisCDT_data(self):
+        self.aramis_cdt._run_t_fired()
+        # self.aramis_cdt._run_back_fired()
+
+    def _plot_aramis_F_t_asc(self, ax, **kwds):
+        ax.plot(self.t_aramis_asc, self.F_t_aramis_asc, **kwds)
+
+    def _plot_aramis_t_strain_asc(self, ax, **kwds):
+        ax.plot(self.t_aramis_asc, self.eps_aramis_asc, **kwds)
+
+    def _plot_aramis_F_strain_asc(self, ax, **kwds):
+        ax.plot(self.eps_aramis_asc, self.F_t_aramis_asc, **kwds)
 
     # ---------------------------------
     # view

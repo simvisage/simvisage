@@ -14,7 +14,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in range(1, 3)]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in range(1, 2)]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
@@ -25,7 +25,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 #                               'tensile_tests', 'buttstrap_clamping',
 #                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
 #                               )
-#
+
 res_key = 'Xf15s1-Yf15s4'
 
 # test_files = ['TTb-4c-2cm-0-TU-V%d_bs4.DAT' % i for i in range(1, 2)]
@@ -34,7 +34,6 @@ res_key = 'Xf15s1-Yf15s4'
 #                               'tensile_tests', 'buttstrap_clamping',
 #                               '2013-07-09_TTb-4c-2cm-0-TU_bs4-Aramis3d'
 #                               )
-#
 # res_key = 'Xf19s1-Yf19s4'
 
 e_list = [ExpATTDB(data_file=os.path.join(test_file_path, test_file),
@@ -56,15 +55,13 @@ def plot_all():
         e.process_source_data()
         e.aramis_cdt.ddd_ux_avg_threshold = -5e-4
         e.aramis_cdt.crack_detection_step = 116
+        e.process_aramisCDT_data()
 
         axes = p.subplot(231)
 
-        axes.plot(e.t_aramis_cut, e.F_t_aramis, color='darkblue', label='F')
+        e._plot_aramis_F_t_asc(axes)
         axes.plot(e.time_asc, e.F_asc, color='gray', label='F2')
 
-        x = e.aramis_cdt.aramis_data.step_times + e.aramis_start_offset
-        stress = e.aramis_cdt.aramis_data.ad_channels_arr[:, 1]
-        axes.plot(x, stress, color='red')
         axes.grid()
         #axes.set_ylim(0, 55)
         axes.set_xlabel('t [sec]')
@@ -73,10 +70,7 @@ def plot_all():
 
         axes = p.subplot(232)
 
-        e.aramis_cdt.run_t = True
-        idx = np.argwhere(e.aramis_cdt.force == np.max(e.aramis_cdt.force))
-        axes.plot(e.aramis_cdt.aramis_data.step_times[:idx + 1],
-                  e.aramis_cdt.control_strain_t[:idx + 1], color='lightblue', label='aramis eps')
+        e._plot_aramis_t_strain_asc(axes)
         axes.plot(e.time_asc, -e.eps_asc, color='darkblue', label='eps')
         axes.grid()
         axes.set_xlabel('t [sec]')
@@ -86,10 +80,7 @@ def plot_all():
 
         axes = p.subplot(233)
         axes.plot(-e.eps_asc, e.F_asc, color='darkblue', label='eps')
-        axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], e.aramis_cdt.force[:idx + 1],
-                  color='lightblue', label='aramis eps')
-        axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], f_interp1d(e.aramis_cdt.aramis_data.step_times[:idx + 1] + e.aramis_start_offset, e.time_asc, e.F_asc),
-                  color='red', label='aramis eps')
+        e._plot_aramis_F_strain_asc(axes)
         axes.grid()
         axes.set_xlabel('eps [-]')
         axes.set_ylabel('F [kN]')
