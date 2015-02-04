@@ -241,11 +241,15 @@ class ExType(SimDBClass):
     @cached_property
     def _get_aramis_start_offset(self):
         # hook_up an extended file if available.
+        aramis_start_offset = 0.0
         if self.hook_up_file:
             config = ConfigParser.ConfigParser()
             config.read(self.hook_up_file)
-            aramis_start_offset = config.get(
-                'aramis_data', 'aramis_start_offset')
+        try:
+            aramis_start_offset = config.get('aramis_data',
+                                             'aramis_start_offset')
+        except ConfigParser.NoOptionError:
+            pass
         return float(aramis_start_offset)
 
     aramis_files = Property(depends_on='data_file')

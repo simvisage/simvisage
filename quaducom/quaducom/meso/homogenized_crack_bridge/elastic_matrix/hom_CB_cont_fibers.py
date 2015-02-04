@@ -22,23 +22,15 @@ class CrackBridgeContFibers(HasTraits):
     Ll = Float
     Lr = Float
     E_m = Float
-
-    V_f_tot = Property(depends_on='cont_reinf_lst+')
+    E_c = Float
+    
+    V_f_tot_cont = Property(depends_on='con_reinf_lst+')
     @cached_property
-    def _get_V_f_tot(self):
+    def _get_V_f_tot_cont(self):
         V_f_tot = 0.0
         for reinf in self.cont_reinf_lst:
             V_f_tot += reinf.V_f
         return V_f_tot
-
-    E_c = Property(depends_on='cont_reinf_lst+')
-    @cached_property
-    def _get_E_c(self):
-        E_fibers = 0.0
-        for reinf in self.cont_reinf_lst:
-            E_fibers += reinf.V_f * reinf.E_f
-        E_c = self.E_m * (1. - self.V_f_tot) + E_fibers
-        return E_c * (1. + 1e-15)
 
     sorted_theta = Property(depends_on='cont_reinf_lst+')
     @cached_property
@@ -57,8 +49,6 @@ class CrackBridgeContFibers(HasTraits):
             V_f_arr = np.hstack((V_f_arr, np.repeat(reinf.V_f, n_int)))
             E_f_arr = np.hstack((E_f_arr, np.repeat(reinf.E_f, n_int)))
             xi_arr = np.hstack((xi_arr, np.repeat(reinf.xi, n_int)))
-#            stat_weights_arr = np.hstack((stat_weights_arr,
-#                                          np.repeat(reinf.stat_weights, n_int)))
             stat_weights_arr = np.hstack((stat_weights_arr, reinf.stat_weights))
             nu_r_arr = np.hstack((nu_r_arr, reinf.nu_r))
             r_arr = np.hstack((r_arr, reinf.r_arr))
@@ -168,7 +158,7 @@ class CrackBridgeContFibers(HasTraits):
         Kf_intact_bonded = np.hstack((0.0, np.cumsum((Kf_intact))))[:-1]
         Kf_broken = np.sum(self.Kf - Kf_intact)
         Kf_add = Kf_intact_bonded + Kf_broken
-        Km = (1. - self.V_f_tot) * self.E_m
+        Km = self.E_c - np.sum(self.Kf)
         E_mtrx = Km + Kf_add
         mu_T = np.cumsum((self.sorted_depsf * Kf_intact)[::-1])[::-1]
         return mu_T / E_mtrx

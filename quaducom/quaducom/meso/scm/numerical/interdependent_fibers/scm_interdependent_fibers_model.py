@@ -79,7 +79,7 @@ class SCM(HasTraits):
     CB_model = Instance(CompositeCrackBridge)
     load_sigma_c_arr = Array
     n_w_CB = Int(100, desc='# of discretization points for w')
-    n_BC_CB = Int(20, desc='# of discretization points for boundary conditions')
+    n_BC_CB = Int(15, desc='# of discretization points for boundary conditions')
 
     representative_cb = Instance(RepresentativeCB)
     def _representative_cb_default(self):
@@ -168,6 +168,14 @@ class SCM(HasTraits):
                 return self.cracking_state[idx]
         else:
             return [None]
+    
+    def get_current_strnegth(self, load):
+        cracking_state = self.get_current_cracking_state(load)
+        if cracking_state[0] is None:
+            return np.inf
+        else:
+            strengths = np.array([cb.max_sigma_c for cb in cracking_state])
+            return np.min(strengths) 
 
     def sigma_m(self, load):
         Em = self.CB_model.E_m
@@ -199,7 +207,7 @@ class SCM(HasTraits):
     def residuum(self, q):
         '''Callback method for the identification of the
         next emerging crack calculated as the difference between
-        the current matrix stress and strength. See the np.brentq call below.
+        the current matrix stress and strength. See the scipy newton call below.
         '''
         residuum = np.min(self.matrix_strength - self.sigma_m_given_crack_lst(q))
         return residuum
@@ -212,16 +220,17 @@ class SCM(HasTraits):
         while True:
             try:
                 s = t.clock()
-                sigc_min = newton(self.residuum, 0.95 * sigc_min, tol=0.001)
+                sigc_min = newton(self.residuum, sigc_min)
                 try:
                     sigc_min = brentq(self.residuum, 0.0, sigc_min - 1e-10)
                     print 'another root found!!!'
                 except:
                     pass
-                print 'evaluation of the matrix crack #'+str(len(self.cracking_stress_lst)), t.clock() - s, 's'
+                print 'evaluation of the matrix crack #'+str(len(self.cracking_stress_lst) + 1), t.clock() - s, 's'
             except:
                 print 'composite saturated'
                 break
+            print 'current strength = ', self.get_current_strnegth(sigc_min)
             crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
             new_cb = CB(position=float(crack_position),
@@ -248,8 +257,8 @@ class SCM(HasTraits):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
-    length = 500.
-    nx = 2000
+    length = 100.
+    nx = 500
     random_field = RandomField(seed=True,
                                lacor=1.,
                                length=length,
@@ -263,7 +272,7 @@ if __name__ == '__main__':
 
     reinf1 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.01, shape=2.),
-                              V_f=0.01,
+                              V_f=0.05,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.01),
                               label='carbon',
@@ -278,19 +287,19 @@ if __name__ == '__main__':
                               n_int=100)   
 
     reinf_short = ShortFibers(bond_law = 'plastic',
-                        r=.1,
-                        tau=.1,
+                        r=.2,
+                        tau=1.5,
                         V_f=0.01,
                         E_f=200e3,
                         xi=10.,
                         snub=0.5,
                         phi=RV('sin2x', scale=1.0, shape=0.0),
-                        Lf=14.,
+                        Lf=20.,
                         label='carbon',
                         n_int=50)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
+                                 reinforcement_lst=[reinf1, reinf_short],
                                  )
 
     scm = SCM(length=length,
@@ -298,6 +307,7 @@ if __name__ == '__main__':
               random_field=random_field,
               CB_model=CB_model,
               load_sigma_c_arr=np.linspace(0.01, 20., 100),
+              n_BC_CB=2
               )
 
     scm.evaluate()

@@ -91,6 +91,8 @@ def plot_all():
 
         axes = p.subplot(234)
 
+        e._plot_force_displacement(axes)
+
         axes = p.subplot(235)
 
         axes = p.subplot(236)

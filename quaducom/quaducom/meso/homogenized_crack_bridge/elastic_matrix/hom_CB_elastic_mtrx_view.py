@@ -91,30 +91,26 @@ class CompositeCrackBridgeView(ModelView):
                 residuum = stiffness_loss - 0.5
             return residuum
 
-        try:
-            w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
-        except:
-            w_max = 0.03 * (self.model.Ll + self.model.Lr)
-        w_points = np.linspace(0, w_max, 5)
-        w_maxima = []
-        sigma_maxima = []
-        for i, w in enumerate(w_points[1:]):
-            w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=8, disp=0))
-            sigma_maxima.append(self.sigma_c)
-        return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
-
-    def w_x_results(self, w_arr, x):
-        epsm = np.zeros((len(w_arr), len(x)))
-        mu_epsf = np.zeros((len(w_arr), len(x)))
-        sigma_c = []
-        for i, w in enumerate(w_arr):
-            self.model.w = w
-            epsm_line = MFnLineArray(xdata=self.x_arr, ydata=self.epsm_arr)
-            mu_epsf_line = MFnLineArray(xdata=self.x_arr, ydata=self.mu_epsf_arr)
-            epsm[i, :] = epsm_line.get_values(x)
-            mu_epsf[i, :] = mu_epsf_line.get_values(x)
-            sigma_c.append(self.sigma_c)
-        return epsm, mu_epsf, np.array(sigma_c)
+        if len(self.model.sorted_reinf_lst[0]) == 0:
+            # there are only short fibers
+            def minfunc_short_fibers(w):
+                self.model.w = w
+                return -self.sigma_c
+            w_max = fminbound(minfunc_short_fibers, 0.0, 3.0, maxfun=10, disp=0)
+            return self.sigma_c, w_max
+        else:
+            # continuous or mixed fibers
+            try:
+                w_max = brentq(residuum_stiffness, 0.0, min(0.1 * (self.model.Ll + self.model.Lr), 20.))
+            except:
+                w_max = 0.03 * (self.model.Ll + self.model.Lr)
+            w_points = np.linspace(0, w_max, len(self.model.reinforcement_lst) + 1)
+            w_maxima = []
+            sigma_maxima = []
+            for i, w in enumerate(w_points[1:]):
+                w_maxima.append(fminbound(minfunc_sigma, w_points[i], w_points[i + 1], maxfun=10, disp=0))
+                sigma_maxima.append(self.sigma_c)
+            return sigma_maxima[np.argmax(np.array(sigma_maxima))], w_maxima[np.argmax(np.array(sigma_maxima))]
 
     def apply_load(self, sigma):
         if sigma > self.sigma_c_max[0]:
@@ -220,7 +216,7 @@ if __name__ == '__main__':
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
-                              n_int=500)
+                              n_int=100)
 
     reinf2 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
@@ -228,10 +224,22 @@ if __name__ == '__main__':
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
-                              n_int=500)
+                              n_int=100)
+
+    reinf_short = ShortFibers(bond_law = 'plastic',
+                        r=.3,
+                        tau=1.5,
+                        V_f=0.1,
+                        E_f=200e3,
+                        xi=10.,
+                        snub=0.5,
+                        phi=RV('sin2x', scale=1.0, shape=0.0),
+                        Lf=14.,
+                        label='carbon',
+                        n_int=100)
 
     model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
+                                 reinforcement_lst=[reinf1],
                                  Ll=500.,
                                  Lr=500.,
                                  )
@@ -291,7 +299,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     # profile(0.031)
-    w = np.linspace(0.0, .1, 300)
+    w = np.linspace(0.0, 8.1, 50)
     sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
