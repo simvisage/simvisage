@@ -40,15 +40,13 @@ def plot_all():
         # print 'crack filter', e.crack_filter_avg
         e.aramis_cdt.ddd_ux_avg_threshold = -5e-4
         e.aramis_cdt.crack_detection_step = 116
+        e.process_aramisCDT_data()
 
         axes = p.subplot(231)
 
-        axes.plot(e.t_aramis_cut, e.F_t_aramis, color='darkblue', label='F')
+        e._plot_aramis_F_t_asc(axes)
         axes.plot(e.time_asc, e.F_asc, color='gray', label='F2')
 
-        x = e.aramis_cdt.aramis_data.step_times + e.aramis_start_offset
-        stress = e.aramis_cdt.aramis_data.ad_channels_arr[:, 1]
-        axes.plot(x, stress, color='red')
         axes.grid()
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('F [kN]')
@@ -56,11 +54,8 @@ def plot_all():
 
         axes = p.subplot(232)
 
-        axes.plot(e.time_asc, e.eps_asc, color='darkblue', label='eps')
-
-        axes.plot(e.t_aramis_cut,
-                  color='lightblue', label='aramis eps')
-
+        e._plot_aramis_t_strain_asc(axes)
+        axes.plot(e.time_asc, -e.eps_asc, color='darkblue', label='eps')
         axes.grid()
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('eps [-]')
@@ -68,9 +63,8 @@ def plot_all():
         axes.set_title(test_files)
 
         axes = p.subplot(233)
-        axes.plot(e.eps_asc, e.F_asc, color='darkblue', label='eps')
-#         axes.plot(e.aramis_cdt.control_strain_t[:idx + 1], f_interp1d(e.aramis_cdt.aramis_data.step_times[:idx + 1] + e.aramis_start_offset, e.time_asc, e.F_asc),
-#                   color='red', label='aramis eps')
+        axes.plot(-e.eps_asc, e.F_asc, color='darkblue', label='eps')
+        e._plot_aramis_F_strain_asc(axes)
         axes.grid()
         axes.set_xlabel('eps [-]')
         axes.set_ylabel('F [kN]')
