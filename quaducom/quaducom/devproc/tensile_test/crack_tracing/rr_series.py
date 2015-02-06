@@ -55,7 +55,7 @@ def plot_all():
         axes = p.subplot(232)
 
         e._plot_aramis_t_strain_asc(axes)
-        axes.plot(e.time_asc, -e.eps_asc, color='darkblue', label='eps')
+        axes.plot(e.time_asc, e.eps_asc, color='darkblue', label='eps')
         axes.grid()
         axes.set_xlabel('t [sec]')
         axes.set_ylabel('eps [-]')
@@ -63,7 +63,7 @@ def plot_all():
         axes.set_title(test_files)
 
         axes = p.subplot(233)
-        axes.plot(-e.eps_asc, e.F_asc, color='darkblue', label='eps')
+        axes.plot(e.eps_asc, e.F_asc, color='darkblue', label='eps')
         e._plot_aramis_F_strain_asc(axes)
         axes.grid()
         axes.set_xlabel('eps [-]')
