@@ -235,6 +235,7 @@ class PDistribView(ModelView):
     icon = Property(Instance(ImageResource), depends_on='model.distr_type.changed, model.quantile, model.n_segments')
     @cached_property
     def _get_icon(self):
+        import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(4, 4), facecolor='white')
         self.plot(fig)
         tf_handle, tf_name = tempfile.mkstemp('.png')
