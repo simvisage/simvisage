@@ -1,10 +1,10 @@
 
 from distribution import Distribution
-from etsproxy.pyface.image_resource import ImageResource
+from enthought.pyface.image_resource import ImageResource
 from etsproxy.traits.api import HasTraits, Float, Int, Event, Array, Interface, \
     Tuple, Property, cached_property, Instance, Enum, on_trait_change, Dict
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from etsproxy.traits.ui.menu import OKButton, CancelButton
+from enthought.traits.ui.menu import OKButton, CancelButton
 from math import sqrt
 from matplotlib.figure import Figure
 from numpy import linspace

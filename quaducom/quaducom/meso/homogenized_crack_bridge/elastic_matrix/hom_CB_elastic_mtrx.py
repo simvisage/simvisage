@@ -364,11 +364,11 @@ if __name__ == '__main__':
 
     reinf = ContinuousFibers(r=3.5e-3,
                               tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
-                              V_f=0.01,
+                              V_f=0.95,
                               E_f=200e3,
                               xi=fibers_MC(m=xi_shape, sV0=xi_scale),
                               label='carbon',
-                              n_int=100)
+                              n_int=40)
 
     ccb = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf],
@@ -388,5 +388,5 @@ if __name__ == '__main__':
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='blue', label='matrix')
     plt.legend(loc='best')
     plt.ylabel('matrix and fiber strain [-]')
-    plt.ylabel('long. position [mm]')
+#     plt.ylabel('long. position [mm]')
     plt.show()

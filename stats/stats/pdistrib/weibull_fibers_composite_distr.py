@@ -32,6 +32,7 @@ class fibers_dry(WeibullFibers):
                             L = fiber length'''
 
     def cdf(self, e, r, L):
+        '''weibull_fibers_cdf_dry'''
         sV0, m = self.sV0, self.m
         s = (sV0 ** m * self.V0 / (L * r ** 2 * pi)) ** (1./m)
         return 1. - np.exp(- (e/s)**m)
@@ -108,7 +109,7 @@ class fibers_MC(WeibullFibers):
 
     Ll = Float(1e10)
     Lr = Float(1e10)
-    specimen_length = 250.
+    specimen_length = 1000.
     # bit of a hack in the present form - this parameter considers the finite length of the specimen. Otherwise the multiple cracking profile
     # would be assumed as having infinite length which weakens the specimen due to statistical size effect. Though a better
     # implementation is needed

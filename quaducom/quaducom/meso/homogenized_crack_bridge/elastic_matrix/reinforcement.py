@@ -53,8 +53,8 @@ class ContinuousFibers(Reinforcement):
             #stat_weights = np.diff(CDF_midpoint)
             nu_r_tau = np.ones_like(tau)
             stat_weights = np.ones_like(tau) / self.n_int
-            print 'mean tau = ', np.sum(tau * stat_weights), 'real value = ', self.tau._distr.mean
-            print 'var tau = ', np.sum(tau**2 * stat_weights) - np.sum(tau * stat_weights)**2, 'real value = ', self.tau._distr.variance()
+#             print 'mean tau = ', np.sum(tau * stat_weights), 'real value = ', self.tau._distr.mean
+#             print 'var tau = ', np.sum(tau**2 * stat_weights) - np.sum(tau * stat_weights)**2, 'real value = ', self.tau._distr.variance()
         else:
             tau = self.tau
             nu_r_tau = 1.0
