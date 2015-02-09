@@ -124,7 +124,7 @@ class ExpATTDB(ExpTTDB):
         print '-----------------------------t_max_ASCII', t_max
         # @todo: make this using the first occurrence
         # of the condition and cut the array using slice
-        return self.t_aramis[np.where(self.t_aramis <= t_max)]
+        return self.t_aramis[:self.maxF_idx_aramis]
 
     n_steps_asc = Property
 
@@ -155,8 +155,7 @@ class ExpATTDB(ExpTTDB):
     @cached_property
     def _get_aramis_field_data(self):
         t_fail = self.time_asc[-1]
-        ad = AramisFieldData(aramis_info=self.aramis_info,
-                             integ_radius=3)
+        ad = AramisFieldData(aramis_info=self.aramis_info)
         current_step = (np.abs(ad.step_times - t_fail).argmin())
         # print 'ad.step_times - t_fail', ad.step_times - t_fail
         ad.current_step = current_step
@@ -172,16 +171,52 @@ class ExpATTDB(ExpTTDB):
         print '---------------------CRACK DETECTION STEP', crack_detection_step
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
-                         aramis_data=ad,
-                         ddd_ux_avg_threshold=-0.5e-3,
-                         ddd_ux_threshold=-0.5e-3)
+                         aramis_data=ad)
+
+    number_of_cracks_aramis = Property(
+        depends_on='data_file,aramis_resolution_key')
+
+    def _get_number_of_cracks_aramis(self):
+        self.aramis_cdt.aramis_data.current_step = self.maxF_idx_aramis
+        n_slices = 10
+        x = []
+        for i in range(n_slices):
+            ad = self.aramis_cdt.aramis_data
+            ad.top_j = np.floor(ad.j_max / 10 * i).astype(int)
+            ad.bottom_j = np.floor(ad.j_max / 10 * (i + 1)).astype(int)
+            cf = self.aramis_cdt.crack_filter_avg
+            x.append(np.sum(cf))
+
+#         cf = self.aramis_cdt.crack_filter
+#         print cf.shape
+#         x = np.sum(cf, axis=0)
+
+        mu = np.mean(x)
+        std = np.std(x, ddof=1)
+        mn = np.min(x)
+        mx = np.max(x)
+        print '---------------', mu, std, mn, mx
+        return mu, std, mn, mx
+
+    F_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
+
+    @cached_property
+    def _get_F_t_aramis(self):
+        '''force interpolated to the time steps of aramis'''
+        return f_interp1d(self.t_aramis, self.Bezugskanal, self.Kraft)
+
+    maxF_idx_aramis = Property(depends_on='data_file,aramis_resolution_key')
+
+    @cached_property
+    def _get_maxF_idx_aramis(self):
+        return np.argmax(self.F_t_aramis)
 
     F_t_aramis_asc = Property(depends_on='data_file,aramis_resolution_key')
 
     @cached_property
     def _get_F_t_aramis_asc(self):
         '''force interpolated to the time steps of aramis'''
-        return f_interp1d(self.t_aramis_asc, self.time_asc, self.F_asc)
+        return self.F_t_aramis[:self.maxF_idx_aramis]
 
     eps_aramis = Property(depends_on='data_file,aramis_resolution_key')
 
@@ -192,15 +227,24 @@ class ExpATTDB(ExpTTDB):
 
     eps_aramis_asc = Property(depends_on='data_file,aramis_resolution_key')
 
+    Finit_aramis = Property(depends_on='data_file,aramis_resolution_key')
+
+    def _get_Finit_aramis(self):
+        return self.F_t_aramis[self.aramis_cdt.init_step_avg_lst]
+
+    eps_init_aramis = Property(depends_on='data_file,aramis_resolution_key')
+
+    def _get_eps_init_aramis(self):
+        return self.eps_aramis[self.aramis_cdt.init_step_avg_lst]
+
     @cached_property
     def _get_eps_aramis_asc(self):
         '''strain from aramis'''
-        t_max = self.time_asc[-1]
-        return self.eps_aramis[np.where(self.t_aramis <= t_max)]
+        return self.eps_aramis[:self.maxF_idx_aramis]
 
     def process_aramisCDT_data(self):
         self.aramis_cdt._run_t_fired()
-        # self.aramis_cdt._run_back_fired()
+        self.aramis_cdt._run_back_fired()
 
     def _plot_aramis_F_t_asc(self, ax, **kwds):
         ax.plot(self.t_aramis_asc, self.F_t_aramis_asc, **kwds)
@@ -210,6 +254,9 @@ class ExpATTDB(ExpTTDB):
 
     def _plot_aramis_F_strain_asc(self, ax, **kwds):
         ax.plot(self.eps_aramis_asc, self.F_t_aramis_asc, **kwds)
+
+    def _plot_aramis_Finit_strain(self, ax, **kwds):
+        ax.plot(self.eps_init_aramis, self.Finit_aramis, **kwds)
 
     # ---------------------------------
     # view
