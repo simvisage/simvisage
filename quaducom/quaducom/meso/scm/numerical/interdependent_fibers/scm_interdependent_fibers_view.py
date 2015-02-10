@@ -13,7 +13,6 @@ from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
 import copy
 from scm_interdependent_fibers_model import SCM
-from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 
 
@@ -21,36 +20,20 @@ class SCMView(ModelView):
 
     model = Instance(SCM)
 
-    def crack_widths(self, sigma_c):
-        # find the index of the nearest value in the load range
-        idx = np.abs(self.model.load_sigma_c_arr - sigma_c).argmin()
-        # evaluate the relative strain e_rel between fibers
-        # and matrix for the given load
-        e_rel = self.mu_epsf_x[idx, :] - self.eps_m_x[idx, :]
+    def crack_widths(self, load):
         # pick the cracks that emerged at the given load
-        cb_load = self.model.cb_list(sigma_c)
-        if cb_load[0] is not None:
-            # find the symmetry points between cracks as
-            # the 0 element of their x range
-            idxs = []
-            for cb in cb_load:
-                idxs.append(np.where(cb.position + 
-                                cb.x[0] == self.model.x_arr)[0])
-            # add the index of the last point
-            idxs.append(self.model.nx - 1)
-            # list of crack widths to be filled in a loop with integrated e_rel
-            crack_widths = [np.trapz(e_rel[idx:idxs[i + 1]],
-                            self.model.x_arr[idx:idxs[i + 1]])
-                            for i, idx in enumerate(idxs[:-1])]
-            return np.array(crack_widths, ndmin=1)
+        current_cracking_state = self.model.get_current_cracking_state(load)
+        if current_cracking_state[0] is not None:
+            w_lst = [cb.get_w(load) for cb in current_cracking_state]
+            return np.array(w_lst)
         else:
             return np.array(0.0, ndmin=1)
     
-    def crack_density(self, sigma_c):
+    def crack_density(self, load):
         # pick the cracks that emerged at the given load
-        cb_load = self.model.cb_list(sigma_c)
-        if cb_load[0] is not None:
-            return float(len(cb_load)) / self.model.length
+        current_cracking_state = self.model.get_current_cracking_state(load)
+        if current_cracking_state[0] is not None:
+            return float(len(current_cracking_state)) / self.model.length
         else:
             return np.array(0.0, ndmin=1) / self.model.length
 
@@ -104,19 +87,15 @@ class SCMView(ModelView):
     def _get_eps_m_x(self):
         return self.sigma_m_x / self.model.CB_model.E_m
 
-    mu_epsf_x = Property(depends_on='model.')
-    @cached_property
-    def _get_mu_epsf_x(self):
-        mu_epsf_x = np.zeros_like(self.model.load_sigma_c_arr[:, np.newaxis]
-                                  * self.model.x_arr[np.newaxis, :])
-        for i, q in enumerate(self.model.load_sigma_c_arr):
-            mu_epsf_x[i, :] = self.model.epsf_x(q)
-        return mu_epsf_x
-
     eps_sigma = Property(depends_on='model.')
     @cached_property
     def _get_eps_sigma(self):
-        eps = np.trapz(self.mu_epsf_x, self.x_area, axis=1) / self.model.length
+        eps_lst = []
+        u_m_tot = np.trapz(self.eps_m_x, self.x_area, axis=1)
+        for i, sig in enumerate(self.model.load_sigma_c_arr): 
+            w_arr_i = np.array(self.eval_w[i])
+            eps_lst.append((np.sum(w_arr_i) + u_m_tot[i])/self.model.length)
+        eps = np.array(eps_lst)
         eps = eps[np.isnan(eps) == False]
         if len(eps) != len(self.model.load_sigma_c_arr):
             eps = list(eps) + [list(eps)[-1]]
@@ -128,48 +107,51 @@ class SCMView(ModelView):
 
 if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
-    length = 500.
-    nx = 2000
-    random_field = RandomField(seed=False,
-                               lacor=1.,
-                               length=length,
-                               nx=500,
-                               nsim=1,
-                               loc=.0,
-                               shape=15.,
-                               scale=4.0,
-                               distr_type='Weibull'
-                               )
+    from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
+    length = 200.
+    nx = 1000
+    random_field = RandomField(seed=True,
+                           lacor=1.,
+                           length=length,
+                           nx=1000,
+                           nsim=1,
+                           loc=.0,
+                           shape=50.,
+                           scale=3.4,
+                           distr_type='Weibull')
 
-    reinf1 = ContinuousFibers(r=3.5e-3,
+    reinf_cont = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
+                              V_f=0.01,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
-                              n_int=500)
+                              n_int=100)
 
-    reinf2 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
-                              E_f=200e3,
-                              xi=fibers_MC(m=7., sV0=0.005),
-                              label='carbon',
-                              n_int=500)
+    reinf_short = ShortFibers(bond_law = 'plastic',
+                        r=.2,
+                        tau=1.,
+                        V_f=0.01,
+                        E_f=200e3,
+                        xi=10.,
+                        snub=0.5,
+                        phi=RV('sin2x', scale=1.0, shape=0.0),
+                        Lf=20.,
+                        label='short steel fibers',
+                        n_int=50)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf2],
+                                 reinforcement_lst=[reinf_cont, reinf_short],
                                  )
-
     scm = SCM(length=length,
               nx=nx,
               random_field=random_field,
               CB_model=CB_model,
-              load_sigma_c_arr=np.linspace(0.01, 20., 100),
-              )
+              load_sigma_c_arr=np.linspace(0.01, 20., 200),
+              n_BC_CB = 10)
 
     scm_view = SCMView(model=scm)
-    scm_view.model.evaluate()
+    scm_view.model.evaluate() 
 
     def plot():
         eps, sigma = scm_view.eps_sigma

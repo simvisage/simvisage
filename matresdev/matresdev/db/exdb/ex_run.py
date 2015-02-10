@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,7 +12,7 @@
 #
 # Created on Aug 3, 2009 by: rch
 #
-# How to introduce ExperimentType class - as an class corresponding to SimModel
+# How to introduce ExperimentType class - as a class corresponding to SimModel
 #
 # - this class gathers the information about the inputs and outputs
 #   of the object.
@@ -21,13 +21,16 @@
 #   ExperimentType subclass defining the inputs and outputs of the experiment
 #   and further derived data needed for processing of experiments.
 #
-# - The ExperimentDB has a root directory and starts by scanning the subdirectories
-#   for the `ex_type.cls' files. It verifies that the ExTypes are defined and known
+# - The ExperimentDB has a root directory and starts by scanning the
+#   sub-directories
+#   for the `ex_type.cls' files. It verifies that the ExTypes are defined
+#   and known
 #   classes. Then, the mapping between a class and between the directories
 #   is established. Typically, there is a data pool in the home directory
 #   or a network file system accessible.
 #
-# - The result of the scanning procedure is list of data directories available for
+# - The result of the scanning procedure
+#   is list of data directories available for
 #   each experiment type. Typically, data from a single treatment are grouped
 #   in the single directory, but this does not necessarily need to be the case.
 #   Therefore, the grouping is done independently on the data based on
@@ -39,13 +42,17 @@
 #     - ETPullOutTest,
 #     - ETYarnTensileTest
 #
-#   They inherit from class ExType specifying the inputs and outputs. They also specify
-#   the default association of tracers to the x- and y- axis (plot templates). Further, grouping
+#   They inherit from class ExType specifying the inputs and outputs.
+#   They also specify
+#   the default association of tracers to the x- and y- axis (plot templates).
+#   Further, grouping
 #   of equivalent values can be provided. The values of the inputs are stored
 #   in the directory in the ExType.db file using the pickle format.
 #
-#   The ExTypeView class communicates with the particular ExType class. It should be able
-#   to accommodate several curves within the plotting window. It should be possible to
+#   The ExTypeView class communicates with the particular ExType class.
+#   It should be able
+#   to accommodate several curves within the plotting window.
+#   It should be possible to
 #   select multiple runs to be plotted.
 #
 
@@ -94,14 +101,16 @@ data_file_editor = FileEditor(filter=['*.DAT'])
 
 # which pickle format to use
 #
-pickle_modes = {'pickle' : dict(load=pickle.load,
-                                dump=pickle.dump,
-                                  ext='.pickle'),
-                'spickle' : dict(load=spickle.load_state,
-                                 dump=spickle.dump,
-                                  ext='.spickle')}
+pickle_modes = {'pickle': dict(load=pickle.load,
+                               dump=pickle.dump,
+                               ext='.pickle'),
+                'spickle': dict(load=spickle.load_state,
+                                dump=spickle.dump,
+                                ext='.spickle')}
+
 
 class ExRun(HasTraits):
+
     '''Read the data from the DAT file containing the measured data.
 
     The data is described in semicolon-separated
@@ -111,30 +120,29 @@ class ExRun(HasTraits):
     '''
     implements(IExRun)
 
-    #--------------------------------------------------------------------
-    # file containing the association between the factor combinations
-    # and data files having the data
-    #--------------------------------------------------------------------
     data_file = File
+    '''File containing the association between the factor combinations
+    and data files having the data.
+    '''
 
-    # pickler as a property in order to be able to switch between
-    #
     pickle = Trait('pickle', pickle_modes)
+    '''Pickle object as a property in order to be able to switch between
+    '''
 
-    # Derive the path to the file specifying the type of the experiment
-    # The ex_type.cls file is stored in the same directory
-    #
     ex_type_file_name = Property(depends_on='data_file')
+    '''Derived  path to the file specifying the type of the experiment,
+    the ex_type.cls file is stored in the same directory.
+    '''
     @cached_property
     def _get_ex_type_file_name(self):
         dir_path = os.path.dirname(self.data_file)
         file_name = os.path.join(dir_path, 'ex_type.cls')
         return file_name
 
-    # Derive the path to the pickle file storing the input data and derived output
-    # data associated with the experiment run
-    #
     pickle_file_name = Property(depends_on='data_file')
+    '''Derived path to the pickle file storing the input data and derived output
+    data associated with the experiment run.
+    '''
     @cached_property
     def _get_pickle_file_name(self):
         dir_path = os.path.dirname(self.data_file)
@@ -144,10 +152,11 @@ class ExRun(HasTraits):
                                  file_split[0] + self.pickle_['ext'])
         return file_name
 
-    # Instance of the specialized experiment type with the particular
-    # inputs and data derived outputs.
-    #
     ex_type = Instance(IExType)
+    '''Instance of the specialized experiment type with the particular
+    inputs and data derived outputs.
+    '''
+
     def _ex_type_default(self):
         return ExType()
 
@@ -235,36 +244,36 @@ class ExRun(HasTraits):
     # Boolean property indicating whether the run is suitable and prepared
     # for calibration of models.
     ready_for_calibration = Property(Bool)
+
     def _get_ready_for_calibration(self):
 
         # it must have a pickle data containing the values
         # of the test parameters
         #
         return (os.path.exists(self.ex_type_file_name) and
-                 self.ex_type.ready_for_calibration)
+                self.ex_type.ready_for_calibration)
 
-
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # View specification
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     view_traits = View(
-                        Item('ex_type@', show_label=False,
-                              resizable=True,
-                              label='experiment type'
-                              ),
-                        resizable=True,
-                        scrollable=True,
-                        # title = 'Data reader',
-                        id='simexdb.exrun',
-                        dock='tab',
-                        buttons=[ OKButton, CancelButton ],
-                        height=0.8,
-                        width=0.8)
+        Item('ex_type@', show_label=False,
+             resizable=True,
+             label='experiment type'
+             ),
+        resizable=True,
+        scrollable=True,
+        # title = 'Data reader',
+        id='simexdb.exrun',
+        dock='tab',
+        buttons=[OKButton, CancelButton],
+        height=0.8,
+        width=0.8)
 
 
 if __name__ == '__main__':
     test_file = join(simdb.exdata_dir, 'tensile_tests', 'TT-9u',
-                              'TT06-9u-V1.DAT')
+                     'TT06-9u-V1.DAT')
 #     test_file = join(simdb.exdata_dir, 'plate_tests', 'PT-10a',
 #                               'PT10-10a.DAT')
     exrun = ExRun(test_file)

@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -17,7 +17,7 @@
 from etsproxy.traits.api import \
     File, \
     Array, Str, Property, cached_property, \
-    Dict, Bool, implements
+    Dict, Bool, implements, Float
 
 import ConfigParser
 
@@ -44,7 +44,9 @@ import zipfile
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+
 class ExType(SimDBClass):
+
     '''Read the data from the directory
     '''
 
@@ -68,6 +70,7 @@ class ExType(SimDBClass):
     # specify inputs
     #
     key = Property(Str, trantient=True, depends_on='data_file')
+
     def _get_key(self):
         return split(os.path.basename(self.data_file), '.')[0]
 
@@ -76,14 +79,15 @@ class ExType(SimDBClass):
         if genkey != value:
             raise KeyError, 'key mismatch %s != %s' % (genkey, value)
 
-    def __setstate__ (self, state, kw={}):
-        if state.has_key('key'):
+    def __setstate__(self, state, kw={}):
+        if 'key' in state:
             del state['key']
         super(SimDBClass, self).__setstate__(state, **kw)
 
     # indicate whether the test is suitable and prepared for
     # calibration.
     ready_for_calibration = Property(Bool)
+
     def _get_ready_for_calibration(self):
         # return False by default
         # the subclasses shall overload this
@@ -110,22 +114,25 @@ class ExType(SimDBClass):
     data_array = Array(float, transient=True)
 
     unit_list = Property(depends_on='data_file')
+
     def _get_unit_list(self):
         return self.names_and_units[1]
 
     factor_list = Property(depends_on='data_file')
+
     def _get_factor_list(self):
         return self.names_and_units[0]
 
     names_and_units = Property(depends_on='data_file')
+
     @cached_property
     def _get_names_and_units(self):
         ''' Extract the names and units of the measured data.
         The order of the names in the .DAT-file corresponds
         to the order of the .ASC-file.
         '''
-        file = open(self.data_file, 'r')
-        lines = file.read().split()
+        file_ = open(self.data_file, 'r')
+        lines = file_.read().split()
         names = []
         units = []
         for i in range(len(lines)):
@@ -141,8 +148,8 @@ class ExType(SimDBClass):
         The order of the names in the .DAT-file corresponds
         to the order of the .ASC-file.
         '''
-        file = open(self.data_file, 'r')
-        lines = file.read().split()
+        file_ = open(self.data_file, 'r')
+        lines = file_.read().split()
         names = []
         units = []
         for i in range(len(lines)):
@@ -159,9 +166,11 @@ class ExType(SimDBClass):
         the processed data array.
         '''
         for i, factor in enumerate(self.factor_list):
-            self.add_trait(factor, Array(value=self.processed_data_array[:, i], transient=True))
+            self.add_trait(
+                factor, Array(value=self.processed_data_array[:, i],
+                              transient=True))
 
-    #------------------
+    # ------------------
 
     def _read_data_array(self):
         ''' Read the experiment data.
@@ -184,7 +193,7 @@ class ExType(SimDBClass):
             # try to use loadtxt to read data file
             try:
                 _data_array = loadtxt(file_name,
-                                       delimiter=';')
+                                      delimiter=';')
 
             # loadtxt returns an error if the data file contains
             # 'NOVALUE' entries. In this case use the special
@@ -197,6 +206,7 @@ class ExType(SimDBClass):
     data_dir = Property()
     '''Local directory path of the data file.
     '''
+
     def _get_data_dir(self):
         return os.path.dirname(self.data_file)
 
@@ -204,6 +214,7 @@ class ExType(SimDBClass):
     '''Relative path inside database structure - the path is same for experiment
     in both database structures (remote and local)
     '''
+
     def _get_relative_path(self):
         return self.data_dir.replace(simdb.simdb_dir, '')[1:]
 
@@ -213,6 +224,7 @@ class ExType(SimDBClass):
     of data stored anywhere that can be downloaded
     on demand to the local cache.
     '''
+
     def _get_hook_up_file(self):
         dir_path = os.path.dirname(self.data_file)
         file_name = os.path.basename(self.data_file)
@@ -222,6 +234,23 @@ class ExType(SimDBClass):
         if not os.path.exists(file_name):
             file_name = ''
         return file_name
+
+    aramis_start_offset = Property(Float, depends_on='data_file')
+    '''Get time offset of aramis start specified in the hookup file.
+    '''
+    @cached_property
+    def _get_aramis_start_offset(self):
+        # hook_up an extended file if available.
+        aramis_start_offset = 0.0
+        if self.hook_up_file:
+            config = ConfigParser.ConfigParser()
+            config.read(self.hook_up_file)
+        try:
+            aramis_start_offset = config.get('aramis_data',
+                                             'aramis_start_offset')
+        except ConfigParser.NoOptionError:
+            pass
+        return float(aramis_start_offset)
 
     aramis_files = Property(depends_on='data_file')
     '''Get the list of available aramis files specified in the hookup file.
@@ -233,11 +262,13 @@ class ExType(SimDBClass):
         if self.hook_up_file:
             config = ConfigParser.ConfigParser()
             config.read(self.hook_up_file)
-            aramis_files = config.get('aramis_data', 'aramis_files').split(',\n')
+            aramis_files = config.get(
+                'aramis_data', 'aramis_files').split(',\n')
         return aramis_files
 
     aramis_dict = Property(depends_on='data_file')
-    '''Use the last two specifiers of the aramis file name as a key to access the proper file.
+    '''Use the last two specifiers of the aramis file name
+    as a key to access the proper file.
     '''
     @cached_property
     def _get_aramis_dict(self):
@@ -245,7 +276,7 @@ class ExType(SimDBClass):
         af_dict = {}
         for af in self.aramis_files:
             fx, fy = af.split('-')[-2:]
-            af_dict[ fx + '-' + fy] = af
+            af_dict[fx + '-' + fy] = af
         return af_dict
 
     def download_aramis_file(self, arkey):
@@ -258,7 +289,8 @@ class ExType(SimDBClass):
             s = SFTPServer(simdb.server_username, '', simdb.server_host)
             if hasattr(s, 'sftp'):
                 zip_filename = af + '.zip'
-                zipfile_server = os.path.join(simdb.simdb_cache_remote_dir, af_rel_dir, zip_filename)
+                zipfile_server = os.path.join(
+                    simdb.simdb_cache_remote_dir, af_rel_dir, zip_filename)
                 zipfile_local = os.path.join(af_local_dir, zip_filename)
 
                 print 'downloading', zipfile_server
@@ -268,7 +300,7 @@ class ExType(SimDBClass):
                 s.sftp.stat(zipfile_server)
                 s.close()
         except IOError, e:
-            raise IOError, e
+            raise IOError(e)
 
     def uncompress_aramis_file(self, arkey):
         af = self.aramis_dict[arkey]
@@ -289,10 +321,12 @@ class ExType(SimDBClass):
         has already been downloaded.
         '''
         af = self.aramis_dict.get(arkey, None)
-        if af == None:
-            print 'Aramis data not available for resolution %s of the test data\n%s' % (arkey, self.data_file)
+        if af is None:
+            print 'Aramis data not available for resolution %s of the'\
+                'test data\n%s' % (arkey, self.data_file)
             return None
-        af_path = os.path.join(simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
+        af_path = os.path.join(
+            simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
 
         print 'cache_remote', simdb.simdb_cache_remote_dir
 

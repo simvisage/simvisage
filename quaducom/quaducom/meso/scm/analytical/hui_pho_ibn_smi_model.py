@@ -5,7 +5,6 @@ model of single fiber composite by Hui, Phoenix, Ibnabeljalil and Smith
 
 @author: rostar
 '''
-
 from etsproxy.traits.api import HasTraits, Float, Property, cached_property
 import numpy as np
 from scipy.special import expi

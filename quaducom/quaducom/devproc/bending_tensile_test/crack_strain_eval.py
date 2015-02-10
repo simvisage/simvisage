@@ -15,6 +15,7 @@ if __name__ == '__main__':
     import numpy as np
 
     test_files = [
+                   'BTT-6c-2cm-TU-0-V02_MxN2.DAT',
                   # 'BTT-6c-2cm-TU-0-V07_MxN2.DAT',
                   # 'BTT-4c-2cm-TU-0-V09_MxN2.DAT',
                   # 'BTT-6c-2cm-TU-0-V08_MxN2.DAT']
@@ -41,8 +42,8 @@ if __name__ == '__main__':
         print 'crack filter', e.crack_filter_avg
         print e.n_steps
         e.aramis_field_data.integ_radius = 3
-        e.aramis_field_data.current_step = e.n_steps
-        e.aramis_cdt.crack_detection_step = e.n_steps
+#         e.aramis_field_data.current_step = e.n_steps
+#         e.aramis_cdt.crack_detection_step = e.n_steps
         e.aramis_cdt.ddd_ux_avg_threshold = -0.5e-3
         e.aramis_cdt.ddd_ux_threshold = -0.5e-3
 

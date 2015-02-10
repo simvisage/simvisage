@@ -20,16 +20,16 @@ from etsproxy.traits.ui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
 
-from etsproxy.traits.ui.menu import Action, CloseAction, HelpAction, Menu, \
+from traitsui.menu import Action, CloseAction, HelpAction, Menu, \
                                      MenuBar, NoButtons, Separator, ToolBar
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter, AnITabularAdapter
 
 from matresdev.db.simdb import \
