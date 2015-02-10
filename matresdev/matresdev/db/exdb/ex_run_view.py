@@ -20,14 +20,14 @@ from etsproxy.traits.ui.api import \
     View, Item, ModelView, HSplit, VSplit, \
     Group, FileEditor
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     Action, HelpAction, Menu, \
     MenuBar, ToolBar
 
-from etsproxy.traits.ui.key_bindings import \
+from traitsui.key_bindings import \
     KeyBinding, KeyBindings
 
-from etsproxy.pyface.api import \
+from pyface.api import \
     ImageResource, confirm, YES
 
 from util.traits.editors.mpl_figure_editor import \

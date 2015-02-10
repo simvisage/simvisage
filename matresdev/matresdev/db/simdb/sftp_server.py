@@ -16,6 +16,12 @@
 
 import os
 import sys
+import platform
+if platform.system()=='Linux':
+    SSHKEY = '~/.ssh/id_rsa'
+elif platform.system()=='Windows':
+    SSHKEY = r'~\ssh\id_rsa'
+
 try:
     import paramiko
 except ImportError, e:
@@ -26,10 +32,11 @@ class SFTPServer(object):
     Wraps paramiko for super-simple SFTP uploading and downloading.
     """
 
+    
     def __init__(self, username, password, host, port=22):
 
         self.transport = paramiko.Transport((host, port))
-        privatekeyfile = os.path.expanduser('~/.ssh/id_rsa')
+        privatekeyfile = os.path.expanduser(SSHKEY)
         mykey = paramiko.RSAKey.from_private_key_file(privatekeyfile)
         try:
             if password == '':
