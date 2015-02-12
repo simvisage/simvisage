@@ -17,7 +17,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [3]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
@@ -25,7 +25,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 e_list_6c = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [3]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
