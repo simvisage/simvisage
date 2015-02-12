@@ -7,7 +7,6 @@ from exp_att_db import ExpATTDB, f_interp1d
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
-from aramis_cdt import AramisUI
 
 import os
 import numpy as np
@@ -17,7 +16,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in range(1, 2)]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
@@ -25,7 +24,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 e_list_6c = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in range(1, 2)]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
@@ -60,57 +59,55 @@ def plot_all():
     for idx, e_run in enumerate(e_list):
         e = e_run.ex_type
         e.aramis_resolution_key = res_key
-
-        print
         # print 'crack filter', e.crack_filter_avg
         params = param_dict.get(os.path.basename(e.data_file))
         e.aramis_cdt.aramis_data.integ_radius = params[0]
         e.aramis_cdt.ddd_ux_avg_threshold = params[1]
         e.aramis_cdt.ddd_ux_threshold = params[1]
         e.aramis_cdt.d_ux_avg_threshold = params[2]
-        # e.aramis_cdt.crack_detection_step = e.maxF_idx_aramis
-        # e.number_of_cracks_aramis
-        # e.process_aramis_cdt_data()
+        e.number_of_cracks_aramis
 
-        dux_t_cr = e.dux_t_cr
-        eps_t_cr = e.eps_t_cr
+        axes = p.subplot(231)
 
-        twin = 6
-        deps_t_cr = eps_t_cr[twin:,:] - eps_t_cr[:-twin,:]
-        argmax_deps_t_cr = np.argmax(deps_t_cr, axis=0)
-        cr_enum = np.arange(len(argmax_deps_t_cr))
+        e._plot_aramis_F_t_asc(axes)
+        axes.plot(e.time_asc, e.F_asc, color='gray', label='F2')
 
-        max_deps_t_cr = deps_t_cr[argmax_deps_t_cr, cr_enum]
-        max_eps_t_cr = eps_t_cr[argmax_deps_t_cr + twin, cr_enum]
-        max_t_cr = e.t_aramis_asc[argmax_deps_t_cr]
+        axes.grid()
+        axes.set_xlabel('t [sec]')
+        axes.set_ylabel('F [kN]')
+        axes.legend(loc=2)
 
-        axes = p.subplot(221)
-        axes.plot(e.t_aramis_asc, dux_t_cr, color='darkblue', label='1')
+        axes = p.subplot(232)
 
-        axes = p.subplot(222)
-        axes.plot(e.t_aramis_asc, eps_t_cr, label='1')
+        e._plot_aramis_t_strain_asc(axes)
+        axes.plot(e.time_asc, e.eps_asc, color='darkblue', label='eps')
+        axes.grid()
+        axes.set_xlabel('t [sec]')
+        axes.set_ylabel('eps [-]')
+        axes.legend(loc=2)
+        axes.set_title(test_files)
 
-        axes.plot(e.t_aramis_asc, e.min_eps_t_cr, color='red',
-                  linewidth=3, label='1')
+        axes = p.subplot(233)
+        axes.plot(e.eps_asc, e.F_asc, color='darkblue', label='eps')
+        e._plot_aramis_Finit_strain(axes, color='g', marker='o', ls='None')
+        e._plot_aramis_F_strain_asc(axes)
+        axes.grid()
+        axes.set_xlabel('eps [-]')
+        axes.set_ylabel('F [kN]')
+        axes.legend(loc=2)
 
-        axes.plot(max_t_cr, max_eps_t_cr, 'ro')
+        print '-----------------------------n_steps', e.aramis_info.number_of_steps
+        print '-----------------------------n_steps_cut1', len(e.t_aramis)
 
-        axes = p.subplot(223)
+        axes = p.subplot(234)
 
-        axes.plot(max_t_cr, max_deps_t_cr, 'ro')
+        e._plot_force_displacement(axes)
 
-        axes.plot(e.t_aramis_asc[:deps_t_cr.shape[0]], deps_t_cr,
-                  linewidth=1, label='1')
+        axes = p.subplot(235)
 
-        axes = p.subplot(224)
-        e._plot_sigc_eps_ironed(axes, color='darkblue', label='eps')
+        axes = p.subplot(236)
 
-        p.show()
-
-        aui = AramisUI(aramis_info=e.aramis_info,
-                       aramis_data=e.aramis_field_data,
-                       aramis_cdt=e.aramis_cdt)
-        aui.configure_traits()
 
 if __name__ == '__main__':
     plot_all()
+    p.show()

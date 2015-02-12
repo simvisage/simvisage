@@ -328,8 +328,6 @@ class ExType(SimDBClass):
         af_path = os.path.join(
             simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
 
-        print 'cache_remote', simdb.simdb_cache_remote_dir
-
         if not os.path.exists(af_path):
             self.uncompress_aramis_file(arkey)
 

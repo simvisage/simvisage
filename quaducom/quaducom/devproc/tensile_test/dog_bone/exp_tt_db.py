@@ -353,7 +353,6 @@ class ExpTTDB(ExType):
     '''
     @cached_property
     def _get_sig_c(self):
-        print 'CALCULATING COMPOSITE STRESS'
         # measured force:
         force = self.Kraft  # [kN]
         # cross sectional area of the concrete [m^2]:
@@ -782,7 +781,7 @@ class ExpTTDB(ExType):
 #        eps_lin = array([0, self.sig_c_max / self.E_c ], dtype='float_')
 #        axes.plot(eps_lin, sig_lin, color='red')
 
-    def _plot_sigc_eps_ironed(self, axes):
+    def _plot_sigc_eps_ironed(self, axes, **kw):
         '''plot smoothed composite stress-strain diagram without unwanted unloading/reloading paths
         due to sliding in the buttstrap clamping
         '''
@@ -807,7 +806,7 @@ class ExpTTDB(ExType):
         #
 #        axes.plot(self.eps_asc, self.sig_c_asc, color='black')
 
-    def _plot_sigc_eps_interpolated(self, axes):
+    def _plot_sigc_eps_interpolated(self, axes, **kw):
         '''plot ironed composite stress-strain diagram starting at the origin,
         i.e. shift the strain by the offset resulting from the
         initial strain and the analytic composite stiffness
@@ -831,7 +830,7 @@ class ExpTTDB(ExType):
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
-    def _plot_sigc_eps_interpolated_smoothed(self, axes):
+    def _plot_sigc_eps_interpolated_smoothed(self, axes, **kw):
         '''plot ironed composite stress-strain diagram starting at the origin,
         i.e. shift the strain by the offset resulting from the
         initial strain and the analytic composite stiffness
@@ -857,7 +856,7 @@ class ExpTTDB(ExType):
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
-    def _plot_sigtex_eps_ironed(self, axes):
+    def _plot_sigtex_eps_ironed(self, axes, **kw):
         '''plot smoothed (textile) stress-strain diagram without unwanted unloading/reloading paths
         due to sliding in the buttstrap clamping
         '''
