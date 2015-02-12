@@ -8,10 +8,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx, StatusBarWx
 
 from etsproxy.traits.api import Any, Instance
-# from etsproxy.traits.ui.api import Editor
-from etsproxy.traits.ui.wx.editor import Editor
-# from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
-from etsproxy.traits.ui.wx.basic_editor_factory import BasicEditorFactory
+from traitsui.wx.editor import Editor
+from traitsui.wx.basic_editor_factory import BasicEditorFactory
 
 class _MPLFigureEditor(Editor):
 

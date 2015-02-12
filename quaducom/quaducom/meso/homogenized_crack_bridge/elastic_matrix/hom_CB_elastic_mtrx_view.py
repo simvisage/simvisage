@@ -245,6 +245,11 @@ if __name__ == '__main__':
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
+    
+    
+    print ccb_view.sigma_c_max
+    print ccb_view.sigma_c_max
+    print ccb_view.sigma_c_max
 
     def profile(w):
         ccb_view.model.w = w

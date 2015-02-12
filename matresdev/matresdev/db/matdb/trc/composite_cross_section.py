@@ -23,7 +23,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, VSplit, Group, \
     Spring
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
 from numpy import \

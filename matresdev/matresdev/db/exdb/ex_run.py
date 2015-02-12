@@ -74,14 +74,14 @@ from etsproxy.traits.ui.api import \
     View, Item, \
     FileEditor
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     OKButton, CancelButton
 
 import os
 from util.find_class import _find_class
 
 import pickle
-import etsproxy.persistence.state_pickler as spickle
+import apptools.persistence.state_pickler as spickle
 
 from i_ex_run import \
     IExRun

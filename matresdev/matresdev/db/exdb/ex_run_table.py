@@ -22,21 +22,21 @@ from etsproxy.traits.ui.api import \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
     Group
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     Action, CloseAction, HelpAction, Menu, \
     MenuBar, NoButtons, Separator, ToolBar
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter
 
-from etsproxy.traits.ui.table_filter \
+from traitsui.table_filter \
     import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
            EvalTableFilter, MenuTableFilter
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter, AnITabularAdapter
 
 from util.find_class import \
