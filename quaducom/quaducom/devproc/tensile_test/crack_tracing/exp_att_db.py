@@ -148,7 +148,7 @@ class ExpATTDB(ExpTTDB):
         ad = AramisFieldData(aramis_info=self.aramis_info)
         current_step = (np.abs(ad.step_times - t_fail).argmin())
         # print 'ad.step_times - t_fail', ad.step_times - t_fail
-        ad.current_step = current_step
+        ad.current_step = int(current_step * 0.95)
         return ad
 
     aramis_cdt = Property(depends_on='data_file,aramis_resolution_key')
@@ -230,9 +230,16 @@ class ExpATTDB(ExpTTDB):
         # add the left and right boundary position
         cr_mid_idx = np.hstack([[0], cr_mid_idx, [-1]])
         return cr_mid_idx
+    
+    n_offset = Property(depends_on='data_file,aramis_resolution_key')
+    '''the number points offset from the middle point between two cracks'''
+    @cached_property
+    def _get_n_offset(self):
+        n_idx = np.average(self.cr_mid_idx[1:] - self.cr_mid_idx[:-1])
+        n_offset = int(n_idx * 0.2)
+        return n_offset
 
-    dux_t_cr = Property(
-        depends_on='data_file,aramis_resolution_key')
+    dux_t_cr = Property(depends_on='data_file,aramis_resolution_key')
     '''Trace back the history of the displacement fields back from the
     ultimate state and detect the initiation time of each crack.
     '''
@@ -241,23 +248,20 @@ class ExpATTDB(ExpTTDB):
         fd = self.aramis_field_data
         n_y, n_x = fd.x_arr_0.shape
 
-        y_slice_fraction = 0.1
+        y_slice_fraction = 0.05
         fd.top_j = int(n_y / 2 * (1.0 - y_slice_fraction))
         fd.bottom_j = int(n_y / 2 * (1.0 + y_slice_fraction))
 
         dux_t_cr_list = []
-
-        n_idx = np.average(self.cr_mid_idx[1:] - self.cr_mid_idx[:-1])
-        n_offset = int(n_idx * 0.3)
 
         for step, time in enumerate(self.t_aramis_asc):
             print 'time', time
             fd.current_step = step
             ux_avg = fd.ux_arr_avg
             ux_cr_mid = ux_avg[self.cr_mid_idx]
-            ux_cr_left = ux_avg[self.cr_mid_idx[:-1] + n_offset]
-            ux_cr_right = ux_avg[self.cr_mid_idx[1:] - n_offset]
-            d_ux_cr = ux_cr_mid[1:] - ux_cr_mid[:-1]
+            ux_cr_left = ux_avg[self.cr_mid_idx[:-1] + self.n_offset]
+            ux_cr_right = ux_avg[self.cr_mid_idx[1:] - self.n_offset]
+#             d_ux_cr = ux_cr_mid[1:] - ux_cr_mid[:-1]
             d_ux_cr = ux_cr_right - ux_cr_left
             dux_t_cr_list.append(d_ux_cr)
 
@@ -268,15 +272,11 @@ class ExpATTDB(ExpTTDB):
     '''
     @cached_property
     def _get_eps_t_cr(self):
-
-        n_idx = np.average(self.cr_mid_idx[1:] - self.cr_mid_idx[:-1])
-        n_offset = int(n_idx * 0.3)
-
         fd = self.aramis_field_data
         x_arr = fd.x_arr_0[0,:]
         x_cr_mid = x_arr[self.cr_mid_idx]
-        x_cr_left = x_arr[self.cr_mid_idx[:-1] + n_offset]
-        x_cr_right = x_arr[self.cr_mid_idx[1:] - n_offset]
+        x_cr_left = x_arr[self.cr_mid_idx[:-1] + self.n_offset]
+        x_cr_right = x_arr[self.cr_mid_idx[1:] - self.n_offset]
         L_cr = x_cr_right - x_cr_left
         return self.dux_t_cr / L_cr
 
