@@ -9,16 +9,16 @@ import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
      cached_property, Float, Int, Instance, Event, List
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from etsproxy.traits.ui.menu import OKButton, CancelButton
+from enthought.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
 from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
 from spirrid.spirrid import SPIRRID
 from spirrid.rv import RV
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from etsproxy.traits.ui.api import ModelView
-from etsproxy.util.home_directory import get_home_directory
+from enthought.util.home_directory import get_home_directory
 from scipy.special import gamma as gamma_func
-from scipy.optimize import newton
+from scipy.optimize import newton, fsolve
 from matplotlib import pyplot as plt
 from scipy.stats import gamma
 
@@ -44,7 +44,7 @@ class Model(HasTraits):
     V_f = Float(.01, params=True)
     r = Float(3.5e-3, params=True)
     sigmamu = Float(3.0, auto_set=False, enter_set=True, params=True)
-    
+
     w = Property(Array)
     def _get_w(self):
         return np.linspace(self.w_min, self.w_max, self.w_pts)
@@ -153,7 +153,6 @@ class CBView(ModelView):
                                            Item('model.w2_min'),
                                            Item('model.w2_max'),
                                            Item('model.w2_pts'),
-                                           Item('model.lm'),
                                            Item('model.sigmamu'),
                                            ),
                                       id='pdistrib.distr_type.pltctrls',
@@ -197,11 +196,11 @@ class CBView(ModelView):
 if __name__ == '__main__':
 
     model = Model(w_min=0.0, w_max=3.0, w_pts=200,
-                  w2_min=0.0, w2_max=.5, w2_pts=200,
+                  w2_min=0.0, w2_max=0.5, w2_pts=200,
                   sV0=8.5e-3, m=9.0, tau_loc=0.0, Ef=180e3,
                   lm=20., n_int=100, tau_scale=0.9, tau_shape=0.1, sigmamu=3.0)
 
-    home_dir = get_home_directory()
+    home_dir = 'D:\Eclipse\\'
     path = [home_dir, 'git',  # the path of the data file
             'rostar',
             'scratch',

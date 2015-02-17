@@ -21,6 +21,8 @@ from etsproxy.traits.api import \
 
 import ConfigParser
 
+import string
+
 from matresdev.db import SimDBClass
 
 import os
@@ -291,6 +293,8 @@ class ExType(SimDBClass):
                 zip_filename = af + '.zip'
                 zipfile_server = os.path.join(
                     simdb.simdb_cache_remote_dir, af_rel_dir, zip_filename)
+
+                zipfile_server = string.replace(zipfile_server,'\\','/')
                 zipfile_local = os.path.join(af_local_dir, zip_filename)
 
                 print 'downloading', zipfile_server
@@ -327,8 +331,6 @@ class ExType(SimDBClass):
             return None
         af_path = os.path.join(
             simdb.simdb_cache_dir, self.relative_path, 'aramis', af)
-
-        print 'cache_remote', simdb.simdb_cache_remote_dir
 
         if not os.path.exists(af_path):
             self.uncompress_aramis_file(arkey)

@@ -191,5 +191,5 @@ if __name__ == '__main__':
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='blue', label='matrix')
     plt.legend(loc='best')
     plt.ylabel('matrix and fiber strain [-]')
-    plt.ylabel('long. position [mm]')
+#     plt.ylabel('long. position [mm]')
     plt.show()

@@ -1,10 +1,10 @@
 
 from distribution import Distribution
-from etsproxy.pyface.image_resource import ImageResource
+from enthought.pyface.image_resource import ImageResource
 from etsproxy.traits.api import HasTraits, Float, Int, Event, Array, Interface, \
     Tuple, Property, cached_property, Instance, Enum, on_trait_change, Dict
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from etsproxy.traits.ui.menu import OKButton, CancelButton
+from enthought.traits.ui.menu import OKButton, CancelButton
 from math import sqrt
 from matplotlib.figure import Figure
 from numpy import linspace
@@ -235,6 +235,7 @@ class PDistribView(ModelView):
     icon = Property(Instance(ImageResource), depends_on='model.distr_type.changed, model.quantile, model.n_segments')
     @cached_property
     def _get_icon(self):
+        import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(4, 4), facecolor='white')
         self.plot(fig)
         tf_handle, tf_name = tempfile.mkstemp('.png')

@@ -16,11 +16,11 @@ import re
 from string \
     import find, rfind
 
-from etsproxy.traits.api \
+from traits.api \
     import Instance, Str, Float, Range, Constant, Bool, Callable, Property, \
            Delegate, Undefined, cached_property
 
-from etsproxy.traits.trait_base \
+from traits.trait_base \
     import user_name_for
 
 

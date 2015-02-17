@@ -12,13 +12,13 @@
 #
 # Created on Mar 29, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Property, Str
 
 from os.path import \
     join
 
-from etsproxy.util.home_directory import \
+from traits.util.home_directory import \
     get_home_directory
 
 class SimDB(HasTraits):
