@@ -7,20 +7,17 @@ import numpy as np
 from scipy.interpolate import interp1d
 import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event, List
+     cached_property, Float, Int, Instance, Event
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
 from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
 from spirrid.spirrid import SPIRRID
 from spirrid.rv import RV
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from etsproxy.traits.ui.api import ModelView
-from enthought.util.home_directory import get_home_directory
-from scipy.special import gamma as gamma_func
-from scipy.optimize import newton, fsolve
-from matplotlib import pyplot as plt
-from scipy.stats import gamma
+from etsproxy.util.home_directory import get_home_directory
+
 
 
 class Model(HasTraits):
@@ -200,7 +197,7 @@ if __name__ == '__main__':
                   sV0=8.5e-3, m=9.0, tau_loc=0.0, Ef=180e3,
                   lm=20., n_int=100, tau_scale=0.9, tau_shape=0.1, sigmamu=3.0)
 
-    home_dir = 'D:\Eclipse\\'
+    home_dir = get_home_directory()
     path = [home_dir, 'git',  # the path of the data file
             'rostar',
             'scratch',
