@@ -218,30 +218,30 @@ if __name__ == '__main__':
                               label='carbon',
                               n_int=100)
 
-    reinf2 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.005,
-                              E_f=200e3,
-                              xi=fibers_MC(m=7., sV0=0.005),
-                              label='carbon',
-                              n_int=100)
+    reinf_cont = ContinuousFibers(r=3.5e-3,
+                          tau=RV('gamma', loc=0.0, scale=.901, shape=.09),
+                          V_f=0.0001,
+                          E_f=181e3,
+                          xi=fibers_MC(m=7.1, sV0=0.0069),
+                          label='carbon',
+                          n_int=100)
 
     reinf_short = ShortFibers(bond_law = 'plastic',
-                        r=.3,
-                        tau=1.5,
-                        V_f=0.1,
-                        E_f=200e3,
-                        xi=10.,
-                        snub=0.5,
-                        phi=RV('sin2x', scale=1.0, shape=0.0),
-                        Lf=14.,
-                        label='carbon',
-                        n_int=100)
+                    r=.2,
+                    tau=1.,
+                    V_f=0.01,
+                    E_f=200e3,
+                    xi=10.,
+                    snub=0.5,
+                    phi=RV('sin2x', scale=1.0, shape=0.0),
+                    Lf=20.,
+                    label='short steel fibers',
+                    n_int=50)
 
-    model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1],
-                                 Ll=500.,
-                                 Lr=500.,
+    model = CompositeCrackBridge(E_m=25e30,
+                                 reinforcement_lst=[reinf_cont],
+                                 Ll=50000.,
+                                 Lr=50000.,
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -255,10 +255,10 @@ if __name__ == '__main__':
 
     def sigma_c_w(w_arr):
         sigma_c_arr, u_arr, damage_arr = ccb_view.sigma_c_arr(w_arr, damage=False, u=True)
-        plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
+        plt.plot(w_arr, sigma_c_arr/0.0001, lw=2, color='black', label='w-sigma')
         #plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
-        plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
+        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
         plt.ylabel('$\sigma_c$ [MPa]')
         plt.legend(loc='best')
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
 #    sigma_c = np.linspace(1., 7., 7)
     # profile(0.031)
-    w = np.linspace(0.0, 8.1, 50)
+    w = np.linspace(0.0, 2., 100)
     sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
