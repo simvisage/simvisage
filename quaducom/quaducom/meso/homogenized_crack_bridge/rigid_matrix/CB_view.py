@@ -40,7 +40,6 @@ class Model(HasTraits):
     lm = Float(auto_set=False, enter_set=True, params=True)
     V_f = Float(.01, params=True)
     r = Float(3.5e-3, params=True)
-    sigmamu = Float(3.0, auto_set=False, enter_set=True, params=True)
 
     w = Property(Array)
     def _get_w(self):

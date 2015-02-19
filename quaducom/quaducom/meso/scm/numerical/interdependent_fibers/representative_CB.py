@@ -34,8 +34,8 @@ class RepresentativeCB(HasTraits):
         if max_sigma_c < self.load_sigma_c_arr[-1]:
             return max_sigma_c, max_w
         else:
-            self.CB_model_view.apply_load(self.load_sigma_c_arr[-1])
-            return self.load_sigma_c_arr[-1], self.CB_model_view.model.w
+            self.CB_model_view.apply_load(self.load_sigma_c_arr[-1] - 1e-10)
+            return self.load_sigma_c_arr[-1] - 1e-10, self.CB_model_view.model.w
 
     BC_range = Property(depends_on='n_BC, CB_model')
     @cached_property
