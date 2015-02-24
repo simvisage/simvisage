@@ -1017,14 +1017,8 @@ class ExpTTDB(ExType):
             # plot the stiffness of the garn (K_IIb - cracked state)
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
-<<<<<<< HEAD
             axes.plot(eps_lin, sig_lin, color='red', linestyle='--', linewidth=2)
         #---------------
-=======
-            axes.plot(
-                eps_lin, sig_lin, color='grey', linestyle='--', linewidth=linewidth)
-        # ---------------
->>>>>>> branch 'master' of https://ale-x@github.com/simvisage/simvisage.git
         # plot stress-strain curves
         # ---------------
         if interpolated == True:
