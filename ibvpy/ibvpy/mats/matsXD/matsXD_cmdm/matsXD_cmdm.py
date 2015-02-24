@@ -600,6 +600,18 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # (= values of integrity in the principle direction)
         #
         min_phi = np.min(phi_eig_value_real)
+        max_omega = (1.0 - min_phi)
+        return array([ max_omega ])
+
+    def get_phi_pdc2(self, sctx, eps_app_eng):
+        phi_mtx = self._get_phi_mtx(sctx, eps_app_eng)
+        # Get the direction of the principle damage coordinates (pdc):
+        phi_eig_value, phi_eig_mtx = eigh(phi_mtx)
+        phi_eig_value_real = array([ pe.real for pe in phi_eig_value])
+        # return the minimum value of the eigenvalues of the integrity tensor
+        # (= values of integrity in the principle direction)
+        #
+        min_phi = np.min(phi_eig_value_real)
         max_omega = (1.0 - min_phi ** 2)
         return array([ max_omega ])
 
@@ -1016,12 +1028,26 @@ class MATSXDMicroplaneDamage(PolarDiscr):
 #        print 'e_equiv_arr:  ', e_equiv_arr
         return e_equiv_arr
 
-    def get_max_omega_i(self, sctx, eps_app_eng):
+    def get_max_omega_i2(self, sctx, eps_app_eng):
         '''
         Get maximum damage at all microplanes.
         '''
         min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
         max_omega = 1. - min_phi ** 2
+        if max_omega == 1.:
+            print 'max_omega', max_omega
+            print 'eps_app_eng', eps_app_eng
+        return np.array([ max_omega ])
+
+    def get_max_omega_i(self, sctx, eps_app_eng):
+        '''
+        Get maximum damage at all microplanes.
+        '''
+        min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
+        max_omega = 1. - min_phi
+        if max_omega == 1.:
+            print 'max_omega', max_omega
+            print 'eps_app_eng', eps_app_eng
         return np.array([ max_omega ])
 
     def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):
@@ -1056,6 +1082,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
                  'phi_mtx'                  : self.get_phi_mtx,
                  'omega_mtx'                : self.get_omega_mtx,
                  'phi_pdc'                  : self.get_phi_pdc,
+                 'phi_pdc2'                 : self.get_phi_pdc2,
                  'microplane_damage'        : RTraceEval(eval=self.get_microplane_integrity,
                                                           ts=self),
 
@@ -1076,7 +1103,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
                                                           ts=self),
                  'fracture_energy_arr'      : self.get_fracture_energy_arr,
                  'fracture_energy'          : self.get_fracture_energy,
-                 'max_omega_i'              : self.get_max_omega_i
+                 'max_omega_i'              : self.get_max_omega_i,
+                 'max_omega_i2'              : self.get_max_omega_i2
                  }
 
     #----------------------------------------------------------------------------
