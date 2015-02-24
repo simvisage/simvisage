@@ -32,6 +32,7 @@ class fibers_dry(WeibullFibers):
                             L = fiber length'''
 
     def cdf(self, e, r, L):
+        '''weibull_fibers_cdf_dry'''
         sV0, m = self.sV0, self.m
         s = (sV0 ** m * self.V0 / (L * r ** 2 * pi)) ** (1./m)
         return 1. - np.exp(- (e/s)**m)
@@ -108,44 +109,44 @@ class fibers_MC(WeibullFibers):
 
     Ll = Float(1e10)
     Lr = Float(1e10)
-    specimen_length = 250.
-    # bit of a hack in the present form - this parameter considers the finite length of the specimen. Otherwise the multiple cracking profile
-    # would be assumed as having infinite length which weakens the specimen due to statistical size effect. Though a better
-    # implementation is needed
+    specimen_length = 1000.
 
-    def cdf(self, e, depsf, r, al, ar):
+    # approximate saw tooth profile
+    def cdf2(self, e, depsf, r, al, ar):
         '''weibull_fibers_cdf_mc'''
         Ll, Lr, m, sV0 = self.Ll, self.Lr, self.m, self.sV0
         s = ((depsf*(m+1.)*sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
         a0 = (e+1e-15)/depsf
         expLfree = (e/s) ** (m + 1) * (1.-(1.-al/a0)**(m+1.))
-        expLfixed = np.minimum(a0, np.ones_like(a0)*self.specimen_length/2.) / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
+        #expLfixed = a0 / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
+        expLfixed = np.minimum(np.ones_like(a0) * self.specimen_length, a0) / Ll * (e/s) ** (m + 1) * (1.-(1.-Ll/a0)**(m+1.))
         maskL = al < Ll
-        expL = expLfree * maskL + expLfixed * (maskL == False)
+        expL = np.nan_to_num(expLfree) * maskL + np.nan_to_num(expLfixed) * (maskL == False)
         expRfree = (e/s) ** (m + 1) * (1.-(1.-ar/a0)**(m+1.))
-        expRfixed = np.minimum(a0, np.ones_like(a0)*self.specimen_length/2.) / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
+        #expRfixed = a0 / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
+        expRfixed = np.minimum(np.ones_like(a0) * self.specimen_length, a0) / Lr * (e/s) ** (m + 1) * (1.-(1.-Lr/a0)**(m+1.))
         maskR = ar < Lr
-        expR = expRfree * maskR + expRfixed * (maskR == False)
+        expR = np.nan_to_num(expRfree) * maskR + np.nan_to_num(expRfixed) * (maskR == False)
         CDF = 1. - np.exp(-expR - expL)
         return CDF
-
-    def cdf2(self, e, depsf, r):
-        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
-        #scale parameter with respect to a reference volume
-        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
-        a = e / depsf
-        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
+    
+    # constant strain with value of the peak strain
+    def cdf(self, e, depsf, r, al, ar):
+        '''weibull_fibers_cdf_mc'''
+        sV0, m, lm = self.sV0, self.m, (al+ar)/2.
+        s_cb = ((depsf*(m+1.)*sV0**m*self.V0)/(pi*r**2.))**(1./(m+1.))
+        a0 = (e+1e-15)/depsf
+        expfree = (e/s_cb) ** (m + 1) * (1.-(1.-lm/a0)**(m+1.))
+        a = np.minimum(a0, self.specimen_length)
+        expfixed = 2* a * r**2 * pi / self.V0 * (e/sV0)**m
+        mask = a0 < lm
+        exp = np.nan_to_num(expfree) * mask + np.nan_to_num(expfixed * (mask == False))
+        CDF = 1. - np.exp(- exp)
+        return CDF
 
     def pdf(self, e, depsf, r, al, ar):
         cdf_line = MFnLineArray(xdata=e, ydata=self.cdf(e, depsf, r, al, ar))
         return cdf_line.get_diffs(e)
-
-    def pdf2(self, e, depsf, r):
-        lm, m, sV0 = 2*self.Ll, self.m, self.sV0
-        #scale parameter with respect to a reference volume
-        s = ((depsf**2 * (m+1) * sV0**m * lm)/(4. * pi * r ** 2))**(1./(m+2))
-        a = e / depsf
-        return 1. - np.exp(-(e/s)**(m+2) * (1.-(1.-lm/2./a)**(m+1)))
     
     def cdf_exact(self, e, depsf, r):
         CDF = []

@@ -265,20 +265,20 @@ if __name__ == '__main__':
     # nm-interaction plot (normal force - bending moment)
     #--------------------------------------------------------------
     #
-    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12_' + do)
+#    lct.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-12_' + do)
 
     #--------------------------------------------------------------
     # interaction plot of material usage 'eta_nm' (utilization ratio)
     #--------------------------------------------------------------
     #
-    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12_' + do)
+#    lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_LC1-12_' + do)
 
     #--------------------------------------------------------------
     # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
     # (surrounding values of all loading cases)
     #--------------------------------------------------------------
 
-    lct.plot_assess_value('eta_nm_tot', scale_mode='scalar', scale_factor=0.8)
+#    lct.plot_assess_value('eta_nm_tot', scale_mode='scalar', scale_factor=0.8)
 
     #--------------------------------------------------------------
     # brows the loading case combinations within an interactive table view

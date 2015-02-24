@@ -13,15 +13,6 @@
 from matplotlib import pyplot as plt
 from etsproxy.traits.api import \
     Float, Str, implements
-
-from etsproxy.traits.ui.ui_traits import Image
-
-from etsproxy.traits.ui.menu import OKButton, CancelButton
-
-from etsproxy.traits.ui.api import \
-    View, Item
-
-from math import pi
 import numpy as np
 from spirrid.i_rf import IRF
 from spirrid.rf import RF
@@ -36,7 +27,6 @@ class CBShortFiber(RF):
     implements(IRF)
 
     title = Str('crack bridge - short fiber with constant friction')
-    image = Image('pics/cb_short_fiber.jpg')
 
     xi = Float(.1, auto_set=False, enter_set=True, input=True,
                 distr=['weibull_min', 'uniform'])
@@ -66,14 +56,14 @@ class CBShortFiber(RF):
                 distr=['norm', 'uniform', 'weibull_min'],
                 scale=1.76, shape=0.5)
 
-    f = Float(0.03, auto_set=False, enter_set=True,
+    snub = Float(0.03, auto_set=False, enter_set=True,
             desc='snubbing coefficient',
             distr=['uniform', 'norm'],
                 scale=0.05, shape=0)
 
     phi = Float(0.0, auto_set=False, enter_set=True,
        desc='inclination angle',
-       distr=['sin2x', 'sin_distr'],
+       distr=['sin2x', 'uniform'],
                 scale=1.0, shape=0)
 
     w = Float(ctrl_range=(0, 0.01, 100), auto_set=False, enter_set=True)
@@ -82,7 +72,7 @@ class CBShortFiber(RF):
 
     C_code = ''
 
-    def __call__(self, w, tau, r, E_f, le, phi, f, xi):
+    def __call__(self, w, tau, r, E_f, le, phi, snub, xi):
 
         T = 2. * tau / r
         # debonding stage
@@ -91,8 +81,8 @@ class CBShortFiber(RF):
         w0 = le ** 2 * T / E_f
         # pulling out stage - the fiber is pulled out from the
         # side with the shorter embedded length only
-        ef0_pull = le * T / E_f
-        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*f)
+        ef0_pull = (le + w0 - w) * T / E_f
+        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*snub)
         # include breaking strain
         ef0 = ef0 * (ef0 < xi)
         return ef0

@@ -50,8 +50,10 @@ if __name__ == '__main__':
 #    test_series_name = 'CAR-800-TR-2v1l'
 #    test_series_name = 'CAR-800-TR-1v1l'
     test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
+#    test_series_name = 'CAR-800-TU-1v1l_TRC-pretests'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-2cm'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-6cm'
+#    test_series_name = 'CAR-3300-TR-3v3l'
 #    test_series_name = 'CAR-3300-TR-3v3l'
     #---------------------------
 #    test_series_name = 'compare_CAR'
@@ -148,8 +150,12 @@ if __name__ == '__main__':
         k_rho = 1.006  # correction factor for ARG-1200-TU (a_tex*b = 54mm2/m*0.10m*6layers =32,4mm2; A_tex = 0.447mm2/Roving * 12 Rovings/layer * 6 layers=32,2mm2)
 
         # specify limits for the plot
-        xlim = 12.
-        ylim = 14.
+        if sig_flag == 'comp':
+            xlim = 12.
+            ylim = 14.
+        if sig_flag == 'tex':
+            xlim = 12.
+            ylim = 1500.
 
         # TTb_bs4
         path_V7 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6g-2cm-0-TU_bs4-Aramis3d', 'TTb-6g-2cm-0-TU-V1_bs4.DAT')
@@ -205,8 +211,12 @@ if __name__ == '__main__':
         k_rho = 1.007  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
 
         # specify limits for the plot
-        xlim = 9.
-        ylim = 30.
+        if sig_flag == 'comp':
+            xlim = 9.
+            ylim = 30.
+        if sig_flag == 'tex':
+            xlim = 9.
+            ylim = 1500.
         #
         path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V1_bs4.DAT')
         path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V2_bs4.DAT')
@@ -218,8 +228,33 @@ if __name__ == '__main__':
         #
         path_list = [path_V1, path_V2, path_V3]
         label_list = ['Serie 1 (V1 bis V3)', None, None]
-        color_list = ['k', 'k', 'k']
+        color_list = ['k', 'r', 'b']
         linestyle_list = ['-', '-', '-']
+
+    #---------------------------
+    # tensile test results (CAR-800-TU-1v1l)-(TTb-2c-25cm-0-TU_TRC-pretests)
+    #---------------------------
+    if test_series_name == 'CAR-800-TU-1v1l_TRC-pretests':
+        interpolated_flag = True
+        # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
+        # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
+        #
+        k_rho = 1.0  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
+
+        # specify limits for the plot
+        xlim = 9.
+        xlim = 18.
+        if sig_flag == 'comp':
+            ylim = 18.
+        if sig_flag == 'tex':
+            ylim = 1500.
+
+        path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-03-22_TTb_TRC-pretests', 'V12-1.DAT')
+        path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-03-22_TTb_TRC-pretests', 'V12-3.DAT')
+        path_list = [path_V1, path_V2]
+        label_list = [None, None]
+        color_list = ['k', 'k']
+        linestyle_list = ['-', '-']
 
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l)-(TT-6c-2cm-0-TU_bs)
@@ -607,13 +642,22 @@ if __name__ == '__main__':
     #
     if plot_sigtex_flag:
         xarr = np.array([0.4 * eps_u_avg, 1.2 * eps_u_avg])
-        yarr = np.array([sig_c_avg, sig_c_avg])
+        if sig_flag == 'comp':
+            yarr = np.array([sig_c_avg, sig_c_avg])
+        if sig_flag == 'tex':
+            yarr = np.array([sig_tex_avg, sig_tex_avg])
         p.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.3)
-        p.text(0.4 * eps_u_avg, sig_c_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+        if sig_flag == 'comp':
+            p.text(0.4 * eps_u_avg, sig_c_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+        if sig_flag == 'tex':
+            p.text(0.4 * eps_u_avg, sig_tex_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
 
     # format plot
     #
-    format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Kompositspannung $\sigma_\mathrm{c}$ [MPa]', xlim=xlim, ylim=ylim)
+    if sig_flag == 'comp':
+        format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Kompositspannung $\sigma_\mathrm{c}$ [MPa]', xlim=xlim, ylim=ylim)
+    if sig_flag == 'tex':
+        format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Textilspannung $\sigma_\mathrm{c}$ [MPa]', xlim=xlim, ylim=ylim)
     axes = p.gca()
     axes.xaxis.grid(True, which='major')
     axes.yaxis.grid(True, which='major')

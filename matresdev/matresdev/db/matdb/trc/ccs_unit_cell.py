@@ -24,10 +24,10 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
 # overload the 'get_label' method from 'Item' to display units in the label

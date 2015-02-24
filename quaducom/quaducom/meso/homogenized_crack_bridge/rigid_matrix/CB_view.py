@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event, List
+     cached_property, Float, Int, Instance, Event
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
 from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
@@ -16,14 +16,14 @@ from spirrid.spirrid import SPIRRID
 from spirrid.rv import RV
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from etsproxy.traits.ui.api import ModelView
+from etsproxy.util.home_directory import get_home_directory
 
-FILE_DIR = os.path.dirname(__file__)
 
 
 class Model(HasTraits):
 
-    test_xdata = List(Array)
-    test_ydata = List(Array)
+    test_xdata = Array
+    test_ydata = Array
     sV0 = Float(auto_set=False, enter_set=True, params=True)
     m = Float(auto_set=False, enter_set=True, params=True)
     w_min = Float(auto_set=False, enter_set=True, params=True)
@@ -38,9 +38,8 @@ class Model(HasTraits):
     tau_shape = Float(auto_set=False, enter_set=True, params=True)
     Ef = Float(auto_set=False, enter_set=True, params=True)
     lm = Float(auto_set=False, enter_set=True, params=True)
-    V_f = Float(1.0, params=True)
+    V_f = Float(.01, params=True)
     r = Float(3.5e-3, params=True)
-
 
     w = Property(Array)
     def _get_w(self):
@@ -50,82 +49,47 @@ class Model(HasTraits):
     def _get_w2(self):
         return np.linspace(self.w2_min, self.w2_max, self.w2_pts)
 
-    interpolate_experiment1 = Property(depends_on='test_xdata, test_ydata')
+    interpolate_experiment = Property(depends_on='test_xdata, test_ydata')
     @cached_property
-    def _get_interpolate_experiment1(self):
+    def _get_interpolate_experiment(self):
         return interp1d(self.test_xdata, self.test_ydata,
-                        bounds_error=False, fill_value=0.0)
-
-    interpolate_experiment2 = Property(depends_on='test_xdata2, test_ydata2')
-    @cached_property
-    def _get_interpolate_experiment2(self):
-        return interp1d(self.test_xdata2, self.test_ydata2,
-                        bounds_error=False, fill_value=0.0)
-
-    interpolate_experiment3 = Property(depends_on='test_xdata3, test_ydata3')
-    @cached_property
-    def _get_interpolate_experiment3(self):
-        return interp1d(self.test_xdata3, self.test_ydata3,
-                        bounds_error=False, fill_value=0.0)
-
-    interpolate_experiment4 = Property(depends_on='test_xdata4, test_ydata4')
-    @cached_property
-    def _get_interpolate_experiment4(self):
-        return interp1d(self.test_xdata4, self.test_ydata4,
-                        bounds_error=False, fill_value=0.0)
-
-    interpolate_experiment5 = Property(depends_on='test_xdata5, test_ydata5')
-    @cached_property
-    def _get_interpolate_experiment5(self):
-        return interp1d(self.test_xdata5, self.test_ydata5,
                         bounds_error=False, fill_value=0.0)
 
     model_rand = Property(Array)
     def _get_model_rand(self):
-        cb = CBClampedRandXi()
-        spirrid = SPIRRID(q=cb, sampling_type='PGrid')
+        cb = CBClampedRandXi(pullout=False)
+        spirrid = SPIRRID(q=cb, sampling_type='LHS')
         sV0 = self.sV0
         tau_scale = self.tau_scale
         V_f = 1.0
         r = 3.5e-3
         m = self.m
-        tau = RV('weibull_min', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
+        tau = RV('gamma', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
         n_int = self.n_int
         w = self.w
-        lm = 1e10
+        lm = 1000.
         spirrid.eps_vars = dict(w=w)
         spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
         spirrid.n_int = n_int
-        if isinstance(r, RV):
-            r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
-            Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
-        else:
-            Er = self.r ** 2
-        sigma_c = spirrid.mu_q_arr / Er
+        sigma_c = spirrid.mu_q_arr / self.r ** 2
         return sigma_c
 
     model_extrapolate = Property(Array)
     def _get_model_extrapolate(self):
-        cb = CBClampedRandXi()
-        spirrid = SPIRRID(q=cb, sampling_type='PGrid')
+        cb = CBClampedRandXi(pullout=False)
+        spirrid = SPIRRID(q=cb, sampling_type='LHS')
         sV0 = self.sV0
-        tau_scale = self.tau_scale
         V_f = 1.0
         r = 3.5e-3
         m = self.m
-        tau = RV('weibull_min', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
-        n_int = 100
+        tau = RV('gamma', shape=self.tau_shape, scale=self.tau_scale, loc=self.tau_loc)
+        n_int = self.n_int
         w = self.w2
         lm = self.lm
         spirrid.eps_vars = dict(w=w)
         spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
         spirrid.n_int = n_int
-        if isinstance(r, RV):
-            r_arr = np.linspace(r.ppf(0.001), r.ppf(0.999), 300)
-            Er = np.trapz(r_arr ** 2 * r.pdf(r_arr), r_arr)
-        else:
-            Er = self.r ** 2
-        sigma_c = spirrid.mu_q_arr / Er
+        sigma_c = spirrid.mu_q_arr / self.r ** 2
         return sigma_c
 
 class CBView(ModelView):
@@ -156,16 +120,8 @@ class CBView(ModelView):
         # plot PDF
         axes.plot(self.model.w, self.model.model_rand, lw=2.0, color='blue', \
                   label='model')
-        axes.plot(self.model.w, self.model.interpolate_experiment1(self.model.w), lw=1.0, color='black', \
-                  label='experiment1')
-        axes.plot(self.model.w, self.model.interpolate_experiment2(self.model.w), lw=1.0, color='black', \
-                   label='experiment2')
-#         axes.plot(self.model.w, self.model.interpolate_experiment3(self.model.w), lw=1.0, color='black', \
-#                    label='experiment3')
-#         axes.plot(self.model.w, self.model.interpolate_experiment4(self.model.w), lw=1.0, color='black', \
-#                    label='experiment4')
-#         axes.plot(self.model.w, self.model.interpolate_experiment5(self.model.w), lw=1.0, color='black', \
-#                    label='experiment5')
+        axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black', \
+                  label='experiment')
         axes.legend()
 
 #         figure2 = fig2
@@ -193,7 +149,7 @@ class CBView(ModelView):
                                            Item('model.w2_min'),
                                            Item('model.w2_max'),
                                            Item('model.w2_pts'),
-                                           Item('model.lm'),
+                                           Item('model.sigmamu'),
                                            ),
                                       id='pdistrib.distr_type.pltctrls',
                                       label='Distribution parameters',
@@ -235,24 +191,22 @@ class CBView(ModelView):
 
 if __name__ == '__main__':
 
-    model = Model(w_min=0.0, w_max=8.0, w_pts=200,
-                  w2_min=0.0, w2_max=.5, w2_pts=200,
-                  sV0=2.6e-3, m=5.0, tau_scale=0.03,
-                  tau_shape=0.23, tau_loc=0.006, Ef=240e3,
-                  lm=20., n_int=100)
+    model = Model(w_min=0.0, w_max=3.0, w_pts=200,
+                  w2_min=0.0, w2_max=0.5, w2_pts=200,
+                  sV0=8.5e-3, m=9.0, tau_loc=0.0, Ef=180e3,
+                  lm=20., n_int=100, tau_scale=0.9, tau_shape=0.1, sigmamu=3.0)
 
-    cb1 = file1 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_xdata = -np.loadtxt(file1, delimiter=';')[:, 3]
-    model.test_xdata = model.test_xdata - model.test_xdata[0]
-    file2 = open('DATA/PO01_RYP.ASC', 'r')
-    model.test_ydata = (np.loadtxt(file2, delimiter=';')[:, 1] + 0.035) / 0.45 * 1000
-
-    file1 = open('DATA/PO03_RYP.ASC', 'r')
-
-    model.test_xdata2 = -np.loadtxt(file1, delimiter=';')[:, 3]
-    model.test_xdata2 = model.test_xdata2 - model.test_xdata2[0]
-    file2 = open('DATA/PO03_RYP.ASC', 'r')
-    model.test_ydata2 = (np.loadtxt(file2, delimiter=';')[:, 1] + 0.035) / 0.45 * 1000
+    home_dir = get_home_directory()
+    path = [home_dir, 'git',  # the path of the data file
+            'rostar',
+            'scratch',
+            'diss_figs',
+            'CB1.txt']
+    filepath = os.path.join(*path)
+    file1 = open(filepath, 'r')
+    cb = np.loadtxt(file1, delimiter=';')
+    model.test_xdata = -cb[:, 2] / 4. - cb[:, 3] / 4. - cb[:, 4] / 2.
+    model.test_ydata = cb[:, 1] / (11. * 0.445) * 1000
 
     cb = CBView(model=model)
     cb.refresh()

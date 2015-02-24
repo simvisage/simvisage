@@ -16,7 +16,7 @@ import numpy as np
 import pylab as p
 
 test_files = [  # 'BTT-6c-2cm-TU-0-V04_MxN2.DAT',
-              # 'BTT-6c-2cm-TU-0-V02_MxN2.DAT',
+               'BTT-6c-2cm-TU-0-V02_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V03_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V04_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V05_MxN2.DAT',
@@ -27,7 +27,7 @@ test_files = [  # 'BTT-6c-2cm-TU-0-V04_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V10_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V11_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V12_MxN2.DAT',
-               'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
+              # 'BTT-6c-2cm-TU-0-V13_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V14_MxN2.DAT',
               # 'BTT-6c-2cm-TU-0-V15_MxN2.DAT',
               # 'BTT-4c-2cm-TU-0-V01_MxN2.DAT',
@@ -66,7 +66,6 @@ def plot_all():
 
     fig = p.figure()
     fig.subplots_adjust(left=0.03, right=0.97, bottom=0.04, top=0.96, wspace=0.25, hspace=0.2)
-
     axes = p.subplot(231)
 
     for e in e_list:
@@ -75,6 +74,7 @@ def plot_all():
         # print 'crack filter', e.crack_filter_avg
         e.process_source_data()
         e.aramis_cdt.ddd_ux_avg_threshold = -5e-4
+        e.aramis_cdt.crack_detection_step = 116
 
         # print 'step_times', e.aramis_field_data.step_times
         # print 'crack filter', e.crack_filter_avg
