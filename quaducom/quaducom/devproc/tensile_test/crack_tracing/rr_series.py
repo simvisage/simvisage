@@ -3,7 +3,6 @@ Created on Jan 28, 2015
 
 '''
 
-from exp_att_db import ExpATTDB, f_interp1d
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
@@ -17,7 +16,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [5]]
+test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [3]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
@@ -25,7 +24,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 e_list_6c = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [3]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
@@ -75,8 +74,9 @@ def plot_all():
         dux_t_cr = e.dux_t_cr
         eps_t_cr = e.eps_t_cr
 
-        twin = 6
-        deps_t_cr = eps_t_cr[twin:,:] - eps_t_cr[:-twin,:]
+        # evaluate the derivative of strain field
+        twin = 5
+        deps_t_cr = eps_t_cr[twin:, :] - eps_t_cr[:-twin,:]
         argmax_deps_t_cr = np.argmax(deps_t_cr, axis=0)
         cr_enum = np.arange(len(argmax_deps_t_cr))
 
@@ -84,10 +84,11 @@ def plot_all():
         max_eps_t_cr = eps_t_cr[argmax_deps_t_cr + twin, cr_enum]
         max_t_cr = e.t_aramis_asc[argmax_deps_t_cr]
 
-        axes = p.subplot(221)
+        axes = p.subplot(231)
         axes.plot(e.t_aramis_asc, dux_t_cr, color='darkblue', label='1')
+        p.ylim((-0.05, 0.30))
 
-        axes = p.subplot(222)
+        axes = p.subplot(232)
         axes.plot(e.t_aramis_asc, eps_t_cr, label='1')
 
         axes.plot(e.t_aramis_asc, e.min_eps_t_cr, color='red',
@@ -95,15 +96,34 @@ def plot_all():
 
         axes.plot(max_t_cr, max_eps_t_cr, 'ro')
 
-        axes = p.subplot(223)
+        p.ylim((-0.002, 0.02))
+
+        axes = p.subplot(233)
 
         axes.plot(max_t_cr, max_deps_t_cr, 'ro')
 
         axes.plot(e.t_aramis_asc[:deps_t_cr.shape[0]], deps_t_cr,
                   linewidth=1, label='1')
+        p.ylim((-0.0005, 0.005))
 
-        axes = p.subplot(224)
+        axes = p.subplot(234)
         e._plot_sigc_eps_ironed(axes, color='darkblue', label='eps')
+
+        axes = p.subplot(235)
+        axes.plot(e.F_t_aramis_asc, eps_t_cr)
+        p.ylim((-0.002, 0.02))
+
+        axes = p.subplot(236)
+        axes.plot(e.t_aramis_asc, e.F_t_aramis_asc)
+
+        # print the crack positions
+        m = e.aramis_cdt.crack_detect_mask_avg.copy()
+        cr_idx = np.where(m)[0]
+        x = e.aramis_field_data.x_arr_0[0, :]
+        print 'position', [x[cr_idx]]
+
+        # print the crack initiating force
+        print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
 
         p.show()
 

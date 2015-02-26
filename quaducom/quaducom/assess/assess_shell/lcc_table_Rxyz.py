@@ -21,7 +21,7 @@ from etsproxy.traits.ui.api import \
 
 from etsproxy.mayavi import \
     mlab
-    
+
 import pylab as p
 
 from etsproxy.traits.ui.table_column import \
@@ -62,36 +62,36 @@ class LC(HasTraits):
 
     # name of the file containing the stress resultants
     #
-    file_name = Str(input = True)
+    file_name = Str(input=True)
 
-    # data filter (used to hide unwanted values, e.g. high sigularities etc.) 
+    # data filter (used to hide unwanted values, e.g. high sigularities etc.)
     #
-    data_filter = Callable(input = True)
+    data_filter = Callable(input=True)
 
     # name of the loading case
     #
-    name = Str(input = True)
+    name = Str(input=True)
 
     # category of the loading case
     #
-    category = Enum('dead-load', 'additional dead-load', 'imposed-load', input = True)
+    category = Enum('dead-load', 'additional dead-load', 'imposed-load', input=True)
 
-    # list of keys specifying the names of the loading cases 
+    # list of keys specifying the names of the loading cases
     # that can not exist at the same time, i.e. which are exclusive to each other
-    # 
-    exclusive_to = List(Str, input = True)
+    #
+    exclusive_to = List(Str, input=True)
     def _exclusive_to_default(self):
         return []
 
     # combination factors (need to be defined in case of imposed loads)
-    # 
-    psi_0 = Float(input = True)
-    psi_1 = Float(input = True)
-    psi_2 = Float(input = True)
+    #
+    psi_0 = Float(input=True)
+    psi_1 = Float(input=True)
+    psi_2 = Float(input=True)
 
     # security factors ULS
     #
-    gamma_fav = Float(input = True)
+    gamma_fav = Float(input=True)
     def _gamma_fav_default(self):
         if self.category == 'dead-load':
             return 1.00
@@ -100,7 +100,7 @@ class LC(HasTraits):
         if self.category == 'imposed-load':
             return 0.00
 
-    gamma_unf = Float(input = True)
+    gamma_unf = Float(input=True)
     def _gamma_unf_default(self):
         if self.category == 'dead-load':
             return 1.35
@@ -111,9 +111,9 @@ class LC(HasTraits):
 
     # security factors SLS:
     # (used to distinguish combinations where imposed-loads
-    # or additional-dead-loads are favorable or unfavorable.) 
+    # or additional-dead-loads are favorable or unfavorable.)
     #
-    gamma_fav_SLS = Float(input = True)
+    gamma_fav_SLS = Float(input=True)
     def _gamma_fav_SLS_default(self):
         if self.category == 'dead-load':
             return 1.00
@@ -121,20 +121,20 @@ class LC(HasTraits):
              self.category == 'imposed-load':
             return 0.00
 
-    gamma_unf_SLS = Float(input = True)
+    gamma_unf_SLS = Float(input=True)
     def _gamma_unf_SLS_default(self):
         return 1.00
 
     # original state data (before filtering)
     #
-    state_data_orig = Property(Dict, depends_on = 'file_name, lcc_table.data_dir')
+    state_data_orig = Property(Dict, depends_on='file_name, lcc_table.data_dir')
     @cached_property
     def _get_state_data_orig(self):
         return self.reader.read_state_data(self.file_name)
 
     # state data (after filtering)
     #
-    state_data_dict = Property(Dict, depends_on = 'file_name, data_filter, lcc_table.data_dir')
+    state_data_dict = Property(Dict, depends_on='file_name, data_filter, lcc_table.data_dir')
     @cached_property
     def _get_state_data_dict(self):
         d = {}
@@ -143,9 +143,9 @@ class LC(HasTraits):
         return d
 
     # if reader == 'RFEM':
-    #sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
+    # sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy'])
     # if reader == 'InfoCAD':
-    #sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy', 'ux_elem', 'uy_elem', 'uz_elem'])
+    # sr_columns = List(['mx', 'my', 'mxy', 'nx', 'ny', 'nxy', 'ux_elem', 'uy_elem', 'uz_elem'])
     # if reader == 'InfoCADRxyz':
     sr_columns = List(['Rx', 'Ry', 'Rz', 'Mx', 'My', 'Mz'])
 
@@ -162,34 +162,34 @@ class LCC(HasTraits):
 
     lcc_id = Int
 
-    #lcc_table = WeakRef()
+    # lcc_table = WeakRef()
 
 #    ls_table = Instance(LSTable)
     # changes concerning 'Rxyz'
     ls_table = Instance(LSTableRxyz)
-    
+
     assess_value = Property()
     def _get_assess_value(self):
         return self.ls_table.assess_value
 
-    traits_view = View(Item('ls_table@', show_label = False),
-                        resizable = True,
-                        scrollable = True
+    traits_view = View(Item('ls_table@', show_label=False),
+                        resizable=True,
+                        scrollable=True
                         )
 
 # The definition of the demo TableEditor:
 lcc_list_editor = TableEditor(
-    columns_name = 'lcc_table_columns',
-    editable = False,
-    selection_mode = 'row',
-    selected = 'object.lcc',
-    show_toolbar = True,
-    auto_add = False,
-    configurable = True,
-    sortable = True,
-    reorderable = False,
-    sort_model = False,
-    auto_size = False,
+    columns_name='lcc_table_columns',
+    editable=False,
+    selection_mode='row',
+    selected='object.lcc',
+    show_toolbar=True,
+    auto_add=False,
+    configurable=True,
+    sortable=True,
+    reorderable=False,
+    sort_model=False,
+    auto_size=False,
     )
 
 class LCCTable(HasTraits):
@@ -204,19 +204,19 @@ class LCCTable(HasTraits):
                 {'ULS' : ULS,
                  'SLS' : SLS })
 
-    # manager of input files with state and geometry data 
-    # 
-    reader_type = Trait('RFEM', dict(RFEM = LCCReaderRFEM,
-                                     InfoCAD = LCCReaderInfoCAD,
+    # manager of input files with state and geometry data
+    #
+    reader_type = Trait('RFEM', dict(RFEM=LCCReaderRFEM,
+                                     InfoCAD=LCCReaderInfoCAD,
                                      # changes concerning 'Rxyz'
-                                     InfoCADRxyz = LCCReaderInfoCADRxyz))
+                                     InfoCADRxyz=LCCReaderInfoCADRxyz))
 
-    reader = Property(Instance(LCCReader), depends_on = 'reader_type')
+    reader = Property(Instance(LCCReader), depends_on='reader_type')
     @cached_property
     def _get_reader(self):
-        return self.reader_type_(lcc_table = self)
+        return self.reader_type_(lcc_table=self)
 
-    # lcc-instance for the view 
+    # lcc-instance for the view
     #
     lcc = Instance(LCC)
 
@@ -235,7 +235,7 @@ class LCCTable(HasTraits):
     # list of load cases
     #
     lc_list_ = List(Instance(LC))
-    lc_list = Property(List, depends_on = '+filter, data_dir')
+    lc_list = Property(List, depends_on='+filter, data_dir')
     def _set_lc_list(self, value):
         self.lc_list_ = value
     def _get_lc_list(self):
@@ -246,14 +246,14 @@ class LCCTable(HasTraits):
                 lc.data_filter = self.data_filter
         return self.lc_list_
 
-    lcc_table_columns = Property(depends_on = 'lc_list_, +filter, data_dir')
+    lcc_table_columns = Property(depends_on='lc_list_, +filter, data_dir')
     def _get_lcc_table_columns(self):
-        return [ ObjectColumn(label = 'Id', name = 'lcc_id') ] + \
-               [ ObjectColumn(label = lc.name, name = lc.name)
+        return [ ObjectColumn(label='Id', name='lcc_id') ] + \
+               [ ObjectColumn(label=lc.name, name=lc.name)
                 for idx, lc in enumerate(self.lc_list) ] + \
-                [ ObjectColumn(label = 'assess_value', name = 'assess_value') ]
+                [ ObjectColumn(label='assess_value', name='assess_value') ]
 
-    sr_columns = Property(List(Str), depends_on = 'lc_list_, +filter, data_dir')
+    sr_columns = Property(List(Str), depends_on='lc_list_, +filter, data_dir')
     def _get_sr_columns(self):
         '''derive the order of the stress resultants
         from the first element in 'lc_list'. The internal
@@ -305,7 +305,7 @@ class LCCTable(HasTraits):
         return self.lc_list[0].sr_arr.shape[0]
 
     #-------------------------------
-    # auxilary method for get_combi_arr 
+    # auxilary method for get_combi_arr
     #-------------------------------
 
     def _product(self, args):
@@ -318,7 +318,7 @@ class LCCTable(HasTraits):
         needs to be defined. In the original version of 'itertools.product'
         the function takes a tuple as argument ("*args").
         """
-        pools = map(tuple, args) #within original version args defined as *args
+        pools = map(tuple, args)  # within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -331,7 +331,7 @@ class LCCTable(HasTraits):
     # list of indices of the position of the imposed loads in 'lc_list'
     #
 #    imposed_idx_list = Property( List, depends_on = 'lc_list_, lc_list_.+input' )
-    imposed_idx_list = Property(List, depends_on = 'lc_list_')
+    imposed_idx_list = Property(List, depends_on='lc_list_')
     @cached_property
     def _get_imposed_idx_list(self):
         '''list of indices for the imposed loads
@@ -345,7 +345,7 @@ class LCCTable(HasTraits):
 
     # array containing the psi with name 'psi_key' for the specified
     # loading cases defined in 'lc_list'. For dead-loads no value for
-    # psi exists. In this case a value of 1.0 is defined. 
+    # psi exists. In this case a value of 1.0 is defined.
     # This yields an array of shape ( n_lc, )
     #
     def _get_psi_arr(self, psi_key):
@@ -363,11 +363,11 @@ class LCCTable(HasTraits):
             psi_value = getattr(self.lc_list[ imposed_idx ], psi_key)
             psi_list[ imposed_idx ] = psi_value
 
-        return array(psi_list, dtype = 'float_')
+        return array(psi_list, dtype='float_')
 
     # list containing names of the loading cases
     #
-    lc_name_list = Property(List, depends_on = 'lc_list_')
+    lc_name_list = Property(List, depends_on='lc_list_')
     @cached_property
     def _get_lc_name_list(self):
         '''list of names of all loading cases
@@ -378,7 +378,7 @@ class LCCTable(HasTraits):
 
     # combination array:
     #
-    combi_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
+    combi_arr = Property(Array, depends_on='lc_list_, combination_SLS')
     @cached_property
     def _get_combi_arr(self):
         '''array containing the security and combination factors
@@ -406,13 +406,13 @@ class LCCTable(HasTraits):
 
         combi_arr = array(permutation_list)
 
-        # check if imposed loads are defined 
+        # check if imposed loads are defined
         # if not no further processing of 'combi_arr' is necessary:
         #
         if self.imposed_idx_list == []:
 
-            # if option is set to 'True' the loading case combination table 
-            # is enlarged with an identity matrix in order to see the 
+            # if option is set to 'True' the loading case combination table
+            # is enlarged with an identity matrix in order to see the
             # characteristic values of each loading case.
             #
             if self.show_lc_characteristic:
@@ -425,7 +425,7 @@ class LCCTable(HasTraits):
         #---------------------------------------------------------------
         # go through all possible cases of leading imposed loads
         # For the currently investigated imposed loading case the
-        # psi value is taken from 'psi_leading_arr' for all other 
+        # psi value is taken from 'psi_leading_arr' for all other
         # imposed loads the psi value is taken from 'psi_non_lead_arr'
 
         # Properties are defined in the subclasses
@@ -434,8 +434,8 @@ class LCCTable(HasTraits):
         psi_non_lead_arr = self.psi_non_lead_arr
 
         # for SLS limit state case 'rare' all imposed loads are multiplied
-        # with 'psi_2'. In this case no distinction between leading or 
-        # non-leading imposed loads needs to be performed.  
+        # with 'psi_2'. In this case no distinction between leading or
+        # non-leading imposed loads needs to be performed.
         #
         if all(psi_lead_arr == psi_non_lead_arr):
             combi_arr_psi = combi_arr * psi_lead_arr
@@ -443,7 +443,7 @@ class LCCTable(HasTraits):
         # generate a list or arrays obtained by multiplication
         # with the psi-factors.
         # This yields a list of length = number of imposed-loads.
-        # 
+        #
         else:
             combi_arr_psi_list = []
             for imposed_idx in self.imposed_idx_list:
@@ -456,11 +456,11 @@ class LCCTable(HasTraits):
 
             combi_arr_psi_no_0 = vstack(combi_arr_psi_list)
 
-            # missing cases without any dead load have to be added 
-            # get combinations with all!! imposed = 0 
+            # missing cases without any dead load have to be added
+            # get combinations with all!! imposed = 0
             #
             lcc_all_imposed_zero = where((combi_arr[:, self.imposed_idx_list] == 0)
-                                          .all(axis = 1))
+                                          .all(axis=1))
 
             # add to combinations
             #
@@ -471,7 +471,7 @@ class LCCTable(HasTraits):
         #---------------------------------------------------------------
 
         # get a list of lists containing the indices of the loading cases
-        # that are defined exclusive to each other. 
+        # that are defined exclusive to each other.
         # The list still contains duplicates, e.g. [1,2] and [2,1]
         #
         exclusive_list = []
@@ -493,15 +493,15 @@ class LCCTable(HasTraits):
 
         # delete the rows in combination array that contain
         # loading case combinations with imposed-loads that have been defined
-        # as exclusive to each other. 
-        # 
+        # as exclusive to each other.
+        #
         combi_arr_psi_exclusive = combi_arr_psi
         for exclusive_list_entry in exclusive_list_unique:
-            # check where maximum one value of the exclusive load cases is unequal to one 
+            # check where maximum one value of the exclusive load cases is unequal to one
             #              LC1  LC2  LC3  (all LCs are defined as exclusive to each other)
             #
-            # e.g.         1.5  0.9  0.8  (example of 'combi_arr_psi') 
-            #              1.5  0.0  0.0  
+            # e.g.         1.5  0.9  0.8  (example of 'combi_arr_psi')
+            #              1.5  0.0  0.0
             #              0.0  0.0  0.0  (combination with all imposed loads = 0 after multiplication wit hpsi and gamma)
             #              ...  ...  ...
             #
@@ -512,17 +512,17 @@ class LCCTable(HasTraits):
             #              ...  ...  ...
             #
             mask_arr = where(combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0)
-            true_combi = where(sum(mask_arr, axis = 1) <= 1.0)
+            true_combi = where(sum(mask_arr, axis=1) <= 1.0)
             combi_arr_psi_exclusive = combi_arr_psi_exclusive[ true_combi ]
 
         #---------------------------------------------------------------
-        # create array with only unique load case combinations 
+        # create array with only unique load case combinations
         #---------------------------------------------------------------
         # If the psi values of an imposed-load are defined as zero this
         # may led to zero entries in 'combi_arr'. This would yield rows
         # in 'combi_arr' which are duplicates. Those rows are removed.
 
-        # Add first row in 'combi_arr_psi_exclusive' to '_unique' array 
+        # Add first row in 'combi_arr_psi_exclusive' to '_unique' array
         # This array must have shape (1, n_lc) in order to use 'axis'-option
         #
         combi_arr_psi_exclusive_unique = combi_arr_psi_exclusive[0][None, :]
@@ -532,11 +532,11 @@ class LCCTable(HasTraits):
             # If this is not the case for any row the combination is added to 'unique'.
             # Broadcasting is used for the bool evaluation:
             #
-            if (row == combi_arr_psi_exclusive_unique).all(axis = 1.0).any() == False:
+            if (row == combi_arr_psi_exclusive_unique).all(axis=1.0).any() == False:
                 combi_arr_psi_exclusive_unique = vstack((combi_arr_psi_exclusive_unique, row))
 
-        # if option is set to 'True' the loading case combination table 
-        # is enlarged with an identity matrix in order to see the 
+        # if option is set to 'True' the loading case combination table
+        # is enlarged with an identity matrix in order to see the
         # characteristic values of each loading case.
         #
         if self.show_lc_characteristic:
@@ -545,10 +545,10 @@ class LCCTable(HasTraits):
         return combi_arr_psi_exclusive_unique
 
     #-------------------------------
-    # lcc_arr 
+    # lcc_arr
     #-------------------------------
-    
-    lcc_arr = Property(Array, depends_on = 'lc_list_, data_dir')
+
+    lcc_arr = Property(Array, depends_on='lc_list_, data_dir')
     @cached_property
     def _get_lcc_arr(self):
         '''Array of all loading case combinations following the
@@ -570,16 +570,16 @@ class LCCTable(HasTraits):
         #
         lc_combi_arr = lc_arr[ None, :, :, :] * combi_arr[:, :, None, None ]
 
-        # Then the sum over index 'n_lc' is evaluated yielding 
+        # Then the sum over index 'n_lc' is evaluated yielding
         # an array of all loading case combinations.
-        # This yields an array of shape ( n_lcc, n_elem, n_sr ) 
+        # This yields an array of shape ( n_lcc, n_elem, n_sr )
         #
-        lcc_arr = sum(lc_combi_arr, axis = 1)
+        lcc_arr = sum(lc_combi_arr, axis=1)
 
         return lcc_arr
 
     lcc_arr_new = Array
-    
+
     def _set_lcc_arr(self):
         print '_set_lcc_arr called!'
         self.lcc_arr = self.lcc_arr_new
@@ -602,13 +602,13 @@ class LCCTable(HasTraits):
         '''
         lcc_arr = self.lcc_arr
 
-        min_arr = ndmin(lcc_arr, axis = 0)
-        max_arr = ndmax(lcc_arr, axis = 0)
+        min_arr = ndmin(lcc_arr, axis=0)
+        max_arr = ndmax(lcc_arr, axis=0)
 
         return min_arr, max_arr
 
     #------------------------------------------
-    # read the geometry data from file 
+    # read the geometry data from file
     # (element number and thickness):
     #------------------------------------------
 
@@ -620,15 +620,15 @@ class LCCTable(HasTraits):
         # use the same file as used for state data as both
         # information is stored in the same file
         #
-        pass 
+        pass
 
     #------------------------------------------
     # get thickness data:
     #------------------------------------------
 
     # coordinates and element thickness read from file:
-    # 
-    geo_data_orig = Property(Dict, depends_on = 'geo_data_file')
+    #
+    geo_data_orig = Property(Dict, depends_on='geo_data_file')
     @cached_property
     def _get_geo_data_orig(self):
         # changes concerning 'Rxyz': get node numbers of the support from the same file as state data
@@ -636,16 +636,16 @@ class LCCTable(HasTraits):
 
     # parameter that defines for which z-coordinate values
     # the read in data is not evaluated (filtered out)
-    # 
-    cut_z_fraction = Float(0.0, filter = True)
+    #
+    cut_z_fraction = Float(0.0, filter=True)
 
-    # construct a filter 
+    # construct a filter
     #
     data_filter = Callable
     def _data_filter_default(self):
-        return lambda lcc_table, x: x    #  - do nothing by default
+        return lambda lcc_table, x: x  #  - do nothing by default
 
-    geo_data_dict = Property(Dict, depends_on = 'geo_data_file, +filter')
+    geo_data_dict = Property(Dict, depends_on='geo_data_file, +filter')
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
@@ -654,10 +654,10 @@ class LCCTable(HasTraits):
         return d
 
     #-------------------------------
-    # lcc_lists 
+    # lcc_lists
     #-------------------------------
 
-    lcc_list = Property(List, depends_on = 'lc_list_, data_dir')
+    lcc_list = Property(List, depends_on='lc_list_, data_dir')
     @cached_property
     def _get_lcc_list(self):
         '''list of loading case combinations (instances of LCC)
@@ -668,8 +668,8 @@ class LCCTable(HasTraits):
         n_lcc = self.n_lcc
 
         # return a dictionary of the stress resultants
-        # this is used by LSTable to determine the stress 
-        # resultants of the current limit state 
+        # this is used by LSTable to determine the stress
+        # resultants of the current limit state
         #
         lcc_list = []
         for i_lcc in range(n_lcc):
@@ -678,20 +678,20 @@ class LCCTable(HasTraits):
             for i_sr, name in enumerate(sr_columns):
                 state_data_dict[ name ] = lcc_arr[ i_lcc, :, i_sr ][:, None]
 
-            lcc = LCC(#lcc_table = self,
-                       factors = combi_arr[ i_lcc, : ],
-                       lcc_id = i_lcc,
+            lcc = LCC(# lcc_table = self,
+                       factors=combi_arr[ i_lcc, : ],
+                       lcc_id=i_lcc,
                        # changes concerning 'Rxyz': use LSTable for support force evaluation
-                       ls_table = LSTableRxyz( reader = self.reader,
-                                           reader_type = self.reader_type,
-                                           assess_name = self.assess_name,
-                                           geo_data = self.geo_data_dict,
-                                           state_data = state_data_dict,
-                                           ls = self.ls)
+                       ls_table=LSTableRxyz(reader=self.reader,
+                                           reader_type=self.reader_type,
+                                           assess_name=self.assess_name,
+                                           geo_data=self.geo_data_dict,
+                                           state_data=state_data_dict,
+                                           ls=self.ls)
                        )
 
             for idx, lc in enumerate(self.lc_list):
-            # @todo: use 'Float' instead of 'Int'    
+            # @todo: use 'Float' instead of 'Int'
                 lcc.add_trait(lc.name, Int(combi_arr[ i_lcc, idx ]))
 
             lcc_list.append(lcc)
@@ -701,7 +701,7 @@ class LCCTable(HasTraits):
     def plot_geo(self, mlab):
         self.reader.plot_mesh(mlab, self.geo_data_dict)
 
-    def plot_RxRz_interaction(self, save_fig_to_file = None, show_tension_only = False, add_max_min_RxRz_from_file = None, save_max_min_RxRz_to_file = None):
+    def plot_RxRz_interaction(self, save_fig_to_file=None, show_tension_only=False, add_max_min_RxRz_from_file=None, save_max_min_RxRz_to_file=None):
         '''plot the normal/shear-reaction forces as interaction diagram for all loading case combinations
         '''
 
@@ -713,120 +713,122 @@ class LCCTable(HasTraits):
         # run trough all loading case combinations:
         #----------------------------------------------
 
-        Rx_Ed_list = [] # normal reaction force (tangential to the shell geometry)
-        Rz_Ed_list = [] # shear reaction force (radial to the shell geometry)
+        Rx_Ed_list = []  # normal reaction force (tangential to the shell geometry)
+        Rz_Ed_list = []  # shear reaction force (radial to the shell geometry)
         for lcc in lcc_list:
 
             # get the ls_table object and retrieve its 'ls_class'
             # (= LSTable_ULS-object)
             #
             ls_class = lcc.ls_table.ls_class
- 
-            # get Rx_Ed and Rz_Ed 
+
+            # get Rx_Ed and Rz_Ed
             #
-            Rx_Ed = np.copy( getattr(ls_class, 'Rx'))
-            Rz_Ed = np.copy( getattr(ls_class, 'Rz'))
-            
+            Rx_Ed = np.copy(getattr(ls_class, 'Rx'))
+            Rz_Ed = np.copy(getattr(ls_class, 'Rz'))
+
             # add read in saved values to be superposed with currently read in values
             #
             if add_max_min_RxRz_from_file != None:
-                max_min_RxRz_arr  = np.loadtxt( add_max_min_RxRz_from_file )
-                max_Rx_Ed_arr = max_min_RxRz_arr[:,0][:,None]
-                min_Rx_Ed_arr = max_min_RxRz_arr[:,1][:,None]
-                max_Rz_Ed_arr = max_min_RxRz_arr[:,2][:,None]
-                min_Rz_Ed_arr = max_min_RxRz_arr[:,3][:,None]
-    
+                max_min_RxRz_arr = np.loadtxt(add_max_min_RxRz_from_file)
+                max_Rx_Ed_arr = max_min_RxRz_arr[:, 0][:, None]
+                min_Rx_Ed_arr = max_min_RxRz_arr[:, 1][:, None]
+                max_Rz_Ed_arr = max_min_RxRz_arr[:, 2][:, None]
+                min_Rz_Ed_arr = max_min_RxRz_arr[:, 3][:, None]
+
                 # Rx_Ed
                 #
-                cond_Rx_Ed_ge_0 = Rx_Ed >= 0. # positive Rx value = shear force for the build-in srew 
+                cond_Rx_Ed_ge_0 = Rx_Ed >= 0.  # positive Rx value = shear force for the build-in srew
                 bool_arr = cond_Rx_Ed_ge_0
                 Rx_Ed[bool_arr] += max_Rx_Ed_arr[bool_arr]
 
-                cond_Rx_Ed_lt_0 = Rx_Ed < 0. # negative Rx value = compressive force in tangential direction at support (normal force) 
+                cond_Rx_Ed_lt_0 = Rx_Ed < 0.  # negative Rx value = compressive force in tangential direction at support (normal force)
                 bool_arr = cond_Rx_Ed_lt_0
                 Rx_Ed[bool_arr] += min_Rx_Ed_arr[bool_arr]
 
                 # Rz_Ed
                 #
-                cond_Rz_Ed_ge_0 = Rz_Ed >= 0. # positive Rz value = compressive force in radial direction at the support 
+                cond_Rz_Ed_ge_0 = Rz_Ed >= 0.  # positive Rz value = compressive force in radial direction at the support
                 bool_arr = cond_Rz_Ed_ge_0
                 Rz_Ed[bool_arr] += max_Rz_Ed_arr[bool_arr]
 
-                cond_Rz_Ed_lt_0 = Rz_Ed < 0. # negative Rz value = pull-out force for the build-in srew 
+                cond_Rz_Ed_lt_0 = Rz_Ed < 0.  # negative Rz value = pull-out force for the build-in srew
                 bool_arr = cond_Rz_Ed_lt_0
-                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]            
-            
-            Rx_Ed_list.append( Rx_Ed )
-            Rz_Ed_list.append( Rz_Ed )
+                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]
+
+            Rx_Ed_list.append(Rx_Ed)
+            Rz_Ed_list.append(Rz_Ed)
 
         # stack the list to an array in order to use plot-function
         #
-        Rx_Ed_arr = hstack( Rx_Ed_list )
-        Rz_Ed_arr = hstack( Rz_Ed_list )
+        Rx_Ed_arr = hstack(Rx_Ed_list)
+        Rz_Ed_arr = hstack(Rz_Ed_list)
         print 'Rz_Ed_arr.shape', Rz_Ed_arr.shape
 
-        # get Rx_Rd, Rz_Rd 
+        # get Rx_Rd, Rz_Rd
         #
-        Rx_Rd = getattr( ls_class, 'Rx_Rd' ) # shear resistance
-        Rz_Rd = getattr( ls_class, 'Rz_Rd' ) # pull-out resistance
+        Rx_Rd = getattr(ls_class, 'Rx_Rd')  # shear resistance
+        Rz_Rd = getattr(ls_class, 'Rz_Rd')  # pull-out resistance
 
         # save min- and max-values to file in order to superpose them later
         #
         if save_max_min_RxRz_to_file != None:
-                
+
             # get maximum or minimum values for superposition depending on
-            # weather Rx or Rz are positive or negative values             
-            
+            # weather Rx or Rz are positive or negative values
+
             # positive value for Rx
             #
-            max_Rx_Ed_arr = np.max( Rx_Ed_arr, axis = 1) 
+            max_Rx_Ed_arr = np.max(Rx_Ed_arr, axis=1)
 
             # negative value for Rx
             #
-            min_Rx_Ed_arr = np.min( Rx_Ed_arr, axis = 1) 
+            min_Rx_Ed_arr = np.min(Rx_Ed_arr, axis=1)
 
             # positive value for Rz
             #
-            max_Rz_Ed_arr = np.max( Rz_Ed_arr, axis = 1) 
+            max_Rz_Ed_arr = np.max(Rz_Ed_arr, axis=1)
 
             # negative value for Rz
             #
-            min_Rz_Ed_arr = np.min( Rz_Ed_arr, axis = 1) 
+            min_Rz_Ed_arr = np.min(Rz_Ed_arr, axis=1)
 
             # stack as four column array
             #
-            max_min_RxRz_arr = np.hstack([max_Rx_Ed_arr[:,None], min_Rx_Ed_arr[:,None], max_Rz_Ed_arr[:,None], min_Rz_Ed_arr[:,None]])
+            max_min_RxRz_arr = np.hstack([max_Rx_Ed_arr[:, None], min_Rx_Ed_arr[:, None], max_Rz_Ed_arr[:, None], min_Rz_Ed_arr[:, None]])
 
             # save max and min values to file
             #
-            np.savetxt( save_max_min_RxRz_to_file, max_min_RxRz_arr )
-            print 'max_min_RxRz_arr saved to file %s' %(save_max_min_RxRz_to_file)
+            np.savetxt(save_max_min_RxRz_to_file, max_min_RxRz_arr)
+            print 'max_min_RxRz_arr saved to file %s' % (save_max_min_RxRz_to_file)
 
         #----------------------------------------------
         # plot
         #----------------------------------------------
         #
-        p.figure(facecolor = 'white') # white background
+#        p.figure(facecolor='white')  # white background
+        p.figure(facecolor='white', figsize=(8, 5))
+        from quaducom.devproc.format_plot import format_plot
 
-        p.plot(Rx_Ed_arr, Rz_Ed_arr, 'wo', markersize=3) # blue dots
+        p.plot(Rx_Ed_arr, Rz_Ed_arr, 'wo', markersize=5, markerfacecolor='gray')  # blue dots
         print 'Rx_Ed_arr', Rx_Ed_arr
         print 'Rz_Ed_arr', Rz_Ed_arr
         x = np.array([0, Rx_Rd])
         y1 = np.array([ -Rz_Rd, 0. ])
 
 #        p.title('$RxRz$-Interaktionsdiagramm')
-    
+
         ax = p.gca()
         if show_tension_only == False:
-#            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
-#            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
-#            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+            p.axis([-10., 6, -6, 4.])  # set plotting range for axis
+            ax.set_xticks([-10., 6])
+            ax.set_yticks([-6., 4.])
             print 'show_tension_only == False'
 
         if show_tension_only == True:
 #            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
 #            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
-            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
+            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.])  # set plotting range for axis
             print 'show_tension_only == True'
 
         ax.spines['left'].set_position(('data', 0))
@@ -836,20 +838,22 @@ class LCCTable(HasTraits):
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
-        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
+#        p.plot(x, y1, 'k--', linewidth=2.0)  # black dashed line
         p.grid(True)
 
-        p.xlabel('$R_{x,Ed}$ [kN]                                             ', fontsize=14, verticalalignment = 'top', horizontalalignment = 'right')
-        p.ylabel('$R_{z,Ed}$ [kN]                                                              ', fontsize=14)
+#        p.xlabel('$R_{x,Ed}$ [kN]                                             ', fontsize=14, verticalalignment='top', horizontalalignment='right')
+#        p.ylabel('$R_{z,Ed}$ [kN]                                                              ', fontsize=14)
+
+        format_plot(p)
 
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' %(save_fig_to_file)
-            p.savefig( save_fig_to_file, format='png' )
-        
+            print 'figure saved to file %s' % (save_fig_to_file)
+            p.savefig(save_fig_to_file, format='png')
+
         p.show()
-        
+
 
     #--------------------
     # eta_RxRz- interaction (new method with sign-consistend superposition of the values)
@@ -859,9 +863,9 @@ class LCCTable(HasTraits):
     # that means that independently of the sign for Rx or Rz resulting from LC1-14 the most conservative eta of all temperature loading cases
     # is used. This corresponds to a translation of the obtained values for LC1-14 by a fixed horizontal and vertical shift.
     # a more realistic superposition needs to consider the signs of the (dominant) values obtained from LS1-14 and enlarge the eta-value only if the
-    # resulting force of LC1-14 affects the in-build srew at all.   
+    # resulting force of LC1-14 affects the in-build srew at all.
     #
-    def plot_eta_RxRz_interaction(self, show_tension_only = False, save_fig_to_file = None, add_max_min_RxRz_from_file = None):
+    def plot_eta_RxRz_interaction(self, show_tension_only=False, save_fig_to_file=None, add_max_min_RxRz_from_file=None):
         '''plot the eta_RxRz-interaction for all loading case combinations
         NOTE: the same superposition assumptions are made as used for method 'plot_RxRz_interaction'
         '''
@@ -874,7 +878,7 @@ class LCCTable(HasTraits):
         #----------------------------------------------
         # run trough all loading case combinations:
         #----------------------------------------------
-        
+
         eta_Rx_list = []
         eta_Rz_list = []
 
@@ -884,92 +888,97 @@ class LCCTable(HasTraits):
             # (= LSTable_ULS-object)
             #
             ls_class = lcc.ls_table.ls_class
- 
-            # get Rx_Ed and Rz_Ed 
-            #
-            Rx_Ed = np.copy( getattr(ls_class, 'Rx'))
-            Rz_Ed = np.copy( getattr(ls_class, 'Rz'))
 
-            # get Rx_Rd and Rz_Rd 
+            # get Rx_Ed and Rz_Ed
+            #
+            Rx_Ed = np.copy(getattr(ls_class, 'Rx'))
+            Rz_Ed = np.copy(getattr(ls_class, 'Rz'))
+
+            # get Rx_Rd and Rz_Rd
             #
             Rx_Rd = getattr(ls_class, 'Rx_Rd')
             Rz_Rd = getattr(ls_class, 'Rz_Rd')
-            
+
             if add_max_min_RxRz_from_file == None:
-                # get 'eta_Rx' and 'eta_Rz' 
+                # get 'eta_Rx' and 'eta_Rz'
                 #
                 eta_Rx = getattr(ls_class, 'eta_Rx')
                 eta_Rz = getattr(ls_class, 'eta_Rz')
- 
+
             # add read in saved values to be superposed with currently read in values
             #
             else:
-                max_min_RxRz_arr  = np.loadtxt( add_max_min_RxRz_from_file )
-                max_Rx_Ed_arr = max_min_RxRz_arr[:,0][:,None]
-                min_Rx_Ed_arr = max_min_RxRz_arr[:,1][:,None]
-                max_Rz_Ed_arr = max_min_RxRz_arr[:,2][:,None]
-                min_Rz_Ed_arr = max_min_RxRz_arr[:,3][:,None]
-    
+                max_min_RxRz_arr = np.loadtxt(add_max_min_RxRz_from_file)
+                max_Rx_Ed_arr = max_min_RxRz_arr[:, 0][:, None]
+                min_Rx_Ed_arr = max_min_RxRz_arr[:, 1][:, None]
+                max_Rz_Ed_arr = max_min_RxRz_arr[:, 2][:, None]
+                min_Rz_Ed_arr = max_min_RxRz_arr[:, 3][:, None]
+
                 # Rx_Ed
                 #
-                cond_Rx_Ed_ge_0 = Rx_Ed >= 0. # positive Rx value = shear force for the build-in srew 
+                cond_Rx_Ed_ge_0 = Rx_Ed >= 0.  # positive Rx value = shear force for the build-in srew
                 bool_arr = cond_Rx_Ed_ge_0
                 Rx_Ed[bool_arr] += max_Rx_Ed_arr[bool_arr]
 
-                cond_Rx_Ed_lt_0 = Rx_Ed < 0. # negative Rx value = compressive force in tangential direction at support (normal force) 
+                cond_Rx_Ed_lt_0 = Rx_Ed < 0.  # negative Rx value = compressive force in tangential direction at support (normal force)
                 bool_arr = cond_Rx_Ed_lt_0
                 Rx_Ed[bool_arr] += min_Rx_Ed_arr[bool_arr]
 
                 # Rz_Ed
                 #
-                cond_Rz_Ed_ge_0 = Rz_Ed >= 0. # positive Rz value = compressive force in radial direction at the support 
+                cond_Rz_Ed_ge_0 = Rz_Ed >= 0.  # positive Rz value = compressive force in radial direction at the support
                 bool_arr = cond_Rz_Ed_ge_0
                 Rz_Ed[bool_arr] += max_Rz_Ed_arr[bool_arr]
 
-                cond_Rz_Ed_lt_0 = Rz_Ed < 0. # negative Rz value = pull-out force for the build-in srew 
+                cond_Rz_Ed_lt_0 = Rz_Ed < 0.  # negative Rz value = pull-out force for the build-in srew
                 bool_arr = cond_Rz_Ed_lt_0
-                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]         
-                
+                Rz_Ed[bool_arr] += min_Rz_Ed_arr[bool_arr]
+
                 # note: positive values of 'Rx' correspond to shear forces for the support screw
-                #       negative values are taken by the compression cushion at the support directly 
+                #       negative values are taken by the compression cushion at the support directly
                 #       Therefore take only the positive part of support force 'Rx' into account
-                #       for the evaluation of 'eta_Rx'  
-                Rx_pos = ( abs( Rx_Ed ) + Rx_Ed ) / 2.
-        
-                # eta shear forces 
+                #       for the evaluation of 'eta_Rx'
+                Rx_pos = (abs(Rx_Ed) + Rx_Ed) / 2.
+
+                # eta shear forces
                 #
                 eta_Rx = Rx_pos / Rx_Rd
-        
+
                 # note: negative values of 'Rz' correspond to pull-out forces for the support screw
-                #       positive values are taken by the compression cushion at the support directly 
+                #       positive values are taken by the compression cushion at the support directly
                 #       Therefore take only the negative values of the support force 'Rz' into account
-                #       for the evaluation of 'eta_Rz'  
-                Rz_neg = ( abs( Rz_Ed ) - Rz_Ed ) / 2.
-                
+                #       for the evaluation of 'eta_Rz'
+                Rz_neg = (abs(Rz_Ed) - Rz_Ed) / 2.
+
                 # eta pull-out
                 #
                 eta_Rz = Rz_neg / Rz_Rd
-            
-            eta_Rx_list.append( eta_Rx )
-            eta_Rz_list.append( eta_Rz )
+
+            eta_Rx_list.append(eta_Rx)
+            eta_Rz_list.append(eta_Rz)
 
         # stack the list to an array in order to use plot-function
         #
-        eta_Rx_arr = hstack( eta_Rx_list )
-        eta_Rz_arr = hstack( eta_Rz_list )
+        eta_Rx_arr = hstack(eta_Rx_list)
+        eta_Rz_arr = hstack(eta_Rz_list)
         print 'eta_Rx_arr.shape', eta_Rx_arr.shape
+
+        eta_tot_arr = eta_Rx_arr + eta_Rz_arr
+        eta_tot_max = np.max(eta_tot_arr)
+        print 'eta_tot_max', eta_tot_max
 
         #----------------------------------------------
         # plot
         #----------------------------------------------
         #
-        p.figure(facecolor = 'white') # white background
+#        p.figure(facecolor='white')  # white background
+        p.figure(facecolor='white', figsize=(6, 6))
 
-        p.plot(eta_Rx_arr, eta_Rz_arr, 'wo', markersize=3) # blue dots
+        p.plot(eta_Rx_arr, eta_Rz_arr, 'wo', markersize=5, markerfacecolor='gray')  # 'wo' blue dots
         x = np.array([0, 1. ])
         y1 = np.array([ -1., 0. ])
         y2 = np.array([  1., 0. ])
-    
+
 #        p.title('Ausnutzungsgrad $\eta$')
 
         ax = p.gca()
@@ -982,12 +991,12 @@ class LCCTable(HasTraits):
         if show_tension_only == True:
             ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
             ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
-            p.axis([0., 1., 1., 0.]) # set plotting range for axis
+            p.axis([0., 1., 1., 0.])  # set plotting range for axis
 
             print 'show_tension_only == True'
 
-        p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
-        p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
+        p.plot(x, y1, 'k--', linewidth=2.0)  # black dashed line
+        p.plot(x, y2, 'k--', linewidth=2.0)  # black dashed line
         p.grid(True)
 
         p.xlabel('$\eta_{Rx}$ [-] (Abscherkraft)', fontsize=14)
@@ -996,31 +1005,31 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' %(save_fig_to_file)
-            p.savefig( save_fig_to_file, format='png' )
+            print 'figure saved to file %s' % (save_fig_to_file)
+            p.savefig(save_fig_to_file, format='png')
 
         p.show()
 
 
     # ------------------------------------------------------------
-    # View 
+    # View
     # ------------------------------------------------------------
 
     traits_view = View(VGroup(
 
                         Item('geo_data_file',
-                              label = 'Evaluated input file for geo_data ',
-                               style = 'readonly', emphasized = True),
+                              label='Evaluated input file for geo_data ',
+                               style='readonly', emphasized=True),
                         VSplit(
-                                    Item('lcc_list', editor = lcc_list_editor,
-                                          show_label = False),
-                                    Item('lcc@', show_label = False),
+                                    Item('lcc_list', editor=lcc_list_editor,
+                                          show_label=False),
+                                    Item('lcc@', show_label=False),
                                     ),
                         ),
-                      resizable = True,
-                      scrollable = True,
-                      height = 1.0,
-                      width = 1.0
+                      resizable=True,
+                      scrollable=True,
+                      height=1.0,
+                      width=1.0
                       )
 
 class LCCTableULS(LCCTable):
@@ -1034,7 +1043,7 @@ class LCCTableULS(LCCTable):
 
     # 'gamma' - safety factors
     #
-    gamma_list = Property(List, depends_on = 'lc_list_')
+    gamma_list = Property(List, depends_on='lc_list_')
     @cached_property
     def _get_gamma_list(self):
         return [[ lc.gamma_fav, lc.gamma_unf ] for lc in self.lc_list ]
@@ -1042,12 +1051,12 @@ class LCCTableULS(LCCTable):
     # 'psi' - combination factors (psi) for leading
     # and non leading load cases
     #
-    psi_non_lead_arr = Property(Array, depends_on = 'lc_list_')
+    psi_non_lead_arr = Property(Array, depends_on='lc_list_')
     @cached_property
     def _get_psi_non_lead_arr(self):
         return self._get_psi_arr('psi_0')
 
-    psi_lead_arr = Property(Array, depends_on = 'lc_list_')
+    psi_lead_arr = Property(Array, depends_on='lc_list_')
     @cached_property
     def _get_psi_lead_arr(self):
         return ones(len(self.lc_list))
@@ -1061,7 +1070,7 @@ class LCCTableSLS(LCCTable):
     #
     ls = 'SLS'
 
-    # possible definitions of the serviceability limit state    
+    # possible definitions of the serviceability limit state
     # are: 'rare', 'freq', 'perm'
     #
     combination_SLS = Enum('rare', 'freq', 'perm')
@@ -1070,7 +1079,7 @@ class LCCTableSLS(LCCTable):
 
     # 'gamma' - safety factors
     #
-    gamma_list = Property(List, depends_on = 'lc_list_')
+    gamma_list = Property(List, depends_on='lc_list_')
     @cached_property
     def _get_gamma_list(self):
 
@@ -1104,12 +1113,12 @@ class LCCTableSLS(LCCTable):
     # combination factors (psi) for leading
     # and non leading load cases
     #
-    psi_lead_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
+    psi_lead_arr = Property(Array, depends_on='lc_list_, combination_SLS')
     @cached_property
     def _get_psi_lead_arr(self):
         return self.psi_lead_dict[ self.combination_SLS ]
 
-    psi_non_lead_arr = Property(Array, depends_on = 'lc_list_, combination_SLS')
+    psi_non_lead_arr = Property(Array, depends_on='lc_list_, combination_SLS')
     @cached_property
     def _get_psi_non_lead_arr(self):
         return self.psi_non_lead_dict[ self.combination_SLS ]
