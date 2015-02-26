@@ -73,10 +73,17 @@ def plot_all():
 
         dux_t_cr = e.dux_t_cr
         eps_t_cr = e.eps_t_cr
+<<<<<<< HEAD
 
         # evaluate the derivative of strain field
         twin = 5
         deps_t_cr = eps_t_cr[twin:, :] - eps_t_cr[:-twin,:]
+=======
+        
+        # evaluate the derivative of strain field
+        twin = 5
+        deps_t_cr = eps_t_cr[twin:,:] - eps_t_cr[:-twin,:]
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
         argmax_deps_t_cr = np.argmax(deps_t_cr, axis=0)
         cr_enum = np.arange(len(argmax_deps_t_cr))
 
@@ -95,8 +102,13 @@ def plot_all():
                   linewidth=3, label='1')
 
         axes.plot(max_t_cr, max_eps_t_cr, 'ro')
-
+        
         p.ylim((-0.002, 0.02))
+
+<<<<<<< HEAD
+        p.ylim((-0.002, 0.02))
+=======
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
         axes = p.subplot(233)
 
@@ -106,8 +118,30 @@ def plot_all():
                   linewidth=1, label='1')
         p.ylim((-0.0005, 0.005))
 
+<<<<<<< HEAD
+=======
+        
+
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
         axes = p.subplot(234)
         e._plot_sigc_eps_ironed(axes, color='darkblue', label='eps')
+        
+        axes = p.subplot(235)
+        axes.plot(e.F_t_aramis_asc, eps_t_cr)
+        p.ylim((-0.002, 0.02))
+        
+        axes = p.subplot(236)
+        axes.plot(e.t_aramis_asc, e.F_t_aramis_asc)
+
+
+        #print the crack positions
+        m = e.aramis_cdt.crack_detect_mask_avg.copy()
+        cr_idx = np.where(m)[0]
+        x = e.aramis_field_data.x_arr_0[0,:]
+        print 'position', [x[cr_idx]]
+               
+        # print the crack initiating force        
+        print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
 
         axes = p.subplot(235)
         axes.plot(e.F_t_aramis_asc, eps_t_cr)
@@ -126,10 +160,10 @@ def plot_all():
         print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
 
         p.show()
-
+        
         aui = AramisUI(aramis_info=e.aramis_info,
-                       aramis_data=e.aramis_field_data,
-                       aramis_cdt=e.aramis_cdt)
+               aramis_data=e.aramis_field_data,
+               aramis_cdt=e.aramis_cdt)
         aui.configure_traits()
 
 if __name__ == '__main__':
