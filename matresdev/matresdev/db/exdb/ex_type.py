@@ -247,11 +247,11 @@ class ExType(SimDBClass):
         if self.hook_up_file:
             config = ConfigParser.ConfigParser()
             config.read(self.hook_up_file)
-        try:
-            aramis_start_offset = config.get('aramis_data',
-                                             'aramis_start_offset')
-        except ConfigParser.NoOptionError:
-            pass
+            try:
+                aramis_start_offset = config.get('aramis_data',
+                                                 'aramis_start_offset')
+            except ConfigParser.NoOptionError:
+                pass
         return float(aramis_start_offset)
 
     aramis_files = Property(depends_on='data_file')
@@ -294,7 +294,7 @@ class ExType(SimDBClass):
                 zipfile_server = os.path.join(
                     simdb.simdb_cache_remote_dir, af_rel_dir, zip_filename)
 
-                zipfile_server = string.replace(zipfile_server,'\\','/')
+                zipfile_server = string.replace(zipfile_server, '\\', '/')
                 zipfile_local = os.path.join(af_local_dir, zip_filename)
 
                 print 'downloading', zipfile_server
