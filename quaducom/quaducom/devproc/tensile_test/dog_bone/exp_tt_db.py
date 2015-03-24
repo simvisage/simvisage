@@ -84,9 +84,9 @@ class ExpTTDB(ExType):
     # -------------------------------------------------------------------------
 
     width = Float(0.140, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                  auto_set=False, enter_set=True)
     gauge_length = Float(0.550, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                         auto_set=False, enter_set=True)
     age = Int(29, unit='d', input=True, table_field=True,
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
@@ -484,6 +484,7 @@ class ExpTTDB(ExType):
             bool_arr_eps = delta_eps > 0.
             bool_arr_t = delta_t > 0.
             bool_arr = bool_arr_F * bool_arr_eps * bool_arr_t
+            print 'XX', np.where(bool_arr).shape
             jump_idx2 = np.where(bool_arr)[0][1]
             delta_jump_idx = jump_idx2 - jump_idx
             jump_idx2_arr[n_idx] = jump_idx2
@@ -726,7 +727,8 @@ class ExpTTDB(ExType):
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
         '''
-        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and \
+                hasattr(self, "W10_vo"):
             #
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
@@ -1017,7 +1019,8 @@ class ExpTTDB(ExType):
             # plot the stiffness of the garn (K_IIb - cracked state)
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
-            axes.plot(eps_lin, sig_lin, color='red', linestyle='--', linewidth=2)
+            axes.plot(
+                eps_lin, sig_lin, color='red', linestyle='--', linewidth=2)
         #---------------
         # plot stress-strain curves
         # ---------------
