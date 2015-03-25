@@ -83,15 +83,10 @@ class ExpTTDB(ExType):
     # specify inputs:
     # -------------------------------------------------------------------------
 
-    width = Float(0.100, unit='m', input=True, table_field=True,
+    width = Float(0.140, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    '''Width of the specimen cross section.
-    '''
-    gauge_length = Float(0.250, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.550, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
-    '''Gauge length for measuring the elongation of the specimen.
-    '''
-
     age = Int(29, unit='d', input=True, table_field=True,
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
@@ -127,14 +122,14 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
-        concrete_mixture_key = 'barrelshell'
+#        concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'sto-100'
-#        concrete_mixture_key = 'FIL-10-09'
+        concrete_mixture_key = 'FIL-10-09'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 6
-        thickness = 0.02
+        n_layers = 12
+        thickness = 0.06
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -241,7 +236,7 @@ class ExpTTDB(ExType):
             self.W10_vo *= -1
 
         if hasattr(self, "W10_vli"):
-            print 'change_varname'
+            print 'change_varname WA_VL = W10_vli etc'
             self.WA_VL = self.W10_vli
         if hasattr(self, "W10_vre"):
             self.WA_VR = self.W10_vre
@@ -249,6 +244,16 @@ class ExpTTDB(ExType):
             self.WA_HL = self.W10_hli
         if hasattr(self, "W20_hre"):
             self.WA_HR = self.W20_hre
+
+        if hasattr(self, "Wvo_li"):
+            print 'change_varname WA_VL = Wvo_li etc'
+            self.WA_VL = self.Wvo_li
+        if hasattr(self, "Wvo_re"):
+            self.WA_VR = self.Wvo_re
+        if hasattr(self, "WHi_li"):
+            self.WA_HL = self.WHi_li
+        if hasattr(self, "WHi_re"):
+            self.WA_HR = self.WHi_re
 
         # NOTE: the large tensile tests (PSB1000) with width = 0.14 m have
         # 4 displacement gauges
@@ -721,7 +726,8 @@ class ExpTTDB(ExType):
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
         '''
-        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and \
+                hasattr(self, "W10_vo"):
             #
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
@@ -1013,8 +1019,8 @@ class ExpTTDB(ExType):
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
             axes.plot(
-                eps_lin, sig_lin, color='grey', linestyle='--', linewidth=linewidth)
-        # ---------------
+                eps_lin, sig_lin, color='red', linestyle='--', linewidth=2)
+        #---------------
         # plot stress-strain curves
         # ---------------
         if interpolated == True:
