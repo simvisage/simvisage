@@ -106,21 +106,56 @@ class RandomField(HasTraits):
     def plot_rf(self):
         if len(self.nDgrid) == 1:
             ''' 1D plot '''
+            import matplotlib
+            matplotlib.use('WxAgg')
+            import matplotlib.pyplot as plt
             plt.plot(self.nDgrid[0], self.random_field)
             plt.show()
         elif len(self.nDgrid) == 2:
             ''' 2D plot '''
+            import os
+            os.environ['ETS_TOOLKIT'] = 'qt4'
+            os.environ['QT_API'] = 'pyqt'
+            from mayavi import mlab
             rand_field_2D = self.random_field
             x, y = self.nDgrid
             mlab.surf(x, y, rand_field_2D)
             mlab.show()
+            mlab.close()
+        elif len(self.nDgrid) == 3:
+            ''' 3D plot '''
+            import os
+            os.environ['ETS_TOOLKIT'] = 'qt4'
+            os.environ['QT_API'] = 'pyqt'
+            from mayavi import mlab
+            rand_field_3D = self.random_field
+            x, y, z = self.nDgrid
+            #x, y, z = numpy.ogrid[-5:5:64j, -5:5:64j, -5:5:64j]
+            mlab.contour3d(rand_field_3D, contours=7, transparent=True)
+            mlab.show()
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from mayavi import mlab
-
-    rf = RandomField(lacor_arr=np.array([1.,1.2]),
-                    nDgrid=[np.linspace(0.0, 50., 200),
-                            np.linspace(0.0, 80., 200)]
+    example1D = False
+    example2D = True
+    example3D = False
+    
+    if example1D is True:
+        rf = RandomField(lacor_arr=np.array([2.0]),
+                         nDgrid=[np.linspace(0.0, 30., 300)]
+                         )
+        rf.plot_rf()
+    
+    if example2D is True:
+        rf = RandomField(lacor_arr=np.array([2.0, 1.2]),
+                    nDgrid=[np.linspace(0.0, 30., 100),
+                            np.linspace(0.0, 30., 100)]
                     )
-    rf.plot_rf()
+        rf.plot_rf()
+        
+    if example3D is True:
+        rf = RandomField(lacor_arr=np.array([2.0, 10.0, 3.0]),
+                    nDgrid=[np.linspace(0.0, 50., 30),
+                            np.linspace(0.0, 50., 25),
+                            np.linspace(0.0, 70., 20)]
+                    )
+        rf.plot_rf()
