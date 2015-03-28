@@ -140,20 +140,23 @@ if __name__ == '__main__':
     example3D = False
     
     if example1D is True:
-        rf = RandomField(lacor_arr=np.array([2.0]),
+        rf = RandomField(distr_type='Gauss',
+                         lacor_arr=np.array([2.0]),
                          nDgrid=[np.linspace(0.0, 30., 300)]
                          )
         rf.plot_rf()
     
     if example2D is True:
-        rf = RandomField(lacor_arr=np.array([2.0, 1.2]),
+        rf = RandomField(distr_type='Gauss',
+                         lacor_arr=np.array([2.0, 1.2]),
                     nDgrid=[np.linspace(0.0, 30., 100),
                             np.linspace(0.0, 30., 100)]
                     )
         rf.plot_rf()
         
     if example3D is True:
-        rf = RandomField(lacor_arr=np.array([2.0, 10.0, 3.0]),
+        rf = RandomField(distr_type='Gauss',
+                         lacor_arr=np.array([2.0, 10.0, 3.0]),
                     nDgrid=[np.linspace(0.0, 50., 30),
                             np.linspace(0.0, 50., 25),
                             np.linspace(0.0, 70., 20)]
