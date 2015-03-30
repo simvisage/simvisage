@@ -6,7 +6,6 @@ Created on Jul 26, 2012
 
 from etsproxy.traits.api import \
     Instance, Array, List, cached_property, Property
-from matplotlib import pyplot as plt
 from etsproxy.traits.ui.api import ModelView
 from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
@@ -14,6 +13,7 @@ import numpy as np
 import copy
 from scm_interdependent_fibers_model import SCM
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
+import matplotlib.pyplot as plt
 
 
 class SCMView(ModelView):
@@ -22,20 +22,19 @@ class SCMView(ModelView):
 
     def crack_widths(self, load):
         # pick the cracks that emerged at the given load
-        current_cracking_state = self.model.get_current_cracking_state(load)
-        if current_cracking_state[0] is not None:
-            w_lst = [cb.get_w(load) for cb in current_cracking_state]
+        if load > self.model.cracking_stress_lst[0]:
+            cb_lst = self.model.get_current_cracking_state(load)
+            w_lst = [cb_i.get_w(load) for cb_i in cb_lst]
             return np.array(w_lst)
         else:
             return np.array(0.0, ndmin=1)
     
     def crack_density(self, load):
         # pick the cracks that emerged at the given load
-        current_cracking_state = self.model.get_current_cracking_state(load)
-        if current_cracking_state[0] is not None:
-            return float(len(current_cracking_state)) / self.model.length
+        if load > self.model.cracking_stress_lst[0]:
+            return float(len(self.model.cracking_stress_lst)) / self.model.length
         else:
-            return np.array(0.0, ndmin=1) / self.model.length
+            return np.array([1. / self.model.length])
 
     w_density = Property(List, depends_on='model')
     @cached_property
@@ -92,7 +91,7 @@ class SCMView(ModelView):
     def _get_eps_sigma(self):
         eps_lst = []
         u_m_tot = np.trapz(self.eps_m_x, self.x_area, axis=1)
-        for i, sig in enumerate(self.model.load_sigma_c_arr): 
+        for i, load in enumerate(self.model.load_sigma_c_arr): 
             w_arr_i = np.array(self.eval_w[i])
             eps_lst.append((np.sum(w_arr_i) + u_m_tot[i])/self.model.length)
         eps = np.array(eps_lst)
@@ -105,9 +104,32 @@ class SCMView(ModelView):
         else:
             return eps, self.model.load_sigma_c_arr
 
+    eps_sigma_altern = Property(depends_on='model.')
+    @cached_property
+    def _get_eps_sigma_altern(self):
+        eps_lst = []
+        for load in self.model.load_sigma_c_arr: 
+            if self.model.cracking_stress_lst[0] < load:
+                cb_lst = self.model.get_current_cracking_state(load)
+                u_i = 0.0
+                for cb_i in cb_lst:
+                    u_i += np.trapz(cb_i.get_epsf_x(load), cb_i.x)
+                eps_lst.append(u_i/self.model.length)
+            else:
+                eps_lst.append(load / self.model.CB_model.E_c)
+        eps = np.array(eps_lst)
+        if len(eps) != len(self.model.load_sigma_c_arr):
+            eps = list(eps) + [list(eps)[-1]]
+            sigma = copy.copy(self.model.load_sigma_c_arr[:len(eps)])
+            sigma[-1] = 0.0
+            return eps, sigma
+        else:
+            return eps, self.model.load_sigma_c_arr
+             
 if __name__ == '__main__':
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
+    from matplotlib import pyplot as plt
     length = 200.
     nx = 1000
     random_field = RandomField(seed=True,

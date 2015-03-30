@@ -43,7 +43,7 @@ class ContinuousFibers(Reinforcement):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
             p_arr = np.linspace(0.5/self.n_int, 1 - 0.5/self.n_int, self.n_int)
-            tau = self.tau.ppf(p_arr) + 1e-10 # to eliminate zeros
+            tau = self.tau.ppf(p_arr) + 1e-15 # to eliminate zeros
             nu_r_tau = np.ones_like(tau)
             stat_weights = np.ones_like(tau) / self.n_int
         else:

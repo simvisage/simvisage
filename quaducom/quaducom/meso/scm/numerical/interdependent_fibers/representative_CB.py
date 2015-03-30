@@ -49,6 +49,7 @@ class RepresentativeCB(HasTraits):
         self.CB_model_view.model.Ll = ll
         self.CB_model_view.model.Lr = lr
         cb_epsm_interpolators_lst = [MFnLineArray(xdata=np.linspace(-1e5,1e5,5), ydata=np.zeros(5))]
+        cb_epsf_interpolators_lst = [MFnLineArray(xdata=np.linspace(-1e5,1e5,5), ydata=np.zeros(5))]
         sigma_c_lst = [0.0]
         w_lst = [0.0]
         for w in w_arr:
@@ -58,14 +59,18 @@ class RepresentativeCB(HasTraits):
                 sigma_c_lst.append(self.CB_model_view.sigma_c)
                 x_i = np.hstack((-self.length - 1e-1, self.CB_model_view.x_arr, self.length + 1e-1))
                 epsm_i = np.hstack((self.CB_model_view.epsm_arr[0], self.CB_model_view.epsm_arr, self.CB_model_view.epsm_arr[-1]))
-                cb_epsm_interpolators_lst.append(MFnLineArray(xdata=x_i, ydata=epsm_i))   
+                epsf_i = np.hstack((self.CB_model_view.epsf_arr[0], self.CB_model_view.epsf_arr, self.CB_model_view.epsf_arr[-1]))
+                cb_epsm_interpolators_lst.append(MFnLineArray(xdata=x_i, ydata=epsm_i))
+                cb_epsf_interpolators_lst.append(MFnLineArray(xdata=x_i, ydata=epsf_i))   
         w_interpolator = MFnLineArray(xdata=np.array(sigma_c_lst), ydata=np.array(w_lst))
-        return w_interpolator, [sigma_c_lst, cb_epsm_interpolators_lst]
+        return w_interpolator, [sigma_c_lst, cb_epsm_interpolators_lst], [sigma_c_lst, cb_epsf_interpolators_lst]
+
 
     interpolator_lists = Property(Array, depends_on='CB_model, load_sigma_c_arr, n_w, n_x, n_BC')
     @cached_property
     def _get_interpolator_lists(self):
             epsm_interpolators = np.zeros((self.n_BC, self.n_BC), dtype = np.object)
+            epsf_interpolators = np.zeros((self.n_BC, self.n_BC), dtype = np.object)
             w_interpolators = np.zeros((self.n_BC, self.n_BC), dtype = np.object)
             loops_tot = self.n_BC ** 2
             max_sigma_c_arr = np.zeros((self.n_BC, self.n_BC))
@@ -76,14 +81,15 @@ class RepresentativeCB(HasTraits):
                         sigma_c_max, wmax = self.max_sigma_w(ll, lr)
                         max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                         w_arr0 = np.linspace(1e-10, wmax, self.n_w)
-                        w_interpolator, epsm_interp_lst = self.w_x_res(w_arr0, ll, lr)
+                        w_interpolator, epsm_interp_lst, epsf_interp_lst = self.w_x_res(w_arr0, ll, lr)
                         epsm_interpolators[i,j] = epsm_interpolators[j,i] = epsm_interp_lst
+                        epsf_interpolators[i,j] = epsf_interpolators[j,i] = epsf_interp_lst
                         w_interpolators[i,j] = w_interpolators[j,i] = w_interpolator
                     current_loop = i * len(self.BC_range) + j + 1
                     print 'progress: %2.1f %%' % \
                     (current_loop / float(loops_tot) * 100.)
             interp_max_sigma_c = interp2d(self.BC_range, self.BC_range, max_sigma_c_arr, fill_value = None)
-            return interp_max_sigma_c, epsm_interpolators, w_interpolators
+            return interp_max_sigma_c, epsm_interpolators, w_interpolators, epsf_interpolators
 
     def get_BC_idxs(self, Ll, Lr):
         if Ll >= self.BC_range[-1]:
@@ -129,6 +135,27 @@ class RepresentativeCB(HasTraits):
                         epsm_interpolator_lst[1][sigc_high].get_values(-x_arr[::-1]) * coeff_high
                 epsm = epsm[::-1]
             return epsm
+
+    def interpolate_epsf(self, Ll, Lr, sigma_c, x_arr):
+        ll_idx_high, lr_idx_high, ll_idx_low, lr_idx_low = self.get_BC_idxs(Ll, Lr)
+        epsf_interpolator_lst = self.interpolator_lists[3][ll_idx_high, lr_idx_high]
+        sigc = np.array(epsf_interpolator_lst[0])
+        if sigma_c > sigc[-1]:
+            # applied stress is higher than crack bridge strength
+            return np.repeat(np.nan, len(x_arr)) 
+        else:
+            sigc_high = np.argwhere(sigc > sigma_c)[0][0]
+            sigc_low = np.argwhere(sigc < sigma_c)[-1][0]
+            coeff_low = (sigc[sigc_high] - sigma_c) / (sigc[sigc_high] - sigc[sigc_low])
+            coeff_high = (sigma_c - sigc[sigc_low]) / (sigc[sigc_high] - sigc[sigc_low])
+            if Lr >= Ll:
+                epsf = epsf_interpolator_lst[1][sigc_low].get_values(x_arr) * coeff_low + \
+                       epsf_interpolator_lst[1][sigc_high].get_values(x_arr) * coeff_high
+            else:
+                epsf = epsf_interpolator_lst[1][sigc_low].get_values(-x_arr[::-1]) * coeff_low + \
+                        epsf_interpolator_lst[1][sigc_high].get_values(-x_arr[::-1]) * coeff_high
+                epsf = epsf[::-1]
+            return epsf
         
     def interpolate_w(self, Ll, Lr, sigma_c):
         '''

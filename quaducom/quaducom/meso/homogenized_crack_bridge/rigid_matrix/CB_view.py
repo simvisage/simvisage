@@ -122,7 +122,7 @@ class CBView(ModelView):
                   label='model')
         axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black', \
                   label='experiment')
-        axes.legend()
+        axes.legend(loc='best')
 
 #         figure2 = fig2
 #         figure2.clear()
@@ -193,20 +193,27 @@ if __name__ == '__main__':
 
     model = Model(w_min=0.0, w_max=3.0, w_pts=200,
                   w2_min=0.0, w2_max=0.5, w2_pts=200,
-                  sV0=8.5e-3, m=9.0, tau_loc=0.0, Ef=180e3,
-                  lm=20., n_int=100, tau_scale=0.9, tau_shape=0.1, sigmamu=3.0)
+                  sV0=11.4e-3, m=8.6, tau_loc=0.0, Ef=181e3,
+                  lm=20., n_int=100, tau_scale=1.53419049, tau_shape=0.0615, sigmamu=3.0)
 
+    w_arr = np.linspace(0.0,10.,500)
+    avg = np.zeros_like(w_arr)
     home_dir = get_home_directory()
-    path = [home_dir, 'git',  # the path of the data file
-            'rostar',
-            'scratch',
-            'diss_figs',
-            'CB1.txt']
-    filepath = os.path.join(*path)
-    file1 = open(filepath, 'r')
-    cb = np.loadtxt(file1, delimiter=';')
-    model.test_xdata = -cb[:, 2] / 4. - cb[:, 3] / 4. - cb[:, 4] / 2.
-    model.test_ydata = cb[:, 1] / (11. * 0.445) * 1000
+    for i in range(5):
+        path = [home_dir, 'git',  # the path of the data file
+                    'rostar',
+                    'scratch',
+                    'diss_figs',
+                    'CB' + str(i+1) +'.txt']
+        filepath = os.path.join(*path)
+        file1 = open(filepath, 'r')
+        cb = np.loadtxt(file1, delimiter=';')
+        model.test_xdata = -cb[:, 2] / 4. - cb[:, 3] / 4. - cb[:, 4] / 2.
+        model.test_ydata = cb[:, 1] / (11. * 0.445) * 1000
+        avg += model.interpolate_experiment(w_arr) / 5.
+
+    model.test_xdata = w_arr
+    model.test_ydata = avg
 
     cb = CBView(model=model)
     cb.refresh()
