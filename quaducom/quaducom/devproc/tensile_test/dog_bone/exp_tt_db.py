@@ -484,7 +484,11 @@ class ExpTTDB(ExType):
             bool_arr_eps = delta_eps > 0.
             bool_arr_t = delta_t > 0.
             bool_arr = bool_arr_F * bool_arr_eps * bool_arr_t
-            jump_idx2 = np.where(bool_arr)[0][1]
+            try:
+                jump_idx2 = np.where(bool_arr)[0][1]
+                print 'jump_idx2', jump_idx2
+            except:
+                continue
             delta_jump_idx = jump_idx2 - jump_idx
             jump_idx2_arr[n_idx] = jump_idx2
             delta_jump_idx_arr[n_idx] = delta_jump_idx
