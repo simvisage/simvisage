@@ -51,7 +51,7 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone',
 ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
                        'buttstrap_clamping',
                        '2015-03-23_TTb-2C-9mm-0-800SBR_Ring1',
-                       'TTb1-2C-9mm-0-800SBR-V1.DAT')
+                       'TTb1-2C-9mm-0-800SBR-V1_1.DAT')
 
 print os.path.exists(ex_path)
 

@@ -15,7 +15,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
 
-## overload the 'get_label' method from 'Item' to display units in the label
+# # overload the 'get_label' method from 'Item' to display units in the label
 from util.traits.ui.item import \
     Item
 
@@ -25,82 +25,91 @@ from numpy import \
 from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
-class ConcreteMixture( SimDBClass ):
+class ConcreteMixture(SimDBClass):
     '''Describes the properties of the concrete matrix
     '''
 
     # E-modulus of the concrete after 28d
-    E_m28 = Float( unit = 'MPa', simdb = True, input = False, auto_set = False, enter_set = False )
+    E_m28 = Float(unit='MPa', simdb=True, input=False, auto_set=False, enter_set=False)
 
     # E-modulus of the concrete after 28d
-    nu = Float( unit = '-', simdb = True, input = False, auto_set = False, enter_set = False )
+    nu = Float(unit='-', simdb=True, input=False, auto_set=False, enter_set=False)
 
     # developement of the E-modulus depending on the age at the time of testing:
     get_E_m_time = Callable
 
     # view:
-    traits_view = View( 
-                      Item( 'key'  , style = 'readonly' ),
-                      Item( 'E_m28', style = 'readonly', format_str = "%.0f" ),
-                      Item( 'nu'   , style = 'readonly', format_str = "%.2f" ),
-                      resizable = True,
-                      scrollable = True
+    traits_view = View(
+                      Item('key'  , style='readonly'),
+                      Item('E_m28', style='readonly', format_str="%.0f"),
+                      Item('nu'   , style='readonly', format_str="%.2f"),
+                      resizable=True,
+                      scrollable=True
                       )
 
-# Setup the database class extension 
+# Setup the database class extension
 #
-ConcreteMixture.db = SimDBClassExt( 
-            klass = ConcreteMixture,
-            constants = {
+ConcreteMixture.db = SimDBClassExt(
+            klass=ConcreteMixture,
+            constants={
                 # NOTE: log = natural logarithm  ("ln")
 
-                'PZ-0708-1' : ConcreteMixture( 
-                                           E_m28 = 33036.,
-                                           get_E_m_time = lambda t: 4665. * log( t + 0.024 ) + 17487.,
-                                           nu = 0.25
+                'PZ-0708-1' : ConcreteMixture(
+                                           E_m28=33036.,
+                                           get_E_m_time=lambda t: 4665. * log(t + 0.024) + 17487.,
+                                           nu=0.25
                                            ),
-                'FIL-10-09' : ConcreteMixture( 
-                                           E_m28 = 28700.,
-                                           # function for the evolution derived based on only 
+                'FIL-10-09' : ConcreteMixture(
+                                           E_m28=28700.,
+                                           # function for the evolution derived based on only
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
-                                           get_E_m_time = lambda t: 3682. * log( t + 0.012 ) + 16429.,
-                                           nu = 0.25
+                                           get_E_m_time=lambda t: 3682. * log(t + 0.012) + 16429.,
+                                           nu=0.25
                                            ),
-                'FIL-Standard-SF' : ConcreteMixture( 
-                                           E_m28 = 31000.,
+                'FIL-Standard-SF' : ConcreteMixture(
+                                           E_m28=31000.,
                                            # function for the evolution unknown
-                                           get_E_m_time = lambda t: 31000.,
-                                           nu = 0.2
+                                           get_E_m_time=lambda t: 31000.,
+                                           nu=0.2
                                            ),
-                'barrelshell' : ConcreteMixture( 
-#                                           E_m28 = 22721., # 
-                                           E_m28 = 19800., # based on cylinder tests
-                                           get_E_m_time = lambda t: 19800., #@todo: specify time function for evolution of E-modulus; so far value for 28d is used;  
-                                           nu = 0.25
+                'barrelshell' : ConcreteMixture(
+#                                           E_m28 = 22721., #
+                                           E_m28=19800.,  # based on cylinder tests
+                                           get_E_m_time=lambda t: 19800.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.25
                                            ),
-                'shotcrete-4mm' : ConcreteMixture( 
-                                           E_m28 = 30000., # @todo: approximation only
-                                           # @todo: function for the evolution derived based on only 
+                'shotcrete-4mm' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           # @todo: function for the evolution derived based on only
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
-                                           get_E_m_time = lambda t: 30000., #@todo: specify time function for evolution of E-modulus; so far value for 28d is used;  
-                                           nu = 0.2 # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
                                            ),
 
-                'sto-100' : ConcreteMixture( 
-                                           E_m28 = 30000., # @todo: approximation only
-                                           # function for the evolution derived based on only 
+                'sto-100' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
-                                           get_E_m_time = lambda t: 30000., #@todo: specify time function for evolution of E-modulus; so far value for 28d is used;  
-                                           nu = 0.2 # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
                                            ),
 
-                'flowstone' : ConcreteMixture( 
-                                           E_m28 = 30000., # @todo: approximation only
-                                           # function for the evolution derived based on only 
+                'flowstone' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
-                                           get_E_m_time = lambda t: 30000., #@todo: specify time function for evolution of E-modulus; so far value for 28d is used;  
-                                           nu = 0.2 # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
                                            ),
+
+                'Pagel_TF10' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+
 
                                            }
             )
