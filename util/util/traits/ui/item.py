@@ -16,7 +16,7 @@ import re
 from string \
     import find, rfind
 
-from traits.api \
+from etsproxy.traits.api \
     import Instance, Str, Float, Range, Constant, Bool, Callable, Property, \
            Delegate, Undefined, cached_property
 
