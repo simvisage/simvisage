@@ -27,16 +27,12 @@ test_files = [('TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT', 'clamp 1.0', 'series 1'),
               ('TTb1-2C-9mm-0-800SBR-V5_R1S2.DAT', 'clamp 1.0', 'series 2'),
               ]
 
-
-clamp_colors = {'clamp 1.0': 'grey',
-                'clamp 2.0': 'blue',
+clamp_colors = {'clamp 1.0': 'black',
+                'clamp 2.0': 'red',
                 'clamp 3.0': 'blue'}
 
 series_colors = {'series 1': 'grey',
                  'series 2': 'red'}
-
-series_styles = {'series 1': '--',
-                 'series 2': '-'}
 
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
@@ -59,10 +55,10 @@ clamp_23_map = np.logical_or(
 clamp_23_imap = np.where(clamp_23_map)
 print clamp_23_imap
 
-print 'series 1', np.average(sig_tex_max_arr[series_1_imap]), np.std(sig_tex_max_arr[series_1_imap])
-print 'series 2', np.average(sig_tex_max_arr[series_2_imap]), np.std(sig_tex_max_arr[series_2_imap])
-print 'clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap]), np.std(sig_tex_max_arr[clamp_1_imap])
-print 'clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig_tex_max_arr[clamp_23_imap])
+print 'series 1', np.average(sig_tex_max_arr[series_1_imap])
+print 'series 2', np.average(sig_tex_max_arr[series_2_imap])
+print 'clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap])
+print 'clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap])
 
 
 def plot_all():
@@ -71,23 +67,60 @@ def plot_all():
     fig.subplots_adjust(
         left=0.03, right=0.97, bottom=0.04, top=0.96, wspace=0.25, hspace=0.2)
 
-    axes = p.subplot(111)
-
+    axes = p.subplot(221)
     axes.plot([0.0, 0.01], [0.0, 1800], '--', color='gray')
     axes.plot([0.0, 0.01], [0.0, 2450], '--', color='gray')
+
+    axes = p.subplot(222)
+    axes.plot([0.0, 0.01], [0.0, 1800], '--', color='gray')
+    axes.plot([0.0, 0.01], [0.0, 2450], '--', color='gray')
+
+    axes = p.subplot(223)
+    axes.plot([0.0, 0.01], [0.0, 1800], '--', color='gray')
+    axes.plot([0.0, 0.01], [0.0, 2450], '--', color='gray')
+
+    axes = p.subplot(224)
+    axes.plot([0.0, 0.01], [0.0, 1800 * 0.012], '--', color='gray')
+    axes.plot([0.0, 0.01], [0.0, 2450 * 0.012], '--', color='gray')
 
     for e_run, clamp, series in e_list:
         e = e_run.ex_type
         color_clamps = clamp_colors[clamp]
-        style_series = series_styles[series]
-        axes = p.subplot(111)
+        color_series = series_colors[series]
+        axes = p.subplot(221)
 
-        axes.plot(e.eps_asc, e.sig_tex_asc, style_series,
-                  color=color_clamps, linewidth=2)
+        axes.plot(e.eps_asc, e.sig_tex_asc, color=color_clamps)
 
         axes.grid()
         axes.set_xlabel('eps [-]')
         axes.set_ylabel('sig_tex [MPa]')
+        axes.legend(loc=2)
+
+        axes = p.subplot(222)
+
+        axes.plot(e.eps_asc, e.sig_tex_asc, color=color_series)
+
+        axes.grid()
+        axes.set_xlabel('eps [-]')
+        axes.set_ylabel('sig_tex [MPa]')
+        axes.legend(loc=2)
+
+        axes = p.subplot(223)
+
+        axes.plot(e.eps_smooth, e.sig_tex_smooth, color=color_clamps)
+
+        axes.grid()
+        axes.set_xlabel('eps [-]')
+        axes.set_ylabel('sig_tex smoothed [MPa]')
+        axes.legend(loc=2)
+
+        axes = p.subplot(224)
+
+        axes.plot(e.eps_smooth, e.sig_c_smooth, color=color_series)
+
+        axes.grid()
+        axes.set_xlabel('eps [-]')
+        axes.set_ylabel('sig_c smoothed [MPa]')
         axes.legend(loc=2)
 
 if __name__ == '__main__':
