@@ -28,9 +28,9 @@ from scipy.optimize import brentq, newton
 import copy
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from spirrid.rv import RV
-from matplotlib import pyplot as plt
 from math import pi
 import time as t
+import matplotlib.pyplot as plt
 
 
 class CB(HasTraits):
@@ -66,6 +66,15 @@ class CB(HasTraits):
             return np.nan * np.ones_like(self.x)
         else:
             return self.representative_cb.interpolate_epsm(self.Ll, self.Lr, load, self.x)
+
+    def get_epsf_x(self, load):
+        '''
+        evaluates the mean fiber strain profile at given load
+        '''
+        if load > self.max_sigma_c:
+            return np.nan * np.ones_like(self.x)
+        else:
+            return self.representative_cb.interpolate_epsf(self.Ll, self.Lr, load, self.x)
             
 
 class SCM(HasTraits):
@@ -90,11 +99,9 @@ class SCM(HasTraits):
 
     # list of composite stress at which cracks occur
     cracking_stress_lst = List
+    # list of cracks positions
+    crack_positions_lst = List
     
-    # list of lists of CB objects
-    # at the state of N cracks, the cracking state list has N lists of i elements with i from 1 to N
-    cracking_state = List
-
     x_arr = Property(Array, depends_on='length, nx')
     @cached_property
     def _get_x_arr(self):
@@ -112,95 +119,80 @@ class SCM(HasTraits):
         rf_spline = MFnLineArray(xdata=self.random_field.xgrid, ydata=rf)
         return rf_spline.get_values(self.x_arr)
 
-    def sort_cbs(self):
+    def get_cbs_lst(self, positions, cracking_stresses):
         # sorts the CBs by position and adjusts the boundary conditions
         # sort the CBs
-        cb_list = self.cracking_state[-1]
-        crack_position = cb_list[-1].position
-        cb_list = sorted(cb_list, key=attrgetter('position'))
-        # find idx of the new crack
-        for i, crack in enumerate(cb_list):
-            if crack.position == crack_position:
-                idx = i
-        # specify the boundaries
-        if idx != 0:
-            # there is a crack at the left hand side
-            cbl = cb_list[idx - 1]
-            cb = cb_list[idx]
-            cbl.Lr = (cb.position - cbl.position) / 2.
-            cb.Ll = cbl.Lr
-        else:
-            # the new crack is the first from the left hand side
-            cb_list[idx].Ll = cb_list[idx].position
-
-        if idx != len(cb_list) - 1:
-            # there is a crack at the right hand side
-            cb, cbr = cb_list[idx], cb_list[idx + 1]
-            cbr.Ll = (cbr.position - cb.position) / 2.
-            cb.Lr = cbr.Ll
-        else:
-            # the new crack is the first from the right hand side
-            cb_list[idx].Lr = self.length - cb_list[idx].position
-
-        # specify the x range and stress profile for
-        # the new crack and its neighbors
-        idxs = [idx - 1, idx, idx + 1]
-        if idx == 0:
-            idxs.remove(-1)
-        if idx == len(cb_list) - 1:
-            idxs.remove(len(cb_list))
-        for idx in idxs:
-            mask1 = self.x_arr >= (cb_list[idx].position - cb_list[idx].Ll)
-            if idx == 0:
-                mask1[0] = True
-            mask2 = self.x_arr <= (cb_list[idx].position + cb_list[idx].Lr)
-            cb_list[idx].x = self.x_arr[mask1 * mask2] - cb_list[idx].position
-        self.cracking_state[-1] = cb_list
+        positions = np.array(positions)
+        cracking_stresses = np.array(cracking_stresses)
+        argsort = np.argsort(positions)
+        sorted_positions = positions[argsort]
+        sorted_cracking_stresses = cracking_stresses[argsort]
+        
+        cb_lst = []
+        for i, position_i in enumerate(list(sorted_positions)):
+            cb_i = CB(position=position_i,
+                      representative_cb=self.representative_cb,
+                    crack_load_sigma_c=sorted_cracking_stresses[i])
+            # specify the boundaries
+            if i == 0:
+                # the leftmost crack
+                cb_i.Ll = cb_i.position
+            else:
+                # there is a crack at the left hand side
+                cb_i.Ll = (cb_i.position - cb_lst[-1].position)/2.
+                cb_lst[-1].Lr = cb_i.Ll
+            if i == len(positions) - 1:
+                # the rightmost crack
+                cb_i.Lr = self.length - cb_i.position
+            cb_lst.append(cb_i)
+            
+        for cb_i in cb_lst: 
+            # specify the x range for cracks
+            mask_right = self.x_arr >= (cb_i.position - cb_i.Ll)
+            mask_left = self.x_arr <= (cb_i.position + cb_i.Lr)
+            cb_i.x = self.x_arr[mask_left * mask_right] - cb_i.position           
+        return cb_lst
 
     def get_current_cracking_state(self, load):
-        '''Get the list of CB objects that have been formed up to the current load
+        '''Creates the list of CB objects that have been formed up to the current load
         '''
-        if len(self.cracking_state) is not 0:
-            idx = np.sum(np.array(self.cracking_stress_lst) < load) - 1
-            if idx == -1:
-                return [None]
-            else:
-                return self.cracking_state[idx]
-        else:
-            return [None]
+        idx_load_level = np.sum(np.array(self.cracking_stress_lst) <= load)
+        cb_lst = self.get_cbs_lst(self.crack_positions_lst[:idx_load_level],
+                                      self.cracking_stress_lst[:idx_load_level])
+        return cb_lst
     
     def get_current_strnegth(self, load):
-        cracking_state = self.get_current_cracking_state(load)
-        if cracking_state[0] is None:
-            return np.inf
+        if len(self.crack_positions_lst) is not 0:
+            cb_lst = self.get_current_cracking_state(load)
+            strengths = np.array([cb_i.max_sigma_c for cb_i in cb_lst])
+            return np.min(strengths)
         else:
-            strengths = np.array([cb.max_sigma_c for cb in cracking_state])
-            return np.min(strengths) 
+            return np.inf
 
     def sigma_m(self, load):
         Em = self.CB_model.E_m
         Ec = self.CB_model.E_c
         sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
-        cb_load = self.get_current_cracking_state(load)
-        if cb_load[0] is not None:
-            for cb in cb_load:
-                crack_position_idx = np.argwhere(self.x_arr == cb.position)
-                left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
-                right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                sigma_m[left:right] = cb.get_epsm_x(float(load)) * Em
+        if len(self.crack_positions_lst) != 0:
+            cb_lst = self.get_current_cracking_state(load)
+            for cb_i in cb_lst:
+                crack_position_idx = np.argwhere(self.x_arr == cb_i.position)
+                idx_l = crack_position_idx - len(np.nonzero(cb_i.x < 0.)[0])
+                idx_r = crack_position_idx + len(np.nonzero(cb_i.x > 0.)[0]) + 1
+                sigma_m[idx_l:idx_r] = cb_i.get_epsm_x(float(load)) * Em
         return sigma_m
     
     def sigma_m_given_crack_lst(self, load):
         Em = self.CB_model.E_m
         Ec = self.CB_model.E_c
         sigma_m = load * Em / Ec * np.ones(len(self.x_arr))
-        if len(self.cracking_state) != 0:
-            cb_load = self.cracking_state[-1]
-            for cb in cb_load:
-                crack_position_idx = np.argwhere(self.x_arr == cb.position)
-                left = crack_position_idx - len(np.nonzero(cb.x < 0.)[0])
-                right = crack_position_idx + len(np.nonzero(cb.x > 0.)[0]) + 1
-                sigma_m[left:right] = cb.get_epsm_x(float(load)) * Em
+        if len(self.crack_positions_lst) != 0:
+            cb_lst = self.get_cbs_lst(self.crack_positions_lst, self.cracking_stress_lst)
+            for cb_i in cb_lst:
+                crack_position_idx = np.argwhere(self.x_arr == cb_i.position)
+                idx_l = crack_position_idx - len(np.nonzero(cb_i.x < 0.)[0])
+                idx_r = crack_position_idx + len(np.nonzero(cb_i.x > 0.)[0]) + 1
+                sigma_m[idx_l:idx_r] = cb_i.get_epsm_x(float(load)) * Em
         return sigma_m
     
 
@@ -211,7 +203,7 @@ class SCM(HasTraits):
         '''
         residuum = np.min(self.matrix_strength - self.sigma_m_given_crack_lst(q))
         return residuum
-
+    
     def evaluate(self):
         # seek for the minimum strength redundancy to find the position
         # of the next crack
@@ -233,17 +225,8 @@ class SCM(HasTraits):
             print 'current strength = ', self.get_current_strnegth(sigc_min)
             crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
-            new_cb = CB(position=float(crack_position),
-                     crack_load_sigma_c=sigc_min - self.load_sigma_c_arr[-1] / 1000.,
-                     representative_cb=self.representative_cb)
+            self.crack_positions_lst.append(crack_position)
             self.cracking_stress_lst.append(sigc_min - 1e-10)
-            if len(self.cracking_state) is not 0:
-                self.cracking_state.append(copy.copy(self.cracking_state[-1])
-                                        + [new_cb])
-            else:
-                self.cracking_state.append([new_cb])
-            
-            self.sort_cbs()
             #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
             #plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
             #plt.show()
@@ -257,6 +240,7 @@ class SCM(HasTraits):
 if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
+    from matplotlib import pyplot as plt
     length = 100.
     nx = 500
     random_field = RandomField(seed=True,
@@ -299,7 +283,7 @@ if __name__ == '__main__':
                         n_int=50)
 
     CB_model = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf_short],
+                                 reinforcement_lst=[reinf1],
                                  )
 
     scm = SCM(length=length,
@@ -307,7 +291,7 @@ if __name__ == '__main__':
               random_field=random_field,
               CB_model=CB_model,
               load_sigma_c_arr=np.linspace(0.01, 20., 100),
-              n_BC_CB=2
+              n_BC_CB=3
               )
 
     scm.evaluate()

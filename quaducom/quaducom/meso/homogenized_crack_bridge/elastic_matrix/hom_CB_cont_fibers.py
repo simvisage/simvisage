@@ -310,6 +310,13 @@ class CrackBridgeContFibers(HasTraits):
     epsm_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
     def _get_epsm_arr(self):
         return self.profile(self.damage)[3]
+    
+    epsf_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
+    def _get_epsf_arr(self):
+        epsf_xi = self.sorted_depsf.reshape(len(self.sorted_depsf),1) * np.abs(self.x_arr.reshape(1,len(self.x_arr)))
+        epsf_x = np.maximum(self.epsf0_arr.reshape(len(self.epsf0_arr),1) - epsf_xi, self.epsm_arr.reshape(1,len(self.epsm_arr)))
+        epsf_x = np.mean(epsf_x, axis=0)
+        return epsf_x
 
     epsf0_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
     def _get_epsf0_arr(self):

@@ -12,7 +12,6 @@ from spirrid.i_rf import IRF
 from spirrid.rf import RF
 from scipy.optimize import fminbound
 from scipy.interpolate.interpolate import interp2d
-from matplotlib import pyplot as plt
 
 
 class CBShortFiber(RF):

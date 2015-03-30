@@ -136,7 +136,6 @@ if __name__ == '__main__':
                     scale=3.4,
                     distr_type='Weibull'
                     )
-    
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
     p.legend(loc='best')
     p.ylim(0)

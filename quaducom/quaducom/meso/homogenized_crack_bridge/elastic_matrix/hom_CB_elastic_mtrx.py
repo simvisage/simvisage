@@ -106,6 +106,16 @@ class CompositeCrackBridge(HasTraits):
         elif len(self.sorted_reinf_lst[1]) != 0:
             self.short_fibers.w = self.w
             return self.short_fibers.epsm_arr
+
+    _epsf_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
+    @cached_property
+    def _get__epsf_arr(self):
+        ''' only for continuous reinforcement '''
+        if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) == 0:
+            self.cont_fibers.w = self.w
+            return self.cont_fibers.epsf_arr
+        else:
+            raise ValueError('epsf can only be computed for continuous fibers')
         
     _epsf0_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
@@ -155,18 +165,31 @@ class CompositeCrackBridge(HasTraits):
         
     
 if __name__ == '__main__':
-    
     from matplotlib import pyplot as plt
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
     from spirrid.rv import RV
 
+    tau_scale =1.53419049
+    tau_shape = 0.90615
+    tau_loc = 0.00
+    xi_shape = 8.6
+    xi_scale = .0114
+
     reinf1 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
-                              V_f=0.05,
+                              V_f=0.005,
                               E_f=200e3,
                               xi=fibers_MC(m=7., sV0=0.005),
                               label='carbon',
                               n_int=100)
+
+    reinf_cont = ContinuousFibers(r=3.5e-3,
+                          tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
+                          V_f=0.001,
+                          E_f=181e3,
+                          xi=fibers_MC(m=xi_shape, sV0=xi_scale),
+                          label='carbon',
+                          n_int=200)
     
     reinf_short = ShortFibers(bond_law = 'plastic',
                          r=3.5e-3,
@@ -181,14 +204,23 @@ if __name__ == '__main__':
                         n_int=201)
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf1, reinf_short],
-                                 Ll=100.,
-                                 Lr=100.,
-                                 w=.01)
+                                 reinforcement_lst=[reinf_cont],
+                                 Ll=5000.,
+                                 Lr=5000.,
+                                 w=1.0)
+    
+    for i, depsf in enumerate(ccb.cont_fibers.sorted_depsf):
+        epsf_x = np.maximum(ccb._epsf0_arr[0][i] - depsf * np.abs(ccb._x_arr), ccb._epsm_arr)
+#             if i == 0:
+#                 plt.plot(ccb._x_arr, epsf_x, color='blue', label='fibers')
+#             else:
+        plt.plot(ccb._x_arr, epsf_x, color='black', alpha=1-0.5*ccb.cont_fibers.damage[i])
+    
     
     epsf0_combined = np.hstack((ccb._epsf0_arr[0], ccb._epsf0_arr[1]))
     plt.plot(np.zeros_like(epsf0_combined), epsf0_combined, 'ro', label='maximum')
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='blue', label='matrix')
+    plt.plot(ccb._x_arr, ccb._epsf_arr, lw=2, color='red', label='mean fiber')
     plt.legend(loc='best')
     plt.ylabel('matrix and fiber strain [-]')
 #     plt.ylabel('long. position [mm]')
