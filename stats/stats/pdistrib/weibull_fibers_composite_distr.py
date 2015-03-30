@@ -109,7 +109,7 @@ class fibers_MC(WeibullFibers):
 
     Ll = Float(1e10)
     Lr = Float(1e10)
-    specimen_length = 1e10
+    specimen_length = 1000.
 
     # approximate saw tooth profile
     def cdf2(self, e, depsf, r, al, ar):
@@ -135,12 +135,11 @@ class fibers_MC(WeibullFibers):
         '''weibull_fibers_cdf_mc'''
         sV0, m = self.sV0, self.m
         s_cb = ((depsf*(m+1.)*sV0**m*self.V0)/(2.*pi*r**2.))**(1./(m+1.))
-        s_mc = ((depsf*sV0**m*self.V0)/(2.*pi*r**2.))**(1./(m+1.))
+        #s_mc = ((depsf*sV0**m*self.V0)/(2.*pi*r**2.))**(1./(m+1.))
         a0 = (e+1e-15)/depsf
         expfree = (e/s_cb) ** (m + 1)
-        expfixed = (e/s_mc) ** (m + 1)
-        #a = np.minimum(a0, self.specimen_length)
-        #expfixed = 2* a * r**2 * pi / self.V0 * (e/sV0)**m
+        a = np.minimum(a0, self.specimen_length)
+        expfixed = 2* a * r**2 * pi / self.V0 * (e/sV0)**m
         mask = a0 < (self.Ll/2. + self.Lr/2.)
         exp = np.nan_to_num(expfree) * mask + np.nan_to_num(expfixed * (mask == False))
         CDF = 1. - np.exp(- exp)
