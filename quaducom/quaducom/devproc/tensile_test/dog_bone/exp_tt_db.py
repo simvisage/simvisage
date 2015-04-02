@@ -235,6 +235,13 @@ class ExpTTDB(ExType):
             self.W10_vo -= self.W10_vo[0]
             self.W10_vo *= -1
 
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") \
+                and not hasattr(self, "W10_vo"):
+            self.W10_re -= self.W10_re[0]
+            self.W10_re *= -1
+            self.W10_li -= self.W10_li[0]
+            self.W10_li *= -1
+
         if hasattr(self, "W10_vli"):
             print 'change_varname WA_VL = W10_vli etc'
             self.WA_VL = self.W10_vli
@@ -317,6 +324,24 @@ class ExpTTDB(ExType):
             # average strains
             #
             eps_m = ((eps_li + eps_re) / 2. + eps_vo) / 2.
+
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li")  \
+                and not hasattr(self, "W10_vo"):
+            W10_li = np.copy(self.W10_li)
+            W10_re = np.copy(self.W10_re)
+            min_W10_li = np.min(W10_li[:10])
+            min_W10_re = np.min(W10_re[:10])
+            W10_li -= min_W10_li
+            W10_re -= min_W10_re
+            eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
+            eps_re = W10_re / (self.gauge_length * 1000.)
+            if np.average(eps_re) < 0.0001:
+                print "displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead"
+                eps_re = eps_li
+            if np.average(eps_li) < 0.0001:
+                print "displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead"
+                eps_li = eps_re
+            eps_m = (eps_li + eps_re) / 2.
 
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             WA_VL = np.copy(self.WA_VL)
@@ -484,7 +509,10 @@ class ExpTTDB(ExType):
             bool_arr_eps = delta_eps > 0.
             bool_arr_t = delta_t > 0.
             bool_arr = bool_arr_F * bool_arr_eps * bool_arr_t
-            jump_idx2 = np.where(bool_arr)[0][1]
+            try:
+                jump_idx2 = np.where(bool_arr)[0][1]
+            except:
+                break
             delta_jump_idx = jump_idx2 - jump_idx
             jump_idx2_arr[n_idx] = jump_idx2
             delta_jump_idx_arr[n_idx] = delta_jump_idx
@@ -726,12 +754,11 @@ class ExpTTDB(ExType):
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
         '''
-        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and \
-                hasattr(self, "W10_vo"):
-            #
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
             axes.plot(self.W10_re, self.Kraft)
             axes.plot(self.W10_li, self.Kraft)
-            axes.plot(self.W10_vo, self.Kraft)
+            if hasattr(self, "W10_vo"):
+                axes.plot(self.W10_vo, self.Kraft)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):

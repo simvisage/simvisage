@@ -276,45 +276,45 @@ if __name__ == '__main__':
                     exclusive_to=['s_verweht_re', 's_scheddach_re', 's_hinten', 's_feld'],
                     psi_0=0.5, psi_1=0.2, psi_2=0.0
                     ),
-                 # LC3:
-                 LC(name='s_verweht_re', category='imposed-load', file_name='LC3.txt',
-                    exclusive_to=['s_komplett', 's_scheddach_re', 's_hinten', 's_feld'],
-                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-                    ),
+#                 # LC3:
+#                 LC(name='s_verweht_re', category='imposed-load', file_name='LC3.txt',
+#                    exclusive_to=['s_komplett', 's_scheddach_re', 's_hinten', 's_feld'],
+#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+#                    ),
                  # LC4:
                  LC(name='s_scheddach_re', category='imposed-load', file_name='LC4.txt',
                     exclusive_to=['s_komplett', 's_verweht_re', 's_hinten', 's_feld'],
                     psi_0=0.5, psi_1=0.2, psi_2=0.0
                     ),
-                 # LC5:
-                 LC(name='s_hinten', category='imposed-load', file_name='LC5.txt',
-                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
-                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-                    ),
-                 # LC6:
-                 LC(name='s_feld', category='imposed-load', file_name='LC6.txt',
-                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
-                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-                    ),
+#                 # LC5:
+#                 LC(name='s_hinten', category='imposed-load', file_name='LC5.txt',
+#                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
+#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+#                    ),
+#                 # LC6:
+#                 LC(name='s_feld', category='imposed-load', file_name='LC6.txt',
+#                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
+#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+#                    ),
 
                  #----------------------------------------------------------------------
                  # wind load
                  #----------------------------------------------------------------------
-                 # LC7:
-                 LC(name='w_sog_komplett', category='imposed-load', file_name='LC7.txt',
-                    exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
-                    psi_0=0.6, psi_1=0.2, psi_2=0.0
-                    ),
+#                 # LC7:
+#                 LC(name='w_sog_komplett', category='imposed-load', file_name='LC7.txt',
+#                    exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
+#                    psi_0=0.6, psi_1=0.2, psi_2=0.0
+#                    ),
                  # LC8:
                  LC(name='w_druck_komplett', category='imposed-load', file_name='LC8.txt',
                     exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
                     psi_0=0.6, psi_1=0.2, psi_2=0.0
                     ),
-                 # LC9:
-                 LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC9.txt',
-                    exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-                    psi_0=0.6, psi_1=0.2, psi_2=0.0
-                    ),
+#                 # LC9:
+#                 LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC9.txt',
+#                    exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+#                    psi_0=0.6, psi_1=0.2, psi_2=0.0
+#                    ),
                  # LC10:
                  LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC10.txt',
                     exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
@@ -324,21 +324,21 @@ if __name__ == '__main__':
                  #----------------------------------------------------------------------
                  # man load (1 KN)
                  #----------------------------------------------------------------------
-                 # LC11:
-                 LC(name='Q_hinten', category='imposed-load', file_name='LC11.txt',
-                    exclusive_to=[ 'Q_links', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-                    ),
-                 # LC12:
-                 LC(name='Q_mitte', category='imposed-load', file_name='LC12.txt',
-                    exclusive_to=[ 'Q_links', 'Q_hinten', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-                    ),
-                 # LC13:
-                 LC(name='Q_links', category='imposed-load', file_name='LC13.txt',
-                    exclusive_to=[ 'Q_hinten', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-                    ),
+#                 # LC11:
+#                 LC(name='Q_hinten', category='imposed-load', file_name='LC11.txt',
+#                    exclusive_to=[ 'Q_links', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+#                    ),
+#                 # LC12:
+#                 LC(name='Q_mitte', category='imposed-load', file_name='LC12.txt',
+#                    exclusive_to=[ 'Q_links', 'Q_hinten', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+#                    ),
+#                 # LC13:
+#                 LC(name='Q_links', category='imposed-load', file_name='LC13.txt',
+#                    exclusive_to=[ 'Q_hinten', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+#                    ),
                  #----------------------------------------------------------------------
                  # shrinkage
                  #----------------------------------------------------------------------
@@ -346,6 +346,28 @@ if __name__ == '__main__':
                  LC(name='T_schwinden', category='imposed-load', file_name='LC14.txt',
                     psi_0=0.8, psi_1=0.7, psi_2=0.5,
                     ),
+
+                 # LC15:
+                 LC(name='T_N_pos', category='imposed-load', file_name='LC15.txt',
+                    exclusive_to=['T_N_neg', 'T_uo_pos', 'T_uo_neg'],
+                    psi_0=1.0, psi_1=0.5, psi_2=0.0
+                    ),
+                 # LC16:
+                 LC(name='T_N_neg', category='imposed-load', file_name='LC16.txt',
+                    exclusive_to=['T_N_pos', 'T_uo_pos', 'T_uo_neg'],
+                    psi_0=1.0, psi_1=0.5, psi_2=0.0
+                    ),
+                 # LC17:
+                 LC(name='T_uo_pos', category='imposed-load', file_name='LC17.txt',
+                    exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_neg'],
+                    psi_0=1.0, psi_1=0.5, psi_2=0.0
+                    ),
+                 # LC18:
+                 LC(name='T_uo_neg', category='imposed-load', file_name='LC18.txt',
+                    exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_pos'],
+                    psi_0=1.0, psi_1=0.5, psi_2=0.0
+                    ),
+
                ]
 
         lc_list_T = [
