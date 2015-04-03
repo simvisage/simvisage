@@ -7,12 +7,10 @@ implements the 3D random field
 from etsproxy.traits.api import HasTraits, Float, Property, \
                                 cached_property, Array, Enum, \
                                 Event, Bool, List
-from scipy.linalg import eigh, eig
-from scipy.linalg import toeplitz
+from scipy.linalg import eigh, toeplitz
 import numpy as np
 from math import e
 from scipy.stats import norm, weibull_min
-from astropy.cosmology.funcs import scale_factor
 
 
 class RandomField(HasTraits):
@@ -103,8 +101,9 @@ class RandomField(HasTraits):
         rf = np.reshape(scaled_ydata, shape)
         return rf
     
-    def interpolate_rf(self,coords):
-        '''interpolate RF values using the EOLE method'''
+    def interpolate_rf(self, coords):
+        '''interpolate RF values using the EOLE method
+        coords = list of 1d arrays of coordinates'''
         # check consistency of dimensions
         if len(coords) != len(self.nDgrid):
             raise ValueError('point dimension differs from random field dimension')
@@ -123,13 +122,19 @@ class RandomField(HasTraits):
             C_u = C_u.reshape(grid_size,len(coords[0]))
 
         Lambda_Cx, Phi_Cx = self.eigenvalues
+        # values interpolated in the standardized Gaussian rf 
         u = np.sum(self.generated_random_vector / np.diag(Lambda_Cx) ** 0.5 * np.dot(C_u.T, Phi_Cx), axis=1)
-        return u
+        if self.distr_type == 'Gauss':
+            scaled_u = u * self.stdev + self.mean
+        elif self.distr_type == 'Weibull':
+            Pf = norm().cdf(u)
+            scaled_u = weibull_min(self.shape, scale=self.scale, loc=self.loc).ppf(Pf)
+        return scaled_u
 
 if __name__ == '__main__':
     example1D = False
-    example2D = False
-    example3D = True
+    example2D = True
+    example3D = False
     
     if example1D is True:
         ''' 1D plot '''
@@ -158,9 +163,9 @@ if __name__ == '__main__':
         # random field instance
         rf = RandomField(distr_type='Gauss',
                          seed=True,
-                         lacor_arr=np.array([10.0, .5]),
-                    nDgrid=[np.linspace(0.0, 50., 51),
-                            np.linspace(0.0, 20., 21)]
+                         lacor_arr=np.array([10.0, 1.]),
+                    nDgrid=[np.linspace(0.0, 50., 500),
+                            np.linspace(0.0, 30., 300)]
                     )
         rand_field_2D = rf.random_field
         x, y = rf.nDgrid
