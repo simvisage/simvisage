@@ -209,7 +209,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     tau_scale =1.53419049
-    tau_shape = .0615
+    tau_shape = 1.
     tau_loc = 0.00
     xi_shape = 8.6
     xi_scale = .0114
@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
     reinf_cont = ContinuousFibers(r=3.5e-3,
                           tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
-                          V_f=0.1,
+                          V_f=0.0001,
                           E_f=181e3,
                           xi=fibers_MC(m=xi_shape, sV0=xi_scale),
                           label='carbon',
@@ -246,6 +246,8 @@ if __name__ == '__main__':
                                  reinforcement_lst=[reinf_cont],
                                  Ll=500.,
                                  Lr=500.,
+                                 ft=3.0,
+                                 Gf=.3
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -259,7 +261,7 @@ if __name__ == '__main__':
 
     def sigma_c_w(w_arr):
         sigma_c_arr, u_arr, damage_arr = ccb_view.sigma_c_arr(w_arr, damage=False, u=True)
-        plt.plot(w_arr, sigma_c_arr/0.001, lw=2, color='black', label='w-sigma')
+        plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
         #plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
         #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
@@ -301,10 +303,10 @@ if __name__ == '__main__':
 
     # TODO: check energy for combined reinf
     # energy(np.linspace(.0, .15, 100))
-#    sigma_c = np.linspace(1., 7., 7)
-    profile(0.031)
-    #w = np.linspace(0.0, 20.0, 100)
-    #sigma_c_w(w)
+    #sigma_c = np.linspace(1., 7., 7)
+    #profile(0.031)
+    w = np.linspace(0.0, 4.0, 100)
+    sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
     # sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
