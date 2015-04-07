@@ -42,7 +42,6 @@ class ContinuousFibers(Reinforcement):
     def _get_results(self):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
-            
             p_arr = np.linspace(0.5/self.n_int, 1 - 0.5/self.n_int, self.n_int)
             tau = self.tau.ppf(p_arr)
             mu_tau = np.mean(tau)

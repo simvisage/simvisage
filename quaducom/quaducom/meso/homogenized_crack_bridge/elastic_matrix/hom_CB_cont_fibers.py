@@ -23,6 +23,7 @@ class CrackBridgeContFibers(HasTraits):
     Lr = Float
     E_m = Float
     E_c = Float
+    epsm_softening = Float
     
     V_f_tot_cont = Property(depends_on='con_reinf_lst+')
     @cached_property
@@ -195,13 +196,15 @@ class CrackBridgeContFibers(HasTraits):
 
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
-        em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
+        em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax)) + self.sigma_m_softening
         epsf0 = (self.sorted_depsf / 2. * (Lmin ** 2 + Lmax ** 2) +
                      self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
         return a, em, epsf0
 
     def profile(self, iter_damage):
         '''
+        Evaluates the maximum vifer strain, debonded lengths and matrix strain profile
+        given the boundaries, crack opening and damage vector.
         '''
         Lmin = min(self.Ll, self.Lr)
         Lmax = max(self.Ll, self.Lr)
@@ -293,7 +296,7 @@ class CrackBridgeContFibers(HasTraits):
         a_long = a[a > 0.0][:-1]
         if len(a_long) < len(self.sorted_depsf):
             a_long = np.hstack((a_long, Lmax * np.ones(len(self.sorted_depsf) - len(a_long))))
-        return epsf0, a_short, a_long, em, a
+        return epsf0 + self.epsm_softening, a_short, a_long, em + self.epsm_softening, a
 
     def damage_residuum(self, iter_damage):
         if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):

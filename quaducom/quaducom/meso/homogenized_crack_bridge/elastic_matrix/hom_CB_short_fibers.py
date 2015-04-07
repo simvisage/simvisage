@@ -18,9 +18,7 @@ class CBShortFiber(RF):
     '''
     Micromechanical response of a short fiber bridging a crack
     '''
-
     implements(IRF)
-
     xi = Float(distr=['weibull_min', 'uniform'])
     E_f = Float(distr=['uniform', 'norm'])
     r = Float(distr=['uniform', 'norm'])
@@ -31,7 +29,7 @@ class CBShortFiber(RF):
     w = Float
     C_code = ''
 
-    def __call__(self, w, tau, r, E_f, le, phi, snub, xi):
+    def __call__(self, w, tau, r, E_f, le, phi, snub, xi, epsm_softening):
         T = 2. * tau / r
         # debonding stage
         ef0_deb = np.sqrt(T * w / E_f)
@@ -40,7 +38,7 @@ class CBShortFiber(RF):
         # pulling out stage - the fiber is pulled out from the
         # side with the shorter embedded length only
         ef0_pull = (le + w0 - w) * T / E_f
-        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*snub)
+        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*snub) + epsm_softening
         # include breaking strain
         ef0 = ef0 * (ef0 < xi) * (ef0 > 0.0)
         return ef0
@@ -49,13 +47,11 @@ class CBShortFiberSP(CBShortFiber):
     '''
     stress profile for a crack bridged by a short fiber
     '''
-
     x = Float(distr=['uniform'])  
-
     C_code = ''
 
-    def __call__(self, w, x, tau, r, E_f, le, phi, snub, xi):
-        epsf0 = super(CBShortFiberSP, self).__call__(w, tau, r, E_f, le, phi, snub, xi)
+    def __call__(self, w, x, tau, r, E_f, le, phi, snub, xi, epsm_softening):
+        epsf0 = super(CBShortFiberSP, self).__call__(w, tau, r, E_f, le, phi, snub, xi, epsm_softening)
         T = 2. * tau / r
         epsf_x = epsf0 / np.exp(snub*phi) - np.abs(x) * T / E_f
         epsf_x = epsf_x * (epsf_x > 0.0) * np.exp(snub * phi)
@@ -68,7 +64,18 @@ class CrackBridgeShortFibers(HasTraits):
     w = Float
     E_c = Float
     E_m = Float
+    epsm_softening = Float
         
+    sorted_V_f = Property(depends_on='short_reinf_lst+')
+    @cached_property
+    def _get_sorted_V_f(self):
+        return np.array([reinf.V_f for reinf in self.short_reinf_lst])
+   
+    sorted_E_f = Property(depends_on='short_reinf_lst+')
+    @cached_property
+    def _get_sorted_E_f(self):
+        return np.array([reinf.E_f for reinf in self.short_reinf_lst]) 
+    
     x_arr = Property(Array, depends_on='short_reinf_lst+')
     @cached_property
     def _get_x_arr(self):
@@ -88,7 +95,8 @@ class CrackBridgeShortFibers(HasTraits):
             cb = CBShortFiberSP()
             spirrid = SPIRRID(q=cb,
                               sampling_type='LHS',
-                              theta_vars=dict(tau=reinf.tau,
+                              theta_vars=dict(epsm_softening=self.epsm_softening,
+                                              tau=reinf.tau,
                                               E_f=reinf.E_f,
                                               r=reinf.r,
                                               xi=reinf.xi,
@@ -116,7 +124,7 @@ class CrackBridgeShortFibers(HasTraits):
             interpolators_lst.append(interp2d(self.x_arr, w_arri, spirr.mu_q_arr, fill_value=0.0))
         return interpolators_lst
 
-    epsm_arr = Property(Array, depends_on='short_reinf_lst+,w,E_m')
+    epsm_arr = Property(Array, depends_on='short_reinf_lst+,w,E_m,epsm_softening')
     @cached_property
     def _get_epsm_arr(self):
         epsm_x_arr = np.zeros(len(self.x_arr))
@@ -125,24 +133,14 @@ class CrackBridgeShortFibers(HasTraits):
             Ff_x_i = sigf_x_i * self.sorted_V_f[i]
             Fmax_i = np.max(Ff_x_i)
             epsm_x_i = (Fmax_i - Ff_x_i) / self.E_c
-            epsm_x_arr += epsm_x_i.flatten()      
+            epsm_x_arr += epsm_x_i.flatten() + self.epsm_softening      
         return epsm_x_arr       
 
     epsf0_arr = Property(Array, depends_on='short_reinf_lst+,w')
     @cached_property
     def _get_epsf0_arr(self):
         return np.array([interpolator(0.,self.w) / self.sorted_E_f[i] for i, interpolator
-                         in enumerate(self.spirrid_evaluation_cached)]).flatten()
-
-    sorted_V_f = Property(depends_on='short_reinf_lst+')
-    @cached_property
-    def _get_sorted_V_f(self):
-        return np.array([reinf.V_f for reinf in self.short_reinf_lst])
-   
-    sorted_E_f = Property(depends_on='short_reinf_lst+')
-    @cached_property
-    def _get_sorted_E_f(self):
-        return np.array([reinf.E_f for reinf in self.short_reinf_lst])        
+                         in enumerate(self.spirrid_evaluation_cached)]).flatten()       
             
 if __name__ == '__main__':
     pass

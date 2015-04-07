@@ -26,6 +26,13 @@ class CompositeCrackBridge(HasTraits):
     E_m = Float
     Ll = Float
     Lr = Float
+    ft = Float
+    Gf = Float(1.0)
+    
+    epsm_softening = Property(depends_on='w,ft,Gf,E_m')
+    @cached_property
+    def _get_epsm_softening(self):
+        return self.ft * np.exp(-self.ft/self.Gf * self.w) / self.E_m
 
     V_f_tot = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -64,14 +71,16 @@ class CompositeCrackBridge(HasTraits):
                                      Lr=self.Lr,
                                      E_m=self.E_m,
                                      E_c=self.E_c,
-                                     cont_reinf_lst=self.sorted_reinf_lst[0])
+                                     cont_reinf_lst=self.sorted_reinf_lst[0],
+                                     epsm_softening=self.epsm_softening)
         return cbcf
 
     short_fibers = Instance(CrackBridgeShortFibers)
     def _short_fibers_default(self):
         cbsf = CrackBridgeShortFibers(E_m=self.E_m,
                                       E_c=self.E_c,
-                                      short_reinf_lst=self.sorted_reinf_lst[1])
+                                      short_reinf_lst=self.sorted_reinf_lst[1],
+                                      epsm_softening=self.epsm_softening)
         return cbsf
     
     _x_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
@@ -100,7 +109,7 @@ class CompositeCrackBridge(HasTraits):
             added_epsm_cont = self.cont_fibers.epsm_arr + epsm_short_interp.get_values(self.cont_fibers.x_arr) 
             added_epsm_short = self.short_fibers.epsm_arr + epsm_cont_interp.get_values(self.short_fibers.x_arr) 
             sorted_unique_idx = np.unique(np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr)), return_index=True)[1]
-            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_unique_idx]
+            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_unique_idx] - self.epsm_softening
         elif len(self.sorted_reinf_lst[0]) != 0:
             return self.cont_fibers.epsm_arr
         elif len(self.sorted_reinf_lst[1]) != 0:
@@ -161,7 +170,7 @@ class CompositeCrackBridge(HasTraits):
             sigma_c_cont = 0.0
             sigma_c_short = np.sum(self._epsf0_arr_short * self.short_fibers.sorted_V_f *
                                self.short_fibers.sorted_E_f)
-        return sigma_c_cont + sigma_c_short
+        return sigma_c_cont + sigma_c_short + self.epsm_softening * self.E_m * (1.-self.V_f_tot)
         
     
 if __name__ == '__main__':
@@ -173,7 +182,9 @@ if __name__ == '__main__':
     tau_shape = 0.90615
     tau_loc = 0.00
     xi_shape = 8.6
-    xi_scale = .0114
+    xi_scale = 1.0114
+    ft = 6.0
+    Gf = 3.0
 
     reinf1 = ContinuousFibers(r=3.5e-3,
                               tau=RV('weibull_min', loc=0.01, scale=.1, shape=2.),
@@ -189,7 +200,7 @@ if __name__ == '__main__':
                           E_f=181e3,
                           xi=fibers_MC(m=xi_shape, sV0=xi_scale),
                           label='carbon',
-                          n_int=200)
+                          n_int=20)
     
     reinf_short = ShortFibers(bond_law = 'plastic',
                          r=3.5e-3,
@@ -204,23 +215,25 @@ if __name__ == '__main__':
                         n_int=201)
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                                 reinforcement_lst=[reinf_cont],
-                                 Ll=5000.,
-                                 Lr=5000.,
-                                 w=1.0)
+                               ft=ft,
+                               Gf=Gf,
+                               reinforcement_lst=[reinf_cont],
+                               Ll=50.,
+                               Lr=50.,
+                               w=.1)
     
     for i, depsf in enumerate(ccb.cont_fibers.sorted_depsf):
         epsf_x = np.maximum(ccb._epsf0_arr[0][i] - depsf * np.abs(ccb._x_arr), ccb._epsm_arr)
 #             if i == 0:
 #                 plt.plot(ccb._x_arr, epsf_x, color='blue', label='fibers')
 #             else:
-        plt.plot(ccb._x_arr, epsf_x, color='black', alpha=1-0.5*ccb.cont_fibers.damage[i])
+        #plt.plot(ccb._x_arr, epsf_x, color='black', alpha=1-0.5*ccb.cont_fibers.damage[i])
     
     
     epsf0_combined = np.hstack((ccb._epsf0_arr[0], ccb._epsf0_arr[1]))
-    plt.plot(np.zeros_like(epsf0_combined), epsf0_combined, 'ro', label='maximum')
+    #plt.plot(np.zeros_like(epsf0_combined), epsf0_combined, 'ro', label='maximum')
     plt.plot(ccb._x_arr, ccb._epsm_arr, lw=2, color='blue', label='matrix')
-    plt.plot(ccb._x_arr, ccb._epsf_arr, lw=2, color='red', label='mean fiber')
+    #plt.plot(ccb._x_arr, ccb._epsf_arr, lw=2, color='red', label='mean fiber')
     plt.legend(loc='best')
     plt.ylabel('matrix and fiber strain [-]')
 #     plt.ylabel('long. position [mm]')
