@@ -15,7 +15,7 @@
 from etsproxy.traits.api import TraitType, HasTraits, TraitError, Bool
 from etsproxy.traits.ui.api import View, Item, InstanceEditor
 from traits.trait_base import ClassTypes
-from enthought.traits.ui.instance_choice import \
+from etsproxy.traits.ui.instance_choice import \
     InstanceFactoryChoice
 
 class EitherType( TraitType ):
