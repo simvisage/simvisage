@@ -68,6 +68,13 @@ class CompositeCrackBridgeView(ModelView):
         else:
             return np.array(sigma_c_lst)
 
+    def secant_K(self, w_arr):
+        secant_K_lst = []
+        for w_i in w_arr:
+            self.model.w = w_i
+            secant_K_lst.append(self.model.secant_K)
+        return np.array(secant_K_lst)
+
     u_evaluated = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_u_evaluated(self):
@@ -270,6 +277,7 @@ if __name__ == '__main__':
     def sigma_c_w(w_arr):
         sigma_c_arr, u_arr, damage_arr = ccb_view.sigma_c_arr(w_arr, damage=False, u=True)
         plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
+        #plt.plot(w_arr, ccb_view.secant_K(w_arr), lw=2, color='blue', label='K secant')
         #plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
         plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')

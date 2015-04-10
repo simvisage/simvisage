@@ -43,6 +43,10 @@ class CB(HasTraits):
     def get_sigma_c(self, w):
         self.CB_model.w = w
         return self.CB_model.sigma_c
+    
+    def get_secant_K(self, w):
+        self.model.w = w
+        return self.CB_model.secant_K
             
     def get_epsm_x(self, w):
         '''
@@ -199,20 +203,23 @@ class SCM(HasTraits):
             for i in range(len(self.current_CB_lst)):
                 self.current_CB_lst[i].damage_switch = False
             CB_arr = np.array(self.current_CB_lst)
-            def scalar_func(f, w):
-                return f.get_sigma_c(w)       
-            vect_CB = np.vectorize(scalar_func)
+            def scalar_sigma_c(w, f):
+                return f.get_sigma_c(w)      
+            vect_sigma_c = np.vectorize(scalar_sigma_c)
+            
             def min_func(w_arr):
                 w_arr = np.abs(w_arr)
-                if W - np.sum(w_arr) < 0.0:
-                    return np.repeat(np.mean(w_arr),len(w_arr)) + 1.0
-                w_arr_stacked = np.hstack((w_arr,W-np.sum(w_arr)))
-                CB_sigmac_arr = vect_CB(CB_arr, w_arr_stacked)
-                residuum = CB_sigmac_arr[:-1] - CB_sigmac_arr[1:]
+                #if W - np.sum(w_arr) < 0.0:
+                #    print 'neg'
+                #    return np.repeat(np.mean(w_arr),len(w_arr)) + 1.0
+                #w_arr_stacked = np.hstack((w_arr,W-np.sum(w_arr)))
+                #CB_sigmac_arr = vect_CB(CB_arr, w_arr_stacked)
+                CB_sigmac_arr = vect_sigma_c(w_arr, CB_arr)
+                residuum = np.hstack((CB_sigmac_arr[:-1] - CB_sigmac_arr[1:], W-np.sum(w_arr)))
                 return residuum
-            opt_result = root(min_func, np.repeat(W/float(len(self.current_CB_lst)),len(self.current_CB_lst)-1),
+            opt_result = root(min_func, np.repeat(W/float(len(self.current_CB_lst)),len(self.current_CB_lst)),
                               method='krylov', options={'maxiter':10})
-            equil_w_arr = np.hstack((opt_result.x, W-np.sum(opt_result.x)))
+            equil_w_arr = np.hstack((np.abs(opt_result.x), W-np.sum(np.abs(opt_result.x))))
             for i in range(len(self.current_CB_lst)):
                 self.current_CB_lst[i].damage_switch = True
             return equil_w_arr
@@ -222,32 +229,32 @@ class SCM(HasTraits):
         # seek for the minimum strength redundancy to find the position
         # of the next crack
         while True:
-            try:
-                s = t.clock()
-                epsc, sigmac, position, W = self.find_next_crack()
-                print 'evaluation of the matrix crack #'+str(len(self.cracking_stresses_lst) + 1), t.clock() - s, 's'
-                if len(self.cracking_strains_lst) > 1000:
-                    plt.plot(self.x_arr, self.sigma_m(W) / self.CB_model.E_m, color='blue', lw=2)
-                    plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-                    plt.show()
-                self.crack_positions_lst.append(position)
-                self.cracking_stresses_lst.append(sigmac)
-                self.cracking_strains_lst.append(epsc)
-                #append the last crack object
-                self.CB_objects_lst.append(CB(position=self.crack_positions_lst[-1],
-                                              cracking_stress=self.cracking_stresses_lst[-1],
-                                              CB_model=CompositeCrackBridge(reinforcement_lst=self.CB_model.reinforcement_lst,
-                                                                            E_m=self.CB_model.E_m,
-                                                                            Gf=self.CB_model.Gf,
-                                                                            ft=float(self.matrix_strength[np.argwhere(self.crack_positions_lst[-1] == self.x_arr)]) * 0.99
-                                                                            )
-                                              )
-                                           )
-            except:
+            #try:
+            s = t.clock()
+            epsc, sigmac, position, W = self.find_next_crack()
+            print 'evaluation of the matrix crack #'+str(len(self.cracking_stresses_lst) + 1), t.clock() - s, 's'
+            if len(self.cracking_strains_lst) > 1000:
+                plt.plot(self.x_arr, self.sigma_m(W) / self.CB_model.E_m, color='blue', lw=2)
+                plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+                plt.show()
+            self.crack_positions_lst.append(position)
+            self.cracking_stresses_lst.append(sigmac)
+            self.cracking_strains_lst.append(epsc)
+            #append the last crack object
+            self.CB_objects_lst.append(CB(position=self.crack_positions_lst[-1],
+                                          cracking_stress=self.cracking_stresses_lst[-1],
+                                          CB_model=CompositeCrackBridge(reinforcement_lst=self.CB_model.reinforcement_lst,
+                                                                        E_m=self.CB_model.E_m,
+                                                                        Gf=self.CB_model.Gf,
+                                                                        ft=float(self.matrix_strength[np.argwhere(self.crack_positions_lst[-1] == self.x_arr)]) * 0.99
+                                                                        )
+                                          )
+                                       )
+            #except:
                 #plt.plot(np.hstack((0.0,self.cracking_strains_lst)), np.hstack((0.0,self.cracking_stresses_lst)), color='blue', lw=2)
                 #plt.show()
-                print 'composite saturated'
-                break
+                #print 'composite saturated'
+                #break
 
     
 if __name__ == '__main__':

@@ -34,6 +34,7 @@ class CompositeCrackBridge(HasTraits):
     
     @on_trait_change('damage_switch')
     def switch_damage(self):
+        '''freezes the loading history'''
         self.cont_fibers_instance.damage_switch = self.damage_switch
         self.short_fibers_instance.damage_switch = self.damage_switch
     
@@ -190,7 +191,21 @@ class CompositeCrackBridge(HasTraits):
             sigma_c_short = np.sum(self._epsf0_arr_short * self.short_fibers.sorted_V_f *
                                self.short_fibers.sorted_E_f)
         return sigma_c_cont + sigma_c_short + self.epsm_softening * self.E_m * (1.-self.V_f_tot)
-        
+    
+    secant_K = Property(depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
+    @cached_property
+    def _get_secant_K(self):
+        ''' secant stiffness at given w '''
+        if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) == 0:
+            self.cont_fibers.w = self.w
+            ef0, a_short, a_long, em, a = self.cont_fibers.profile(self.cont_fibers.damage)
+            K_cont = np.sum(self.cont_fibers.sorted_stats_weights *
+                            self.cont_fibers.sorted_V_f * self.cont_fibers.sorted_nu_r *
+                            self.cont_fibers.sorted_E_f * (1. - self.cont_fibers.damage) /
+                            (a_short + a_long))
+            return K_cont
+        else:
+            raise ValueError('secant stiffness not yet implemented for short fibers')       
     
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
