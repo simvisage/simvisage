@@ -13,11 +13,12 @@ The evaluation is array based.
 '''
 import numpy as np
 from etsproxy.traits.api import HasTraits, cached_property, \
-    Float, Property, Instance, List, Array, Tuple
+    Float, Property, Instance, List, Array, Tuple, Bool
 from hom_CB_cont_fibers import CrackBridgeContFibers
 from hom_CB_short_fibers import CrackBridgeShortFibers
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers, ShortFibers
+from traits.has_traits import on_trait_change
 
 class CompositeCrackBridge(HasTraits):
 
@@ -28,11 +29,23 @@ class CompositeCrackBridge(HasTraits):
     Lr = Float
     ft = Float
     Gf = Float(1.0)
+    w_unld = Float(0.0)
+    damage_switch = Bool(True)
+    
+    @on_trait_change('damage_switch')
+    def switch_damage(self):
+        self.cont_fibers_instance.damage_switch = self.damage_switch
+        self.short_fibers_instance.damage_switch = self.damage_switch
     
     epsm_softening = Property(depends_on='w,ft,Gf,E_m')
     @cached_property
     def _get_epsm_softening(self):
-        return self.ft * np.exp(-self.ft/self.Gf * self.w) / self.E_m
+        if self.w >= self.w_unld:
+            if self.damage_switch == True:
+                self.w_unld += self.w - self.w_unld 
+            return self.ft * np.exp(-self.ft/self.Gf * self.w) / self.E_m
+        else:
+            return self.w / self.w_unld * self.ft * np.exp(-self.ft/self.Gf * self.w_unld) / self.E_m
 
     V_f_tot = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -63,47 +76,55 @@ class CompositeCrackBridge(HasTraits):
                 short_reinf_lst.append(reinf)
         return cont_reinf_lst, short_reinf_lst
     
+    cont_fibers_instance = Instance(CrackBridgeContFibers)
+    def _cont_fibers_instance_default(self):
+        return CrackBridgeContFibers()
+
     cont_fibers = Property(Instance(CrackBridgeContFibers), depends_on = 'reinforcement_lst+,Ll,Lr,E_m,w')
     @cached_property
     def _get_cont_fibers(self):
-        cbcf = CrackBridgeContFibers(w=self.w,
-                                     Ll=self.Ll,
-                                     Lr=self.Lr,
-                                     E_m=self.E_m,
-                                     E_c=self.E_c,
-                                     cont_reinf_lst=self.sorted_reinf_lst[0],
-                                     epsm_softening=self.epsm_softening)
+        cbcf = self.cont_fibers_instance
+        cbcf.w=self.w
+        cbcf.Ll=self.Ll
+        cbcf.Lr=self.Lr
+        cbcf.E_m=self.E_m
+        cbcf.E_c=self.E_c
+        cbcf.w_unld=self.w_unld
+        cbcf.cont_reinf_lst=self.sorted_reinf_lst[0]
+        cbcf.epsm_softening=self.epsm_softening
         return cbcf
-
-    short_fibers = Instance(CrackBridgeShortFibers)
-    def _short_fibers_default(self):
-        cbsf = CrackBridgeShortFibers(E_m=self.E_m,
-                                      E_c=self.E_c,
-                                      short_reinf_lst=self.sorted_reinf_lst[1],
-                                      epsm_softening=self.epsm_softening)
+    
+    short_fibers_instance = Instance(CrackBridgeShortFibers)
+    def _short_fibers_instance_default(self):
+        return CrackBridgeShortFibers()
+    
+    short_fibers = Property(Instance(CrackBridgeShortFibers), depends_on = 'reinforcement_lst+,E_m,w')
+    @cached_property
+    def _get_short_fibers(self):
+        cbsf = self.short_fibers_instance
+        cbsf.w = self.w
+        cbsf.E_m = self.E_m
+        cbsf.E_c = self.E_c
+        cbsf.short_reinf_lst = self.sorted_reinf_lst[1]
+        cbsf.epsm_softening = self.epsm_softening
         return cbsf
     
     _x_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
     def _get__x_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
-            self.cont_fibers.w = self.w
-            self.short_fibers.w = self.w
             added_x = np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr))
             sorted_unique_x = np.unique(added_x)
             return sorted_unique_x
         elif len(self.sorted_reinf_lst[0]) != 0:
-            self.cont_fibers.w = self.w
             return self.cont_fibers.x_arr
         elif len(self.sorted_reinf_lst[1]) != 0:
-            self.short_fibers.w = self.w
             return self.short_fibers.x_arr
         
     _epsm_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
     @cached_property
     def _get__epsm_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
-            self.short_fibers.w = self.w
             epsm_cont_interp = MFnLineArray(xdata=self.cont_fibers.x_arr, ydata=self.cont_fibers.epsm_arr)
             epsm_short_interp = MFnLineArray(xdata=self.short_fibers.x_arr, ydata=self.short_fibers.epsm_arr)
             added_epsm_cont = self.cont_fibers.epsm_arr + epsm_short_interp.get_values(self.cont_fibers.x_arr) 
@@ -130,14 +151,12 @@ class CompositeCrackBridge(HasTraits):
     @cached_property
     def _get__epsf0_arr(self):
         if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) != 0:
-            self.short_fibers.w = self.w
             epsf0_cont = self.cont_fibers.epsf0_arr
             epsf0_short = self.short_fibers.epsf0_arr
         elif len(self.sorted_reinf_lst[0]) != 0:
             epsf0_cont = self.cont_fibers.epsf0_arr
             epsf0_short = np.array([])
         elif len(self.sorted_reinf_lst[1]) != 0:
-            self.short_fibers.w = self.w
             epsf0_cont = np.array([])
             epsf0_short = self.short_fibers.epsf0_arr
         return epsf0_cont, epsf0_short

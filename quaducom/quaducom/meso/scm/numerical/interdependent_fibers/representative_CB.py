@@ -131,6 +131,7 @@ class RepresentativeCB(HasTraits):
                 epsm = epsm_interpolator_lst[1][sigc_low].get_values(x_arr) * coeff_low + \
                        epsm_interpolator_lst[1][sigc_high].get_values(x_arr) * coeff_high
             else:
+                import matplotlib.pyplot as plt
                 epsm = epsm_interpolator_lst[1][sigc_low].get_values(-x_arr[::-1]) * coeff_low + \
                         epsm_interpolator_lst[1][sigc_high].get_values(-x_arr[::-1]) * coeff_high
                 epsm = epsm[::-1]

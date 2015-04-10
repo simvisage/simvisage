@@ -4,7 +4,7 @@ Created on Jan 21, 2015
 @author: rostislavrypl
 '''
 
-from traits.api import HasTraits, List, Instance, Float, Array, Property, cached_property, implements
+from traits.api import HasTraits, List, Instance, Float, Array, Property, cached_property, implements, Bool
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement
 import numpy as np
 from spirrid import SPIRRID
@@ -65,6 +65,7 @@ class CrackBridgeShortFibers(HasTraits):
     E_c = Float
     E_m = Float
     epsm_softening = Float
+    damage_switch = Bool(True)
         
     sorted_V_f = Property(depends_on='short_reinf_lst+')
     @cached_property

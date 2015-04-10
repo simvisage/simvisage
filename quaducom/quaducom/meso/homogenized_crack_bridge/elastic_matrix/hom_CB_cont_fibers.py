@@ -4,7 +4,7 @@ Created on Jan 21, 2015
 @author: rostislavrypl
 '''
 
-from traits.api import HasTraits, List, Property, cached_property, Instance, Array, Float
+from traits.api import HasTraits, List, Property, cached_property, Instance, Array, Float, Bool
 from types import FloatType
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
@@ -24,6 +24,8 @@ class CrackBridgeContFibers(HasTraits):
     E_m = Float
     E_c = Float
     epsm_softening = Float
+    w_unld = Float
+    damage_switch = Bool(True)
     
     V_f_tot_cont = Property(depends_on='con_reinf_lst+')
     @cached_property
@@ -196,14 +198,14 @@ class CrackBridgeContFibers(HasTraits):
 
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
-        em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax)) + self.sigma_m_softening
+        em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
         epsf0 = (self.sorted_depsf / 2. * (Lmin ** 2 + Lmax ** 2) +
                      self.w + em[0] * Lmin / 2. + em[-1] * Lmax / 2.) / (Lmin + Lmax)
         return a, em, epsf0
 
     def profile(self, iter_damage):
         '''
-        Evaluates the maximum vifer strain, debonded lengths and matrix strain profile
+        Evaluates the maximum fiber strain, debonded lengths and matrix strain profile
         given the boundaries, crack opening and damage vector.
         '''
         Lmin = min(self.Ll, self.Lr)
@@ -307,14 +309,17 @@ class CrackBridgeContFibers(HasTraits):
             return residuum
 
     x_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
+    @cached_property
     def _get_x_arr(self):
         return self.profile(self.damage)[4] 
 
     epsm_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
+    @cached_property
     def _get_epsm_arr(self):
         return self.profile(self.damage)[3]
     
     epsf_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
+    @cached_property
     def _get_epsf_arr(self):
         epsf_xi = self.sorted_depsf.reshape(len(self.sorted_depsf),1) * np.abs(self.x_arr.reshape(1,len(self.x_arr)))
         epsf_x = np.maximum(self.epsf0_arr.reshape(len(self.epsf0_arr),1) - epsf_xi, self.epsm_arr.reshape(1,len(self.epsm_arr)))
@@ -322,19 +327,23 @@ class CrackBridgeContFibers(HasTraits):
         return epsf_x
 
     epsf0_arr = Property(Array, depends_on='reinforcement_lst,w,Ll,Lr,E_m')
+    @cached_property
     def _get_epsf0_arr(self):
         return self.profile(self.damage)[0]
+
+    maximum_damage = Array
 
     damage = Property(depends_on='w, Ll, Lr, reinforcement+')
     @cached_property
     def _get_damage(self):
+        if len(self.maximum_damage) == 0:
+                self.maximum_damage = np.zeros_like(self.sorted_depsf)
         if self.w == 0.:
             damage = np.zeros_like(self.sorted_depsf)
         else:
             ff = t.clock()
             try:
-
-                damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf) * 0.2,
+                damage = root(self.damage_residuum, self.maximum_damage,
                               method='excitingmixing', options={'maxiter':100})
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
@@ -345,7 +354,11 @@ class CrackBridgeContFibers(HasTraits):
                               method='krylov')
                 damage = damage.x
             # print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
-        return damage
+        if self.damage_switch == False:
+            return np.maximum(damage, self.maximum_damage)
+        elif self.damage_switch == True:
+            self.maximum_damage = np.maximum(damage, self.maximum_damage)
+            return self.maximum_damage
 
 if __name__ == '__main__':
     pass
