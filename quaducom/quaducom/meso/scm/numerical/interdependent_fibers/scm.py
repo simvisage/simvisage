@@ -43,10 +43,6 @@ class CB(HasTraits):
     def get_sigma_c(self, w):
         self.CB_model.w = w
         return self.CB_model.sigma_c
-    
-    def get_secant_K(self, w):
-        self.model.w = w
-        return self.CB_model.secant_K
             
     def get_epsm_x(self, w):
         '''
@@ -87,7 +83,7 @@ class SCM(HasTraits):
     # list of cracks positions
     crack_positions_lst = List
     # list of cracking strains
-    cracking_strains_lst = List
+    cracking_W_lst = List
     
     x_arr = Property(Array, depends_on='length, nx')
     @cached_property
@@ -128,29 +124,17 @@ class SCM(HasTraits):
                 cb_i.CB_model.Lr = self.length - cb_i.position
             cb_lst.append(cb_i)
             
-        for cb_i in cb_lst: 
+        for cb_i in cb_lst:
             # specify the x range for cracks
             mask_right = self.x_arr >= (cb_i.position - cb_i.CB_model.Ll)
             mask_left = self.x_arr <= (cb_i.position + cb_i.CB_model.Lr)
             cb_i.x = self.x_arr[mask_left * mask_right] - cb_i.position
-        self.CB_objects_lst = cb_lst           
+        self.CB_objects_lst = cb_lst
+        w_lst = self.eval_w_vect(W=self.cracking_W_lst[-1], cb_lst=cb_lst)
+        for i, cb_i in enumerate(cb_lst):
+            if cb_i.CB_model.w_unld < w_lst[i]:
+                cb_lst[i].CB_model.w_unld = w_lst[i]
         return cb_lst
-
-    def get_current_cracking_state(self, load):
-        '''Creates the list of CB objects that have been formed up to the current load
-        '''
-        idx_load_level = np.sum(np.array(self.cracking_stresses_lst) <= load)
-        cb_lst = self.get_cbs_lst(self.crack_positions_lst[:idx_load_level],
-                                      self.cracking_stresses_lst[:idx_load_level])
-        return cb_lst
-    
-    def get_current_strnegth(self, load):
-        if len(self.crack_positions_lst) is not 0:
-            cb_lst = self.get_current_cracking_state(load)
-            strengths = np.array([cb_i.max_sigma_c for cb_i in cb_lst])
-            return np.min(strengths)
-        else:
-            return np.inf
     
     def sigma_m(self, W=None, w_lst=None):
         '''evaluates sigma_m along the composite
@@ -171,58 +155,66 @@ class SCM(HasTraits):
         an iterative procedure of solving non-linear equations'''
         if len(self.crack_positions_lst) == 0:
             #first crack
-            position = self.x_arr[np.argmin(self.matrix_strength)]
-            sigmac = np.min(self.matrix_strength) / self.CB_model.E_m * self.CB_model.E_c
-            epsc = sigmac / self.CB_model.E_c
-            return epsc, sigmac, position, 0.002
+            position_new_crack = self.x_arr[np.argmin(self.matrix_strength)]
+            sigmac_pre_crack = np.min(self.matrix_strength) / self.CB_model.E_m * self.CB_model.E_c
+            W_pre_crack = sigmac_pre_crack  / self.CB_model.E_c * self.length
+            return sigmac_pre_crack, position_new_crack, W_pre_crack
         else:
-            init_guess = self.cracking_strains_lst[-1] * self.length
-            W = newton(self.residuum, init_guess)
-            position = self.x_arr[np.argmin(self.matrix_strength - self.sigma_m(W))]
-            w_lst = self.eval_w_vect(W)
-            sigmac = self.CB_objects_lst[0].get_sigma_c(w_lst[0])
-            epsc = (np.sum(np.array(w_lst)) + np.trapz(self.sigma_m(w_lst=w_lst),self.x_arr) / self.CB_model.E_m) / self.length
-            return epsc, sigmac, position, W
+#             W_arr = np.linspace(-0.1, 0.0, 50)
+#             res = [self.residuum(Wi) for Wi in W_arr]
+#             plt.plot(W_arr, res, color='green')
+#             W_arr = np.linspace(0.0, 0.3 * len(self.crack_positions_lst), 50)
+#             res = [self.residuum(Wi) for Wi in W_arr]
+#             plt.plot(W_arr, res, color='blue')
+#             W_arr = np.linspace(0.3 * len(self.crack_positions_lst), 0.5 * len(self.crack_positions_lst),50)
+#             res = [self.residuum(Wi) for Wi in W_arr]
+#             plt.plot(W_arr, res, color='red')
+#             plt.show()
+            W_pre_crack = newton(self.residuum, self.cracking_W_lst[-1], maxiter=10, tol=np.min(self.matrix_strength)/1000.)
+            position_new_crack = self.x_arr[np.argmin(self.matrix_strength - self.sigma_m(W=W_pre_crack))]
+            w_lst = self.eval_w_vect(W_pre_crack)
+            sigmac_pre_crack = self.CB_objects_lst[0].get_sigma_c(w_lst[0])
+            #epsc = (np.sum(np.array(w_lst)) + np.trapz(self.sigma_m(w_lst=w_lst),self.x_arr) / self.CB_model.E_m) / self.length
+            return sigmac_pre_crack, position_new_crack, W_pre_crack
 
     def residuum(self, W):
         '''Callback method for the identification of the
         next emerging crack calculated as the difference between
         the current matrix stress and strength. See the scipy newton call above.
         '''
-        if W < 0.0:
-            mu_sigmamu = np.mean(self.matrix_strength)
-            residuum = mu_sigmamu - mu_sigmamu * W
+        print 'W = ', W
+        if W <= 0.0 or W > 0.3 * len(self.crack_positions_lst):
+            min_strength = np.min(self.matrix_strength)
+            residuum = min_strength - self.CB_model.E_c * W / self.length
         else: 
-            residuum = np.min(self.matrix_strength - self.sigma_m(W))
+            residuum = np.min(self.matrix_strength - self.sigma_m(W=W))
         return residuum
     
-    def eval_w_vect(self, W):
-        if len(self.current_CB_lst) == 1:
-            return np.array([W])
-        else:
-            for i in range(len(self.current_CB_lst)):
-                self.current_CB_lst[i].damage_switch = False
-            CB_arr = np.array(self.current_CB_lst)
-            def scalar_sigma_c(w, f):
-                return f.get_sigma_c(w)      
-            vect_sigma_c = np.vectorize(scalar_sigma_c)
-            
-            def min_func(w_arr):
-                w_arr = np.abs(w_arr)
-                #if W - np.sum(w_arr) < 0.0:
-                #    print 'neg'
-                #    return np.repeat(np.mean(w_arr),len(w_arr)) + 1.0
-                #w_arr_stacked = np.hstack((w_arr,W-np.sum(w_arr)))
-                #CB_sigmac_arr = vect_CB(CB_arr, w_arr_stacked)
-                CB_sigmac_arr = vect_sigma_c(w_arr, CB_arr)
-                residuum = np.hstack((CB_sigmac_arr[:-1] - CB_sigmac_arr[1:], W-np.sum(w_arr)))
-                return residuum
-            opt_result = root(min_func, np.repeat(W/float(len(self.current_CB_lst)),len(self.current_CB_lst)),
-                              method='krylov', options={'maxiter':10})
-            equil_w_arr = np.hstack((np.abs(opt_result.x), W-np.sum(np.abs(opt_result.x))))
-            for i in range(len(self.current_CB_lst)):
-                self.current_CB_lst[i].damage_switch = True
-            return equil_w_arr
+    def eval_w_vect(self, W, cb_lst=None):
+        if cb_lst == None:
+            if len(self.current_CB_lst) == 1:
+                return np.array([W])
+            else:
+                cb_lst = self.current_CB_lst
+
+        for cb_i in cb_lst:
+            cb_i.damage_switch = False
+        CB_arr = np.array(cb_lst)
+        def scalar_sigma_c(w, f):
+            return f.get_sigma_c(w)      
+        vect_sigma_c = np.vectorize(scalar_sigma_c)
+        
+        def min_func(w_arr):
+            w_arr = np.abs(w_arr)
+            CB_sigmac_arr = vect_sigma_c(w_arr, CB_arr)
+            residuum = np.hstack((CB_sigmac_arr[:-1] - CB_sigmac_arr[1:], W-np.sum(w_arr)))
+            return residuum
+        opt_result = root(min_func, np.repeat(W/float(len(cb_lst)),len(cb_lst)),
+                          method='krylov', options={'maxiter':10})
+        equil_w_arr = np.hstack((np.abs(opt_result.x), W-np.sum(np.abs(opt_result.x))))
+        for cb_i in cb_lst:
+            cb_i.damage_switch = True 
+        return equil_w_arr
         
     
     def evaluate(self):
@@ -231,15 +223,15 @@ class SCM(HasTraits):
         while True:
             #try:
             s = t.clock()
-            epsc, sigmac, position, W = self.find_next_crack()
+            sigmac_pre_crack, position_new_crack, W_pre_crack = self.find_next_crack()
             print 'evaluation of the matrix crack #'+str(len(self.cracking_stresses_lst) + 1), t.clock() - s, 's'
-            if len(self.cracking_strains_lst) > 1000:
-                plt.plot(self.x_arr, self.sigma_m(W) / self.CB_model.E_m, color='blue', lw=2)
+            if len(self.cracking_W_lst) > 1000:
+                plt.plot(self.x_arr, self.sigma_m(W=W_pre_crack) / self.CB_model.E_m, color='blue', lw=2)
                 plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
                 plt.show()
-            self.crack_positions_lst.append(position)
-            self.cracking_stresses_lst.append(sigmac)
-            self.cracking_strains_lst.append(epsc)
+            self.crack_positions_lst.append(position_new_crack)
+            self.cracking_stresses_lst.append(sigmac_pre_crack)
+            self.cracking_W_lst.append(W_pre_crack)
             #append the last crack object
             self.CB_objects_lst.append(CB(position=self.crack_positions_lst[-1],
                                           cracking_stress=self.cracking_stresses_lst[-1],
@@ -249,9 +241,9 @@ class SCM(HasTraits):
                                                                         ft=float(self.matrix_strength[np.argwhere(self.crack_positions_lst[-1] == self.x_arr)]) * 0.99
                                                                         )
                                           )
-                                       )
+                                       )            
             #except:
-                #plt.plot(np.hstack((0.0,self.cracking_strains_lst)), np.hstack((0.0,self.cracking_stresses_lst)), color='blue', lw=2)
+                #plt.plot(np.hstack((0.0,self.cracking_W_lst)), np.hstack((0.0,self.cracking_stresses_lst)), color='blue', lw=2)
                 #plt.show()
                 #print 'composite saturated'
                 #break
@@ -285,7 +277,7 @@ if __name__ == '__main__':
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1],
                                  ft=1.0,
-                                 Gf=0.15
+                                 Gf=0.1
                                  )
 
     scm = SCM(length=length,

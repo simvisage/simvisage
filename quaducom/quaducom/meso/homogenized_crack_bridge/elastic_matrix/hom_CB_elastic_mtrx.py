@@ -43,7 +43,7 @@ class CompositeCrackBridge(HasTraits):
     def _get_epsm_softening(self):
         if self.w >= self.w_unld:
             if self.damage_switch == True:
-                self.w_unld += self.w - self.w_unld 
+                self.w_unld += self.w - self.w_unld
             return self.ft * np.exp(-self.ft/self.Gf * self.w) / self.E_m
         else:
             return self.w / self.w_unld * self.ft * np.exp(-self.ft/self.Gf * self.w_unld) / self.E_m
@@ -93,6 +93,7 @@ class CompositeCrackBridge(HasTraits):
         cbcf.w_unld=self.w_unld
         cbcf.cont_reinf_lst=self.sorted_reinf_lst[0]
         cbcf.epsm_softening=self.epsm_softening
+        #print self.w_unld, self.w, self.epsm_softening, self.ft, self.Gf
         return cbcf
     
     short_fibers_instance = Instance(CrackBridgeShortFibers)
@@ -131,7 +132,7 @@ class CompositeCrackBridge(HasTraits):
             added_epsm_cont = self.cont_fibers.epsm_arr + epsm_short_interp.get_values(self.cont_fibers.x_arr) 
             added_epsm_short = self.short_fibers.epsm_arr + epsm_cont_interp.get_values(self.short_fibers.x_arr) 
             sorted_unique_idx = np.unique(np.hstack((self.cont_fibers.x_arr, self.short_fibers.x_arr)), return_index=True)[1]
-            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_unique_idx] - self.epsm_softening
+            return np.hstack((added_epsm_cont, added_epsm_short))[sorted_unique_idx]
         elif len(self.sorted_reinf_lst[0]) != 0:
             return self.cont_fibers.epsm_arr
         elif len(self.sorted_reinf_lst[1]) != 0:
