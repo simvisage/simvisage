@@ -57,7 +57,7 @@ class BCDofProportional( BCDof ):
     By changing the level alpha, the boundary conditions
     are  adjusted to the corresponding proportional loading
     of e1 and e2 in the strain space. This allows for elementary
-    testing of the material point behavior for combined loadings.
+    testing2 of the material point behavior for combined loadings.
     
     alpha = 0 and 90 means tensile loading in e1 and e2, respectively
     alpha = 45 represents simultaneous tension in e1 and e2

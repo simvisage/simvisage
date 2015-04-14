@@ -79,6 +79,7 @@ class RepresentativeCB(HasTraits):
                     if j >= i:
                         # find maximum
                         sigma_c_max, wmax = self.max_sigma_w(ll, lr)
+                        #print 'Ll, Lr, sigmacmax: ', ll, lr, sigma_c_max
                         max_sigma_c_arr[i, j] = max_sigma_c_arr[j, i] = sigma_c_max
                         w_arr0 = np.linspace(1e-10, wmax, self.n_w)
                         w_interpolator, epsm_interp_lst, epsf_interp_lst = self.w_x_res(w_arr0, ll, lr)
@@ -131,6 +132,7 @@ class RepresentativeCB(HasTraits):
                 epsm = epsm_interpolator_lst[1][sigc_low].get_values(x_arr) * coeff_low + \
                        epsm_interpolator_lst[1][sigc_high].get_values(x_arr) * coeff_high
             else:
+                import matplotlib.pyplot as plt
                 epsm = epsm_interpolator_lst[1][sigc_low].get_values(-x_arr[::-1]) * coeff_low + \
                         epsm_interpolator_lst[1][sigc_high].get_values(-x_arr[::-1]) * coeff_high
                 epsm = epsm[::-1]

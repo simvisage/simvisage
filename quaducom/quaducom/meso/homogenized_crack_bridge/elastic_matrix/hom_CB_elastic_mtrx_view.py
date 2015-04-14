@@ -68,6 +68,13 @@ class CompositeCrackBridgeView(ModelView):
         else:
             return np.array(sigma_c_lst)
 
+    def secant_K(self, w_arr):
+        secant_K_lst = []
+        for w_i in w_arr:
+            self.model.w = w_i
+            secant_K_lst.append(self.model.secant_K)
+        return np.array(secant_K_lst)
+
     u_evaluated = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_u_evaluated(self):
@@ -76,7 +83,11 @@ class CompositeCrackBridgeView(ModelView):
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_sigma_c_max(self):
+        frozen_w_unld = self.model.w_unld
+        frozen_damage = self.model.cont_fibers.maximum_damage
         def minfunc_sigma(w):
+            self.model.w_unld = frozen_w_unld
+            self.model.cont_fibers.maximum_damage = frozen_damage
             self.model.w = w
             stiffness_loss = np.sum(self.model.cont_fibers.Kf * self.model.cont_fibers.damage) / np.sum(self.model.cont_fibers.Kf)
             if stiffness_loss > 0.90:
@@ -84,6 +95,8 @@ class CompositeCrackBridgeView(ModelView):
             #plt.plot(w, self.sigma_c, 'ro')
             return -self.sigma_c
         def residuum_stiffness(w):
+            self.model.w_unld = frozen_w_unld
+            self.model.cont_fibers.maximum_damage = frozen_damage
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
             if stiffness_loss > 0.90:
@@ -97,6 +110,8 @@ class CompositeCrackBridgeView(ModelView):
         if len(self.model.sorted_reinf_lst[0]) == 0:
             # there are only short fibers
             def minfunc_short_fibers(w):
+                self.model.w_unld = frozen_w_unld
+                self.model.cont_fibers.maximum_damage = frozen_damage
                 self.model.w = w
                 return -self.sigma_c
             w_max = fminbound(minfunc_short_fibers, 0.0, 3.0, maxfun=10, disp=0)
@@ -209,7 +224,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     tau_scale =1.53419049
-    tau_shape = .0615
+    tau_shape = 1.
     tau_loc = 0.00
     xi_shape = 8.6
     xi_scale = .0114
@@ -224,7 +239,7 @@ if __name__ == '__main__':
 
     reinf_cont = ContinuousFibers(r=3.5e-3,
                           tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
-                          V_f=0.1,
+                          V_f=0.01,
                           E_f=181e3,
                           xi=fibers_MC(m=xi_shape, sV0=xi_scale),
                           label='carbon',
@@ -244,8 +259,10 @@ if __name__ == '__main__':
 
     model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf_cont],
-                                 Ll=500.,
-                                 Lr=500.,
+                                 Ll=10.,
+                                 Lr=10.,
+                                 ft=3.0,
+                                 Gf=.3
                                  )
 
     ccb_view = CompositeCrackBridgeView(model=model)
@@ -259,10 +276,11 @@ if __name__ == '__main__':
 
     def sigma_c_w(w_arr):
         sigma_c_arr, u_arr, damage_arr = ccb_view.sigma_c_arr(w_arr, damage=False, u=True)
-        plt.plot(w_arr, sigma_c_arr/0.001, lw=2, color='black', label='w-sigma')
+        plt.plot(w_arr, sigma_c_arr, lw=2, color='black', label='w-sigma')
+        #plt.plot(w_arr, ccb_view.secant_K(w_arr), lw=2, color='blue', label='K secant')
         #plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
         plt.ylabel('$\sigma_c$ [MPa]')
         plt.legend(loc='best')
@@ -301,10 +319,19 @@ if __name__ == '__main__':
 
     # TODO: check energy for combined reinf
     # energy(np.linspace(.0, .15, 100))
-#    sigma_c = np.linspace(1., 7., 7)
-    profile(0.031)
-    #w = np.linspace(0.0, 20.0, 100)
-    #sigma_c_w(w)
+    #sigma_c = np.linspace(1., 7., 7)
+    #profile(0.01)
+    w_ld = np.linspace(0.0, 0.2, 20)
+    w_unl1 = np.linspace(0.2, 0.0, 20)
+    w_rel1 = np.linspace(0.0, 0.3, 20)
+    w_unl2 = np.linspace(0.3, 0.0, 20)
+    w_rel2 = np.linspace(0.0, 0.4, 20)
+    w_unl3 = np.linspace(0.4, 0.0, 20)
+    w_rel3 = np.linspace(0.0, 0.6, 20)
+
+    w = np.hstack((w_ld, w_unl1, w_rel1))
+    #w = np.linspace(0,0.6,100)
+    sigma_c_w(w)
     # energy(w)
     # bundle at 20 mm
     # sigma_bundle = 70e3*w/20.*np.exp(-(w/20./0.03)**5.)
