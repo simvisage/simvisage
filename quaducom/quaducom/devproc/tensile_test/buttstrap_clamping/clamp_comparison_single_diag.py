@@ -67,14 +67,14 @@ print 'clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig
 
 def plot_all():
 
-    fig = p.figure()
+    fig = p.figure(facecolor='white')
     fig.subplots_adjust(
-        left=0.03, right=0.97, bottom=0.04, top=0.96, wspace=0.25, hspace=0.2)
+        left=0.09, right=0.97, bottom=0.14, top=0.96, wspace=0.25, hspace=0.2)
 
     axes = p.subplot(111)
 
-    axes.plot([0.0, 0.01], [0.0, 1800], '--', color='gray')
-    axes.plot([0.0, 0.01], [0.0, 2450], '--', color='gray')
+#    axes.plot([0.0, 0.01], [0.0, 1800], '--', color='gray')
+#    axes.plot([0.0, 0.01], [0.0, 2450], '--', color='gray')
 
     for e_run, clamp, series in e_list:
         e = e_run.ex_type
@@ -82,7 +82,9 @@ def plot_all():
         style_series = series_styles[series]
         axes = p.subplot(111)
 
-        axes.plot(e.eps_asc, e.sig_tex_asc, style_series,
+#        axes.plot(e.eps_asc, e.sig_tex_asc, style_series,
+#                  color=color_clamps, linewidth=2)
+        axes.plot(e.eps_smooth, e.sig_tex_smooth, style_series,
                   color=color_clamps, linewidth=2)
 
         axes.grid()
