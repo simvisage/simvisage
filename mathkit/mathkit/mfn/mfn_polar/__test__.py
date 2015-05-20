@@ -10,7 +10,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_get_value(self):
         '''
         make sure that the values for corner nodes get returned properly
-        - testing (x,y) plane
+        - testing2 (x,y) plane
         '''
         value = self.mp( 0.225 )
         self.assertEqual( value, 0.4475 ) 

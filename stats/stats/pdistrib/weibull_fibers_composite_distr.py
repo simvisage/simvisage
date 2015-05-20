@@ -109,7 +109,7 @@ class fibers_MC(WeibullFibers):
 
     Ll = Float(1e10)
     Lr = Float(1e10)
-    specimen_length = 1000.
+    specimen_length = 250.
 
     # approximate saw tooth profile
     def cdf2(self, e, depsf, r, al, ar):

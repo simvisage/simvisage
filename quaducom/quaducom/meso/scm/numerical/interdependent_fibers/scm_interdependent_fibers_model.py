@@ -21,11 +21,9 @@ from etsproxy.traits.api import \
     cached_property, Property, Float
 from quaducom.meso.scm.numerical.interdependent_fibers.representative_CB import RepresentativeCB
 from stats.misc.random_field.random_field_1D import RandomField
-from operator import attrgetter
 import numpy as np
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from scipy.optimize import brentq, newton
-import copy
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 from spirrid.rv import RV
 from math import pi
@@ -227,9 +225,9 @@ class SCM(HasTraits):
                                                   self.sigma_m(sigc_min))]
             self.crack_positions_lst.append(crack_position)
             self.cracking_stress_lst.append(sigc_min - 1e-10)
-            #plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
-            #plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-            #plt.show()
+            plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
+            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
+            plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
@@ -284,6 +282,8 @@ if __name__ == '__main__':
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1],
+                                 ft=1.0,
+                                 Gf=0.5
                                  )
 
     scm = SCM(length=length,

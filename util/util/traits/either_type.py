@@ -12,7 +12,7 @@
 #
 # Created on Aug 7, 2009 by: rchx
 
-from etsproxy.traits.api import TraitType, HasTraits, TraitError, Bool
+from etsproxy.traits.api import TraitType, HasTraits, TraitError
 from etsproxy.traits.ui.api import View, Item, InstanceEditor
 from traits.trait_base import ClassTypes
 from traitsui.instance_choice import \

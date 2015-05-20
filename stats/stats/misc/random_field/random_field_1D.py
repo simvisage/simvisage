@@ -85,7 +85,7 @@ class RandomField(HasStrictTraits):
     @cached_property
     def _get_random_field(self):
         if self.seed == True:
-            np.random.seed(141)
+            np.random.seed(101)
         '''simulates the Gaussian random field'''
         # evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
