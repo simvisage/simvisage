@@ -83,11 +83,7 @@ class CompositeCrackBridgeView(ModelView):
     sigma_c_max = Property(depends_on='model.E_m, model.w, model.Ll, model.Lr, model.reinforcement_lst+')
     @cached_property
     def _get_sigma_c_max(self):
-        frozen_w_unld = self.model.w_unld
-        frozen_damage = self.model.cont_fibers.maximum_damage
         def minfunc_sigma(w):
-            self.model.w_unld = frozen_w_unld
-            self.model.cont_fibers.maximum_damage = frozen_damage
             self.model.w = w
             stiffness_loss = np.sum(self.model.cont_fibers.Kf * self.model.cont_fibers.damage) / np.sum(self.model.cont_fibers.Kf)
             if stiffness_loss > 0.90:
@@ -95,8 +91,6 @@ class CompositeCrackBridgeView(ModelView):
             #plt.plot(w, self.sigma_c, 'ro')
             return -self.sigma_c
         def residuum_stiffness(w):
-            self.model.w_unld = frozen_w_unld
-            self.model.cont_fibers.maximum_damage = frozen_damage
             self.model.w = w
             stiffness_loss = np.sum(self.model.Kf * self.model.damage) / np.sum(self.model.Kf)
             if stiffness_loss > 0.90:
@@ -110,8 +104,6 @@ class CompositeCrackBridgeView(ModelView):
         if len(self.model.sorted_reinf_lst[0]) == 0:
             # there are only short fibers
             def minfunc_short_fibers(w):
-                self.model.w_unld = frozen_w_unld
-                self.model.cont_fibers.maximum_damage = frozen_damage
                 self.model.w = w
                 return -self.sigma_c
             w_max = fminbound(minfunc_short_fibers, 0.0, 3.0, maxfun=10, disp=0)

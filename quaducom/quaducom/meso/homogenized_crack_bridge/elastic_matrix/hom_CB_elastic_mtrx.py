@@ -27,26 +27,6 @@ class CompositeCrackBridge(HasTraits):
     E_m = Float
     Ll = Float
     Lr = Float
-    ft = Float
-    Gf = Float(1.0)
-    w_unld = Float(0.0)
-    damage_switch = Bool(True)
-    
-    @on_trait_change('damage_switch')
-    def switch_damage(self):
-        '''freezes the loading history'''
-        self.cont_fibers_instance.damage_switch = self.damage_switch
-        self.short_fibers_instance.damage_switch = self.damage_switch
-    
-    epsm_softening = Property(depends_on='w,ft,Gf,E_m')
-    @cached_property
-    def _get_epsm_softening(self):
-        if self.w >= self.w_unld:
-            if self.damage_switch == True:
-                self.w_unld += self.w - self.w_unld
-            return self.ft * np.exp(-self.ft/self.Gf * self.w) / self.E_m
-        else:
-            return self.w / self.w_unld * self.ft * np.exp(-self.ft/self.Gf * self.w_unld) / self.E_m
 
     V_f_tot = Property(depends_on='reinforcement_lst+')
     @cached_property
@@ -90,10 +70,7 @@ class CompositeCrackBridge(HasTraits):
         cbcf.Lr=self.Lr
         cbcf.E_m=self.E_m
         cbcf.E_c=self.E_c
-        cbcf.w_unld=self.w_unld
         cbcf.cont_reinf_lst=self.sorted_reinf_lst[0]
-        cbcf.epsm_softening=self.epsm_softening
-        #print self.w_unld, self.w, self.epsm_softening, self.ft, self.Gf
         return cbcf
     
     short_fibers_instance = Instance(CrackBridgeShortFibers)
@@ -108,7 +85,6 @@ class CompositeCrackBridge(HasTraits):
         cbsf.E_m = self.E_m
         cbsf.E_c = self.E_c
         cbsf.short_reinf_lst = self.sorted_reinf_lst[1]
-        cbsf.epsm_softening = self.epsm_softening
         return cbsf
     
     _x_arr = Property(Array, depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
@@ -191,22 +167,7 @@ class CompositeCrackBridge(HasTraits):
             sigma_c_cont = 0.0
             sigma_c_short = np.sum(self._epsf0_arr_short * self.short_fibers.sorted_V_f *
                                self.short_fibers.sorted_E_f)
-        return sigma_c_cont + sigma_c_short + self.epsm_softening * self.E_m * (1.-self.V_f_tot)
-    
-    secant_K = Property(depends_on = 'w,E_m,Ll,Lr,reinforcement_lst+')
-    @cached_property
-    def _get_secant_K(self):
-        ''' secant stiffness at given w '''
-        if len(self.sorted_reinf_lst[0]) != 0 and len(self.sorted_reinf_lst[1]) == 0:
-            self.cont_fibers.w = self.w
-            ef0, a_short, a_long, em, a = self.cont_fibers.profile(self.cont_fibers.damage)
-            K_cont = np.sum(self.cont_fibers.sorted_stats_weights *
-                            self.cont_fibers.sorted_V_f * self.cont_fibers.sorted_nu_r *
-                            self.cont_fibers.sorted_E_f * (1. - self.cont_fibers.damage) /
-                            (a_short + a_long))
-            return K_cont
-        else:
-            raise ValueError('secant stiffness not yet implemented for short fibers')       
+        return sigma_c_cont + sigma_c_short  
     
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
@@ -250,8 +211,6 @@ if __name__ == '__main__':
                         n_int=201)
 
     ccb = CompositeCrackBridge(E_m=25e3,
-                               ft=ft,
-                               Gf=Gf,
                                reinforcement_lst=[reinf_cont],
                                Ll=50.,
                                Lr=50.,
