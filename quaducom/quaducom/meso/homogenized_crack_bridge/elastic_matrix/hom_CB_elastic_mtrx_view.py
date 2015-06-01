@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     reinf_cont = ContinuousFibers(r=3.5e-3,
                           tau=RV('gamma', loc=tau_loc, scale=tau_scale, shape=tau_shape),
-                          V_f=0.01,
+                          V_f=0.00001,
                           E_f=181e3,
                           xi=fibers_MC(m=xi_shape, sV0=xi_scale),
                           label='carbon',
@@ -280,7 +280,7 @@ if __name__ == '__main__':
         #plt.plot(w_arr, ccb_view.secant_K(w_arr), lw=2, color='blue', label='K secant')
         #plt.plot(w_arr, damage_arr, lw=2, color='red', label='damage')
         #plt.plot(u_arr, sigma_c_arr, lw=2, label='u-sigma')
-        plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
+        #plt.plot(ccb_view.sigma_c_max[1], ccb_view.sigma_c_max[0], 'bo')
         plt.xlabel('w,u [mm]')
         plt.ylabel('$\sigma_c$ [MPa]')
         plt.legend(loc='best')
@@ -321,15 +321,15 @@ if __name__ == '__main__':
     # energy(np.linspace(.0, .15, 100))
     #sigma_c = np.linspace(1., 7., 7)
     #profile(0.01)
-    w_ld = np.linspace(0.0, 0.2, 20)
-    w_unl1 = np.linspace(0.2, 0.0, 20)
-    w_rel1 = np.linspace(0.0, 0.3, 20)
-    w_unl2 = np.linspace(0.3, 0.0, 20)
-    w_rel2 = np.linspace(0.0, 0.4, 20)
-    w_unl3 = np.linspace(0.4, 0.0, 20)
-    w_rel3 = np.linspace(0.0, 0.6, 20)
+    w_ld = np.linspace(0.0, 0.1, 50)
+    w_unl1 = np.linspace(0.1, 0.0, 50)
+    w_rel1 = np.linspace(0.0, 0.2, 50)
+    w_unl2 = np.linspace(0.2, 0.0, 50)
+    w_rel2 = np.linspace(0.0, 0.5, 50)
+    w_unl3 = np.linspace(0.4, 0.0, 50)
+    w_rel3 = np.linspace(0.0, 0.6, 50)
 
-    w = np.hstack((w_ld, w_unl1, w_rel1))
+    w = np.hstack((w_ld, w_unl1, w_rel1, w_unl2, w_rel2))
     #w = np.linspace(0,0.6,100)
     sigma_c_w(w)
     # energy(w)
