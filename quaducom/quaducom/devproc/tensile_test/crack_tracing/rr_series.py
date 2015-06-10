@@ -17,7 +17,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [5]]
+test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [1]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
@@ -25,7 +25,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 e_list_6c = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [2]]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [4]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
@@ -134,13 +134,15 @@ def plot_all():
         m = e.aramis_cdt.crack_detect_mask_avg.copy()
         cr_idx = np.where(m)[0]
         x = e.aramis_field_data.x_arr_0[0, :]
+
         print 'position', [x[cr_idx]]
 
         # print the crack initiating force
         print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
+        print 'force', [np.sort(e.F_t_aramis_asc[argmax_deps_t_cr])]
 
         p.show()
-
+#
         aui = AramisUI(aramis_info=e.aramis_info,
                        aramis_data=e.aramis_field_data,
                        aramis_cdt=e.aramis_cdt)

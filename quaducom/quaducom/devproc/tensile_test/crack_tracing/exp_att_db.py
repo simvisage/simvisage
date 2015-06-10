@@ -248,9 +248,16 @@ class ExpATTDB(ExpTTDB):
         fd = self.aramis_field_data
         n_y, n_x = fd.x_arr_0.shape
 
-        y_slice_fraction = 0.4
+        # middle
+        y_slice_fraction = 1.0
         fd.top_j = int(n_y / 2 * (1.0 - y_slice_fraction))
         fd.bottom_j = int(n_y / 2 * (1.0 + y_slice_fraction))
+# top 10 percent
+#         fd.top_j = 0
+#         fd.bottom_j = int(n_y * 0.1)
+#         bottom 10 percent
+#         fd.top_j = n_y - int(n_y * 0.10)
+#         fd.bottom_j = n_y
 
         dux_t_cr_list = []
 
