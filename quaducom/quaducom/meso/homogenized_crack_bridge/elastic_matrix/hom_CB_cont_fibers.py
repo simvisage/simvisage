@@ -23,9 +23,6 @@ class CrackBridgeContFibers(HasTraits):
     Lr = Float
     E_m = Float
     E_c = Float
-    epsm_softening = Float
-    w_unld = Float
-    damage_switch = Bool(True)
     
     V_f_tot_cont = Property(depends_on='con_reinf_lst+')
     @cached_property
@@ -172,30 +169,6 @@ class CrackBridgeContFibers(HasTraits):
         F = np.hstack((0., cumtrapz(f, -self.sorted_depsf)))
         return F
 
-#     def F(self, dems, amin):
-#         '''Auxiliary function (see Part II, appendix B)
-#         '''
-#         F = np.zeros_like(self.sorted_depsf)
-#         for i, mask in enumerate(self.sorted_masks):
-#             depsfi = self.sorted_depsf[mask]
-#             demsi = dems[mask]
-#             fi = 1. / (depsfi + demsi)
-#             F[mask] = np.hstack((np.array([0.0]), cumtrapz(fi, -depsfi)))
-#             if i == 0:
-#                 C = 0.0
-#             else:
-#                 depsf0 = self.sorted_depsf[self.sorted_masks[i - 1]]
-#                 depsf1 = depsfi[0]
-#                 idx = np.sum(depsf0 > depsf1) - 1
-#                 depsf2 = depsf0[idx]
-#                 a1 = np.exp(F[self.sorted_masks[i - 1]][idx] / 2. + np.log(amin))
-#                 p = depsf2 - depsf1
-#                 q = depsf1 + demsi[0]
-#                 amin_i = np.sqrt(a1 ** 2 + p / q * a1 ** 2)
-#                 C = np.log(amin_i / amin)
-#             F[mask] += 2 * C
-#         return F
-
     def clamped(self, Lmin, Lmax, init_dem):
         a = np.hstack((-Lmin, 0.0, Lmax))
         em = np.hstack((init_dem * Lmin, 0.0, init_dem * Lmax))
@@ -251,17 +224,6 @@ class CrackBridgeContFibers(HasTraits):
             # some fibers are debonded up to Lmin, some are not
             # boundary condition position
             idx1 = np.sum(a1 <= Lmin)
-            # a(T) for one sided pullout
-            # first debonded length amin for one sided pull out
-#             depsfLmin = self.sorted_depsf[idx1]
-#             p = (depsfLmin + dems[idx1])
-#             a_short = np.hstack((a1[:idx1], Lmin))
-#             em_short = np.cumsum(np.diff(np.hstack((0.0, a_short))) * dems[:idx1 + 1]) 
-#             emLmin = em_short[-1]
-#             umLmin = np.trapz(np.hstack((0.0, em_short)), np.hstack((0.0, a_short)))
-#             amin = -Lmin + np.sqrt(4 * Lmin ** 2 * p ** 2 - 4 * p * emLmin * Lmin + 4 * p * umLmin - 2 * p * Lmin ** 2 * depsfLmin + 2 * p * self.w) / p
-#             C = np.log(amin ** 2 + 2 * amin * Lmin - Lmin ** 2)
-#             a2 = (np.sqrt(2 * Lmin ** 2 + np.exp(F + C - F[idx1])) - Lmin)[idx1:]
             a2 = np.sqrt(2 * Lmin ** 2 + np.exp(F[idx1:])*2*self.w/(self.sorted_depsf[0] + init_dem))-Lmin
             # matrix strain profiles - shorter side
             a_short = np.hstack((-Lmin, -a1[:idx1][::-1], 0.0))
@@ -298,7 +260,7 @@ class CrackBridgeContFibers(HasTraits):
         a_long = a[a > 0.0][:-1]
         if len(a_long) < len(self.sorted_depsf):
             a_long = np.hstack((a_long, Lmax * np.ones(len(self.sorted_depsf) - len(a_long))))
-        return epsf0 + self.epsm_softening, a_short, a_long, em + self.epsm_softening, a
+        return epsf0, a_short, a_long, em, a
 
     def damage_residuum(self, iter_damage):
         if np.any(iter_damage < 0.0) or np.any(iter_damage > 1.0):
@@ -331,19 +293,15 @@ class CrackBridgeContFibers(HasTraits):
     def _get_epsf0_arr(self):
         return self.profile(self.damage)[0]
 
-    maximum_damage = Array
-
     damage = Property(depends_on='w, Ll, Lr, reinforcement+')
     @cached_property
     def _get_damage(self):
-        if len(self.maximum_damage) == 0:
-                self.maximum_damage = np.zeros_like(self.sorted_depsf)
         if self.w == 0.:
             damage = np.zeros_like(self.sorted_depsf)
         else:
             ff = t.clock()
             try:
-                damage = root(self.damage_residuum, self.maximum_damage,
+                damage = root(self.damage_residuum, 0.2 * np.ones_like(self.sorted_depsf),
                               method='excitingmixing', options={'maxiter':100})
                 if np.any(damage.x < 0.0) or np.any(damage.x > 1.0):
                     raise ValueError
@@ -354,11 +312,7 @@ class CrackBridgeContFibers(HasTraits):
                               method='krylov')
                 damage = damage.x
             # print 'damage =', np.sum(damage) / len(damage), 'iteration time =', t.clock() - ff, 'sec'
-        if self.damage_switch == False:
-            return np.maximum(damage, self.maximum_damage)
-        elif self.damage_switch == True:
-            self.maximum_damage = np.maximum(damage, self.maximum_damage)
-            return self.maximum_damage
+        return damage
 
 if __name__ == '__main__':
     pass

@@ -12,8 +12,13 @@
 #
 # Created on Aug 7, 2009 by: rchx
 
-from etsproxy.traits.api import TraitType, HasTraits, TraitError
-from etsproxy.traits.ui.api import View, Item, InstanceEditor
+# <<<<<<< HEAD
+from traits.api import TraitType, HasTraits, TraitError, Bool
+from traitsui.api import View, Item, InstanceEditor
+# =======
+# from etsproxy.traits.api import TraitType, HasTraits, TraitError
+# from etsproxy.traits.ui.api import View, Item, InstanceEditor
+# >>>>>>> branch 'master' of https://github.com/simvisage/simvisage.git
 from traits.trait_base import ClassTypes
 from traitsui.instance_choice import \
     InstanceFactoryChoice

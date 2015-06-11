@@ -160,16 +160,6 @@ class SCM(HasTraits):
             W_pre_crack = sigmac_pre_crack  / self.CB_model.E_c * self.length
             return sigmac_pre_crack, position_new_crack, W_pre_crack
         else:
-#             W_arr = np.linspace(-0.1, 0.0, 50)
-#             res = [self.residuum(Wi) for Wi in W_arr]
-#             plt.plot(W_arr, res, color='green')
-#             W_arr = np.linspace(0.0, 0.3 * len(self.crack_positions_lst), 50)
-#             res = [self.residuum(Wi) for Wi in W_arr]
-#             plt.plot(W_arr, res, color='blue')
-#             W_arr = np.linspace(0.3 * len(self.crack_positions_lst), 0.5 * len(self.crack_positions_lst),50)
-#             res = [self.residuum(Wi) for Wi in W_arr]
-#             plt.plot(W_arr, res, color='red')
-#             plt.show()
             W_pre_crack = newton(self.residuum, self.cracking_W_lst[-1], maxiter=10, tol=np.min(self.matrix_strength)/1000.)
             position_new_crack = self.x_arr[np.argmin(self.matrix_strength - self.sigma_m(W=W_pre_crack))]
             w_lst = self.eval_w_vect(W_pre_crack)
@@ -210,7 +200,7 @@ class SCM(HasTraits):
             residuum = np.hstack((CB_sigmac_arr[:-1] - CB_sigmac_arr[1:], W-np.sum(w_arr)))
             return residuum
         opt_result = root(min_func, np.repeat(W/float(len(cb_lst)),len(cb_lst)),
-                          method='krylov', options={'maxiter':10})
+                          method='krylov')
         equil_w_arr = np.hstack((np.abs(opt_result.x), W-np.sum(np.abs(opt_result.x))))
         for cb_i in cb_lst:
             cb_i.damage_switch = True 
@@ -253,6 +243,7 @@ if __name__ == '__main__':
     from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import ContinuousFibers, ShortFibers
     from stats.pdistrib.weibull_fibers_composite_distr import fibers_MC
     from matplotlib import pyplot as plt
+    import time
     length = 250.
     nx = 5000
     random_field = RandomField(seed=True,
@@ -277,7 +268,7 @@ if __name__ == '__main__':
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1],
                                  ft=1.0,
-                                 Gf=0.1
+                                 Gf=0.15
                                  )
 
     scm = SCM(length=length,
@@ -285,5 +276,4 @@ if __name__ == '__main__':
               random_field=random_field,
               CB_model=CB_model
               )
-
     scm.evaluate()

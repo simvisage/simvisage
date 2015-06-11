@@ -16,7 +16,7 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [3]]
+test_files = ['TTb-6c-2cm-0-TU-V%d.DAT' % i for i in [1]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-02_TTb-6c-2cm-0-TU_Aramis2d_RR'
@@ -24,7 +24,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
 e_list_6c = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
-test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [3]]
+test_files = ['TTb-4c-2cm-0-TU-V%d.DAT' % i for i in [4]]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',
                               '2013-12-01_TTb-4c-2cm-0-TU_Aramis2d_RR'
@@ -84,9 +84,20 @@ def plot_all():
         max_eps_t_cr = eps_t_cr[argmax_deps_t_cr + twin, cr_enum]
         max_t_cr = e.t_aramis_asc[argmax_deps_t_cr]
 
+        fd = e.aramis_field_data
+        displacement = np.zeros_like(e.t_aramis_asc)
+        for step, time in enumerate(e.t_aramis_asc):
+            #             print 'time', time
+            fd.current_step = step
+            ux_avg = fd.ux_arr_avg
+            displacement[step] = ux_avg[-1] - ux_avg[0]
+
+#         print 'u shape', e.aramis_field_data.ux_arr_avg.shape
+
         axes = p.subplot(231)
         axes.plot(e.t_aramis_asc, dux_t_cr, color='darkblue', label='1')
-        p.ylim((-0.05, 0.30))
+#         p.ylim((-0.05, 0.30))
+#         p.plot(np.average(eps_t_cr, axis=1), e.F_t_aramis_asc/2.)
 
         axes = p.subplot(232)
         axes.plot(e.t_aramis_asc, eps_t_cr, label='1')
@@ -108,6 +119,8 @@ def plot_all():
 
         axes = p.subplot(234)
         e._plot_sigc_eps_ironed(axes, color='darkblue', label='eps')
+        p.plot(displacement / 120., e.F_t_aramis_asc / 2., label='segment')
+        p.legend()
 
         axes = p.subplot(235)
         axes.plot(e.F_t_aramis_asc, eps_t_cr)
@@ -140,9 +153,9 @@ def plot_all():
 
         # print the crack initiating force
         print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
+        print 'force', [np.sort(e.F_t_aramis_asc[argmax_deps_t_cr])]
 
         p.show()
-
         aui = AramisUI(aramis_info=e.aramis_info,
                        aramis_data=e.aramis_field_data,
                        aramis_cdt=e.aramis_cdt)

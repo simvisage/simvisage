@@ -225,9 +225,9 @@ class SCM(HasTraits):
                                                   self.sigma_m(sigc_min))]
             self.crack_positions_lst.append(crack_position)
             self.cracking_stress_lst.append(sigc_min - 1e-10)
-            plt.plot(self.x_arr, self.sigma_m(sigc_min) / self.CB_model.E_m, color='blue', lw=2)
-            plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)
-            plt.show()
+#             plt.plot(self.x_arr, self.sigma_m(sigc_min), color='blue', lw=2)
+#             plt.plot(self.x_arr, self.matrix_strength, color='black', lw=2)
+#             plt.show()
             if float(crack_position) == last_pos:
                 print last_pos
                 raise ValueError('''got stuck in loop,
@@ -241,22 +241,22 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     length = 100.
     nx = 500
-    random_field = RandomField(seed=True,
+    random_field = RandomField(seed=False,
                                lacor=1.,
                                length=length,
                                nx=500,
                                nsim=1,
                                loc=.0,
-                               shape=15.,
+                               shape=30.,
                                scale=4.0,
                                distr_type='Weibull'
                                )
 
-    reinf1 = ContinuousFibers(r=3.5e-3,
-                              tau=RV('weibull_min', loc=0.01, scale=.01, shape=2.),
+    reinf1 = ContinuousFibers(r=.1,
+                              tau=RV('uniform', loc=0.2, scale=.8),
                               V_f=0.05,
                               E_f=200e3,
-                              xi=fibers_MC(m=7., sV0=0.01),
+                              xi=fibers_MC(m=7., sV0=10.01),
                               label='carbon',
                               n_int=100)
     
@@ -282,7 +282,7 @@ if __name__ == '__main__':
 
     CB_model = CompositeCrackBridge(E_m=25e3,
                                  reinforcement_lst=[reinf1],
-                                 ft=1.0,
+                                 ft=0.0,
                                  Gf=0.5
                                  )
 

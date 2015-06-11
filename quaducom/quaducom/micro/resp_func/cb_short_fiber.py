@@ -77,18 +77,23 @@ class CBShortFiber(RF):
     C_code = ''
 
     def __call__(self, w, tau, r, E_f, le, phi, snub, xi, spall):
-
         T = 2. * tau / r
         # debonding stage
         ef0_deb = np.sqrt(T * w / E_f)
+        ef0_deb *= np.exp(phi*snub) * np.cos(phi)**spall
+        mask_deb = ef0_deb < xi
+        ef0_deb = ef0_deb * mask_deb
         # crack opening at which debonding is finished
         w0 = le ** 2 * T / E_f
+        mask_pullout = np.sqrt(T * w0 / E_f) < xi
         # pulling out stage - the fiber is pulled out from the
         # side with the shorter embedded length only
         ef0_pull = (le + w0 - w) * T / E_f
-        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*snub) * np.cos(phi)**spall
+        ef0_pull *= np.exp(phi*snub) * np.cos(phi)**spall
+        ef0_pull = ef0_pull * mask_pullout # fibers have ruptured during debonding
+        
+        ef0 = ef0_deb * (w < w0) + ef0_pull * (w > w0)
         # include breaking strain
-        ef0 = ef0 * (ef0 < xi)
         return ef0
 
 if __name__ == '__main__':
