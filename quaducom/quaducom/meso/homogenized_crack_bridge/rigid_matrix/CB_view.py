@@ -7,20 +7,17 @@ import numpy as np
 from scipy.interpolate import interp1d
 import os
 from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event, List
+     cached_property, Float, Int, Instance, Event
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from enthought.traits.ui.menu import OKButton, CancelButton
+from etsproxy.traits.ui.menu import OKButton, CancelButton
 from matplotlib.figure import Figure
 from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
 from spirrid.spirrid import SPIRRID
 from spirrid.rv import RV
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from etsproxy.traits.ui.api import ModelView
-from enthought.util.home_directory import get_home_directory
-from scipy.special import gamma as gamma_func
-from scipy.optimize import newton, fsolve
-from matplotlib import pyplot as plt
-from scipy.stats import gamma
+from etsproxy.util.home_directory import get_home_directory
+
 
 
 class Model(HasTraits):
@@ -36,38 +33,13 @@ class Model(HasTraits):
     w2_min = Float(auto_set=False, enter_set=True, params=True)
     w2_max = Float(auto_set=False, enter_set=True, params=True)
     w2_pts = Int(auto_set=False, enter_set=True, params=True)
-    #tau_scale = Float(auto_set=False, enter_set=True, params=True)
+    tau_scale = Float(auto_set=False, enter_set=True, params=True)
     tau_loc = Float(auto_set=False, enter_set=True, params=True)
-    #tau_shape = Float(auto_set=False, enter_set=True, params=True)
+    tau_shape = Float(auto_set=False, enter_set=True, params=True)
     Ef = Float(auto_set=False, enter_set=True, params=True)
     lm = Float(auto_set=False, enter_set=True, params=True)
     V_f = Float(.01, params=True)
     r = Float(3.5e-3, params=True)
-    CS = Float(8.0, auto_set=False, enter_set=True, params=True)
-    sigmamu = Float(3.0, auto_set=False, enter_set=True, params=True)
-    w_hat = Float(0.075)
-    tau_scale1 = Float(0.651310376269)
-    tau_shape1 = Float(0.11757297717)
-
-    tau_scale = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS,sigmamu, tau_scale1, m')
-    @cached_property
-    def _get_tau_scale(self):
-        return self.tau_scale1
-#         sigmaf_hat = self.interpolate_experiment(self.w_hat)
-#         mu_sqrt_tau = sigmaf_hat / np.sqrt(2. * self.Ef * self.w_hat / self.r)
-#         mu_tau = 1.3 * self.r *self.sigmamu* (1.-self.V_f) / (2. * self.V_f * self.CS)
-#         def scale_res(scale):
-#             res = scale - ((mu_sqrt_tau) / (gamma_func(mu_tau/scale + 0.5)/gamma_func(mu_tau/scale)))**2
-#             return res
-#         scale = fsolve(scale_res, 0.52)
-#         return float(scale)
-#      
-    tau_shape = Property(Float, depends_on='test_xdata,test_ydata,Ef,r,V_f,CS,sigmamu, tau_shape1, m')
-    @cached_property
-    def _get_tau_shape(self):
-        return self.tau_shape1
-#         mu_tau = 1.3 * self.r * self.sigmamu * (1.-self.V_f) / (2. * self.V_f * self.CS)
-#         return mu_tau/self.tau_scale
 
     w = Property(Array)
     def _get_w(self):
@@ -150,7 +122,7 @@ class CBView(ModelView):
                   label='model')
         axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black', \
                   label='experiment')
-        axes.legend()
+        axes.legend(loc='best')
 
 #         figure2 = fig2
 #         figure2.clear()
@@ -164,8 +136,8 @@ class CBView(ModelView):
         self.plot(self.figure, self.figure2)
         self.data_changed = True
 
-    traits_view = View(HSplit(VGroup(Group(Item('model.tau_scale1'),
-                                           Item('model.tau_shape1'),
+    traits_view = View(HSplit(VGroup(Group(Item('model.tau_scale'),
+                                           Item('model.tau_shape'),
                                            Item('model.tau_loc'),
                                            Item('model.m'),
                                            Item('model.sV0'),
@@ -177,10 +149,7 @@ class CBView(ModelView):
                                            Item('model.w2_min'),
                                            Item('model.w2_max'),
                                            Item('model.w2_pts'),
-                                           Item('model.lm'),
-                                           Item('model.CS'),
                                            Item('model.sigmamu'),
-                                           Item('model.w_hat')
                                            ),
                                       id='pdistrib.distr_type.pltctrls',
                                       label='Distribution parameters',
@@ -224,20 +193,27 @@ if __name__ == '__main__':
 
     model = Model(w_min=0.0, w_max=3.0, w_pts=200,
                   w2_min=0.0, w2_max=0.5, w2_pts=200,
-                  sV0=8.5e-3, m=9.0, tau_loc=0.0, Ef=180e3,
-                  lm=20., n_int=100, CS=8.0, sigmamu=3.0)
+                  sV0=11.4e-3, m=8.6, tau_loc=0.0, Ef=181e3,
+                  lm=20., n_int=100, tau_scale=1.53419049, tau_shape=0.0615, sigmamu=3.0)
 
-    home_dir = 'D:\Eclipse\\'
-    path = [home_dir, 'git',  # the path of the data file
-            'rostar',
-            'scratch',
-            'diss_figs',
-            'CB1.txt']
-    filepath = os.path.join(*path)
-    file1 = open(filepath, 'r')
-    cb = np.loadtxt(file1, delimiter=';')
-    model.test_xdata = -cb[:, 2] / 4. - cb[:, 3] / 4. - cb[:, 4] / 2.
-    model.test_ydata = cb[:, 1] / (11. * 0.445) * 1000
+    w_arr = np.linspace(0.0,10.,500)
+    avg = np.zeros_like(w_arr)
+    home_dir = get_home_directory()
+    for i in range(5):
+        path = [home_dir, 'git',  # the path of the data file
+                    'rostar',
+                    'scratch',
+                    'diss_figs',
+                    'CB' + str(i+1) +'.txt']
+        filepath = os.path.join(*path)
+        file1 = open(filepath, 'r')
+        cb = np.loadtxt(file1, delimiter=';')
+        model.test_xdata = -cb[:, 2] / 4. - cb[:, 3] / 4. - cb[:, 4] / 2.
+        model.test_ydata = cb[:, 1] / (11. * 0.445) * 1000
+        avg += model.interpolate_experiment(w_arr) / 5.
+
+    model.test_xdata = w_arr
+    model.test_ydata = avg
 
     cb = CBView(model=model)
     cb.refresh()

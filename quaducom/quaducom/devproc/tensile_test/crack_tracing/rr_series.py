@@ -3,7 +3,6 @@ Created on Jan 28, 2015
 
 '''
 
-from exp_att_db import ExpATTDB, f_interp1d
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
@@ -134,7 +133,22 @@ def plot_all():
         m = e.aramis_cdt.crack_detect_mask_avg.copy()
         cr_idx = np.where(m)[0]
         x = e.aramis_field_data.x_arr_0[0, :]
+        print 'position', [x[cr_idx]]
 
+        # print the crack initiating force
+        print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
+
+        axes = p.subplot(235)
+        axes.plot(e.F_t_aramis_asc, eps_t_cr)
+        p.ylim((-0.002, 0.02))
+
+        axes = p.subplot(236)
+        axes.plot(e.t_aramis_asc, e.F_t_aramis_asc)
+
+        # print the crack positions
+        m = e.aramis_cdt.crack_detect_mask_avg.copy()
+        cr_idx = np.where(m)[0]
+        x = e.aramis_field_data.x_arr_0[0, :]
         print 'position', [x[cr_idx]]
 
         # print the crack initiating force
@@ -142,7 +156,6 @@ def plot_all():
         print 'force', [np.sort(e.F_t_aramis_asc[argmax_deps_t_cr])]
 
         p.show()
-#
         aui = AramisUI(aramis_info=e.aramis_info,
                        aramis_data=e.aramis_field_data,
                        aramis_cdt=e.aramis_cdt)

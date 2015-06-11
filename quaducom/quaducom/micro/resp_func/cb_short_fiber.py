@@ -10,7 +10,6 @@
 #
 # Thanks for using Simvisage open source!
 
-from matplotlib import pyplot as plt
 from etsproxy.traits.api import \
     Float, Str, implements
 import numpy as np
@@ -61,6 +60,11 @@ class CBShortFiber(RF):
             distr=['uniform', 'norm'],
                 scale=0.05, shape=0)
 
+    spall = Float(0.03, auto_set=False, enter_set=True,
+            desc='spalling coefficient',
+            distr=['uniform', 'norm'],
+                scale=0.05, shape=0)
+
     phi = Float(0.0, auto_set=False, enter_set=True,
        desc='inclination angle',
        distr=['sin2x', 'uniform'],
@@ -72,25 +76,31 @@ class CBShortFiber(RF):
 
     C_code = ''
 
-    def __call__(self, w, tau, r, E_f, le, phi, snub, xi):
-
+    def __call__(self, w, tau, r, E_f, le, phi, snub, xi, spall):
         T = 2. * tau / r
         # debonding stage
         ef0_deb = np.sqrt(T * w / E_f)
+        ef0_deb *= np.exp(phi*snub) * np.cos(phi)**spall
+        mask_deb = ef0_deb < xi
+        ef0_deb = ef0_deb * mask_deb
         # crack opening at which debonding is finished
         w0 = le ** 2 * T / E_f
+        mask_pullout = np.sqrt(T * w0 / E_f) < xi
         # pulling out stage - the fiber is pulled out from the
         # side with the shorter embedded length only
         ef0_pull = (le + w0 - w) * T / E_f
-        ef0 = (ef0_deb * (w < w0) + ef0_pull * (w > w0)) * np.exp(phi*snub)
+        ef0_pull *= np.exp(phi*snub) * np.cos(phi)**spall
+        ef0_pull = ef0_pull * mask_pullout # fibers have ruptured during debonding
+        
+        ef0 = ef0_deb * (w < w0) + ef0_pull * (w > w0)
         # include breaking strain
-        ef0 = ef0 * (ef0 < xi)
         return ef0
 
 if __name__ == '__main__':
+    from matplotlib import pyplot as plt
     frc = CBShortFiber()
     w = np.linspace(0.0, .06, 200)
-    ef0 = frc(w, .3, 0.013, 70e3, 7.0, 0.5, 0.03, 20.0)
+    ef0 = frc(w, .3, 0.013, 70e3, 7.0, 0.5, 0.03, 20.0, 0.)
     plt.plot(w, ef0 * 70e3, linewidth=2, color='navy')
     #plt.ylim(0,0.01 * 70e3)
     plt.show()

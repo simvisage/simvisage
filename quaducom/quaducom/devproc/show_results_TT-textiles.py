@@ -32,14 +32,14 @@ if __name__ == '__main__':
     #
     save_fig_to_file = True
     save_table_to_file = True
-    stiffness_flag = True
+    stiffness_flag = False
     stiffness_flag_I = False
-    stiffness_flag_II = False
+    stiffness_flag_II = True
     plot_sigtex_flag = True
-    legend_flag = False
-    legend_loc = 1  # upper right # set to "legend_loc = 4" for lower right
-    sig_flag = 'comp'
-#    sig_flag = 'tex'
+    legend_flag = True
+    legend_loc = 4  # upper right # set to "legend_loc = 4" for lower right
+#    sig_flag = 'comp'
+    sig_flag = 'tex'
 
     #---------------------------
 #    test_series_name = 'ARG-2400-FR-1v1l'
@@ -49,9 +49,11 @@ if __name__ == '__main__':
 #    test_series_name = 'ARG-1200-TU-1v1l'
 #    test_series_name = 'CAR-800-TR-2v1l'
 #    test_series_name = 'CAR-800-TR-1v1l'
-    test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
+#    test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
+    test_series_name = 'CAR-800-TU-1v1l_TRC-pretests'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-2cm'
 #    test_series_name = 'CAR-800-TU-1v1l_TT-6cm'
+#    test_series_name = 'CAR-3300-TR-3v3l'
 #    test_series_name = 'CAR-3300-TR-3v3l'
     #---------------------------
 #    test_series_name = 'compare_CAR'
@@ -148,8 +150,12 @@ if __name__ == '__main__':
         k_rho = 1.006  # correction factor for ARG-1200-TU (a_tex*b = 54mm2/m*0.10m*6layers =32,4mm2; A_tex = 0.447mm2/Roving * 12 Rovings/layer * 6 layers=32,2mm2)
 
         # specify limits for the plot
-        xlim = 12.
-        ylim = 14.
+        if sig_flag == 'comp':
+            xlim = 12.
+            ylim = 14.
+        if sig_flag == 'tex':
+            xlim = 12.
+            ylim = 1500.
 
         # TTb_bs4
         path_V7 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6g-2cm-0-TU_bs4-Aramis3d', 'TTb-6g-2cm-0-TU-V1_bs4.DAT')
@@ -205,8 +211,12 @@ if __name__ == '__main__':
         k_rho = 1.007  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
 
         # specify limits for the plot
-        xlim = 9.
-        ylim = 30.
+        if sig_flag == 'comp':
+            xlim = 9.
+            ylim = 30.
+        if sig_flag == 'tex':
+            xlim = 9.
+            ylim = 1500.
         #
         path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V1_bs4.DAT')
         path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V2_bs4.DAT')
@@ -218,8 +228,39 @@ if __name__ == '__main__':
         #
         path_list = [path_V1, path_V2, path_V3]
         label_list = ['Serie 1 (V1 bis V3)', None, None]
-        color_list = ['k', 'k', 'k']
+        color_list = ['k', 'r', 'b']
         linestyle_list = ['-', '-', '-']
+
+    #---------------------------
+    # tensile test results (CAR-800-TU-1v1l)-(TTb-2c-25cm-0-TU_TRC-pretests)
+    #---------------------------
+    if test_series_name == 'CAR-800-TU-1v1l_TRC-pretests':
+        interpolated_flag = True
+        # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
+        # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
+        #
+        k_rho = 1.0  # correction factor for CAR-800-TU (a_tex*b = 53.9mm2/m*0.10m*6layers =32,34mm2; A_tex = 0.446mm2/Roving * 12 Rovings/layer * 6 layers=32,11mm2)
+
+        # specify limits for the plot
+        xlim = 9.
+#        xlim = 18.
+        if sig_flag == 'comp':
+            ylim = 18.
+        if sig_flag == 'tex':
+            ylim = 1600.
+
+        path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-03-22_TTb_TRC-pretests', 'V12-1.DAT')
+        path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-03-22_TTb_TRC-pretests', 'V12-3.DAT')
+
+#        path_V3 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V1_bs4.DAT')
+        path_V3 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V2_bs4.DAT')
+        path_V4 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d', 'TTb-6c-2cm-0-TU-V3_bs4.DAT')
+
+        path_list = [path_V1, path_V2, path_V3, path_V4]
+        label_list = [None, None, None, None]
+        color_list = ['k', 'k', 'grey', 'grey']
+        linestyle_list = ['-', '-', '-', '-']
+        label_list = [r'fixe Endverankerung nach Bild 3.3', None, r'variable Endverankerung nach Bild 3.4', None]
 
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l)-(TT-6c-2cm-0-TU_bs)
@@ -439,7 +480,7 @@ if __name__ == '__main__':
         interpolated_flag = False
         stiffness_flag = False
         stiffness_flag_I = False
-        stiffness_flag_II = False
+        stiffness_flag_II = True
         plot_sigtex_flag = False
         legend_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
@@ -601,19 +642,39 @@ if __name__ == '__main__':
         if sig_flag == 'comp':
             ex_run.ex_type._plot_comp_stress_strain_asc(p, interpolated=interpolated_flag, k_rho=k_rho, color=color_list[i], linewidth=1.3, linestyle=linestyle_list[i], label=label_list[i], xscale=1000., plot_analytical_stiffness=stiffness_flag, plot_analytical_stiffness_I=stiffness_flag_I, plot_analytical_stiffness_II=stiffness_flag_II)
         if sig_flag == 'tex':
-            ex_run.ex_type._plot_tex_stress_strain_asc(p, interpolated=interpolated_flag, k_rho=k_rho, color=color_list[i], linewidth=1.3, linestyle=linestyle_list[i], label=label_list[i], xscale=1000., plot_analytical_stiffness=stiffness_flag, plot_analytical_stiffness_I=stiffness_flag_I, plot_analytical_stiffness_II=stiffness_flag_II)
+            ex_run.ex_type._plot_tex_stress_strain_asc(p, interpolated=True, k_rho=k_rho, color=color_list[i], linewidth=1.3, linestyle=linestyle_list[i], label=label_list[i], xscale=1000., plot_analytical_stiffness=stiffness_flag, plot_analytical_stiffness_I=stiffness_flag_I, plot_analytical_stiffness_II=stiffness_flag_II)
 
     # plot maximum average textile stress
     #
     if plot_sigtex_flag:
         xarr = np.array([0.4 * eps_u_avg, 1.2 * eps_u_avg])
-        yarr = np.array([sig_c_avg, sig_c_avg])
+        if sig_flag == 'comp':
+            yarr = np.array([sig_c_avg, sig_c_avg])
+        if sig_flag == 'tex':
+            yarr = np.array([sig_tex_avg, sig_tex_avg])
         p.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.3)
-        p.text(0.4 * eps_u_avg, sig_c_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+        if sig_flag == 'comp':
+            p.text(0.4 * eps_u_avg, sig_c_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+        if sig_flag == 'tex':
+            p.text(0.4 * eps_u_avg, sig_tex_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+            # ## for figure compare pretest with barrelshell (TTb_2cm) only:
+#            xarr = np.array([0.3 * eps_u_avg, 1.2 * eps_u_avg])
+#            sig_tex_avg = 1077
+#            yarr = np.array([sig_tex_avg, sig_tex_avg])
+#            p.plot(xarr, yarr, linestyle='--', color='k', linewidth=1.)
+#            p.text(0.3 * eps_u_avg, sig_tex_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+#            sig_tex_avg = 1483
+#            yarr = np.array([sig_tex_avg, sig_tex_avg])
+#            p.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.)
+#            p.text(0.3 * eps_u_avg, sig_tex_avg * 1.03, r'$\sigma_\mathrm{tex,u}\,=\,%0.0f\,\mathrm{MPa}$' % (sig_tex_avg), color='grey', fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
+#            p.text(0.10 * eps_u_avg, sig_tex_avg * .04, r'$E_\mathrm{tex}$', color='k', fontsize=16)  # , bbox={'facecolor':'white', 'edgecolor':'none'})
 
     # format plot
     #
-    format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Kompositspannung $\sigma_\mathrm{c}$ [MPa]', xlim=xlim, ylim=ylim)
+    if sig_flag == 'comp':
+        format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Kompositspannung $\sigma_\mathrm{c}$ [MPa]', xlim=xlim, ylim=ylim)
+    if sig_flag == 'tex':
+        format_plot(p, fontsize=15, xlabel='Dehnung $\epsilon$ [1E-3]', ylabel='Textilspannung $\sigma_\mathrm{tex}$ [MPa]', xlim=xlim, ylim=ylim)
     axes = p.gca()
     axes.xaxis.grid(True, which='major')
     axes.yaxis.grid(True, which='major')
@@ -650,11 +711,18 @@ if __name__ == '__main__':
         #
         if os.path.isdir(test_series_dir) == False:
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, 'sigc-sigtex-epsu.pdf')
-        p.savefig(filename, format='pdf')
-        filename = os.path.join(test_series_dir, 'sigc-sigtex-epsu.png')
-        p.savefig(filename, format='png')
-        print 'figure saved to file %s' % (filename)
+        if sig_flag == 'comp':
+            filename = os.path.join(test_series_dir, 'sigc-epsu.pdf')
+            p.savefig(filename, format='pdf')
+            filename = os.path.join(test_series_dir, 'sigc-epsu.png')
+            p.savefig(filename, format='png')
+            print 'figure saved to file %s' % (filename)
+        if sig_flag == 'tex':
+            filename = os.path.join(test_series_dir, 'sigtex-epsu.pdf')
+            p.savefig(filename, format='pdf')
+            filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
+            p.savefig(filename, format='png')
+            print 'figure saved to file %s' % (filename)
 
     p.show()
 

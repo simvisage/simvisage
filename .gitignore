@@ -4,3 +4,4 @@
 *.o
 *.so
 .svn
+.DS_Store

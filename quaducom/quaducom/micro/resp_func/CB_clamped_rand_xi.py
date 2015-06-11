@@ -76,7 +76,7 @@ class CBClampedRandXi(RF):
 
     C_code = Str('')
 
-    pullout = Bool(True)
+    pullout = Bool(False)
 
     def mu_broken(self, e, depsf, r, lm, m, sV0, mask):
         n = 200
@@ -98,16 +98,21 @@ class CBClampedRandXi(RF):
 
     def cdf(self, e, depsf, r, lm, m, sV0):
         '''weibull_fibers_cdf_mc'''
-        s = ((depsf*(m+1.)*sV0**m)/(2.*pi*r**2.))**(1./(m+1.))
+        s = ((depsf * (m+1) * sV0**m)/(2. * pi * r ** 2))**(1./(m+1))
         a0 = (e+1e-15)/depsf
-        expfree = (e/s) ** (m + 1)
-        expfixed = a0 / (lm/2.0) * (e/s) ** (m + 1) * (1.-(1.-lm/2.0/a0)**(m+1.))
         mask = a0 < lm/2.0
-        exp = expfree * mask + np.nan_to_num(expfixed * (mask == False))
-        return 1. - np.exp(- exp)
+        ef0cb = e * mask
+        ef0lin = e * (mask == False)
+        Gxi_deb = 1 - np.exp(-(ef0cb/s)**(m+1))
+        Gxi_clamp = 1 - np.exp(-(ef0lin/s)**(m+1) * (1-(1-lm/(2.*(ef0lin/depsf)))**(m+1)))
+        return np.nan_to_num(Gxi_deb) + np.nan_to_num(Gxi_clamp)
 
     def __call__(self, w, tau, E_f, V_f, r, m, sV0, lm):
-        '''free and fixed fibers combined'''
+        '''free and fixed fibers combined
+        the failure probability of fixed fibers
+        is evaluated by integrating only
+        between -lm/2 and lm/2.
+        '''
         T = 2. * tau / r + 1e-10
         k = np.sqrt(T/E_f)
         ef0cb = k*np.sqrt(w)  
@@ -117,13 +122,13 @@ class CBClampedRandXi(RF):
         mask = a0 < lm/2.0
         e = ef0cb * mask + ef0lin * (mask == False)
         Gxi = self.cdf(e, depsf, r, lm, m, sV0)
-        mu_int = e * (1.-Gxi)
-        mu_broken = self.mu_broken(e, depsf, r, lm, m, sV0, mask)
+        mu_int = e * (1-Gxi)
         if self.pullout:
+            mu_broken = self.mu_broken(e, depsf, r, lm, m, sV0, mask)
             return (mu_int + mu_broken) * E_f * V_f * r**2
         else:
             return mu_int * E_f * V_f * r**2
-    
+
     def free_deb(self, w, tau, E_f, V_f, r, m, sV0):
         '''free debonding only = __call__ with lm=infty'''
         T = 2. * tau / r
@@ -141,7 +146,7 @@ class CBClampedRandXi(RF):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    cb = CBClampedRandXi()
+    cb = CBClampedRandXi(pullout=True)
     w = np.linspace(0.0, 2., 300)
     sigma = []
     for wi in w:

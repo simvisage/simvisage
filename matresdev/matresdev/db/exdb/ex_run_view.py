@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -46,13 +46,15 @@ import os
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+
 class ExRunView(ModelView):
 
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Initialization
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     filter = List()
+
     def _filter_default(self):
         return ['*.DAT;*.raw']
 
@@ -70,23 +72,24 @@ class ExRunView(ModelView):
     def init(self, ui_info):
         self._ui_info = ui_info
 
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Model manipulation
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     # Current experiment run
     #
     data_file = File
+
     def _data_file_default(self):
         # get the default form of the model
-#        ex_path = os.path.join( simdb.exdata_dir,
-#                                'tensile_tests',
-#                                'TT-9a',
-#                                'TT09-9a-V1.DAT' )
+        #        ex_path = os.path.join( simdb.exdata_dir,
+        #                                'tensile_tests',
+        #                                'TT-9a',
+        #                                'TT09-9a-V1.DAT' )
         ex_path = os.path.join(simdb.exdata_dir,
-                                'plate_tests',
-                                'PT-10a',
-                                'PT11-10a.DAT')
+                               'plate_tests',
+                               'PT-10a',
+                               'PT11-10a.DAT')
 
         return ex_path
 
@@ -102,9 +105,9 @@ class ExRunView(ModelView):
             if model.unsaved:
 
                 answer = confirm(self._ui_info.ui.control, 'Run changed, save it?',
-                                  title='Save confirmation',
-                                  cancel=False,
-                                  default=YES)
+                                 title='Save confirmation',
+                                 cancel=False,
+                                 default=YES)
 
                 if answer == YES:
                     # ask whether the modified run should be saved
@@ -120,9 +123,9 @@ class ExRunView(ModelView):
     #
     model = Instance(ExRun)
 
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Drawing
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     # The variable controlling the redraw button. It is set True whenever
     # an input value of the experiment run was changed.
@@ -134,17 +137,21 @@ class ExRunView(ModelView):
         self.redraw()
 
     unsaved = Bool(False)
+
     def listen_to_unsaved(self):
         self.unsaved = self.model.unsaved
 
     @on_trait_change('model')
     def _reset_model_listeners(self, obj, name, old_model, new_model):
         '''Delete the listeners of the old object reacting to the redraw tag
-        of the experiment run. Bind the redraw listener to the newly attached model.
+        of the experiment run. Bind the redraw listener to the newly
+        attached model.
         '''
         if old_model:
-            old_model.on_trait_change(self.set_changed, 'change_event', remove=True)
-            old_model.on_trait_change(self.listen_to_unsaved, 'unsaved', remove=True)
+            old_model.on_trait_change(
+                self.set_changed, 'change_event', remove=True)
+            old_model.on_trait_change(
+                self.listen_to_unsaved, 'unsaved', remove=True)
         if new_model:
             new_model.on_trait_change(self.set_changed, 'change_event')
             new_model.on_trait_change(self.listen_to_unsaved, 'unsaved')
@@ -161,15 +168,15 @@ class ExRunView(ModelView):
         axes = figure.gca()
         axes.clear()
 
-        proc_name = self.model.ex_type.plot_templates[ self.plot_template ]
+        proc_name = self.model.ex_type.plot_templates[self.plot_template]
         plot_processor = getattr(self.model.ex_type, proc_name)
         plot_processor(axes)
 
         self.data_changed = True
 
-    #----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Persistence management
-    #----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def load_run(self, ui_info=None):
         '''Read the run from the current data file into the model.
@@ -189,9 +196,9 @@ class ExRunView(ModelView):
         The source DAT file is unaffected.
         '''
         answer = confirm(self._ui_info.ui.control, 'Really reset? Changes will be lost!',
-                          title='Reset confirmation',
-                          cancel=False,
-                          default=YES)
+                         title='Reset confirmation',
+                         cancel=False,
+                         default=YES)
 
         if answer == YES:
             # ask whether the modified run should be saved
@@ -205,6 +212,7 @@ class ExRunView(ModelView):
     #-------------------------------------------------------------------
 
     figure = Instance(Figure)
+
     def _figure_default(self):
         figure = Figure(facecolor='white')
         figure.add_axes([0.08, 0.13, 0.85, 0.74])
@@ -217,6 +225,7 @@ class ExRunView(ModelView):
     # selected plot template
     #
     plot_template = Enum(values='plot_template_list')
+
     def _plot_template_default(self):
         return self.model.ex_type.default_plot_template
 
@@ -224,6 +233,7 @@ class ExRunView(ModelView):
     # (gets extracted from the model whenever it's been changed)
     #
     plot_template_list = List
+
     def _reset_plot_template_list(self):
         '''Change the selection list of plot templates.
 
@@ -232,11 +242,12 @@ class ExRunView(ModelView):
         '''
         self.plot_template_list = self.model.ex_type.plot_templates.keys()
 
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # UI specification
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     key_bindings = Instance(KeyBindings)
+
     def _key_bindings_default(self):
         """ Trait initializer. """
 
@@ -258,91 +269,89 @@ class ExRunView(ModelView):
 
     def default_toolbar(self):
         return ToolBar(
-                  Action(name="Save",
-                         tooltip='Save run',
-                         enabled_when='unsaved',
-                         image=ImageResource('save'),
-                         action="save_run"),
-                  Action(name="Reset",
-                         tooltip='Reset run',
-                         enabled_when='unsaved',
-                         image=ImageResource('reset'),
-                         action="reset_run"),
-                  image_size=(22, 22),
-                  show_tool_names=False,
-                  show_divider=True,
-                  name='exrun_toolbar')
+            Action(name="Save",
+                   tooltip='Save run',
+                   enabled_when='unsaved',
+                   image=ImageResource('save'),
+                   action="save_run"),
+            Action(name="Reset",
+                   tooltip='Reset run',
+                   enabled_when='unsaved',
+                   image=ImageResource('reset'),
+                   action="reset_run"),
+            image_size=(22, 22),
+            show_tool_names=False,
+            show_divider=True,
+            name='exrun_toolbar')
 
     def default_menubar(self):
         return MenuBar(Menu(Action(name="&Open",
-                               action="load_run"),
+                                   action="load_run"),
                             Action(name="&Save",
-                               action="save_run"),
+                                   action="save_run"),
                             Action(name="&Exit",
-                               action="exit"),
+                                   action="exit"),
                             name="&File"),
-                      Menu(Action(name="About PStudy",
-                               action="about_pstudy"),
-                         HelpAction,
-                        name="Help")
-                    )
+                       Menu(Action(name="About PStudy",
+                                   action="about_pstudy"),
+                            HelpAction,
+                            name="Help")
+                       )
 
     def default_traits_view(self):
 
-        return  View(HSplit(
-                            VSplit(
-                               Item('data_file@', editor=FileEditor(filter_name='filter') ,
-                                    show_label=False),
-                                Group(
-                                    Item('figure', editor=MPLFigureEditor(),
-                                         resizable=True, show_label=False),
-                                         id='simexdb.plot_sheet',
-                                         label='plot sheet',
-                                         dock='tab',
-                                         ),
-                                    Group(
-                                        Item('plot_template'),
-                                        columns=1,
-                                        label='plot parameters',
-                                        id='simexdb.plot_params',
-                                        dock='tab',
-                                        ),
-                                    id='simexdb.plot.vsplit',
-                                    dock='tab',
-                                    ),
-                            VSplit(
-                               Item('model@',
-                                    id='simexdb.run.split',
-                                    dock='tab',
-                                    resizable=True,
-                                    label='experiment run',
-                                    show_label=False),
-                                id='simexdb.mode_plot_data.vsplit',
-                                dock='tab',
-                                scrollable=True
-                                ),
-                                id='simexdb.hsplit',
-                                dock='tab',
-                            ),
-                        key_bindings=self.key_bindings,
-                        menubar=self.default_menubar(),
-                        toolbar=self.default_toolbar(),
-                        resizable=True,
-                        title='Simvisage: experiment database browser',
-                        id='simexdb',
-                        dock='tab',
-                        buttons=[ 'Ok' ],  # , 'Cancel' ],
-                        height=1.0,
-                        width=1.0)
+        return View(HSplit(
+            VSplit(
+                Item('data_file@', editor=FileEditor(filter_name='filter'),
+                     show_label=False),
+                Group(
+                    Item('figure', editor=MPLFigureEditor(),
+                         resizable=True, show_label=False),
+                    id='simexdb.plot_sheet',
+                    label='plot sheet',
+                    dock='tab',
+                ),
+                Group(
+                    Item('plot_template'),
+                    columns=1,
+                    label='plot parameters',
+                    id='simexdb.plot_params',
+                    dock='tab',
+                ),
+                id='simexdb.plot.vsplit',
+                dock='tab',
+            ),
+            VSplit(
+                Item('model@',
+                     id='simexdb.run.split',
+                     dock='tab',
+                     resizable=True,
+                     label='experiment run',
+                     show_label=False),
+                id='simexdb.mode_plot_data.vsplit',
+                dock='tab',
+                scrollable=True
+            ),
+            id='simexdb.hsplit',
+            dock='tab',
+        ),
+            key_bindings=self.key_bindings,
+            menubar=self.default_menubar(),
+            toolbar=self.default_toolbar(),
+            resizable=True,
+            title='Simvisage: experiment database browser',
+            id='simexdb',
+            dock='tab',
+            buttons=['Ok'],  # , 'Cancel' ],
+            height=1.0,
+            width=1.0)
 
 if __name__ == '__main__':
 
-#    ex_path = os.path.join( simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'BT-12c-6cm-0-Tu-V4.raw' )
-
-
+    #    ex_path = os.path.join( simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'BT-12c-6cm-0-Tu-V4.raw' )
 
     ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-06-10_TT-12c-6cm-90-TU_ZiE',
-                            'TT-12c-6cm-90-TU-V1.DAT')
+                           'TT-12c-6cm-90-TU-V1.DAT')
 
 #    ex_path = os.path.join( simdb.exdata_dir, 'plate_tests', 'PT-6a-ibac',
 #                            'PTi-6a-woSF', 'PTi-6a-woSF-V1.DAT' )

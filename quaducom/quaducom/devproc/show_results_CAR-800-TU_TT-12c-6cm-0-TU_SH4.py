@@ -55,6 +55,7 @@ if __name__ == '__main__':
     path_V1 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3', 'TT-12c-4cm-TU-0-SH3-V1.DAT')
     path_V2 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3', 'TT-12c-4cm-TU-0-SH3-V2.DAT')
     path_V3 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3', 'TT-12c-4cm-TU-0-SH3-V3.DAT')
+    #
     # 6 cm
     path_V4 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V1.DAT')
     path_V5 = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2', 'TT-12c-6cm-0-TU-SH2-V2.DAT')
@@ -65,8 +66,8 @@ if __name__ == '__main__':
                  path_V4, path_V5, path_V6,
                  ]
     label_list = [
-                  r"$h_{2}\,=\,4\,\rm{cm}$", None, None,
-                  r'$h_{1}\,=\,6\,\rm{cm}$', None, None,
+                  r"$h_{2}\,=\,6\,\rm{cm}\,(QS-2 Jahre;\,kontinuierlich)$", None, None,
+                  r'$h_{1}\,=\,6\,\rm{cm}\,(QS-SH4,\,synchron)$', None, None,
                  ]
     color_list = [
                   'grey', 'grey', 'grey',

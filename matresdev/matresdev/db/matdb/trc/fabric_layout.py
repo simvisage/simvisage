@@ -270,6 +270,31 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_90=1.6,  # average spacing for alternating arrangement of rovings (3/1/1)
                                            ),
 
+               # SBR coated carbon textile
+               # 1 x 12K (800tex) in 0-direction
+               # ? x ? K in 90-direction
+               #
+               'CAR-800-SBR_TUD' : FabricLayOut(
+                                           a_tex_0=62.8,
+                                           a_tex_90=1.,
+                                           E_tex_0=245000.,  # SBR coating 800 tex
+                                           E_tex_90=245000.,
+                                           s_tex_0=7.1,
+                                           s_tex_90=1.,
+                                           ),
+
+               # SBR coated carbon textile
+               # 12K (800tex) rovings with SBR-coating
+               # A_rov = 0.45m^2
+               #
+               'NWM3-016-09-b1' : FabricLayOut(
+                                           a_tex_0=62.5,  # = 0.45 m^2 / 0.0072 m
+                                           a_tex_90=31.3,  # = 0.45 m^2 / 0.0144 m
+                                           E_tex_0=245000.,  # SBR coating 800 tex
+                                           E_tex_90=245000.,
+                                           s_tex_0=7.2,
+                                           s_tex_90=14.4,
+                                           ),
 
              }
             )

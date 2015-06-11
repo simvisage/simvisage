@@ -84,8 +84,8 @@ class RandomField(HasStrictTraits):
     random_field = Property(Array, depends_on='+modified, reevaluate')
     @cached_property
     def _get_random_field(self):
-        #if self.seed == True:
-        #    np.random.seed(1540)
+        if self.seed == True:
+            np.random.seed(101)
         '''simulates the Gaussian random field'''
         # evaluate the eigenvalues and eigenvectors of the autocorrelation matrix
         _lambda, phi = self.eigenvalues
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as p
 
     rf = RandomField(seed=False,
-                    lacor=1.,
+                    lacor=10.,
                     length=500,
                     nx=500,
                     nsim=1,
@@ -136,8 +136,6 @@ if __name__ == '__main__':
                     scale=3.4,
                     distr_type='Weibull'
                     )
-
-    rf.configure_traits()
     p.plot(rf.xgrid, rf.random_field, lw=2, color='black', label='Weibull')
     p.legend(loc='best')
     p.ylim(0)

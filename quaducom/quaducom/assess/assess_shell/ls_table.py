@@ -53,7 +53,7 @@ class LSArrayAdapter (TabularAdapter):
 
     font = 'Courier 10'
     alignment = 'right'
-    format = '%5.2f'  # '%g'
+    format = '%5.4f'  # '%g'
     even_bg_color = Color(0xE0E0FF)
     width = Float(80)
     # @todo: format columns using 'column_id'
