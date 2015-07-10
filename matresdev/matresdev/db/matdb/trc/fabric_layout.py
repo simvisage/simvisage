@@ -296,6 +296,20 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_90=14.4,
                                            ),
 
+               # SBR coated carbon textile
+               # 50K (3300tex) rovings with SBR-coating 0-direction
+               # 12L (800tex) rovings with SBR-coating in 90-direction
+               # A_rov = 1.84m^2
+               #
+               'CAR-3300-SBR_BTZ2' : FabricLayOut(
+                                           a_tex_0=144.9,  # = 1.84 m^2 / 0.0127 m
+                                           a_tex_90=25.0,  # = 0.45 m^2 / 0.018 m
+                                           E_tex_0=170000.,  # yarn test with SBR coating (3300tex)
+                                           E_tex_90=152000.,  # yarn test with SBR coating (800tex)
+                                           s_tex_0=12.7,
+                                           s_tex_90=18.0,
+                                           ),
+
              }
             )
 
