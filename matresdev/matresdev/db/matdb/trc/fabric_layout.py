@@ -310,6 +310,19 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_90=18.0,
                                            ),
 
+               # epoxy resin coated carbon textile
+               # 50K (3300tex) rovings with EP-coating 0-direction and 90-direction
+               # A_rov = 1.84m^2
+               #
+               'CAR-3300-EP_Q90' : FabricLayOut(
+                                           a_tex_0=90.,  # = 1.84 m^2 / 0.02 m
+                                           a_tex_90=90,
+                                           E_tex_0=245000.,  # yarn test with EP impregnation (3300tex)
+                                           E_tex_90=245000.,
+                                           s_tex_0=21.,
+                                           s_tex_90=21.,
+                                           ),
+
              }
             )
 
