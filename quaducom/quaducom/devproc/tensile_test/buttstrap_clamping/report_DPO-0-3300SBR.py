@@ -16,17 +16,20 @@ params = {'legend.fontsize': 10,
 p.rcParams.update(params)
 
 test_files = [
-               'TTb-2C-14mm-0-3300SBR-V1_R2.DAT',
-               'TTb-2C-14mm-0-3300SBR-V1b_R2.DAT',
-              'TTb-2C-14mm-0-3300SBR-V2_R2.DAT',
-              'TTb-2C-14mm-0-3300SBR-V3_R2.DAT',
-               'TTb-2C-14mm-0-3300SBR-V4_R2.DAT',
-              'TTb-2C-14mm-0-3300SBR-V5_R2.DAT',
+               'DPO-30cm-0-3300SBR-V1.DAT',
+               'DPO-30cm-0-3300SBR-V2.DAT',
+               'DPO-40cm-0-3300SBR-V2.DAT',
+               'DPO-40cm-0-3300SBR-V3.DAT',
+               'DPO-50cm-0-3300SBR-V1.DAT',
+               'DPO-50cm-0-3300SBR-V2.DAT',
+               'DPO-60cm-0-3300SBR-V1.DAT',
+               'DPO-60cm-0-3300SBR-V2.DAT',
               ]
+
 test_file_path = os.path.join(simdb.exdata_dir,
-                              'tensile_tests', 'buttstrap_clamping',
-                              '2015-07-10_TTb-2C-14mm-0-3300SBR_R2'
-                              )
+                              'double_pullout',
+                              '2015-07-15_DPO-30cm-0-3300SBR')
+
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
@@ -34,11 +37,16 @@ color_list = [
               'r',
               'r',
               'g',
+              'g',
+              'b',
               'b',
               'k',
-              'magenta',
+              'k',
               ]
+
 linestyle_list = [
+                  '-',
+                  '-',
                   '-',
                   '-',
                   '-',
@@ -58,17 +66,13 @@ def plot_all():
 
         axes = p.subplot(111)
 
-        e._plot_sigtex_eps(axes, color=color_list[idx], linestyle=linestyle_list[idx], label=test_files[idx], plot_analytical_stiffness_II=False)
+        label = test_files[idx].split('.')[0]
+        e._plot_force_displacement_asc(axes, color=color_list[idx], linestyle=linestyle_list[idx], label=label)
         axes.grid()
-        axes.set_xlabel('eps [-]')
-        axes.set_ylabel('sig_tex [MPa]')
-        axes.set_xlim([0., 0.012])
-        axes.set_ylim([0., 2500])
-
-    # material stiffness carbon (E=245GPa)
-    xarr = np.array([0., 0.010])
-    yarr = np.array([0., 2450.])
-    axes.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.5, label='E_tex = 245 GPa')
+        axes.set_xlabel('$\Delta$ w [mm]')
+        axes.set_ylabel('F [kN]')
+#        axes.set_xlim([0., 0.012])
+#        axes.set_ylim([0., 2500])
 
     axes.legend(loc=2)
 
