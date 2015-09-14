@@ -1,23 +1,25 @@
 
 from etsproxy.traits.api import \
-     Array, Bool, Enum, Float, HasTraits, \
-     HasStrictTraits, \
-     Instance, Int, Trait, Str, Enum, \
-     Callable, List, TraitDict, Any, Range, \
-     Delegate, Event, on_trait_change, Button, \
-     Interface, Property, cached_property, WeakRef, Dict
+    Array, Bool, Enum, Float, HasTraits, \
+    HasStrictTraits, \
+    Instance, Int, Trait, Str, Enum, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, \
+    Interface, Property, cached_property, WeakRef, Dict
 
 from etsproxy.traits.ui.api import \
-     Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit
+    Item, View, HGroup, ListEditor, VGroup, \
+    HSplit, Group, Handler, VSplit
 
-from etsproxy.traits.ui.menu import \
-     NoButtons, OKButton, CancelButton, \
-     Action
+from traitsui.menu import \
+    NoButtons, OKButton, CancelButton, \
+    Action
 
 from numpy import zeros, float_
 
-class ITStepperEval( Interface ):
+
+class ITStepperEval(Interface):
+
     """
     Interface for time step evaluators (ITStepperEvalE).
 
@@ -25,7 +27,8 @@ class ITStepperEval( Interface ):
     governing equations of the simulated problem at a discrete time
     instance t.
     """
-    def get_state_array_size( self ):
+
+    def get_state_array_size(self):
         """
         Get the size of the state array.
 
@@ -34,12 +37,12 @@ class ITStepperEval( Interface ):
         object's state.
         """
 
-    def setup( self, sctx ):
+    def setup(self, sctx):
         '''
         Setup the state array and spatial context to be operated on.
         '''
 
-    def get_corr_pred( self, sctx, u, tn, tn1 ):
+    def get_corr_pred(self, sctx, u, tn, tn1):
         '''
         Return the corrector and predictor for supplied control variable.
         '''

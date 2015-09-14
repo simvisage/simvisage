@@ -3,43 +3,44 @@ import sys
 print sys.path
 
 from etsproxy.traits.api import \
-     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
+    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
+    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
+    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-import etsproxy.traits.has_traits
-etsproxy.traits.has_traits.CHECK_INTERFACES = 2
+import traits.has_traits
+traits.has_traits.CHECK_INTERFACES = 2
 
-from etsproxy.traits.ui.api import \
-     Item, View, HGroup, ListEditor, VGroup, Group
+from traitsui.api import \
+    Item, View, HGroup, ListEditor, VGroup, Group
 
-from etsproxy.traits.ui.menu import \
-     NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-     MenuBar, Separator
+from traitsui.menu import \
+    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
+    MenuBar, Separator
 
 from numpy import \
-     array, zeros, dot, hstack, \
-     identity
+    array, zeros, dot, hstack, \
+    identity
 
 from scipy.linalg import \
-     inv
+    inv
 
 from ibvpy.fets.fets_eval import FETSEval
 
-#-----------------------------------------------------------------------------------
-# FETS2D4Q - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)    
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+# FETS2D4Q - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)
+#-------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------------
-# Element Information: 
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+# Element Information:
+#-------------------------------------------------------------------------
 #
 # Here an isoparametric element formulation is applied.
-# The implemented shape functions are derived based on the 
-# ordering of the nodes of the parent element defined in 
+# The implemented shape functions are derived based on the
+# ordering of the nodes of the parent element defined in
 # '_node_coord_map' (see below)
 #
-#-----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
 
 class FETS2D4Q(FETSEval):
 
@@ -50,19 +51,19 @@ class FETS2D4Q(FETSEval):
 
     # Order of node positions for the formulation of shape function
     #
-    dof_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
-    geo_r = Array(value = [[-1, -1], [1, -1], [1, 1], [-1, 1]])
+    dof_r = Array(value=[[-1, -1], [1, -1], [1, 1], [-1, 1]])
+    geo_r = Array(value=[[-1, -1], [1, -1], [1, 1], [-1, 1]])
 
     n_e_dofs = Int(8)
-    t = Float(1.0, label = 'thickness')
+    t = Float(1.0, label='thickness')
 
     # Integration parameters
     #
     ngp_r = Int(2)
     ngp_s = Int(2)
 
-    # Corner nodes are used for visualization 
-    vtk_r = Array(value = [[-1., -1.], [ 1., -1.], [ 1., 1.], [-1., 1.]])
+    # Corner nodes are used for visualization
+    vtk_r = Array(value=[[-1., -1.], [1., -1.], [1., 1.], [-1., 1.]])
     vtk_cells = [[0, 1, 2, 3]]
     vtk_cell_types = 'Quad'
 
@@ -76,9 +77,9 @@ class FETS2D4Q(FETSEval):
         '''
         Return the value of shape functions for the specified local coordinate r
         '''
-        cx = array(self.geo_r, dtype = 'float_')
+        cx = array(self.geo_r, dtype='float_')
         Nr = array([[1 / 4. * (1 + r_pnt[0] * cx[i, 0]) * (1 + r_pnt[1] * cx[i, 1])
-                      for i in range(0, 4) ]])
+                     for i in range(0, 4)]])
         return Nr
 
     def get_dNr_geo_mtx(self, r_pnt):
@@ -91,9 +92,9 @@ class FETS2D4Q(FETSEval):
         operator.
         '''
         #cx = self._node_coord_map
-        cx = array(self.geo_r, dtype = 'float_')
-        dNr_geo = array([[ 1 / 4. * cx[i, 0] * (1 + r_pnt[1] * cx[i, 1]) for i in range(0, 4) ],
-                          [ 1 / 4. * cx[i, 1] * (1 + r_pnt[0] * cx[i, 0]) for i in range(0, 4) ]])
+        cx = array(self.geo_r, dtype='float_')
+        dNr_geo = array([[1 / 4. * cx[i, 0] * (1 + r_pnt[1] * cx[i, 1]) for i in range(0, 4)],
+                         [1 / 4. * cx[i, 1] * (1 + r_pnt[0] * cx[i, 0]) for i in range(0, 4)]])
         return dNr_geo
 
     #---------------------------------------------------------------------
@@ -121,7 +122,7 @@ class FETS2D4Q(FETSEval):
         J_mtx = self.get_J_mtx(r_pnt, X_mtx)
         dNr_mtx = self.get_dNr_mtx(r_pnt)
         dNx_mtx = dot(inv(J_mtx), dNr_mtx)
-        Bx_mtx = zeros((3, 8), dtype = 'float_')
+        Bx_mtx = zeros((3, 8), dtype='float_')
         for i in range(0, 4):
             Bx_mtx[0, i * 2] = dNx_mtx[0, i]
             Bx_mtx[1, i * 2 + 1] = dNx_mtx[1, i]
@@ -143,8 +144,8 @@ def example_with_new_domain():
     from ibvpy.api import BCDofGroup
 
     mats_eval = MATS2DElastic()
-    fets_eval = FETS2D4Q(mats_eval = mats_eval)
-    #fets_eval = FETS2D4Q(mats_eval = MATS2DScalarDamage()) 
+    fets_eval = FETS2D4Q(mats_eval=mats_eval)
+    #fets_eval = FETS2D4Q(mats_eval = MATS2DScalarDamage())
 
     print fets_eval.vtk_node_cell_data
 
@@ -154,82 +155,82 @@ def example_with_new_domain():
     from mathkit.mfn import MFnLineArray
 
     # Discretization
-    fe_grid = FEGrid(coord_max = (10., 4., 0.),
-                      shape = (10, 3),
-                      fets_eval = fets_eval)
+    fe_grid = FEGrid(coord_max=(10., 4., 0.),
+                     shape = (10, 3),
+                     fets_eval = fets_eval)
 
-    bcg = BCDofGroup(var = 'u', value = 0., dims = [0],
-                   get_dof_method = fe_grid.get_left_dofs)
+    bcg = BCDofGroup(var='u', value=0., dims=[0],
+                     get_dof_method=fe_grid.get_left_dofs)
     bcg.setup(None)
     print 'labels', bcg._get_labels()
     print 'points', bcg._get_mvpoints()
 
-    mf = MFnLineArray(#xdata = arange(10),
-                       ydata = array([0, 1, 2, 3]))
+    mf = MFnLineArray(  # xdata = arange(10),
+        ydata=array([0, 1, 2, 3]))
 
     right_dof = 2
-    tstepper = TS(sdomain = fe_grid,
-                   bcond_list = [ BCDofGroup(var = 'u', value = 0., dims = [0, 1],
-                                               get_dof_method = fe_grid.get_left_dofs),
-#                                   BCDofGroup( var='u', value = 0., dims = [1],
-#                                  get_dof_method = fe_grid.get_bottom_dofs ),                                  
-                         BCDofGroup(var = 'u', value = .005, dims = [1],
-                                  time_function = mf.get_value,
-                                  get_dof_method = fe_grid.get_right_dofs) ],
-         rtrace_list = [
-                     RTraceGraph(name = 'Fi,right over u_right (iteration)' ,
-                               var_y = 'F_int', idx_y = right_dof,
-                               var_x = 'U_k', idx_x = right_dof,
-                               record_on = 'update'),
-                         RTraceDomainListField(name = 'Stress' ,
-                         var = 'sig_app', idx = 0,
-                         position = 'int_pnts',
-                         record_on = 'update'),
-#                     RTraceDomainListField(name = 'Damage' ,
-#                                    var = 'omega', idx = 0,
-#                
-#                    record_on = 'update',
-#                                    warp = True),
-                     RTraceDomainListField(name = 'Displacement' ,
-                                    var = 'u', idx = 0,
-                                    record_on = 'update',
-                                    warp = True),
-                     RTraceDomainListField(name = 'Strain energy' ,
-                                    var = 'strain_energy', idx = 0,
-                                    record_on = 'update',
-                                    warp = False),
-                     RTraceDomainListInteg(name = 'Integ strain energy' ,
-                                    var = 'strain_energy', idx = 0,
-                                    record_on = 'update',
-                                    warp = False),
-                                    #                    RTraceDomainListField(name = 'N0' ,
-#                                      var = 'N_mtx', idx = 0,
-#                                      record_on = 'update')
-                ]
-            )
+    tstepper = TS(sdomain=fe_grid,
+                  bcond_list=[BCDofGroup(var='u', value=0., dims=[0, 1],
+                                         get_dof_method=fe_grid.get_left_dofs),
+                              #                                   BCDofGroup( var='u', value = 0., dims = [1],
+                              # get_dof_method = fe_grid.get_bottom_dofs ),
+                              BCDofGroup(var='u', value=.005, dims=[1],
+                                         time_function=mf.get_value,
+                                         get_dof_method=fe_grid.get_right_dofs)],
+                  rtrace_list=[
+                      RTraceGraph(name='Fi,right over u_right (iteration)',
+                                  var_y='F_int', idx_y=right_dof,
+                                  var_x='U_k', idx_x=right_dof,
+                                  record_on='update'),
+                      RTraceDomainListField(name='Stress',
+                                            var='sig_app', idx=0,
+                                            position='int_pnts',
+                                            record_on='update'),
+                      #                     RTraceDomainListField(name = 'Damage' ,
+                      #                                    var = 'omega', idx = 0,
+                      #
+                      #                    record_on = 'update',
+                      #                                    warp = True),
+                      RTraceDomainListField(name='Displacement',
+                                            var='u', idx=0,
+                                            record_on='update',
+                                            warp=True),
+                      RTraceDomainListField(name='Strain energy',
+                                            var='strain_energy', idx=0,
+                                            record_on='update',
+                                            warp=False),
+                      RTraceDomainListInteg(name='Integ strain energy',
+                                            var='strain_energy', idx=0,
+                                            record_on='update',
+                                            warp=False),
+                      #                    RTraceDomainListField(name = 'N0' ,
+                      #                                      var = 'N_mtx', idx = 0,
+                      # record_on = 'update')
+                  ]
+                  )
 
     # Add the time-loop control
     #global tloop
-    tloop = TLoop(tstepper = tstepper, KMAX = 300, tolerance = 1e-4,
-                   tline = TLine(min = 0.0, step = 1.0, max = 1.0))
+    tloop = TLoop(tstepper=tstepper, KMAX=300, tolerance=1e-4,
+                  tline=TLine(min=0.0, step=1.0, max=1.0))
 
     #import cProfile
     #cProfile.run('tloop.eval()', 'tloop_prof' )
-    #print tloop.eval()
+    # print tloop.eval()
     #import pstats
     #p = pstats.Stats('tloop_prof')
-    #p.strip_dirs()
-    #print 'cumulative'
-    #p.sort_stats('cumulative').print_stats(20)
-    #print 'time'
-    #p.sort_stats('time').print_stats(20)
+    # p.strip_dirs()
+    # print 'cumulative'
+    # p.sort_stats('cumulative').print_stats(20)
+    # print 'time'
+    # p.sort_stats('time').print_stats(20)
 
     tloop.eval()
     # Put the whole thing into the simulation-framework to map the
     # individual pieces of definition into the user interface.
     #
     from ibvpy.plugins.ibvpy_app import IBVPyApp
-    app = IBVPyApp(ibv_resource = tloop)
+    app = IBVPyApp(ibv_resource=tloop)
     app.main()
 
 if __name__ == '__main__':
