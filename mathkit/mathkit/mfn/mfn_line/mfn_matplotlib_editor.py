@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -10,7 +10,7 @@
 #
 # Created on May 25, 2009 by Rostislav Chudoba
 #
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 import matplotlib
 matplotlib.use('WXAgg')
@@ -21,12 +21,12 @@ from matplotlib.figure import Figure
 import wx
 
 from etsproxy.traits.api import Instance, Int
-from etsproxy.traits.ui.wx.editor import Editor
-from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
+from traitsui.wx.editor import Editor
+from traitsui.basic_editor_factory import BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter
 
-class _MFnMatplotlibEditor(Editor):
 
+class _MFnMatplotlibEditor(Editor):
 
     # @todo This is not used here, either activate or delete
     # scrollable  = True
@@ -40,6 +40,7 @@ class _MFnMatplotlibEditor(Editor):
     border_size = Int(0)
     # @todo faezeh please make the mapping from the human readable color
     #
+
     def init(self, parent):
 
         factory = self.factory
@@ -117,8 +118,8 @@ class _MFnMatplotlibEditor(Editor):
                   linestyle=line_style)
         axes.set_xlabel(label_x, weight='semibold')
         axes.set_ylabel(label_y, weight='semibold')
-        axes.set_title(a.title, size='large', color=a.title_color, \
-                        weight='bold', position=(.5, 1.03))
+        axes.set_title(a.title, size='large', color=a.title_color,
+                       weight='bold', position=(.5, 1.03))
         axes.set_axis_bgcolor(color=a.bgcolor)
         axes.ticklabel_format(scilimits=a.scilimits)
         axes.grid(color='gray', linestyle='--', linewidth=0.1, alpha=0.4)
@@ -133,11 +134,12 @@ class _MFnMatplotlibEditor(Editor):
 #                           'Data Save', 'Save plot data to file')
 #        bind(self, wx.EVT_TOOL, self.save, id=_NTB2_DSAVE)
 
+
 class MFnMatplotlibEditor(BasicEditorFactory):
 
     klass = _MFnMatplotlibEditor
 
     adapter = Instance(MFnPlotAdapter)
+
     def _adapter_default(self):
         return MFnPlotAdapter()
-
