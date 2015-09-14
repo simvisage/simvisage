@@ -115,9 +115,9 @@ class ExpST(ExType):
     # specify inputs:
     #--------------------------------------------------------------------------------
 
-    edge_length = Float(0.80, unit='m', input=True, table_field=True,
+    edge_length = Float(1.25, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
-    thickness = Float(0.02, unit='m', input=True, table_field=True,
+    thickness = Float(0.06, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
@@ -140,21 +140,24 @@ class ExpST(ExType):
 #        fabric_layout_key = '2D-02-06a'
 #        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'FIL-10-09'
-        concrete_mixture_key = 'barrelshell'
-        orientation_fn_key = 'all0'
-#        orientation_fn_key = '90_0'
-        n_layers = 10
-        s_tex_z = 0.020 / (n_layers + 1)
+#        concrete_mixture_key = 'barrelshell'
+        concrete_mixture_key = 'PZ-0708-1'
+#        orientation_fn_key = 'all0'
+        orientation_fn_key = '90_0'
+        n_layers = 2
+        s_tex_z = 0.015 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list=[
-                            plain_concrete(s_tex_z * 0.5),
+                            plain_concrete(0.035),
+#                            plain_concrete(s_tex_z * 0.5),
                             FabricLayUp (
                                    n_layers=n_layers,
                                    orientation_fn_key=orientation_fn_key,
                                    s_tex_z=s_tex_z,
                                    fabric_layout_key=fabric_layout_key
                                    ),
-                            plain_concrete(s_tex_z * 0.5)
+#                            plain_concrete(s_tex_z * 0.5)
+                            plain_concrete(0.5)
                                         ],
                     concrete_mixture_key=concrete_mixture_key
                     )
@@ -181,7 +184,7 @@ class ExpST(ExType):
 
     # put this into the ironing procedure processor
     #
-    jump_rtol = Float(0.03,
+    jump_rtol = Float(0.1,
                       auto_set=False, enter_set=True,
                       ironing_param=True)
 
@@ -268,17 +271,18 @@ class ExpST(ExType):
     # plot templates
     #--------------------------------------------------------------------------------
 
-    plot_templates = {'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
-                      'force / deflection (center)'               : '_plot_force_center_deflection',
-                      'smoothed force / deflection (center)'      : '_plot_force_center_deflection_smoothed',
-                      'force / deflection (edges)'                : '_plot_force_edge_deflection',
-                      'force / deflection (center-edges)'         : '_plot_force_center_edge_deflection',
-                      'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
-                      'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
-                      'force / average deflection (c; ce; e)'     : '_plot_force_deflection_avg',
-                      'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
-                      'force / deflection (corner)'               : '_plot_force_corner_deflection',
-                      'edge_deflection_avg (front/back) / edge_deflection_avg (left/right)' : '_plot_edge_deflection_edge_deflection_avg',
+    plot_templates = {'force / deflection (all)' : '_plot_force_deflection',
+#                      'force / average deflection (c; ce; e) interpolated'    : '_plot_force_deflection_avg_interpolated',
+#                      'force / deflection (center)'               : '_plot_force_center_deflection',
+#                      'smoothed force / deflection (center)'      : '_plot_force_center_deflection_smoothed',
+#                      'force / deflection (edges)'                : '_plot_force_edge_deflection',
+#                      'force / deflection (center-edges)'         : '_plot_force_center_edge_deflection',
+#                      'force / average deflection (edges)'        : '_plot_force_edge_deflection_avg',
+#                      'force / average deflection (center-edges)' : '_plot_force_center_edge_deflection_avg',
+#                      'force / average deflection (c; ce; e)'     : '_plot_force_deflection_avg',
+#                      'force / deflection (center) interpolated'  : '_plot_force_center_deflection_interpolated',
+#                      'force / deflection (corner)'               : '_plot_force_corner_deflection',
+#                      'edge_deflection_avg (front/back) / edge_deflection_avg (left/right)' : '_plot_edge_deflection_edge_deflection_avg',
 
                      }
 
@@ -315,6 +319,53 @@ class ExpST(ExType):
     w_smooth = Property()
     def _get_w_smooth(self):
         return smooth(self.w_asc, self.n_points, 'flat')
+
+    def _plot_force_deflection(self, axes, offset_w=0., color='blue', linewidth=1.5, linestyle='-'):
+        '''plot the F-w-diagramm for all displacement gauges including maschine displacement
+        '''
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+
+        max_force_idx = self.max_force_idx
+#        max_force_idx = -2
+        f_asc = -self.Kraft[:max_force_idx + 1]
+
+        print 'self.factor_list', self.factor_list
+        header_string = ''
+        for i in self.factor_list[2:]:
+            header_string = header_string + i + '; '
+            T_arr = -getattr(self, i)
+            T_asc = T_arr[:max_force_idx + 1]
+            axes.plot(T_asc, f_asc, label=i)
+
+        axes.legend()
+
+        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
+        # check if directory exist otherwise create
+        #
+        if os.path.isdir(img_dir) == False:
+            os.makedirs(img_dir)
+        test_series_dir = os.path.join(img_dir, 'slab_test_astark')
+        # check if directory exist otherwise create
+        #
+        if os.path.isdir(test_series_dir) == False:
+            os.makedirs(test_series_dir)
+        out_file = os.path.join(test_series_dir, self.key)
+
+        np.savetxt(out_file, self.processed_data_array, delimiter=';')
+
+        # workaround for old numpy.savetxt version:
+        f = open(out_file, 'r')
+        temp = f.read()
+        f.close()
+
+        f = open(out_file, 'w')
+        f.write(header_string)
+
+        f.write(temp)
+        f.close()
+
+
 
     def _plot_force_center_deflection(self, axes, offset_w=0., color='blue', linewidth=1.5, linestyle='-'):
         '''plot the F-w-diagramm for the center (c) deflection
