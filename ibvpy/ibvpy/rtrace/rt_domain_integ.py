@@ -6,23 +6,23 @@ from etsproxy.traits.api import \
     Interface, WeakRef, implements, Property, cached_property, Tuple, \
     Dict, TraitError
 
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from etsproxy.traits.ui.menu \
+from traitsui.menu \
     import NoButtons, OKButton, CancelButton, \
     Action
 
-from etsproxy.traits.ui.ui_editors.array_view_editor \
+from traitsui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from etsproxy.traits.ui.table_column \
+from traitsui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from etsproxy.traits.ui.table_filter \
+from traitsui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+    MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
 from numpy \
     import ix_, mgrid, array, arange, c_, newaxis, setdiff1d, zeros, \
@@ -36,9 +36,9 @@ from ibvpy.core.rtrace \
 
 # tvtk related imports
 #
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, HSplit, VSplit
-from etsproxy.tvtk.api import \
+from tvtk.api import \
     tvtk
 from ibvpy.core.i_sdomain import \
     ISDomain
@@ -50,16 +50,20 @@ from ibvpy.rtrace.rt_domain import RTraceDomain
 
 import os
 
+
 class RTraceDomainInteg(RTraceDomain):
+
     '''
     Trace encompassing the whole spatial domain.
     '''
 
     fets_eval = Property
+
     def _get_fets_eval(self):
         return self.sd.fets_eval
 
     var_eval = Property
+
     def _get_var_eval(self):
         return self.sd.dots.rte_dict.get(self.var, None)
 
@@ -100,7 +104,7 @@ class RTraceDomainInteg(RTraceDomain):
 
         for e_id, e in enumerate(sd.elements):
 
-            sctx.elem_state_array = state_array[e_id * e_arr_size :\
+            sctx.elem_state_array = state_array[e_id * e_arr_size:
                                                 (e_id + 1) * e_arr_size]
             sctx.X = e.get_X_mtx()
             sctx.x = e.get_x_mtx()
@@ -109,10 +113,10 @@ class RTraceDomainInteg(RTraceDomain):
             field_entry = []
             i = 0
             for ip, iw in zip(self.fets_eval.ip_coords,
-                               self.fets_eval.ip_weights):
+                              self.fets_eval.ip_weights):
                 m_arr_size = self.fets_eval.m_arr_size
                 sctx.mats_state_array = sctx.elem_state_array\
-                                            [i * m_arr_size: (i + 1) * m_arr_size]
+                    [i * m_arr_size: (i + 1) * m_arr_size]
                 sctx.loc = ip
                 sctx.r_pnt = ip
                 sctx.p_id = i  # TODO:check this
@@ -124,11 +128,10 @@ class RTraceDomainInteg(RTraceDomain):
 
             self.integ_val = integ_val
 
-    view = View(HSplit(VSplit (VGroup('var', 'idx'),
-                                  VGroup('record_on', 'clear_on'),
-                                  Item('integ_val', style='readonly',
-                                       show_label=False),
-                                       ),
-                                       ),
-                                       resizable=True)
-
+    view = View(HSplit(VSplit(VGroup('var', 'idx'),
+                              VGroup('record_on', 'clear_on'),
+                              Item('integ_val', style='readonly',
+                                   show_label=False),
+                              ),
+                       ),
+                resizable=True)

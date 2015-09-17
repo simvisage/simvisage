@@ -8,10 +8,10 @@ import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.mayavi.plugins.app import setup_logger
+from mayavi.plugins.app import setup_logger
 from etsproxy.traits.api import List, Instance
-from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
+from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from pyface.workbench.api import Perspective, PerspectiveItem
 from ibvpy.api import RTraceMngr, RTraceGraph
 
 logger = logging.getLogger()
@@ -19,7 +19,10 @@ logger = logging.getLogger()
 ###############################################################################
 # `RTracePerspective` class.
 ###############################################################################
+
+
 class RTracePerspective(Perspective):
+
     """ An default perspective for the app. """
 
     # The perspective's name.
@@ -36,12 +39,14 @@ class RTracePerspective(Perspective):
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id = RTRACEMNGR_VIEW, position = 'left'),
+        PerspectiveItem(id=RTRACEMNGR_VIEW, position='left'),
     ]
 
 ###############################################################################
 # `RTracePlugin` class.
 ###############################################################################
+
+
 class RTraceUIPlugin(Plugin):
 
     # Extension points we contribute to.
@@ -55,10 +60,10 @@ class RTraceUIPlugin(Plugin):
     name = 'RTraces'
 
     # Perspectives.
-    perspectives = List(contributes_to = PERSPECTIVES)
+    perspectives = List(contributes_to=PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to = VIEWS)
+    views = List(contributes_to=VIEWS)
 
     ######################################################################
     # Private methods.
@@ -73,14 +78,14 @@ class RTraceUIPlugin(Plugin):
     def _rtrace_service_view_factory(self, window, **traits):
         """ Factory method for rtrace_service views. """
         from etsproxy.pyface.workbench.traits_ui_view import \
-                TraitsUIView
+            TraitsUIView
 
         rtrace_service = self._get_rtrace_service(window)
-        tui_engine_view = TraitsUIView(obj = rtrace_service,
-                                       id = 'ibvpy.plugins.rtrace_service.rtrace_service',
-                                       name = 'Response traces',
-                                       window = window,
-                                       position = 'left',
+        tui_engine_view = TraitsUIView(obj=rtrace_service,
+                                       id='ibvpy.plugins.rtrace_service.rtrace_service',
+                                       name='Response traces',
+                                       window=window,
+                                       position='left',
                                        **traits
                                        )
         return tui_engine_view
@@ -88,6 +93,7 @@ class RTraceUIPlugin(Plugin):
     def _get_rtrace_service(self, window):
         """Return the rtrace_service service."""
         return window.get_service('ibvpy.plugins.rtrace_service.RTraceService')
+
 
 def get_plugins():
     """Get list of default plugins to use for Mayavi."""
@@ -101,7 +107,7 @@ def get_plugins():
     from etsproxy.mayavi.plugins.mayavi_ui_plugin import MayaviUIPlugin
     from etsproxy.envisage.developer.developer_plugin import DeveloperPlugin
     from etsproxy.envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
-    
+
     plugins = [CorePlugin(),
                WorkbenchPlugin(),
                MayaviPlugin(),
@@ -111,18 +117,20 @@ def get_plugins():
                PythonShellPlugin(),
                DeveloperPlugin(),
                DeveloperUIPlugin(),
-#              TextEditorPlugin()
-            ]
+               #              TextEditorPlugin()
+               ]
 
     return plugins
 ######################################################################
+
+
 def main():
 
     # Get the default mayavi plugins.
     plugins = get_plugins()
     from rtrace_plugin import RTracePlugin
     from rtrace_service import RTraceService
-    
+
     # Inject our plugin up front so our perspective becomes the default.
     #plugins = [ RTracePlugin() ]
     plugins.insert(0, RTracePlugin())
@@ -130,24 +138,24 @@ def main():
     from ibvpy_workbench_application import IBVPyWorkbenchApplication
     # Create an Envisage application.
     id = 'rtrace_service.rtrace_service'
-    application = IBVPyWorkbenchApplication(id = id, plugins = plugins)
+    application = IBVPyWorkbenchApplication(id=id, plugins=plugins)
 
-    rtrace_mgr = RTraceService(rtrace_list = [
-        RTraceGraph(name = 'rte 1'),
-        RTraceGraph(name = 'rte 2'),
-        RTraceGraph(name = 'rte 3'),
-        RTraceGraph(name = 'rte 4'),
-        RTraceGraph(name = 'rte 5'),
-        RTraceGraph(name = 'rte 6'),
-        RTraceGraph(name = 'rte 7'),
-        RTraceGraph(name = 'rte 8'),
-        RTraceGraph(name = 'rte 8'),
-        RTraceGraph(name = 'rte 10'),
-        RTraceGraph(name = 'rte 11'),
-        ])
+    rtrace_mgr = RTraceService(rtrace_list=[
+        RTraceGraph(name='rte 1'),
+        RTraceGraph(name='rte 2'),
+        RTraceGraph(name='rte 3'),
+        RTraceGraph(name='rte 4'),
+        RTraceGraph(name='rte 5'),
+        RTraceGraph(name='rte 6'),
+        RTraceGraph(name='rte 7'),
+        RTraceGraph(name='rte 8'),
+        RTraceGraph(name='rte 8'),
+        RTraceGraph(name='rte 10'),
+        RTraceGraph(name='rte 11'),
+    ])
     application.register_service('rtrace_service.RTraceService', rtrace_mgr)
 
-    setup_logger(logger, 'rtrace.log', mode = logging.ERROR)
+    setup_logger(logger, 'rtrace.log', mode=logging.ERROR)
 
     # Start the application.
     application.run()

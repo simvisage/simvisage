@@ -10,20 +10,21 @@ import os.path
 import logging
 
 # Enthought library imports.
-from etsproxy.logger.api import LogFileHandler, FORMATTER
-from etsproxy.etsconfig.api import ETSConfig
+from apptools.logger.api import LogFileHandler, FORMATTER
+from traits.etsconfig.api import ETSConfig
 from etsproxy.traits.api import \
     HasTraits, Instance, Int, \
     on_trait_change, Any
 
 # Local imports.
 from ibvpy_workbench_application import IBVPyWorkbenchApplication
-from etsproxy.mayavi.preferences.api import preference_manager
-from etsproxy.mayavi.core.customize import get_custom_plugins
+from mayavi.preferences.api import preference_manager
+from mayavi.core.customize import get_custom_plugins
 
-import etsproxy.mayavi.plugins.app as mayavi_app
+import mayavi.plugins.app as mayavi_app
 
-from etsproxy import ETS_BASENAME
+# from etsproxy import ETS_BASENAME
+ETS_BASENAME = ''
 
 # GLOBALS
 logger = logging.getLogger()
@@ -43,6 +44,7 @@ from ibv_model_plugin import IBVModelPlugin
 from ibv_model_ui_plugin import IBVModelUIPlugin
 from mayavi_engine import set_engine
 
+
 def get_plugins():
     """Get list of default plugins to use for IBVPy."""
     plugins = mayavi_app.get_plugins()
@@ -58,6 +60,7 @@ def get_plugins():
     plugins.insert(7, RTraceUIPlugin())
     return plugins
 
+
 def get_non_gui_plugins():
     """Get list of basic tloop plugins that do not add any views or
     actions."""
@@ -70,7 +73,10 @@ def get_non_gui_plugins():
 ###########################################################################
 # `IBVPy` class.
 ###########################################################################
+
+
 class IBVPyApp(HasTraits):
+
     """The IBVPy application class.
 
     This class may be easily subclassed to do something different.
@@ -87,7 +93,7 @@ class IBVPyApp(HasTraits):
                       'mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
-    # @todo: make a base class for the IBVModel components that should be here 
+    # @todo: make a base class for the IBVModel components that should be here
     # instead of Any
     ibv_resource = Instance('ibvpy.core.ibv_resource.IBVResource')
 
@@ -127,11 +133,11 @@ class IBVPyApp(HasTraits):
         # Create the application
         prefs = preference_manager.preferences
         app = IBVPyWorkbenchApplication(plugins=plugins,
-                                         preferences=prefs)
+                                        preferences=prefs)
         self.application = app
 
         # Setup the logger.
-        #self.setup_logger()
+        # self.setup_logger()
 
         # Start the application.
         app.run()
@@ -193,6 +199,7 @@ class IBVPyApp(HasTraits):
         self.script = window.get_service(Script)
         # Call self.run from the GUI thread.
         app.gui.invoke_later(self.run)
+
 
 def main(argv=None):
     """Simple helper to start up the ibvpy application.  This returns

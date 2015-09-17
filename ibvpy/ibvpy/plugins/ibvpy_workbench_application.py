@@ -1,30 +1,33 @@
 """Mayavi specific workbench application.
 """
 # Author: Prabhu Ramachandran <prabhu [at] aero . iitb . ac . in>
-# Copyright (c) 2008, Enthought, Inc. 
+# Copyright (c) 2008, Enthought, Inc.
 # License: BSD Style.
 
 # Standard library imports.
 from os.path import dirname
 
 # Enthought library imports.
-from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
+from envisage.ui.workbench.api import WorkbenchApplication
 from etsproxy.pyface.api import AboutDialog, ImageResource, SplashScreen
 
 # Local imports.
-import etsproxy.mayavi.api
-from etsproxy.mayavi.preferences.api import preference_manager
+import mayavi.api
+from mayavi.preferences.api import preference_manager
 
-IMG_DIR = dirname(etsproxy.mayavi.api.__file__)
+IMG_DIR = dirname(mayavi.api.__file__)
 
-from etsproxy.pyface.message_dialog import MessageDialog
+from pyface.message_dialog import MessageDialog
 
-class AboutDialog( MessageDialog ):
+
+class AboutDialog(MessageDialog):
     title = 'About Simvisage.IBVPy'
     message = '''Authors:\nRostislav Chudoba,\nJakub Jerabek,\nAlexander Scholzen\n(C)2008
     '''
 
+
 class IBVPyWorkbenchApplication(WorkbenchApplication):
+
     """ The mayavi application. """
 
     #### 'IApplication' interface #############################################
@@ -43,7 +46,7 @@ class IBVPyWorkbenchApplication(WorkbenchApplication):
     name = 'Simvisage.IBVPy'
 
     # Define an about dialog
-    about_dialog = AboutDialog() 
+    about_dialog = AboutDialog()
 
     ###########################################################################
     # 'WorkbenchApplication' interface.
@@ -53,12 +56,12 @@ class IBVPyWorkbenchApplication(WorkbenchApplication):
         """ Trait initializer. """
 
         about_dialog = AboutDialog(
-#            parent = self.workbench.active_window.control,
-#            image  = ImageResource('m2_about.jpg',
-#                                   search_path=[IMG_DIR]),
-            additions = ['Authors: Rostislav Chudoba',
-                         'and Jakub Jerabek',
-                         'and Alexander Scholzen'],
+            #            parent = self.workbench.active_window.control,
+            #            image  = ImageResource('m2_about.jpg',
+            #                                   search_path=[IMG_DIR]),
+            additions=['Authors: Rostislav Chudoba',
+                       'and Jakub Jerabek',
+                       'and Alexander Scholzen'],
         )
 
         return about_dialog
@@ -67,12 +70,11 @@ class IBVPyWorkbenchApplication(WorkbenchApplication):
         """ Trait initializer. """
         if preference_manager.root.show_splash_screen:
             splash_screen = SplashScreen(
-                image             = ImageResource('m2_about.jpg',
-                                                  search_path=[IMG_DIR]),
-                show_log_messages = False,
+                image=ImageResource('m2_about.jpg',
+                                    search_path=[IMG_DIR]),
+                show_log_messages=False,
             )
         else:
             splash_screen = None
 
         return splash_screen
-

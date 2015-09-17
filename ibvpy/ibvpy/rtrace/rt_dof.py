@@ -5,10 +5,10 @@ from etsproxy.traits.api import \
     Dict, Property, cached_property, WeakRef, Delegate, \
     ToolbarButton, on_trait_change
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit, Spring
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
     MenuBar, Separator
 
@@ -22,7 +22,9 @@ from mathkit.mfn import MFnLineArray
 from mathkit.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
 from mathkit.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
 
+
 class RTraceGraph(RTrace):
+
     '''
     Collects two response evaluators to make a response graph.
 
@@ -52,37 +54,38 @@ class RTraceGraph(RTrace):
     transform_y = Str(enter_set=True, auto_set=False)
 
     trace = Instance(MFnLineArray)
+
     def _trace_default(self):
         return MFnLineArray()
 
     print_button = ToolbarButton('Print Values',
-                                   style='toolbar', trantient=True)
+                                 style='toolbar', trantient=True)
 
     @on_trait_change('print_button')
     def print_values(self, event=None):
         print 'x:\t', self.trace.xdata, '\ny:\t', self.trace.ydata
 
-    view = View(VSplit(VGroup(HGroup (VGroup(HGroup(Spring(), Item('var_x', style='readonly'),
-                                                         Item('idx_x', show_label=False)),
-                                                  Item('transform_x')),
-                                          VGroup(HGroup(Spring(), Item('var_y', style='readonly'),
-                                                         Item('idx_y', show_label=False)),
-                                                         Item('transform_y')),
-                                          VGroup('record_on', 'clear_on')),
-                                 HGroup(Item('refresh_button', show_label=False),
-                                         Item('print_button', show_label=False)),
-                                ),
-                         Item('trace@', \
-                              editor=MFnMatplotlibEditor(\
-                                        adapter=MFnPlotAdapter(var_x='var_x',
-                                                                  var_y='var_y',
-                                                                  min_size=(100, 100))),
-                              show_label=False, resizable=True),
-                         ),
-                 buttons=[OKButton, CancelButton],
-                 resizable=True,
-                 scrollable=True,
-                 height=0.5, width=0.5)
+    view = View(VSplit(VGroup(HGroup(VGroup(HGroup(Spring(), Item('var_x', style='readonly'),
+                                                   Item('idx_x', show_label=False)),
+                                            Item('transform_x')),
+                                     VGroup(HGroup(Spring(), Item('var_y', style='readonly'),
+                                                   Item('idx_y', show_label=False)),
+                                            Item('transform_y')),
+                                     VGroup('record_on', 'clear_on')),
+                              HGroup(Item('refresh_button', show_label=False),
+                                     Item('print_button', show_label=False)),
+                              ),
+                       Item('trace@',
+                            editor=MFnMatplotlibEditor(
+                                adapter=MFnPlotAdapter(var_x='var_x',
+                                                       var_y='var_y',
+                                                       min_size=(100, 100))),
+                            show_label=False, resizable=True),
+                       ),
+                buttons=[OKButton, CancelButton],
+                resizable=True,
+                scrollable=True,
+                height=0.5, width=0.5)
 
     _xdata = List(Array(float))
     _ydata = List(Array(float))
@@ -101,7 +104,6 @@ class RTraceGraph(RTrace):
             raise KeyError, 'Variable %s not present in the dictionary:\n%s' % \
                             (self.var_y, self.rmgr.rte_dict.keys())
 
-
     def setup(self):
         self.clear()
 
@@ -119,7 +121,8 @@ class RTraceGraph(RTrace):
         file_name = os.path.join(self.dir, file_base_name)
         # file_rtrace = open( file_name, 'w' )
         self.refresh()
-        np.savetxt(file_name, np.vstack([self.trace.xdata, self.trace.ydata]).T)
+        np.savetxt(
+            file_name, np.vstack([self.trace.xdata, self.trace.ydata]).T)
         # pickle.dump( self, file_rtrace )
         # file.close()
 
@@ -139,9 +142,9 @@ class RTraceGraph(RTrace):
     @on_trait_change('idx_x,idx_y')
     def redraw(self, e=None):
         if ((self.idx_x < 0 and len(self.idx_x_arr) == 0) or
-             (self.idx_y < 0 and len(self.idx_y_arr) == 0) or
-             self._xdata == [] or
-             self._ydata == []):
+                (self.idx_y < 0 and len(self.idx_y_arr) == 0) or
+                self._xdata == [] or
+                self._ydata == []):
             return
         #
         if len(self.idx_x_arr) > 0:
@@ -162,7 +165,6 @@ class RTraceGraph(RTrace):
 #            print 'sym_weigth_arr', sym_weigth_arr
 #            yarray = dot( yarray_arr, sym_weigth_arr )
 #            print 'yarray', yarray
-
 
         else:
             yarray = np.array(self._ydata)[:, self.idx_y]
@@ -203,7 +205,9 @@ class RTraceGraph(RTrace):
         self.trace.clear()
         self.redraw()
 
+
 class RTraceArraySnapshot(RTrace):
+
     '''
     Plot the current value of the array along the x_axis
 
@@ -214,18 +218,19 @@ class RTraceArraySnapshot(RTrace):
     idx = Int(-1)
 
     trace = Instance(MFnLineArray)
+
     def _trace_default(self):
         return MFnLineArray()
 
-    view = View(HSplit(VGroup (VGroup('var'),
-                                  VGroup('record_on', 'clear_on')),
-                         Item('trace@', style='custom',
-                              editor=MFnMatplotlibEditor(\
-                                        adapter=MFnPlotAdapter(var_y='var')),
-                              show_label=False, resizable=True),
-                         ),
-                 buttons=[OKButton, CancelButton],
-                 resizable=True)
+    view = View(HSplit(VGroup(VGroup('var'),
+                              VGroup('record_on', 'clear_on')),
+                       Item('trace@', style='custom',
+                            editor=MFnMatplotlibEditor(
+                                adapter=MFnPlotAdapter(var_y='var')),
+                            show_label=False, resizable=True),
+                       ),
+                buttons=[OKButton, CancelButton],
+                resizable=True)
 
     def bind(self):
         '''
@@ -259,9 +264,9 @@ class RTraceArraySnapshot(RTrace):
 if __name__ == '__main__':
 
     rm1 = RTraceGraph(name='rte 1',
-                       idx_x=0,
-                       idx_y=0,
-                       transform_x='-x')
+                      idx_x=0,
+                      idx_y=0,
+                      transform_x='-x')
 #                       transform_x = lambda x: -x )
 
 #    print rm1.dir

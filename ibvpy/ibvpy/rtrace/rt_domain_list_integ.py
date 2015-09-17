@@ -1,26 +1,26 @@
 from etsproxy.traits.api import \
-     Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
-     Instance, Int, Trait, Str, Enum, \
-     Callable, List, TraitDict, Any, Range, \
-     Delegate, Event, on_trait_change, Button, \
-     Interface, WeakRef, implements, Property, cached_property, Tuple, \
-     Dict, Any
+    Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
+    Instance, Int, Trait, Str, Enum, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, \
+    Interface, WeakRef, implements, Property, cached_property, Tuple, \
+    Dict, Any
 
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
+from traitsui.api import Item, View, HGroup, ListEditor, VGroup, \
+    HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
-     Action
+from traitsui.menu import NoButtons, OKButton, CancelButton, \
+    Action
 
-from etsproxy.traits.ui.ui_editors.array_view_editor \
+from traitsui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from etsproxy.traits.ui.table_column \
+from traitsui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from etsproxy.traits.ui.table_filter \
+from traitsui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+    MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
 from numpy import ix_, mgrid, array, arange, c_, newaxis, setdiff1d, zeros, \
     float_, vstack, hstack, repeat
@@ -32,8 +32,8 @@ from ibvpy.api import RTrace
 
 # tvtk related imports
 #
-from etsproxy.traits.ui.api import View, Item, HSplit, VSplit
-from etsproxy.tvtk.api import tvtk
+from traitsui.api import View, Item, HSplit, VSplit
+from tvtk.api import tvtk
 from ibvpy.core.i_sdomain import \
     ISDomain
 
@@ -44,15 +44,16 @@ from rt_domain_list import RTraceDomainList
 from rt_domain_integ import RTraceDomainInteg
 import os
 
-from etsproxy.tvtk.api import tvtk
+from tvtk.api import tvtk
+
 
 class RTraceDomainListInteg(RTrace, RTraceDomainList):
 
-#    sd = Instance( SDomain )
-#
-#    rt_domain = Property
-#    def _get_rt_domain(self):
-#        return self.sd.rt_bg_domain
+    #    sd = Instance( SDomain )
+    #
+    #    rt_domain = Property
+    #    def _get_rt_domain(self):
+    #        return self.sd.rt_bg_domain
 
     label = Str('RTraceDomainInteg')
     var = Str('')
@@ -76,18 +77,19 @@ class RTraceDomainListInteg(RTrace, RTraceDomainList):
             sf.setup()
 
     subfields = Property
+
     @cached_property
     def _get_subfields(self):
         # construct the RTraceDomainFields
         #
-        return [ RTraceDomainInteg(var=self.var,
-                                    idx=self.idx,
-                                    position=self.position,
-                                    save_on=self.save_on,
-                                    warp=self.warp,
-                                    warp_f=self.warp_f,
-                                    sd=subdomain)
-                 for subdomain in self.sd.nonempty_subdomains ]
+        return [RTraceDomainInteg(var=self.var,
+                                  idx=self.idx,
+                                  position=self.position,
+                                  save_on=self.save_on,
+                                  warp=self.warp,
+                                  warp_f=self.warp_f,
+                                  sd=subdomain)
+                for subdomain in self.sd.nonempty_subdomains]
 
     integ_val = Array(desc='Integral over the domain')
 
@@ -109,10 +111,10 @@ class RTraceDomainListInteg(RTrace, RTraceDomainList):
     def clear(self):
         pass
 
-    view = View(HSplit(VSplit (VGroup('var', 'idx'),
-                                  VGroup('record_on', 'clear_on'),
-                                  Item('integ_val', style='readonly',
-                                       show_label=False),
-                                           ),
-                                           ),
-                                    resizable=True)
+    view = View(HSplit(VSplit(VGroup('var', 'idx'),
+                              VGroup('record_on', 'clear_on'),
+                              Item('integ_val', style='readonly',
+                                   show_label=False),
+                              ),
+                       ),
+                resizable=True)

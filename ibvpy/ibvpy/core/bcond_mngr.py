@@ -5,18 +5,18 @@ from etsproxy.traits.api import \
     Delegate, Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit
 
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import View, Item, VSplit, TableEditor, ListEditor
 
-from etsproxy.traits.ui.table_filter \
+from traitsui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+    MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
-from etsproxy.traits.ui.table_column \
+from traitsui.table_column \
     import ObjectColumn, ExpressionColumn
 
 from numpy import ix_, array, int_, dot, newaxis, float_, copy
@@ -24,13 +24,14 @@ from i_bcond import IBCond
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
-    columns = [ ObjectColumn(label = 'Type', name = 'var'),
-                ObjectColumn(label = 'Value', name = 'value'),
-                ObjectColumn(label = 'DOF', name = 'dof')
-                ],
-    editable = False,
-    selected = 'object.selected_bcond',
-    )
+    columns=[ObjectColumn(label='Type', name='var'),
+             ObjectColumn(label='Value', name='value'),
+             ObjectColumn(label='DOF', name='dof')
+             ],
+    editable=False,
+    selected='object.selected_bcond',
+)
+
 
 class BCondMngr(HasTraits):
 
@@ -55,9 +56,9 @@ class BCondMngr(HasTraits):
         for bcond in self.bcond_list:
             bcond.apply(step_flag, sctx, K, R, t_n, t_n1)
 
-    traits_view = View(VSplit(Item('bcond_list', style = 'custom', editor = bcond_list_editor,
-                                     show_label = False),
-                                Item('selected_bcond@', show_label = False)),
-                        resizable = True,
-                        kind = 'subpanel',
-                        )
+    traits_view = View(VSplit(Item('bcond_list', style='custom', editor=bcond_list_editor,
+                                   show_label=False),
+                              Item('selected_bcond@', show_label=False)),
+                       resizable=True,
+                       kind='subpanel',
+                       )

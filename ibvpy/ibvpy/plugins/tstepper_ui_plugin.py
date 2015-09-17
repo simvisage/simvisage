@@ -8,14 +8,16 @@ import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.mayavi.plugins.app import setup_logger
-from etsproxy.traits.api import List, Instance
-from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
+from mayavi.plugins.app import setup_logger
+from traits.api import List, Instance
+from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from pyface.workbench.api import Perspective, PerspectiveItem
 
 ###############################################################################
 # `TStepperPlugin` class.
 ###############################################################################
+
+
 class TStepperUIPlugin(Plugin):
 
     # Extension points we contribute to.
@@ -28,7 +30,7 @@ class TStepperUIPlugin(Plugin):
     name = 'TStepper Manager'
 
     # Views.
-    views = List(contributes_to = VIEWS)
+    views = List(contributes_to=VIEWS)
 
     ######################################################################
     # Private methods.
@@ -39,14 +41,14 @@ class TStepperUIPlugin(Plugin):
     def _tstepper_service_view_factory(self, window, **traits):
         """ Factory method for tstepper_service views. """
         from etsproxy.pyface.workbench.traits_ui_view import \
-                TraitsUIView
+            TraitsUIView
 
         tstepper_service = self._get_tstepper_service(window)
-        tui_engine_view = TraitsUIView(obj = tstepper_service,
-                                       id = 'ibvpy.plugins.tstepper_service.tstepper_service',
-                                       name = 'Time stepper',
-                                       window = window,
-                                       position = 'left',
+        tui_engine_view = TraitsUIView(obj=tstepper_service,
+                                       id='ibvpy.plugins.tstepper_service.tstepper_service',
+                                       name='Time stepper',
+                                       window=window,
+                                       position='left',
                                        **traits
                                        )
         return tui_engine_view

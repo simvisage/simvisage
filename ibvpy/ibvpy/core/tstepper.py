@@ -1,19 +1,19 @@
 
 from etsproxy.traits.api import \
-     Array, Bool, Enum, Float, HasTraits, \
-     HasStrictTraits, Any, \
-     Instance, Int, Trait, Str, Enum, \
-     Callable, List, TraitDict, Any, Range, \
-     Delegate, Event, on_trait_change, Button, \
-     Interface, Property, cached_property, WeakRef, Dict
+    Array, Bool, Enum, Float, HasTraits, \
+    HasStrictTraits, Any, \
+    Instance, Int, Trait, Str, Enum, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, \
+    Interface, Property, cached_property, WeakRef, Dict
 
 from etsproxy.traits.ui.api import \
-     Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit
+    Item, View, HGroup, ListEditor, VGroup, \
+    HSplit, Group, Handler, VSplit
 
-from etsproxy.traits.ui.menu import \
-     NoButtons, OKButton, CancelButton, \
-     Action
+from traitsui.menu import \
+    NoButtons, OKButton, CancelButton, \
+    Action
 
 import numpy as np
 
@@ -32,7 +32,9 @@ from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
 from ibvpy.mesh.fe_subdomain import FESubDomain
 from ibvpy.mesh.fe_grid import FEGrid
 
+
 class TStepper(IBVResource):
+
     """
     The TStepper is a spatially bounded TStepperEval.
 
@@ -55,10 +57,10 @@ class TStepper(IBVResource):
     service_class = 'ibvpy.plugins.tstepper_service.TStepperService'
     service_attrib = 'tstepper'
 
-    # Integration terms involved in the evaluation of the 
+    # Integration terms involved in the evaluation of the
     # incremetal spatial integrals.
-    # Must be either an instance of ts_eval or a tuple specifying a pair 
-    # ( ts_eval, sdomain ) or a list of tuples with the pairs 
+    # Must be either an instance of ts_eval or a tuple specifying a pair
+    # ( ts_eval, sdomain ) or a list of tuples with the pairs
     # [ ( ts_eval, sdomain ), ( ts_eval, sdomain ), ... ]
     #
 
@@ -67,6 +69,7 @@ class TStepper(IBVResource):
     tse = Instance(ITStepperEval)
 
     tse_integ = Property(depends_on='tse,_sdomain, _sdomain.changed_structure')
+
     @cached_property
     def _get_tse_integ(self):
         if self.tse:
@@ -81,12 +84,13 @@ class TStepper(IBVResource):
     #
     _sdomain = Instance(ISDomain)
     sdomain = Property(Instance(ISDomain))
+
     def _set_sdomain(self, value):
         if isinstance(value, FEGrid):
             # construct FERefinementGrid and FEDomain
             self._sdomain = FEDomain()
             fe_rgrid = FERefinementGrid(domain=self._sdomain,
-                                         fets_eval=value.fets_eval)
+                                        fets_eval=value.fets_eval)
             value.level = fe_rgrid
         elif isinstance(value, FERefinementGrid):
             # construct FEDomain
@@ -97,7 +101,7 @@ class TStepper(IBVResource):
             for d in value:
                 if isinstance(d, FEGrid):
                     fe_rgrid = FERefinementGrid(domain=self._sdomain,
-                                                 fets_eval=d.fets_eval)
+                                                fets_eval=d.fets_eval)
                     d.level = fe_rgrid
                 elif isinstance(d, FESubDomain):
                     d.domain = self._sdomain
@@ -105,18 +109,21 @@ class TStepper(IBVResource):
                     raise TypeError, 'The list can contain only FEGrid or FERefinementGrid'
         else:
             self._sdomain = value
+
     def _get_sdomain(self):
         if self._sdomain == None:
             self._sdomain = SDomain()
         return self._sdomain
 
     subdomains = Property()
+
     def _get_subdomains(self):
         if self.sdomain == None:
             return []
         return self.sdomain.subdomains
 
     xdomains = Property()
+
     def _get_xdomains(self):
         if self.sdomain == None:
             return []
@@ -130,41 +137,47 @@ class TStepper(IBVResource):
     # Boundary condition manager
     #
     bcond_mngr = Instance(BCondMngr)
+
     def _bcond_mngr_default(self):
         return BCondMngr()
 
-    # Convenience constructor 
+    # Convenience constructor
     #
     # This property provides the possibility to write
     # tstepper.bcond_list = [BCDof(var='u',dof=5,value=0, ... ]
     # The result gets propageted to the BCondMngr
     #
     bcond_list = Property(List)
+
     def _get_bcond_list(self):
         return self.bcond_mngr.bcond_list
+
     def _set_bcond_list(self, bcond_list):
         self.bcond_mngr.bcond_list = bcond_list
 
     # Response variable manager
     #
     rtrace_mngr = Instance(RTraceMngr)
+
     def _rtrace_mngr_default(self):
         return RTraceMngr(tstepper=self)
 
-    # Convenience constructor 
+    # Convenience constructor
     #
     # This property provides the possibility to write
     # tstepper.bcond_list = [RVDof(var='u',dof=5,value=0, ... ]
     # The result gets propageted to the RTraceMngr
     #
     rtrace_list = Property(List)
+
     def _get_rtrace_list(self):
         return self.rtrace_mngr.rtrace_list
+
     def _set_rtrace_list(self, rtrace_list):
         self.rtrace_mngr.rtrace_list = rtrace_list
 
-    # Possibility to add a callable for derived 
-    # variables of the control variable. 
+    # Possibility to add a callable for derived
+    # variables of the control variable.
     u_processor = Callable
 
     # Backward reference to the time-loop in order to accommadate the
@@ -175,12 +188,14 @@ class TStepper(IBVResource):
     tloop = WeakRef
 
     dir = Property
+
     def _get_dir(self):
         return self.tloop.dir
 
     dof_resultants = Bool(True)
 
     rte_dict = Property(Dict, depends_on='tse')
+
     @cached_property
     def _get_rte_dict(self):
         '''
@@ -196,7 +211,7 @@ class TStepper(IBVResource):
             return self.F_int
 
         if self.dof_resultants:
-            _rte_dict['F_int'] = _get_F_int # lambda sctx, U_k: self.F_int
+            _rte_dict['F_int'] = _get_F_int  # lambda sctx, U_k: self.F_int
             _rte_dict['F_ext'] = lambda sctx, U_k, *args, **kw: self.F_ext
 
         _rte_dict.update(self.tse_integ.rte_dict)
@@ -211,6 +226,7 @@ class TStepper(IBVResource):
         return self.tse_integ.new_resp_var()
 
     U_k = Property(depends_on='_sdomain.changed_structure')
+
     @cached_property
     def _get_U_k(self):
         '''
@@ -220,6 +236,7 @@ class TStepper(IBVResource):
         return U_k
 
     d_U = Property(depends_on='_sdomain.changed_structure')
+
     @cached_property
     def _get_d_U(self):
         '''
@@ -228,6 +245,7 @@ class TStepper(IBVResource):
         return self.new_cntl_var()
 
     F_ext = Property(depends_on='_sdomain.changed_structure')
+
     @cached_property
     def _get_F_ext(self):
         '''
@@ -283,7 +301,7 @@ class TStepper(IBVResource):
                 self.u_processor.sd = self.sdomain
 
         # add-on parameters to be passed to every inner loop
-        # they are provided by u_processors 
+        # they are provided by u_processors
         #
         self.kw = {}
         self.args = []
@@ -324,7 +342,7 @@ class TStepper(IBVResource):
         # Let the time sub-stepper evaluate its contribution.
         #
         F_int, K_mtx = self.tse_integ.get_corr_pred(sctx, U_k, d_U, t_n, t_n1,
-                                                     *self.args, **self.kw)
+                                                    *self.args, **self.kw)
 
         # Promote the system matrix to the SysMtxAssembly
         # Supported representation of the system matrix is
@@ -353,15 +371,15 @@ class TStepper(IBVResource):
 
             # The code below is somewhat wasteful as it explicitly constructs the
             # array of external forces and then makes the subraction
-            # F_ext - F_int to obtain the residual forces. As a result, there two unnecessary 
+            # F_ext - F_int to obtain the residual forces. As a result, there two unnecessary
             # intermediate instances of the vector of the size [n_dofs].
             #
             # The two arrays are needed only for postprocessing, if there is a need
-            # to get the reaction forces at particular DOF stored in F_int 
-            # or when the imposed time-dependent loading in a DOF should be visualized 
-            # for verification, the two vectors must be defined as 
+            # to get the reaction forces at particular DOF stored in F_int
+            # or when the imposed time-dependent loading in a DOF should be visualized
+            # for verification, the two vectors must be defined as
             # attributes of the tstepper objects. For this reasons, the more demanding
-            # implementation is used here. 
+            # implementation is used here.
             #
             # Remember F_int
             #
@@ -371,9 +389,10 @@ class TStepper(IBVResource):
             #
             self.F_ext[:] = 0.0
 
-            # Assemble boundary conditions in K and self.F_ext 
+            # Assemble boundary conditions in K and self.F_ext
             #
-            self.bcond_mngr.apply(step_flag, sctx, self.K, self.F_ext, t_n, t_n1)
+            self.bcond_mngr.apply(
+                step_flag, sctx, self.K, self.F_ext, t_n, t_n1)
 
             # Return the system matrix assembly K and the residuum
             #
@@ -381,12 +400,12 @@ class TStepper(IBVResource):
 
         else:
 
-            # On the other hand, the time-loop only requires the residuum 
+            # On the other hand, the time-loop only requires the residuum
             # which can be obtained withoug an additional
             # memory consumption by issuing an in-place switch of the sign
-            # 
-            F_int *= -1 # in-place sign change of the internal forces
-            # 
+            #
+            F_int *= -1  # in-place sign change of the internal forces
+            #
             # Then F_int can be used as the target for the boundary conditions
             #
             self.bcond_mngr.apply(step_flag, sctx, self.K, F_int, t_n, t_n1)
@@ -417,16 +436,16 @@ class TStepper(IBVResource):
         self.rtrace_mngr.register_mv_pipelines(e)
 
     traits_view = View(Group(Item('sdomain', style='custom', show_label=False),
-                               label='Discretization'),
-                        Group(Item('tse', style='simple', show_label=False),
-                               label='Integrator'),
-                        Group(Item('bcond_mngr', style='custom', show_label=False),
-                               label='Boundary conditions'),
-                        Group(Item('dof_resultants'),
-                               label='Options'),
-                        resizable=True,
-                        height=0.8,
-                        width=0.8,
-                        buttons=[OKButton, CancelButton],
-                        kind='subpanel',
-                        )
+                             label='Discretization'),
+                       Group(Item('tse', style='simple', show_label=False),
+                             label='Integrator'),
+                       Group(Item('bcond_mngr', style='custom', show_label=False),
+                             label='Boundary conditions'),
+                       Group(Item('dof_resultants'),
+                             label='Options'),
+                       resizable=True,
+                       height=0.8,
+                       width=0.8,
+                       buttons=[OKButton, CancelButton],
+                       kind='subpanel',
+                       )
