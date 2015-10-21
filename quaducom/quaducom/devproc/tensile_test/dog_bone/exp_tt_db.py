@@ -68,6 +68,8 @@ class ExpTTDB(ExType):
 
     implements(IExType)
 
+    file_ext = 'DAT'
+
     # --------------------------------------------------------------------
     # register a change of the traits with metadata 'input'
     # --------------------------------------------------------------------
@@ -83,16 +85,16 @@ class ExpTTDB(ExType):
     # specify inputs:
     # -------------------------------------------------------------------------
 
-    width = Float(0.140, unit='m', input=True, table_field=True,
+    width = Float(0.120, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    gauge_length = Float(0.550, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.250, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     age = Int(29, unit='d', input=True, table_field=True,
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''
 
-    loading_rate = Float(2.0, unit='mm/min', input=True, table_field=True,
+    loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     '''Applied loading rate.
     '''
@@ -118,18 +120,22 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-14-10'
 #        fabric_layout_key = '2D-18-10'
 #        fabric_layout_key = '2D-04-11'
-        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = '2D-05-11'
+#        fabric_layout_key = 'NWM3-016-09-b1'
+        fabric_layout_key = 'CAR-3300-EP_Q90'
+#        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'sto-100'
-        concrete_mixture_key = 'FIL-10-09'
+#        concrete_mixture_key = 'FIL-10-09'
+        concrete_mixture_key = 'Pagel_TF10'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 12
-        thickness = 0.06
+        n_layers = 1
+        thickness = 0.03
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -276,6 +282,24 @@ class ExpTTDB(ExType):
             self.WA_HR -= self.WA_HR[0]
             self.WA_HR *= -1
 
+        # NOTE: use PEEKEL measuring software returning only one csv-file
+        # 2 displacement gauges at the sides and one at the back; ARAMIS at front;
+        #
+        if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            self.WA1_vorne -= self.WA1_vorne[0]
+            self.WA1_vorne *= -1
+            self.WA2_links -= self.WA2_links[0]
+            self.WA2_links *= -1
+            self.WA3_rechts -= self.WA3_rechts[0]
+            self.WA3_rechts *= -1
+        if hasattr(self, "WA1_hinten") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            self.WA1_hinten -= self.WA1_hinten[0]
+            self.WA1_hinten *= -1
+            self.WA2_links -= self.WA2_links[0]
+            self.WA2_links *= -1
+            self.WA3_rechts -= self.WA3_rechts[0]
+            self.WA3_rechts *= -1
+
     eps = Property(Array('float_'), output=True,
                    depends_on='input_change')
     '''Strains calculated from the input gauge displacements.
@@ -374,6 +398,17 @@ class ExpTTDB(ExType):
             # average strains
             #
             eps_m = (eps_V + eps_H) / 2.
+
+        if (hasattr(self, "WA1_vorne") or hasattr(self, "WA1_hinten")) and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            WA2_links = np.copy(self.WA2_links)
+            WA3_rechts = np.copy(self.WA3_rechts)
+            min_WA2_links = np.min(WA2_links[:10])
+            min_WA3_rechts = np.min(WA3_rechts[:10])
+            WA2_links -= min_WA2_links
+            WA3_rechts -= min_WA3_rechts
+            eps_li = WA2_links / (self.gauge_length * 1000.)  # [mm/mm]
+            eps_re = WA3_rechts / (self.gauge_length * 1000.)
+            eps_m = (eps_li + eps_re) / 2.
 
         return eps_m
 
@@ -531,7 +566,7 @@ class ExpTTDB(ExType):
         jump_idx2_arr = np.delete(jump_idx2_arr, remove_idx)
         delta_jump_idx_arr = np.delete(delta_jump_idx_arr, remove_idx)
 
-        # specify the factor by with the index delta range of a jump
+        # specify the factor with whom the index delta range of a jump
         # (i.e. displacement range of the jump)
         # is multiplied, i.e. up to which index the values of the
         # F-w- curve are removed
@@ -568,7 +603,6 @@ class ExpTTDB(ExType):
         return F_asc_ironed, eps_asc_ironed
 
     sig_c_ironed = Property(Float, depends_on='input_change', unit='MPa')
-#                                      ,output=False, table_field=False,
     '''Stress in composite - ironed
     '''
     @cached_property
@@ -579,8 +613,7 @@ class ExpTTDB(ExType):
         return sig_c_asc_ironed
 
     sig_c_interpolated = Property(Float, depends_on='input_change')
-#                                      ,output=False, table_field=False, unit='MPa')
-    '''Stress in composite - ironed
+    '''Stress in composite - ironed with initial offset removed
     '''
     @cached_property
     def _get_sig_c_interpolated(self):
@@ -595,8 +628,6 @@ class ExpTTDB(ExType):
         return smooth(self.sig_c_interpolated, 15, 'flat')
 
     eps_c_interpolated = Property(Float, depends_on='input_change')
-#                                      ,output=False, table_field=False, unit='MPa')
-
     @cached_property
     def _get_eps_c_interpolated(self):
         eps_c_interpolated = np.copy(self.eps_ironed)
@@ -769,25 +800,41 @@ class ExpTTDB(ExType):
             axes.plot(self.WA_HR, self.Kraft)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
+        if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            axes.plot(self.WA1_vorne, self.Kraft)
+            axes.plot(self.WA2_links, self.Kraft)
+            axes.plot(self.WA3_rechts, self.Kraft)
+        if hasattr(self, "WA1_hinten") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            axes.plot(self.WA1_hinten, self.Kraft)
+            axes.plot(self.WA2_links, self.Kraft)
+            axes.plot(self.WA3_rechts, self.Kraft)
 
-    def _plot_force_displacement_asc(self, axes):
+    def _plot_force_displacement_asc(self, axes, color='black', linewidth=1., linestyle='-', label=None):
         '''plot force-displacement diagram (only the ascending branch)
         '''
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
             #
-            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc)
-            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc)
-            axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
             #
-            axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc)
-            axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc)
-            axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc)
-            axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc)
+            axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
+        if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            axes.plot(self.WA1_vorne[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        if hasattr(self, "WA1_hinten") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
+            axes.plot(self.WA1_hinten[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
@@ -926,9 +973,9 @@ class ExpTTDB(ExType):
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
-    def _plot_sigtex_eps(self, axes, color='blue', linewidth=1., linestyle='-'):
+    def _plot_sigtex_eps(self, axes, color='blue', linewidth=1., linestyle='-', label=None, plot_analytical_stiffness_II=True):
         axes.plot(self.eps_asc, self.sig_tex_asc,
-                  color=color, linewidth=linewidth, linestyle=linestyle)
+                  color=color, linewidth=linewidth, linestyle=linestyle, label=label)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('textile stress [MPa]')
         # original curve
@@ -936,9 +983,10 @@ class ExpTTDB(ExType):
 #        axes.plot(self.eps_asc, self.sig_tex_asc)
         # plot the textile secant stiffness at fracture state
         #
-        eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
-        sig_lin = self.ccs.E_tex_arr[1] * eps_lin
-        axes.plot(eps_lin, sig_lin)
+        if plot_analytical_stiffness_II:
+            eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
+            sig_lin = self.ccs.E_tex_arr[1] * eps_lin
+            axes.plot(eps_lin, sig_lin)
 
     def _plot_sigtex_eps_smoothed(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_smooth, self.sig_tex_smooth,
@@ -1151,6 +1199,6 @@ if __name__ == '__main__':
     #        print inst.production_date
     #        inst.save()
 
-    print ExpTTDB.db['TT-12c-6cm-0-TU-WMTC'].sig_c_interpolated_smoothed
+#    print ExpTTDB.db['TT-12c-6cm-0-TU-WMTC'].sig_c_interpolated_smoothed
 
-    # ExpTTDB.db.configure_traits()
+    ExpTTDB.db.configure_traits()
