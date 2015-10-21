@@ -3,41 +3,12 @@ Created on Sep 9, 2013
 
 @author: alexander
 '''
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
     Delegate, Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
-
-from ibvpy.api import \
-    TStepper as TS, TLoop, TLine, \
-    IBVModel, DOTSEval, \
-    RTraceGraph, RTraceDomainListField, \
-    BCDof, BCDofGroup, BCSlice, FERefinementGrid, FEDomain
-
-from ibvpy.fets.fets_eval import \
-    FETSEval
-from ibvpy.fets.fets3D.fets3D8h import \
-    FETS3D8H
-from ibvpy.fets.fets3D.fets3D8h20u import \
-    FETS3D8H20U
-from ibvpy.fets.fets3D.fets3D8h27u import \
-    FETS3D8H27U
-from ibvpy.fets.fets2D5.fets2D58h20u import \
-    FETS2D58H20U
-
-from ibvpy.mesh.fe_grid import \
-    FEGrid
-
-from ibvpy.mats.mats2D5.mats2D5_cmdm.mats2D5_cmdm import \
-    MATS2D5MicroplaneDamage
-
-from ibvpy.mats.mats2D.mats2D_elastic.mats2D_elastic import \
-    MATS2DElastic
-
-from ibvpy.mats.mats3D.mats3D_elastic.mats3D_elastic import \
-    MATS3DElastic
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnGeneralExtended, \
@@ -109,8 +80,8 @@ if __name__ == '__main__':
     # do
     #------------------------------
 #    do = 'show_phi_fn'
-#    do = 'ui'
-    do = 'validation'
+    do = 'ui'
+#    do = 'validation'
 #    do = 'show_last_results'
 
 #    test_series = 'ST-10g'
@@ -267,7 +238,8 @@ if __name__ == '__main__':
                             shape_R=2,
                             shape_z=2,
                             #
-                            w_max= -0.040,
+#                            w_max= -0.040,
+                            w_max= -0.045,
                             tstep=0.01,
                             tmax=1.0,
                             #
@@ -339,7 +311,7 @@ if __name__ == '__main__':
     if do == 'ui':
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource=sim_model)
-        sim_model.tloop.eval()
+#        sim_model.tloop.eval()
         app.main()
 
     #------------------------------
