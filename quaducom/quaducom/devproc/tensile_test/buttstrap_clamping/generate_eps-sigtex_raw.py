@@ -114,6 +114,10 @@ number of reinforcement layers: %g
 
 def eval_sig_tex_eps(smooth=False):
 
+    # plot
+    fig = p.figure(facecolor='white', figsize=(12, 9))
+    axes = p.subplot(111)
+
     sigtex_max_list = []
     for idx, e_run in enumerate(e_list):
         e = e_run.ex_type
@@ -122,41 +126,54 @@ def eval_sig_tex_eps(smooth=False):
         file_name = os.path.basename(data_file)
         base_name, ext = os.path.splitext(file_name)
 
-        if smooth:
-            out_arr = np.vstack([e.eps_smooth, e.sig_tex_smooth]).T
-            out_file = os.path.join(
-                dir_name, base_name + '-eps-sigtex_smooth.csv')
-        else:
-            out_arr = np.vstack([e.eps_asc, e.sig_tex_asc]).T
-            out_file = os.path.join(
-                dir_name, base_name + '-eps-sigtex_raw.csv')
-
-        print 'writing output to', out_file
+        # use measured values for number of rovings and thickness of the cross section
+        #
+        A_rov = 1.84  # [mm^2]
+        n_rov = n_rov_list[idx]  # [-]
+        A_tex = n_rov * A_rov  # [mm^2]
+        thickness = thickness_list[idx]  # [m]
+        width = width_list[idx]  # [m]
+        A_c = thickness * width
+        rho_c = A_tex / A_c / 1000000.
+        print 'A_rov', A_rov
+        print 'n_rov', n_rov
+        print 'A_tex', A_tex
+        print 'thickness', thickness
+        print 'width', width
+        print 'A_c', A_c
+        print 'rho_c', rho_c
 
         mid_layer = e.ccs.fabric_layup_list[1]
         fabric_type = mid_layer.fabric_layout_key
         flo_ref = mid_layer.fabric_layout_ref
         n_fabric_layers = mid_layer.n_layers
 
+        a_tex_db = e.ccs.a_tex
+        print 'a_tex_db', a_tex_db
+
+        width_db = e.width
+        print 'width_db', width_db
+
+        A_tex_db = a_tex_db * width_db
+        print 'A_tex_db', A_tex_db
+
+        scale_factor = A_tex_db / A_tex
+
+        if smooth:
+            out_arr = np.vstack([e.eps_smooth, scale_factor * e.sig_tex_smooth]).T
+            out_file = os.path.join(
+                dir_name, base_name + '-eps-sigtex_smooth.csv')
+        else:
+            out_arr = np.vstack([e.eps_asc, scale_factor * e.sig_tex_asc]).T
+            out_file = os.path.join(
+                dir_name, base_name + '-eps-sigtex_raw.csv')
+
+        print 'writing output to', out_file
+
 #        header_string = header_template % (base_name, e.ccs.thickness, e.width,
 #                                           e.gauge_length, e.A_tex,
 #                                           e.rho_c, fabric_type,
 #                                           n_fabric_layers)
-
-        # use measured values for number of rovings and thickness of the cross section
-        #
-        A_rov = 1.84  # [mm^2]
-        n_rov = n_rov_list[idx]  # [-]
-        A_tex = n_rov * A_rov  # [mm^2]
-        print 'A_rov', A_rov
-        print 'n_rov', n_rov
-        print 'A_tex', A_tex
-
-        thickness = thickness_list[idx]  # [m]
-        width = width_list[idx]  # [m]
-
-        A_c = thickness * width
-        rho_c = A_tex / A_c / 1000000.
 
         header_string = header_template % (base_name, thickness, width,
                                            e.gauge_length, A_tex,
@@ -182,10 +199,27 @@ def eval_sig_tex_eps(smooth=False):
         f.write(temp)
         f.close()
 
+        # plot
+        e._plot_sigtex_eps(axes, color=color_list[idx], linestyle=linestyle_list[idx], label=test_files[idx], plot_analytical_stiffness_II=False)
+        axes.grid()
+        axes.set_xlabel('eps [-]')
+        axes.set_ylabel('sig_tex [MPa]')
+        axes.legend(loc=2)
+        axes.set_xlim([0., 0.012])
+        axes.set_ylim([0., 2500])
+
     print 'sigtex_max_list: ', sigtex_max_list
     print 'sigtex (average) = %g' % (np.average(np.array(sigtex_max_list)))
     print 'sigtex (standard deviation) = %g' % (np.std(np.array(sigtex_max_list)))
 
+    p.savefig('eps-sigtex.pdf', format='pdf')
+    p.show()
+
+sig_tex_max_arr_db = np.array([e_run.ex_type.sig_tex_max
+                            for e_run in e_list], dtype='float_')
+print 'sigtex_db (average) = %g' % (np.average(sig_tex_max_arr_db))
+print 'sigtex_db (standard deviation) = %g' % (np.std(sig_tex_max_arr_db))
+
 if __name__ == '__main__':
-    plot_eps_sigtex()
+#    plot_eps_sigtex()
     eval_sig_tex_eps(smooth=False)
