@@ -59,7 +59,7 @@ from os.path import join
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 
-from simiter.sim_pstudy import \
+from matresdev.simiter.sim_pstudy import \
     SimPStudy, SimOut, ISimModel
 
 from matresdev.db.exdb.ex_run_view import \
@@ -1063,8 +1063,8 @@ class SimSTDB(SimST):
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
         print 'E_m (from ccs)', E_m
-        E_m = 29100.
-        print 'E_m set explicitly to ', E_m
+#        E_m = 29100.
+#        print 'E_m set explicitly to ', E_m
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -1074,10 +1074,10 @@ class SimSTDB(SimST):
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
         print 'E_c (from ccs)', E_c
-        print 'E_c set explicitly to 18709.5'
         E_c = 18709.5
-        print 'E_c set explicitly to 29100.'
-        E_c = 29100.
+        print 'E_c set explicitly to 18709.5'
+#        print 'E_c set explicitly to 29100.'
+#        E_c = 29100.
         return E_c
 
     # Poisson's ratio
