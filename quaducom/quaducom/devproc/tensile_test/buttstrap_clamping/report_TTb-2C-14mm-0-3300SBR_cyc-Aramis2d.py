@@ -32,9 +32,9 @@ e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
 n_rov_list = [18, 18, 14]
 
 color_list = [
-              'r',
-              'g',
               'b',
+              'g',
+              'r',
               ]
 linestyle_list = [
                   '-',
@@ -83,7 +83,7 @@ def plot_all():
         else:
             eps_m = (eps_li + eps_re) / 2.
         eps_asc = eps_m[:e.max_stress_idx + 1]
-        p.plot(eps_asc, sig_tex_asc, label=test_files[idx])
+        p.plot(eps_asc, sig_tex_asc, label=test_files[idx], color=color_list[idx])
 
     # material stiffness carbon (E=245GPa)
     xarr = np.array([0., 0.010])
