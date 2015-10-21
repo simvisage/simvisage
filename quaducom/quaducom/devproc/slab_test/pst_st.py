@@ -6,22 +6,11 @@ Created on Sep 9, 2013
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 from numpy import \
-    sin, cos, c_, arange, hstack, array, max, frompyfunc, linspace
+    sin, cos, c_, frompyfunc, linspace
 import os
 from os.path import join
 from pickle import dump, load
 
-from geo_lip import \
-    GeoLIP
-from geo_st import \
-    GeoST
-from geo_supprt import \
-    GeoSUPPRT
-from ibvpy.api import \
-    TStepper as TS, TLoop, TLine, \
-    IBVModel, DOTSEval, \
-    RTraceGraph, RTraceDomainListField, \
-    BCDof, BCDofGroup, BCSlice, FERefinementGrid, FEDomain
 from ibvpy.fets.fets2D5.fets2D58h20u import \
     FETS2D58H20U
 from ibvpy.fets.fets3D.fets3D8h import \
