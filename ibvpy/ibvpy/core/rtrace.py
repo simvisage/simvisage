@@ -8,7 +8,7 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
     MenuBar, Separator
 
@@ -17,6 +17,7 @@ from numpy import float_, zeros, arange, array, copy
 from mathkit.mfn import MFnLineArray
 
 #from rt_domain import RTraceDomainField
+
 
 class RTrace(HasStrictTraits):
     name = Str('unnamed')
@@ -30,6 +31,7 @@ class RTrace(HasStrictTraits):
 
     # path to directory to store the data
     dir = Property
+
     def _get_dir(self):
         return self.rmgr.dir
 
@@ -57,7 +59,8 @@ class RTrace(HasStrictTraits):
     def add_current_values(self, sctx, U_k, *args, **kw):
         pass
 
-    def add_current_displ(self, sctx, U_k):#TODO: to avoid class checking in rmngr - UGLY
+    # TODO: to avoid class checking in rmngr - UGLY
+    def add_current_displ(self, sctx, U_k):
         pass
 
     def register_mv_pipelines(self, e):
@@ -66,4 +69,3 @@ class RTrace(HasStrictTraits):
 
         do nothing by default
         '''
-

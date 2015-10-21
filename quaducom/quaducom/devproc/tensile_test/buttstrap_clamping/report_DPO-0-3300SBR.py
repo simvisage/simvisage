@@ -16,44 +16,45 @@ params = {'legend.fontsize': 10,
 p.rcParams.update(params)
 
 test_files = [
-               'DPO-30cm-0-3300SBR-V1.DAT',
-               'DPO-30cm-0-3300SBR-V2.DAT',
-               'DPO-40cm-0-3300SBR-V2.DAT',
-               'DPO-40cm-0-3300SBR-V3.DAT',
-               'DPO-50cm-0-3300SBR-V1.DAT',
-               'DPO-50cm-0-3300SBR-V2.DAT',
-               'DPO-60cm-0-3300SBR-V1.DAT',
-               'DPO-60cm-0-3300SBR-V2.DAT',
-              ]
+    'DPO-30cm-0-3300SBR-V1.DAT',
+    'DPO-30cm-0-3300SBR-V2.DAT',
+    'DPO-40cm-0-3300SBR-V2.DAT',
+    'DPO-40cm-0-3300SBR-V3.DAT',
+    'DPO-50cm-0-3300SBR-V1.DAT',
+    'DPO-50cm-0-3300SBR-V2.DAT',
+    'DPO-60cm-0-3300SBR-V1.DAT',
+    'DPO-60cm-0-3300SBR-V2.DAT',
+]
 
 test_file_path = os.path.join(simdb.exdata_dir,
                               'double_pullout',
                               '2015-07-15_DPO-30cm-0-3300SBR')
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
-             for test_file in test_files]
+          for test_file in test_files]
 
 color_list = [
-              'r',
-              'r',
-              'g',
-              'g',
-              'b',
-              'b',
-              'k',
-              'k',
-              ]
+    'r',
+    'r',
+    'g',
+    'g',
+    'b',
+    'b',
+    'k',
+    'k',
+]
 
 linestyle_list = [
-                  '-',
-                  '-',
-                  '-',
-                  '-',
-                  '-',
-                  '-',
-                  '-',
-                  '-',
-                  ]
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+    '-',
+]
+
 
 def plot_all():
 
@@ -67,7 +68,7 @@ def plot_all():
         axes = p.subplot(111)
 
         label = test_files[idx].split('.')[0]
-        e._plot_force_displacement_asc(axes, color=color_list[idx], linestyle=linestyle_list[idx], label=label)
+        e._plot_force_displacement_asc(axes)
         axes.grid()
         axes.set_xlabel('$\Delta$ w [mm]')
         axes.set_ylabel('F [kN]')

@@ -8,17 +8,20 @@ import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.mayavi.plugins.app import setup_logger
-from etsproxy.traits.api import List, Instance
-from etsproxy.envisage.api import Plugin, ServiceOffer, ExtensionPoint
-from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
+from mayavi.plugins.app import setup_logger
+from traits.api import List, Instance
+from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from pyface.workbench.api import Perspective, PerspectiveItem
 
 logger = logging.getLogger()
 
 ###############################################################################
 # `IBVPPerspective` class.
 ###############################################################################
+
+
 class TLoopPerspective(Perspective):
+
     """ An default perspective for the app. """
 
     # The perspective's name.
@@ -31,16 +34,18 @@ class TLoopPerspective(Perspective):
     show_editor_area = True
 
     # View IDs.
-    TLOOPMNGR_VIEW = 'ibvpy.plugins.tloop_service.tloop_service' 
+    TLOOPMNGR_VIEW = 'ibvpy.plugins.tloop_service.tloop_service'
 
     # The contents of the perspective.
     contents = [
-        PerspectiveItem(id = TLOOPMNGR_VIEW, position = 'left'),
+        PerspectiveItem(id=TLOOPMNGR_VIEW, position='left'),
     ]
 
 ###############################################################################
 # `IBVPPlugin` class.
 ###############################################################################
+
+
 class TLoopUIPlugin(Plugin):
 
     # Extension points we contribute to.
@@ -54,10 +59,10 @@ class TLoopUIPlugin(Plugin):
     name = 'Time loop'
 
     # Perspectives.
-    perspectives = List(contributes_to = PERSPECTIVES)
+    perspectives = List(contributes_to=PERSPECTIVES)
 
     # Views.
-    views = List(contributes_to = VIEWS)
+    views = List(contributes_to=VIEWS)
 
     ######################################################################
     # Private methods.
@@ -72,14 +77,14 @@ class TLoopUIPlugin(Plugin):
     def _tloop_service_view_factory(self, window, **traits):
         """ Factory method for tloop_service views. """
         from etsproxy.pyface.workbench.traits_ui_view import \
-                TraitsUIView
+            TraitsUIView
 
         tloop_service = self._get_tloop_service(window)
-        tui_engine_view = TraitsUIView(obj = tloop_service,
-                                       id = 'ibvpy.plugins.tloop_service.tloop_service',
-                                       name = 'Time loop',
-                                       window = window,
-                                       position = 'left',
+        tui_engine_view = TraitsUIView(obj=tloop_service,
+                                       id='ibvpy.plugins.tloop_service.tloop_service',
+                                       name='Time loop',
+                                       window=window,
+                                       position='left',
                                        **traits
                                        )
         return tui_engine_view

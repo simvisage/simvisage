@@ -17,9 +17,11 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
+
 def comma2dot(c):
     '''convert float with comma separator into float with dot separator'''
     return float((str(c)).replace(",", "."))
+
 
 def time2sec(date):
     '''convert time format (hh:mm:ss) to seconds (s)'''
@@ -27,6 +29,7 @@ def time2sec(date):
     t_list = d_list[1].split(':')
     t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + int(t_list[2])
     return t_sec
+
 
 def scaledown_data(data_arr, n_avg):
     '''scale down the number of rows in 'data_array' by the
@@ -43,11 +46,18 @@ def scaledown_data(data_arr, n_avg):
     data_arr_ = np.mean(avg_arr, 0)
     return data_arr_
 
-test_file_path = os.path.join(simdb.exdata_dir,
-                              'tensile_tests',
-                              'buttstrap_clamping',
-                              '2015-04-20_TTb-2C-1cm-0-800SBR_cyc'
-                              )
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                               'tensile_tests',
+#                               'buttstrap_clamping',
+#                               '2015-04-20_TTb-2C-1cm-0-800SBR_cyc'
+#                               )
+#
+# test_files = [
+#              'TTb-2C-1cm-0-800SBR-V1_cyc-Aramis2d.csv',
+#             ]
+#
+#
+# test_file = os.path.join(test_file_path, test_files[0])
 
 test_files = [
              'TTb-2C-1cm-0-800SBR-V3_cyc-Aramis2d.csv',
@@ -62,6 +72,8 @@ test_file = 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d'
 
 test_file = os.path.join(test_file_path, test_files[0])
 
+# test_file = 'D:\\2015-04-20_TTb-2C-1cm-0-800SBR_cyc\\TTb-2C-1cm-0-800SBR-V4_cyc-Aramis2d-dot.csv'
+
 downscale_data = True
 plot_data = True
 
@@ -70,12 +82,13 @@ t0 = time.time()
 # use 'genfromtxt' if file containes blank entries
 # data_arr = np.loadtxt(test_file, delimiter=";", skiprows=2,
 data_arr = np.genfromtxt(test_file, delimiter=";", skiprows=2,
-                converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
-                            4: comma2dot, 5: comma2dot, 6: comma2dot })
+                         converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
+                                     4: comma2dot, 5: comma2dot, 6: comma2dot})
 
 print 'data_arr', data_arr.shape
 # print 'data_arr[0]', data_arr[0]
-dlist = [np.array([data_arr[i][0], data_arr[i][1], data_arr[i][2], data_arr[i][3], data_arr[i][4], data_arr[i][5], data_arr[i][6]]) for i in range(data_arr.shape[0])]
+dlist = [np.array([data_arr[i][0], data_arr[i][1], data_arr[i][2], data_arr[i][
+                  3], data_arr[i][4], data_arr[i][5], data_arr[i][6]]) for i in range(data_arr.shape[0])]
 data_arr = np.vstack(dlist)
 
 t1 = time.time()
@@ -91,12 +104,14 @@ if downscale_data:
         print 'time needed for down scaling of data array [min]: %g' % dt
         print 'data_arr_.shape', data_arr_.shape
 
-        test_file_ = os.path.join(test_file_path, test_files[0].split('.')[0] + '_navg' + str(n_avg) + '.csv')
+        test_file_ = os.path.join(
+            test_file_path, test_files[0].split('.')[0] + '_navg' + str(n_avg) + '.csv')
         print 'test_file_', test_file_
 
         header_string = '''Datum/Uhrzeit;Kraft;Clamping;Weg;WA1_vorne;WA2_links;WA3_rechts\r\n;kN;kN;mm;mm;mm;mm\r\n'''
         np.savetxt(test_file_, data_arr_, delimiter=";")
-        #                   header=header_string) # use header_string option of new loadtxt version if available
+        # header=header_string) # use header_string option of new loadtxt
+        # version if available
 
         #-------
         # workaround for old numpy.savetxt version:
@@ -113,10 +128,12 @@ if downscale_data:
         #-------
 
 if plot_data:
-    e_list = [ExRun(data_file=os.path.join(test_file_path, test_file)) for test_file in test_files]
+    e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
+              for test_file in test_files]
 
     fig = p.figure(facecolor='white')
-    fig.subplots_adjust(left=0.09, right=0.97, bottom=0.14, top=0.96, wspace=0.25, hspace=0.2)
+    fig.subplots_adjust(
+        left=0.09, right=0.97, bottom=0.14, top=0.96, wspace=0.25, hspace=0.2)
     p.legend()
 
     for e_run in e_list:

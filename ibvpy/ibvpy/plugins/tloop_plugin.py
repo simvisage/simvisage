@@ -7,15 +7,17 @@ import os.path
 import logging
 
 # Enthought library imports.
-from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.traits.api import List
-from etsproxy.envisage.api import Plugin, ServiceOffer
-from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
-from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
+from mayavi.plugins.app import get_plugins, setup_logger
+from traits.api import List
+from envisage.api import Plugin, ServiceOffer
+from envisage.ui.workbench.api import WorkbenchApplication
+from pyface.workbench.api import Perspective, PerspectiveItem
 
 ###############################################################################
 # `TLoopPlugin` class.
 ###############################################################################
+
+
 class TLoopPlugin(Plugin):
 
     # Extension points we contribute to.
@@ -28,15 +30,15 @@ class TLoopPlugin(Plugin):
     name = 'TLoop'
 
     # Services we contribute.
-    service_offers = List(contributes_to = SERVICE_OFFERS)
-    
+    service_offers = List(contributes_to=SERVICE_OFFERS)
+
     ######################################################################
     # Private methods.
     def _service_offers_default(self):
         """ Trait initializer. """
         ibvpy_service_offer = ServiceOffer(
-            protocol = 'ibvpy.plugins.tloop_service.TLoopService',
-            factory = 'ibvpy.plugins.tloop_service.TLoopService'
+            protocol='ibvpy.plugins.tloop_service.TLoopService',
+            factory='ibvpy.plugins.tloop_service.TLoopService'
         )
 
         return [ibvpy_service_offer]

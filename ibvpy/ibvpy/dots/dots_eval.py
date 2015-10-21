@@ -1,25 +1,25 @@
 
 from etsproxy.traits.api import \
-     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
-     DelegatesTo
+    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
+    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
+    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
+    DelegatesTo
 
-from etsproxy.traits.ui.api import \
-     Item, View
+from traitsui.api import \
+    Item, View
 
-from etsproxy.traits.ui.menu import \
-     OKButton, CancelButton
+from traitsui.menu import \
+    OKButton, CancelButton
 
 
 from numpy import \
-     zeros, float_, ix_, meshgrid, repeat, arange, array, dot, \
-     tensordot, sum
+    zeros, float_, ix_, meshgrid, repeat, arange, array, dot, \
+    tensordot, sum
 
 from ibvpy.core.i_tstepper_eval import \
-     ITStepperEval
+    ITStepperEval
 from ibvpy.core.tstepper_eval import \
-     TStepperEval
+    TStepperEval
 
 from ibvpy.core.rtrace_eval import RTraceEval
 from ibvpy.fets.i_fets_eval import IFETSEval
@@ -32,7 +32,9 @@ from time import time
 # Integrator for a general regular domain.
 #-----------------------------------------------------------------------------
 
+
 class DOTSEval(TStepperEval):
+
     '''
     Domain with uniform FE-time-step-eval.
     '''
@@ -41,6 +43,7 @@ class DOTSEval(TStepperEval):
     sdomain = Instance(IFEUniformDomain)
 
     fets_eval = Property(Instance(IFETSEval), depends_on='sdomain.fets_eval')
+
     @cached_property
     def _get_fets_eval(self):
         return self.sdomain.fets_eval
@@ -59,31 +62,38 @@ class DOTSEval(TStepperEval):
 
     cache_geo_matrices = Bool(True)
 
-    # cached zeroed array for element stiffnesses 
+    # cached zeroed array for element stiffnesses
     k_arr = Property(Array, depends_on='sdomain.changed_structure')
+
     @cached_property
     def _get_k_arr(self):
         n_e, n_e_dofs = self.sdomain.elem_dof_map_unmasked.shape
         return zeros((n_e, n_e_dofs, n_e_dofs), dtype='float_')
 
     F_int = Property(Array, depends_on='sdomain.changed_structure')
+
     @cached_property
     def _get_F_int(self):
         return zeros(self.sdomain.n_dofs, float_)
 
-    B_mtx_grid = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+    B_mtx_grid = Property(
+        Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+
     @cached_property
     def _get_B_mtx_grid(self):
         return self.sdomain.apply_on_ip_grid_unmasked(self.fets_eval.get_B_mtx,
                                                       self.fets_eval.ip_coords)
 
-    J_det_grid = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+    J_det_grid = Property(
+        Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+
     @cached_property
     def _get_J_det_grid(self):
         return self.sdomain.apply_on_ip_grid_unmasked(self.fets_eval.get_J_det,
                                                       self.fets_eval.ip_coords)
 
     state_array_size = Property(depends_on='sdomain.changed_structure')
+
     @cached_property
     def _get_state_array_size(self):
 
@@ -94,6 +104,7 @@ class DOTSEval(TStepperEval):
         return n_elems * self.e_arr_size
 
     ip_offset = Property(depends_on='sdomain.changed_structure')
+
     def _get_ip_offset(self):
         n_elems = self.sdomain.n_elems
         return arange(n_elems + 1, dtype=int) * self.fets_eval.n_gp
@@ -102,7 +113,9 @@ class DOTSEval(TStepperEval):
     def get_state_array_size(self):
         return 0
 
-    state_array = Property(Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+    state_array = Property(
+        Array, depends_on='sdomain.changed_structure,sdomain.+changed_geometry')
+
     @cached_property
     def _get_state_array(self):
         state_array = zeros((self.state_array_size,), dtype='float_')
@@ -113,19 +126,21 @@ class DOTSEval(TStepperEval):
         #
         for e_id, elem in zip(self.sdomain.idx_active_elems, self.sdomain.elements):
             sctx.elem = elem
-            sctx.elem_state_array = state_array[ e_id * e_arr_size : (e_id + 1) * e_arr_size ]
+            sctx.elem_state_array = state_array[
+                e_id * e_arr_size: (e_id + 1) * e_arr_size]
             self.fets_eval.setup(sctx)
         return state_array
 
     def get_corr_pred(self, sctx, u, du, tn, tn1, F_int, *args, **kw):
 
-        # in order to avoid allocation of the array in every time step 
+        # in order to avoid allocation of the array in every time step
         # of the computation
         k_arr = self.k_arr
         k_arr[...] = 0.0
         e_arr_size = self.fets_eval.get_state_array_size()
 
-        if self.cache_geo_matrices and len(self.sdomain.elements) != 0:#build in control that there is at least one active elem
+        # build in control that there is at least one active elem
+        if self.cache_geo_matrices and len(self.sdomain.elements) != 0:
             B_mtx_grid = self.B_mtx_grid
             J_det_grid = self.J_det_grid
 
@@ -143,30 +158,31 @@ class DOTSEval(TStepperEval):
         kw_fets = {}
         U_avg_k = kw.get('eps_avg', None)
         if U_avg_k != None:
-            u_avg_arr = U_avg_k[ self.sdomain.elem_dof_map_unmasked ]
+            u_avg_arr = U_avg_k[self.sdomain.elem_dof_map_unmasked]
 
         for e_id, elem in zip(self.sdomain.idx_active_elems, self.sdomain.elements):
 
             ix = elem.get_dof_map()
             sctx.elem = elem
-            sctx.elem_state_array = state_array[ e_id * e_arr_size : (e_id + 1) * e_arr_size ]
+            sctx.elem_state_array = state_array[
+                e_id * e_arr_size: (e_id + 1) * e_arr_size]
             sctx.X = elem.get_X_mtx()
             sctx.x = elem.get_x_mtx()
             if self.cache_geo_matrices:
-                Be_mtx_grid = B_mtx_grid[ e_id, ... ]
-                Je_det_grid = J_det_grid[ e_id, ... ]
+                Be_mtx_grid = B_mtx_grid[e_id, ...]
+                Je_det_grid = J_det_grid[e_id, ...]
 
             if U_avg_k != None:
-                kw_fets['eps_avg'] = u_avg_arr[ e_id, ... ]
+                kw_fets['eps_avg'] = u_avg_arr[e_id, ...]
 
-            f, k = self.fets_eval.get_corr_pred(sctx, U[ ix_(ix) ], d_U[ ix_(ix) ],
-                                                 tn, tn1,
-                                                 B_mtx_grid=Be_mtx_grid,
-                                                 J_det_grid=Je_det_grid,
-                                                 *args_fets, **kw_fets)
+            f, k = self.fets_eval.get_corr_pred(sctx, U[ix_(ix)], d_U[ix_(ix)],
+                                                tn, tn1,
+                                                B_mtx_grid=Be_mtx_grid,
+                                                J_det_grid=Je_det_grid,
+                                                *args_fets, **kw_fets)
 
-            k_arr[ e_id ] = k
-            F_int[ ix_(ix) ] += f
+            k_arr[e_id] = k
+            F_int[ix_(ix)] += f
 
         return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map_unmasked)
 
@@ -206,25 +222,26 @@ class DOTSEval(TStepperEval):
         return dot(N_mtx, u)[2:]
 
     rte_dict = Property(Dict, depends_on='fets_eval')
+
     @cached_property
     def _get_rte_dict(self):
         rte_dict = {}
 
         # @todo: Jakub remove this - specific to two field problems
         # Should be a tracer assocated with the element.
-        rte_dict.update({'u_m' : RTraceEvalUDomainFieldVar(eval=self.get_u_m, ts=self, u_mapping=self.map_u),
-                          'u_f' : RTraceEvalUDomainFieldVar(eval=self.get_u_f, ts=self, u_mapping=self.map_u),
-#                          'u_rm' : RTraceEvalUDomainFieldVar( eval = self.get_u, ts = self, u_mapping = self.map_u ), 
-#                          'u_rf' : RTraceEvalUDomainFieldVar( eval = self.get_u, ts = self, u_mapping = self.map_u ),
-                          'eps_m' : RTraceEvalUDomainFieldVar(eval=self.get_eps_m, ts=self, u_mapping=self.map_u),
-                          'eps_f' : RTraceEvalUDomainFieldVar(eval=self.get_eps_f, ts=self, u_mapping=self.map_u),
-                          })
+        rte_dict.update({'u_m': RTraceEvalUDomainFieldVar(eval=self.get_u_m, ts=self, u_mapping=self.map_u),
+                         'u_f': RTraceEvalUDomainFieldVar(eval=self.get_u_f, ts=self, u_mapping=self.map_u),
+                         #                          'u_rm' : RTraceEvalUDomainFieldVar( eval = self.get_u, ts = self, u_mapping = self.map_u ),
+                         #                          'u_rf' : RTraceEvalUDomainFieldVar( eval = self.get_u, ts = self, u_mapping = self.map_u ),
+                         'eps_m': RTraceEvalUDomainFieldVar(eval=self.get_eps_m, ts=self, u_mapping=self.map_u),
+                         'eps_f': RTraceEvalUDomainFieldVar(eval=self.get_eps_f, ts=self, u_mapping=self.map_u),
+                         })
         for key, eval in self.fets_eval.rte_dict.items():
 
-            rte_dict[ key ] = RTraceEvalUDomainFieldVar(name=key,
-                                                         u_mapping=self.map_u,
-                                                         eval=eval,
-                                                         fets_eval=self.fets_eval)
+            rte_dict[key] = RTraceEvalUDomainFieldVar(name=key,
+                                                      u_mapping=self.map_u,
+                                                      eval=eval,
+                                                      fets_eval=self.fets_eval)
         return rte_dict
 
     def get_vtk_r_arr(self, idx):
@@ -257,7 +274,7 @@ class DOTSEval(TStepperEval):
 
     debug_cell_data = Bool(False)
 
-    ## @todo - comment this procedure`
+    # @todo - comment this procedure`
     def get_vtk_cell_data(self, position, point_offset, cell_offset):
         if position == 'nodes':
             subcell_offsets, subcell_lengths, subcells, subcell_types = self.fets_eval.vtk_node_cell_data
@@ -290,7 +307,7 @@ class DOTSEval(TStepperEval):
             print 'idx_cell_pnts'
             print idx_cell_pnts
 
-        idx_cell_pnts[ subcell_offsets ] = False
+        idx_cell_pnts[subcell_offsets] = False
 
         if self.debug_cell_data:
             print 'idx_cell_pnts'
@@ -309,7 +326,8 @@ class DOTSEval(TStepperEval):
             print 'point_offsets'
             print point_offsets
 
-        vtk_cell_array[:, idx_cell_pnts] = point_offsets[:, None] + subcells[None, :]
+        vtk_cell_array[:, idx_cell_pnts] = point_offsets[
+            :, None] + subcells[None, :]
         vtk_cell_array[:, idx_lengths] = subcell_lengths[None, :]
 
         if self.debug_cell_data:
@@ -332,7 +350,7 @@ class DOTSEval(TStepperEval):
             print vtk_cell_offsets
 
         vtk_cell_types = zeros(self.n_cells * n_subcells, dtype=int).reshape(self.n_cells,
-                                                                                  n_subcells)
+                                                                             n_subcells)
         vtk_cell_types += subcell_types[None, :]
 
         if self.debug_cell_data:
@@ -342,23 +360,26 @@ class DOTSEval(TStepperEval):
         return vtk_cell_array.flatten(), vtk_cell_offsets.flatten(), vtk_cell_types.flatten()
 
     n_cells = Property(Int)
+
     def _get_n_cells(self):
         '''Return the total number of cells'''
         return self.sdomain.n_active_elems
 
     n_cell_points = Property(Int)
+
     def _get_n_cell_points(self):
         '''Return the number of points defining one cell'''
         return self.fets_eval.n_vtk_r
 
     traits_view = View(Item('fets_eval', style='custom', show_label=False),
-                        resizable=True,
-                        height=0.8,
-                        width=0.8,
-                        buttons=[OKButton, CancelButton],
-                        kind='subpanel',
-                        scrollable=True,
-                        )
+                       resizable=True,
+                       height=0.8,
+                       width=0.8,
+                       buttons=[OKButton, CancelButton],
+                       kind='subpanel',
+                       scrollable=True,
+                       )
+
 
 class RTraceEvalUDomainFieldVar(RTraceEval):
     fets_eval = WeakRef(IFETSEval)
