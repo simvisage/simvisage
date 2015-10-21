@@ -50,9 +50,15 @@ test_file_path = os.path.join(simdb.exdata_dir,
                               )
 
 test_files = [
-             'TTb-2C-1cm-0-800SBR-V1_cyc-Aramis2d.csv',
+             'TTb-2C-1cm-0-800SBR-V3_cyc-Aramis2d.csv',
             ]
 
+test_file_path = os.path.join(simdb.exdata_dir,
+                              'tensile_tests', 'buttstrap_clamping',
+                              '2015-08-03_TTb-2C-14mm-0-3300SBR_cyc-Aramis2d'
+                              )
+
+test_file = 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d'
 
 test_file = os.path.join(test_file_path, test_files[0])
 
