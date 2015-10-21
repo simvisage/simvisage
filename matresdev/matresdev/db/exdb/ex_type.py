@@ -30,6 +30,8 @@ import os
 from numpy import \
     loadtxt
 
+import numpy as np
+
 from os.path import exists
 
 from loadtxt_novalue import loadtxt_novalue
@@ -46,6 +48,30 @@ import zipfile
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 
+def comma2dot(c):
+    '''convert float with comma separator into float with dot separator'''
+    return float((str(c)).replace(",", "."))
+
+def time2sec(date):
+    '''convert time format (hh:mm:ss) to seconds (s)'''
+    d_list = str(date).split()
+    t_list = d_list[1].split(':')
+    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + int(t_list[2])
+    return t_sec
+
+def scaledown_data(data_arr, n_avg):
+    '''scaledown the nuber of rows in 'data_array' by the
+    integer 'n_avg', i.e. if 'n_avg=2' reduce the number of rows in
+    'data_arr' to half. The methods cuts of  up to 2*'n_avgs' rows from the end
+    of the file in order to make sure that the sub arrays used for averaging have the same
+    shape; in general that doesn't effect the data as the measuring is continued after rupture
+    or high frequency measurements is used'''
+    n_rows = data_arr.shape[0]
+    n_steps = (n_rows - n_avg) / n_avg
+    n_max = n_steps * n_avg
+    avg_list = [data_arr[i:n_max:n_avg, :] for i in range(n_avg)]
+    avg_arr = np.array(avg_list)
+    return np.mean(avg_arr, 0)
 
 class ExType(SimDBClass):
 
@@ -133,16 +159,36 @@ class ExType(SimDBClass):
         The order of the names in the .DAT-file corresponds
         to the order of the .ASC-file.
         '''
+        # for data exported into DAT and ASC-files
         file_ = open(self.data_file, 'r')
         lines = file_.read().split()
         names = []
         units = []
         for i in range(len(lines)):
             if lines[i] == '#BEGINCHANNELHEADER':
+                print 'names and units are defined in DAT-file'
                 name = lines[i + 1].split(',')[1]
                 unit = lines[i + 3].split(',')[1]
                 names.append(name)
                 units.append(unit)
+
+        # for data exported into a single csv-file
+        file_split = self.data_file.split('.')
+        if os.path.exists(file_split[0] + '.csv'):
+            file_ = open(file_split[0] + '.csv', 'r')
+            header_line_1 = file_.readline()
+            if header_line_1.split(';')[0] == 'Datum/Uhrzeit':
+                print 'csv-file with header exists'
+                header_line_2 = file_.readline()
+                names = header_line_1.split(';')
+                units = header_line_2.split(';')
+                names[0] = 'Bezugskanal'
+                units[0] = 'sec'
+                # cut off trailing '\r\n' at end of header line
+                names[-1] = names[-1][:-2]
+                units[-1] = units[-1][:-2]
+
+        print 'names, units', names, units
         return names, units
 
     def _names_and_units_default(self):
@@ -150,6 +196,7 @@ class ExType(SimDBClass):
         The order of the names in the .DAT-file corresponds
         to the order of the .ASC-file.
         '''
+        # for data exported into DAT and ASC-files
         file_ = open(self.data_file, 'r')
         lines = file_.read().split()
         names = []
@@ -160,7 +207,23 @@ class ExType(SimDBClass):
                 unit = lines[i + 3].split(',')[1]
                 names.append(name)
                 units.append(unit)
-        print 'names, units', names, units
+
+        # for data exported into a single csv-file
+        file_split = self.data_file.split('.')
+        if os.path.exists(file_split[0] + '.csv'):
+            file_ = open(file_split[0] + '.csv', 'r')
+            header_line_1 = file_.readline()
+            if header_line_1.split(';')[0] == 'Datum/Uhrzeit':
+                header_line_2 = file_.readline()
+                names = header_line_1.split(';')
+                units = header_line_2.split(';')
+                names[0] = 'Bezugskanal'
+                units[0] = 'sec'
+                # cut off trailing '\r\n' at end of header line
+                names[-1] = names[-1][:-2]
+                units[-1] = units[-1][:-2]
+
+        print 'names, units (default)', names, units
         return names, units
 
     def _set_array_attribs(self):
@@ -177,31 +240,66 @@ class ExType(SimDBClass):
     def _read_data_array(self):
         ''' Read the experiment data.
         '''
-        if exists(self.data_file):
+        if os.path.exists(self.data_file):
 
             print 'READ FILE'
             # change the file name dat with asc
             file_split = self.data_file.split('.')
-
             file_name = file_split[0] + '.csv'
-            if not os.path.exists(file_name):
 
+            # for data exported into a single csv-file
+            if os.path.exists(file_name):
+                print 'check csv-file'
+                file_ = open(file_name, 'r')
+                header_line_1 = file_.readline().split()
+                if header_line_1[0].split(';')[0] == 'Datum/Uhrzeit':
+                    print 'read csv-file'
+                    # for data exported into down sampled data array
+                    try:
+                        _data_array = loadtxt(file_name,
+                                      delimiter=';',
+                                      skiprows=2)
+                        # reset time[sec] in order to start at 0.
+                        _data_array[:0] -= _data_array[0:0]
+                    except ValueError:
+                        _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2,
+                          converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
+                                      4: comma2dot, 5: comma2dot, 6: comma2dot })
+                        # reset time[sec] in order to start at 0.
+                        _data_array[:0] -= _data_array[0:0]
+#                    # downsizing data array
+#                    print '_data_array.shape', _data_array.shape
+#                    _data_array = scaledown_data(_data_array, 100)
+#                    print '_data_array.shape', _data_array.shape
+                else:
+                    # for data exported into DAT and ASC-files
+                    # try to use loadtxt to read data file
+                    try:
+                        _data_array = loadtxt(file_name,
+                                      delimiter=';')
+
+                    # loadtxt returns an error if the data file contains
+                    # 'NOVALUE' entries. In this case use the special
+                    # method 'loadtxt_novalue'
+                    except ValueError:
+                        _data_array = loadtxt_novalue(file_name)
+
+            if not os.path.exists(file_name):
                 file_name = file_split[0] + '.ASC'
                 if not os.path.exists(file_name):
                     raise IOError, 'file %s does not exist' % file_name
 
-            print 'file_name', file_name
+                # for data exported into DAT and ASC-files
+                # try to use loadtxt to read data file
+                try:
+                    _data_array = loadtxt(file_name,
+                                  delimiter=';')
 
-            # try to use loadtxt to read data file
-            try:
-                _data_array = loadtxt(file_name,
-                                      delimiter=';')
-
-            # loadtxt returns an error if the data file contains
-            # 'NOVALUE' entries. In this case use the special
-            # method 'loadtxt_novalue'
-            except ValueError:
-                _data_array = loadtxt_novalue(file_name)
+                # loadtxt returns an error if the data file contains
+                # 'NOVALUE' entries. In this case use the special
+                # method 'loadtxt_novalue'
+                except ValueError:
+                    _data_array = loadtxt_novalue(file_name)
 
             self.data_array = _data_array
 
