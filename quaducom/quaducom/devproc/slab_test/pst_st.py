@@ -66,8 +66,8 @@ import os
 from math import \
     pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
 
-from simiter.sim_pstudy import \
-    SimPStudy, SimOut, ISimModel
+from matresdev.simiter.sim_pstudy import \
+    SimOut, ISimModel, SimPStudy
 
 from matresdev.db.exdb.ex_run_view import \
     ExRunView
@@ -110,12 +110,12 @@ if __name__ == '__main__':
     #------------------------------
 #    do = 'show_phi_fn'
 #    do = 'ui'
-#    do = 'validation'
-    do = 'show_last_results'
+    do = 'validation'
+#    do = 'show_last_results'
 
 #    test_series = 'ST-10g'
-    test_series = 'ST-12c'
-#    test_series = 'ST-6c'
+#    test_series = 'ST-12c'
+    test_series = 'ST-6c'
 
     #-----------------------------------------------
     # ST-10g: AG-glas slab tests (125 cm / 3 cm) with tricot-binding:
@@ -248,7 +248,8 @@ if __name__ == '__main__':
 #                             calibration_test='TT-6c-2cm-0-TU-V1_bs3_age28_Ec22213.2_nu0.2_nsteps100',
 #                             calibration_test='TTb-6c-2cm-0-TU-V3_bs5_age28_Ec22213.2_nu0.2_nsteps100',
 
-                             calibration_test='TTb-6c-2cm-0-TU-V2_bs4_age28_Ec18709.5_nu0.2_nsteps200_smoothed',
+#                             calibration_test='TTb-6c-2cm-0-TU-V2_bs4_age28_Ec18709.5_nu0.2_nsteps200_smoothed',
+                             calibration_test='TTb-6c-2cm-0-TU-V1_bs5_age28_Ec18709.5_nu0.2_nsteps100_smoothed',
 #
                             age=28,
                             #
@@ -266,8 +267,8 @@ if __name__ == '__main__':
                             shape_R=2,
                             shape_z=2,
                             #
-                            w_max= -0.060,
-                            tstep=0.02,
+                            w_max= -0.040,
+                            tstep=0.01,
                             tmax=1.0,
                             #
                             ord=np.inf,  # "norm = max(abs(x_i))"
@@ -364,8 +365,9 @@ if __name__ == '__main__':
 
         # pstudy: thickness
         #
-        pst_list = [ 0.0554 ]  # 0.06, ]
+#        pst_list = [ 0.0554 ]  # 0.06, ]
 #        pst_list = [ 0.01714 ]  # 0.02 ]
+        pst_list = [ 0.02 ]
 
         # pstudy: n_mp
         #
@@ -471,7 +473,7 @@ if __name__ == '__main__':
             print 'w_asc.shape', w_asc.shape
             fw_arr = np.hstack([f_asc[:, None], w_asc[:, None]])
             print 'fw_arr.shape', fw_arr.shape
-            np.savetxt('sim' + param_key + '.csv', fw_arr, delimiter=';')
+            np.savetxt(param_key + '.csv', fw_arr, delimiter=';')
 
             #--------------------
             # experiments
@@ -579,6 +581,8 @@ if __name__ == '__main__':
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%gh%gR%g_sxy%gz%gR%g_s%sg%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
                         % (phi_fn_class, length, thickness, radius_plate, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
+            param_key = 'SimSTDB_barrelshell_2D-05-11_0.00286_all0_TTb-6c-2cm-0-TU-V1_bs5_age28_Ec18709.5_nu0.2_nsteps100_smoothed_PhiFnGeneralExtended_L0.8h0.02R0.04_sxy10z2R2_sTgT_E18709.5_nu0.2_tol5e-05_w-0.04_ts0.05_nmp30'
+
             print 'param_key = %s' % param_key
 
             #------------------
@@ -598,12 +602,11 @@ if __name__ == '__main__':
 #            p.plot(trace.xdata[:n_max], trace.ydata[:n_max], color='grey', linestyle='--', linewidth=2.)
 
             # h = 0.06 m
-            file_name = 'f_w_diagram_supprt_SimSTDB_FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed_PhiFnGeneralExtended_L1.25h0.06R0.095_sxy10z2R2_sTgT_E29100_nu0.2_tol0.0001_w-0.035_ts0.01_nmp30.pickle'
+#            file_name = 'f_w_diagram_supprt_SimSTDB_FIL-10-09_2D-05-11_0.00462_all0_TT-12c-6cm-0-TU-SH2-V1_age26_Ec29100_nu0.2_nsteps100_maxeps0.007_smoothed_PhiFnGeneralExtended_L1.25h0.06R0.095_sxy10z2R2_sTgT_E29100_nu0.2_tol0.0001_w-0.035_ts0.01_nmp30.pickle'
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'r')
             trace = load(file)
-            n_max = -30
-            p.plot(trace.xdata[:n_max], trace.ydata[:n_max], color='grey', linestyle='-', linewidth=2.)
+            p.plot(trace.xdata, trace.ydata, color='grey', linestyle='-', linewidth=2.)
 
 #        # f-w-diagram_center
 #        #
@@ -637,7 +640,7 @@ if __name__ == '__main__':
             #
             format_plot(p, xlim=34, ylim=54, xlabel='Durchbiegung [mm]', ylabel='Kraft [kN]')
 
-        if test_series == 'ST-6c':
+        if test_series == 'ST-6cX':
             # ST-6c-2cm-TU_bs2
             #
             ex_path = join(simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
@@ -662,5 +665,5 @@ if __name__ == '__main__':
             #
             format_plot(p, xlim=80, ylim=20, xlabel='Durchbiegung [mm]', ylabel='Kraft [kN]')
 
-        p.plot(np.array([0, 1]), np.array([0, 1]), color='grey', linestyle='--', linewidth=1.5)
+#        p.plot(np.array([0, 1]), np.array([0, 1]), color='grey', linestyle='--', linewidth=1.5)
         p.show()
