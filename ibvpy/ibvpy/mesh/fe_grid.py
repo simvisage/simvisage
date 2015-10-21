@@ -1,14 +1,11 @@
 
 from etsproxy.traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
-    List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
-    Callable, Class, This, Str, Event
+    List, Button, HasTraits, implements, WeakRef, Float,  \
+    Callable, Str, Event
 
-import etsproxy.traits.has_traits
-etsproxy.traits.has_traits.CHECK_INTERFACES = 2
-
-from etsproxy.traits.ui.api import View, Item, HSplit, Group, TabularEditor, Include
-from etsproxy.traits.ui.tabular_adapter import TabularAdapter
+from traitsui.api import View, Item, HSplit, Group, TabularEditor
+from traitsui.tabular_adapter import TabularAdapter
 
 from ibvpy.mesh.cell_grid.dof_grid import DofCellGrid, DofCellView
 from ibvpy.mesh.cell_grid.geo_grid import GeoCellGrid, GeoCellView
@@ -16,21 +13,16 @@ from ibvpy.mesh.cell_grid.cell_grid import CellGrid
 from ibvpy.mesh.cell_grid.cell_spec import CellSpec
 from ibvpy.mesh.cell_grid.cell_array import ICellView, CellView, CellArray, ICellArraySource
 
-from numpy import copy, zeros, array_equal, repeat, arange, frompyfunc, array, cos, sin
+from numpy import copy, zeros, array_equal
 
 from i_fe_uniform_domain import IFEUniformDomain
-from ibvpy.mesh.fe_subdomain import FESubDomain
 
-from mathkit.level_set.level_set import ILevelSetFn, SinLSF
-
-from ibvpy.fets.i_fets_eval import IFElem, IFETSEval
+from ibvpy.fets.i_fets_eval import IFETSEval
 
 from ibvpy.rtrace.rt_domain import RTraceDomain
-from ibvpy.rtrace.rt_domain_field import RTraceDomainField
 from fe_grid_activation_map import FEGridActivationMap
 from fe_grid_idx_slice import FEGridIdxSlice
 from fe_grid_ls_slice import FEGridLevelSetSlice
-from math import pi
 #-----------------------------------------------------------------------------
 # Adaptor for tables showing the cell point distributions
 #-----------------------------------------------------------------------------
