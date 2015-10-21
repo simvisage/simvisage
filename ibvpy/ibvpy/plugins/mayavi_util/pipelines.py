@@ -1,44 +1,48 @@
 from etsproxy.traits.api import \
-     Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
-     Instance, Int, Trait, Str, \
-     Callable, List, TraitDict, Any, Range, \
-     Delegate, Event, on_trait_change, Button, \
-     Interface, WeakRef, implements, Property, cached_property, Tuple, \
-     Dict
+    Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
+    Instance, Int, Trait, Str, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, \
+    Interface, WeakRef, implements, Property, cached_property, Tuple, \
+    Dict
 from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
+    HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
 from numpy import \
     array, hstack, zeros
 
-from etsproxy.tvtk.api import tvtk
+from tvtk.api import tvtk
 # Mayavi related imports
 #
-from etsproxy.mayavi.sources.api import VTKDataSource, VTKFileReader
-from etsproxy.mayavi.modules.api import Outline, Surface
-from etsproxy.mayavi.filters.api import ExtractTensorComponents, \
+from mayavi.sources.api import VTKDataSource, VTKFileReader
+from mayavi.modules.api import Outline, Surface
+from mayavi.filters.api import ExtractTensorComponents, \
     ExtractVectorComponents, WarpVector
 
-from etsproxy.mayavi.core.source import Source
-from etsproxy.mayavi.filters.api import WarpVector
+from mayavi.core.source import Source
+from mayavi.filters.api import WarpVector
 
-# MayaVI engine used for the pipeline construction 
+# MayaVI engine used for the pipeline construction
 #
 from ibvpy.plugins.mayavi_engine import get_engine
 
 import os
 
-class MVStructuredGrid( HasTraits ):
+
+class MVStructuredGrid(HasTraits):
     dims = Callable
-    def _dims( self ):
-        return lambda : ( 1, 1, 1 )
+
+    def _dims(self):
+        return lambda: (1, 1, 1)
 
     points = Callable
-    def _points_default( self ):
-        return lambda : array( [] )
 
-    pd = Instance( tvtk.StructuredGrid )
-    def _pd_default( self ):
+    def _points_default(self):
+        return lambda: array([])
+
+    pd = Instance(tvtk.StructuredGrid)
+
+    def _pd_default(self):
         return tvtk.StructuredGrid()
 
     scalars = Callable
@@ -47,33 +51,32 @@ class MVStructuredGrid( HasTraits ):
 
     tensors = Callable
 
-    name = Str( '' )
+    name = Str('')
 
-    def __init__( self, **kw ):
+    def __init__(self, **kw):
 
-        super( MVStructuredGrid, self ).__init__( **kw )
+        super(MVStructuredGrid, self).__init__(**kw)
         e = get_engine()
 
         from etsproxy.mayavi.modules.api import \
-        Outline, Surface, StructuredGridOutline, GridPlane
+            Outline, Surface, StructuredGridOutline, GridPlane
 
-        self.src = VTKDataSource( name = self.name, data = self.pd )
-        e.add_source( self.src )
+        self.src = VTKDataSource(name=self.name, data=self.pd)
+        e.add_source(self.src)
 
         o = StructuredGridOutline()
-        e.add_module( o )
+        e.add_module(o)
 
         for axis in ['x', 'y', 'z']:
-            g = GridPlane( name = '%s - grid plane' % axis )
+            g = GridPlane(name='%s - grid plane' % axis)
             g.grid_plane.axis = axis
-            e.add_module( g )
+            e.add_module(g)
 
         if self.scalars or self.vectors or self.tensors:
             s = Surface()
-            e.add_module( s )
+            e.add_module(s)
 
-
-    def redraw( self ):
+    def redraw(self):
 
         self.pd.dimensions = self.dims()
         self.pd.points = self.points()
@@ -87,118 +90,123 @@ class MVStructuredGrid( HasTraits ):
 
         self.src.data_changed = True
 
-from etsproxy.tvtk.api import tvtk
+from tvtk.api import tvtk
 
-class MVUnstructuredGrid( HasTraits ):
 
-#    vtk_cell_array = Instance(tvtk.CellArray())
-#    def _vtk_cell_array_default(self):
-#        return tvtk.CellArray()
+class MVUnstructuredGrid(HasTraits):
 
-    warp = Bool( False )
+    #    vtk_cell_array = Instance(tvtk.CellArray())
+    #    def _vtk_cell_array_default(self):
+    #        return tvtk.CellArray()
+
+    warp = Bool(False)
 
     name = Str
-    position = Enum( 'nodes', 'int_pnts' )
+    position = Enum('nodes', 'int_pnts')
     engine = Trait()
-    def _engine_default( self ):
+
+    def _engine_default(self):
         return get_engine()
 
-
-    def rebuild_pipeline( self, pd ):
-        src = VTKDataSource( name = self.name, data = pd )
-        self.engine.add_source( src )
+    def rebuild_pipeline(self, pd):
+        src = VTKDataSource(name=self.name, data=pd)
+        self.engine.add_source(src)
         if self.warp:
-            self.engine.add_filter( WarpVector() )
+            self.engine.add_filter(WarpVector())
 
         if self.name in src._point_tensors_list:
             src.point_tensors_name = self.name
-            self.engine.add_filter( ExtractTensorComponents() )
+            self.engine.add_filter(ExtractTensorComponents())
         elif self.name in src._point_vectors_list:
             src.point_vectors_name = self.name
-            self.engine.add_filter( ExtractVectorComponents() )
+            self.engine.add_filter(ExtractVectorComponents())
         elif self.name in src._point_scalars_list:
             src.point_scalars_name = self.name
         s = Surface()
         s.actor.property.point_size = 5.
-        self.engine.add_module( s )
+        self.engine.add_module(s)
         src.scene.z_plus_view()
 
 
+class MVVTKSource(HasTraits):
 
-class MVVTKSource( HasTraits ):
-
-    warp = Bool( False )
+    warp = Bool(False)
 
     name = Str
-    position = Enum( 'nodes', 'int_pnts' )
+    position = Enum('nodes', 'int_pnts')
     engine = Trait()
-    def _engine_default( self ):
+
+    def _engine_default(self):
         return get_engine()
 
 #    def redraw(self):
 #        e = get_engine()
-#        #directory management
+# directory management
 #        home_dir = os.environ['HOME']
 #        base_name = os.path.basename(os.getcwd())
-#    
+#
 #        data_dir = home_dir+'/simdata'
 #        if not os.path.exists(data_dir):
 #            os.mkdir(data_dir)
 #            print "simdata directory created"
-#            
+#
 #        if not os.path.exists(data_dir +'/'+ base_name):
 #            os.mkdir(data_dir +'/'+ base_name)
 #            print base_name," directory created"
-#        
+#
 #        os.chdir(data_dir +'/'+ base_name)
 #
 #        self.src = VTKFileReader(base_file_name = 'nodes_0.vtk')
-#        #self.src = VTKDataSource( name = self.name, data = self.pd )
-#        #self.e.add_source(self.src)
+# self.src = VTKDataSource( name = self.name, data = self.pd )
+# self.e.add_source(self.src)
 #        e.add_source(self.src)
 #        g = Surface()
 #        e.add_module(g)
-#        g.module_manager.scalar_lut_manager.show_scalar_bar = True # show scalar bar
+# g.module_manager.scalar_lut_manager.show_scalar_bar = True # show scalar bar
 #
 #        self.src.scene.z_plus_view()
-#        #self.src.data_changed = True
+# self.src.data_changed = True
 
-    def rebuild_pipeline( self, pd ):
-        src = VTKFileReader( base_file_name = '%s_0.vtk' % self.position )
-        self.engine.add_source( src )
+    def rebuild_pipeline(self, pd):
+        src = VTKFileReader(base_file_name='%s_0.vtk' % self.position)
+        self.engine.add_source(src)
         if self.warp:
-            self.engine.add_filter( WarpVector() )
+            self.engine.add_filter(WarpVector())
 
         if self.name in src._point_tensors_list:
             src.point_tensors_name = self.name
-            self.engine.add_filter( ExtractTensorComponents() )
+            self.engine.add_filter(ExtractTensorComponents())
         elif self.name in src._point_vectors_list:
             src.point_vectors_name = self.name
-            self.engine.add_filter( ExtractVectorComponents() )
+            self.engine.add_filter(ExtractVectorComponents())
         elif self.name in src._point_scalars_list:
             src.point_scalars_name = self.name
         s = Surface()
         s.actor.property.point_size = 5.
-        self.engine.add_module( s )
+        self.engine.add_module(s)
         src.scene.z_plus_view()
 
 
-class MVPBase( HasTraits ):
+class MVPBase(HasTraits):
+
     '''
     Mayavi Pipeline Base class
     '''
 
     points = Callable
-    def _points_default( self ):
-        return lambda : array( [] )
+
+    def _points_default(self):
+        return lambda: array([])
 
     lines = Callable
-    def _lines_default( self ):
-        return lambda : array( [] )
+
+    def _lines_default(self):
+        return lambda: array([])
 
     polys = Callable
-    def _polys_default( self ):
-        return lambda : array( [] )
+
+    def _polys_default(self):
+        return lambda: array([])
 
     scalars = Callable
 
@@ -206,11 +214,12 @@ class MVPBase( HasTraits ):
 
     tensors = Callable
 
-    pd = Instance( tvtk.PolyData )
-    def _pd_default( self ):
+    pd = Instance(tvtk.PolyData)
+
+    def _pd_default(self):
         return tvtk.PolyData()
 
-    def redraw( self ):
+    def redraw(self):
 
         self.pd.points = self.points()
         self.pd.lines = self.lines()
@@ -224,13 +233,12 @@ class MVPBase( HasTraits ):
         self.src.data_changed = True
 
 
-
-
 #-------------------------------------------------------------------
 # MVMeshSource - mayavi mesh source
 #-------------------------------------------------------------------
 
-class MVPolyData( MVPBase ):
+class MVPolyData(MVPBase):
+
     '''
     Provide a Mayavi source for polar visualization visualization. 
 
@@ -240,43 +248,43 @@ class MVPolyData( MVPBase ):
     implemented taht way.
     '''
 
-    name = Str( '' )
+    name = Str('')
 
-    def __init__( self, **kw ):
+    def __init__(self, **kw):
 
         e = get_engine()
 
-        super( MVPolyData, self ).__init__( **kw )
+        super(MVPolyData, self).__init__(**kw)
         from etsproxy.mayavi.modules.api import Outline, Surface, Labels
 
-        self.src = VTKDataSource( name = self.name, data = self.pd )
-        e.add_source( self.src )
+        self.src = VTKDataSource(name=self.name, data=self.pd)
+        e.add_source(self.src)
 
         o = Outline()
-        e.add_module( o )
+        e.add_module(o)
         s = Surface()
-        e.add_module( s )
+        e.add_module(s)
 
-class MVPointLabels( MVPBase ):
-    color = Tuple( 1., 1., 1. )
 
-    def __init__( self, **kw ):
+class MVPointLabels(MVPBase):
+    color = Tuple(1., 1., 1.)
+
+    def __init__(self, **kw):
 
         e = get_engine()
 
-
-        super( MVPointLabels, self ).__init__( **kw )
+        super(MVPointLabels, self).__init__(**kw)
         from etsproxy.mayavi.modules.api import Outline, Surface, Labels
 
-        self.src = VTKDataSource( name = self.name, data = self.pd )
-        e.add_source( self.src )
+        self.src = VTKDataSource(name=self.name, data=self.pd)
+        e.add_source(self.src)
 
-        self.labels = Labels( name = 'Node numbers', object = self.src,
-                         label_format = '%g',
-                         number_of_labels = 100 )
+        self.labels = Labels(name='Node numbers', object=self.src,
+                             label_format='%g',
+                             number_of_labels=100)
         self.labels.property.color = self.color
-        e.add_module( self.labels )
+        e.add_module(self.labels)
 
-    def redraw( self, label_mode = 'label_ids' ):
-        super( MVPointLabels, self ).redraw()
+    def redraw(self, label_mode='label_ids'):
+        super(MVPointLabels, self).redraw()
         self.labels.mapper.label_mode = label_mode

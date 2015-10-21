@@ -1,24 +1,14 @@
 from numpy import \
-    ix_, array, int_, dot, newaxis, float_, copy, repeat
-
-from etsproxy.traits.api import Array, Bool, Enum, Float, HasStrictTraits, \
-    Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Any, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, implements, Property, cached_property
-from etsproxy.traits.ui.api \
-    import View, Item, VSplit, TableEditor, ListEditor
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
-    Action
-from etsproxy.traits.ui.table_column \
-    import ObjectColumn, ExpressionColumn
+    ix_, array, float_
+from traits.api import Float, HasStrictTraits, \
+    Int,  Enum, \
+    Callable, List,  Any, implements
 from ibvpy.core.i_bcond import \
     IBCond
 
 
 class BCDof(HasStrictTraits):
+
     '''
     Implements the IBC functionality for a constrained dof.
     '''
@@ -157,11 +147,11 @@ class BCDof(HasStrictTraits):
 if __name__ == '__main__':
 
     from ibvpy.mesh.fe_grid import FEGrid
-    from ibvpy.mesh.fe_domain_list import FEDomainList
+    from ibvpy.mesh.fe_domain import FEDomain
     from ibvpy.fets.fets1D.fets1D2l import FETS1D2L
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainField, TLoop, \
-        TLine, IBVPSolve as IS, DOTSEval
+        TStepper as TS, RTraceGraph, TLoop, \
+        TLine
     from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
 
     fets_eval = FETS1D2L(mats_eval=MATS1DElastic(E=10., A=1.))
@@ -176,7 +166,7 @@ if __name__ == '__main__':
                         shape=(10,),
                         fets_eval=fets_eval)
 
-    fe_domain = FEDomainList(subdomains=[fe_domain1, fe_domain2])
+    fe_domain = FEDomain(subdomains=[fe_domain1, fe_domain2])
     ts = TS(dof_resultants=True,
             sdomain=fe_domain,
             bcond_list=[BCDof(var='u', dof=0, value=0.),
@@ -192,7 +182,7 @@ if __name__ == '__main__':
     # Add the time-loop control
     tloop = TLoop(tstepper=ts, tline=TLine(min=0.0, step=1, max=1.0))
 
-    ts.set(sdomain=FEDomainList(subdomains=[fe_domain1, fe_domain2]))
+    ts.set(sdomain=FEDomain(subdomains=[fe_domain1, fe_domain2]))
 
     ts.set(bcond_list=[BCDof(var='u', dof=0, value=0.),
                        BCDof(

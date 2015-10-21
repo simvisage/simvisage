@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -16,17 +16,17 @@
 Generic implementation of the time loop.
 '''
 
-from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
-                                 Instance, Int, Trait, Str, Enum, \
-                                 Callable, List, TraitDict, Any, Range, \
-                                 Delegate, Event, on_trait_change, Button, Property, \
-                                 cached_property, property_depends_on, Event, \
-                                 Directory
+from traits.api import Array, Bool, Enum, Float, HasTraits, \
+    Instance, Int, Trait, Str, Enum, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, Property, \
+    cached_property, property_depends_on, Event, \
+    Directory
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, RangeEditor, spring
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
+from traitsui.menu import NoButtons, OKButton, CancelButton, \
     Action
 
 from weakref import ref
@@ -42,7 +42,7 @@ import time
 import os
 from ibvpy.core.ibv_resource import IBVResource
 
-from etsproxy.util.home_directory import get_home_directory
+from traits.util.home_directory import get_home_directory
 
 # import pymem
 from ibvpy.core.tstepper import TStepper
@@ -53,7 +53,9 @@ if LOGGING_ON:
     import logging
     log = logging.getLogger('info')
 
+
 class TLine(HasTraits):
+
     '''
     Time line for the control parameter.
 
@@ -70,6 +72,7 @@ class TLine(HasTraits):
     step = Float(0.1)
     val = Float(0.0)
     time = Property
+
     @property_depends_on('val')
     def _get_time(self):
         return self.val
@@ -79,20 +82,21 @@ class TLine(HasTraits):
         self.val = self.val
 
     traits_view = View(HGroup(Item('min'),
-                                spring,
-                                Item('step', label='step size'),
-                                spring,
-                                Item('max')),
-                        Item('time', editor=RangeEditor(low_name='min',
-                                                           high_name='max',
-                                                           format='(%s)',
-                                                           auto_set=False,
-                                                           enter_set=False,
-                                                           ),
-                                    show_label=False
-                                                           ),
-                        resizable=True
-                        )
+                              spring,
+                              Item('step', label='step size'),
+                              spring,
+                              Item('max')),
+                       Item('time', editor=RangeEditor(low_name='min',
+                                                       high_name='max',
+                                                       format='(%s)',
+                                                       auto_set=False,
+                                                       enter_set=False,
+                                                       ),
+                            show_label=False
+                            ),
+                       resizable=True
+                       )
+
 
 class CompTimer(object):
 
@@ -115,6 +119,7 @@ class CompTimer(object):
         print "Timer", self.name
         print "Computation Time : %8.2f sec" % self.overall_duration
         print "Elapsed time     : %8.2f sec" % self.duration
+
 
 class TLoopHandler(Handler):
 
@@ -145,7 +150,9 @@ RecalcAction = Action(name='Recalculate', action='recalculate')
 from etsproxy.traits.ui.api import TreeNodeObject
 from warnings import warn
 
+
 class TLoop(IBVResource):
+
     ''' Time loop management.
 
     This class implements the generic time-stepping scheme. It can be
@@ -157,6 +164,7 @@ class TLoop(IBVResource):
     service_attrib = 'tloop'
 
     dir = Directory
+
     def _dir_default(self):
 
         # get the path to the simdb directory
@@ -165,7 +173,8 @@ class TLoop(IBVResource):
         if not os.path.exists(sim_data_dir):
             os.mkdir(sim_data_dir)
 
-        # derive the name of the simdata directory from the main python module name
+        # derive the name of the simdata directory from the main python module
+        # name
         mod_base_name = os.path.basename(os.getcwd())
         mod_path = os.path.join(sim_data_dir, mod_base_name)
         if not os.path.exists(mod_path):
@@ -179,24 +188,29 @@ class TLoop(IBVResource):
     name = Str('<unnamed>')
 
     tline = Instance(TLine)
+
     def _tline_default(self):
         return TLine(min=0.0, max=1.0, step=1.0)
 
-    # Convenience property to set the boundary condition list 
+    # Convenience property to set the boundary condition list
     # in the time stepper through the time loop
     #
     bcond_list = Property
+
     def _get_bcond_list(self):
         return self.tstepper.bcond_list
+
     def _set_bcond_list(self, value):
         self.tstepper.bcond_list = value
 
-    # Convenience property to set the response trace list  
+    # Convenience property to set the response trace list
     # in the time stepper through the time loop
     #
     rtrace_list = Property
+
     def _get_rtrace_list(self):
         return self.tstepper.rtrace_list
+
     def _set_rtrace_list(self, value):
         self.tstepper.rtrace_list = value
 
@@ -206,10 +220,11 @@ class TLoop(IBVResource):
     RESETMAX = Int(10)
     tolerance = Float(1e-8)
 
-    # 
+    #
     #
     adap = Trait(AStrategyBase())
     tstepper = Trait(TStepper)
+
     def _tstepper_default(self):
         return TStepper()
 
@@ -219,12 +234,13 @@ class TLoop(IBVResource):
     # the time-stepper and included in views to the model.
     #
     rte_dict = Property(List, depends_on='tstepper:rte_dict')
+
     @cached_property
     def _get_rte_dict(self):
-        return { 'time'        : lambda sctx, U_k, *args, **kw: np.array([self.t_n1]) ,
-                 'mem_counter' : lambda sctx, U_k, *args, **kw: self.mem_counter,
-                 'U_k'         : lambda sctx, U_k, *args, **kw: self.U_k,
-        }
+        return {'time': lambda sctx, U_k, *args, **kw: np.array([self.t_n1]),
+                'mem_counter': lambda sctx, U_k, *args, **kw: self.mem_counter,
+                'U_k': lambda sctx, U_k, *args, **kw: self.U_k,
+                }
 
     sync_resp_tracing = Bool(False)
     _updated = Int(0)
@@ -254,6 +270,7 @@ class TLoop(IBVResource):
         # self.mem_counter = pymem.MemCounter()
 
     t_n = Float()
+
     def _t_n_default(self):
         return self.tline.min
 
@@ -299,17 +316,17 @@ class TLoop(IBVResource):
         self.setup()
         self.t_n1 = self.t_n
         return self.tstepper.eval('predictor',
-                                    self.U_k,
-                                    self.d_U,
-                                    self.t_n,
-                                    self.t_n1)
+                                  self.U_k,
+                                  self.d_U,
+                                  self.t_n,
+                                  self.t_n1)
 
-    # Tolerance in the time variable to end the iteration.  
+    # Tolerance in the time variable to end the iteration.
     step_tolerance = Float(1e-8)
 
     # specify type of 'linalg.norm'
     # default 'ord = None' returns 2-norm
-    # 
+    #
     ord = Enum(None, np.inf)
 
     def eval(self, e=None):
@@ -428,7 +445,7 @@ class TLoop(IBVResource):
                 #
                 if n_F_int == 0.0:
                     n_F_int = 1.0
-                self.norm = np.linalg.norm(R, ord=self.ord) # / n_F_int
+                self.norm = np.linalg.norm(R, ord=self.ord)  # / n_F_int
 
                 if self.debug:
                     print 'Norm:', self.norm
@@ -436,7 +453,8 @@ class TLoop(IBVResource):
                 if self.norm < self.tolerance:  # convergence satisfied
                     self.n_reset = 0
                     if LOGGING_ON:
-                        log.info("time step equilibrated in %d step(s)", self.k)
+                        log.info(
+                            "time step equilibrated in %d step(s)", self.k)
                     break  # update_switch -> on
 
                 self.solv_timer.reset()
@@ -464,8 +482,10 @@ class TLoop(IBVResource):
 
                 if LOGGING_ON:
                     log.info("no convergence reached - refinement in time")
-                self.n_reset = self.n_reset + 1  # adaptive strategy halving d_t
-                if self.n_reset > self.RESETMAX:  # max number of resets achieved
+                # adaptive strategy halving d_t
+                self.n_reset = self.n_reset + 1
+                # max number of resets achieved
+                if self.n_reset > self.RESETMAX:
 
                     # Handle this situation with an exception with an
                     # associated dialog box and concise report of the
@@ -494,12 +514,13 @@ class TLoop(IBVResource):
             if abort_tloop:
                 # ultimate failure exit the calculation
                 print 'ABORT tloop with exception', e
-                try: self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
+                try:
+                    self.rtrace_mngr.record(self.tstepper.sctx, self.U_k)
                 except:
                     pass
                 break
 
-            if adap.ehandler_needed():  # explicit adaptations 
+            if adap.ehandler_needed():  # explicit adaptations
                 if adap.ehandler_accept():  # accept equilibrium?
                     self.accept_time_step()  # register the state and response
                 adap.ehandler_invoke()
@@ -519,7 +540,6 @@ class TLoop(IBVResource):
                 self.tline.val = self.t_n1
 
                 self.report_load_step_end()
-
 
         # Hack to get the state variables in the last time step.
         # This invokes the update state operator in the
@@ -553,7 +573,7 @@ class TLoop(IBVResource):
 #        print 'U_k at the end of tloop.eval: U_k', self.U_k
         return self.U_k
 
-    on_accept_time_step = Callable(lambda : None)
+    on_accept_time_step = Callable(lambda: None)
 
     def accept_time_step(self):
         '''
@@ -582,10 +602,11 @@ class TLoop(IBVResource):
         self.rtrace_mngr_timer.record()
 
     verbose_load_step = Bool(True)
+
     def report_load_step_start(self):
         if self.verbose_load_step:
             print 'LS:%3d, Time: %.4f' % \
-            (self.ls_counter, self.t_n1),
+                (self.ls_counter, self.t_n1),
             if self.verbose_iteration:
                 print  # just add a new line
 
@@ -593,9 +614,10 @@ class TLoop(IBVResource):
         if self.verbose_load_step and not self.verbose_iteration:
             # just a summary of iterations within the load step
             print ' Iter: %4d' % \
-            (self.k,)
+                (self.k,)
 
     verbose_iteration = Bool(True)
+
     def report_iteration(self):
         if self.verbose_iteration:
             print '\tIT: %3d, Norm: %3g' % \
@@ -615,9 +637,9 @@ class TLoop(IBVResource):
             self.user_wants_abort = True
         else:
             self.user_wants_abort = False
-            self.computation_thread = Thread(target=self.eval, name="computation")
+            self.computation_thread = Thread(
+                target=self.eval, name="computation")
             self.computation_thread.start()
-
 
     def register_mv_pipelines(self, e):
         '''Register the visualization pipelines in mayavi engine
@@ -625,20 +647,21 @@ class TLoop(IBVResource):
         self.tstepper.register_mv_pipelines(e)
 
     view = View(Group(Item('calculate', show_label=False),
-#                        'sync_resp_tracing',
-                        Item('tline', label='Time line', style='custom'),
-                        HGroup(Item('KMAX', label='Max. number of iterations'),
-                                Item('RESETMAX', label='Max. number of resets'),
-                                Item('tolerance', label='Tolerance on residual norm')
-                                ),
-                        ),
-                 # Item('rmgr', style="custom"),
-                 # handler = TCHandler(),
-                 resizable=True,
-                 scrollable=True,
-                 height=0.75, width=0.75,
-                 handler=TLoopHandler(),
-                 buttons=[OKButton, CancelButton, RecalcAction])
+                      #                        'sync_resp_tracing',
+                      Item('tline', label='Time line', style='custom'),
+                      HGroup(Item('KMAX', label='Max. number of iterations'),
+                             Item('RESETMAX', label='Max. number of resets'),
+                             Item(
+                                 'tolerance', label='Tolerance on residual norm')
+                             ),
+                      ),
+                # Item('rmgr', style="custom"),
+                # handler = TCHandler(),
+                resizable=True,
+                scrollable=True,
+                height=0.75, width=0.75,
+                handler=TLoopHandler(),
+                buttons=[OKButton, CancelButton, RecalcAction])
 
 if LOGGING_ON:
     import logging.config

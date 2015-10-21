@@ -1,26 +1,26 @@
 from etsproxy.traits.api import \
-     Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
-     Instance, Int, Trait, Str, Enum, \
-     Callable, List, TraitDict, Any, Range, \
-     Delegate, Event, on_trait_change, Button, \
-     Interface, WeakRef, implements, Property, cached_property, Tuple, \
-     Dict, Any, Directory
+    Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
+    Instance, Int, Trait, Str, Enum, \
+    Callable, List, TraitDict, Any, Range, \
+    Delegate, Event, on_trait_change, Button, \
+    Interface, WeakRef, implements, Property, cached_property, Tuple, \
+    Dict, Any, Directory
 
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
+from traitsui.api import Item, View, HGroup, ListEditor, VGroup, \
+    HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
-     Action
+from traitsui.menu import NoButtons, OKButton, CancelButton, \
+    Action
 
-from etsproxy.traits.ui.ui_editors.array_view_editor \
+from traitsui.ui_editors.array_view_editor \
     import ArrayViewEditor
 
-from etsproxy.traits.ui.table_column \
+from traitsui.table_column \
     import ObjectColumn, ExpressionColumn
 
-from etsproxy.traits.ui.table_filter \
+from traitsui.table_filter \
     import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-           MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
+    MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
 
 from numpy import ix_, mgrid, array, arange, c_, newaxis, setdiff1d, zeros, \
     float_, vstack, hstack, repeat
@@ -32,8 +32,8 @@ from ibvpy.api import RTrace
 
 # tvtk related imports
 #
-from etsproxy.traits.ui.api import View, Item, HSplit, VSplit
-from etsproxy.tvtk.api import tvtk
+from traitsui.api import View, Item, HSplit, VSplit
+from tvtk.api import tvtk
 from ibvpy.core.i_sdomain import \
     ISDomain
 
@@ -44,15 +44,16 @@ from rt_domain_list import RTraceDomainList
 from rt_domain_field import RTraceDomainField
 import os
 
-from etsproxy.tvtk.api import tvtk
+from tvtk.api import tvtk
+
 
 class RTraceDomainListField(RTrace, RTraceDomainList):
 
-#    sd = Instance( SDomain )
-#
-#    rt_domain = Property
-#    def _get_rt_domain(self):
-#        return self.sd.rt_bg_domain
+    #    sd = Instance( SDomain )
+    #
+    #    rt_domain = Property
+    #    def _get_rt_domain(self):
+    #        return self.sd.rt_bg_domain
 
     label = Str('RTraceDomainField')
     var = Str('')
@@ -77,21 +78,25 @@ class RTraceDomainListField(RTrace, RTraceDomainList):
             sf.setup()
 
     subfields = Property(depends_on='sd.changed_structure')
+
     @cached_property
     def _get_subfields(self):
         # construct the RTraceDomainFields
         #
-        return [ RTraceDomainField(var=self.var,
-                                warp_var=self.warp_var,
-                                idx=self.idx,
-                                position=self.position,
-                                save_on=self.save_on,
-                                warp=self.warp,
-                                warp_f=self.warp_f,
-                                sd=subdomain) for subdomain in self.sd.nonempty_subdomains ]
+        return [RTraceDomainField(var=self.var,
+                                  warp_var=self.warp_var,
+                                  idx=self.idx,
+                                  position=self.position,
+                                  save_on=self.save_on,
+                                  warp=self.warp,
+                                  warp_f=self.warp_f,
+                                  sd=subdomain) for subdomain in self.sd.nonempty_subdomains]
 
-    vtk_data = Property(Instance(tvtk.UnstructuredGrid), depends_on='write_counter')  # TODO: should depend on the time step
+    # TODO: should depend on the time step
+    vtk_data = Property(
+        Instance(tvtk.UnstructuredGrid), depends_on='write_counter')
     # @cached_property
+
     def _get_vtk_data(self):
         if self.position == 'nodes':
             ug = self.vtk_node_structure
@@ -113,7 +118,6 @@ class RTraceDomainListField(RTrace, RTraceDomainList):
             warp_arr.from_array(self._get_warp_data())
             ug.point_data.add_array(warp_arr)
         return ug
-
 
     def redraw(self):
         '''Delegate the calculation to the pipeline
@@ -160,7 +164,7 @@ class RTraceDomainListField(RTrace, RTraceDomainList):
         '''
         # self.writer.scalars_name = self.name
         file_base_name = self.var + '%(direction)d%(pos)s_%(step)d.vtk' \
-        % {'direction': (self.idx + 1), "pos":self.position, "step": self.write_counter}
+            % {'direction': (self.idx + 1), "pos": self.position, "step": self.write_counter}
         # full path to the data file
         file_name = os.path.join(self.dir, file_base_name)
 
@@ -206,24 +210,21 @@ class RTraceDomainListField(RTrace, RTraceDomainList):
         else:
             return zeros((0, 3), dtype='float_')
 
-
-
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Visualization pipelines
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     mvp_mgrid_geo = Trait(MVUnstructuredGrid)
 
     def _mvp_mgrid_geo_default(self):
         return MVUnstructuredGrid(name=self.name,
-                                   warp=self.warp,
-                                   warp_var=self.warp_var
-                               )
+                                  warp=self.warp,
+                                  warp_var=self.warp_var
+                                  )
 
-
-    view = View(HSplit(VSplit (VGroup('var', 'idx'),
-                                  VGroup('record_on', 'clear_on'),
-                                  Item('refresh_button', show_label=False),
-                                           ),
-                                           ),
-                                    resizable=True)
+    view = View(HSplit(VSplit(VGroup('var', 'idx'),
+                              VGroup('record_on', 'clear_on'),
+                              Item('refresh_button', show_label=False),
+                              ),
+                       ),
+                resizable=True)

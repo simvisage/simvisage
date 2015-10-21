@@ -5,45 +5,49 @@ from etsproxy.traits.api import \
     Dict, Property, cached_property, WeakRef, Delegate, Button, \
     Constant
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit, \
     TabularEditor
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
     MenuBar, Separator
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter
 
 from numpy import zeros, float_
 from ibv_resource import IBVResource
 from rtrace import RTrace
 
-#----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Tabular Adapter Definition
-#----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
 class RTraceTableAdapter (TabularAdapter):
 
-    columns = [ ('Name', 'name'),
-#                ( 'Record on',    'record_on' ),
-#                ( 'Clear on',     'clear_on' )
-                ]
+    columns = [('Name', 'name'),
+               #                ( 'Record on',    'record_on' ),
+               #                ( 'Clear on',     'clear_on' )
+               ]
 
     font = 'Courier 10'
     variable_alignment = Constant('right')
 
-#----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Tabular Editor Construction
-#----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 rtrace_editor = TabularEditor(
     selected='current_rtrace',
     adapter=RTraceTableAdapter(),
-    operations=[ 'move' ],
+    operations=['move'],
     auto_update=True
- )
+)
+
 
 class RTraceMngr(IBVResource):
+
     '''
     The response variable manager.
 
@@ -68,12 +72,14 @@ class RTraceMngr(IBVResource):
     tstepper = WeakRef
 
     dir = Property
+
     def _get_dir(self):
         return self.tstepper.dir
 
     # List of response evaluators available in the current time stepper
     #
     rte_dict = Property(Dict, depends_on='tstepper')
+
     def _get_rte_dict(self):
         return self.tstepper.rte_dict
 
@@ -81,6 +87,7 @@ class RTraceMngr(IBVResource):
     #
     rtrace_list = List(RTrace)
     rtrace_bound_list = Property(List(RTrace), depends_on='rtrace_list')
+
     @cached_property
     def _get_rtrace_bound_list(self):
         '''
@@ -93,6 +100,7 @@ class RTraceMngr(IBVResource):
 
     # variable selectable in the table of varied params (just for viewing)
     current_rtrace = Instance(RTrace)
+
     def _current_rtrace_default(self):
         if len(self.rtrace_list) > 0:
             return self.rtrace_list[0]
@@ -184,32 +192,32 @@ class RTraceMngr(IBVResource):
 #                warp_field[:,rtrace.var_eval.dim_slice] = rtrace.field_arr
 #                return warp_field
 #
-#            #    raise KeyError, 'warp field not found'
+# raise KeyError, 'warp field not found'
 
     trait_view = View(HSplit(
-                              Item('rtrace_bound_list', show_label=False,
-                                   editor=rtrace_editor),
-                              Item('current_rtrace', show_label=False,
-                                   style='custom', resizable=True),
-                              ),
-                        resizable=True,
-                        scrollable=True,
-                        height=0.6, width=0.6
-                            )
+        Item('rtrace_bound_list', show_label=False,
+             editor=rtrace_editor),
+        Item('current_rtrace', show_label=False,
+             style='custom', resizable=True),
+    ),
+        resizable=True,
+        scrollable=True,
+        height=0.6, width=0.6
+    )
 
 if __name__ == '__main__':
     from rtrace import RTraceGraph
     rmgr = RTraceMngr(rtrace_list=[
-    RTraceGraph(name='rte x'),
-    RTraceGraph(name='rte 2'),
-    RTraceGraph(name='rte 3'),
-    RTraceGraph(name='rte 4'),
-    RTraceGraph(name='rte 5'),
-    RTraceGraph(name='rte 6'),
-    RTraceGraph(name='rte 7'),
-    RTraceGraph(name='rte 8'),
-    RTraceGraph(name='rte 8'),
-    RTraceGraph(name='rte 10'),
-    RTraceGraph(name='rte 11'),
+        RTraceGraph(name='rte x'),
+        RTraceGraph(name='rte 2'),
+        RTraceGraph(name='rte 3'),
+        RTraceGraph(name='rte 4'),
+        RTraceGraph(name='rte 5'),
+        RTraceGraph(name='rte 6'),
+        RTraceGraph(name='rte 7'),
+        RTraceGraph(name='rte 8'),
+        RTraceGraph(name='rte 8'),
+        RTraceGraph(name='rte 10'),
+        RTraceGraph(name='rte 11'),
     ])
     rmgr.configure_traits()

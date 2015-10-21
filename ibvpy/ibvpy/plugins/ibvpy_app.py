@@ -5,25 +5,32 @@
 # License: BSD Style.
 
 # Standard library imports.
-import sys
-import os.path
 import logging
+from mayavi.core.customize import get_custom_plugins
+from mayavi.preferences.api import preference_manager
+import os.path
+import sys
 
-# Enthought library imports.
-from etsproxy.logger.api import LogFileHandler, FORMATTER
-from etsproxy.etsconfig.api import ETSConfig
 from etsproxy.traits.api import \
     HasTraits, Instance, Int, \
-    on_trait_change, Any
-
-# Local imports.
+    on_trait_change
+from ibv_model_plugin import IBVModelPlugin
+from ibv_model_ui_plugin import IBVModelUIPlugin
 from ibvpy_workbench_application import IBVPyWorkbenchApplication
-from etsproxy.mayavi.preferences.api import preference_manager
-from etsproxy.mayavi.core.customize import get_custom_plugins
+import mayavi.plugins.app as mayavi_app
+from mayavi_engine import set_engine
+from rtrace_plugin import RTracePlugin
+from rtrace_ui_plugin import RTraceUIPlugin
+from tloop_plugin import TLoopPlugin
+from tloop_ui_plugin import TLoopUIPlugin
+from tstepper_plugin import TStepperPlugin
+from tstepper_ui_plugin import TStepperUIPlugin
 
-import etsproxy.mayavi.plugins.app as mayavi_app
 
-from etsproxy import ETS_BASENAME
+# Enthought library imports.
+# Local imports.
+# from etsproxy import ETS_BASENAME
+ETS_BASENAME = ''
 
 # GLOBALS
 logger = logging.getLogger()
@@ -31,17 +38,9 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 # local imports
-from rtrace_plugin import RTracePlugin
-from rtrace_ui_plugin import RTraceUIPlugin
-from tstepper_plugin import TStepperPlugin
-from tstepper_ui_plugin import TStepperUIPlugin
 #from sdomain_plugin import SDomainPlugin
 #from sdomain_ui_plugin import SDomainUIPlugin
-from tloop_plugin import TLoopPlugin
-from tloop_ui_plugin import TLoopUIPlugin
-from ibv_model_plugin import IBVModelPlugin
-from ibv_model_ui_plugin import IBVModelUIPlugin
-from mayavi_engine import set_engine
+
 
 def get_plugins():
     """Get list of default plugins to use for IBVPy."""
@@ -58,6 +57,7 @@ def get_plugins():
     plugins.insert(7, RTraceUIPlugin())
     return plugins
 
+
 def get_non_gui_plugins():
     """Get list of basic tloop plugins that do not add any views or
     actions."""
@@ -70,7 +70,10 @@ def get_non_gui_plugins():
 ###########################################################################
 # `IBVPy` class.
 ###########################################################################
+
+
 class IBVPyApp(HasTraits):
+
     """The IBVPy application class.
 
     This class may be easily subclassed to do something different.
@@ -87,7 +90,7 @@ class IBVPyApp(HasTraits):
                       'mayavi.plugins.script.Script')
 
     # TLoop instance constructed by scripting
-    # @todo: make a base class for the IBVModel components that should be here 
+    # @todo: make a base class for the IBVModel components that should be here
     # instead of Any
     ibv_resource = Instance('ibvpy.core.ibv_resource.IBVResource')
 
@@ -127,11 +130,11 @@ class IBVPyApp(HasTraits):
         # Create the application
         prefs = preference_manager.preferences
         app = IBVPyWorkbenchApplication(plugins=plugins,
-                                         preferences=prefs)
+                                        preferences=prefs)
         self.application = app
 
         # Setup the logger.
-        #self.setup_logger()
+        # self.setup_logger()
 
         # Start the application.
         app.run()
@@ -193,6 +196,7 @@ class IBVPyApp(HasTraits):
         self.script = window.get_service(Script)
         # Call self.run from the GUI thread.
         app.gui.invoke_later(self.run)
+
 
 def main(argv=None):
     """Simple helper to start up the ibvpy application.  This returns

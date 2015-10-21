@@ -3,7 +3,7 @@ Created on Jan 28, 2015
 
 '''
 
-from exp_att_db import ExpATTDB, f_interp1d
+# from exp_att_db import ExpATTDB, f_interp1d
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
@@ -16,10 +16,10 @@ params = {'legend.fontsize': 10,
           }
 p.rcParams.update(params)
 
-test_files = ['TTb1-2C-9mm-0-800SBR-V1.DAT',
-              'TTb1-2C-9mm-0-800SBR-V2.DAT',
-              'TTb1-2C-9mm-0-800SBR-V3.DAT',
-              'TTb2-2C-9mm-0-800SBR-V1.DAT',
+test_files = ['TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT',
+              'TTb1-2C-9mm-0-800SBR-V2_R1S1.DAT',
+#              'TTb1-2C-9mm-0-800SBR-V3.DAT',
+#              'TTb2-2C-9mm-0-800SBR-V1.DAT',
               ]
 test_file_path = os.path.join(simdb.exdata_dir,
                               'tensile_tests', 'buttstrap_clamping',

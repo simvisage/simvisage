@@ -9,10 +9,12 @@ from ibv_resource import IBVResource
 
 import os
 
-from etsproxy.util.home_directory import \
+from traits.util.home_directory import \
     get_home_directory
 
+
 class IBVModel(IBVResource):
+
     '''Base class for construction of initial boundary value formulation.
 
     This class should be subclassed to construct for particular applications
@@ -31,6 +33,7 @@ class IBVModel(IBVResource):
     service_attrib = 'ibv_model'
 
     tloop = Instance(TLoop)
+
     def _tloop_default(self):
         ''' Default constructor'''
         return TLoop()
@@ -41,7 +44,7 @@ class IBVModel(IBVResource):
     dir = Directory
 
     def _get_default_dir(self):
-        #directory management
+        # directory management
         home_dir = get_home_directory()
         mod_base_name = self.__class__.__name__
 
@@ -69,7 +72,7 @@ class IBVModel(IBVResource):
 
     # model constructors that can be subclassed
     # @TODO clarify the usage of these methods on examples.
-    # How about the state consistency. Should tloop have a backward 
+    # How about the state consistency. Should tloop have a backward
     # loop to the ibvmodel?
     def _create_sdomain(self):
         pass

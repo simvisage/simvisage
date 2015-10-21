@@ -1,35 +1,36 @@
-from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
-                                 Instance, Int, Trait, Str, Enum, \
-                                 Callable, List, TraitDict, Any, Range, \
-                                 Delegate, Event, on_trait_change, Button, \
-                                 Interface, implements, Property, cached_property
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-     HSplit, Group, Handler, VSplit
-from etsproxy.traits.ui.menu import NoButtons, OKButton, CancelButton, \
-     Action
-from etsproxy.traits.ui.api \
-    import View, Item, VSplit, TableEditor, ListEditor
-from etsproxy.traits.ui.table_column \
-    import ObjectColumn, ExpressionColumn
 from numpy import \
     ix_, array, int_, dot, newaxis, float_, copy, repeat
-from ibvpy.api import \
-    IBCond
+from traits.api import Array, Bool, Enum, Float, HasTraits, \
+    Int, Trait, Enum, \
+    Callable, List, \
+    Button, \
+    implements
+from traitsui.api \
+    import View, Item, VSplit, TableEditor, ListEditor
+from traitsui.api import \
+    HSplit, Group
+from traitsui.table_column \
+    import ObjectColumn
+
 from bc_dof import BCDof
+from ibvpy.core.i_bcond import \
+    IBCond
+from ibvpy.plugins.mayavi_util.pipelines import \
+    MVPointLabels
+
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
-    columns = [ ObjectColumn(label = 'Type', name = 'var'),
-                ObjectColumn(label = 'Value', name = 'value'),
-                ObjectColumn(label = 'DOF', name = 'dof')
-                ],
-    editable = False,
-    )
+    columns=[ObjectColumn(label='Type', name='var'),
+             ObjectColumn(label='Value', name='value'),
+             ObjectColumn(label='DOF', name='dof')
+             ],
+    editable=False,
+)
 
-from ibvpy.plugins.mayavi_util.pipelines import \
-    MVPolyData, MVPointLabels, MVStructuredGrid
 
 class BCDofGroup(HasTraits):
+
     '''
     Implements the IBC functionality for a constrained dof.
     '''
@@ -40,7 +41,7 @@ class BCDofGroup(HasTraits):
     get_dof_method = Callable
 
     get_link_dof_method = Callable  # optional callable to deliver
-                                    # dofs for linked pairing
+    # dofs for linked pairing
     dof_numbers = Array(int)
     dof_X = Array(Float)
 
@@ -49,7 +50,7 @@ class BCDofGroup(HasTraits):
     # List of dofs that determine the value of the current dof
     #
     # If this list is empty, then the current dof is
-    # prescribed. Otherwise, the dof value is given by the 
+    # prescribed. Otherwise, the dof value is given by the
     # linear combination of DOFs in the list (see the example below)
     #
     link_dofs = List(Int)
@@ -65,7 +66,7 @@ class BCDofGroup(HasTraits):
 
     value = Float
 
-    ##### TODO - adapt the definition
+    # TODO - adapt the definition
     time_function = Callable
 
     def _time_function_default(self):
@@ -98,31 +99,31 @@ class BCDofGroup(HasTraits):
 
         if self.get_link_dof_method:
             link_dofs, linked_dof_X = self.get_link_dof_method()
-            #TODO: test if the shape is the same as dof_numbers
+            # TODO: test if the shape is the same as dof_numbers
             if len(self.link_dims) == 0:
                 self.link_dims = self.dims
             else:
                 if len(self.dims) != len(self.link_dims):
                     raise IndexError, 'incompatible dim specification (%d != %d' \
-                            % (len(self.dims), len(self.link_dims))
+                        % (len(self.dims), len(self.link_dims))
 
             link_dofs_arr = link_dofs[:, tuple(self.link_dims)]
 
             # slice the dof_numbers for the proper direction
             #
-            self.bcdof_list = [BCDof(var = self.var, dof = dof,
-                                     value = self.value,
-                                     link_dofs = [ldof],
-                                     link_coeffs = self.link_coeffs,
-                                     time_function = self.time_function)
-                               for dof, ldof in  zip(self.dof_numbers.flatten(), link_dofs_arr.flatten()) ]
+            self.bcdof_list = [BCDof(var=self.var, dof=dof,
+                                     value=self.value,
+                                     link_dofs=[ldof],
+                                     link_coeffs=self.link_coeffs,
+                                     time_function=self.time_function)
+                               for dof, ldof in zip(self.dof_numbers.flatten(), link_dofs_arr.flatten())]
         else:
-            self.bcdof_list = [BCDof(var = self.var, dof = dof,
-                                 value = self.value,
-                                 link_dofs = self.link_dofs,
-                                 link_coeffs = self.link_coeffs,
-                                 time_function = self.time_function)
-                           for dof in  self.dof_numbers.flatten() ]
+            self.bcdof_list = [BCDof(var=self.var, dof=dof,
+                                     value=self.value,
+                                     link_dofs=self.link_dofs,
+                                     link_coeffs=self.link_coeffs,
+                                     time_function=self.time_function)
+                               for dof in self.dof_numbers.flatten()]
 
         return
 
@@ -139,36 +140,38 @@ class BCDofGroup(HasTraits):
     # register the pipelines for plotting labels and geometry
     #
     mvp_dofs = Trait(MVPointLabels)
+
     def _mvp_dofs_default(self):
-        return MVPointLabels(name = 'Boundary condition',
-                              points = self._get_mvpoints,
-                              vectors = self._get_labels,
-                              color = (0.0, 0.0, 0.882353))
+        return MVPointLabels(name='Boundary condition',
+                             points=self._get_mvpoints,
+                             vectors=self._get_labels,
+                             color=(0.0, 0.0, 0.882353))
 
     def _get_mvpoints(self):
-        ## blow up
+        # blow up
         print 'dof_X', self.dof_X
-        return array(self.dof_X, dtype = 'float_')
+        return array(self.dof_X, dtype='float_')
 
     def _get_labels(self):
-        ## blow up
+        # blow up
         n_points = self.dof_numbers.shape[0]
         dofs = repeat(-1., n_points * 3).reshape(n_points, 3)
-        dofs[:, tuple(self.dims) ] = self.dof_numbers
+        dofs[:, tuple(self.dims)] = self.dof_numbers
         print 'BC - DOFS', dofs
         return dofs
 
     redraw_button = Button('Redraw')
+
     def _redraw_button_fired(self):
-        self.mvp_dofs.redraw(label_mode = 'label_vectors')
+        self.mvp_dofs.redraw(label_mode='label_vectors')
 
     traits_view = View(HSplit(Group('var',
-                                       'dims',
-                                       'value',
-                                       'redraw_button'),
-                                Item('bcdof_list',
-                                     style = 'custom',
-                                     editor = bcond_list_editor,
-                                     show_label = False)),
-                        resizable = True,
-                        )
+                                    'dims',
+                                    'value',
+                                    'redraw_button'),
+                              Item('bcdof_list',
+                                   style='custom',
+                                   editor=bcond_list_editor,
+                                   show_label=False)),
+                       resizable=True,
+                       )
