@@ -157,12 +157,12 @@ if __name__ == '__main__':
 
     st = GeoST()
 
-#    st = GeoST(shape_xy=10,
-#               shape_R=2,
-#               shape_z=2,
-#               radius_plate=0.04, # D=8cm
-#               length_quarter=0.40, # L=80cm
-#               thickness=0.02)
+    st = GeoST(shape_xy=11,
+               shape_R=2,
+               shape_z=2,
+               radius_plate=0.04,  # D=8cm
+               length_quarter=0.40,  # L=80cm
+               thickness=0.02)
 
 #    shape_xy = 26
 #    st.shape_R = 5
@@ -184,16 +184,16 @@ if __name__ == '__main__':
     fp1 = st(gpoints)
 
     # save x,y,z - node coordinates of FE-mesh to file
-#    print fp1
-#    from matresdev.db.simdb import SimDB
-#    simdb = SimDB()
-#    import os
-#    simdata_dir = os.path.join(simdb.simdata_dir, 'SimST')
-#    if os.path.isdir(simdata_dir) == False:
-#        os.makedirs(simdata_dir)
-#    filename = os.path.join(simdata_dir, 'FE-mesh_ST-80cm.csv')
-#    np.savetxt(filename, fp1, delimiter=';')
-#    print 'xyz_arr saved to file %s' % (filename)
+    print fp1
+    from matresdev.db.simdb import SimDB
+    simdb = SimDB()
+    import os
+    simdata_dir = os.path.join(simdb.simdata_dir, 'SimST')
+    if os.path.isdir(simdata_dir) == False:
+        os.makedirs(simdata_dir)
+    filename = os.path.join(simdata_dir, 'FE-mesh_ST-80cm_nxy11.csv')
+    np.savetxt(filename, fp1, delimiter=';')
+    print 'xyz_arr saved to file %s' % (filename)
 
     mlab.points3d(fp1[:, 0], fp1[:, 1], fp1[:, 2],
                    scale_factor=0.01 ,

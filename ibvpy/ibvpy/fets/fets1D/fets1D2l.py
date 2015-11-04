@@ -1,19 +1,16 @@
 
+from numpy import array, dot
+from scipy.linalg import \
+    inv
+
 from etsproxy.traits.api import \
     Int, implements, Array
-
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval
 
-
-from numpy import array, dot
-
-from scipy.linalg import \
-     inv
 
 #-----------------------------------------------------------------------------
 # FEBar1D
 #-----------------------------------------------------------------------------
-
 class FETS1D2L(FETSEval):
     '''
     Fe Bar 2 nodes, deformation
@@ -29,18 +26,18 @@ class FETS1D2L(FETSEval):
     n_e_dofs = Int(2)
     n_nodal_dofs = Int(1)
 
-    dof_r = Array(value = [[-1], [1]])
-    geo_r = Array(value = [[-1], [1]])
-    vtk_r = Array(value = [[-1.], [1.]])
+    dof_r = Array(value=[[-1], [1]])
+    geo_r = Array(value=[[-1], [1]])
+    vtk_r = Array(value=[[-1.], [1.]])
     vtk_cells = [[0, 1]]
     vtk_cell_types = 'Line'
 
     def _get_ip_coords(self):
         offset = 1e-6
-        return  array([[-1 + offset, 0., 0.], [1 - offset, 0., 0.]])
+        return array([[-1 + offset, 0., 0.], [1 - offset, 0., 0.]])
 
     def _get_ip_weights(self):
-        return array([[1.], [1.]], dtype = float)
+        return array([[1.], [1.]], dtype=float)
 
     # Integration parameters
     #
@@ -88,41 +85,45 @@ class FETS1D2L(FETSEval):
 
 #----------------------- example --------------------
 
+from ibvpy.plugins.ibvpy_app import IBVPyApp
+
+
 def __demo__():
+
     from ibvpy.api import \
         TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
         TLine, BCDof
     from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
 
-    fets_eval = FETS1D2L(mats_eval = MATS1DElastic(E = 10.))
+    fets_eval = FETS1D2L(mats_eval=MATS1DElastic(E=10.))
     from ibvpy.mesh.fe_grid import FEGrid
 
     # Discretization
-    domain = FEGrid(coord_max = (3.,),
-                    shape = (3,),
-                    fets_eval = fets_eval)
+    domain = FEGrid(coord_max=(3.,),
+                    shape=(3,),
+                    fets_eval=fets_eval)
 
-    ts = TS(dof_resultants = True,
-            sdomain = domain,
-            bcond_list = [BCDof(var = 'u', dof = 0, value = 0.),
-                          BCDof(var = 'f', dof = 3, value = 1,) ],
-            rtrace_list = [RTraceGraph(name = 'Fi,right over u_right (iteration)' ,
-                                        var_y = 'F_int', idx_y = 0,
-                                        var_x = 'U_k', idx_x = 1),
-                           RTraceDomainListField(name = 'Stress' ,
-                                                 var = 'sig_app', idx = 0),
-                           RTraceDomainListField(name = 'Displacement' ,
-                                                 var = 'u', idx = 0,
-                                                 warp = True),
-                           RTraceDomainListField(name = 'N0' ,
-                                                 var = 'N_mtx', idx = 0,
-                                                 record_on = 'update')
-                           ]
+    ts = TS(dof_resultants=True,
+            sdomain=domain,
+            bcond_list=[BCDof(var='u', dof=0, value=0.),
+                        BCDof(var='f', dof=3, value=1,)],
+            rtrace_list=[RTraceGraph(name='Fi,right over u_right (iteration)',
+                                     var_y='F_int', idx_y=0,
+                                     var_x='U_k', idx_x=1),
+                         RTraceDomainListField(name='Stress',
+                                               var='sig_app', idx=0),
+                         RTraceDomainListField(name='Displacement',
+                                               var='u', idx=0,
+                                               warp=True),
+                         RTraceDomainListField(name='N0',
+                                               var='N_mtx', idx=0,
+                                               record_on='update')
+                         ]
             )
 
     # Add the time-loop control
-    tloop = TLoop(tstepper = ts,
-                  tline = TLine(min = 0.0, step = 0.5, max = 1.0))
+    tloop = TLoop(tstepper=ts,
+                  tline=TLine(min=0.0, step=0.5, max=1.0))
 
     print '---- result ----'
     print tloop.eval()
@@ -132,8 +133,7 @@ def __demo__():
     # Put the whole stuff into the simulation-framework to map the
     # individual pieces of definition into the user interface.
     #
-    from ibvpy.plugins.ibvpy_app import IBVPyApp
-    app = IBVPyApp(ibv_resource = tloop)
+    app = IBVPyApp(ibv_resource=tloop)
     app.main()
 
 if __name__ == '__main__':

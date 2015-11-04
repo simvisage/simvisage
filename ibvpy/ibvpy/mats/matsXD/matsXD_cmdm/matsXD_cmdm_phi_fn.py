@@ -208,7 +208,7 @@ class PhiFnGeneralExtended(PhiFnGeneral):
 
     implements(IPhiFn)
 
-    factor_eps_fail = Float(1.1)
+    factor_eps_fail = Float(1.0)
 
     def get_value(self, e_max, *c_list):
         '''
@@ -226,7 +226,6 @@ class PhiFnGeneralExtended(PhiFnGeneral):
 
         elif (e_max > eps_last and e_max < eps_fail):
             return phi_last
-
         else:
             return 1e-50
 

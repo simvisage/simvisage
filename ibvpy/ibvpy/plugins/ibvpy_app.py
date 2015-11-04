@@ -5,24 +5,30 @@
 # License: BSD Style.
 
 # Standard library imports.
-import sys
-import os.path
 import logging
+from mayavi.core.customize import get_custom_plugins
+from mayavi.preferences.api import preference_manager
+import os.path
+import sys
 
-# Enthought library imports.
-from apptools.logger.api import LogFileHandler, FORMATTER
-from traits.etsconfig.api import ETSConfig
 from etsproxy.traits.api import \
     HasTraits, Instance, Int, \
-    on_trait_change, Any
-
-# Local imports.
+    on_trait_change
+from ibv_model_plugin import IBVModelPlugin
+from ibv_model_ui_plugin import IBVModelUIPlugin
 from ibvpy_workbench_application import IBVPyWorkbenchApplication
-from mayavi.preferences.api import preference_manager
-from mayavi.core.customize import get_custom_plugins
-
 import mayavi.plugins.app as mayavi_app
+from mayavi_engine import set_engine
+from rtrace_plugin import RTracePlugin
+from rtrace_ui_plugin import RTraceUIPlugin
+from tloop_plugin import TLoopPlugin
+from tloop_ui_plugin import TLoopUIPlugin
+from tstepper_plugin import TStepperPlugin
+from tstepper_ui_plugin import TStepperUIPlugin
 
+
+# Enthought library imports.
+# Local imports.
 # from etsproxy import ETS_BASENAME
 ETS_BASENAME = ''
 
@@ -32,17 +38,8 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 # local imports
-from rtrace_plugin import RTracePlugin
-from rtrace_ui_plugin import RTraceUIPlugin
-from tstepper_plugin import TStepperPlugin
-from tstepper_ui_plugin import TStepperUIPlugin
 #from sdomain_plugin import SDomainPlugin
 #from sdomain_ui_plugin import SDomainUIPlugin
-from tloop_plugin import TLoopPlugin
-from tloop_ui_plugin import TLoopUIPlugin
-from ibv_model_plugin import IBVModelPlugin
-from ibv_model_ui_plugin import IBVModelUIPlugin
-from mayavi_engine import set_engine
 
 
 def get_plugins():

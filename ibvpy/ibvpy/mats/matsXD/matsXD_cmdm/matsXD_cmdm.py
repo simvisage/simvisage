@@ -1062,8 +1062,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
         max_omega = 1. - min_phi ** 2
         if max_omega == 1.:
-            print 'max_omega', max_omega
-            print 'eps_app_eng', eps_app_eng
+            print 'max_omega_i2', max_omega
+#            print 'eps_app_eng', eps_app_eng
         return np.array([max_omega])
 
     def get_max_omega_i(self, sctx, eps_app_eng):
@@ -1073,8 +1073,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         min_phi = np.min(self._get_phi_arr(sctx, eps_app_eng))
         max_omega = 1. - min_phi
         if max_omega == 1.:
-            print 'max_omega', max_omega
-            print 'eps_app_eng', eps_app_eng
+            print 'max_omega_i', max_omega
+#            print 'eps_app_eng', eps_app_eng
         return np.array([max_omega])
 
     def get_omega_mtx(self, sctx, eps_app_eng, *args, **kw):

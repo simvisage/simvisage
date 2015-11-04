@@ -12,7 +12,11 @@
 #
 # Created on May 26, 2009 by: rchx
 
-from etsproxy.traits.api import Float, HasStrictTraits, \
+from numpy import \
+    ix_, dot, repeat, zeros
+from scipy.linalg import \
+    det, norm
+from traits.api import Float, HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, \
     Button, \
@@ -22,16 +26,15 @@ from traitsui.api import \
     View, Item, TableEditor
 from traitsui.table_column \
     import ObjectColumn
-from numpy import \
-    ix_, dot, repeat, zeros
 
-import numpy as np
-from scipy.linalg import \
-    det, norm
-from ibvpy.api import \
-    IBCond
 from bc_dof import BCDof
+from ibvpy.core.i_bcond import \
+    IBCond
 from ibvpy.mesh.fe_grid_idx_slice import FEGridIdxSlice
+from ibvpy.plugins.mayavi_util.pipelines import \
+    MVPointLabels
+import numpy as np
+
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
@@ -41,9 +44,6 @@ bcond_list_editor = TableEditor(
              ],
     editable=False,
 )
-
-from ibvpy.plugins.mayavi_util.pipelines import \
-    MVPolyData, MVPointLabels, MVStructuredGrid
 
 
 class BCSlice(HasStrictTraits):

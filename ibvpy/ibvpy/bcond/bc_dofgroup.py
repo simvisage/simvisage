@@ -1,21 +1,23 @@
-from etsproxy.traits.api import Array, Bool, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Any, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, implements, Property, cached_property
-from traitsui.api import Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit
-from traitsui.menu import NoButtons, OKButton, CancelButton, \
-    Action
-from traitsui.api \
-    import View, Item, VSplit, TableEditor, ListEditor
-from traitsui.table_column \
-    import ObjectColumn, ExpressionColumn
 from numpy import \
     ix_, array, int_, dot, newaxis, float_, copy, repeat
-from ibvpy.api import \
-    IBCond
+from traits.api import Array, Bool, Enum, Float, HasTraits, \
+    Int, Trait, Enum, \
+    Callable, List, \
+    Button, \
+    implements
+from traitsui.api \
+    import View, Item, VSplit, TableEditor, ListEditor
+from traitsui.api import \
+    HSplit, Group
+from traitsui.table_column \
+    import ObjectColumn
+
 from bc_dof import BCDof
+from ibvpy.core.i_bcond import \
+    IBCond
+from ibvpy.plugins.mayavi_util.pipelines import \
+    MVPointLabels
+
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(
@@ -25,9 +27,6 @@ bcond_list_editor = TableEditor(
              ],
     editable=False,
 )
-
-from ibvpy.plugins.mayavi_util.pipelines import \
-    MVPolyData, MVPointLabels, MVStructuredGrid
 
 
 class BCDofGroup(HasTraits):
