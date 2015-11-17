@@ -27,8 +27,7 @@ from ibvpy.mats.mats3D.mats3D_tensor import \
 
 #-----------------------------------------------------------------------------------
 # FETS2D58H32U -  degenerated subparametric 3D volume element using a 2D material model
-#                 rs-direction: cubic (serendipity)
-#                 t-direction: linear
+#                 rst-direction: cubic (serendipity)
 #-----------------------------------------------------------------------------------
 
 
