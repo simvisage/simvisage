@@ -2,17 +2,15 @@
 """ The entry point for an Envisage application. """
 
 # Standard library imports.
-import sys
-import os.path
 import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
 from mayavi.plugins.app import setup_logger
-from etsproxy.traits.api import List, Instance
-from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from traits.api import List
+from envisage.api import Plugin
 from pyface.workbench.api import Perspective, PerspectiveItem
-from ibvpy.api import RTraceMngr, RTraceGraph
+from ibvpy.api import RTraceGraph
 
 logger = logging.getLogger()
 
@@ -77,7 +75,7 @@ class RTraceUIPlugin(Plugin):
 
     def _rtrace_service_view_factory(self, window, **traits):
         """ Factory method for rtrace_service views. """
-        from etsproxy.pyface.workbench.traits_ui_view import \
+        from pyface.workbench.traits_ui_view import \
             TraitsUIView
 
         rtrace_service = self._get_rtrace_service(window)
@@ -97,16 +95,15 @@ class RTraceUIPlugin(Plugin):
 
 def get_plugins():
     """Get list of default plugins to use for Mayavi."""
-    from etsproxy.envisage.core_plugin import CorePlugin
-    from etsproxy.envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
-    from etsproxy.plugins.python_shell.python_shell_plugin import PythonShellPlugin
-    from etsproxy.plugins.text_editor.text_editor_plugin import TextEditorPlugin
-    from etsproxy.tvtk.plugins.scene.scene_plugin import ScenePlugin
-    from etsproxy.tvtk.plugins.scene.ui.scene_ui_plugin import SceneUIPlugin
-    from etsproxy.mayavi.plugins.mayavi_plugin import MayaviPlugin
-    from etsproxy.mayavi.plugins.mayavi_ui_plugin import MayaviUIPlugin
-    from etsproxy.envisage.developer.developer_plugin import DeveloperPlugin
-    from etsproxy.envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
+    from envisage.core_plugin import CorePlugin
+    from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
+    from envisage.plugins.python_shell.python_shell_plugin import PythonShellPlugin
+    from tvtk.plugins.scene.scene_plugin import ScenePlugin
+    from tvtk.plugins.scene.ui.scene_ui_plugin import SceneUIPlugin
+    from mayavi.plugins.mayavi_plugin import MayaviPlugin
+    from mayavi.plugins.mayavi_ui_plugin import MayaviUIPlugin
+    from envisage.developer.developer_plugin import DeveloperPlugin
+    from envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
 
     plugins = [CorePlugin(),
                WorkbenchPlugin(),

@@ -182,7 +182,7 @@ fe_domain_tree_editor = TreeEditor(
 class TStepperService(HasTraits):
 
     # Set by envisage when this is offered as a service offer.
-    window = Instance('etsproxy.pyface.workbench.api.WorkbenchWindow')
+    window = Instance('envisage.ui.workbench.workbench_window.WorkbenchWindow')
 
     tstepper = Instance(TStepper)
 

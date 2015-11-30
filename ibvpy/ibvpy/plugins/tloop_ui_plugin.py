@@ -2,15 +2,13 @@
 """ The entry point for an Envisage application. """
 
 # Standard library imports.
-import sys
-import os.path
 import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from mayavi.plugins.app import setup_logger
-from traits.api import List, Instance
-from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+
+from traits.api import List
+from envisage.api import Plugin
 from pyface.workbench.api import Perspective, PerspectiveItem
 
 logger = logging.getLogger()
@@ -76,7 +74,7 @@ class TLoopUIPlugin(Plugin):
 
     def _tloop_service_view_factory(self, window, **traits):
         """ Factory method for tloop_service views. """
-        from etsproxy.pyface.workbench.traits_ui_view import \
+        from pyface.workbench.traits_ui_view import \
             TraitsUIView
 
         tloop_service = self._get_tloop_service(window)
