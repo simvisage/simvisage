@@ -1,17 +1,16 @@
-import wx
-
 import matplotlib
-# We want matplotlib to use a wxPython backend
-matplotlib.use('WXAgg')
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx, StatusBarWx
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx, StatusBarWx
-
-from etsproxy.traits.api import Any, Instance
-#from etsproxy.traits.ui.api import Editor
-from traitsui.wx.editor import Editor
-#from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
+from traits.api import Instance
 from traitsui.wx.basic_editor_factory import BasicEditorFactory
+from traitsui.wx.editor import Editor
+import wx
+
+
+# We want matplotlib to use a wxPython backend
+matplotlib.use('WXAgg')
+
 
 class _MPLFigureEditor(Editor):
 
@@ -51,7 +50,8 @@ class _MPLFigureEditor(Editor):
     def key_press_callback(self, event):
         'whenever a key is pressed'
         figure = self.value
-        if not event.inaxes: return
+        if not event.inaxes:
+            return
         if event.key == 'k':
             if figure.axes[0].get_xscale() == 'log':
                 figure.axes[0].set_xscale('linear')
@@ -67,6 +67,7 @@ class _MPLFigureEditor(Editor):
             else:
                 figure.axes[0].set_yscale('log')
                 figure.canvas.draw()
+
 
 class MPLFigureEditor(BasicEditorFactory):
 
@@ -84,15 +85,16 @@ if __name__ == "__main__":
         figure = Instance(Figure, ())
 
         view = View(Item('figure', editor=MPLFigureEditor(),
-                                show_label=False),
-                        width=400,
-                        height=300,
-                        resizable=True)
+                         show_label=False),
+                    width=400,
+                    height=300,
+                    resizable=True)
 
         def __init__(self):
             super(Test, self).__init__()
             axes = self.figure.add_subplot(111)
             t = linspace(0, 2 * pi, 200)
-            axes.plot(sin(t) * (1 + 0.5 * cos(11 * t)), cos(t) * (1 + 0.5 * cos(11 * t)))
+            axes.plot(
+                sin(t) * (1 + 0.5 * cos(11 * t)), cos(t) * (1 + 0.5 * cos(11 * t)))
 
     Test().configure_traits()

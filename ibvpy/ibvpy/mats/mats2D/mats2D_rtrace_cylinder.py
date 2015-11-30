@@ -1,18 +1,18 @@
 
-from ibvpy.api import \
-    RTrace
-from etsproxy.traits.api import \
-    Str, Callable, Int, List, Bool, Trait
-from etsproxy.traits.ui.api import \
-    View, HSplit, VGroup, Item
 from numpy import \
     array, hstack, zeros, vstack, pi as Pi, mgrid, arange, \
     linspace, sin, cos, c_, vstack, zeros, append, concatenate, \
     dot
 
-from mats2D_tensor import map2d_eps_eng_to_mtx
+from etsproxy.traits.api import \
+    Str, Callable, Int, List, Bool, Trait
+from etsproxy.traits.ui.api import \
+    View, HSplit, VGroup, Item
+from ibvpy.api import \
+    RTrace
 from ibvpy.plugins.mayavi_util.pipelines import \
     MVPolyData, MVPointLabels
+from mats2D_tensor import map2d_eps_eng_to_mtx
 
 
 class MATS2DRTraceCylinder(RTrace):
@@ -55,6 +55,9 @@ class MATS2DRTraceCylinder(RTrace):
     var_surface_eval = Callable
     idx_surface = Int(-1)
 
+    _trace = List()
+    _warp_field = List()
+
     def get_n_t(self):
         '''Get the resolution of the axis.
         This associates every point in the history with a time stamp
@@ -93,8 +96,8 @@ class MATS2DRTraceCylinder(RTrace):
         self._trace.append(surface_values)
         if self.var_warp_on:
             n_r = self.get_n_r()
-            alpha_list = array([ 2 * Pi / n_r * i for i in range(0, n_r) ])
-            N = array([[ cos(alpha), sin(alpha)] for alpha in alpha_list ])
+            alpha_list = array([2 * Pi / n_r * i for i in range(0, n_r)])
+            N = array([[cos(alpha), sin(alpha)] for alpha in alpha_list])
 
             # todo: change this so that it can be applied to a general model.
             #
@@ -102,13 +105,13 @@ class MATS2DRTraceCylinder(RTrace):
             # to the strain tensor and then projected onto the planes N
             #
             eps_mtx = map2d_eps_eng_to_mtx(eps_eng)
-            warp_values = array([ dot(eps_mtx, n) for n in N ])
+            warp_values = array([dot(eps_mtx, n) for n in N])
 
             self._warp_field.append(warp_values)
 
-    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # 3D visualization in MayaVI
-    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def xregister_mv_pipelines(self, e):
         '''Register as a source in the pipelane
         '''
@@ -148,7 +151,7 @@ class MATS2DRTraceCylinder(RTrace):
         from etsproxy.tvtk.api import tvtk
 
         self._mv_src = VTKDataSource(name='Time-Strain Cylinder',
-                                      data=tvtk.PolyData())
+                                     data=tvtk.PolyData())
         e.add_source(self._mv_src)
 
         # Construct the warp filter
@@ -164,19 +167,21 @@ class MATS2DRTraceCylinder(RTrace):
         s.module_manager.scalar_lut_manager.show_scalar_bar = True
         s.module_manager.scalar_lut_manager.reverse_lut = True
 
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Visualization pipelines
-    #----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     mvp_mgrid_geo = Trait(MVPolyData)
+
     def _mvp_mgrid_geo_default(self):
         return MVPolyData(name='Mesh geomeetry',
                                points=self._get_points,
                                polys=self._get_faces,
                                scalars=self._get_scalars,
                                vectors=self._get_vectors
-                               )
+                          )
 
     mvp_mgrid_labels = Trait(MVPointLabels)
+
     def _mvp_mgrid_labels_default(self):
         return MVPointLabels(name='Mesh numbers',
                                   points=self._get_points,
@@ -188,6 +193,9 @@ class MATS2DRTraceCylinder(RTrace):
         '''
         self.mvp_mgrid_geo.redraw()
         # self.mvp_mgrid_labels.redraw( 'label_scalars' )
+
+    n_t = Int
+    n_r = Int
 
     def _get_points(self):
         '''
@@ -219,8 +227,8 @@ class MATS2DRTraceCylinder(RTrace):
         grid1 = array([R * cos(grid1[0]), R * sin(grid1[0]), grid1[1]])
         grid2 = array([R * cos(grid2[0]), R * sin(grid2[0]), grid2[1]])
 
-        points1 = c_[ tuple([ grid1[i].flatten() for i in range(3) ]) ]
-        points2 = c_[ tuple([ grid2[i].flatten() for i in range(3) ]) ]
+        points1 = c_[tuple([grid1[i].flatten() for i in range(3)])]
+        points2 = c_[tuple([grid2[i].flatten() for i in range(3)])]
         points = vstack([points1, points2])
         return points
 
@@ -231,18 +239,20 @@ class MATS2DRTraceCylinder(RTrace):
         # Construct  an array of node numbers respecting the grid structure
         # (the nodes are numbered first in t-direction, then in r-direction
         #
-        enum_nodes = arange(2 * self.n_r * self.n_t).reshape((2 * self.n_r, self.n_t))
+        enum_nodes = arange(
+            2 * self.n_r * self.n_t).reshape((2 * self.n_r, self.n_t))
         #
         # get the slices extracting all corner nodes with the smallest
         # node number within the element
         #
-        enum_nodes_grid1 = arange(self.n_r * self.n_t).reshape((self.n_r, self.n_t))
+        enum_nodes_grid1 = arange(
+            self.n_r * self.n_t).reshape((self.n_r, self.n_t))
         base_node_list = enum_nodes_grid1[:, 0:-1].flatten()
         #
         # Get the node map within the line
         #
         goffset = self.n_r
-        offsets = enum_nodes[ [0, 0, goffset, goffset], [0, 1, 1, 0] ]
+        offsets = enum_nodes[[0, 0, goffset, goffset], [0, 1, 1, 0]]
         #
         # The number is determined by putting 1 into inactive dimensions and
         # n_t into the active dimensions.
@@ -313,10 +323,10 @@ class MATS2DRTraceCylinder(RTrace):
         if self.var_warp_on:
             self._warp_field = []
 
-    view = View(HSplit(VGroup (Item('var_warp_on'),
-                                  VGroup('var_axis', style='readonly'),
-                                  VGroup('var_surface', style='readonly'),
-                                  VGroup('record_on', 'clear_on'),
-                                  VGroup(Item('refresh_button', show_label=False)),),
-                         ),
-                 resizable=True)
+    view = View(HSplit(VGroup(Item('var_warp_on'),
+                              VGroup('var_axis', style='readonly'),
+                              VGroup('var_surface', style='readonly'),
+                              VGroup('record_on', 'clear_on'),
+                              VGroup(Item('refresh_button', show_label=False)),),
+                       ),
+                resizable=True)

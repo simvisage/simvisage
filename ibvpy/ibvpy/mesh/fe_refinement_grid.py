@@ -1,32 +1,19 @@
 
-from etsproxy.traits.api import \
-    Instance, Array, Int, on_trait_change, Property, cached_property, \
-    List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
-    Callable, Dict, Tuple, Class, Event
-
-import traits.has_traits
-traits.has_traits.CHECK_INTERFACES = 2
-
-from traitsui.api import View, Item, HSplit, Group, TabularEditor, Include
-from traitsui.tabular_adapter import TabularAdapter
-
 from numpy import array, copy, zeros, array_equal, repeat, arange, append, vstack, hstack
+from traits.api import \
+    Instance, Array, Int, on_trait_change, Property, cached_property, \
+    List, Button, implements,  \
+    Event
+from traitsui.api import View, Item, Include
 
-from ibvpy.core.sdomain import \
-    SDomain
-
-from ibvpy.fets.i_fets_eval import IFETSEval
-from mathkit.level_set.level_set import ILevelSetFn, SinLSF
-from fe_grid import FEGrid, MElem, point_list_tabular_editor
-from fe_subdomain import FESubDomain
+from fe_grid import FEGrid, MElem
 from fe_refinement_level import FERefinementLevel
 from i_fe_uniform_domain import IFEUniformDomain
 from ibvpy.dots.subdots_eval import SubDOTSEval
-
+from ibvpy.fets.i_fets_eval import IFETSEval
 from ibvpy.mesh.cell_grid.cell_array import ICellArraySource
 from ibvpy.mesh.cell_grid.cell_spec import CellSpec
 from ibvpy.rtrace.rt_domain import RTraceDomain
-from ibvpy.rtrace.rt_domain_field import RTraceSubDomainField
 
 
 class FERefinementGrid(FERefinementLevel):

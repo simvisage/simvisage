@@ -11,7 +11,7 @@ from mayavi.preferences.api import preference_manager
 import os.path
 import sys
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Instance, Int, \
     on_trait_change
 from ibv_model_plugin import IBVModelPlugin
