@@ -2,15 +2,12 @@
 """ The entry point for an Envisage application. """
 
 # Standard library imports.
-import sys
-import os.path
 import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from mayavi.plugins.app import setup_logger
-from traits.api import List, Instance
-from envisage.api import Plugin, ServiceOffer, ExtensionPoint
+from traits.api import List
+from envisage.api import Plugin
 from pyface.workbench.api import Perspective, PerspectiveItem
 
 logger = logging.getLogger()

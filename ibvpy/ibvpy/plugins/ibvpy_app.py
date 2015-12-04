@@ -8,10 +8,9 @@
 import logging
 from mayavi.core.customize import get_custom_plugins
 from mayavi.preferences.api import preference_manager
-import os.path
 import sys
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Instance, Int, \
     on_trait_change
 from ibv_model_plugin import IBVModelPlugin
@@ -190,7 +189,7 @@ class IBVPyApp(HasTraits):
         if trait_name != 'started' or not new:
             return
         app = self.application
-        from etsproxy.mayavi.plugins.script import Script
+        from mayavi.plugins.script import Script
         window = app.workbench.active_window
         # Set our script instance.
         self.script = window.get_service(Script)

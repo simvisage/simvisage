@@ -1,26 +1,20 @@
 
-from etsproxy.traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    Dict, Property, cached_property, WeakRef, Delegate, \
-    ToolbarButton, on_trait_change
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit, Spring
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-import pickle
 import os
+import pickle
+from traits.api import \
+    Array, List, Callable, \
+    Instance, Int, Str, \
+    ToolbarButton, on_trait_change
+from traitsui.api import \
+    Item, View, HGroup, VGroup, VSplit, HSplit, Spring
+from traitsui.menu import \
+    OKButton, CancelButton
 
-import numpy as np
 from ibvpy.api import RTrace
-
 from mathkit.mfn import MFnLineArray
 from mathkit.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
 from mathkit.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
+import numpy as np
 
 
 class RTraceGraph(RTrace):
@@ -218,6 +212,9 @@ class RTraceArraySnapshot(RTrace):
     idx = Int(-1)
 
     trace = Instance(MFnLineArray)
+
+    x = Array(float)
+    y = Array(float)
 
     def _trace_default(self):
         return MFnLineArray()

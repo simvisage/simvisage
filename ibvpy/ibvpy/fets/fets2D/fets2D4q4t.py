@@ -1,32 +1,19 @@
-from etsproxy.traits.api import \
+from numpy import \
+    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
+    identity
+from scipy.linalg import \
+    inv
+from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
 
-import traits.has_traits
-traits.has_traits.CHECK_INTERFACES = 2
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
-    identity
-
-from scipy.linalg import \
-    inv
-
 from ibvpy.fets.fets_eval import FETSEval
+
 
 #-------------------------------------------------------------------------
 # FETS2D4T - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)
 #-------------------------------------------------------------------------
-
-
 class FETS2D4Q4T(FETSEval):
 
     debug_on = True
@@ -134,8 +121,8 @@ def run_example():
 
     # Discretization
     fe_grid = FEGrid(coord_max=(1., 1., 0.),
-                     shape = (2, 2),
-                     fets_eval = fets_eval)
+                     shape=(2, 2),
+                     fets_eval=fets_eval)
 
     tstepper = TS(sdomain=fe_grid,
                   bcond_list=[BCDofGroup(var='u', value=0., dims=[0],

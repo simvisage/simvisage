@@ -9,7 +9,7 @@ from os.path import dirname
 
 # Enthought library imports.
 from envisage.ui.workbench.api import WorkbenchApplication
-from etsproxy.pyface.api import AboutDialog, ImageResource, SplashScreen
+from pyface.api import AboutDialog, ImageResource, SplashScreen
 
 # Local imports.
 import mayavi.api

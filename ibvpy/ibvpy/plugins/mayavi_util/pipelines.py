@@ -1,32 +1,24 @@
-from etsproxy.traits.api import \
-    Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
-    Instance, Int, Trait, Str, \
-    Callable, List, TraitDict, Any, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, WeakRef, implements, Property, cached_property, Tuple, \
-    Dict
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit, TableEditor, ListEditor
+from traits.api import \
+    Bool, Enum, HasTraits, \
+    Instance, Trait, Str, \
+    Callable, Tuple
 
 from numpy import \
-    array, hstack, zeros
+    array
 
 from tvtk.api import tvtk
 # Mayavi related imports
 #
 from mayavi.sources.api import VTKDataSource, VTKFileReader
-from mayavi.modules.api import Outline, Surface
+from mayavi.modules.api import Surface
 from mayavi.filters.api import ExtractTensorComponents, \
-    ExtractVectorComponents, WarpVector
+    ExtractVectorComponents
 
-from mayavi.core.source import Source
 from mayavi.filters.api import WarpVector
 
 # MayaVI engine used for the pipeline construction
 #
 from ibvpy.plugins.mayavi_engine import get_engine
-
-import os
 
 
 class MVStructuredGrid(HasTraits):
@@ -58,8 +50,8 @@ class MVStructuredGrid(HasTraits):
         super(MVStructuredGrid, self).__init__(**kw)
         e = get_engine()
 
-        from etsproxy.mayavi.modules.api import \
-            Outline, Surface, StructuredGridOutline, GridPlane
+        from mayavi.modules.api import \
+            StructuredGridOutline, GridPlane
 
         self.src = VTKDataSource(name=self.name, data=self.pd)
         e.add_source(self.src)
@@ -89,8 +81,6 @@ class MVStructuredGrid(HasTraits):
             self.pd.point_data.tensors = self.tensors()
 
         self.src.data_changed = True
-
-from tvtk.api import tvtk
 
 
 class MVUnstructuredGrid(HasTraits):
@@ -255,7 +245,7 @@ class MVPolyData(MVPBase):
         e = get_engine()
 
         super(MVPolyData, self).__init__(**kw)
-        from etsproxy.mayavi.modules.api import Outline, Surface, Labels
+        from mayavi.modules.api import Outline, Surface, Labels
 
         self.src = VTKDataSource(name=self.name, data=self.pd)
         e.add_source(self.src)
@@ -274,7 +264,7 @@ class MVPointLabels(MVPBase):
         e = get_engine()
 
         super(MVPointLabels, self).__init__(**kw)
-        from etsproxy.mayavi.modules.api import Outline, Surface, Labels
+        from mayavi.modules.api import Outline, Surface, Labels
 
         self.src = VTKDataSource(name=self.name, data=self.pd)
         e.add_source(self.src)

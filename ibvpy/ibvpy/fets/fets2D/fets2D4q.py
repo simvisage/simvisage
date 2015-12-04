@@ -1,30 +1,16 @@
 
-import sys
-print sys.path
-
-from etsproxy.traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-import traits.has_traits
-traits.has_traits.CHECK_INTERFACES = 2
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
 from numpy import \
     array, zeros, dot, hstack, \
     identity
-
 from scipy.linalg import \
     inv
+import sys
 
+from traits.api import \
+    Array, Float, Int
 from ibvpy.fets.fets_eval import FETSEval
+print sys.path
+
 
 #-------------------------------------------------------------------------
 # FETS2D4Q - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)
@@ -156,8 +142,8 @@ def example_with_new_domain():
 
     # Discretization
     fe_grid = FEGrid(coord_max=(10., 4., 0.),
-                     shape = (10, 3),
-                     fets_eval = fets_eval)
+                     shape=(10, 3),
+                     fets_eval=fets_eval)
 
     bcg = BCDofGroup(var='u', value=0., dims=[0],
                      get_dof_method=fe_grid.get_left_dofs)

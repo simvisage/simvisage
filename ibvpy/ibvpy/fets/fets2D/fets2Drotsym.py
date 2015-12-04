@@ -4,43 +4,24 @@ Created on Sep 3, 2009
 @author: jakub
 '''
 
-from etsproxy.traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Property, cached_property, \
-    DelegatesTo
-
-import traits.has_traits
-traits.has_traits.CHECK_INTERFACES = 2
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
+from math import pi, sqrt
 from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
-    identity, append, copy
-
+    array, zeros, dot, \
+    append, copy
 from scipy.linalg import \
     inv
-
-from math import pi, sqrt
+from traits.api import \
+    Instance, Property, \
+    DelegatesTo
 
 from ibvpy.fets.fets_eval import \
     FETSEval
-from ibvpy.fets.fets_eval_prototyped import \
-    FETSEvalPrototyped
+
 
 #-------------------------------------------------------------------------
 # FETS2D4Q - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)
 #-------------------------------------------------------------------------
-
 # class FETS2Drotsym( FETSEvalPrototyped ):
-
-
 class FETS2Drotsym(FETSEval):
 
     debug_on = True
@@ -136,9 +117,8 @@ class FETS2Drotsym(FETSEval):
 
 def example_with_new_domain():
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainListField, \
-        RTraceDomainListInteg, TLoop, \
-        TLine, BCDof, IBVPSolve as IS, DOTSEval, BCSlice
+        TStepper as TS, RTraceDomainListField, TLoop, \
+        TLine, BCSlice
     from ibvpy.mats.mats2D.mats2D_elastic.mats2D_elastic import MATS2DElastic
     from ibvpy.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
     from ibvpy.fets.fets2D.fets2D4q import FETS2D4Q
@@ -171,17 +151,17 @@ def example_with_new_domain():
     # Discretization
     fe_grid = FEGrid(  # coord_min = (0.,radius/2.,0.),
         coord_max=(1., radius, 0.),
-        shape = (2, 2),
-        fets_eval = fets_eval)
+        shape=(2, 2),
+        fets_eval=fets_eval)
 
     tstepper = TS(sdomain=fe_grid,
                   bcond_list=[
                       BCSlice(var='u', value=0., dims=[0],
-                                           slice = fe_grid[0, :, 0,:] ), 
+                              slice=fe_grid[0, :, 0, :]),
                       BCSlice(var='u', value=0., dims=[1],
                               slice=fe_grid[0, 0, 0, 0]),
                       BCSlice(var='u', value=1.e-3, dims=[0],
-                                           slice = fe_grid[-1, :, -1,:] ),
+                              slice=fe_grid[-1, :, -1, :]),
                   ],
 
                   rtrace_list=[

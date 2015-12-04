@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -11,6 +11,7 @@
 # Thanks for using Simvisage open source!
 #
 # Created on Sep 8, 2009 by: rch
+from envisage.ui.workbench.api import WorkbenchApplication
 
 from etsproxy.traits.api import \
     Instance, Property, cached_property, implements, List, \
@@ -29,174 +30,190 @@ from ibvpy.mats.mats1D import \
 
 from numpy import zeros, zeros_like, array
 
-mats_klasses = [ MATS1DElastic,
-                 MATS1DPlastic,
-                 MATS1DDamage ]
+mats_klasses = [MATS1DElastic,
+                MATS1DPlastic,
+                MATS1DDamage]
 
-class MATS1D5Bond( MATS1D5Eval ):
+
+class MATS1D5Bond(MATS1D5Eval):
+
     '''Bond model for two phases interacting over an interface with zero thickness.
-    
+
     Both phases can be associated with arbitrary 1D mats model.
     Interface behavior can be defined for both sliding and opening using 1D mats models.
     '''
-    implements( IMATSEval )
+    implements(IMATSEval)
 
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Submodels constituting the interface behavior
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
-    mats_phase1 = EitherType( klasses = mats_klasses,
-                              desc = 'Material model of phase 1' )
-    mats_ifslip = EitherType( klasses = mats_klasses,
-                              desc = 'Material model for interface slippage' )
-    mats_ifopen = EitherType( klasses = mats_klasses,
-                              desc = 'Material model for interface opening' )
-    mats_phase2 = EitherType( klasses = mats_klasses,
-                              desc = 'Material model for phase 2' )
+    mats_phase1 = EitherType(klasses=mats_klasses,
+                             desc='Material model of phase 1')
+    mats_ifslip = EitherType(klasses=mats_klasses,
+                             desc='Material model for interface slippage')
+    mats_ifopen = EitherType(klasses=mats_klasses,
+                             desc='Material model for interface opening')
+    mats_phase2 = EitherType(klasses=mats_klasses,
+                             desc='Material model for phase 2')
 
-    def _mats_phase1_default( self ):
-        return MATS1DElastic()
-    def _mats_ifslip_default( self ):
-        return MATS1DElastic()
-    def _mats_ifopen_default( self ):
-        return MATS1DElastic()
-    def _mats_phase2_default( self ):
+    def _mats_phase1_default(self):
         return MATS1DElastic()
 
-    traits_view = View( Item( 'mats_phase1@' ),
-                        Item( 'mats_ifslip@' ),
-                        Item( 'mats_ifopen@' ),
-                        Item( 'mats_phase2@' ),
-                        resizable = True,
-                        scrollable = True,
-                        width = 0.8,
-                        height = 0.9,
-                        buttons = ['OK', 'Cancel'] )
+    def _mats_ifslip_default(self):
+        return MATS1DElastic()
 
-    #-----------------------------------------------------------------------------------------------
-    # Subsidiary maps to enable generic loop over the material models 
-    #-----------------------------------------------------------------------------------------------
+    def _mats_ifopen_default(self):
+        return MATS1DElastic()
+
+    def _mats_phase2_default(self):
+        return MATS1DElastic()
+
+    traits_view = View(Item('mats_phase1@'),
+                       Item('mats_ifslip@'),
+                       Item('mats_ifopen@'),
+                       Item('mats_phase2@'),
+                       resizable=True,
+                       scrollable=True,
+                       width=0.8,
+                       height=0.9,
+                       buttons=['OK', 'Cancel'])
+
+    #-------------------------------------------------------------------------
+    # Subsidiary maps to enable generic loop over the material models
+    #-------------------------------------------------------------------------
 
     # order of the material model names used for association in generic loops
-    _mats_names = List( ['mats_phase1', 'mats_slip', 'mats_open', 'mats_phase2'] )
+    _mats_names = List(
+        ['mats_phase1', 'mats_slip', 'mats_open', 'mats_phase2'])
 
     # hidden list of all four involved mats
-    _mats_list = Property( depends_on = 'mats_phase1, mats_slip, mats_open, mats_phase2' )
+    _mats_list = Property(
+        depends_on='mats_phase1, mats_slip, mats_open, mats_phase2')
+
     @cached_property
-    def _get__mats_list( self ):
-        return [self.mats_phase1, self.mats_ifslip, self.mats_ifopen, self.mats_phase2 ]
+    def _get__mats_list(self):
+        return [self.mats_phase1, self.mats_ifslip, self.mats_ifopen, self.mats_phase2]
 
     # state array map with the sizes of the array
-    _state_sizes = Property( depends_on = 'mats_phase1, mats_slip, mats_open, mats_phase2' )
+    _state_sizes = Property(
+        depends_on='mats_phase1, mats_slip, mats_open, mats_phase2')
+
     @cached_property
-    def _get__state_sizes( self ):
-        return array( [mats.get_state_array_size()
-                        for mats in self._mats_list ], dtype = 'int_' )
+    def _get__state_sizes(self):
+        return array([mats.get_state_array_size()
+                      for mats in self._mats_list], dtype='int_')
 
     # state array map with the sizes of the array
-    _state_offsets = Property( depends_on = 'mats_phase1, mats_slip, mats_open, mats_phase2' )
+    _state_offsets = Property(
+        depends_on='mats_phase1, mats_slip, mats_open, mats_phase2')
+
     @cached_property
-    def _get__state_offsets( self ):
-        offsets = zeros_like( self._state_sizes )
+    def _get__state_offsets(self):
+        offsets = zeros_like(self._state_sizes)
         offsets[1:] = self._state_sizes[:-1].cumsum()
         return offsets
 
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Setup for computation within a supplied spatial context
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
-    def get_state_array_size( self ):
+    def get_state_array_size(self):
         '''
         Return the number of floats to be saved
         '''
         return self._state_sizes.cumsum()[-1]
 
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Evaluation - get the corrector and predictor
-    #-----------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
-    def get_corr_pred( self, sctx, eps_app_eng, d_eps_app_eng, tn, tn1, *args, **kw ):
+    def get_corr_pred(self, sctx, eps_app_eng, d_eps_app_eng, tn, tn1, *args, **kw):
         '''
         Corrector predictor computation.
         @param eps_app_eng input variable - engineering strain
         '''
 
-        sig_app_eng = zeros_like( eps_app_eng )
-        # @todo [rch] dirty - when called form response tracer        
-        if isinstance( d_eps_app_eng, int ) and d_eps_app_eng == 0:
-            d_eps_app_eng = zeros_like( eps_app_eng )
+        sig_app_eng = zeros_like(eps_app_eng)
+        # @todo [rch] dirty - when called form response tracer
+        if isinstance(d_eps_app_eng, int) and d_eps_app_eng == 0:
+            d_eps_app_eng = zeros_like(eps_app_eng)
 
-        D_mtx = zeros( ( eps_app_eng.shape[0], eps_app_eng.shape[0] ), dtype = 'float_' )
+        D_mtx = zeros(
+            (eps_app_eng.shape[0], eps_app_eng.shape[0]), dtype='float_')
 
         mats_state_array = sctx.mats_state_array
 
-        for i, mats in enumerate( self._mats_list ):
+        for i, mats in enumerate(self._mats_list):
 
             # extract the stress components
             eps, d_eps = eps_app_eng[i], d_eps_app_eng[i]
             size = self._state_sizes[i]
             offset = self._state_offsets[i]
-            sctx.mats_state_array = mats_state_array[ offset: offset + size ]
+            sctx.mats_state_array = mats_state_array[offset: offset + size]
 
-            sig_app_eng[i], D_mtx[i, i] = mats.get_corr_pred( sctx, eps, d_eps, tn, tn1 )
+            sig_app_eng[i], D_mtx[i, i] = mats.get_corr_pred(
+                sctx, eps, d_eps, tn, tn1)
 
         sctx.mats_state_array = mats_state_array
 
         return sig_app_eng, D_mtx
 
-    def get_sig1( self, sctx, eps_app_eng, *args, **kw ):
-        sig_eng, D_mtx = self.get_corr_pred( sctx, eps_app_eng, 0, 0, 0 )
+    def get_sig1(self, sctx, eps_app_eng, *args, **kw):
+        sig_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
         return sig_eng[0:1]
 
-    def get_sig2( self, sctx, eps_app_eng, *args, **kw ):
-        sig_eng, D_mtx = self.get_corr_pred( sctx, eps_app_eng, 0, 0, 0 )
+    def get_sig2(self, sctx, eps_app_eng, *args, **kw):
+        sig_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
         return sig_eng[3:]
 
-    def get_shear_flow( self, sctx, eps_app_eng, *args, **kw ):
-        sig_eng, D_mtx = self.get_corr_pred( sctx, eps_app_eng, 0, 0, 0 )
+    def get_shear_flow(self, sctx, eps_app_eng, *args, **kw):
+        sig_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
         return sig_eng[1:2]
 
-    def get_cohesive_stress( self, sctx, eps_app_eng, *args, **kw ):
-        sig_eng, D_mtx = self.get_corr_pred( sctx, eps_app_eng, 0, 0, 0 )
+    def get_cohesive_stress(self, sctx, eps_app_eng, *args, **kw):
+        sig_eng, D_mtx = self.get_corr_pred(sctx, eps_app_eng, 0, 0, 0)
         return sig_eng[2:3]
 
     rte_dict = Property
-    def _get_rte_dict( self ):
+
+    def _get_rte_dict(self):
 
         rte_dict = {}
         ix_maps = [0, 1, 2, 3]
         for name, mats, ix_map, size, offset in \
-            zip( self._mats_names, self._mats_list, ix_maps, self._state_sizes,
-                 self._state_offsets ):
+            zip(self._mats_names, self._mats_list, ix_maps, self._state_sizes,
+                self._state_offsets):
             for key, v_eval in mats.rte_dict.items():
 
-                __call_v_eval = RTE1D5Bond( v_eval = v_eval,
-                                            name = name + '_' + key,
-                                            size = size,
-                                            offset = offset,
-                                            ix_map = ix_map )
+                __call_v_eval = RTE1D5Bond(v_eval=v_eval,
+                                           name=name + '_' + key,
+                                           size=size,
+                                           offset=offset,
+                                           ix_map=ix_map)
 
-                rte_dict[ name + '_' + key ] = __call_v_eval
-
+                rte_dict[name + '_' + key] = __call_v_eval
 
         # sigma is also achievable through phase1_sig_app and phase_2_sig_app
-        extra_rte_dict = {'sig1' : self.get_sig1,
-                          'sig2' : self.get_sig2,
-                          'shear_flow' : self.get_shear_flow,
-                          'cohesive_stress' : self.get_cohesive_stress,
+        extra_rte_dict = {'sig1': self.get_sig1,
+                          'sig2': self.get_sig2,
+                          'shear_flow': self.get_shear_flow,
+                          'cohesive_stress': self.get_cohesive_stress,
                           }
-        rte_dict.update( extra_rte_dict )
+        rte_dict.update(extra_rte_dict)
         return rte_dict
-    #-------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Methods required by the mats_explore tool
-    #-------------------------------------------------------------------------------------
-    def new_cntl_var( self ):
-        return zeros( 4, 'float_' )
+    #-------------------------------------------------------------------------
 
-    def new_resp_var( self ):
-        return zeros( 4, 'float_' )
+    def new_cntl_var(self):
+        return zeros(4, 'float_')
 
-class RTE1D5Bond( HasTraits ):
+    def new_resp_var(self):
+        return zeros(4, 'float_')
+
+
+class RTE1D5Bond(HasTraits):
 
     v_eval = Callable
     name = String
@@ -204,12 +221,13 @@ class RTE1D5Bond( HasTraits ):
     offset = Int
     ix_map = Int
 
-    def __call__( self, sctx, u, *args, **kw ):
-        u_x = array( [ u[ self.ix_map ] ], dtype = 'float' )
+    def __call__(self, sctx, u, *args, **kw):
+        u_x = array([u[self.ix_map]], dtype='float')
         # save the spatial context
         mats_state_array = sctx.mats_state_array
-        sctx.mats_state_array = mats_state_array[ self.offset: self.offset + self.size ]
-        result = self.v_eval( sctx, u_x, *args, **kw )
+        sctx.mats_state_array = mats_state_array[
+            self.offset: self.offset + self.size]
+        result = self.v_eval(sctx, u_x, *args, **kw)
         # put the spatial context back
         sctx.mats_state_array = mats_state_array
 
