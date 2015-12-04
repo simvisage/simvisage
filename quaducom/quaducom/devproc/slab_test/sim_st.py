@@ -19,8 +19,12 @@ from ibvpy.fets.fets3D.fets3D8h20u import \
     FETS3D8H20U
 from ibvpy.fets.fets3D.fets3D8h27u import \
     FETS3D8H27U
+from ibvpy.fets.fets3D.fets3D8h32u import \
+    FETS3D8H32U
 from ibvpy.fets.fets2D5.fets2D58h20u import \
     FETS2D58H20U
+from ibvpy.fets.fets2D5.fets2D58h32u import \
+    FETS2D58H32U
 
 from ibvpy.mesh.fe_grid import \
     FEGrid
@@ -280,7 +284,7 @@ class SimST(IBVModel):
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
-                         zoffset= -self.thickness_supprt)
+                         zoffset=-self.thickness_supprt)
 
     #----------------------------------------------------------------------------------
     # mats
@@ -397,7 +401,11 @@ class SimST(IBVModel):
                            depends_on='input_change')
     @cached_property
     def _get_specmn_fets(self):
-        fets = FETS2D58H20U(mats_eval=self.specmn_mats)
+        # NOTE: chose number of notes correspondingly to 'supprt_fets'!
+        # quadratic serendipity elements:
+#         fets = FETS2D58H20U(mats_eval=self.specmn_mats)
+        # cubic serendipity elements:
+        fets = FETS2D58H32U(mats_eval=self.specmn_mats)
         fets.vtk_r *= self.vtk_r
         return fets
 
@@ -405,7 +413,7 @@ class SimST(IBVModel):
                            depends_on='input_change')
     @cached_property
     def _get_plain_concrete_fets(self):
-        fets = FETS2D58H20U(mats_eval=self.plain_concrete_mats)
+        fets = FETS2D58H32U(mats_eval=self.plain_concrete_mats)
         fets.vtk_r *= self.vtk_r
         return fets
 
@@ -413,7 +421,7 @@ class SimST(IBVModel):
                            depends_on='input_change')
     @cached_property
     def _get_elstmr_fets(self):
-        fets = FETS2D58H20U(mats_eval=self.elstmr_mats)
+        fets = FETS2D58H32U(mats_eval=self.elstmr_mats)
         fets.vtk_r *= self.vtk_r
         return fets
 
@@ -422,7 +430,10 @@ class SimST(IBVModel):
     @cached_property
     def _get_supprt_fets(self):
         # linear-elastic behavior quadratic serendipity elements
-        fets = FETS3D8H20U(mats_eval=self.supprt_mats)
+        # quadratic serendipity elements:
+#         fets = FETS3D8H20U(mats_eval=self.supprt_mats)
+        # cubic serendipity elements:
+        fets = FETS3D8H32U(mats_eval=self.supprt_mats)
         fets.vtk_r *= self.vtk_r
         return fets
 
@@ -551,6 +562,8 @@ class SimST(IBVModel):
     def _get_tloop(self):
 
         specmn = self.specmn_fe_grid
+        print 'XXX specmn_fe_grid.n_dofs', specmn.n_dofs
+        print 'XXX specmn_fe_grid.dof_grid', specmn.dof_grid.dofs.shape
 
         if self.elstmr_flag:
             elstmr = self.elstmr_fe_grid
@@ -854,6 +867,16 @@ class SimST(IBVModel):
 
         if self.elstmr_flag:
             bcond_list += [ bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp ]
+
+        print 'bcond_list', bcond_list
+        print 'bcond_list', len(bcond_list)
+        print 'bcond_list', np.product(bcond_list[1].dofs.shape)
+        print 'bcond_list', [np.product(bcond_list[0].dofs.shape),
+                             np.product(bcond_list[1].dofs.shape),
+                             np.product(bcond_list[2].dofs.shape),
+                             np.product(bcond_list[3].dofs.shape),
+                             np.product(bcond_list[4].dofs.shape),
+                             np.product(bcond_list[5].dofs.shape)]
 
         #--------------------------------------------------------------
         # ts

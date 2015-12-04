@@ -59,6 +59,9 @@ from matresdev.db.matdb.trc.composite_cross_section \
 
 from matresdev.db.exdb.ex_run_table import ExRunClassExt
 
+from matresdev.db.exdb.loadtxt_novalue import loadtxt_novalue
+
+import os
 
 class ExpTTDB(ExType):
 
@@ -87,9 +90,9 @@ class ExpTTDB(ExType):
 
     width = Float(0.120, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    gauge_length = Float(0.250, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.40, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
-    age = Int(29, unit='d', input=True, table_field=True,
+    age = Int(28, unit='d', input=True, table_field=True,
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''
@@ -123,7 +126,7 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-05-11'
 #        fabric_layout_key = 'NWM3-016-09-b1'
         fabric_layout_key = 'CAR-3300-EP_Q90'
-#        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+#         fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
@@ -219,6 +222,72 @@ class ExpTTDB(ExType):
     # -------------------------------------------------------------------------
     # define processing
     # -------------------------------------------------------------------------
+    def _read_data_array(self):
+        ''' Read the experiment data.
+        '''
+        if os.path.exists(self.data_file):
+
+            print 'READ FILE'
+            # change the file name dat with asc
+            file_split = self.data_file.split('.')
+            file_name = file_split[0] + '.csv'
+
+            # for data exported into a single csv-file
+            if os.path.exists(file_name):
+                print 'check csv-file'
+                file_ = open(file_name, 'r')
+                header_line_1 = file_.readline().split()
+
+                if header_line_1[0].split(';')[0] == 'Datum/Uhrzeit':
+                    print 'read csv-file'
+                    # for data exported into down sampled data array
+                    try:
+                        _data_array = np.loadtxt(file_name,
+                                      delimiter=';',
+                                      skiprows=2)
+                        # reset time[sec] in order to start at 0.
+                        _data_array[:0] -= _data_array[0:0]
+                    except ValueError:
+                        _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2,
+                          converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
+                                      4: comma2dot, 5: comma2dot, 6: comma2dot })
+                        # reset time[sec] in order to start at 0.
+                        _data_array[:0] -= _data_array[0:0]
+#                    # downsizing data array
+#                    print '_data_array.shape', _data_array.shape
+#                    _data_array = scaledown_data(_data_array, 100)
+#                    print '_data_array.shape', _data_array.shape
+                else:
+                    # for data exported into DAT and ASC-files
+                    # try to use loadtxt to read data file
+                    try:
+                        _data_array = np.loadtxt(file_name,
+                                      delimiter=';')
+
+                    # loadtxt returns an error if the data file contains
+                    # 'NOVALUE' entries. In this case use the special
+                    # method 'loadtxt_novalue'
+                    except ValueError:
+                        _data_array = loadtxt_novalue(file_name)
+
+            if not os.path.exists(file_name):
+                file_name = file_split[0] + '.ASC'
+                if not os.path.exists(file_name):
+                    raise IOError, 'file %s does not exist' % file_name
+
+                # for data exported into DAT and ASC-files
+                # try to use loadtxt to read data file
+                try:
+                    _data_array = np.loadtxt(file_name,
+                                  delimiter=';')
+
+                # loadtxt returns an error if the data file contains
+                # 'NOVALUE' entries. In this case use the special
+                # method 'loadtxt_novalue'
+                except ValueError:
+                    _data_array = loadtxt_novalue(file_name)
+
+            self.data_array = _data_array
 
     def process_source_data(self):
         '''Extend the default data processing with

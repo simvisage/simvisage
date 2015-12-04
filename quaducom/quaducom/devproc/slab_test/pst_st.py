@@ -186,16 +186,30 @@ if __name__ == '__main__':
             supprt_flag=True,
             geo_st_flag=True,
             #
-            shape_xy=11,
+#             shape_xy=6,  # coarse mesh
+            shape_xy=11,  # medium mesh
+#             shape_xy=20,  # fine mesh
             shape_R=2,
             shape_z=2,
             #
             w_max=-0.050,
             tstep=0.005,
-            tmax=0.575,
+            tmax=0.66,
+
+            # quadratic elements (ngp=2x2x2) and w_max = 0.050m --> w_u=0.0289m
+#             w_max=-0.050,
+#             tmax=0.575,
+
+            # cubic elements (ngp=4x4x4) and w_max = 0.070m --> w_u=0.0322m
+#            w_max=-0.050,
+#            tmax=0.6450, # no failure reached up to that load level!
+            #
+#            w_max=-0.070,
+#             tmax=0.4600,
             #
             ord=np.inf,  # "norm = max(abs(x_i))"
             tolerance=0.00005,  # [MN]0.0001#1e-6#1e-8#0.0005
+#             tolerance=0.00005,  # [MN]0.0001#1e-6#1e-8#0.0005
             #
             # 'factor_eps_fail' = 1.0 (default)
             phi_fn_class=PhiFnGeneralExtended
