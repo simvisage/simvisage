@@ -58,17 +58,17 @@ p.rcParams.update(params)
 # TTb-1C-3cm-3300EP
 #--------------------
 # test_files = [ 'TTb-1C-3cm-0-3300EP-V6_cyc-Aramis2d-sideview-notched.DAT',
-#                'TTb-1C-3cm-0-3300EP-V1_Aramis2d.DAT',
+# #                'TTb-1C-3cm-0-3300EP-V1_Aramis2d.DAT',
 #                'TTb-1C-3cm-0-3300EP-V2_Aramis2d.DAT']
 #
 # test_file_path = os.path.join(simdb.exdata_dir,
 #                              'tensile_tests', 'buttstrap_clamping',
 #                              '2015-08-10_TTb-1C-3cm-0-3300EP_cyc-Aramis2d')
 #
-# n_rov_list = [9, 9, 9]
-# color_list = ['g', 'b', 'r']
-# linestyle_list = ['-', '-', '-']
-# plot_asc_list = [1, 1, 1]
+# n_rov_list = [9, 9]
+# color_list = ['k', 'grey']
+# linestyle_list = ['-', '-']
+# plot_asc_list = [1, 1]
 # xlim = 0.025
 # ylim = 3500.
 
@@ -83,7 +83,7 @@ p.rcParams.update(params)
 #                              '2015-08-03_TTb-2C-14mm-0-3300SBR_cyc-Aramis2d')
 #
 # n_rov_list = [9, 9]
-# color_list = ['g', 'b']
+# color_list = ['k', 'grey']
 # linestyle_list = ['-', '-']
 # plot_asc_list = [0, 1]
 # xlim = 0.010
@@ -93,19 +93,19 @@ p.rcParams.update(params)
 #--------------------
 # TTb-2C-14mm-800SBR
 #--------------------
-# test_files = [ 'TTb-2C-1cm-0-800SBR-V4_cyc-Aramis2d.DAT',
-#                'TTb-2C-1cm-0-800SBR-V1_Aramis2d.DAT']
-#
-# test_file_path = os.path.join(simdb.exdata_dir,
-#                              'tensile_tests', 'buttstrap_clamping',
-#                              '2015-04-20_TTb-2C-1cm-0-800SBR_cyc-Aramis2d')
-#
-# n_rov_list = [9, 9]
-# color_list = ['g', 'b']
-# linestyle_list = ['-', '-']
-# plot_asc_list = [0, 1]
-# xlim = 0.015
-# ylim = 2000.
+test_files = [ 'TTb-2C-1cm-0-800SBR-V4_cyc-Aramis2d.DAT',
+               'TTb-2C-1cm-0-800SBR-V1_Aramis2d.DAT']
+
+test_file_path = os.path.join(simdb.exdata_dir,
+                             'tensile_tests', 'buttstrap_clamping',
+                             '2015-04-20_TTb-2C-1cm-0-800SBR_cyc-Aramis2d')
+
+n_rov_list = [9, 9]
+color_list = ['k', 'grey']
+linestyle_list = ['-', '-']
+plot_asc_list = [0, 1]
+xlim = 0.015
+ylim = 2000.
 #--------------------
 
 
@@ -127,7 +127,7 @@ def plot_all():
         axes = p.subplot(111)
 
         if plot_asc_list[idx]:
-            e._plot_sigtex_eps_asc(axes, color=color_list[idx], plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)  # [0:24])
+            e._plot_sigtex_eps_asc(axes, color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)  # [0:24])
         else:
             e._plot_sigtex_eps(axes, color=color_list[idx], plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)  # [0:24])
 
