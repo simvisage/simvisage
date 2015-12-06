@@ -363,17 +363,17 @@ class ExpBT4PT(ExType):
 
             # set attributes of displacement (original data before ironing):
             #
-            DB_mi_orig = self.data_array[:, 5]
+            DB_mi_orig = np.copy(self.data_array[:, 5])
             DB_mi_orig -= DB_mi_orig[0]
             DB_mi_orig *= -1
             self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
 
-            DB_li_orig = self.data_array[:, 3]
+            DB_li_orig = np.copy(self.data_array[:, 3])
             DB_li_orig -= DB_li_orig[0]
             DB_li_orig *= -1
             self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
 
-            DB_re_orig = self.data_array[:, 7]
+            DB_re_orig = np.copy(self.data_array[:, 7])
             DB_re_orig -= DB_re_orig[0]
             DB_re_orig *= -1
             self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
@@ -439,6 +439,7 @@ class ExpBT4PT(ExType):
     #--------------------------------------------------------------------------------
 
     plot_templates = {'force / deflection (center)'            : '_plot_force_deflection_center',
+                      'force / deflection (center) - original' : '_plot_force_deflection_center_orig',
                       'smoothed force / deflection (center)'   : '_plot_smoothed_force_deflection_center',
                       'force / deflection (thirdpoints)'       : '_plot_force_deflection_thirdpoints',
                       'strain (top/bottom) / force'            : '_plot_strain_top_bottom_force',
@@ -458,14 +459,38 @@ class ExpBT4PT(ExType):
         # NOTE: processed data returns positive values for force and displacement
         return argmax(self.Kraft)
 
-    def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1.):
+    def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1., label=None):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot(w_asc, f_asc, color='black', linewidth=linewidth)
+        axes.plot(w_asc, f_asc, linewidth=linewidth, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+        # draw linear stiffness for 2 mm range
+        f_max = f_asc[-1]
+        K_c = self.K_bending_elast_c
+        w_linear = np.array([0., f_max / K_c])
+        F_linear = np.array([0., f_max])
+        axes.plot(w_linear, F_linear, linestyle='--', color='black', linewidth=linewidth)
+
+    def _plot_force_deflection_center_orig(self, axes, offset_w=0., color='black', linewidth=1., label=None):
+        '''plot the original data before jumps has been processed out
+        '''
+        # get only the ascending branch of the response curve
+        f_asc = self.Kraft[:self.max_force_idx + 1]
+        w_asc = self.DB_mi_orig[:self.max_force_idx + 1]
+
+        # add curves
+        #
+        axes.plot(w_asc, f_asc, linewidth=linewidth, label=label, color=color)
 
         # add axes labels
         #

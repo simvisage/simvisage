@@ -2,7 +2,6 @@
 Created on Jan 28, 2015
 
 '''
-
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
@@ -10,58 +9,110 @@ from matresdev.db.exdb import ExRun
 import os
 import numpy as np
 import pylab as p
-params = {'legend.fontsize': 10,
-          # 'legend.linewidth': 2
-          }
+
+# specify font options for plots
+params = {'legend.fontsize': 12,
+#         'legend.linewidth': 2,
+          u'font.size':15,
+          u'font.family':'serif',
+          u'font.style':'normal'}
 p.rcParams.update(params)
+# print p.rcParams.keys()
 
-test_files = [
-               'TTb-2C-14mm-0-3300EP-V1_stextz3mm.DAT',
-               'TTb-2C-14mm-0-3300EP-V2_stextz3mm.DAT',
-               'TTb-2C-14mm-0-3300EP-V1_stextz4mm.DAT',
-               'TTb-2C-14mm-0-3300EP-V2_stextz4mm.DAT',
-               'TTb-2C-14mm-0-3300EP-V1_stextz5mm.DAT',
-               'TTb-2C-14mm-0-3300EP-V2_stextz5mm.DAT',
-              ]
 
-test_file_path = os.path.join(simdb.exdata_dir,
-                              'tensile_tests', 'buttstrap_clamping',
-                              '2015-07-14_TTb-2C-14mm-0-3300EP_stexz'
-                              )
+#--------------------
+# TTb-2C-3cm-3300EP
+#--------------------
+# test_files = ['TTb-2C-3cm-0-3300EP-V4_Aramis2d.DAT',
+#             'TTb-2C-3cm-0-3300EP-V5_cyc-Aramis2d.DAT']
+#
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                              'tensile_tests', 'buttstrap_clamping',
+#                              '2015-08-18_TTb-2C-3cm-0-3300EP_cyc-Aramis-2d')
+#
+# n_rov_list = [9, 9]
+# color_list = ['g', 'b']
+# linestyle_list = ['-', '-']
+# plot_asc_list = [1, 1]
+# xlim = 0.02
+# ylim = 2000.
+
+#--------------------
+# TTb-2C-14mm-3300EP
+#--------------------
+# test_files = ['TTb-2C-14mm-0-3300EP-V2_cyc-Aramis2d.DAT',
+#               'TTb-2C-14mm-0-3300EP-V1_Aramis2d.DAT']
+#
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                              'tensile_tests', 'buttstrap_clamping',
+#                              '2015-08-11_TTb-2C-14mm-0-3300EP_cyc-Aramis2d')
+#
+# n_rov_list = [9, 9]
+# color_list = ['g', 'b']
+# linestyle_list = ['-', '-']
+# plot_asc_list = [1, 1]
+# xlim = 0.025
+# ylim = 3500.
+
+#--------------------
+# TTb-1C-3cm-3300EP
+#--------------------
+# test_files = [ 'TTb-1C-3cm-0-3300EP-V6_cyc-Aramis2d-sideview-notched.DAT',
+#                'TTb-1C-3cm-0-3300EP-V1_Aramis2d.DAT',
+#                'TTb-1C-3cm-0-3300EP-V2_Aramis2d.DAT']
+#
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                              'tensile_tests', 'buttstrap_clamping',
+#                              '2015-08-10_TTb-1C-3cm-0-3300EP_cyc-Aramis2d')
+#
+# n_rov_list = [9, 9, 9]
+# color_list = ['g', 'b', 'r']
+# linestyle_list = ['-', '-', '-']
+# plot_asc_list = [1, 1, 1]
+# xlim = 0.025
+# ylim = 3500.
+
+#--------------------
+# TTb-2C-14mm-3300SBR
+#--------------------
+# test_files = [ 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT',
+#                'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
+#
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                              'tensile_tests', 'buttstrap_clamping',
+#                              '2015-08-03_TTb-2C-14mm-0-3300SBR_cyc-Aramis2d')
+#
+# n_rov_list = [9, 9]
+# color_list = ['g', 'b']
+# linestyle_list = ['-', '-']
+# plot_asc_list = [0, 1]
+# xlim = 0.010
+# ylim = 1600.
+#--------------------
+
+#--------------------
+# TTb-2C-14mm-800SBR
+#--------------------
+# test_files = [ 'TTb-2C-1cm-0-800SBR-V4_cyc-Aramis2d.DAT',
+#                'TTb-2C-1cm-0-800SBR-V1_Aramis2d.DAT']
+#
+# test_file_path = os.path.join(simdb.exdata_dir,
+#                              'tensile_tests', 'buttstrap_clamping',
+#                              '2015-04-20_TTb-2C-1cm-0-800SBR_cyc-Aramis2d')
+#
+# n_rov_list = [9, 9]
+# color_list = ['g', 'b']
+# linestyle_list = ['-', '-']
+# plot_asc_list = [0, 1]
+# xlim = 0.015
+# ylim = 2000.
+#--------------------
+
+
+
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
-
-print 'e_list', e_list
-
-test_file = os.path.join(simdb.exdata_dir,
-                             'tensile_tests', 'buttstrap_clamping',
-                             '2015-08-11_TTb-2c-14mm-0-3300EP_cyc-Aramis2d',
-                             'TTb-2C-14mm-0-3300EP-V1_cyc-Aramis2d.DAT')
-
-e_list.append(ExRun(data_file=test_file))
-print 'len(e_list)', len(e_list)
-
-print 'e_list', e_list
-
-n_rov_list = [
-              10, 10,
-              10, 12,
-              10, 10,
-              10]
-
-color_list = [
-              'b', 'b',
-              'g', 'g',
-              'r', 'r',
-              'k'
-              ]
-linestyle_list = [
-                  '-', '-',
-                  '-', '-',
-                  '-', '-',
-                  '-'
-                 ]
 
 def plot_all():
 
@@ -70,40 +121,70 @@ def plot_all():
         left=0.07, right=0.97, bottom=0.08, top=0.96, wspace=0.25, hspace=0.2)
 
     for idx, e_run in enumerate(e_list):
-        print 'idx', idx
+
         e = e_run.ex_type
 
         axes = p.subplot(111)
 
-        e._plot_sigtex_eps(axes, color=color_list[idx], plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)
-        axes.grid()
+        if plot_asc_list[idx]:
+            e._plot_sigtex_eps_asc(axes, color=color_list[idx], plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)  # [0:24])
+        else:
+            e._plot_sigtex_eps(axes, color=color_list[idx], plot_analytical_stiffness_II=False, label=e_list[idx].ex_type.key)  # [0:24])
+
         axes.set_xlabel('eps [-]')
         axes.set_ylabel('sig_tex [MPa]')
+        axes.axis([0., xlim, 0., ylim])
 
-    # material stiffness carbon (E=245GPa)
-    xarr = np.array([0., 0.010])
-    yarr = np.array([0., 2450.])
-    axes.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.5, label='E_tex = 245 GPa')
+#     # material stiffness carbon (E=245GPa)
+#     xarr = np.array([0., 0.010])
+#     yarr = np.array([0., 2450.])
+#     axes.plot(xarr, yarr, linestyle='--', color='grey', linewidth=1.5, label='E_tex = 245 GPa')
 
-    axes.legend(loc=2)
+    axes.grid()
+    axes.legend(loc=4)
 
-
-def get_sig_tex_max():
-
-    sig_tex_max_list = []
-    for idx, e_run in enumerate(e_list):
-        e = e_run.ex_type
-        sig_tex_max = e.sig_tex_asc[-1]
-        sig_tex_max_list = sig_tex_max_list + [sig_tex_max]
-    sig_tex_max_arr = np.array(sig_tex_max_list)
-    print 'sig_tex_max_list', sig_tex_max_list
-    print 'sig_tex_max_arr', sig_tex_max_arr
-    sig_tex_max_average = np.average(sig_tex_max_arr)
-    print 'sig_tex_max_average', sig_tex_max_average
-
+    # --------------------------------
+    # save figure
+    # --------------------------------
+    save_fig_to_file = True
+    test_series_name = 'TTb_cyc-Aramis2d'
+    if save_fig_to_file:
+        print 'XXX'
+        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
+        # check if directory exist otherwise create
+        #
+        if os.path.isdir(img_dir) == False:
+            os.makedirs(img_dir)
+        test_series_dir = os.path.join(img_dir, test_series_name)
+        # check if directory exist otherwise create
+        #
+        if os.path.isdir(test_series_dir) == False:
+            os.makedirs(test_series_dir)
+        filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
+        p.savefig(filename, format='png')
+        print 'figure saved to file %s' % (filename)
 
 if __name__ == '__main__':
     plot_all()
-    get_sig_tex_max()
-
     p.show()
+
+
+#--------------------
+# TTb-2C-3cm-3300EP
+#--------------------
+# idx_1 = np.where(sig_tex_asc > 1091.)[0][0]
+# idx_2 = np.where(sig_tex_asc > 977.)[0][0]
+# idx_cut = np.where(sig_tex_asc > 1091.)[0]
+# K_cracked = (sig_tex_asc[idx_2] - sig_tex_asc[idx_1]) / (eps_asc[idx_2] - eps_asc[idx_1])
+# sig_tex_asc[idx_cut] = K_cracked * eps_asc[idx_cut]
+# idx_cut = np.where(sig_tex_asc < 1761.)[0]
+# sig_tex_asc = sig_tex_asc[idx_cut]
+# eps_asc = eps_asc[idx_cut]
+# print 'idx_1', idx_1
+# print 'idx_2', idx_2
+# print 'K_cracked', K_cracked
+# print 'sig_tex_asc[idx_1]', sig_tex_asc[idx_1]
+
+
+
+

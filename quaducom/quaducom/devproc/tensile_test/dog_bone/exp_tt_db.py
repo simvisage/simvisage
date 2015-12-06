@@ -976,8 +976,8 @@ class ExpTTDB(ExType):
         sig_lin = array([0, self.eps_max * K_III], dtype='float_')
         axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
 
-    def _plot_sigtex_eps(self, axes, color='blue', linewidth=1., linestyle='-', label=None, plot_analytical_stiffness_II=True):
-        axes.plot(self.eps_asc, self.sig_tex_asc,
+    def _plot_sigtex_eps(self, axes, color='blue', linewidth=1.5, linestyle='-', label=None, plot_analytical_stiffness_II=True):
+        axes.plot(self.eps, self.sig_tex,
                   color=color, linewidth=linewidth, linestyle=linestyle, label=label)
         axes.set_xlabel('strain [-]')
         axes.set_ylabel('textile stress [MPa]')
@@ -990,6 +990,25 @@ class ExpTTDB(ExType):
             eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
             sig_lin = self.ccs.E_tex_arr[1] * eps_lin
             axes.plot(eps_lin, sig_lin)
+
+    def _plot_sigtex_eps_asc(self, axes, color='blue', linewidth=1.5, linestyle='-', label=None, plot_analytical_stiffness_II=True):
+        eps_asc = self.eps_asc
+        sig_tex_asc = self.sig_tex_asc
+        axes.plot(eps_asc, sig_tex_asc,
+                  color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        axes.set_xlabel('strain [-]')
+        axes.set_ylabel('textile stress [MPa]')
+        # original curve
+        #
+#        axes.plot(self.eps_asc, self.sig_tex_asc)
+        # plot the textile secant stiffness at fracture state
+        #
+        if plot_analytical_stiffness_II:
+            eps_lin = array([0, self.eps_smooth[-1]], dtype='float_')
+            sig_lin = self.ccs.E_tex_arr[1] * eps_lin
+            axes.plot(eps_lin, sig_lin)
+
+
 
     def _plot_sigtex_eps_smoothed(self, axes, color='blue', linewidth=1., linestyle='-'):
         axes.plot(self.eps_smooth, self.sig_tex_smooth,
@@ -1055,6 +1074,7 @@ class ExpTTDB(ExType):
             # unite to "permile"
             eps_asc_scaled = self.eps_asc * xscale
             sig_tex_interpolated = k_rho * self.sig_c_asc / self.rho_c
+
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color,
                   linewidth=linewidth, linestyle=linestyle, label=label)
 
