@@ -402,6 +402,15 @@ class ExpTTDB(ExType):
             #
             eps_m = (eps_V + eps_H) / 2.
 
+        if hasattr(self, "WA1_vorne"):
+            print 'hasattr(self, "WA1_vorne")'
+        if hasattr(self, "WA1_hinten"):
+            print 'hasattr(self, "WA1_hinten")'
+        if hasattr(self, "WA2_links"):
+            print 'hasattr(self, "WA2_links")'
+        if hasattr(self, "WA3_rechts"):
+            print 'hasattr(self, "WA3_rechts")'
+
         if (hasattr(self, "WA1_vorne") or hasattr(self, "WA1_hinten")) and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
             WA2_links = np.copy(self.WA2_links)
             WA3_rechts = np.copy(self.WA3_rechts)
@@ -770,7 +779,8 @@ class ExpTTDB(ExType):
     # plot templates
     # -------------------------------------------------------------------------
 
-    plot_templates = {'force / gauge displacement': '_plot_force_displacement',
+    plot_templates = {'force / machine displacement': '_plot_force_displacement_machine',
+                      'force / gauge displacement': '_plot_force_displacement',
                       'force / gauge displacement (ascending)': '_plot_force_displacement_asc',
                       'composite stress / strain': '_plot_sigc_eps',
                       'ironed composite stress / strain': '_plot_sigc_eps_ironed',
@@ -784,6 +794,12 @@ class ExpTTDB(ExType):
                       }
 
     default_plot_template = 'force / gauge displacement'
+
+    def _plot_force_displacement_machine(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram
+        '''
+        if hasattr(self, "Weg") and hasattr(self, "Kraft"):
+            axes.plot(-self.Weg, self.Kraft, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
@@ -1026,7 +1042,7 @@ class ExpTTDB(ExType):
 
     # scaleable plotting methods
     #
-    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=False):
         '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
         #---------------
@@ -1034,7 +1050,9 @@ class ExpTTDB(ExType):
         #---------------
         K_I = self.E_c / self.rho_c * k_rho
         print 'K_I = E_c (simdb)', self.E_c
+        print 'self.rho_c', self.rho_c
         rho_new = self.rho_c / k_rho
+        print 'rho_new', rho_new
         K_I = self.E_c / rho_new
         print 'K_I = E_c (new)', K_I
         E_tex = self.ccs.E_tex
@@ -1077,6 +1095,64 @@ class ExpTTDB(ExType):
 
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color,
                   linewidth=linewidth, linestyle=linestyle, label=label)
+
+    # scaleable plotting methods
+    #
+    def _plot_tex_stress_strain(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=False):
+        '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
+        '''
+        #---------------
+        # plot stiffness KI and KII if option is set to True
+        #---------------
+        K_I = self.E_c / self.rho_c * k_rho
+        print 'K_I = E_c (simdb)', self.E_c
+        print 'self.rho_c', self.rho_c
+        rho_new = self.rho_c / k_rho
+        print 'rho_new', rho_new
+        K_I = self.E_c / rho_new
+        print 'K_I = E_c (new)', K_I
+        E_tex = self.ccs.E_tex
+        K_IIb = E_tex
+        print 'K_IIb = E_tex ', K_IIb
+        #---------------
+        if plot_analytical_stiffness == True:
+            plot_analytical_stiffness_I = True
+            plot_analytical_stiffness_II = True
+        #---------------
+        if plot_analytical_stiffness_I == True:
+            print 'plot analytical stiffness (K_I)'
+            # plot the stiffness of the composite (K_I) - uncracked state)
+            eps_lin = array(
+                [0, self.sig_tex_max / K_I], dtype='float_') * xscale
+            sig_lin = array([0, self.sig_tex_max], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        if plot_analytical_stiffness_II == True:
+            print 'plot analytical stiffness (K_IIb)'
+            # plot the stiffness of the garn (K_IIb - cracked state)
+            eps_lin = array([0, self.eps_max], dtype='float_') * xscale
+            sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        # plot stress-strain curves
+        #---------------
+        if interpolated == True:
+            # use ironed date (without initial offset)
+            # scale by scale-factor scale_factor = 1000. for setting strain
+            # unite to "permile"
+            eps_asc_scaled = self.eps_c_interpolated * xscale
+            sig_tex_interpolated = k_rho * self.sig_c_interpolated / self.rho_c
+        else:
+            # use ironed date (still contains initial offset)
+            # scale by scale-factor scale_factor = 1000. for setting strain
+            # unite to "permile"
+            eps_scaled = self.eps * xscale
+            sig_tex_interpolated = k_rho * self.sig_c / self.rho_c
+
+        axes.plot(eps_scaled, sig_tex_interpolated, color=color,
+                  linewidth=linewidth, linestyle=linestyle, label=label)
+
+
 
     def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
         '''plot the composite stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;

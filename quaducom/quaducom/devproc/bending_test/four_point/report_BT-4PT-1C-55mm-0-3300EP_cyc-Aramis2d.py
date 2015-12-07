@@ -34,6 +34,7 @@ n_rov_list = [9, 9]
 color_list = ['grey', 'k']
 linestyle_list = ['-', '-']
 plot_orig_list = [0, 1]
+label_cutoff = [-9, -9]  # cutoff long label names at the end for cleaner legend display
 xlim = 160
 ylim = 8.
 
@@ -47,6 +48,7 @@ ylim = 8.
 # color_list = ['grey', 'k']
 # linestyle_list = ['-', '-']
 # plot_orig_list = [0, 1]
+# label_cutoff = [-9, -9]  # cutoff long label names at the end for cleaner legend display
 # xlim = 160
 # ylim = 8.
 
@@ -58,9 +60,7 @@ e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
 
 def plot_all():
 
-    fig = p.figure(facecolor='white', figsize=(12, 9))
-    fig.subplots_adjust(
-        left=0.07, right=0.97, bottom=0.08, top=0.96, wspace=0.25, hspace=0.2)
+    fig = p.figure(facecolor='white', figsize=(8, 6))
 
     for idx, e_run in enumerate(e_list):
 
@@ -69,12 +69,12 @@ def plot_all():
         axes = p.subplot(111)
 
         if plot_orig_list[idx]:
-            e._plot_force_deflection_center_orig(axes, linewidth=1.5, color=color_list[idx], label=e_list[idx].ex_type.key)
+            e._plot_force_deflection_center_orig(axes, linewidth=1.5, color=color_list[idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
         else:
-            e._plot_force_deflection_center(axes, linewidth=1.5, color=color_list[idx], label=e_list[idx].ex_type.key)
+            e._plot_force_deflection_center(axes, linewidth=1.5, color=color_list[idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
 
-        axes.set_xlabel('w [w]')
-        axes.set_ylabel('F [kN]')
+        axes.set_xlabel('$w$ [mm]')
+        axes.set_ylabel('$F$ [kN]')
         axes.axis([0., xlim, 0., ylim])
 
     axes.grid()
