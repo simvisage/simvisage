@@ -252,7 +252,7 @@ class DOTSEval(TStepperEval):
 
         print 'F_int', F_int
         print 'diff1', np.sum(k_arr - k_arr2)
-        print 'diff2', np.sum(F_int - F_int2)
+        # print 'diff2', np.sum(F_int - F_int2)
 
         return SysMtxArray(mtx_arr=k_arr, dof_map_arr=self.sdomain.elem_dof_map_unmasked)
 

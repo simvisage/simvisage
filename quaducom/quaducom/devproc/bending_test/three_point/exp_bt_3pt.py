@@ -24,7 +24,7 @@ from etsproxy.traits.ui.api import \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
 
-## overload the 'get_label' method from 'Item' to display units in the label
+# # overload the 'get_label' method from 'Item' to display units in the label
 from util.traits.ui.item import \
     Item
 
@@ -102,7 +102,7 @@ from matresdev.db.simdb import \
 #
 simdb = SimDB()
 
-#class ExpBendingTestThreePoint(ExType):
+# class ExpBendingTestThreePoint(ExType):
 class ExpBT3PT(ExType):
     '''Experiment: Bending Test Three Point
     '''
@@ -154,7 +154,7 @@ class ExpBT3PT(ExType):
 #        concrete_mixture_key = 'FIL-10-09'
         concrete_mixture_key = 'barrelshell'
         orientation_fn_key = 'all0'
-#        orientation_fn_key = 'all90'                                           
+#        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
         n_layers = 6
         s_tex_z = 0.020 / (n_layers + 1)
@@ -174,10 +174,10 @@ class ExpBT3PT(ExType):
         return ccs
 
     #--------------------------------------------------------------------------
-    # Get properties of the composite 
+    # Get properties of the composite
     #--------------------------------------------------------------------------
 
-    # E-modulus of the composite at the time of testing 
+    # E-modulus of the composite at the time of testing
     E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
@@ -185,7 +185,7 @@ class ExpBT3PT(ExType):
     # E-modulus of the composite after 28 days
     E_c28 = DelegatesTo('ccs', listenable=False)
 
-    # reinforcement ration of the composite 
+    # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
     #--------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ class ExpBT3PT(ExType):
 
     # flag distinguishes weather data from a displacement gauge is available
     # stored in a separate ASC-file with a corresponding file name
-    # 
+    #
     flag_dat_file = 'true'
 
     def _read_data_array(self):
@@ -203,7 +203,7 @@ class ExpBT3PT(ExType):
         if exists(self.data_file):
 
             print 'READ FILE'
-            # change the file name dat with asc  
+            # change the file name dat with asc
             file_split = self.data_file.split('.')
 
             file_name = file_split[0] + '.csv'
@@ -288,7 +288,7 @@ class ExpBT3PT(ExType):
     def _get_Fw_asc(self):
         # if data from displacement gauge is available (stored in .ASC file use this data for center displacement
         #
-        # change the file name dat with asc  
+        # change the file name dat with asc
         file_split = self.data_file.split('.')
         file_name = file_split[0] + '.ASC'
         return np.loadtxt(file_name,
@@ -301,7 +301,7 @@ class ExpBT3PT(ExType):
         # force [kN] stored in the .ASC-file:
         #
         F_asc = self.Fw_asc[:, 0].flatten()
-        # change sign to positive value  
+        # change sign to positive value
         F_asc *= -1.
         return F_asc
 
@@ -311,7 +311,7 @@ class ExpBT3PT(ExType):
         # displacement [mm] stored in the .ASC-file:
         #
         w_asc = self.Fw_asc[:, 1].flatten()
-        # change sign to positive value for deflection 
+        # change sign to positive value for deflection
         w_asc *= -1.
         return w_asc
 
@@ -354,7 +354,7 @@ class ExpBT3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
+                       # color = c, linewidth = w, linestyle = s
                        )
 
     def _plot_force_deflection_gauge_displ(self, axes):
@@ -367,7 +367,7 @@ class ExpBT3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
+                       # color = c, linewidth = w, linestyle = s
                        )
 
 
@@ -382,7 +382,7 @@ class ExpBT3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
         axes.plot(xdata, ydata
-                       # color = c, linewidth = w, linestyle = s 
+                       # color = c, linewidth = w, linestyle = s
                        )
 
     n_fit_window_fraction = Float(0.1)
@@ -411,7 +411,7 @@ class ExpBT3PT(ExType):
 #        w0_lin = array( [0.0, w_smooth[10] ], dtype = 'float_' )
 #        f0_lin = array( [0.0, w_smooth[10] * secant_stiffness_w10 ], dtype = 'float_' )
 
-        #axes.plot( w0_lin, f0_lin, color = 'black' )
+        # axes.plot( w0_lin, f0_lin, color = 'black' )
 
     M_eps_c_smoothed = Property(depends_on='input_change')
     @cached_property
