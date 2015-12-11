@@ -3,15 +3,16 @@ Created on 22.10.2015
 
 @author: Yingxiong
 '''
-import numpy as np
-import matplotlib.pyplot as plt
+from itertools import cycle
 from matplotlib.widgets import CheckButtons
 from os import listdir
 import os
-from itertools import cycle
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
 import os
+
+import matplotlib.pyplot as plt
+from matresdev.db.simdb import SimDB
+import numpy as np
+simdb = SimDB()
 
 lines = ["-", "-.", ":"]
 linecycler = cycle(lines)
@@ -63,7 +64,9 @@ rax['70-V1_R2_f'] = plt.axes([0.15, 0.55, 0.14, 0.03])
 
 d_set = {}
 labels = []
-fpath = os.path.join(simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'processed_averaged_data_R1+R2')
+# 'processed_averaged_data_R1+R2')
+fpath = os.path.join(
+    simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'all')
 
 for fname in listdir(fpath):
 

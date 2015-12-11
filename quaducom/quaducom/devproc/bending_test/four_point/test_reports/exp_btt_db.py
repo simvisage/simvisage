@@ -184,33 +184,18 @@ class ExpBTTDB(ExType):
         super(ExpBTTDB, self).process_source_data()
 
         # ad 0.265 kN for the weight of the test set up (26,5 kg)
-        self.N = self.F160kN + 0.265
-        self.F = self.Zquer
+        self.F = self.Kraft + 0.265
+        self.F = self.Weg
         self.t = self.Bezugskanal
 
-        if hasattr(self, 'W10_Ho'):
-            self.w = self.W10_Ho
-        elif hasattr(self, 'W10_li'):
-            self.w = self.W10_li
-        else:
-            self.w = np.zeros_like(self.F)
+        if hasattr(self, 'WA_Mitte'):
+            self.w = self.WA_Mitte
 
         print 'wwww',
         print self.w
 
-        if hasattr(self, 'Weg'):
-            self.u = self.Weg
-        else:
-            self.u = np.zeros_like(self.F)
-
-        # u is the machine control displacement corresponding the F160kN
-
-    # get the first value of the displacement gauges
-    # used to reset the displacement gauges if they do not start at zero
         self.w -= self.w[0]
         self.w *= -1
-
-        self.u -= self.u[0]
 
     #--------------------------------------------------------------------------
     # Get the maximum force index to cut off the descending part of the curves
