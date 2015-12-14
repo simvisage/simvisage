@@ -23,8 +23,9 @@ if __name__ == '__main__':
                                   '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
                                   )
 
-    #res_key = 'Xf15s13-Yf15s13'
+    # res_key = 'Xf15s13-Yf15s13'
     res_key = 'Xf15s1-Yf15s4'
+    res_key = 'Xf15s3-Yf10s1'
 
     e_list = [ExpBTTDB(data_file=os.path.join(test_file_path, test_file),
                        aramis_resolution_key=res_key,
