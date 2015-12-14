@@ -1,6 +1,7 @@
 '''
-Created on Jan 28, 2015
+Created on 14.12.2015
 
+@author: alexander
 '''
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -175,16 +176,9 @@ def plot_all():
     save_fig_to_file = True
     test_series_name = 'TTb_cyc-Aramis2d'
     if save_fig_to_file:
-        print 'XXX'
         img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(img_dir) == False:
-            os.makedirs(img_dir)
-        test_series_dir = os.path.join(img_dir, test_series_name)
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(test_series_dir) == False:
+        test_series_dir = os.path.join(simdb.report_dir, test_series_name)
+        if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
         p.savefig(filename, format='png')
@@ -210,7 +204,5 @@ if __name__ == '__main__':
 # print 'idx_2', idx_2
 # print 'K_cracked', K_cracked
 # print 'sig_tex_asc[idx_1]', sig_tex_asc[idx_1]
-
-
 
 
