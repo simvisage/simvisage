@@ -44,7 +44,7 @@ d_set = {}
 labels = []
 # 'processed_averaged_data_R1+R2')
 fpath = os.path.join(
-    simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'all')
+    simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'processed_averaged_data_R1+R2')
 
 # do = 'R2_f_ALL'
 # do = 'R2_f_TREND-30-40-50-70-80'
@@ -290,21 +290,12 @@ plt.legend(loc='best', prop={'size': 11})
 # --------------------------------
 save_fig_to_file = True
 test_series_name = 'DPO-3300SBR'
-if save_fig_to_file:
 
+if save_fig_to_file:
     img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
-    # check if directory exist otherwise create
-    #
-    if os.path.isdir(img_dir) == False:
-        os.makedirs(img_dir)
-    test_series_dir = os.path.join(img_dir, test_series_name)
-    # check if directory exist otherwise create
-    #
-    if os.path.isdir(test_series_dir) == False:
+    test_series_dir = os.path.join(simdb.report_dir, test_series_name)
+    if not os.path.exists(test_series_dir):
         os.makedirs(test_series_dir)
-#        filename = os.path.join(test_series_dir, 'sigc-epsu.pdf')
-    filename = os.path.join(test_series_dir, 'DPO_' + do + '.pdf')
-    plt.savefig(filename, format='pdf')
     filename = os.path.join(test_series_dir, 'DPO_' + do + '.png')
     plt.savefig(filename, format='png', dpi=300)
     print 'figure saved to file %s' % (filename)

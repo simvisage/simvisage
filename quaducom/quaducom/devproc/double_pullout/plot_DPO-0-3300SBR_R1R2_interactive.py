@@ -66,7 +66,7 @@ d_set = {}
 labels = []
 # 'processed_averaged_data_R1+R2')
 fpath = os.path.join(
-    simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'all')
+    simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'processed_averaged_data_R1+R2')
 
 for fname in listdir(fpath):
 
