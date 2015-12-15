@@ -46,7 +46,7 @@ labels = []
 fpath = os.path.join(
     simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'processed_averaged_data_R1+R2')
 
-# do = 'R2_f_ALL'
+do = 'R2_f_ALL'
 # do = 'R2_f_TREND-30-40-50-70-80'
 # do = 'R2_f_TREND-30-40-50-80'
 # do = 'R2_f_GLUE-30'
@@ -58,7 +58,7 @@ fpath = os.path.join(
 # do = 'R2_s_ALL'
 # do = 'R2_s_TREND-50-40-30'
 # do = 'R2_s_TREND-60-50-40-30'
-do = 'R1_all'
+# do = 'R1_all'
 
 if do == 'R2_f_ALL':
     # ALL 14 fast tests
@@ -289,10 +289,10 @@ plt.legend(loc='best', prop={'size': 11})
 # save figure
 # --------------------------------
 save_fig_to_file = True
-test_series_name = 'DPO-3300SBR'
+# create a subfolder with the name of the script (without file extension '.py')
+test_series_name = os.path.basename(__file__)[:-3]
 
 if save_fig_to_file:
-    img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
     test_series_dir = os.path.join(simdb.report_dir, test_series_name)
     if not os.path.exists(test_series_dir):
         os.makedirs(test_series_dir)
