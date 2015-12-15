@@ -23,7 +23,7 @@ p.rcParams.update(params)
 # TTb-1C-3cm-3300EP
 #--------------------
 do = 'sigtex-eps'  # gauge displacement
-# do = 'F-w' # machine displacement
+# do = 'F-w'  # machine displacement
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
@@ -87,14 +87,14 @@ def plot_all():
     # save figure
     # --------------------------------
     save_fig_to_file = True
-    test_series_name = 'TTb_cyc-Aramis2d'
+    # create a subfolder with the name of the script (without file extension '.py')
+    test_series_name = os.path.basename(__file__)[:-3]
     if save_fig_to_file:
-        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
         test_series_dir = os.path.join(simdb.report_dir, test_series_name)
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
-        p.savefig(filename, format='png')
+        filename = os.path.join(test_series_dir, do + '.png')
+        p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 
 if __name__ == '__main__':
