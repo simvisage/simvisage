@@ -80,13 +80,21 @@ def plot_all():
     # save figure
     # --------------------------------
     save_fig_to_file = True
-    # create a subfolder with the name of the script (without file extension '.py')
-    test_series_name = os.path.basename(__file__)[:-3]
+
     if save_fig_to_file:
-        test_series_dir = os.path.join(simdb.report_dir, test_series_name)
+        # create a report-subfolder with the name of the script (without file extension '.py')
+        # and save it in the test-type-subfolders with the name and path as ex_type
+        test_series_name = os.path.basename(__file__)[:-3]
+        subfolder_list = __file__.split(os.path.sep)
+        devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
+        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        test_series_dir = os.path.join(simdb.report_dir)
+        for subfolder_name in subfolder_path:
+            test_series_dir = os.path.join(test_series_dir, subfolder_name)
+
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
+        filename = os.path.join(test_series_dir, do + '.png')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 

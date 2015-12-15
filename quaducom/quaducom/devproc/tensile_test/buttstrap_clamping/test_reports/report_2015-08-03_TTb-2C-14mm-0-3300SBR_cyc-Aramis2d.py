@@ -33,15 +33,26 @@ test_file_path = os.path.join(simdb.exdata_dir,
 test_files = [ 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT',
                'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
 
+A_rov = 1.84  # 3300 tex
 n_rov_list = [14, 18]
 color_list = ['k', 'grey']
 linestyle_list = ['-', '-']
 plot_asc_list = [0, 1]
 label_cutoff = [-9, -9]  # cutoff long label names at the end for cleaner legend display
-k_rho_list = [1.002, 1.08]  # = 9,1 mm^2 / 10,8 mm^2 = (5 rovings * 1,84 mm^2) / (90 mm^2/m * 0.12 m)
+
+k_rho_list = [1.080,  # = 27.82 mm^2 / 25.76 mm^2 = (2layers * 144.9 mm^2/m * 0.096 m) / (14 rovings * 1,84 mm^2)
+              0.998]  # = 33.04 mm^2 / 33.12 mm^2 = (2layers * 144.9 mm^2/m * 0.114 m) / (18 rovings * 1,84 mm^2)
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
+
+# compare 'A_tex' as calculated in simdb based on 'a_tex_0 [mm^2/m]' and the specimen 'width [m]'
+# and the real number of rovings as counted in the test:
+for n, n_rov in enumerate(n_rov_list):
+    k_rho_list[n] = e_list[n].ex_type.A_tex / (n_rov * A_rov)
+print '\n'
+print 'k_rho_list (caclulated based on simdb data and n_rovings specified in script: \n', k_rho_list
+print '\n'
 
 def plot_all():
 
@@ -85,10 +96,18 @@ def plot_all():
     # save figure
     # --------------------------------
     save_fig_to_file = True
-    # create a subfolder with the name of the script (without file extension '.py')
-    test_series_name = os.path.basename(__file__)[:-3]
+
     if save_fig_to_file:
-        test_series_dir = os.path.join(simdb.report_dir, test_series_name)
+        # create a report-subfolder with the name of the script (without file extension '.py')
+        # and save it in the test-type-subfolders with the name and path as ex_type
+        test_series_name = os.path.basename(__file__)[:-3]
+        subfolder_list = __file__.split(os.path.sep)
+        devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
+        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        test_series_dir = os.path.join(simdb.report_dir)
+        for subfolder_name in subfolder_path:
+            test_series_dir = os.path.join(test_series_dir, subfolder_name)
+
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, do + '.png')
