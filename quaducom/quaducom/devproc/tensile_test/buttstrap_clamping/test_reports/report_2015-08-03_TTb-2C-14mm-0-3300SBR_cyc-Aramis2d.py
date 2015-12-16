@@ -23,15 +23,18 @@ p.rcParams.update(params)
 #--------------------
 # TTb-2C-14mm-3300SBR
 #--------------------
-do = 'sigtex-eps'  # gauge displacement
-# do = 'F-w'  # machine displacement
+# do = 'sigtex-eps'  # gauge displacement
+do = 'F-w'  # machine displacement
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
                              '2015-08-03_TTb-2C-14mm-0-3300SBR_cyc-Aramis2d')
 
 test_files = [ 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT',
-               'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
+                'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
+#                 'TTb-2C-14mm-0-3300SBR-V2_Aramis2d.DAT']
+#                 'TTb-2C-14mm-0-3300SBR-V5_Aramis2d.DAT']
+
 
 A_rov = 1.84  # 3300 tex
 n_rov_list = [14, 18]
