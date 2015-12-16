@@ -402,14 +402,14 @@ class ExpTTDB(ExType):
             #
             eps_m = (eps_V + eps_H) / 2.
 
-        if hasattr(self, "WA1_vorne"):
-            print 'hasattr(self, "WA1_vorne")'
-        if hasattr(self, "WA1_hinten"):
-            print 'hasattr(self, "WA1_hinten")'
-        if hasattr(self, "WA2_links"):
-            print 'hasattr(self, "WA2_links")'
-        if hasattr(self, "WA3_rechts"):
-            print 'hasattr(self, "WA3_rechts")'
+#         if hasattr(self, "WA1_vorne"):
+#             print 'hasattr(self, "WA1_vorne")'
+#         if hasattr(self, "WA1_hinten"):
+#             print 'hasattr(self, "WA1_hinten")'
+#         if hasattr(self, "WA2_links"):
+#             print 'hasattr(self, "WA2_links")'
+#         if hasattr(self, "WA3_rechts"):
+#             print 'hasattr(self, "WA3_rechts")'
 
         if (hasattr(self, "WA1_vorne") or hasattr(self, "WA1_hinten")) and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
             WA2_links = np.copy(self.WA2_links)
@@ -820,13 +820,13 @@ class ExpTTDB(ExType):
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
-            axes.plot(self.WA1_vorne, self.Kraft)
-            axes.plot(self.WA2_links, self.Kraft)
-            axes.plot(self.WA3_rechts, self.Kraft)
+            axes.plot(self.WA1_vorne, self.Kraft, color='b')
+            axes.plot(self.WA2_links, self.Kraft, color='r')
+            axes.plot(self.WA3_rechts, self.Kraft, color='g')
         if hasattr(self, "WA1_hinten") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
-            axes.plot(self.WA1_hinten, self.Kraft)
-            axes.plot(self.WA2_links, self.Kraft)
-            axes.plot(self.WA3_rechts, self.Kraft)
+            axes.plot(self.WA1_hinten, self.Kraft, color='b')
+            axes.plot(self.WA2_links, self.Kraft, color='r')
+            axes.plot(self.WA3_rechts, self.Kraft, color='g')
 
     def _plot_force_displacement_asc(self, axes, color='black', linewidth=1., linestyle='-', label=None):
         '''plot force-displacement diagram (only the ascending branch)
@@ -1050,14 +1050,14 @@ class ExpTTDB(ExType):
         #---------------
         K_I = self.E_c / self.rho_c * k_rho
         print 'K_I = E_c (simdb)', self.E_c
-        print 'self.rho_c', self.rho_c
+        print 'rho_c (simdb)= ', self.rho_c
         rho_new = self.rho_c / k_rho
-        print 'rho_new', rho_new
+        print 'rho_c (n_rov)= ', rho_new
         K_I = self.E_c / rho_new
-        print 'K_I = E_c (new)', K_I
+        print 'K_I = E_c (new) =', K_I
         E_tex = self.ccs.E_tex
         K_IIb = E_tex
-        print 'K_IIb = E_tex ', K_IIb
+        print 'K_IIb = E_tex =', K_IIb
         #---------------
         if plot_analytical_stiffness == True:
             plot_analytical_stiffness_I = True
