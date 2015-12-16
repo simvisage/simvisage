@@ -48,7 +48,7 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from quaducom.devproc.format_plot import format_plot
+from format_plot import format_plot
 
 from matplotlib.font_manager import FontProperties
 font = FontProperties()

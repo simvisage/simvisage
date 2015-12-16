@@ -18,7 +18,7 @@ from matresdev.db.simdb.simdb_class import \
 
 simdb = SimDB()
 
-from quaducom.devproc.format_plot import format_plot
+from format_plot import format_plot
 from matplotlib.font_manager import FontProperties
 font = FontProperties()
 
