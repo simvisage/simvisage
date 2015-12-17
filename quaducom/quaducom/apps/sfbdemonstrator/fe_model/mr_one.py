@@ -64,7 +64,7 @@ from scipy.interpolate import Rbf
 
 from geo_column import GEOColumn
 
-from simiter.sim_pstudy import\
+from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
 from hp_shell import HPShell
@@ -92,13 +92,13 @@ class MRone(MushRoofModel):
 
     shift_elems = True
 
-    vtk_r = Float(0.90)
+    vtk_r = Float(1.00)
 
     # default roof
     fe_roof = Instance((FETSEval), depends_on='+ps_levels, +input')
     def _fe_roof_default(self):
         fets = self.fe_quad_serendipity_roof
-        fets.vtk_r *= 0.9
+        fets.vtk_r *= self.vtk_r
         return fets
 
     # default plate
@@ -108,7 +108,7 @@ class MRone(MushRoofModel):
         fets.ngp_r = 3
         fets.ngp_s = 3
         fets.ngp_t = 3
-        fets.vtk_r *= 0.9
+        fets.vtk_r *= self.vtk_r
         return fets
 
 
@@ -155,7 +155,7 @@ class MRone(MushRoofModel):
     fe_column = Instance((FETSEval), transient=True , depends_on='+ps_levels, +input')
     def _fe_column_default(self):
         fets = self.fe_quad_serendipity_column
-        fets.vtk_r *= 0.9
+        fets.vtk_r *= self.vtk_r
         return fets
 
 
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     sim_model = MRone(n_elems_xy_quarter=8,
                        n_elems_z=1,
                        n_elems_col=2,
-                       vtk_r=0.9,
+                       vtk_r=1.0,
                        n_elems_per_column_height=6,
                        )
 
