@@ -56,7 +56,7 @@ from matplotlib.pyplot import \
 
 import csv
 
-from simiter.sim_pstudy import\
+from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
 from rsurface_reader import \
@@ -93,7 +93,7 @@ class MRtwo(MushRoofModel):
     # fets_eval
     #----------------------------------------------------
 
-    vtk_r = Float(0.9, input=True)
+    vtk_r = Float(1., input=True)
 
     # fets used for roof
     #
@@ -822,8 +822,16 @@ class MRtwo(MushRoofModel):
     # in-plane degree of freedom between the roofs either linked or not
     #
     link_type = Enum('exc_V_ip', 'inc_V_ip', input=True)
+
+    # coupled system (real structure with steel hinges)
+    #
     linked_dims = {'exc_V_ip':[0, 2],
                    'inc_V_ip':[0, 1, 2]}
+
+    # non-coupled system (reference)
+    #
+#     linked_dims = {'exc_V_ip':[],
+#                    'inc_V_ip':[]}
 
     linked_dims_coeffs = Property(List)
     def _get_linked_dims_coeffs(self):
@@ -980,7 +988,13 @@ class MRtwo(MushRoofModel):
                                          slice=roof_1[elem, -1, -1, 0, -1, -1 ],
                                          value=0.)]
 
+                # coupled system (real structure with steel hinges)
+                #
                 constraint_list = constraint_list + link_0_1 + constraint_0 + constraint_1
+
+                # non-coupled system (reference)
+                #
+#                 constraint_list = constraint_list + link_0_1  # + constraint_0 + constraint_1
 
             bc_roof_link_list = constraint_list
 
@@ -1761,15 +1775,15 @@ if __name__ == '__main__':
 
                       # loading:
                       #
-#                      lc='lc_w_asym')
+                    lc='lc_w_asym')
 #                      lc = 'lc_s_asym' )
 #                      lc='lc_g')
 
-                      lc='lc_g_own_weight')
+#                     lc='lc_g_own_weight')
 #                      lc = 'lc_g_surf_load' )
 #                      lc = 'lc_g_edge_load')
-#                      lc = 'lc_g_tol_asym')
-#                      lc = 'lc_g_tol_sym')
+#                      lc = 'lc_g_tol_asym')#                       lc='lc_g_own_weight')
+#                      lc = 'lc_g_tol_sym')#     #                       lc='lc_g_own_weight')#                       lc='lc_g_own_weight')#                       lc='lc_g_own_weight')                  lc='lc_g_own_weight')
 #
 #                      lc =  'lc_shrink' )
 #                      lc = 'lc_s_sym' )
