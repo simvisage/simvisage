@@ -32,7 +32,7 @@ test_file_path = os.path.join(simdb.exdata_dir,
                               '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d')
 
 test_files = ['BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT',
-              'BT-1C-55mm-0-3300EP-V2_S4P2(13)_cyc-Aramis2d.DAT']
+              'BT-1C-55mm-0-3300EP-V2_S4P2(13)-cyc-Aramis2d.DAT']
 
 n_rov_list = [9, 9]
 color_list = ['grey', 'k']

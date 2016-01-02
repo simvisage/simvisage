@@ -35,6 +35,9 @@ from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
 from matresdev.db.exdb.ex_run_table import ExRunClassExt
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
+
+from quaducom.devproc.bending_test.four_point.exp_bt_4pt import ExpBT4PT
+
 from matresdev.db.matdb.trc.composite_cross_section \
     import CompositeCrossSection, plain_concrete
 from matresdev.db.matdb.trc.fabric_layup \
@@ -42,134 +45,46 @@ from matresdev.db.matdb.trc.fabric_layup \
 import numpy as np
 
 
-class ExpBTTDB(ExType):
+# class ExpBTTDB(ExType):
+class ExpBT4PTAramis2d(ExpBT4PT):
 
-    '''Experiment: Bending Tensile Test Dog Bone
+    '''Experiment: Bending Test with Aramis2d measurements
     '''
-#    label = Str('dog bone tensile test')
-
-    implements(IExType)
-
-    # ------------------------------------------------------- -------------
-    # register a change of the traits with metadata 'input'
-    # --------------------------------------------------------------------
-
-    input_change = Event
-
-    @on_trait_change('+input, ccs.input_change')
-    def _set_input_change(self):
-        print '*** raising input change in CTT'
-        self.input_change = True
 
     #--------------------------------------------------------------------------
     # specify inputs:
     #--------------------------------------------------------------------------
 
-    width = Float(0.100, unit='m', input=True, table_field=True,
-                  auto_set=False, enter_set=True)
-    length = Float(0.35, unit='m', input=True, table_field=True,
-                   auto_set=False, enter_set=True)
     # start of 2D-Aramis
-    start_time_aramis = Float(5, unit='m', input=True, table_field=True,
+    start_time_aramis = Float(0, unit='m', input=True, table_field=True,
                               auto_set=False, enter_set=True)
-    # age of the concrete at the time of testing
-    age = Int(28, unit='d', input=True, table_field=True,
-              auto_set=False, enter_set=True)
-    loading_rate_N = Float(2.0, unit='mm/min', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
-    loading_rate_F = Float(4.0, unit='kN/10min', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
-    # date of the production of the specimen
-    prodcution_date = Float(27.0, unit='DD.MM', input=True, table_field=True,
-                            auto_set=False, enter_set=True)
-    # date of the testing of the specimen
-    testing_date = Float(27.0, unit='DD.MM', input=True, table_field=True,
-                         auto_set=False, enter_set=True)
 
-    #--------------------------------------------------------------------------
-    # composite cross section
-    #--------------------------------------------------------------------------
+    integ_radius = Int(3, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    ccs = Instance(CompositeCrossSection)
+    integ_radius_crack = Int(5, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    def _ccs_default(self):
-        '''default settings correspond to
-        setup '9u_MAG-07-03_PZ-0708-1'
-        '''
-        print 'ccs default used'
-        fabric_layout_key = '2D-05-11'
-        concrete_mixture_key = 'barrelshell'
-        orientation_fn_key = 'all0'
-        n_layers = 6
-        thickness = 0.02
+    ddd_ux_avg_threshold = Float(-0.5e-3, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-        s_tex_z = thickness / (n_layers + 1)
-        ccs = CompositeCrossSection(
-            fabric_layup_list=[
-                plain_concrete(s_tex_z * 0.5),
-                FabricLayUp(
-                    n_layers=n_layers,
-                    orientation_fn_key=orientation_fn_key,
-                    s_tex_z=s_tex_z,
-                    fabric_layout_key=fabric_layout_key
-                ),
-                plain_concrete(s_tex_z * 0.5)
-            ],
-            concrete_mixture_key=concrete_mixture_key
-        )
-        return ccs
+    ddd_ux_threshold = Float(-0.5e-3, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    #--------------------------------------------------------------------------
-    # Indicate whether the test is suitable and prepared for
-    # calibration.
-    #--------------------------------------------------------------------------
-    ready_for_calibration = Property(Bool)
+    dd_ux_avg_threshold = Float(-0.5e-3, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    def _get_ready_for_calibration(self):
-        # return False by default
-        # the subclasses shall overload this
-        # and define the rules
-        return self.ccs.is_regular
+    dd_ux_threshold = Float(-0.5e-3, unit='m', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    #--------------------------------------------------------------------------
-    # Get properties of the composite
-    #--------------------------------------------------------------------------
+    scale_data_factor = Float(1.0, unit='', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    # E-modulus of the composite at the time of testing
-    E_c = Property(
-        Float, unit='MPa', depends_on='input_change', table_field=True)
+    crack_detaction_step = Int(-1, unit='', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
-    @cached_property
-    def _get_E_c(self):
-        return self.ccs.get_E_c_time(self.age)
-
-    # E-modulus of the concrete at the time of testing
-    E_m = Property(
-        Float, unit='MPa', depends_on='input_change', table_field=True)
-
-    @cached_property
-    def _get_E_m(self):
-        return self.ccs.get_E_m_time(self.age)
-
-    # cross-sectional-area of the composite
-    A_c = Property(Float, unit='m^2', depends_on='input_change')
-
-    @cached_property
-    def _get_A_c(self):
-        return self.width * self.ccs.thickness
-
-    # total cross-sectional-area of the textile reinforcement
-    A_tex = Property(Float, unit='mm^2', depends_on='input_change')
-
-    @cached_property
-    def _get_A_tex(self):
-        return self.ccs.a_tex * self.width
-
-    # E-modulus of the composite after 28 days
-    E_c28 = DelegatesTo('ccs', listenable=False)
-
-    # reinforcement ration of the composite
-    rho_c = DelegatesTo('ccs', listenable=False)
+    crack_detaction_current_step = Bool(True, unit='', input=True, table_field=True,
+                              auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
     # define processing
@@ -181,21 +96,13 @@ class ExpBTTDB(ExType):
         If necessary modify the assigned data, e.i. change
         the sign or specify an offset for the specific test setup.
         '''
-        super(ExpBTTDB, self).process_source_data()
+        super(ExpBT4PTAramis2d, self).process_source_data()
 
-        # ad 0.265 kN for the weight of the test set up (26,5 kg)
-        self.F = self.Kraft + 0.265
-        self.F = self.Weg
-        self.t = self.Bezugskanal
-
-        if hasattr(self, 'WA_Mitte'):
-            self.w = self.WA_Mitte
-
-        print 'wwww',
-        print self.w
-
+        self.F = self.Kraft
+        self.w = self.Weg
         self.w -= self.w[0]
         self.w *= -1
+        self.t = self.Bezugskanal
 
     #--------------------------------------------------------------------------
     # Get the maximum force index to cut off the descending part of the curves
@@ -207,359 +114,84 @@ class ExpBTTDB(ExType):
     def _get_max_F_idx(self):
         return np.argmax(self.F)
 
-    max_N_idx = Property(Int, depends_on='input_change')
-
-    @cached_property
-    def _get_max_N_idx(self):
-        return np.argmax(self.N)
-
-    F_max1 = Property(Float, depends_on='input_change',
-                      output=True, table_field=True, unit='kN')
-
-    @cached_property
-    def _get_F_max1(self):
-        '''Only needed for the distinction between pure tensile test and bending test
-        '''
-        return max(self.F)
-
     #--------------------------------------------------------------------------
     # Get only the ascending branch of the response curve
     #--------------------------------------------------------------------------
-
-    F_max_threshold = Float(0.15, auto_set=False, enter_set=True)
-    '''Threshold to distinguish between pure tensile test and bending test.
-    '''
-
-    N_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_N_asc(self):
-        if self.F_max1 >= self.F_max_threshold:
-            # maximum load is determined by the transverse force
-            return self.N[:self.max_F_idx + 1]
-        elif self.F_max1 <= self.F_max_threshold:
-            # maximum load is determined by the normal force
-            return self.N[:self.max_N_idx + 1]
 
     F_asc = Property(Array('float_'), depends_on='input_change')
 
     @cached_property
     def _get_F_asc(self):
-        if self.F_max1 >= self.F_max_threshold:
-            # maximum load is determined by the transverse force
-            return self.F[:self.max_F_idx + 1]
-        elif self.F_max1 <= self.F_max_threshold:
-            # maximum load is determined by the normal force
-            return self.F[:self.max_N_idx + 1]
+        return self.F[:self.max_F_idx + 1]
 
     t_asc = Property(Array('float_'), depends_on='input_change')
 
     @cached_property
     def _get_t_asc(self):
-        if self.F_max1 >= self.F_max_threshold:
-            # maximum load is determined by the transverse force
-            return self.t[:self.max_F_idx + 1]
-        elif self.F_max1 <= self.F_max_threshold:
-            # maximum load is determined by the normal force
-            return self.t[:self.max_N_idx + 1]
+        return self.t[:self.max_F_idx + 1]
 
     w_asc = Property(Array('float_'), depends_on='input_change')
 
     @cached_property
     def _get_w_asc(self):
-        if self.F_max1 >= self.F_max_threshold:
-            # maximum load is determined by the transverse force
-            return self.w[:self.max_F_idx + 1]
-        elif self.F_max1 <= self.F_max_threshold:
-            # maximum load is determined by the normal force
-            return self.w[:self.max_N_idx + 1]
+        return self.w[:self.max_F_idx + 1]
 
-    u_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_u_asc(self):
-        if self.F_max1 >= self.F_max_threshold:
-            # maximum load is determined by the transverse force
-            return self.u[:self.max_F_idx + 1]
-        elif self.F_max1 <= self.F_max_threshold:
-            # maximum load is determined by the normal force
-            return self.u[:self.max_N_idx + 1]
-
-    #--------------------------------------------------------------------------
-    # Cut the curves at the end when the gradient of displacement is to big
-    #--------------------------------------------------------------------------
-
-    gra_max_threshold = Float(0.12, auto_set=False, enter_set=True)
-    '''Threshold to limit the gradient of displacement-curve at the end.
-    '''
-
-    w_cut_idx = Property(Int, depends_on='input_change')
-
-    @cached_property
-    def _get_w_cut_idx(self):
-
-        w_asc = self.w_asc
-        t_asc = self.t_asc
-
-        # Calculate the deltas with beginning at indize 840 that is equivalent
-        # to t = 420 sec. The calculation of deltas start at t = 420 sec because there are
-        # sometimes big gradients in the beginning or during the test due to the controlling
-        # of the bending force by hand
-        delta_w_arr = w_asc[841:] - w_asc[840:-1]
-        delta_t_arr = t_asc[841:] - t_asc[840:-1]
-
-        # Calculate the gradient for every index
-        gra_arr = delta_w_arr[:] / delta_t_arr[:]
-
-        # Examine the indices where the gradient is bigger than the threshold
-        # gradient
-        gra_idx_arr = np.where(gra_arr > self.gra_max_threshold)[0]
-
-#        print '*** gradient is bigger than the threshold gradient at the following indices and time: ***'
-#        print 'gra_idx_arr', gra_idx_arr
-#        print 'gra_rr', gra_arr[gra_idx_arr]
-#        print 'w_asc[gra_idx_arr]', w_asc[gra_idx_arr]
-
-        if len(gra_idx_arr) > 0:
-            return gra_idx_arr[0] + 840
-        else:
-            return len(self.w_asc)
-
-    N_cut_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_N_cut_asc(self):
-        ''' Method to cut the end of the displacement curve if the gradient is
-        to big due to the kind of failure in the testing
-        '''
-        return self.N[:self.w_cut_idx]
-
-    F_cut_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_F_cut_asc(self):
-        ''' Method to cut the end of the displacement curve if the gradient is
-        to big due to the kind of failure in the testing
-        '''
-        return self.F[:self.w_cut_idx]
-
-    t_cut_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_t_cut_asc(self):
-        ''' Method to cut the end of the displacement curve if the gradient is
-        to big due to the kind of failure in the testing
-        '''
-        return self.t[:self.w_cut_idx]
-
-    w_cut_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_w_cut_asc(self):
-        ''' Method to cut the end of the displacement curve if the gradient is
-        to big due to the kind of failure in the testing
-        '''
-        return self.w_asc[:self.w_cut_idx]
-
-    u_cut_asc = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_u_cut_asc(self):
-        ''' Method to cut the end of the displacement curve if the gradient is
-        to big due to the kind of failure in the testing
-        '''
-        return self.u_asc[:self.w_cut_idx]
-
-    #--------------------------------------------------------------------------
-    # Method to eliminate the negative or positive deformation at the beginning
-    # of the experiment (while F ~ 0.1 kN (constant) and N is increasing)
-    # due to predeformation of the specimen
-    #--------------------------------------------------------------------------
-
-    # get the minimum value of deformation that is equivalent to the
-    # predeformation
-    w_pred = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_w_pred(self):
-        w_pred = min(self.w_cut_asc)
-        return w_pred
-
-    F_lim_threshold = Float(0.142, auto_set=False, enter_set=True)
-    '''Threshold for the lower limit of force. For all force values smaller
-        than this limit, equate the deformation value with zero
-    '''
-
-    w_el_pred = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_w_el_pred(self):
-        w = self.w_cut_asc
-        F = self.F_cut_asc
-
-        # get the indices for the force smaller than force threshold
-        idx_F_lim = np.where(F <= self.F_lim_threshold)[0]
-
-        if len(idx_F_lim) > 0:
-            idx = idx_F_lim[-1]
-
-            w_lim = w[idx_F_lim[-1]]
-
-            w_0 = w[0:idx]
-            w_0 = np.zeros_like(w_0)
-            w_1 = w[idx:]
-            w_1 = w_1 - w_lim
-            w_el_pred = np.append(w_0, w_1)
-
-            return w_el_pred
-
-        else:
-            return w
 
     #--------------------------------------------------------------------------
     # Get the moment arrays
     #--------------------------------------------------------------------------
 
-    M = Property(Array('float_'), depends_on='input_change')
+    # distance between the support and the load introduction (F/2) of the four point bending test
+    length_0 = 0.70  # [m] for 'BT_cyc'
+
+    M_asc = Property(Array('float_'), depends_on='input_change')
 
     @cached_property
-    def _get_M(self):
+    def _get_M_asc(self):
         'resulting moment'
-        return self.F_cut_asc * self.length / 4 - self.N_cut_asc * self.w_el_pred / 1000
-
-    MN = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_MN(self):
-        'moment due to normal force an eccentricity'
-        return self.N_cut_asc * self.w_el_pred / 1000 * -1
-
-    MF = Property(Array('float_'), depends_on='input_change')
-
-    @cached_property
-    def _get_MF(self):
-        'moment due to bending force'
-        return self.F_cut_asc * self.length / 4
+        return self.F_asc / 2. * self.length_0
 
     #--------------------------------------------------------------------------
     # Get maximum values of the variables
     #--------------------------------------------------------------------------
-
-    N_max = Property(Float, depends_on='input_change',
-                     output=True, table_field=True, unit='kN')
-
-    @cached_property
-    def _get_N_max(self):
-        return self.N_cut_asc[-1]
 
     F_max = Property(Float, depends_on='input_change',
                      output=True, table_field=True, unit='kN')
 
     @cached_property
     def _get_F_max(self):
-        return self.F_cut_asc[-1]
+        return self.F_asc[-1]
 
     t_max = Property(Float, depends_on='input_change',
                      output=True, table_field=True, unit='kNm')
 
     @cached_property
     def _get_t_max(self):
-        return self.t_cut_asc[-1]
+        return self.t_asc[-1]
 
     w_max = Property(Float, depends_on='input_change',
                      output=True, table_field=True, unit='mm')
 
     @cached_property
     def _get_w_max(self):
-        return self.w_el_pred[-1]
-
-    u_max = Property(Float, depends_on='input_change',
-                     output=True, table_field=True, unit='mm')
-
-    @cached_property
-    def _get_u_max(self):
-        return self.u_cut_asc[-1]
+        return self.w_asc[-1]
 
     M_max = Property(Float, depends_on='input_change',
                      output=True, table_field=True, unit='kNm')
 
     @cached_property
     def _get_M_max(self):
-        return self.M[-1]
-
-    MN_max = Property(Float, depends_on='input_change',
-                      output=True, table_field=True, unit='kNm')
-
-    @cached_property
-    def _get_MN_max(self):
-        return self.MN[-1]
-
-    MF_max = Property(Float, depends_on='input_change',
-                      output=True, table_field=True, unit='kNm')
-
-    @cached_property
-    def _get_MF_max(self):
-        return self.MF[-1]
+        return self.M_asc[-1]
 
     #--------------------------------------------------------------------------
     # plot templates
     #--------------------------------------------------------------------------
 
-    plot_templates = {'N(t), F(t)': '_plot_N_F_t',
-                      'N_cut(t), F_cut(t)': '_plot_N_F_t_cut',
-                      'N(u)_cut': '_plot_N_u_cut',
-                      'w(t)': '_plot_w_t',
-                      'w_cut(t)': '_plot_w_t_cut',
-                      'w_el_pred(t)': '_plot_w_el_pred_t',
-                      'u(t)': '_plot_u_t',
-                      'u_cut(t)': '_plot_u_t_cut',
-                      'F(w)_cut': '_plot_F_w_cut',
-                      'F(w_el_pred)': '_plot_F_w_el_pred',
-                      'M(t), M_II(t), M_0(t)': '_plot_M_MN_MF_t',
-                      'N(M), N(M_II), N(M_0)': '_plot_N_M_MN_MF',
-                      'N-M': '_plot_N_M',
+    plot_templates = {'w(t)': '_plot_w_t',
+                      'F(w)': '_plot_F_w',
                       }
 
-    default_plot_template = 'N(t), F(t)'
-
-    def _plot_N_F_t(self, axes):
-        '''Normal force and bending force versus time
-        '''
-        axes.plot(self.t_asc, self.N_asc, color='blue', label='N')
-        axes.plot(self.t_asc, self.F_asc, color='red', label='F')
-        axes.xaxis.tick_bottom()
-        axes.set_ylim(0, 50)
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('N / F[kN]')
-        # ax2.set_ylim(0, 3)
-        # ax2.set_ylabel('F [kN]')
-        axes.legend(loc=2)
-
-    def _plot_N_F_t_cut(self, axes):
-        '''Normal force_cut and bending force_cut versus time_cut
-        '''
-        axes.plot(self.t_cut_asc, self.N_cut_asc, color='darkblue', label='N')
-        axes.grid()
-        axes.set_ylim(0, 55)
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('N [kN]')
-        # ax2 = axes.twinx()
-        axes.plot(self.t_cut_asc, self.F_cut_asc, color='darkred', label='F')
-        # axes.set_ylim(0, 5.5)
-        axes.set_ylabel('F [kN]')
-        # axes.legend(loc=9)
-        axes.legend(loc=2)
-
-    def _plot_N_u_cut(self, axes):
-        '''Normal force_cut versus displacement_u_cut
-        '''
-        # ax1 = axes
-        axes.plot(self.u_cut_asc, self.N_cut_asc, color='blue', label='N')
-        axes.xaxis.tick_bottom()
-        axes.set_xlabel('u [mm]')
-        axes.set_ylabel('N [kN]')
-        axes.set_ylim(0, 50)
-        axes.legend(loc=2)
+    default_plot_template = 'F(w)'
 
     def _plot_w_t(self, axes):
         '''Displacement versus time
@@ -571,108 +203,15 @@ class ExpBTTDB(ExType):
         axes.set_ylabel('w [mm]')
         axes.set_ylim(0, 10)
 
-    def _plot_w_t_cut(self, axes):
-        '''Displacement_cut versus time_cut
-        '''
-        axes.plot(self.t_cut_asc, self.w_cut_asc, color='black')
-        axes.xaxis.tick_bottom()
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('w [mm]')
-        axes.set_ylim(0, 10)
-
-    def _plot_w_el_pred_t(self, axes):
-        '''Displacement with eliminated predeformation versus time_cut
-        '''
-        axes.plot(self.t_cut_asc, self.w_el_pred, color='black')
-        axes.xaxis.tick_bottom()
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('w [mm]')
-        axes.set_ylim(0, 10)
-
-    def _plot_u_t(self, axes):
-        '''Displacement versus time
-        '''
-        axes.plot(self.t_asc, self.u_asc, color='black')
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('u [mm]')
-        axes.set_ylim(0, 30)
-
-    def _plot_u_t_cut(self, axes):
-        '''Displacement_cut versus time_cut
-        '''
-        axes.plot(self.t_cut_asc, self.u_cut_asc, color='black')
-        axes.xaxis.tick_bottom()
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('u [mm]')
-        axes.set_ylim(0, 30)
-
-    def _plot_F_w_cut(self, axes):
+    def _plot_F_w(self, axes):
         '''Bending force_cut versus displacement_cut
         '''
-        axes.plot(self.w_cut_asc, self.F_cut_asc, color='blue')
+        axes.plot(self.w_asc, self.F_asc, color='blue')
         axes.xaxis.tick_bottom()
         axes.set_xlabel('w [mm]')
         axes.set_ylabel('F [kN]')
         axes.set_ylim(0, 6)
         axes.set_xlim(0, 10)
-
-    def _plot_F_w_el_pred(self, axes):
-        '''Normal force_cut versus displacement with eliminated predeformation
-        '''
-        axes.plot(self.w_el_pred, self.F_cut_asc, color='blue')
-        axes.xaxis.tick_bottom()
-        axes.set_xlabel('w [mm]')
-        axes.set_ylabel('F [kN]')
-        axes.set_ylim(0, 6)
-        axes.set_xlim(0, 10)
-
-    def _plot_M_MN_MF_t(self, axes, *args, **kw):
-        '''Moment versus time
-        '''
-        axes.plot(self.t_cut_asc, self.N_cut_asc, color='darkblue', label='N')
-        axes.grid()
-        axes.set_ylim(0, 55)
-        axes.set_xlabel('t [sec]')
-        axes.set_ylabel('N [kN]')
-        axes.legend(loc=2)
-        ax2 = axes.twinx()
-        ax2.plot(self.t_cut_asc, self.M, color='green', label='M')
-        ax2.plot(self.t_cut_asc, self.MF, color='darkred', label='M_0')
-        ax2.plot(self.t_cut_asc, self.MN, color='aqua', label='M_II')
-        ax2.set_ylabel(' M [kNm]')
-        ax2.set_ylim(-0.33, 0.58)
-        ax2.legend(loc=1)
-        ax2.legend(ncol=3)
-
-    def _plot_N_M_MN_MF(self, axes):
-        '''Normal force versus moment
-        '''
-        axes.plot(self.MF, self.N_cut_asc, color='red', label='M_0')
-        axes.plot(self.MN, self.N_cut_asc, color='blue', label='M_II')
-        axes.plot(self.M, self.N_cut_asc, color='green', label='M')
-        # axes.xaxis.tick_top()
-        axes.set_xlabel('M / M_II / M_0 [kNm]')
-        axes.xaxis.set_label_position('top')
-        axes.set_ylabel('N [kN]')
-        axes.set_ylim(24, 0)
-        axes.set_xlim(-0.25, 0.45)
-        axes.legend(loc=2)
-
-    # def _plot_N_M(self, axes):
-        '''M-M-interaction diagramm
-        '''
-        '''axes.plot(self.M, self.N_cut_asc, color='green', label='M')
-        x = [0, 0.35]
-        y = [44, 0]
-        axes.plot(x, y, color='grey', linestyle='--', label='M-N-Interaction')
-        axes.grid()
-        axes.xaxis.tick_top()
-        axes.xaxis.set_label_position('top')
-        axes.set_ylim(55 , -1)
-        axes.set_xlim(-0.01 , 0.4)
-        axes.set_xlabel('M [kNm]')
-        axes.set_ylabel('N [kN]')
-        axes.legend(loc=4)'''
 
     #=========================================================================
     # 2D-ARAMIS PROCESSING
@@ -692,11 +231,11 @@ class ExpBTTDB(ExType):
 
     @cached_property
     def _get_t_aramis(self):
-        step_times = self.aramis_field_data.step_times + 5
+        step_times = self.aramis_field_data.step_times
         # step_times = self.aramis_field_data.step_times + self.start_time_aramis
         print 'self.start_time_aramis', self.start_time_aramis
         print '-----------------------------t_max_ARAMIS', step_times[-1]
-        t_max = self.t[self.w_cut_idx]
+        t_max = self.t[-1]
         print '-----------------------------t_max_ASCII', t_max
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
@@ -723,7 +262,7 @@ class ExpBTTDB(ExType):
         print '-----------------------------n_steps_cut2', len(self.t_aramis_cut)
         return len(self.t_aramis_cut)
 
-    aramis_info = Property(depends_on='data_file,aramis_resolution_key')
+    aramis_info = Property(depends_on='data_file,aramis_resolution_key,input_change')
 
     @cached_property
     def _get_aramis_info(self):
@@ -732,41 +271,43 @@ class ExpBTTDB(ExType):
             return None
         return AramisInfo(data_dir=af)
 
-    aramis_field_data = Property(depends_on='data_file,aramis_resolution_key')
+    aramis_field_data = Property(depends_on='data_file,aramis_resolution_key,scale_data_factor,input_change')
     '''Field data including strains and displacements.
     '''
     @cached_property
     def _get_aramis_field_data(self):
-        t_fail = self.t_cut_asc[-1]
+        print '_get_aramis_field_data'
+        t_fail = self.t_asc[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
-                             integ_radius=3)
+                             integ_radius=self.integ_radius,
+                             integ_radius_crack=self.integ_radius_crack,
+                             transform_data=True,
+                             scale_data_factor=self.scale_data_factor)
         current_step = (np.abs(ad.step_times - t_fail).argmin())
         # print 'ad.step_times - t_fail', ad.step_times - t_fail
         ad.current_step = current_step
         return ad
 
-    aramis_cdt = Property(depends_on='data_file,aramis_resolution_key')
+    aramis_cdt = Property(depends_on='data_file,aramis_resolution_key,aramis_field_data,input_change')
     '''Field data including strains and displacements.
     '''
     @cached_property
     def _get_aramis_cdt(self):
+        print '_get_aramis_cdt'
         ad = self.aramis_field_data
-        crack_detection_step = ad.current_step
+        crack_detection_step = self.crack_detaction_step
+        # if crack-detections-step is set to current step:
+        if self.crack_detaction_current_step:
+            crack_detection_step = ad.current_step
         print '---------------------CRACK DETECTION STEP', crack_detection_step
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
-                         ddd_ux_avg_threshold=-0.5e-3,
-                         ddd_ux_threshold=-0.5e-3)
-
-    N_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
-
-    @cached_property
-    def _get_N_t_aramis(self):
-        'normal force interpolated to the time steps of aramis'
-        # print 'np.interp(self.t_aramis, self.t, self.N)',
-        # np.interp(self.t_aramis, self.t, self.N)
-        return np.interp(self.t_aramis_cut, self.t, self.N)
+                         ddd_ux_avg_threshold=self.ddd_ux_avg_threshold,
+                         ddd_ux_threshold=self.ddd_ux_threshold,
+                         dd_ux_avg_threshold=self.dd_ux_avg_threshold,
+                         dd_ux_threshold=self.dd_ux_threshold
+                         )
 
     F_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
 
@@ -780,28 +321,14 @@ class ExpBTTDB(ExType):
     @cached_property
     def _get_w_t_aramis(self):
         'displacement (with eliminated predeformation) interpolated to the time steps of aramis'
-        return np.interp(self.t_aramis_cut, self.t_cut_asc, self.w_el_pred)
+        return np.interp(self.t_aramis_cut, self.t_cut_asc, self.w)
 
     M_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
 
     @cached_property
     def _get_M_t_aramis(self):
         'resulting moment interpolated to the time steps of aramis'
-        return self.F_t_aramis * self.length / 4 - self.N_t_aramis * self.w_t_aramis / 1000
-
-    MN_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
-
-    @cached_property
-    def _get_MN_t_aramis(self):
-        'moment due to normal force interpolated to the time steps of aramis'
-        return self.N_t_aramis * self.w_t_aramis / 1000 * -1
-
-    MF_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
-
-    @cached_property
-    def _get_MF_t_aramis(self):
-        'moment due to bending force interpolated to the time steps of aramis'
-        return self.F_t_aramis * self.length / 4
+        return self.F_t_aramis * self.length_0 / 2
 
     #-------------------------------------------------------------------------
     # crack bridge strain
@@ -827,7 +354,6 @@ class ExpBTTDB(ExType):
     def _get_crack_bridge_strain_all(self):
         '''method to get crack bridge strain for the cracks determined by crack_filter_avg
         '''
-
         ai = self.aramis_info
         if ai == None:
             return None
@@ -939,13 +465,17 @@ class ExpBTTDB(ExType):
     # get max tensile strain in first reinforcement layer
     #-------------------------------------------------------------------------
 
-    h_re1_6_threshold = Float(2.86, auto_set=False, enter_set=True)
-    '''Threshold for position of first reinforcement layer (6 layers).
+    h_re1_threshold = Float(15., auto_set=False, enter_set=True)
+    '''Threshold for position of first reinforcement layer (1 layers); c_nom = 15mm.
     '''
 
-    h_re1_4_threshold = Float(4.0, auto_set=False, enter_set=True)
-    '''Threshold for position of first reinforcement layer (4 layers).
-    '''
+#     h_re1_6_threshold = Float(2.86, auto_set=False, enter_set=True)
+#     '''Threshold for position of first reinforcement layer (6 layers).
+#     '''
+#
+#     h_re1_4_threshold = Float(4.0, auto_set=False, enter_set=True)
+#     '''Threshold for position of first reinforcement layer (4 layers).
+#     '''
 
     meas_field = Property(depends_on='data_file,aramis_resolution_key')
     '''Get length and height of measuring field (calculated from the center of the facets)
@@ -981,8 +511,7 @@ class ExpBTTDB(ExType):
         ai = self.aramis_info
         if ai == None:
             return None
-
-        h_dis = (20 - self.meas_field[1]) / 2
+        h_dis = (self.thickness * 1000. - self.meas_field[1]) / 2
         # print 'h_dis', h_dis
         return h_dis
 
@@ -995,8 +524,7 @@ class ExpBTTDB(ExType):
         if ai == None:
             return None
 
-        # position of first node in y-direction
-        pos_no_f = 20.0 - self.h_dis
+        pos_no_f = self.thickness * 1000. - self.h_dis
         # position of last node in y-direction
         pos_no_l = self.h_dis
 
@@ -1022,10 +550,13 @@ class ExpBTTDB(ExType):
         # print 'dis_fa', dis_fa
 
         # get distance form top edge of mask to first reinforcement layer
-        pos_re1_6 = self.h_re1_6_threshold - self.h_dis
-        # print 'pos_re1_6', pos_re1_6  # -> negative value
-        pos_re1_4 = self.h_re1_4_threshold - self.h_dis
-        # print 'pos_re1_4', pos_re1_4
+        # for 55mm bending specimens
+        pos_re1_6 = self.h_re1_threshold - self.h_dis
+#         # get distance form top edge of mask to first reinforcement layer
+#         pos_re1_6 = self.h_re1_6_threshold - self.h_dis
+#         # print 'pos_re1_6', pos_re1_6  # -> negative value
+#         pos_re1_4 = self.h_re1_4_threshold - self.h_dis
+#         # print 'pos_re1_4', pos_re1_4
 
         # indices of strain next to position of reinforcement layer
         if pos_re1_6 < 0:
@@ -1034,13 +565,6 @@ class ExpBTTDB(ExType):
             idx_6a = pos_re1_6 / dis_fa
             idx_6a = round(idx_6a)
         idx_6b = idx_6a + 1
-
-        if pos_re1_4 < 0:
-            idx_4a = 0
-        else:
-            idx_4a = pos_re1_4 / dis_fa
-            idx_4a = round(idx_4a)
-        idx_4b = idx_4a + 1
 
         a = self.crack_bridge_strain_all
         eps_t_list = []
@@ -1084,17 +608,6 @@ class ExpBTTDB(ExType):
             eps_t_list.append(eps_re1)
             # print 'eps_t_list', np.array(eps_t_list, dtype='f')
         return np.array(eps_t_list, dtype='f')
-
-        # if 4 layers
-        # x1 = pos_re1_4 - idx_4a * dis_fa
-        # print 'x1', x1
-        # x_re1 = (dis_fa - x1) * (eps[idx_4a] - eps[idx_4b]) / dis_fa
-        # print 'x_re1', x_re1
-        # eps_re1 = eps[idx_4b] + x_re1
-        # print 'eps_re1', eps_re1
-        # eps_t_list.append(eps_re1)
-        # print 'eps_t_list', np.array(eps_t_list, dtype='f')
-        # return np.array(eps_t_list, dtype='f')
 
     #-------------------------------------------------------------------------
     # get max and min strain of cross section
@@ -1145,7 +658,9 @@ class ExpBTTDB(ExType):
                 # eps = np.mean(ad.d_ux[:, idx_border1:idx_border2], axis=1)
 
             # extrapolate eps for the specimen edges
-            x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+            # 55mm bending specimen
+            x = ((55 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+#             x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
             eps_ed_up = x + eps[-1]
             eps_ed_lo = eps[0] - x
             eps_to1 = np.append(eps, eps_ed_lo)
@@ -1159,42 +674,7 @@ class ExpBTTDB(ExType):
             # print 'eps_t_list', np.array(eps_t_list, dtype='f')
         return np.array(eps_t_list, dtype='f'), np.array(eps_c_list, dtype='f')
 
-    # TO-DO:
-    #--------------------------------------------------------------------------
-    # Cut the strain  at the end when the gradient of displacement is to big
-    #--------------------------------------------------------------------------
 
-    # gra_max_eps_threshold = Float(0.0002, auto_set=False, enter_set=True)
-    '''Threshold to limit the gradient of displacement-curve at the end.
-    '''
-
-    '''eps_cut_idx = Property(Int, depends_on='input_change')
-    @cached_property
-    def _get_eps_cut_idx(self):
-
-        eps_max_arr = self.eps_t_aramis[0]
-        print 'eps_max_arr', eps_max_arr
-        t_arr = self.t_aramis_cut
-
-        delta_eps_arr = eps_max_arr[1:] - eps_max_arr[:-1]
-        print 'delta_eps_arr', delta_eps_arr
-        delta_t_arr = t_arr[1:] - t_arr[:-1]
-        print 'delta_t_arr', delta_t_arr
-
-        # Calculate the gradient for every index
-        gra_arr = delta_eps_arr[:] / delta_t_arr[:]
-        print 'gra_rr', gra_arr
-
-        # Examine the indices where the gradient is bigger than the threshold gradient
-        gra_idx_arr = np.where(gra_arr > self.gra_max_eps_threshold)[0]
-
-        print '*** gradient is bigger than the threshold gradient at the following indices and time: ***'
-        print 'gra_idx_arr', gra_idx_arr
-
-        if len(gra_idx_arr) > 0:
-            return gra_idx_arr[0]
-        else:
-            return len(self.eps_t_aramis[0])'''
 
     #-------------------------------------------------------------------------
     # get strain(N) and strain(M)
@@ -1230,27 +710,6 @@ class ExpBTTDB(ExType):
         print 'F_beg_idx', F_beg_idx
         return F_beg_idx
 
-    t_N_arr = Property(depends_on='data_file,aramis_resolution_key')
-    '''Get the time where N rises
-    '''
-    @cached_property
-    def _get_t_N_arr(self):
-        ai = self.aramis_info
-        if ai == None:
-            return None
-
-        if self.F_beg_idx == 0:
-            t_N = []
-        elif self.F_beg_idx == []:
-            t_N = self.t_aramis_cut
-        else:
-            N_end_idx = self.F_beg_idx
-            # print 'N_end_idx', N_end_idx
-            t_N = self.t_aramis_cut[0: N_end_idx]
-
-        # print 't_N_arr', t_N
-        return t_N
-
     t_F_arr = Property(depends_on='data_file,aramis_resolution_key')
     '''Get the time where F rises
     '''
@@ -1270,82 +729,6 @@ class ExpBTTDB(ExType):
         # print 't_F_arr', t_F
         return t_F
 
-    eps_N = Property(depends_on='data_file,aramis_resolution_key')
-    '''get the strain corresponding to N
-    '''
-    @cached_property
-    def _get_eps_N(self):
-        ai = self.aramis_info
-        if ai == None:
-            return None
-
-        field_data = self.aramis_field_data
-
-        a = self.crack_bridge_strain_all
-        n_fa = field_data.d_ux.shape[0]
-        h = np.linspace(self.pos_fa[0], self.pos_fa[1], num=n_fa)
-        t_N = self.t_N_arr
-        eps_N_list = []
-
-        if len(t_N) == 0:
-            N_end_idx = 0
-        elif self.F_beg_idx == []:
-            N_end_idx = len(self.N_t_aramis)
-        else:
-            N_end_idx = self.F_beg_idx
-        print 'N_end_idx', N_end_idx
-
-        if t_N != []:
-            for step in range(0, N_end_idx, 1):
-                field_data.current_step = step
-                if a == None:
-                    mid_idx = field_data.d_ux.shape[1] / 2
-                    eps_range = 3
-                    eps = np.mean(
-                        field_data.d_ux[:, mid_idx - eps_range:mid_idx + eps_range], axis=1)
-
-                else:
-                    idx_border1 = self.idx_failure_crack[1]
-                    idx_border2 = self.idx_failure_crack[2]
-                    eps = np.mean(
-                        field_data.d_ux[:, idx_border1:idx_border2], axis=1)
-                    # print 'eps', eps
-
-                    # extrapolate eps for the specimen edges
-                    x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
-                    eps_ed_up = x + eps[-1]
-                    eps_ed_lo = eps[0] - x
-                    eps_to1 = np.append(eps, eps_ed_lo)
-                    eps_to2 = np.append(eps_ed_up, eps_to1)
-
-                    # print 'eps_to2', eps_to2
-
-                    eps_N_list.append(np.mean(eps_to2))
-                    eps_N = np.array(eps_N_list, dtype='f')
-
-            # print 'eps_N_list', eps_N
-            print 'eps_N[-1]', eps_N[-1] * 1000
-            return eps_N
-
-    N_t_N = Property(depends_on='data_file,aramis_resolution_key')
-    '''Get N in the range of t_N
-    '''
-    @cached_property
-    def _get_N_t_N(self):
-
-        if self.t_N_arr == None or len(self.t_N_arr) == 0:
-            # print 'self.N_t_aramis[0:t_N_idx]', []
-            return []
-        elif self.F_beg_idx == []:
-            N_t_N = self.N_t_aramis
-            return N_t_N
-        else:
-            N_end_idx = self.F_beg_idx
-            # print 'N_end_idx' , N_end_idx
-            N_t_N = self.N_t_aramis[0:N_end_idx]
-            # print 'self.N_t_aramis[0:t_N_idx]', N_t_N
-            print 'N_t_N[-1]', N_t_N[-1]
-            return N_t_N
 
     eps_M = Property(depends_on='data_file,aramis_resolution_key')
     '''Get the strain corresponding to M
@@ -1460,7 +843,8 @@ class ExpBTTDB(ExType):
 
         h = np.linspace(self.pos_fa[0], self.pos_fa[1], num=n_fa)
         h_1 = np.append(h, 0)
-        h_2 = np.append(20, h_1)
+            # 55mm specimens
+        h_2 = np.append(self.thickness * 1000., h_1)
 
         x_list = []
 
@@ -1479,7 +863,8 @@ class ExpBTTDB(ExType):
                     field_data.d_ux[:, idx_border1:idx_border2], axis=1)
 
             # extrapolate eps for the specimen edges
-            x = ((20 - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
+            # 55mm specimens
+            x = ((self.thickness * 1000. - h[-1]) * (eps[0] - eps[-1])) / (h[0] - h[-1])
             eps_ed_up = x + eps[-1]
             eps_ed_lo = eps[0] - x
             eps_to1 = np.append(eps, eps_ed_lo)
@@ -1499,7 +884,7 @@ class ExpBTTDB(ExType):
                 x = 0
 
             elif idx_neg[0] == 0:
-                x = 20
+                x = self.thickness * 1000.
 
             else:
                 idx_1 = idx_neg[0]
@@ -1518,40 +903,6 @@ class ExpBTTDB(ExType):
 
         return np.array(x_list, dtype='f')
 
-    #-------------------------------------------------------------------------
-    # get curvature of the specimen
-    #-------------------------------------------------------------------------
-
-    # TO-DO: check if correct
-    '''cu_t_aramis = Property(depends_on='data_file,aramis_resolution_key')
-    @cached_property
-    def _get_cu_t_aramis(self):
-
-        ai = self.aramis_info
-        if ai == None:
-            return None
-
-        a = self.crack_bridge_strain_all
-        eps = self.eps1_t_aramis[0]
-        z_arr = 20 - self.x_t_aramis
-        cu_list = []
-        # print 'self.x_t_aramis', self.x_t_aramis
-        # print 'z_arr', z_arr
-        # print 'self.eps1_t_aramis[0]', self.eps1_t_aramis[0]
-
-        if a == None:
-            return None
-
-        else:
-            for i in z_arr:
-                if i == 0:
-                    cu = 0
-                else:
-                    cu = eps[i] / z_arr[i]
-                cu_list.append(cu)
-
-        return np.array(cu_list, dtype='f')'''
-
     #---------------------------------
     # view
     #---------------------------------
@@ -1567,11 +918,8 @@ class ExpBTTDB(ExType):
             dock='tab',
         ),
             Group(
-            Item('loading_rate_N'),
-            Item('loading_rate_F'),
+            Item('loading_rate'),
             Item('age'),
-            Item('prodcution_date'),
-            Item('testing_date'),
             springy=True,
             label='loading rate and age',
             id='matresdev.db.exdb.ex_composite_bending_tensile_test.loading',
@@ -1590,21 +938,11 @@ class ExpBTTDB(ExType):
         #                               ),
         Group(
             Item('E_c', style='readonly', show_label=True, format_str="%.0f"),
-            Item('N_max', style='readonly',
-                 emphasized=True, format_str="%.2f"),
             Item('F_max', style='readonly',
                  emphasized=True, format_str="%.2f"),
             Item('w_max', style='readonly',
                  emphasized=True, format_str="%.2f"),
-            Item('u_max', style='readonly',
-                 emphasized=True, format_str="%.2f"),
             Item('M_max', style='readonly',
-                 emphasized=True, format_str="%.3f"),
-            Item('MN_max', style='readonly',
-                 emphasized=True, format_str="%.3f"),
-            Item('MF_max', style='readonly',
-                 emphasized=True, format_str="%.3f"),
-            Item('w_pred', style='readonly',
                  emphasized=True, format_str="%.3f"),
             label='output characteristics',
             id='matresdev.db.exdb.ex_composite_bending_tensile_test.vgroup.outputs',
@@ -1624,7 +962,8 @@ class ExpBTTDB(ExType):
     )
 
 
-ExpBTTDB.db = ExRunClassExt(klass=ExpBTTDB)
+ExpBT4PTAramis2d.db = ExRunClassExt(klass=ExpBT4PTAramis2d)
+# ExpBTTDB.db = ExRunClassExt(klass=ExpBTTDB)
 
 #--------------------------------------------------------------
 
@@ -1635,18 +974,15 @@ if __name__ == '__main__':
     simdb = SimDB()
     import os
 
-    ex_path = os.path.join(simdb.exdata_dir,
-                           'bending_tensile_test',
-                           '2014-06-12_BTT-6c-2cm-0-TU_MxN2',
-                           'BTT-6c-2cm-TU-0-V03_MxN2.DAT')
+    test_files = ['BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT']
 
-    test_file = os.path.join(simdb.exdata_dir,
-                             'bending_tensile_test',
-                             '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
-                             'BTT-4c-2cm-TU-0-V02_MxN2.DAT')
+    test_file_path = os.path.join(simdb.exdata_dir,
+                                  'bending_tests', 'four_point',
+                                  '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
+                                  )
 
-    doe_reader = ExRunView(data_file=ex_path)
+    doe_reader = ExRunView(data_file=test_file_path)
     doe_reader.configure_traits()
 
-    # ExpBTTDB.db.configure_traits()
-    # to see all experiments in one picture
+#     ExpBT4PTAramis2d.db.configure_traits()
+#    to see all experiments in one picture

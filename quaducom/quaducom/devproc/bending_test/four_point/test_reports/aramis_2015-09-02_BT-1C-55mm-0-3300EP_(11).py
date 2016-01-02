@@ -17,7 +17,7 @@ if __name__ == '__main__':
     #-------------------------------------------
     # list of available aramis files and resolution keys
     #-------------------------------------------
-    # BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d-Xf15s3-Yf10s1,
+    #                BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d-Xf15s3-Yf10s1,
     #                BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d-Xf15s13-Yf15s13,
     #                BT-1C-55mm-0-3300EP-V2_S4P2(13)-cyc-Aramis2d-Xf15s13-Yf15s13,
     #                BT-1C-55mm-0-3300EP-V2_S4P2(13)-cyc-Aramis2d-Xf15s3-Yf10s1,
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     #-------------------------------------------
     # select test file and resolution key
     #-------------------------------------------
-    test_file = 'BT-1C-55mm-0-3300SBR-V3_S2P1(12)-cyc-Aramis2d.DAT'
+    test_file = 'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT'
 
     test_file_path = os.path.join(simdb.exdata_dir,
                                   'bending_tests', 'four_point',
@@ -44,14 +44,14 @@ if __name__ == '__main__':
     #-------------------------------------------
     # specify parameters for aramis_cdt
     #-------------------------------------------
-    start_time_aramis = 31
-    crack_detaction_step = 257  # last step before rupture is step no. 267 (specimen is deforming strongly therefore use last stable step instead);
+    start_time_aramis = 0.
+    crack_detaction_step = 162  # last step before rupture
     integ_radius = 3  # radius used for crack detection
     integ_radius_crack = 5  # radius used for calculation of displacement jumps (=crack width)
-    dd_ux_avg_threshold = -0.0000001
-    dd_ux_threshold = -0.0000001
-    ddd_ux_avg_threshold = -0.0008
-    ddd_ux_threshold = -0.0008
+    dd_ux_avg_threshold = -1e-07
+    dd_ux_threshold = -1e-07
+    ddd_ux_avg_threshold = 0.00001
+    ddd_ux_threshold = 0.00001
 
     #-------------------------------------------
     # specify parameters for 2d-scaling of coordinates (calculation see below)
@@ -150,9 +150,10 @@ if __name__ == '__main__':
     left_i = e_run.aramis_field_data.left_i
     e_run.aramis_field_data.left_i = integ_radius_crack
     right_i = e_run.aramis_field_data.right_i
-    e_run.aramis_field_data.right_i -= (integ_radius_crack + 5)  # NOTE: cut off spurious displacement jump
+    e_run.aramis_field_data.right_i -= integ_radius_crack
     print 'left_i', left_i
     print 'right_i', right_i
+    e_run.aramis_field_data.top_j += 9  # NOTE: cutoff 9 cells from top surface as purious displacement jumps are detected
 
     #-------------------------------------------
     # scale gylphs for mlab.points3d
