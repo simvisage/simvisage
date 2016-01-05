@@ -156,7 +156,7 @@ if __name__ == '__main__':
     #-------------------------------------------
     # scale gylphs for mlab.points3d
     #-------------------------------------------
-    overlap_factor = 1.03  # cubes overlap for smoother display without gaps
+    overlap_factor = 1.25  # cubes overlap for smoother display without gaps
     range_l = max(x.shape[0], x.shape[1])
     range_t = min(x.shape[0], x.shape[1])
     dist_l = lx_avg * scale_data_factor
