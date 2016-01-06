@@ -12,7 +12,7 @@
 #
 # Created on Jun 15, 2010 by: rch
 
-from etsproxy.traits.api import Float, Int
+from traits.api import Float, Int
 
 from ibvpy.api import \
     IBVModel, \

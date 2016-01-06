@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import HasTraits, WeakRef, Property
+from traits.api import HasTraits, WeakRef, Property
 
 class AStrategyBase( HasTraits ):
     '''

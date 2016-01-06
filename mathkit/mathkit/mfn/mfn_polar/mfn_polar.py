@@ -5,7 +5,7 @@ from chaco.api import create_polar_plot
 
 
 # Enthought library imports
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Enum, Float, HasTraits, Int, \
     Property, cached_property, Range, Str, TraitError
 from traitsui.api import \

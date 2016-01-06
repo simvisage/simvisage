@@ -10,11 +10,11 @@ from numpy \
 from numpy.random \
     import random
 
-from etsproxy.traits.api \
+from traits.api \
     import HasTraits, Property, Array, Any, Event, \
     on_trait_change, Instance, WeakRef, Int, Str, Bool, Trait
     
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import View, Item, TabularEditor, HSplit, Group
     
 from etsproxy.traits.ui.menu \
@@ -177,7 +177,7 @@ class ElemArrayView ( HasTraits ):
 # Run the demo (if invoked from the command line):
 if __name__ == '__main__':
 
-    from etsproxy.traits.api import Button
+    from traits.api import Button
     from mdomain import MGridDomain
 
     rt_domain = MGridDomain( shape = (20,20,1) )

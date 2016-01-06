@@ -1,10 +1,10 @@
-from etsproxy.traits.api import \
+from traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
      Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
      on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, \
      This, self, TraitError
 
-from etsproxy.traits.ui.api import View, Item, Group, Include
+from traitsui.api import View, Item, Group, Include
 from i_fe_subdomain import IFESubDomain
 from fe_domain import FEDomain
 

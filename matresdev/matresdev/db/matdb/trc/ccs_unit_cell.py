@@ -12,14 +12,14 @@
 #
 # Created on May 12, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, List, Float, \
     on_trait_change, Instance, \
     Str, Property, cached_property, \
     Event, \
     DelegatesTo, Button
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring

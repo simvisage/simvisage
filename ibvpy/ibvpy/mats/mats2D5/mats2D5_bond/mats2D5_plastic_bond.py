@@ -3,12 +3,12 @@ Created on Feb 25, 2010
 
 @author: jakub
 '''
-from etsproxy.traits.api import \
+from traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring
 
 #from dacwt import DAC

@@ -1,6 +1,6 @@
 
-from etsproxy.traits.api import HasTraits, implements, List, Any, WeakRef
-from etsproxy.traits.ui.api import View, Item
+from traits.api import HasTraits, implements, List, Any, WeakRef
+from traitsui.api import View, Item
 from i_sdomain import ISDomain
 from scontext import SContext
 from ibv_resource import IBVResource

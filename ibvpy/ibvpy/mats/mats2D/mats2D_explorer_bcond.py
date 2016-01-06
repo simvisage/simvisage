@@ -12,7 +12,7 @@
 #
 # Created on Sep 8, 2009 by: rch
 
-from etsproxy.traits.api import Range, Float, on_trait_change
+from traits.api import Range, Float, on_trait_change
 from ibvpy.bcond.bc_dof import BCDof
 from math import sin, cos
 from numpy import pi as Pi

@@ -13,9 +13,9 @@
 #-------------------------------------------------------------------------------
 
 # Enthought library imports
-from etsproxy.traits.api import \
+from traits.api import \
     Enum, false, Str, Range, Tuple, Bool, Trait, Int, Any, Property, Instance, HasPrivateTraits
-from etsproxy.traits.ui.api import  Item, UI
+from traitsui.api import  Item, UI
 from etsproxy.traits.ui.menu import Action, ToolBar, Menu
 from etsproxy.traits.ui.wx.editor import Editor
 from etsproxy.traits.ui.basic_editor_factory import BasicEditorFactory
