@@ -12,11 +12,11 @@
 #
 # Created on May 29, 2009 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     Float, Instance, Array, Int, Property, cached_property, on_trait_change, Bool, \
     HasTraits, File, Event, Str
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, FileEditor, HSplit, Group, VSplit, \
     Handler
 

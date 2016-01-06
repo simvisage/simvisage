@@ -3,7 +3,7 @@ Created on May 25, 2009
 
 @author: jakub
 '''
-from etsproxy.traits.api import \
+from traits.api import \
     Instance, Array, Int, on_trait_change, Property, cached_property, \
     List, Button, HasTraits, implements, WeakRef, Float, Delegate, \
     Callable, Class, This, Str, Tuple

@@ -6,7 +6,7 @@ Created on Apr 9, 2010
 
 from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, FileEditor, HSplit, Group, VSplit, \
     Handler
 

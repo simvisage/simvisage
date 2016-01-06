@@ -1,10 +1,10 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Float, Int, Array, Property, cached_property, \
     Tuple, List, Str, on_trait_change, Button, Delegate, \
     Instance, Trait
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Group, HGroup, VGroup, VSplit, HSplit, CheckListEditor, TextEditor
         
 from numpy import zeros, mgrid, c_, indices, transpose, array, arange, \
@@ -12,7 +12,7 @@ from numpy import zeros, mgrid, c_, indices, transpose, array, arange, \
 
 # tvtk related imports
 #
-from etsproxy.traits.ui.api import View, Item, HSplit, VSplit, InstanceEditor
+from traitsui.api import View, Item, HSplit, VSplit, InstanceEditor
 from etsproxy.tvtk.api import tvtk
 
 from etsproxy.tvtk.pyface.scene_editor import SceneEditor

@@ -12,7 +12,7 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
@@ -21,7 +21,7 @@ from etsproxy.traits.api import \
 from etsproxy.util.home_directory import \
     get_home_directory
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group
     

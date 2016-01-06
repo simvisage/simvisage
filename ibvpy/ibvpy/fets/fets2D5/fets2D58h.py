@@ -1,4 +1,4 @@
-from etsproxy.traits.api import \
+from traits.api import \
     Instance, Int, Property, Array, cached_property, Instance, Float
 
 from numpy import \

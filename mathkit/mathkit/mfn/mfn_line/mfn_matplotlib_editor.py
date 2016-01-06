@@ -20,7 +20,7 @@ from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 from matplotlib.figure import Figure
 import wx
 
-from etsproxy.traits.api import Instance, Int
+from traits.api import Instance, Int
 from traitsui.wx.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 from mfn_plot_adapter import MFnPlotAdapter

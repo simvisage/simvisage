@@ -1,11 +1,11 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Callable, Enum, File, Float, HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     Dict, Property, cached_property, WeakRef, Delegate, \
     ToolbarButton, on_trait_change
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
 
 from traitsui.menu import \

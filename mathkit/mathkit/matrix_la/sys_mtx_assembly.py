@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Int, Array, Property, cached_property, List, Trait, Dict, \
     Any, Bool, Float
 from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \

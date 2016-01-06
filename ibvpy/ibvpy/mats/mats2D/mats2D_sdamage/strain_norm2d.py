@@ -1,5 +1,5 @@
-from etsproxy.traits.api import HasTraits, Float
-from etsproxy.traits.ui.api import View, Item
+from traits.api import HasTraits, Float
+from traitsui.api import View, Item
 
 from numpy import where, zeros, dot, diag, linalg
 from ibvpy.mats.mats2D.mats2D_tensor import map2d_sig_eng_to_mtx

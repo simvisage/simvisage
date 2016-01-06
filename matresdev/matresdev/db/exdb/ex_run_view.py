@@ -12,11 +12,11 @@
 #
 # Created on Jan 19, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     Instance, File, List, on_trait_change, Bool, \
     Event, Enum
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, ModelView, HSplit, VSplit, \
     Group, FileEditor
 

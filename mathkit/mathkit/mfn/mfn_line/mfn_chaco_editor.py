@@ -13,11 +13,11 @@
 #-------------------------------------------------------------------------------
 
 # Enthought library imports
-from etsproxy.traits.api import \
+from traits.api import \
     Enum, false, Str, Range, Tuple, \
     Bool, Trait, Int, Any, Property, Instance, HasPrivateTraits, File
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, UI
 from etsproxy.traits.ui.menu import \
     Action, ToolBar, Menu

@@ -1,9 +1,9 @@
-from etsproxy.traits.api import \
+from traits.api import \
     Trait, Str, Enum, \
     Property, \
     TraitError
 
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import VGroup
 
 from numpy \
@@ -13,7 +13,7 @@ from numpy \
 from ibvpy.plugins.mayavi_util.pipelines \
     import MVUnstructuredGrid
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, HSplit, VSplit
 
 from ibvpy.rtrace.rt_domain import RTraceDomain

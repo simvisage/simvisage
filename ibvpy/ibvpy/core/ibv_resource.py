@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Instance, Delegate, HasStrictTraits, Str
 
 class IBVResource(HasTraits):

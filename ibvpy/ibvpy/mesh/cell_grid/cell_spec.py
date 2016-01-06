@@ -1,10 +1,10 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item
 
 from ibvpy.core.i_sdomain import \

@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, \
     Instance, Int, Trait, Range, HasStrictTraits, HasTraits, on_trait_change, Event, \
     implements, Dict, Property, cached_property, Delegate, Button, \
@@ -8,7 +8,7 @@ from etsproxy.traits.api import \
 # from util.traits.either_type import \
 #    EitherType
 # Traits UI imports
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HSplit, VSplit, VGroup, \
     Group, HGroup, Spring, TabularEditor, \
     Include

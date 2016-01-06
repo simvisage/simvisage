@@ -147,7 +147,7 @@ class TLoopHandler(Handler):
 
 RecalcAction = Action(name='Recalculate', action='recalculate')
 
-from etsproxy.traits.ui.api import TreeNodeObject
+from traitsui.api import TreeNodeObject
 from warnings import warn
 
 
