@@ -4,7 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>aramis_cdt</project>
-		<project>etsproxy</project>
 		<project>ibvpy</project>
 		<project>mathkit</project>
 		<project>matresdev</project>
