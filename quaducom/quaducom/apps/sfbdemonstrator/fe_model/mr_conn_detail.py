@@ -5,7 +5,7 @@ TODO: @ Andreas
      - split dead load cases, include additional dead load case
 '''
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Float, Array, implements, Property, cached_property, Instance, \
     Int, List, Bool, HasTraits, Enum, Dict, Str
 
@@ -56,7 +56,7 @@ from matplotlib.pyplot import \
 import csv
 
 
-from simiter.sim_pstudy import\
+from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
 
