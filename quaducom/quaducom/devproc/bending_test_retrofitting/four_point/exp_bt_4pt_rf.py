@@ -478,12 +478,12 @@ class ExpBT4PTRF(ExType):
 
         # add curves
         #
-        axes.plot(eps_CM, f_asc, linewidth=linewidth, label='concrete: eps_CM', color='grey')
-        axes.plot(eps_CMR, f_asc, linewidth=linewidth, label='concrete: eps_CMR', color='grey')
-        axes.plot(eps_CML, f_asc, linewidth=linewidth, label='concrete: eps_CML', color='grey')
-        axes.plot(eps_HL, f_asc, linewidth=linewidth, label='TRC: eps_HL', color='k')
-        axes.plot(eps_HM, f_asc, linewidth=linewidth, label='TRC: eps_HM', color='k')
-        axes.plot(eps_HR, f_asc, linewidth=linewidth, label='TRC: eps_HR', color='k')
+        axes.plot(eps_CM, f_asc, linewidth=linewidth, label='compression: eps_CM', color='grey')
+        axes.plot(eps_CMR, f_asc, linewidth=linewidth, label='compression: eps_CMR', color='grey')
+        axes.plot(eps_CML, f_asc, linewidth=linewidth, label='compression: eps_CML', color='grey')
+        axes.plot(eps_HL, f_asc, linewidth=linewidth, label='tension: eps_HL', color='k')
+        axes.plot(eps_HM, f_asc, linewidth=linewidth, label='tension: eps_HM', color='k')
+        axes.plot(eps_HR, f_asc, linewidth=linewidth, label='tension: eps_HR', color='k')
 
         # add axes labels
         #

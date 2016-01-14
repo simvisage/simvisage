@@ -62,8 +62,8 @@ def plot_all():
 #             e._plot_force_deflection_thirdpoints(axes)
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
-            xlim = 250
-            ylim = 90.
+            xlim = 140
+            ylim = 40.
             axes.axis([-1., xlim, 0., ylim])
 
         if do == 'strains-top-bottom':
