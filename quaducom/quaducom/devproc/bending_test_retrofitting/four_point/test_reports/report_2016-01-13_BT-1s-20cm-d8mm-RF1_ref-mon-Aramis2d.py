@@ -22,7 +22,8 @@ p.rcParams.update(params)
 
 # plot force - displacement
 # NOTE: 'do'-key is used for file name of saved image
-do = 'F-w'  # plot force - displacement
+do = 'F-w-center'
+# do = 'strains-top-bottom'
 
 #--------------------
 # BT-4PT-1C-55cm-3300EP
@@ -39,9 +40,6 @@ plot_orig_list = [1]
 # cutoff long label names at the end for cleaner legend display
 label_cutoff = [-9]
 #--------------------
-
-do = 'F-w-center'
-# do = 'strains-top-bottom'
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
           for test_file in test_files]
