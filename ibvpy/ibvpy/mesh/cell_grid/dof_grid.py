@@ -1,10 +1,10 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, List, Array, Property, cached_property, \
     Instance, Trait, Button, on_trait_change, Tuple, \
     Int, Float, DelegatesTo, implements, Interface, WeakRef, Bool
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Group
 
 from ibvpy.core.i_sdomain import \
@@ -341,7 +341,7 @@ class DofGridSlice(CellGridSlice):
 #-- Tabular Adapter Definition -------------------------------------------
 from traitsui.tabular_adapter import \
     TabularAdapter
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     TabularEditor
 
 

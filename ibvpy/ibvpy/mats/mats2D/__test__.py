@@ -12,7 +12,7 @@
 #
 # Created on Aug 18, 2009 by: rch
 
-from etsproxy.traits.api import HasTraits, Instance
+from traits.api import HasTraits, Instance
 
 import unittest
 

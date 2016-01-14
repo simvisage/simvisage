@@ -13,11 +13,11 @@
 # Created on Sep 8, 2009 by: rch
 from envisage.ui.workbench.api import WorkbenchApplication
 
-from etsproxy.traits.api import \
+from traits.api import \
     Instance, Property, cached_property, implements, List, \
     Callable, String, Int, HasTraits
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item
 
 from util.traits.either_type import \

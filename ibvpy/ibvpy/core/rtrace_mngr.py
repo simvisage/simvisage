@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     Dict, Property, cached_property, WeakRef, Delegate, Button, \

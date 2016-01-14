@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, \
@@ -7,7 +7,7 @@ from etsproxy.traits.api import \
     Delegate, Event, on_trait_change, Button, \
     Interface, Property, cached_property, WeakRef, Dict
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit
 
@@ -15,7 +15,7 @@ from traitsui.menu import \
     NoButtons, OKButton, CancelButton, \
     Action
 
-from etsproxy.traits.api import \
+from traits.api import \
     implements
 
 from numpy import zeros, float_

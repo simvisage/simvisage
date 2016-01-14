@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, WeakRef, Tuple, Property, cached_property, Int, Float, Bool, Any
 
 class CellGridSlice( HasTraits ):

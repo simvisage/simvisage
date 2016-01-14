@@ -12,11 +12,11 @@
 #
 # Created on Aug 19, 2009 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     Enum, Property, cached_property, Callable, Constant, Class, implements, \
     Int
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
      Item, View, HSplit, VSplit, VGroup, Group, Spring, Include
 
 from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm import \

@@ -14,7 +14,7 @@
 
 # @todo: introduce the activation of filters - ironing, smoothing
 
-from etsproxy.traits.api import \
+from traits.api import \
     File, \
     Array, Str, Property, cached_property, \
     Dict, Bool, implements, Float

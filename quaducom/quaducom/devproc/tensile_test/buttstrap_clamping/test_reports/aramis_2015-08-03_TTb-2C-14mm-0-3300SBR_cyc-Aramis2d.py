@@ -22,7 +22,9 @@ if __name__ == '__main__':
     # Aramis2d - frontview
     #------------------------
     test_file = 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT'
-    scale_data_factor = 1.385  # based on real specimen width of the tensile tests with SBR textile (= 96 mm)
+    # based on real specimen width of the tensile tests with SBR textile (= 96
+    # mm)
+    scale_data_factor = 1.385
     res_key = 'Xf15s1-Yf15s4'
     start_time_aramis = 6.
 
@@ -35,7 +37,8 @@ if __name__ == '__main__':
     crack_detaction_step = -1  # last step (not used if 'current_step'=True)
     crack_detaction_current_step = True
     integ_radius = 3  # radius used for crack detection
-    integ_radius_crack = 5  # radius used for calculation of displacement jumps (=crack width)
+    # radius used for calculation of displacement jumps (=crack width)
+    integ_radius_crack = 5
     dd_ux_avg_threshold = -1e-07
     dd_ux_threshold = -1e-07
     ddd_ux_avg_threshold = 0.00001
@@ -45,18 +48,18 @@ if __name__ == '__main__':
     # setup experiment run with aramis data
     #-------------------------------------------
     e_run = ExpTTAramis2d(data_file=os.path.join(test_file_path, test_file),
-                       aramis_resolution_key=res_key,
-                       start_time_aramis=start_time_aramis,
-                       integ_radius=integ_radius,
-                       integ_radius_crack=integ_radius_crack,
-                       ddd_ux_avg_threshold=ddd_ux_avg_threshold,
-                       ddd_ux_threshold=ddd_ux_threshold,
-                       dd_ux_avg_threshold=dd_ux_avg_threshold,
-                       dd_ux_threshold=dd_ux_threshold,
-                       delta_t_aramis=0,
-                       crack_detaction_current_step=crack_detaction_current_step,
-                       crack_detaction_step=crack_detaction_step
-                       )
+                          aramis_resolution_key=res_key,
+                          start_time_aramis=start_time_aramis,
+                          integ_radius=integ_radius,
+                          integ_radius_crack=integ_radius_crack,
+                          ddd_ux_avg_threshold=ddd_ux_avg_threshold,
+                          ddd_ux_threshold=ddd_ux_threshold,
+                          dd_ux_avg_threshold=dd_ux_avg_threshold,
+                          dd_ux_threshold=dd_ux_threshold,
+                          delta_t_aramis=0,
+                          crack_detaction_current_step=crack_detaction_current_step,
+                          crack_detaction_step=crack_detaction_step
+                          )
 
     e_run.process_source_data()
     print 'crack filter', e_run.crack_filter_avg
@@ -153,10 +156,10 @@ if __name__ == '__main__':
                    glyph_x_length=glyph_l_length,
                    glyph_y_length=glyph_t_length,
                    glyph_z_length=0.0,
-                   glyph_x_length_cr=glyph_l_length * 6.,  # extrude the plot_var in the out-of-plane direction
+                   # extrude the plot_var in the out-of-plane direction
+                   glyph_x_length_cr=glyph_l_length * 6.,
                    glyph_y_length_cr=glyph_l_length,
                    glyph_z_length_cr=glyph_t_length,
                    warp_factor=1.0)
 
     aui.configure_traits()
-

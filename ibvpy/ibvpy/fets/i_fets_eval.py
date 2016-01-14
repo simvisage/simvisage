@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import Array, Int, List, Interface, Class
+from traits.api import Array, Int, List, Interface, Class
 from ibvpy.core.i_tstepper_eval import ITStepperEval
 
 #-------------------------------------------------------------------
