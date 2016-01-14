@@ -56,7 +56,7 @@ def time2sec(date):
     '''convert time format (hh:mm:ss) to seconds (s)'''
     d_list = str(date).split()
     t_list = d_list[1].split(':')
-    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + int(t_list[2])
+    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + float(comma2dot(t_list[2]))
     return t_sec
 
 def scaledown_data(data_arr, n_avg):
@@ -269,15 +269,10 @@ class ExType(SimDBClass):
                         for i in range(len(header_line_1[0].split(';')) - 1):
                             converters[i + 1] = comma2dot
                         _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2, converters=converters)
-#                           converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
-#                                       4: comma2dot, 5: comma2dot, 6: comma2dot, 7: comma2dot, 8: comma2dot, 9: comma2dot })
 
                         # reset time[sec] in order to start at 0.
                         _data_array[:0] -= _data_array[0:0]
-#                    # downsizing data array
-#                    print '_data_array.shape', _data_array.shape
-#                    _data_array = scaledown_data(_data_array, 100)
-#                    print '_data_array.shape', _data_array.shape
+
                 else:
                     # for data exported into DAT and ASC-files
                     # try to use loadtxt to read data file
