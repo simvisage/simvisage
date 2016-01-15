@@ -148,6 +148,10 @@ class ExpBT4PTRF(ExType):
     gauge_length_horizontal = Float(0.40, unit='m', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
+    # additional own weight of the steel traverse used for load introduction
+    weight_steel_traverse = Float(1.14, unit='kN', input=True, table_field=True,
+                            auto_set=False, enter_set=True)
+
     #--------------------------------------------------------------------------
     # composite cross section
     #--------------------------------------------------------------------------
@@ -280,6 +284,13 @@ class ExpBT4PTRF(ExType):
         # convert units and change signs
         self.Kraft -= self.Kraft[0]
         self.Kraft *= -1
+
+        # add weight of load introduction to force
+        print 'add weight of steel traverse to force'
+        self.Kraft += self.weight_steel_traverse
+        print 'force at initial state ', self.weight_steel_traverse
+        # @todo: interpolate an initial deformation based on the initial force and the initial stiffness
+        #       measured in order to start the F-w-curve at the origin!
 
         # (reset displacement gauges by their initial values and change sign
         # in order to return a positive value for a displacement)
@@ -433,9 +444,15 @@ class ExpBT4PTRF(ExType):
         w_asc_M2_orig = self.WA_M2_orig[:self.max_force_idx + 1]
         w_asc_Mavg_orig = (w_asc_M1_orig + w_asc_M2_orig) / 2.
 
+        f = self.Kraft
+        w_M1_orig = self.WA_M1_orig
+        w_M2_orig = self.WA_M2_orig
+        w_Mavg_orig = (w_M1_orig + w_M2_orig) / 2.
+
         # add curves
         #
         axes.plot(w_asc_Mavg_orig, f_asc, linewidth=linewidth, label=label, color=color)
+        axes.plot(w_Mavg_orig, f, linewidth=linewidth, label=label, color=color)
 
         # add axes labels
         #
@@ -557,6 +574,7 @@ class ExpBT4PTRF(ExType):
                               label='geometry'
                               ),
                          Group(
+                              Item('weight_steel_traverse'),
                               Item('loading_rate'),
                               Item('gauge_length_horizontal'),
                               Item('age'),
