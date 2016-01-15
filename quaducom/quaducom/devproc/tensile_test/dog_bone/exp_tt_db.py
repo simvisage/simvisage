@@ -125,8 +125,8 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-04-11'
 #        fabric_layout_key = '2D-05-11'
 #        fabric_layout_key = 'NWM3-016-09-b1'
-        fabric_layout_key = 'CAR-3300-EP_Q90'
-#         fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+#         fabric_layout_key = 'CAR-3300-EP_Q90'
+        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
@@ -137,8 +137,8 @@ class ExpTTDB(ExType):
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 1
-        thickness = 0.03
+        n_layers = 2
+        thickness = 0.015
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
