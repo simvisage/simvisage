@@ -184,9 +184,9 @@ class ExType(SimDBClass):
                 units = header_line_2.split(';')
                 names[0] = 'Bezugskanal'
                 units[0] = 'sec'
-                # cut off trailing '\r\n' at end of header line
-                names[-1] = names[-1][:-2]
-                units[-1] = units[-1][:-2]
+                # cut off trailing '\n' at end of header line
+                names[-1] = names[-1][:-1]
+                units[-1] = units[-1][:-1]
 
         print 'names, units', names, units
         return names, units
