@@ -12,94 +12,31 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from etsproxy.traits.api import \
-    HasTraits, Directory, List, Int, Float, Any, \
-    on_trait_change, File, Constant, Instance, Trait, \
-    Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Bool, Enum, Event, implements, DelegatesTo, \
-    Callable
+from traits.api import \
+    Int, Float,  \
+    on_trait_change,   Instance,  \
+    Array, Property, cached_property,  \
+    Event, implements, DelegatesTo
 
-from etsproxy.util.home_directory import \
-    get_home_directory
+from traitsui.api import \
+    View, Item,    VGroup, \
+    Group
 
-from etsproxy.traits.ui.api import \
-    View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
-    TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
-    HGroup, Spring
-
-# # overload the 'get_label' method from 'Item' to display units in the label
-from util.traits.ui.item import \
-    Item
-
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from matplotlib.figure import Figure
-
-import os
-
-import csv
-
-from numpy import array, fabs, where, copy, ones, argsort, \
-    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, unique, around
+from numpy import  fabs, where, copy, \
+    argmax,  unique, around
 
 import numpy as np
 
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-from mathkit.mfn import MFnLineArray
-from mathkit.mfn.mfn_line.mfn_matplotlib_editor import \
-    MFnMatplotlibEditor
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
-from string import replace
-from os.path import exists
-
-#-----------------------------------------------------------------------------------
-# ExDesignReader
-#-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
-from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor, VGroup, HGroup
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
-
-from mathkit.array.smoothing import smooth
-
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
-
-from matresdev.db.matdb.trc.fabric_layout \
-    import FabricLayOut
-
-from matresdev.db.matdb.trc.concrete_mixture \
-    import ConcreteMixture
 
 from matresdev.db.matdb.trc.composite_cross_section import \
     CompositeCrossSection, plain_concrete
 
-from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
-
 from matresdev.db.simdb import \
     SimDB
-
-from matresdev.db.exdb.loadtxt_novalue import loadtxt_novalue
 
 # Access to the toplevel directory of the database
 #

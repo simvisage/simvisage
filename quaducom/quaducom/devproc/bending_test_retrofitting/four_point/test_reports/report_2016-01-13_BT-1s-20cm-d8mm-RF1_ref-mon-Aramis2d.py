@@ -10,6 +10,7 @@ import numpy as np
 import pylab as p
 simdb = SimDB()
 
+import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 
 # specify font options for plots
 params = {'legend.fontsize': 12,

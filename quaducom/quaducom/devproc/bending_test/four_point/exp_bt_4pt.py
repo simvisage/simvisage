@@ -284,9 +284,6 @@ class ExpBT4PT(ExType):
 
         # PEEKEL-measuring software:
         #
-        print 'names_and_units', self.names_and_units
-        
-        'Bezugskanal', 'Kraft', 'Weg', 'WA_Links', 'WA_Mitte_Links', 'WA_Mitte', 'WA_Mitte_Rechts', 'WA_Rechts', 'WA_unten', 'DM'
         if hasattr(self, "Kraft") and hasattr(self, "Weg") \
                 and hasattr(self, "WA_Links") and hasattr(self, "WA_Mitte_Links") \
                 and hasattr(self, "WA_Mitte") and hasattr(self, "WA_Mitte_Rechts") \
@@ -338,7 +335,7 @@ class ExpBT4PT(ExType):
             DB_re_orig = np.copy(self.data_array[:, 7])
             DB_re_orig -= DB_re_orig[0]
             DB_re_orig *= -1
-            print 'DB_re_orig', DB_re_orig
+
             self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
 
     K_bending_elast_c = Property(Array('float_'), depends_on='input_change')

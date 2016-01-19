@@ -176,19 +176,15 @@ class ExType(SimDBClass):
         file_split = self.data_file.split('.')
         if os.path.exists(file_split[0] + '.csv'):
             file_ = open(file_split[0] + '.csv', 'r')
-            header_line_1 = file_.readline()
+            header_line_1 = file_.readline().strip()
             if header_line_1.split(';')[0] == 'Datum/Uhrzeit':
                 print 'csv-file with header exists'
-                header_line_2 = file_.readline()
+                header_line_2 = file_.readline().strip()
                 names = header_line_1.split(';')
                 units = header_line_2.split(';')
                 names[0] = 'Bezugskanal'
                 units[0] = 'sec'
-                # cut off trailing '\n' at end of header line
-                names[-1] = names[-1][:-1]
-                units[-1] = units[-1][:-1]
 
-        print 'names, units', names, units
         return names, units
 
     def _names_and_units_default(self):

@@ -10,7 +10,6 @@ import numpy as np
 import pylab as p
 simdb = SimDB()
 
-
 # specify font options for plots
 params = {'legend.fontsize': 12,
           #         'legend.linewidth': 2,
