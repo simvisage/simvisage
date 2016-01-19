@@ -28,21 +28,25 @@ do = 'F-w-center'
 #--------------------
 # BT-4PT-1C-55cm-3300EP
 #--------------------
-test_file_path = os.path.join(simdb.exdata_dir,
+test_file_path = [os.path.join(simdb.exdata_dir,
                               'bending_tests_retrofitting', 'four_point',
-                              '2016-01-13_BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d')
+                              '2016-01-13_BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
+                  os.path.join(simdb.exdata_dir,
+                              'bending_tests_retrofitting', 'four_point',
+                              '2016-01-15_BT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d')]
 
-test_files = ['2016-01-13_BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT']
+test_files = ['BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
+              'BT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT']
 
-color_list = ['grey']
-linestyle_list = ['-']
-plot_orig_list = [1]
+color_list = ['grey', 'k']
+linestyle_list = ['-', '-']
+plot_orig_list = [1, 1]
 # cutoff long label names at the end for cleaner legend display
-label_cutoff = [-9]
+label_cutoff = [-9, -9]
 #--------------------
 
-e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
-          for test_file in test_files]
+e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
+          for i in range(len(test_files))]
 
 def plot_all():
 
@@ -55,13 +59,13 @@ def plot_all():
         axes = p.subplot(111)
 
         if do == 'F-w-center':
-            e._plot_force_deflection_center(axes, linewidth=1.5, color=color_list[
+            e._plot_force_deflection_center_orig(axes, linewidth=1.5, color=color_list[
                                                  idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
 #             e._plot_force_deflection_thirdpoints(axes)
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
             xlim = 140
-            ylim = 40.
+            ylim = 100.
             axes.axis([-1., xlim, 0., ylim])
 
         if do == 'strains-top-bottom':
