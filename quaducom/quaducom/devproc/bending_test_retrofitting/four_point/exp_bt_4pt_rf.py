@@ -13,17 +13,17 @@
 # Created on Feb 15, 2010 by: rch
 
 from traits.api import \
-    Int, Float,  \
-    on_trait_change,   Instance,  \
-    Array, Property, cached_property,  \
+    Int, Float, \
+    on_trait_change, Instance, \
+    Array, Property, cached_property, \
     Event, implements, DelegatesTo
 
 from traitsui.api import \
-    View, Item,    VGroup, \
+    View, Item, VGroup, \
     Group
 
 from numpy import  fabs, where, copy, \
-    argmax,  unique, around
+    argmax, unique, around
 
 import numpy as np
 
@@ -85,8 +85,8 @@ class ExpBT4PTRF(ExType):
     gauge_length_horizontal = Float(0.40, unit='m', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
-    # additional own weight of the steel traverse used for load introduction
-    weight_steel_traverse = Float(1.14, unit='kN', input=True, table_field=True,
+    # additional own weight of the steel traverse and steel rolls used for load introduction
+    weight_steel_traverse = Float(1.3, unit='kN', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
@@ -98,8 +98,8 @@ class ExpBT4PTRF(ExType):
         '''default settings'
         '''
         # SFB 532 - demonstrator textil and concrete:
-        fabric_layout_key = '2D-05-11'
-        concrete_mixture_key = 'FIL-10-09'
+        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+        concrete_mixture_key = 'Pagel_TF10'
         orientation_fn_key = 'all0'
         n_layers = 2
         s_tex_z = 0.015 / (n_layers + 1)
@@ -375,21 +375,22 @@ class ExpBT4PTRF(ExType):
     def _plot_force_deflection_center_orig(self, axes, offset_w=0., color='black', linewidth=1., label=None):
         '''plot the original data before jumps has been processed out
         '''
+        # get the ascending AND unloading branch of the response curve
+        f = self.Kraft
+        w_M1_orig = self.WA_M1_orig
+        w_M2_orig = self.WA_M2_orig
+        w_Mavg_orig = (w_M1_orig + w_M2_orig) / 2.
+
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         w_asc_M1_orig = self.WA_M1_orig[:self.max_force_idx + 1]
         w_asc_M2_orig = self.WA_M2_orig[:self.max_force_idx + 1]
         w_asc_Mavg_orig = (w_asc_M1_orig + w_asc_M2_orig) / 2.
 
-        f = self.Kraft
-        w_M1_orig = self.WA_M1_orig
-        w_M2_orig = self.WA_M2_orig
-        w_Mavg_orig = (w_M1_orig + w_M2_orig) / 2.
-
         # add curves
         #
         axes.plot(w_asc_Mavg_orig, f_asc, linewidth=linewidth, label=label, color=color)
-        axes.plot(w_Mavg_orig, f, linewidth=linewidth, label=label, color=color)
+#         axes.plot(w_Mavg_orig, f, linewidth=linewidth, label=label, color=color)
 
         # add axes labels
         #
