@@ -14,36 +14,44 @@ import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 
 # specify font options for plots
 params = {'legend.fontsize': 12,
-          #         'legend.linewidth': 2,
           u'font.size': 15,
           u'font.family': 'serif',
           u'font.style': 'normal'}
 p.rcParams.update(params)
-# print p.rcParams.keys()
 
-# plot force - displacement
+#--------------------
+# select plot
 # NOTE: 'do'-key is used for file name of saved image
-do = 'F-w-center'
+#--------------------
+do = 'F-w-center'  # force-displacement
 # do = 'strains-top-bottom'
 
 #--------------------
-# BT-4PT-1C-55cm-3300EP
+# four point bending tests with retrofiiting
 #--------------------
-test_file_path = [os.path.join(simdb.exdata_dir,
-                              'bending_tests_retrofitting', 'four_point',
-                              '2016-01-13_BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
+test_file_path = [
                   os.path.join(simdb.exdata_dir,
                               'bending_tests_retrofitting', 'four_point',
-                              '2016-01-15_BT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d')]
+                              '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
+                  os.path.join(simdb.exdata_dir,
+                              'bending_tests_retrofitting', 'four_point',
+                              '2016-01-15_BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d'),
+#                   os.path.join(simdb.exdata_dir,
+#                               'bending_tests_retrofitting', 'four_point',
+#                               '2016-01-19_BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
+                  ]
 
-test_files = ['BT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
-              'BT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT']
+test_files = [
+              'BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
+              'BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT',
+#               'BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
+              ]
 
-color_list = ['grey', 'k']
-linestyle_list = ['-', '-']
-plot_orig_list = [1, 1]
+color_list = ['grey', 'k']  # , 'blue']
+linestyle_list = ['-', '-']  # , '-']
+plot_orig_list = [1, 1]  # , 1]
 # cutoff long label names at the end for cleaner legend display
-label_cutoff = [-9, -9]
+label_cutoff = [-9, -9]  # , -9]
 #--------------------
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
@@ -62,7 +70,6 @@ def plot_all():
         if do == 'F-w-center':
             e._plot_force_deflection_center_orig(axes, linewidth=1.5, color=color_list[
                                                  idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
-#             e._plot_force_deflection_thirdpoints(axes)
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
             xlim = 140
