@@ -86,7 +86,7 @@ class ExpBT4PTRF(ExType):
                             auto_set=False, enter_set=True)
 
     # additional own weight of the steel traverse and steel rolls used for load introduction
-    weight_steel_traverse = Float(1.3, unit='kN', input=True, table_field=True,
+    weight_load_introduction = Float(1.3, unit='kN', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
@@ -224,8 +224,8 @@ class ExpBT4PTRF(ExType):
 
         # add weight of load introduction to force
         print 'add weight of steel traverse to force'
-        self.Kraft += self.weight_steel_traverse
-        print 'force at initial state ', self.weight_steel_traverse
+        self.Kraft += self.weight_load_introduction
+        print 'force at initial state ', self.weight_load_introduction
         # @todo: interpolate an initial deformation based on the initial force and the initial stiffness
         #       measured in order to start the F-w-curve at the origin!
 
@@ -389,8 +389,8 @@ class ExpBT4PTRF(ExType):
 
         # add curves
         #
-        axes.plot(w_asc_Mavg_orig, f_asc, linewidth=linewidth, label=label, color=color)
-#         axes.plot(w_Mavg_orig, f, linewidth=linewidth, label=label, color=color)
+#         axes.plot(w_asc_Mavg_orig, f_asc, linewidth=linewidth, label=label, color=color)
+        axes.plot(w_Mavg_orig, f, linewidth=linewidth, label=label, color=color)
 
         # add axes labels
         #
@@ -512,7 +512,7 @@ class ExpBT4PTRF(ExType):
                               label='geometry'
                               ),
                          Group(
-                              Item('weight_steel_traverse'),
+                              Item('weight_load_introduction'),
                               Item('loading_rate'),
                               Item('gauge_length_horizontal'),
                               Item('age'),
