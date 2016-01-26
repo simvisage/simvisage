@@ -10,8 +10,6 @@ import numpy as np
 import pylab as p
 simdb = SimDB()
 
-import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
-
 #--------------------
 # script fills up empty values (last available value of lines above) if:
 # 1) if measuring error occured and single values are not recorded (blank fields)
