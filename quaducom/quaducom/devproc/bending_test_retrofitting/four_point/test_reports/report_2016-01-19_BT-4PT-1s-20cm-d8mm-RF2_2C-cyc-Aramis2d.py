@@ -27,7 +27,7 @@ do = 'F-w-center'  # force-displacement
 # do = 'strains-top-bottom'
 
 #--------------------
-# four point bending test (test with retrofitting / monotonic loading)
+# four point bending test (test with retrofitting / cyclic loading)
 #--------------------
 test_file_path = [os.path.join(simdb.exdata_dir,
                               'bending_tests_retrofitting', 'four_point',
@@ -41,49 +41,6 @@ plot_orig_list = [1]
 # cutoff long label names at the end for cleaner legend display
 label_cutoff = [-9]
 #--------------------
-
-
-#--------------------
-# script fills up empty values (last available value of lines above) if:
-# 1)if measuring error ocurred
-# 2)if measuring frequency was different for displacement gauges and strain gauges
-# script merges the first two columns to one
-#--------------------
-
-# data_file = os.path.join(test_file_path[0], test_files[0])
-#
-# file_split = data_file.split('.')
-# file_ = open(file_split[0] + '.csv', 'r')
-#
-# data_file_str = file_.readlines()
-#
-# data_file_str[0] = data_file_str[0].replace("Datum;Zeit;", "Datum/Uhrzeit;")
-# data_file_str[1] = data_file_str[1].replace(";;kN", ";kN")
-# data_file_str = [data_file_str[i].replace(".2016;", ".2016 ") for i in range(len(data_file_str))]
-#
-# data_file_str_3_split = data_file_str[3].split(';')
-# # print 'data_file_str_3_split', data_file_str_3_split
-# for i in range(3, len(data_file_str)):
-#     data_file_str_i_split = data_file_str[i].split(';')
-# #     print 'data_file_str_i_split', data_file_str_i_split
-# #     print 'len(data_file_str_i_split)', len(data_file_str_i_split)
-#     for j in range(len(data_file_str_i_split)):
-#        if data_file_str_i_split[j].strip() == '':
-# #            print 'replace', j
-#            # replace value in current line with value of previous line
-#            data_file_str_i_split[j] = data_file_str[i - 1].split(';')[j]
-# #            print 'data_file_str_i_split[j]', data_file_str_i_split[j]
-#            data_file_str[i] = ''
-#            for j in range(len(data_file_str_i_split) - 1):
-#                data_file_str[i] += data_file_str_i_split[j] + ';'
-#            data_file_str[i] += data_file_str_i_split[-1]
-#        if len(data_file_str_3_split) > len(data_file_str_i_split):
-# #            print 'len(data_file_str_i_split)', len(data_file_str_i_split)
-#            # replace last value in current line with value of previous line
-#            data_file_str[i] += data_file_str[i - 1].split(';')[j + 1]
-# file_002 = open(file_split[0] + '_processed.csv', 'w')
-# file_002 = file_002.writelines(data_file_str[:])
-# test_files = ['BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d_processed.DAT']
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
           for i in range(len(test_files))]

@@ -27,7 +27,7 @@ do = 'F-w-center'  # force-displacement
 # do = 'strains-top-bottom'
 
 #--------------------
-# four point bending tests with retrofiiting
+# four point bending tests with retrofiiting (comparisson)
 #--------------------
 test_file_path = [
                   os.path.join(simdb.exdata_dir,
