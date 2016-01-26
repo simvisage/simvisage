@@ -58,8 +58,8 @@ def plot_all():
                                                  idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
-            xlim = 140
-            ylim = 100.
+            xlim = 40
+            ylim = 70.
             axes.axis([-1., xlim, 0., ylim])
 
         if do == 'strains-top-bottom':

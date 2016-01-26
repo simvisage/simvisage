@@ -25,31 +25,31 @@ do = 'F-w-center'  # force-displacement
 # do = 'strains-top-bottom'
 
 #--------------------
-# four point bending tests with retrofiiting (comparisson)
+# four point bending tests with retrofitting (comparison)
 #--------------------
 test_file_path = [
-                  os.path.join(simdb.exdata_dir,
-                              'bending_tests_retrofitting', 'four_point',
-                              '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
+#                   os.path.join(simdb.exdata_dir,
+#                               'bending_tests_retrofitting', 'four_point',
+#                               '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
                   os.path.join(simdb.exdata_dir,
                               'bending_tests_retrofitting', 'four_point',
                               '2016-01-15_BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d'),
-#                   os.path.join(simdb.exdata_dir,
-#                               'bending_tests_retrofitting', 'four_point',
-#                               '2016-01-19_BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
+                os.path.join(simdb.exdata_dir,
+                            'bending_tests_retrofitting', 'four_point',
+                            '2016-01-19_BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
                   ]
 
 test_files = [
-              'BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
+#               'BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
               'BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT',
-#               'BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
+              'BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
               ]
 
-color_list = ['grey', 'k']  # , 'blue']
-linestyle_list = ['-', '-']  # , '-']
-plot_orig_list = [1, 1]  # , 1]
+color_list = ['grey', 'k', 'blue']
+linestyle_list = ['-', '-', '-']
+plot_orig_list = [1, 1, 1]
 # cutoff long label names at the end for cleaner legend display
-label_cutoff = [-9, -9]  # , -9]
+label_cutoff = [-9, -9, -9]
 #--------------------
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
@@ -70,7 +70,7 @@ def plot_all():
                                                  idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
-            xlim = 140
+            xlim = 60
             ylim = 100.
             axes.axis([-1., xlim, 0., ylim])
 
