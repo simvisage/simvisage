@@ -33,9 +33,9 @@ do = 'F-w'  # force-displacement
 #--------------------
 test_file_path = [os.path.join(simdb.exdata_dir,
                               'bending_tests_retrofitting', 'three_point',
-                              '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')]
+                              '2016-01-28_BT-3PT-1s-20cm-d8mm-RF2_2C-mon-Aramis2d')]
 
-test_files = ['BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT']
+test_files = ['BT-3PT-1s-20cm-d8mm-RF2_2C-mon-Aramis2d.DAT']
 
 #--------------------
 # format plot
@@ -67,8 +67,8 @@ def plot_all():
                                      label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
-            xlim = 140
-            ylim = 100.
+            xlim = 20
+            ylim = 250.
             axes.axis([-1., xlim, 0., ylim])
 
     axes.grid()

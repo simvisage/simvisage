@@ -49,6 +49,24 @@ data_file_path = os.path.join(simdb.exdata_dir,
                             '2016-01-22_BT-3PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d')
 data_file_name = 'BT-3PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.csv'
 
+# 'RF2_2C-cyc'
+# -------------
+data_file_path = os.path.join(simdb.exdata_dir,
+                            'bending_tests_retrofitting',
+                            'three_point',
+                            '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
+data_file_name = 'BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.csv'
+
+# 'RF2_2C-mon'
+# -------------
+data_file_path = os.path.join(simdb.exdata_dir,
+                            'bending_tests_retrofitting',
+                            'three_point',
+                            '2016-01-27_BT-3PT-1s-20cm-d8mm-RF2_2C-mon-Aramis2d')
+data_file_name = 'BT-3PT-1s-20cm-d8mm-RF2_2C-mon-Aramis2d.csv'
+
+# check for original data in subfolder 'original_data'
+#
 data_file = os.path.join(data_file_path, 'original_data', data_file_name)
 
 # read data as list of strings using 'readlines()'

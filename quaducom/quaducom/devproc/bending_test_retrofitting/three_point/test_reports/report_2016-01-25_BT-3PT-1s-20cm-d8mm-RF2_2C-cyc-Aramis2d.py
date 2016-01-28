@@ -31,32 +31,20 @@ do = 'F-w'  # force-displacement
 #--------------------
 # bending test three point (with retrofitting / cyclic loading)
 #--------------------
-test_file_path = [
-                  os.path.join(simdb.exdata_dir,
-                            'bending_tests_retrofitting', 'three_point',
-                            '2016-01-21_BT-3PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
-                  os.path.join(simdb.exdata_dir,
-                            'bending_tests_retrofitting', 'three_point',
-                            '2016-01-22_BT-3PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d'),
-#                   os.path.join(simdb.exdata_dir,
-#                             'bending_tests_retrofitting', 'three_point',
-#                             '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
-                 ]
+test_file_path = [os.path.join(simdb.exdata_dir,
+                              'bending_tests_retrofitting', 'three_point',
+                              '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')]
 
-test_files = [
-              'BT-3PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
-              'BT-3PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT',
-#             'BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
-             ]
+test_files = ['BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT']
 
 #--------------------
 # format plot
 #--------------------
-color_list = ['grey', 'k']
-linestyle_list = ['-', '-']
-plot_orig_list = [1, 1]
+color_list = ['grey']
+linestyle_list = ['-']
+plot_orig_list = [1]
 # cutoff long label names at the end for cleaner legend display
-label_cutoff = [-9, -9]
+label_cutoff = [-9]
 #--------------------
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
@@ -79,8 +67,8 @@ def plot_all():
                                      label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('$w$ [mm]')
             axes.set_ylabel('$F$ [kN]')
-            xlim = 40.
-            ylim = 250
+            xlim = 20
+            ylim = 250.
             axes.axis([-1., xlim, 0., ylim])
 
     axes.grid()
