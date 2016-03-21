@@ -12,7 +12,7 @@
 #
 # Created on Jun 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     Float, Int, Property, cached_property
 
 from ibvpy.api import \

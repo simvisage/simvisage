@@ -2,7 +2,6 @@ from numpy import array, linspace, trapz, arange
 from traits.api import Array, Bool, Callable, Enum, Float, Event, HasTraits, \
     Instance, Int, Trait, ToolbarButton, Button, on_trait_change, \
     Property, cached_property, List
-
 from traitsui.api import Item, View, Group, Handler, HGroup
 
 from traitsui.menu import NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \

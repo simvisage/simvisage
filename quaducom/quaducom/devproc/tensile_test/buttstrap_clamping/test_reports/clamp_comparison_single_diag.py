@@ -18,15 +18,14 @@ p.rcParams.update(params)
 test_files = [('TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT', 'clamp 1.0', 'series 1'),
               ('TTb1-2C-9mm-0-800SBR-V2_R1S1.DAT', 'clamp 1.0', 'series 1'),
               ('TTb1-2C-9mm-0-800SBR-V3_R1S1.DAT', 'clamp 1.0', 'series 1'),
-              ('TTb2-2C-9mm-0-800SBR-V4_R1S1.DAT', 'clamp 2.0', 'series 1'),
-              ('TTb3-2C-9mm-0-800SBR-V5_R1S1.DAT', 'clamp 3.0', 'series 1'),
-              ('TTb3-2C-9mm-0-800SBR-V1_R1S2.DAT', 'clamp 3.0', 'series 2'),
-              ('TTb3-2C-9mm-0-800SBR-V2_R1S2.DAT', 'clamp 3.0', 'series 2'),
-              ('TTb3-2C-9mm-0-800SBR-V3_R1S2.DAT', 'clamp 3.0', 'series 2'),
-              ('TTb1-2C-9mm-0-800SBR-V4_R1S2.DAT', 'clamp 1.0', 'series 2'),
-              ('TTb1-2C-9mm-0-800SBR-V5_R1S2.DAT', 'clamp 1.0', 'series 2'),
+            ('TTb2-2C-9mm-0-800SBR-V4_R1S1.DAT', 'clamp 2.0', 'series 1'),
+            ('TTb3-2C-9mm-0-800SBR-V5_R1S1.DAT', 'clamp 3.0', 'series 1'),
+            ('TTb3-2C-9mm-0-800SBR-V1_R1S2.DAT', 'clamp 3.0', 'series 2'),
+            ('TTb3-2C-9mm-0-800SBR-V2_R1S2.DAT', 'clamp 3.0', 'series 2'),
+            ('TTb3-2C-9mm-0-800SBR-V3_R1S2.DAT', 'clamp 3.0', 'series 2'),
+            ('TTb1-2C-9mm-0-800SBR-V4_R1S2.DAT', 'clamp 1.0', 'series 2'),
+            ('TTb1-2C-9mm-0-800SBR-V5_R1S2.DAT', 'clamp 1.0', 'series 2'),
               ]
-
 
 clamp_colors = {'clamp 1.0': 'grey',
                 'clamp 2.0': 'blue',

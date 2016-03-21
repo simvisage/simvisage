@@ -12,38 +12,17 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, DelegatesTo, \
     Callable
 
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
-
-# # overload the 'get_label' method from 'Item' to display units in the label
-from util.traits.ui.item import \
-    Item
-
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from matplotlib.figure import Figure
-
-import os
 
 import csv
 
@@ -52,30 +31,10 @@ from numpy import array, fabs, where, copy, ones, argsort, \
 
 import numpy as np
 
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-from mathkit.mfn import MFnLineArray
-from mathkit.mfn.mfn_line.mfn_matplotlib_editor import \
-    MFnMatplotlibEditor
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
-from string import replace
-from os.path import exists
-
+#-- Tabular Adapter Definition ------------------------------------------------
 #-----------------------------------------------------------------------------------
 # ExDesignReader
 #-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
-from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor, VGroup, HGroup
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
 
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
@@ -99,9 +58,12 @@ from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
 from matresdev.db.simdb import \
     SimDB
 
+from matresdev.db.exdb.loadtxt_novalue import loadtxt_novalue
+
 # Access to the toplevel directory of the database
 #
 simdb = SimDB()
+
 
 class ExpBT4PT(ExType):
     '''Experiment: Bending Test Four Point
@@ -128,17 +90,17 @@ class ExpBT4PT(ExType):
     # effective length of the bending test specimen
     # (does not include the 5cm part at each side of the specimens that leaps over the support lines)
     #
-    length = Float(1.50, unit='m', input=True, table_field=True,
+    length = Float(1.75, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
     width = Float(0.2, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
-    thickness = Float(0.06, unit='m', input=True, table_field=True,
+    thickness = Float(0.055, unit='m', input=True, table_field=True,
                            auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
     age = Int(28, unit='d', input=True, table_field=True,
                              auto_set=False, enter_set=True)
-    loading_rate = Float(3.0, unit='mm/min', input=True, table_field=True,
+    loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
                             auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
@@ -153,18 +115,20 @@ class ExpBT4PT(ExType):
         fabric_layout_key = '2D-05-11'
         concrete_mixture_key = 'FIL-10-09'
         orientation_fn_key = 'all0'
-        n_layers = 12
-        s_tex_z = 0.060 / (n_layers + 1)
+        n_layers = 1
+#         s_tex_z = 0.060 / (n_layers + 1)
         ccs = CompositeCrossSection (
                     fabric_layup_list=[
-                            plain_concrete(s_tex_z * 0.5),
+#                             plain_concrete(s_tex_z * 0.5),
                             FabricLayUp (
                                    n_layers=n_layers,
                                    orientation_fn_key=orientation_fn_key,
-                                   s_tex_z=s_tex_z,
+#                                    s_tex_z=s_tex_z,
+                                   s_tex_z=0.030,  # [m]
                                    fabric_layout_key=fabric_layout_key
                                    ),
-                            plain_concrete(s_tex_z * 0.5)
+                            plain_concrete(0.025),  # [m]
+#                             plain_concrete(s_tex_z * 0.5)
                                         ],
                     concrete_mixture_key=concrete_mixture_key
                     )
@@ -192,7 +156,7 @@ class ExpBT4PT(ExType):
 
     # put this into the ironing procedure processor
     #
-    jump_rtol = Float(0.005,
+    jump_rtol = Float(0.9,
                       auto_set=False, enter_set=True,
                       ironing_param=True)
 
@@ -216,9 +180,9 @@ class ExpBT4PT(ExType):
             #
 #            print 'self.names_and_units[0]',self.names_and_units[0]
 #            print 'self.names_and_units',self.names_and_units
-            if self.names_and_units[0][ idx ] != 'Kraft' and \
-                self.names_and_units[0][ idx ] != 'Bezugskanal' and \
-                self.names_and_units[0][ idx ] != 'DMS_o':
+            if self.names_and_units[0][ idx ] not in {'Kraft', 'Bezugskanal', 'DMS_o',
+                # for PEEKEL software check the following names:
+                'Datum/Uhrzeit', 'Kraft', 'Weg', 'DMS'}:
 
                 # 1d-array corresponding to column in data_array
                 data_arr = copy(data_array_ironed[:, idx])
@@ -237,8 +201,8 @@ class ExpBT4PT(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-#                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
-#                print 'force', unique(around(-self.data_array[jump_idx,1],2))
+#                 print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
+#                 print 'force', unique(around(-self.data_array[jump_idx, 1], 2))
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -249,7 +213,6 @@ class ExpBT4PT(ExType):
                 data_array_ironed[:, idx] = data_arr[:]
 
         return data_array_ironed
-
 
     def process_source_data(self):
         '''read in the measured data from file and assign
@@ -271,47 +234,109 @@ class ExpBT4PT(ExType):
         #
         self._set_array_attribs()
 
-        # convert units and change signs
+        # DIADAGO-measuring software:
         #
-        self.Kraft -= self.Kraft[0]
-        self.Kraft *= -1
-        # vertical displacement at midspan [mm]:
-        # (reset displacement gauge by its initial value and change sign
-        # in order to return a positive value for a displacement)
-        self.DB_mi -= self.DB_mi[0]
-        self.DB_mi *= -1
-        # vertical displacements at one third of the span (displacement under loading point) [mm]:
-        # (left)
-        self.DB_li -= self.DB_li[0]
-        self.DB_li *= -1
-        # (right)
-        self.DB_re -= self.DB_re[0]
-        self.DB_re *= -1
-        # horizontal displacements at the bottom side of the bending specimen [mm]
-        # (meassuring length l_0 = 0.45 m)
-        self.W10_u -= self.W10_u[0]
-        self.W10_u *= -1
-        # compressive strain at the upper side of the bending specimen at midspan [mm]
-        self.DMS_o -= self.DMS_o[0]
-        # change unite from [nm/m], i.e. [10^(-6)*m / m], to [mm]
-        self.DMS_o /= 1000.
+        if hasattr(self, "Kraft") and hasattr(self, "DB_mi") \
+                and hasattr(self, "DB_re") and hasattr(self, "DB_li") \
+                and hasattr(self, "W10_u") and hasattr(self, "DMS_o"):
 
-        # set attributes of displacement (original data before ironing):
+            # convert units and change signs
+            #
+            self.Kraft -= self.Kraft[0]
+            self.Kraft *= -1
+            # vertical displacement at midspan [mm]:
+            # (reset displacement gauge by its initial value and change sign
+            # in order to return a positive value for a displacement)
+            self.DB_mi -= self.DB_mi[0]
+            self.DB_mi *= -1
+            # vertical displacements at one third of the span (displacement under loading point) [mm]:
+            # (left)
+            self.DB_li -= self.DB_li[0]
+            self.DB_li *= -1
+            # (right)
+            self.DB_re -= self.DB_re[0]
+            self.DB_re *= -1
+            # horizontal displacements at the bottom side of the bending specimen [mm]
+            # (measuring length l_0 = 0.45 m)
+            self.W10_u -= self.W10_u[0]
+            self.W10_u *= -1
+            # compressive strain at the upper side of the bending specimen at midspan [mm]
+            self.DMS_o -= self.DMS_o[0]
+            # change unite from [nm/m], i.e. [10^(-6)*m / m], to [mm]
+            self.DMS_o /= 1000.
+
+            # set attributes of displacement (original data before ironing):
+            #
+            DB_mi_orig = self.data_array[:, 2]
+            DB_mi_orig -= DB_mi_orig[0]
+            DB_mi_orig *= -1
+            self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
+
+            DB_li_orig = self.data_array[:, 4]
+            DB_li_orig -= DB_li_orig[0]
+            DB_li_orig *= -1
+            self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
+
+            DB_re_orig = self.data_array[:, 5]
+            DB_re_orig -= DB_re_orig[0]
+            DB_re_orig *= -1
+            self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
+
+        # PEEKEL-measuring software:
         #
-        DB_mi_orig = self.data_array[:, 2]
-        DB_mi_orig -= DB_mi_orig[0]
-        DB_mi_orig *= -1
-        self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
+        if hasattr(self, "Kraft") and hasattr(self, "Weg") \
+                and hasattr(self, "WA_Links") and hasattr(self, "WA_Mitte_Links") \
+                and hasattr(self, "WA_Mitte") and hasattr(self, "WA_Mitte_Rechts") \
+                and hasattr(self, "WA_Rechts") and hasattr(self, "WA_unten") and hasattr(self, "DMS"):
 
-        DB_li_orig = self.data_array[:, 4]
-        DB_li_orig -= DB_li_orig[0]
-        DB_li_orig *= -1
-        self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
+            # convert units and change signs
+            #
+            self.Kraft -= self.Kraft[0]
+            self.Kraft *= -1
+            # vertical displacements [mm]:
+            # (reset displacement gauges by their initial values and change sign
+            # in order to return a positive value for a displacement)
+            self.WA_Links -= self.WA_Links[0]
+            self.WA_Links *= -1
+            self.DB_li = copy(self.WA_Links)  # set alias
+            self.WA_Mitte -= self.WA_Mitte[0]
+            self.WA_Mitte *= -1
+            self.DB_mi = copy(self.WA_Mitte)  # set alias
+            self.WA_Rechts -= self.WA_Rechts[0]
+            self.WA_Rechts *= -1
+            self.DB_re = copy(self.WA_Rechts)  # set alias
+            self.WA_Mitte_Links -= self.WA_Mitte_Links[0]
+            self.WA_Mitte_Links *= -1
+            self.WA_Mitte_Rechts -= self.WA_Mitte_Rechts[0]
+            self.WA_Mitte_Rechts *= -1
 
-        DB_re_orig = self.data_array[:, 5]
-        DB_re_orig -= DB_re_orig[0]
-        DB_re_orig *= -1
-        self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
+            # horizontal displacements at the bottom side of the bending specimen [mm]
+            # (measuring length l_0 = 0.30 m)
+            self.WA_unten -= self.WA_unten[0]
+            self.WA_unten *= -1
+            # compressive strain at the upper side of the bending specimen at midspan [mm]
+            self.DMS -= self.DMS[0]
+            # change unite from [nm/m], i.e. [10^(-6)*m / m], to [mm]
+            self.DMS /= 1000.
+            self.DMS_o = copy(self.DMS)  # set alias
+
+            # set attributes of displacement (original data before ironing):
+            #
+            DB_mi_orig = np.copy(self.data_array[:, 5])
+            DB_mi_orig -= DB_mi_orig[0]
+            DB_mi_orig *= -1
+            self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
+
+            DB_li_orig = np.copy(self.data_array[:, 3])
+            DB_li_orig -= DB_li_orig[0]
+            DB_li_orig *= -1
+            self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
+
+            DB_re_orig = np.copy(self.data_array[:, 7])
+            DB_re_orig -= DB_re_orig[0]
+            DB_re_orig *= -1
+
+            self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
 
     K_bending_elast_c = Property(Array('float_'), depends_on='input_change')
     @cached_property
@@ -374,6 +399,7 @@ class ExpBT4PT(ExType):
     #--------------------------------------------------------------------------------
 
     plot_templates = {'force / deflection (center)'            : '_plot_force_deflection_center',
+                      'force / deflection (center) - original' : '_plot_force_deflection_center_orig',
                       'smoothed force / deflection (center)'   : '_plot_smoothed_force_deflection_center',
                       'force / deflection (thirdpoints)'       : '_plot_force_deflection_thirdpoints',
                       'strain (top/bottom) / force'            : '_plot_strain_top_bottom_force',
@@ -393,14 +419,38 @@ class ExpBT4PT(ExType):
         # NOTE: processed data returns positive values for force and displacement
         return argmax(self.Kraft)
 
-    def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1.):
+    def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1., label=None):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         w_asc = self.DB_mi[:self.max_force_idx + 1]
 
         # add curves
         #
-        axes.plot(w_asc, f_asc, color='black', linewidth=linewidth)
+        axes.plot(w_asc, f_asc, linewidth=linewidth, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+        # draw linear stiffness for 2 mm range
+        f_max = f_asc[-1]
+        K_c = self.K_bending_elast_c
+        w_linear = np.array([0., f_max / K_c])
+        F_linear = np.array([0., f_max])
+        axes.plot(w_linear, F_linear, linestyle='--', color='black', linewidth=linewidth)
+
+    def _plot_force_deflection_center_orig(self, axes, offset_w=0., color='black', linewidth=1., label=None):
+        '''plot the original data before jumps has been processed out
+        '''
+        # get only the ascending branch of the response curve
+        f_asc = self.Kraft[:self.max_force_idx + 1]
+        w_asc = self.DB_mi_orig[:self.max_force_idx + 1]
+
+        # add curves
+        #
+        axes.plot(w_asc, f_asc, linewidth=linewidth, label=label, color=color)
 
         # add axes labels
         #
@@ -462,8 +512,16 @@ class ExpBT4PT(ExType):
         # compressive strain (top) [permile]
         eps_c = self.DMS_o [:self.max_force_idx + 1]
         # tensile strain (bottom) [permile];
-        # measuring length l_0 = 0.45m
-        eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45
+
+        # NOTE: measuring length is not specified in 'exp_bt'-setup!
+        # @todo: add this as configurable trait in the 'exp_bt' setup!
+        if hasattr(self, "W10_u"):
+            # NOTE: only valid for constant measuring length l_0 = 0.45m
+            eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45
+
+        if hasattr(self, "WA_unten"):
+            # NOTE: only valid for constant measuring length l_0 = 0.30m
+            eps_t = self.WA_unten [:self.max_force_idx + 1] / 0.30
 
         # add curves
         #
@@ -488,8 +546,8 @@ class ExpBT4PT(ExType):
 
         # add curves
         #
-        axes.plot(w_ironed_asc, F_asc)
-        axes.plot(w_orig_asc, F_asc)
+        axes.plot(w_ironed_asc, F_asc, color='blue', linewidth=1.5)
+        axes.plot(w_orig_asc, F_asc, color='grey', linewidth=1.5)
 
         # add axes labels
         #

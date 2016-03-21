@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import HasTraits, WeakRef, Any, Property, cached_property, implements
+from traits.api import HasTraits, WeakRef, Any, Property, cached_property, implements
 from i_fe_grid_slice import IFEGridSlice
 
 class FEGridIdxSlice( HasTraits ):

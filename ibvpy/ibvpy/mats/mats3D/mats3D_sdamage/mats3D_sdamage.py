@@ -1,10 +1,10 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
      Enum, Float, HasTraits, Enum, \
      Instance, Trait, Range, HasTraits, on_trait_change, Event, \
      implements, Dict, Property, Array, cached_property
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
      Item, View, VSplit, Group, Spring
 
 from util.traits.either_type import \

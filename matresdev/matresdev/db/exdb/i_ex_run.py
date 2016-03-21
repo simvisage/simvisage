@@ -12,7 +12,7 @@
 #
 # Created on Feb 16, 2010 by: rch
 
-from etsproxy.traits.api import HasTraits, Interface
+from traits.api import HasTraits, Interface
 
 class IExRun( Interface ):
     '''Read the data from the directory

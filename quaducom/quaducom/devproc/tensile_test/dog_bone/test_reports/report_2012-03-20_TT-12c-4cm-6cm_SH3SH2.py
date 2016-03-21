@@ -18,7 +18,7 @@ from matresdev.db.simdb.simdb_class import \
 
 simdb = SimDB()
 
-from quaducom.devproc.format_plot import format_plot
+from format_plot import format_plot
 from matplotlib.font_manager import FontProperties
 font = FontProperties()
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # configure filename for outputs (save pdf-file and tex-file)
     #---------------------------
     #
-    test_series_name = 'TT-12c-6cm-0-TU_Serie-SH3-4cm-SH2-6cm'
+    do = 'TT-12c-6cm-0-TU_Serie-SH3-4cm-SH2-6cm'
     save_table_to_file = 'true'
     save_fig_to_file = 'true'
 
@@ -45,8 +45,8 @@ if __name__ == '__main__':
 
     # plot composite or textile stress-strain curve
     #
-    stress_flag = 'comp'
-#    stress_flag = 'tex'
+    sig_flag = 'comp'
+#    sig_flag = 'tex'
 
     #---------------------------
     # tensile test results ( CAR-800-TU )
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
     fig = p.figure(facecolor='white')
     fig.set_size_inches(8, 6)
-    plot_method_str = '_plot_' + stress_flag + '_stress_strain_asc'
+    plot_method_str = '_plot_' + sig_flag + '_stress_strain_asc'
 
     for i, ex_path in enumerate(path_list):
         ex_run = ExRun(ex_path)
@@ -85,9 +85,9 @@ if __name__ == '__main__':
 
     # set limits and labels for axis
     #
-    if stress_flag == 'tex':
+    if sig_flag == 'tex':
         format_plot(p, xlabel='strain [1E-3]', ylabel='textile stress [MPa]', xlim=8., ylim=1700.)
-    if stress_flag == 'comp':
+    if sig_flag == 'comp':
         format_plot(p, xlabel='strain [1E-3]', ylabel='composite stress [MPa]', xlim=8., ylim=25.)
 
     # plot grid lines
@@ -104,19 +104,20 @@ if __name__ == '__main__':
     # save figure
     # --------------------------------
     if save_fig_to_file:
-        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(img_dir) == False:
-            os.makedirs(img_dir)
-        test_series_dir = os.path.join(img_dir, test_series_name)
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(test_series_dir) == False:
+        # create a report-subfolder with the name of the script (without file extension '.py')
+        # and save it in the test-type-subfolders with the name and path as ex_type
+        test_series_name = os.path.basename(__file__)[:-3]
+        subfolder_list = __file__.split(os.path.sep)
+        devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
+        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        test_series_dir = os.path.join(simdb.report_dir)
+        for subfolder_name in subfolder_path:
+            test_series_dir = os.path.join(test_series_dir, subfolder_name)
+        if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, 'eps-sig' + stress_flag)
-        p.savefig(filename + '.pdf', format='pdf')
-        p.savefig(filename + '.png', format='png', dpi=600)
+
+        filename = os.path.join(test_series_dir, do + '_sig' + sig_flag + '-epsu.png')
+        p.savefig(filename, format='png')
         print 'figure saved to file %s' % (filename)
 
     p.show()

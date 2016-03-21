@@ -18,7 +18,7 @@ from matresdev.db.simdb.simdb_class import \
 
 simdb = SimDB()
 
-from quaducom.devproc.format_plot import format_plot
+from format_plot import format_plot
 from matplotlib.font_manager import FontProperties
 
 from matresdev.db.exdb.ex_run import ExRun
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     #---------------------------
     #
     save_fig_to_file = True
-    save_table_to_file = True
+    save_table_to_file = False
     stiffness_flag = False
     stiffness_flag_I = False
     stiffness_flag_II = True
@@ -42,28 +42,28 @@ if __name__ == '__main__':
     sig_flag = 'tex'
 
     #---------------------------
-#    test_series_name = 'ARG-2400-FR-1v1l'
-#    test_series_name = 'ARG-2400-TR-1v1l'
-#    test_series_name = 'ARG-1200-TR-2v1l'
-#    test_series_name = 'ARG-1200-TU-1v1l_TTb-2cm'
-#    test_series_name = 'ARG-1200-TU-1v1l'
-#    test_series_name = 'CAR-800-TR-2v1l'
-#    test_series_name = 'CAR-800-TR-1v1l'
-#    test_series_name = 'CAR-800-TU-1v1l_TTb-2cm'
-    test_series_name = 'CAR-800-TU-1v1l_TRC-pretests'
-#    test_series_name = 'CAR-800-TU-1v1l_TT-2cm'
-#    test_series_name = 'CAR-800-TU-1v1l_TT-6cm'
-#    test_series_name = 'CAR-3300-TR-3v3l'
-#    test_series_name = 'CAR-3300-TR-3v3l'
+#    do = 'ARG-2400-FR-1v1l'
+#    do = 'ARG-2400-TR-1v1l'
+#    do = 'ARG-1200-TR-2v1l'
+    do = 'ARG-1200-TU-1v1l_TTb-2cm'
+#    do = 'ARG-1200-TU-1v1l'
+#    do = 'CAR-800-TR-2v1l'
+#    do = 'CAR-800-TR-1v1l'
+#    do = 'CAR-800-TU-1v1l_TTb-2cm'
+#     do = 'CAR-800-TU-1v1l_TRC-pretests'
+#    do = 'CAR-800-TU-1v1l_TT-2cm'
+#     do = 'CAR-800-TU-1v1l_TT-6cm'
+#    do = 'CAR-3300-TR-3v3l'
+#    do = 'CAR-3300-TR-3v3l'
     #---------------------------
-#    test_series_name = 'compare_CAR'
-#    test_series_name = 'compare_ARG'
-#    test_series_name = 'compare_ARG-CAR'
+#    do = 'compare_CAR'
+#    do = 'compare_ARG'
+#    do = 'compare_ARG-CAR'
 
     #---------------------------
     # tensile test results (ARG-2400-FR-1v1l) / (TT-7g-3cm-0-FR_TRC07)
     #---------------------------
-    if test_series_name == 'ARG-2400-FR-1v1l':
+    if do == 'ARG-2400-FR-1v1l':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (ARG-2400-TR-1v1l) / (TT-2g-1cm-0-TR-2400)
     #---------------------------
-    if test_series_name == 'ARG-2400-TR-1v1l':
+    if do == 'ARG-2400-TR-1v1l':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (ARG-1200-TR-2v1l) / (TT-8g-3cm-0-TR)
     #---------------------------
-    if test_series_name == 'ARG-1200-TR-2v1l':
+    if do == 'ARG-1200-TR-2v1l':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (AR-1200-TU-1v1l) / (TTb-6g-2cm-0-TU_bs4)
     #---------------------------
-    if test_series_name == 'ARG-1200-TU-1v1l_TTb-2cm':
+    if do == 'ARG-1200-TU-1v1l_TTb-2cm':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (AR-1200-TU-1v1l) / (TT-6g-2cm-0-TU_bs)
     #---------------------------
-    if test_series_name == 'ARG-1200-TU-1v1l':
+    if do == 'ARG-1200-TU-1v1l':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l)-(TTb-6c-2cm-0-TU_bs)
     #---------------------------
-    if test_series_name == 'CAR-800-TU-1v1l_TTb-2cm':
+    if do == 'CAR-800-TU-1v1l_TTb-2cm':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -234,7 +234,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l)-(TTb-2c-25cm-0-TU_TRC-pretests)
     #---------------------------
-    if test_series_name == 'CAR-800-TU-1v1l_TRC-pretests':
+    if do == 'CAR-800-TU-1v1l_TRC-pretests':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l)-(TT-6c-2cm-0-TU_bs)
     #---------------------------
-    if test_series_name == 'CAR-800-TU-1v1l_TT-2cm':
+    if do == 'CAR-800-TU-1v1l_TT-2cm':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-3300-TR-3v3l) / (TT-6c-3cm-0-HT)
     #---------------------------
-    if test_series_name == 'CAR-3300-TR-3v3l':
+    if do == 'CAR-3300-TR-3v3l':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TR-2v1l) / (TT-12c-6cm-0-TR)
     #---------------------------
-    if test_series_name == 'CAR-800-TR-2v1l':
+    if do == 'CAR-800-TR-2v1l':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -354,7 +354,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TR-1v1l) / (TT-12c-6cm-0-TR)
     #---------------------------
-    if test_series_name == 'CAR-800-TR-1v1l':
+    if do == 'CAR-800-TR-1v1l':
         interpolated_flag = True
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -382,7 +382,7 @@ if __name__ == '__main__':
     #---------------------------
     # tensile test results (CAR-800-TU-1v1l) / (TT-12c-6cm-0-TU-SH2)
     #---------------------------
-    if test_series_name == 'CAR-800-TU-1v1l_TT-6cm':
+    if do == 'CAR-800-TU-1v1l_TT-6cm':
         interpolated_flag = False
         # specify correction factor in order to calculate sigma_tex with the real reinforcement ratio
         # instead of the default value based on the specimen width multiplied with 'a_tex [mm2/m]'
@@ -410,7 +410,7 @@ if __name__ == '__main__':
     #---------------------------
     # COMPARE (TT-12c-6cm-0-TR1-TR2-TU)
     #---------------------------
-    if test_series_name == 'compare_CAR':
+    if do == 'compare_CAR':
         save_table_to_file = False
         interpolated_flag = False
         stiffness_flag = False
@@ -475,7 +475,7 @@ if __name__ == '__main__':
     #---------------------------
     # COMPARE (ARG)
     #---------------------------
-    if test_series_name == 'compare_ARG':
+    if do == 'compare_ARG':
         save_table_to_file = False
         interpolated_flag = False
         stiffness_flag = False
@@ -547,7 +547,7 @@ if __name__ == '__main__':
     #---------------------------
     # COMPARE (ARG-CAR-TU)
     #---------------------------
-    if test_series_name == 'compare_ARG-CAR':
+    if do == 'compare_ARG-CAR':
         save_table_to_file = False
         interpolated_flag = True
         stiffness_flag = False
@@ -701,28 +701,21 @@ if __name__ == '__main__':
     # save figure
     # --------------------------------
     if save_fig_to_file:
-        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(img_dir) == False:
-            os.makedirs(img_dir)
-        test_series_dir = os.path.join(img_dir, test_series_name)
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(test_series_dir) == False:
+        # create a report-subfolder with the name of the script (without file extension '.py')
+        # and save it in the test-type-subfolders with the name and path as ex_type
+        test_series_name = os.path.basename(__file__)[:-3]
+        subfolder_list = __file__.split(os.path.sep)
+        devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
+        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        test_series_dir = os.path.join(simdb.report_dir)
+        for subfolder_name in subfolder_path:
+            test_series_dir = os.path.join(test_series_dir, subfolder_name)
+        if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        if sig_flag == 'comp':
-            filename = os.path.join(test_series_dir, 'sigc-epsu.pdf')
-            p.savefig(filename, format='pdf')
-            filename = os.path.join(test_series_dir, 'sigc-epsu.png')
-            p.savefig(filename, format='png')
-            print 'figure saved to file %s' % (filename)
-        if sig_flag == 'tex':
-            filename = os.path.join(test_series_dir, 'sigtex-epsu.pdf')
-            p.savefig(filename, format='pdf')
-            filename = os.path.join(test_series_dir, 'sigtex-epsu.png')
-            p.savefig(filename, format='png')
-            print 'figure saved to file %s' % (filename)
+
+        filename = os.path.join(test_series_dir, do + '_sig' + sig_flag + '-epsu.png')
+        p.savefig(filename, format='png')
+        print 'figure saved to file %s' % (filename)
 
     p.show()
 
@@ -730,22 +723,23 @@ if __name__ == '__main__':
     # save tabular values as Latex formated table
     # --------------------------------
     if save_table_to_file:
-        img_dir = os.path.join(simdb.exdata_dir, 'img_dir')
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(img_dir) == False:
-            os.makedirs(img_dir)
-        test_series_dir = os.path.join(img_dir, test_series_name)
-        # check if directory exist otherwise create
-        #
-        if os.path.isdir(test_series_dir) == False:
+        test_series_name = os.path.basename(__file__)[:-3]
+        subfolder_list = __file__.split(os.path.sep)
+        devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
+        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        test_series_dir = os.path.join(simdb.report_dir)
+        for subfolder_name in subfolder_path:
+            test_series_dir = os.path.join(test_series_dir, subfolder_name)
+        if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, 'sigc-sigtex-epsu.tex')
+
+        filename = os.path.join(test_series_dir, do + '_sig' + sig_flag + '-epsu.tex')
         f = open(filename, 'w')
 
         #---------------------
         # HORIZONTAL TABLE
         #---------------------
+        print 'sig_c_arr', sig_c_arr
         if len(sig_c_arr) == 6:
             print 'len(sig_c_arr):', len(sig_c_arr)
             output_str = ""
@@ -802,7 +796,7 @@ if __name__ == '__main__':
 #        output_str = output_str + r"\bottomrule " + "\n"
 #        output_str = output_str + r"\end{tabular} " + "\n"
 
-        print 'output_str \n', output_str
+            print 'output_str \n', output_str
 
         f.write(output_str)
         print 'table data saved to file %s' % (filename)

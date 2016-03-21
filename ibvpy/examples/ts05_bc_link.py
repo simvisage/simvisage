@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Int, implements, Array
 
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval

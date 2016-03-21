@@ -3,10 +3,10 @@ from numpy import frompyfunc, linspace, meshgrid, array, float_, zeros
 from math import log, sin, cos
 from scipy.linalg import solve, norm
 
-from etsproxy.traits.api import Array, Bool, Callable, Enum, Float, HasTraits, \
+from traits.api import Array, Bool, Callable, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, \
     TraitDict, Any, implements, WeakRef
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup
+from traitsui.api import Item, View, HGroup, ListEditor, VGroup
 
 from ibvpy.api import RTraceGraph
 from ibvpy.core.tstepper import TStepper as TS

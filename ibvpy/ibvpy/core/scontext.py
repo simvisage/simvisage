@@ -1,11 +1,11 @@
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Enum, Float, HasTraits, HasStrictTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
     Delegate, Event, on_trait_change, Button, \
     Interface, WeakRef, implements, Property, cached_property, Tuple, \
     Dict
-from etsproxy.traits.ui.api import Item, View, HGroup, ListEditor, VGroup, \
+from traitsui.api import Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, TableEditor, ListEditor
 
 from traitsui.menu import NoButtons, OKButton, CancelButton, \

@@ -12,12 +12,12 @@
 #
 # Created on Apr 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
     Directory, List, Property, Float, cached_property, \
     Event, on_trait_change
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
     Group
@@ -181,11 +181,9 @@ class ExRunClassExt(SimDBClassExt):
         print 'file list', self.dir
         for root, sub_folders, files in os.walk(self.dir):
             for folder in sub_folders:
-                print 'folder', folder
                 ex_type_file = os.path.join(root, folder, 'ex_type.cls')
                 if os.path.exists(ex_type_file):
 
-                    print 'ex_type_file', ex_type_file
                     # check if the class specification coincides with
                     # the klass trait of this table
                     #

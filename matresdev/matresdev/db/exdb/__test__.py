@@ -5,7 +5,7 @@ Created on Aug 8, 2009
 '''
 import unittest
 
-from etsproxy.traits.api import \
+from traits.api import \
     Instance
 
 import os

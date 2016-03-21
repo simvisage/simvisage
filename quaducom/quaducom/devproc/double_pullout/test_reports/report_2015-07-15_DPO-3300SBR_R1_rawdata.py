@@ -28,7 +28,8 @@ test_files = [
 
 test_file_path = os.path.join(simdb.exdata_dir,
                               'double_pullout',
-                              '2015-07-15_DPO-30cm-0-3300SBR')
+                              '2015-07-15_DPO-30cm-0-3300SBR_R1',
+                              'rawdata')
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
           for test_file in test_files]

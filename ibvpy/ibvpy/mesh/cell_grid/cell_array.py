@@ -15,7 +15,7 @@ from traits.api \
     on_trait_change, Instance, WeakRef, Int, Str, Bool, Trait, \
     Interface, implements
 
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import View, Item, TabularEditor, HSplit, Group
 
 from traitsui.menu \
@@ -168,7 +168,7 @@ class CellArray(HasTraits):
 # Run the demo (if invoked from the command line):
 if __name__ == '__main__':
 
-    from etsproxy.traits.api import Button
+    from traits.api import Button
 
     class Container(HasTraits):
         show_array = Button

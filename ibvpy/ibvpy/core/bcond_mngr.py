@@ -1,4 +1,4 @@
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Range, \

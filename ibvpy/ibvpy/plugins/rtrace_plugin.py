@@ -6,7 +6,7 @@ import logging
 
 # Enthought library imports.
 #from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.traits.api import List
+from traits.api import List
 from envisage.api import Plugin, ServiceOffer
 
 logger = logging.getLogger()

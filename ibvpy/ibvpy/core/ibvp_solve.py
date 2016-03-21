@@ -1,6 +1,6 @@
 
-from etsproxy.traits.api import HasTraits, Instance, Delegate
-from etsproxy.traits.ui.api import View, Item, VSplit, Group
+from traits.api import HasTraits, Instance, Delegate
+from traitsui.api import View, Item, VSplit, Group
 from tloop import TLoop
 
 class IBVPSolve( HasTraits ):

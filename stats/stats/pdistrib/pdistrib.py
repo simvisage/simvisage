@@ -4,7 +4,7 @@ from pyface.image_resource import ImageResource
 from etsproxy.traits.api import HasTraits, Float, Int, Event, Array, Interface, \
     Tuple, Property, cached_property, Instance, Enum, on_trait_change, Dict
 from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from enthought.traits.ui.menu import OKButton, CancelButton
+from traitsui.menu import OKButton, CancelButton
 from math import sqrt
 from matplotlib.figure import Figure
 from numpy import linspace

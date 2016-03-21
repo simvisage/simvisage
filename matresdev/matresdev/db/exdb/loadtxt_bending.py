@@ -4,22 +4,7 @@ Created on Apr 9, 2010
 @author: alexander
 '''
 
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-from etsproxy.traits.ui.api import \
-    View, Item, FileEditor, HSplit, Group, VSplit, \
-    Handler
-
-from matplotlib.mlab import csv2rec, csvformat_factory
-
-# @todo: forbidden!
-# import numpy as np
-from numpy import *
-
-from scipy import loadtxt
-
-# @todo: forbidden!
-from time import *
+import numpy as np
 
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -28,9 +13,9 @@ def dot2comma(value):
     value = value.replace(',', '.')
     return float(value)
 
-# file contains only loading-path:
-#
-file_name = '/home/alexander/simdb/exdata/bending_tests/ZiE_2011-06-08_BT-12c-6cm-0-TU/BT-12c-6cm-0-Tu-V4.raw'
+import os
+
+file_name = os.path.join(simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU','BT-12c-6cm-0-Tu-V4.raw')
 
 # file contains both loading- and unloading path:
 #
@@ -48,7 +33,7 @@ def loadtxt_bending(file_name):
         # load raw-data in case of loading path only 
         # (no additional unloading path recorded below the first data block in the file)
         # in this case loadtxt works properly'''
-        data_arr = loadtxt(file_name,
+        data_arr = np.loadtxt(file_name,
                             delimiter = ';',
                             skiprows = 41,
                             converters = {1:dot2comma, 2:dot2comma, 3:dot2comma},
@@ -65,11 +50,11 @@ def loadtxt_bending(file_name):
 def loadtxt_2blocks(file_name):
     '''Return an data array consisting of the loading AND unloading path (merge 2 blocks in the data file).
     in this case loadtxt doesn't work as the data file consits of 2 blocks'''
-    file = open(file_name, 'r')
-    lines = file.readlines()
+    file_ = open(file_name, 'r')
+    lines = file_.readlines()
 
-    data_arr_1 = zeros(3)
-    data_arr_2 = zeros(3)
+    data_arr_1 = np.zeros(3)
+    data_arr_2 = np.zeros(3)
 
     start_n_blocks = []
     end_n_blocks = []
@@ -103,25 +88,25 @@ def loadtxt_2blocks(file_name):
     #
     for line in lines[start_n_blocks[0]:end_n_blocks[0]]:
         line_split = line.split(';')
-        line_arr = array([ dot2comma(line_split[1]), \
+        line_arr = np.array([ dot2comma(line_split[1]), \
                             dot2comma(line_split[2]), \
                             dot2comma(line_split[3])], \
                             dtype = float)
-        data_arr_1 = vstack([ data_arr_1, line_arr ])
+        data_arr_1 = np.vstack([ data_arr_1, line_arr ])
 
     # convert data to array for blocks 2:
     #
     for line in lines[start_n_blocks[1]:end_n_blocks[1]]:
         line_split = line.split(';')
-        line_arr = array([ dot2comma(line_split[1]), \
+        line_arr = np.array([ dot2comma(line_split[1]), \
                             dot2comma(line_split[2]), \
                             dot2comma(line_split[3])], \
                             dtype = float)
-        data_arr_2 = vstack([ data_arr_2, line_arr ])
+        data_arr_2 = np.vstack([ data_arr_2, line_arr ])
 
     # remove line with zeros
     #
-    data_arr = vstack([ data_arr_1[1:], data_arr_2[1:] ])
+    data_arr = np.vstack([ data_arr_1[1:], data_arr_2[1:] ])
     return data_arr
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import List
+from traits.api import List
 from ibvpy.api import RTraceGraph
 from numpy import array, ones, trapz, frompyfunc, dot, zeros, fabs
 

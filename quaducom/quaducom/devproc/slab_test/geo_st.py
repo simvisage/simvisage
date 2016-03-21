@@ -184,7 +184,7 @@ if __name__ == '__main__':
     fp1 = st(gpoints)
 
     # save x,y,z - node coordinates of FE-mesh to file
-    print fp1
+    print fp1.shape
     from matresdev.db.simdb import SimDB
     simdb = SimDB()
     import os

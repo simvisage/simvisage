@@ -81,7 +81,7 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from quaducom.devproc.show_results import format_plot
+from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
 
 
 class SimBT4PT(IBVModel):

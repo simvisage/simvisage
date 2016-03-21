@@ -12,7 +12,7 @@
 #
 # Created on Jan 19, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
@@ -20,7 +20,7 @@ from etsproxy.traits.api import \
     Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
                                  
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, TabularEditor, Group
                               
 from numpy import \

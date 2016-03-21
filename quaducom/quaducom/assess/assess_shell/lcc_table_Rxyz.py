@@ -52,6 +52,9 @@ from ls_table_Rxyz import \
 
 from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
 
+from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
+
+
 class LC(HasTraits):
     '''Loading case class
     '''
@@ -808,7 +811,6 @@ class LCCTable(HasTraits):
         #
 #        p.figure(facecolor='white')  # white background
         p.figure(facecolor='white', figsize=(8, 5))
-        from quaducom.devproc.format_plot import format_plot
 
         p.plot(Rx_Ed_arr, Rz_Ed_arr, 'wo', markersize=5, markerfacecolor='gray')  # blue dots
         print 'Rx_Ed_arr', Rx_Ed_arr

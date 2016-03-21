@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,14 +12,14 @@
 #
 # Created on Mar 29, 2010 by: rch
 
-from traits.api import \
-    HasTraits, Property, Str
-
 from os.path import \
     join
-
+import os.path
+from traits.api import \
+    HasTraits, Property, Str
 from traits.util.home_directory import \
     get_home_directory
+
 
 class SimDB(HasTraits):
     '''
@@ -33,25 +33,39 @@ Repository of raw data
 - local data
 '''
     home_dir = Property
+
     def _get_home_dir(self):
         return get_home_directory()
 
     simdb_dir = Property
+
     def _get_simdb_dir(self):
         return join(self.home_dir, 'simdb')
 
     exdata_dir = Property
+
     def _get_exdata_dir(self):
         return join(self.simdb_dir, 'exdata')
 
     matdata_dir = Property
+
     def _get_matdata_dir(self):
         return join(self.simdb_dir, 'matdata')
 
     simdata_dir = Property
+
     def _get_simdata_dir(self):
         return join(self.simdb_dir, 'simdata')
 
+    report_dir = Property
+    '''Directory for generated reports.
+    '''
+
+    def _get_report_dir(self):
+        simdb_reports = join(self.home_dir, 'simdb_reports')
+        if not os.path.exists(simdb_reports):
+            os.makedirs(simdb_reports)
+        return simdb_reports
     '''
     -remote data
     '''
@@ -70,6 +84,6 @@ Repository of raw data
     simdb_cache_dir = Property
     '''Cache directory for downloaded data.
     '''
+
     def _get_simdb_cache_dir(self):
         return join(self.home_dir, '.simdb_cache')
-

@@ -1,5 +1,5 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Int, implements, List, Array, Property, cached_property, \
     Float
 

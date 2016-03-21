@@ -3,7 +3,6 @@
 	<name>matresdev</name>
 	<comment></comment>
 	<projects>
-		<project>etsproxy</project>
 		<project>ibvpy</project>
 		<project>mathkit</project>
 		<project>util</project>

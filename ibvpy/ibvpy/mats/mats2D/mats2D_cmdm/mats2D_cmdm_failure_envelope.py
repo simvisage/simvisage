@@ -1,6 +1,6 @@
 '''
 '''
-from etsproxy.traits.api import Callable, Constant
+from traits.api import Callable, Constant
 from ibvpy.mats.mats_eval import MATSEval
 from ibvpy.mats.mats2D.mats2D_tensor import map2d_eps_eng_to_mtx
 
@@ -8,7 +8,7 @@ from ibvpy.mats.mats2D.mats2D_tensor import \
     map2d_eps_eng_to_mtx, map2d_sig_eng_to_mtx, map2d_eps_mtx_to_eng, map2d_sig_mtx_to_eng, \
     map2d_ijkl2mn, map2d_tns2_to_tns4, map2d_tns4_to_tns2, compliance_mapping2d
 
-from etsproxy.traits.api import \
+from traits.api import \
      Array, Bool, Callable, Enum, Float, HasTraits, \
      Instance, Int, Trait, Range, HasStrictTraits, on_trait_change, Event, \
      implements, Dict, Property, cached_property, Delegate, List, WeakRef
@@ -16,7 +16,7 @@ from etsproxy.traits.api import \
 from util.traits.either_type import \
     EitherType
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     Item, View, HSplit, VSplit, VGroup, Group, Spring
 
 from ibvpy.api import BCDof, RTrace, TStepper

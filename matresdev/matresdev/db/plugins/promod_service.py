@@ -1,7 +1,7 @@
 
 
-from etsproxy.traits.api import HasTraits, Instance
-from etsproxy.traits.ui.api import View, Item
+from traits.api import HasTraits, Instance
+from traitsui.api import View, Item
 from promod.core.promod import IProMod
 
 class ProModelService(HasTraits):

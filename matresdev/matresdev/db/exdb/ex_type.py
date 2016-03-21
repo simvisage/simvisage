@@ -14,7 +14,7 @@
 
 # @todo: introduce the activation of filters - ironing, smoothing
 
-from etsproxy.traits.api import \
+from traits.api import \
     File, \
     Array, Str, Property, cached_property, \
     Dict, Bool, implements, Float
@@ -56,7 +56,7 @@ def time2sec(date):
     '''convert time format (hh:mm:ss) to seconds (s)'''
     d_list = str(date).split()
     t_list = d_list[1].split(':')
-    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + int(t_list[2])
+    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + float(comma2dot(t_list[2]))
     return t_sec
 
 def scaledown_data(data_arr, n_avg):
@@ -176,19 +176,15 @@ class ExType(SimDBClass):
         file_split = self.data_file.split('.')
         if os.path.exists(file_split[0] + '.csv'):
             file_ = open(file_split[0] + '.csv', 'r')
-            header_line_1 = file_.readline()
+            header_line_1 = file_.readline().strip()
             if header_line_1.split(';')[0] == 'Datum/Uhrzeit':
                 print 'csv-file with header exists'
-                header_line_2 = file_.readline()
+                header_line_2 = file_.readline().strip()
                 names = header_line_1.split(';')
                 units = header_line_2.split(';')
                 names[0] = 'Bezugskanal'
                 units[0] = 'sec'
-                # cut off trailing '\r\n' at end of header line
-                names[-1] = names[-1][:-2]
-                units[-1] = units[-1][:-2]
 
-        print 'names, units', names, units
         return names, units
 
     def _names_and_units_default(self):
@@ -252,30 +248,32 @@ class ExType(SimDBClass):
                 print 'check csv-file'
                 file_ = open(file_name, 'r')
                 header_line_1 = file_.readline().split()
+
                 if header_line_1[0].split(';')[0] == 'Datum/Uhrzeit':
                     print 'read csv-file'
                     # for data exported into down sampled data array
                     try:
-                        _data_array = loadtxt(file_name,
+                        _data_array = np.loadtxt(file_name,
                                       delimiter=';',
                                       skiprows=2)
                         # reset time[sec] in order to start at 0.
                         _data_array[:0] -= _data_array[0:0]
                     except ValueError:
-                        _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2,
-                          converters={0: time2sec, 1: comma2dot, 2: comma2dot, 3: comma2dot,
-                                      4: comma2dot, 5: comma2dot, 6: comma2dot })
+                        # for first column use converter method 'time2sec';
+                        converters = {0: time2sec}
+                        # for all other columns use converter method 'comma2dot'
+                        for i in range(len(header_line_1[0].split(';')) - 1):
+                            converters[i + 1] = comma2dot
+                        _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2, converters=converters)
+
                         # reset time[sec] in order to start at 0.
                         _data_array[:0] -= _data_array[0:0]
-#                    # downsizing data array
-#                    print '_data_array.shape', _data_array.shape
-#                    _data_array = scaledown_data(_data_array, 100)
-#                    print '_data_array.shape', _data_array.shape
+
                 else:
                     # for data exported into DAT and ASC-files
                     # try to use loadtxt to read data file
                     try:
-                        _data_array = loadtxt(file_name,
+                        _data_array = np.loadtxt(file_name,
                                       delimiter=';')
 
                     # loadtxt returns an error if the data file contains
@@ -292,7 +290,7 @@ class ExType(SimDBClass):
                 # for data exported into DAT and ASC-files
                 # try to use loadtxt to read data file
                 try:
-                    _data_array = loadtxt(file_name,
+                    _data_array = np.loadtxt(file_name,
                                   delimiter=';')
 
                 # loadtxt returns an error if the data file contains

@@ -64,13 +64,13 @@
 #   the ExpTools and SimTools.
 #
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, \
     on_trait_change, File, Instance, Trait, \
     Property, cached_property, \
     Bool, Event, implements
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, \
     FileEditor
 

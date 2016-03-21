@@ -12,13 +12,13 @@
 #
 # Created on Jan 26, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, \
     implements
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
 

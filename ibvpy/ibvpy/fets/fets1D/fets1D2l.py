@@ -3,7 +3,7 @@ from numpy import array, dot
 from scipy.linalg import \
     inv
 
-from etsproxy.traits.api import \
+from traits.api import \
     Int, implements, Array
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval
 

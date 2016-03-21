@@ -8,7 +8,7 @@ import logging
 
 # Enthought library imports.
 from etsproxy.mayavi.plugins.app import get_plugins, setup_logger
-from etsproxy.traits.api import List
+from traits.api import List
 from etsproxy.envisage.api import Plugin, ServiceOffer
 from etsproxy.envisage.ui.workbench.api import WorkbenchApplication
 from etsproxy.pyface.workbench.api import Perspective, PerspectiveItem
