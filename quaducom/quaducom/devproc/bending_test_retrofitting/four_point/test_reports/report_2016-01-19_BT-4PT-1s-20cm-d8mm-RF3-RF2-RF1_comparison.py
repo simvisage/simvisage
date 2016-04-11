@@ -21,29 +21,29 @@ p.rcParams.update(params)
 # select plot
 # NOTE: 'do'-key is used for file name of saved image
 #--------------------
-do = 'F-w-center'  # force-displacement
-# do = 'strains-top-bottom'
+# do = 'F-w-center'  # force-displacement
+do = 'strains-top-bottom'
 
 #--------------------
 # four point bending tests with retrofitting (comparison)
 #--------------------
 test_file_path = [
-#                   os.path.join(simdb.exdata_dir,
-#                               'bending_tests_retrofitting', 'four_point',
-#                               '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
-                  os.path.join(simdb.exdata_dir,
-                              'bending_tests_retrofitting', 'four_point',
-                              '2016-01-15_BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d'),
-                os.path.join(simdb.exdata_dir,
-                            'bending_tests_retrofitting', 'four_point',
-                            '2016-01-19_BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
-                  ]
+    #     os.path.join(simdb.exdata_dir,
+    #                  'bending_tests_retrofitting', 'four_point',
+    #                  '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d'),
+    #     os.path.join(simdb.exdata_dir,
+    #                  'bending_tests_retrofitting', 'four_point',
+    #                  '2016-01-15_BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d'),
+    os.path.join(simdb.exdata_dir,
+                 'bending_tests_retrofitting', 'four_point',
+                 '2016-01-19_BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')
+]
 
 test_files = [
-#               'BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
-              'BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT',
-              'BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
-              ]
+    #     'BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT',
+    #     'BT-4PT-1s-20cm-d8mm-RF3_2C-mon-Aramis2d.DAT',
+    'BT-4PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT'
+]
 
 color_list = ['grey', 'k', 'blue']
 linestyle_list = ['-', '-', '-']
@@ -54,6 +54,7 @@ label_cutoff = [-9, -9, -9]
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
           for i in range(len(test_files))]
+
 
 def plot_all():
 
@@ -75,12 +76,12 @@ def plot_all():
             axes.axis([-1., xlim, 0., ylim])
 
         if do == 'strains-top-bottom':
-            e._plot_strain_top_bottom_force(axes, linewidth=1.5, color=color_list[
-                                                idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
+            e._plot_avg_strain_bottom_force(axes, linewidth=1.5, color=color_list[
+                idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
 
             axes.set_xlabel('strain $\epsilon$ [1E-3]')
             axes.set_ylabel('vertical load $F$ [kN]')
-            axes.axis([-5., 60, 0., 40])
+            axes.axis([-.1, 8, 0., 70])
 
     axes.grid()
     axes.legend(loc=4)
@@ -92,11 +93,13 @@ def plot_all():
 
     if save_fig_to_file:
         # create a report-subfolder with the name of the script (without file extension '.py')
-        # and save it in the test-type-subfolders with the name and path as ex_type
+        # and save it in the test-type-subfolders with the name and path as
+        # ex_type
         test_series_name = os.path.basename(__file__)[:-3]
         subfolder_list = __file__.split(os.path.sep)
         devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
-        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        subfolder_path = subfolder_list[
+            devproc_idx + 1:-2] + [test_series_name]
         test_series_dir = os.path.join(simdb.report_dir)
         for subfolder_name in subfolder_path:
             test_series_dir = os.path.join(test_series_dir, subfolder_name)
