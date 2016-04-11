@@ -15,10 +15,16 @@
 from os.path import \
     join
 import os.path
+import platform
+import sys
 from traits.api import \
-    HasTraits, Property, Str
+    HasTraits, Property, Str, Constant
 from traits.util.home_directory import \
     get_home_directory
+if platform.system() == 'Linux':
+    pathchar = '/'
+elif platform.system() == 'Windows':
+    pathchar = '\\'
 
 
 class SimDB(HasTraits):
@@ -33,6 +39,10 @@ Repository of raw data
 - local data
 '''
     home_dir = Property
+
+    def __init__(self, *args, **kw):
+        super(SimDB, self).__init__(*args, **kw)
+        sys.path.append(self.exdata_dir)
 
     def _get_home_dir(self):
         return get_home_directory()
@@ -87,3 +97,7 @@ Repository of raw data
 
     def _get_simdb_cache_dir(self):
         return join(self.home_dir, '.simdb_cache')
+
+    pathchar = Constant(pathchar)
+
+simdb = SimDB()

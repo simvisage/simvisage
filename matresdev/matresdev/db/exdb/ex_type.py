@@ -14,50 +14,43 @@
 
 # @todo: introduce the activation of filters - ironing, smoothing
 
+import ConfigParser
+import importlib
+from numpy import \
+    loadtxt
+import os
+from os.path import exists
+from string import split
+import string
+import sys
 from traits.api import \
     File, \
     Array, Str, Property, cached_property, \
-    Dict, Bool, implements, Float
-
-import ConfigParser
-
-import string
-
-from matresdev.db import SimDBClass
-
-import os
-
-from numpy import \
-    loadtxt
-
-import numpy as np
-
-from os.path import exists
-
-from loadtxt_novalue import loadtxt_novalue
-
-from string import split
+    Dict, Bool, implements, Float, Callable
+import zipfile
 
 from i_ex_type import \
     IExType
-
+from loadtxt_novalue import loadtxt_novalue
+from matresdev.db import SimDBClass
 from matresdev.db.simdb import SFTPServer
+from matresdev.db.simdb.simdb import simdb
+import numpy as np
 
-import zipfile
-
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
 
 def comma2dot(c):
     '''convert float with comma separator into float with dot separator'''
     return float((str(c)).replace(",", "."))
 
+
 def time2sec(date):
     '''convert time format (hh:mm:ss) to seconds (s)'''
     d_list = str(date).split()
     t_list = d_list[1].split(':')
-    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * 60 + float(comma2dot(t_list[2]))
+    t_sec = int(t_list[0]) * 60 * 60 + int(t_list[1]) * \
+        60 + float(comma2dot(t_list[2]))
     return t_sec
+
 
 def scaledown_data(data_arr, n_avg):
     '''scaledown the nuber of rows in 'data_array' by the
@@ -72,6 +65,7 @@ def scaledown_data(data_arr, n_avg):
     avg_list = [data_arr[i:n_max:n_avg, :] for i in range(n_avg)]
     avg_arr = np.array(avg_list)
     return np.mean(avg_arr, 0)
+
 
 class ExType(SimDBClass):
 
@@ -138,6 +132,45 @@ class ExType(SimDBClass):
         self._read_data_array()
         self.processed_data_array = self.data_array
         self._set_array_attribs()
+        self._import_processor()
+        self._apply_processor()
+
+    data_processor = Callable(None)
+
+    def _import_processor(self):
+        '''Check to see if there is a data processor in the data directory.
+        The name of the processor is assumed data_processor.py.
+
+        '''
+        dp_file = os.path.join(os.path.dirname(self.data_file),
+                               'data_processor.py')
+        dp_modpath = os.path.join(os.path.dirname(self.data_file),
+                                  'data_processor').replace(simdb.pathchar, '.')[1:]
+        exdata_dir = simdb.exdata_dir
+        print 'dp_modpath', dp_modpath
+        print 'exdata_dir', exdata_dir
+        dp_mod = dp_modpath[len(exdata_dir):]
+        print 'dp_mod', dp_mod
+        print 'sys.path', sys.path
+        if os.path.exists(dp_file):
+            mod = importlib.import_module(dp_mod)
+            print 'simdb-data processor used'
+            self.data_processor = mod.data_processor
+
+    processing_done = Bool(False)
+
+    def _apply_processor(self):
+        '''Make a call to a test-specific data processor
+        transforming the data_array to standard response variables.
+        of the test setup.
+
+        An example of data processing for a tensile test is the calculation
+        of average displacement from several gauges placed on different sides
+        of the specimen. 
+        '''
+        if self.data_processor:
+            self.data_processor(self)
+            self.processing_done = True
 
     data_array = Array(float, transient=True)
 
@@ -254,17 +287,19 @@ class ExType(SimDBClass):
                     # for data exported into down sampled data array
                     try:
                         _data_array = np.loadtxt(file_name,
-                                      delimiter=';',
-                                      skiprows=2)
+                                                 delimiter=';',
+                                                 skiprows=2)
                         # reset time[sec] in order to start at 0.
                         _data_array[:0] -= _data_array[0:0]
                     except ValueError:
                         # for first column use converter method 'time2sec';
                         converters = {0: time2sec}
-                        # for all other columns use converter method 'comma2dot'
+                        # for all other columns use converter method
+                        # 'comma2dot'
                         for i in range(len(header_line_1[0].split(';')) - 1):
                             converters[i + 1] = comma2dot
-                        _data_array = np.loadtxt(file_name, delimiter=";", skiprows=2, converters=converters)
+                        _data_array = np.loadtxt(
+                            file_name, delimiter=";", skiprows=2, converters=converters)
 
                         # reset time[sec] in order to start at 0.
                         _data_array[:0] -= _data_array[0:0]
@@ -274,7 +309,7 @@ class ExType(SimDBClass):
                     # try to use loadtxt to read data file
                     try:
                         _data_array = np.loadtxt(file_name,
-                                      delimiter=';')
+                                                 delimiter=';')
 
                     # loadtxt returns an error if the data file contains
                     # 'NOVALUE' entries. In this case use the special
@@ -291,7 +326,7 @@ class ExType(SimDBClass):
                 # try to use loadtxt to read data file
                 try:
                     _data_array = np.loadtxt(file_name,
-                                  delimiter=';')
+                                             delimiter=';')
 
                 # loadtxt returns an error if the data file contains
                 # 'NOVALUE' entries. In this case use the special
