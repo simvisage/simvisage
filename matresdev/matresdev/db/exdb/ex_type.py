@@ -16,17 +16,16 @@
 
 import ConfigParser
 import importlib
-from numpy import \
-    loadtxt
+
 import os
-from os.path import exists
+
 from string import split
 import string
 import sys
 from traits.api import \
     File, \
     Array, Str, Property, cached_property, \
-    Dict, Bool, implements, Float, Callable
+    Dict, Bool, implements, Float, Callable, List
 import zipfile
 
 from i_ex_type import \
@@ -129,13 +128,25 @@ class ExType(SimDBClass):
         attributes to the DAT-file channel names.
         '''
         print '*** process data ***'
-        self._read_data_array()
+        self._import_processor()
+        self._apply_data_reader()
         self.processed_data_array = self.data_array
         self._set_array_attribs()
-        self._import_processor()
-        self._apply_processor()
+        self._apply_data_processor()
 
+    data_columns = Callable(None)
+    '''Specification of the measured data columns in the data array 
+    '''
+    data_units = Callable(None)
+    '''Specification of the measured data units in the data array 
+    '''
+    data_reader = Callable(None)
+    '''Function reading the data into the self.data_array
+    '''
     data_processor = Callable(None)
+    '''Function preparing the data for evaluation - convert the measured
+    data to a standard format, smooth the data, remove jumps etc. 
+    '''
 
     def _import_processor(self):
         '''Check to see if there is a data processor in the data directory.
@@ -155,11 +166,18 @@ class ExType(SimDBClass):
         if os.path.exists(dp_file):
             mod = importlib.import_module(dp_mod)
             print 'simdb-data processor used'
-            self.data_processor = mod.data_processor
+            if hasattr(mod, 'data_columns'):
+                self.data_columns = mod.data_columns
+            if hasattr(mod, 'data_units'):
+                self.data_units = mod.data_units
+            if hasattr(mod, 'data_processor'):
+                self.data_processor = mod.data_processor
+            if hasattr(mod, 'data_reader'):
+                self.data_reader = mod.data_reader
 
     processing_done = Bool(False)
 
-    def _apply_processor(self):
+    def _apply_data_processor(self):
         '''Make a call to a test-specific data processor
         transforming the data_array to standard response variables.
         of the test setup.
@@ -172,17 +190,29 @@ class ExType(SimDBClass):
             self.data_processor(self)
             self.processing_done = True
 
+    def _apply_data_reader(self):
+        if self.data_reader:
+            self.data_reader(self)
+        else:
+            self._read_data_array()
+
     data_array = Array(float, transient=True)
 
     unit_list = Property(depends_on='data_file')
 
     def _get_unit_list(self):
-        return self.names_and_units[1]
+        if self.data_units:
+            return self.data_units(self)
+        else:
+            return self.names_and_units[1]
 
     factor_list = Property(depends_on='data_file')
 
     def _get_factor_list(self):
-        return self.names_and_units[0]
+        if self.data_columns:
+            return self.data_columns(self)
+        else:
+            return self.names_and_units[0]
 
     names_and_units = Property(depends_on='data_file')
 
