@@ -12,39 +12,28 @@
 #
 # Created on Jan 19, 2010 by: rch
 
+from matplotlib.figure import \
+    Figure
+import os
+from pyface.api import \
+    ImageResource, confirm, YES
 from traits.api import \
     Instance, File, List, on_trait_change, Bool, \
     Event, Enum
-
 from traitsui.api import \
     View, Item, ModelView, HSplit, VSplit, \
     Group, FileEditor
-
+from traitsui.key_bindings import \
+    KeyBinding, KeyBindings
 from traitsui.menu import \
     Action, HelpAction, Menu, \
     MenuBar, ToolBar
 
-from traitsui.key_bindings import \
-    KeyBinding, KeyBindings
-
-from pyface.api import \
-    ImageResource, confirm, YES
-
-from util.traits.editors.mpl_figure_editor import \
-    MPLFigureEditor
-
-from matplotlib.figure import \
-    Figure
-
 from ex_run import \
     ExRun
-
-import os
-
-# Access to the toplevel directory of the database
-#
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
+from matresdev.db.simdb.simdb import simdb
+from util.traits.editors.mpl_figure_editor import \
+    MPLFigureEditor
 
 
 class ExRunView(ModelView):

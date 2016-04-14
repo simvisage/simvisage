@@ -46,7 +46,7 @@ labels = []
 fpath = os.path.join(
     simdb.exdata_dir, 'double_pullout', '2015-10-14_DPO-15mm-0-3300SBR_R2', 'processed_averaged_data_R1+R2')
 
-# do = 'R2_f_ALL'
+do = 'R2_f_ALL'
 # do = 'R2_f_TREND-30-40-50-70-80'
 # do = 'R2_f_TREND-30-40-50-80'
 # do = 'R2_f_GLUE-30'
@@ -254,6 +254,7 @@ if do == 'R1_all':
 
 for fname in sorted(listdir(fpath), reverse=True):
 
+    print 'file', fpath, fname
     data = np.loadtxt(os.path.join(fpath, fname), delimiter=';')
     flabel = fname.replace('-0-3300SBR', '')
     flabel = flabel.replace('DPO-', '')

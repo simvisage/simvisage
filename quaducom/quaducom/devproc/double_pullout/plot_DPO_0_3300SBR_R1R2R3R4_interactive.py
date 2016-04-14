@@ -3,13 +3,14 @@ Created on 22.10.2015
 
 @author: Yingxiong
 '''
-import numpy as np
-import matplotlib.pyplot as plt
+from itertools import cycle
 from matplotlib.widgets import CheckButtons
 from os import listdir
 import os
-from itertools import cycle
+
+import matplotlib.pyplot as plt
 from matresdev.db.simdb import SimDB
+import numpy as np
 simdb = SimDB()
 
 lines = ["-", "-.", ":"]
@@ -145,10 +146,10 @@ for fname in listdir(fpath):
 
     d_set[flabel], = ax.plot(data[0][data[0] < 25], data[1][data[0] < 25],
                              linestyle=ls, lw=1.0, color=color, marker=marker, markevery=0.03, label=flabel, alpha=alpha, visible=False)
-    rax[flabel].plot([0, 2], [0, 0], linestyle=ls, lw=1.0, color=color,
-                     marker=marker, markevery=0.1, label=flabel, alpha=alpha)
-    rax[flabel].set_ylim((-0.2, 1))
-    rax[flabel].set_xlim((-2, 4))
+#     rax[flabel].plot([0, 2], [0, 0], linestyle=ls, lw=1.0, color=color,
+#                      marker=marker, markevery=0.1, label=flabel, alpha=alpha)
+#     rax[flabel].set_ylim((-0.2, 1))
+#     rax[flabel].set_xlim((-2, 4))
 
 plt.subplots_adjust(left=0.52, right=0.99)
 

@@ -44,7 +44,6 @@ xlim = 160
 ylim = 8.
 #--------------------
 
-
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
           for test_file in test_files]
 
@@ -80,11 +79,13 @@ def plot_all():
 
     if save_fig_to_file:
         # create a report-subfolder with the name of the script (without file extension '.py')
-        # and save it in the test-type-subfolders with the name and path as ex_type
+        # and save it in the test-type-subfolders with the name and path as
+        # ex_type
         test_series_name = os.path.basename(__file__)[:-3]
         subfolder_list = __file__.split(os.path.sep)
         devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
-        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        subfolder_path = subfolder_list[
+            devproc_idx + 1:-2] + [test_series_name]
         test_series_dir = os.path.join(simdb.report_dir)
         for subfolder_name in subfolder_path:
             test_series_dir = os.path.join(test_series_dir, subfolder_name)

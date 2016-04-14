@@ -5,38 +5,27 @@ Created on Mar 15, 2012
 '''
 
 import os.path
-
-from matresdev.db.simdb import \
-    SimDB
-
-simdb = SimDB()
-
 from matresdev.db.exdb.ex_run_view import ExRunView
+from matresdev.db.simdb.simdb import simdb
+
 
 # ex_path = os.path.join(simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
-
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3',
 #                       'TT-12c-4cm-TU-0-SH3-V2.DAT')
-
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-02-14_TT-12c-6cm-0-TU_SH2',
 #                       'TT-12c-6cm-0-TU-SH2-V1.DAT')
-
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone',
 #                       '2015-02-24_TT-12c-6cm-0-TU_QS-2Jahre', 'TT-12c-6cm-0-TU-SH3F-V1_QS-2Jahre.DAT')
-
 # ex_path = os.path.join(simdb.exdata_dir, 'slab_tests',
 #                        '2015-08-27_ST-2C-6cm-3300EP_SPP', 'B-C1-3-3.DAT')
-
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2015-02-24_TT-12c-6cm-0-TU_QS-2Jahre', 'TT-12c-6cm-0-TU-SH3F-V1_QS-2Jahre.DAT')
-
-
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2013-07-09_TTb-6c-2cm-0-TU_bs4-Aramis3d',
 #                        'TTb-6c-2cm-0-TU-V2_bs4.DAT')
 #
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
 ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
-                                      'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT')
+                       'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
