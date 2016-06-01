@@ -3,13 +3,14 @@ Created on Jan 28, 2015
 
 '''
 
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
-from matresdev.db.exdb import ExRun
-
 import os
+
+from matresdev.db.exdb import ExRun
+from matresdev.db.simdb import SimDB
 import numpy as np
 import pylab as p
+simdb = SimDB()
+
 params = {'legend.fontsize': 10,
           # 'legend.linewidth': 2
           }
@@ -69,7 +70,7 @@ def plot_all():
         axes = p.subplot(111)
 
         label = test_files[idx].split('.')[0]
-        e._plot_force_displacement_asc(axes)
+        e._plot_yforce_displacement(axes)
         axes.grid()
         axes.set_xlabel('$\Delta$ w [mm]')
         axes.set_ylabel('F [kN]')
