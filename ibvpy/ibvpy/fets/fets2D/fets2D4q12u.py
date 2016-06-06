@@ -1,36 +1,18 @@
 
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-from math  import \
-    pow, fabs
-
 from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
-    identity
-
+    array, zeros, dot
 from scipy.linalg import \
-    inv, det
-
-import time
-
+    inv
+from traits.api import \
+    Array, Float, \
+    Instance, Int
 from ibvpy.fets.fets_eval import FETSEval
 from ibvpy.mats.mats_eval import MATSEval
+
 
 #-------------------------------------------------------------------------
 # FEQ12sub - 12 nodes subparametric quadrilateral (2D, cubic, serendipity family)
 #-------------------------------------------------------------------------
-
-
 class FETS2D4Q12U(FETSEval):
     debug_on = True
 
@@ -223,8 +205,8 @@ class FETS2D4Q12U(FETSEval):
 #----------------------- example --------------------
 if __name__ == '__main__':
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDofGroup, IBVPSolve as IS
+        TStepper as TS, RTraceDomainListField, TLoop, \
+        TLine, BCDofGroup
 
     #from lib.mats.mats2D.mats_cmdm2D.mats_mdm2d import MACMDM
 #    from lib.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
@@ -238,8 +220,8 @@ if __name__ == '__main__':
 
     # Discretization
     domain = FEGrid(coord_max=(1., 1., 0.),
-                    shape = (1, 1),
-                    fets_eval = fets_eval)
+                    shape=(1, 1),
+                    fets_eval=fets_eval)
 
     ts = TS(
         sdomain=domain,

@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,44 +12,32 @@
 #
 # Created on Aug 19, 2009 by: rch
 
-from traits.api import \
-    Enum, Property, cached_property, Callable, Constant, Class, implements, \
-    Int
-
-from traitsui.api import \
-     Item, View, HSplit, VSplit, VGroup, Group, Spring, Include
-
-from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm import \
-    MATSXDMicroplaneDamage, PhiFnGeneral, PhiFnStrainSoftening, PhiFnStrainHardening
-
-import numpy as np
-
-from numpy import \
-     array, arange, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-     fabs, linspace, vdot, identity, tensordot, \
-     sin as nsin, meshgrid, float_, ix_, \
-     vstack, hstack, sqrt as arr_sqrt, swapaxes, copy, loadtxt
-
-from ibvpy.mats.mats_eval import \
-    IMATSEval, MATSEval
-
 from math import \
-    pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
-
-from mathkit.mfn.mfn_polar.mfn_polar import MFnPolar
-
-# @todo parameterize - should be specialized in the dimensional subclasses
-
-from ibvpy.mats.mats2D.mats2D_tensor import \
-    map2d_eps_eng_to_mtx, map2d_sig_eng_to_mtx, map2d_eps_mtx_to_eng, map2d_sig_mtx_to_eng, \
-    map2d_ijkl2mn, map2d_tns2_to_tns4, map2d_tns4_to_tns2, compliance_mapping2d, \
-    get_D_plane_stress, get_D_plane_strain, get_C_plane_stress, get_C_plane_strain
-
-from ibvpy.mats.mats3D.mats3D_tensor import \
-    map3d_tns4_to_tns2
+    cos, sin
+from numpy import \
+    array,  ones,  outer,   \
+    identity
+from traits.api import \
+    Enum, Property, cached_property,  Constant, Class, implements, \
+    Int
+from traitsui.api import \
+    View, Include
 
 from ibvpy.mats.mats2D.mats2D_eval import MATS2DEval
+from ibvpy.mats.mats2D.mats2D_tensor import \
+    map2d_tns2_to_tns4 ,\
+    get_D_plane_stress, get_D_plane_strain, get_C_plane_stress, get_C_plane_strain
+from ibvpy.mats.mats3D.mats3D_tensor import \
+    map3d_tns4_to_tns2
+from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm import \
+    MATSXDMicroplaneDamage
+from ibvpy.mats.mats_eval import \
+    IMATSEval
+from mathkit.mfn.mfn_polar.mfn_polar import MFnPolar
+import numpy as np
 
+
+# @todo parameterize - should be specialized in the dimensional subclasses
 class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
 
     implements(IMATSEval)
@@ -70,17 +58,20 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
 
     # get the normal vectors of the microplanes
     _MPN = Property(depends_on='n_mp')
+
     @cached_property
     def _get__MPN(self):
-        return array([[ cos(alpha), sin(alpha)] for alpha in self.alpha_list ])
+        return array([[cos(alpha), sin(alpha)] for alpha in self.alpha_list])
 
     # get the weights of the microplanes
     _MPW = Property(depends_on='n_mp')
+
     @cached_property
     def _get__MPW(self):
         return ones(self.n_mp) / self.n_mp * 2
 
     elasticity_tensors = Property(depends_on='E, nu, stress_state')
+
     @cached_property
     def _get_elasticity_tensors(self):
         '''
@@ -127,7 +118,8 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         delta_ikjl = delta_ijkl.swapaxes(1, 2)
         delta_iljk = delta_ikjl.swapaxes(2, 3)
         D4_e_3D = la * delta_ijkl + mu * (delta_ikjl + delta_iljk)
-        C4_e_3D = -nu / E * delta_ijkl + (1 + nu) / (2 * E) * (delta_ikjl + delta_iljk)
+        C4_e_3D = -nu / E * delta_ijkl + \
+            (1 + nu) / (2 * E) * (delta_ikjl + delta_iljk)
 
         # -----------------------------------------------------------------------------------------------------
         # Get the fourth order elasticity and compliance tensors for the 2D-case
@@ -151,7 +143,7 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
             D2_e = D2_e_2D_plane_strain
 
         # 3. step: Get the fourth order elasticity and compliance tensors
-        #          for the 2D-cases plane stress and plane strain (D4.shape = (2,2,2,2))
+        # for the 2D-cases plane stress and plane strain (D4.shape = (2,2,2,2))
         D4_e_2D_plane_stress = map2d_tns2_to_tns4(D2_e_2D_plane_stress)
         D4_e_2D_plane_strain = map2d_tns2_to_tns4(D2_e_2D_plane_strain)
         C4_e_2D_plane_stress = map2d_tns2_to_tns4(C2_e_2D_plane_stress)
@@ -182,40 +174,43 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         from ibvpy.mats.mats2D.mats2D_rtrace_cylinder import MATS2DRTraceCylinder
 
         # overload the default configuration
-        c['bcond_list' ] = [ BCDofProportional(max_strain=0.006, alpha_rad=0.0) ]
-        c['rtrace_list' ] += [
-                              MATS2DRTraceCylinder(name='Laterne',
-                                      var_axis='time', idx_axis=0,
-                                      var_surface='microplane_damage',
-                                      record_on='update'),
-                        ]
+        c['bcond_list'] = [BCDofProportional(max_strain=0.006, alpha_rad=0.0)]
+        c['rtrace_list'] += [
+            MATS2DRTraceCylinder(name='Laterne',
+                                 var_axis='time', idx_axis=0,
+                                 var_surface='microplane_damage',
+                                 record_on='update'),
+        ]
 
         c['tline'] = TLine(step=0.02, max=1)
         return c
 
-    #---------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Dock-based view with its own id
-    #---------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     traits_view = View(Include('polar_fn_group'),
-                        dock='tab',
-                        id='ibvpy.mats.mats3D.mats_2D_cmdm.MATS2D_cmdm',
-                        kind='modal',
-                        resizable=True,
-                        scrollable=True,
-                        width=0.6, height=0.8,
-                        buttons=['OK', 'Cancel' ]
-                        )
+                       dock='tab',
+                       id='ibvpy.mats.mats3D.mats_2D_cmdm.MATS2D_cmdm',
+                       kind='modal',
+                       resizable=True,
+                       scrollable=True,
+                       width=0.6, height=0.8,
+                       buttons=['OK', 'Cancel']
+                       )
+
 
 class MATS1DMicroplaneDamage(MATS2DMicroplaneDamage):
 
     n_mp = Int(2)
     _MPN = Property
+
     @cached_property
     def _get__MPN(self):
         # microplane normals:
         return np.array([[1, 0], [0, 1]], dtype='f')
 
     _MPW = Property
+
     @cached_property
     def _get__MPW(self):
         # microplane normals:
@@ -228,4 +223,3 @@ if __name__ == '__main__':
     print 'D4', D4
 
     m.configure_traits(view='traits_view')
-
