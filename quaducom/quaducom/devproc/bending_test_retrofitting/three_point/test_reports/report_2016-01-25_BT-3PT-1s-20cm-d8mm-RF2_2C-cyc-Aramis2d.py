@@ -5,10 +5,9 @@ Created on Jan 28, 2015
 import os
 
 from matresdev.db.exdb import ExRun
-from matresdev.db.simdb import SimDB
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-simdb = SimDB()
 
 import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 
@@ -32,8 +31,8 @@ do = 'F-w'  # force-displacement
 # bending test three point (with retrofitting / cyclic loading)
 #--------------------
 test_file_path = [os.path.join(simdb.exdata_dir,
-                              'bending_tests_retrofitting', 'three_point',
-                              '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')]
+                               'bending_tests_retrofitting', 'three_point',
+                               '2016-01-25_BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d')]
 
 test_files = ['BT-3PT-1s-20cm-d8mm-RF2_2C-cyc-Aramis2d.DAT']
 
@@ -49,6 +48,7 @@ label_cutoff = [-9]
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
           for i in range(len(test_files))]
+
 
 def plot_all():
 
@@ -81,11 +81,13 @@ def plot_all():
 
     if save_fig_to_file:
         # create a report-subfolder with the name of the script (without file extension '.py')
-        # and save it in the test-type-subfolders with the name and path as ex_type
+        # and save it in the test-type-subfolders with the name and path as
+        # ex_type
         test_series_name = os.path.basename(__file__)[:-3]
         subfolder_list = __file__.split(os.path.sep)
         devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
-        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        subfolder_path = subfolder_list[
+            devproc_idx + 1:-2] + [test_series_name]
         test_series_dir = os.path.join(simdb.report_dir)
         for subfolder_name in subfolder_path:
             test_series_dir = os.path.join(test_series_dir, subfolder_name)

@@ -1,36 +1,21 @@
 
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Range, HasStrictTraits, HasTraits, on_trait_change, Event, \
-    implements, Dict, Property, cached_property, Delegate, Button, \
-    Interface, WeakRef, String, List, Constant
-
-# from util.traits.either_type import \
-#    EitherType
-# Traits UI imports
-from traitsui.api import \
-    Item, View, HSplit, VSplit, VGroup, \
-    Group, HGroup, Spring, TabularEditor, \
-    Include
-from traitsui.menu \
-    import OKButton, CancelButton
-from traitsui.tabular_adapter \
-    import TabularAdapter
-
-from mathkit.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
-from mathkit.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
-
+from math import exp, pow
 from numpy import \
-    array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-    fabs, sqrt, linspace, vdot, identity, tensordot, where, trapz, \
-    sin as nsin, meshgrid, float_, ix_, \
-    vstack, hstack, sqrt as arr_sqrt
+    array, ones, frompyfunc, \
+    sqrt, linspace, where, trapz, \
+    hstack
+from traits.api import \
+    Float,  \
+    Instance, HasStrictTraits, on_trait_change,  \
+    implements, Button, \
+    Interface, WeakRef
+from traitsui.api import \
+    Item, View, VGroup, \
+    Group, HGroup
 
 from mathkit.mfn import MFnLineArray
-
-from math import exp, pow
-
-from scipy.linalg import eig, inv
+from mathkit.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
+from mathkit.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
 
 mfn_editor = MFnMatplotlibEditor(
     adapter=MFnPlotAdapter(label_x='strain',

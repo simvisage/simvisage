@@ -1,34 +1,18 @@
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-from math  import \
-    pow, fabs
-
-from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
-    identity, setdiff1d
 
 from scipy.linalg import \
-    inv, det
-
-import time
+    inv
+from traits.api import \
+    Array, Float, \
+    Instance, Int
 
 from ibvpy.fets.fets_eval import FETSEval
 from ibvpy.mats.mats_eval import MATSEval
+import numpy as np
+
 
 #-------------------------------------------------------------------------
 # FETS2D4Q8U - 8 nodes subparametric quadrilateral (2D, quadratic, serendipity family)
 #-------------------------------------------------------------------------
-
 #-------------------------------------------------------------------------
 # Element Information:
 #-------------------------------------------------------------------------
@@ -38,7 +22,7 @@ from ibvpy.mats.mats_eval import MATSEval
 # The implemented shape functions are derived (in femple) based
 # on the following ordering of the nodes of the parent element.
 #
-#            _node_coord_map_dof = Array( Float, (8,2),
+#            _node_coord_map_dof = np.array( Float, (8,2),
 #                                 [[ -1.,-1. ],
 #                                  [  1.,-1. ],
 #                                  [  1., 1. ],
@@ -53,8 +37,6 @@ from ibvpy.mats.mats_eval import MATSEval
 # and the (linear) shape functions are derived by formula
 #
 #-------------------------------------------------------------------------
-
-
 class FETS2D4Q8U(FETSEval):
     debug_on = True
 
@@ -110,7 +92,7 @@ class FETS2D4Q8U(FETSEval):
         Return the value of shape functions for the specified local coordinate r_pnt
         '''
         cx = self._node_coord_map_geo
-        N_geo_mtx = array(
+        N_geo_mtx = np.array(
             [[1 / 4. * (1 + r_pnt[0] * cx[i, 0]) * (1 + r_pnt[1] * cx[i, 1]) for i in range(0, 4)]])
         return N_geo_mtx
 
@@ -124,8 +106,8 @@ class FETS2D4Q8U(FETSEval):
         operator.
         '''
         cx = self._node_coord_map_geo
-        dNr_geo_mtx = array([[1 / 4. * cx[i, 0] * (1 + r_pnt[1] * cx[i, 1]) for i in range(0, 4)],
-                             [1 / 4. * cx[i, 1] * (1 + r_pnt[0] * cx[i, 0]) for i in range(0, 4)]])
+        dNr_geo_mtx = np.array([[1 / 4. * cx[i, 0] * (1 + r_pnt[1] * cx[i, 1]) for i in range(0, 4)],
+                                [1 / 4. * cx[i, 1] * (1 + r_pnt[0] * cx[i, 0]) for i in range(0, 4)]])
         return dNr_geo_mtx
 
     #-------------------------------------------------------------------------
@@ -137,7 +119,7 @@ class FETS2D4Q8U(FETSEval):
         approximation containing zero entries. The number of rows corresponds to the number 
         of nodal dofs. The matrix is evaluated for the specified local coordinate r_pnt.
         '''
-        N_dof = zeros((1, 8))
+        N_dof = np.zeros((1, 8))
         N_dof[0, 0] = -((-1 + r_pnt[1]) * (-1 + r_pnt[0])
                         * (r_pnt[0] + 1 + r_pnt[1])) / 4.0
         N_dof[0, 1] = -((-1 + r_pnt[1]) * (1 + r_pnt[0])
@@ -155,9 +137,9 @@ class FETS2D4Q8U(FETSEval):
         N_dof[0, 7] = (
             (-1 + r_pnt[1]) * (1 + r_pnt[1]) * (-1 + r_pnt[0])) / 2.0
 
-        I_mtx = identity(self.n_nodal_dofs, float)
+        I_mtx = np.identity(self.n_nodal_dofs, float)
         N_mtx_list = [I_mtx * N_dof[0, i] for i in range(0, N_dof.shape[1])]
-        N_mtx = hstack(N_mtx_list)
+        N_mtx = np.hstack(N_mtx_list)
         return N_mtx
 
     def get_dNr_mtx(self, r_pnt):
@@ -165,7 +147,7 @@ class FETS2D4Q8U(FETSEval):
         Return the derivatives of the shape functions (derived in femple) 
         used for the field approximation
         '''
-        dNr_mtx = zeros((2, 8), dtype='float_')
+        dNr_mtx = np.zeros((2, 8), dtype='float_')
         dNr_mtx[0, 0] = -((-1 + r_pnt[1]) * (r_pnt[0] + 1 + r_pnt[1])
                           ) / 4.0 - ((-1 + r_pnt[1]) * (-1 + r_pnt[0])) / 4.0
         dNr_mtx[0, 1] = -((-1 + r_pnt[1]) * (r_pnt[0] - 1 - r_pnt[1])
@@ -199,8 +181,8 @@ class FETS2D4Q8U(FETSEval):
     def get_B_mtx(self, r_pnt, X_mtx):
         J_mtx = self.get_J_mtx(r_pnt, X_mtx)
         dNr_mtx = self.get_dNr_mtx(r_pnt)
-        dNx_mtx = dot(inv(J_mtx), dNr_mtx)
-        Bx_mtx = zeros((3, 16), dtype='float_')
+        dNx_mtx = np.dot(inv(J_mtx), dNr_mtx)
+        Bx_mtx = np.zeros((3, 16), dtype='float_')
         for i in range(0, 8):
             Bx_mtx[0, i * 2] = dNx_mtx[0, i]
             Bx_mtx[1, i * 2 + 1] = dNx_mtx[1, i]
@@ -213,8 +195,8 @@ class FETS2D4Q8U(FETSEval):
 
 if __name__ == '__main__':
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDofGroup, IBVPSolve as IS
+        TStepper as TS, RTraceDomainListField, TLoop, \
+        TLine, BCDofGroup
 
     #from ibvpy.mats.mats2D.mats_cmdm2D.mats_cmdm2D import MATS2DMicroplaneDamage
     #from ibvpy.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
@@ -231,8 +213,8 @@ if __name__ == '__main__':
 
     # Discretization
     domain = FEGrid(coord_max=(3., 3., 0.),
-                    shape = (1, 1),
-                    fets_eval = fets_eval)
+                    shape=(1, 1),
+                    fets_eval=fets_eval)
 
     # Put the tseval (time-stepper) into the spatial context of the
     # discretization and specify the response tracers to evaluate there.

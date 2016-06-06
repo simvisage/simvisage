@@ -12,32 +12,32 @@
 #
 # Created on Aug 19, 2009 by: rch, ascholzen
 
+from math import sqrt as scalar_sqrt
+from numpy import \
+    array, zeros, outer, inner, transpose, dot, \
+    fabs, identity, tensordot, \
+    float_, \
+    sqrt as arr_sqrt, copy
+from scipy.linalg import \
+    eigh, inv
 from traits.api import \
     Bool, Callable, Enum, \
     Int, Trait, on_trait_change, \
     Dict, Property, cached_property
 from traitsui.api import \
     Item, View, Group, Spring, Include
-from numpy import \
-    array, zeros, outer, inner, transpose, dot, \
-    fabs, identity, tensordot, \
-    float_, \
-    sqrt as arr_sqrt, copy
-import numpy as np
-from math import sqrt as scalar_sqrt
-from scipy.linalg import \
-    eigh, inv
+
 from ibvpy.core.rtrace_eval import \
     RTraceEval
-# @todo parameterize for 2D and 2D5 - does not make sense for 3D
 from matsXD_cmdm_polar_discr import \
     PolarDiscr
+import numpy as np
 
+
+# @todo parameterize for 2D and 2D5 - does not make sense for 3D
 #---------------------------------------------------------------------------
 # Material time-step-evaluator for Microplane-Damage-Model
 #---------------------------------------------------------------------------
-
-
 class MATSXDMicroplaneDamage(PolarDiscr):
 
     '''
@@ -885,10 +885,10 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # for compliance version only
         #
         if self.model_version != 'compliance':
-            raise ExceptionError('only valid for compliance version')
+            raise ValueError('only valid for compliance version')
 
         e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(
-            self, sctx, e_max_arr_new, eps_app_eng))
+            self, sctx, e_msax_arr_new, eps_app_eng))
 
         self.update_state_variables(e_max_arr_new)
 
@@ -1002,36 +1002,6 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
         fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
         return fracture_energy
-
-    def Xget_fracture_energy(self, sctx, eps_app_eng, *args, **kw):
-        '''
-        Get the macroscopic fracture energy as a weighted sum of all mircoplane contributions
-        '''
-        e_vct_arr, s_vct_arr = self._get_e_s_vct_arr(sctx, eps_app_eng)
-
-        # N: normal components
-        # integral under the stress-strain curve
-        E_tN = trapz(e_app_vct_arr[:, 0], s_app_vct_arr[:, 0])
-        # area of the stored elastic energy
-        U_tN = 0.5 * _ydata_integ[-1] * _xdata_emax[-1]
-#        print 'E_t', E_t
-#        print 'U_t', U_t
-#        print 'E_t - U_t', E_t - U_t
-        return E_t - U_t
-
-        e_max_arr = self._get_state_variables(sctx, eps_app_eng)
-        fracture_energy_arr = self.get_fracture_energy_arr(sctx, e_max_arr)
-        fracture_energy = array([dot(self._MPW, fracture_energy_arr)], float)
-        return fracture_energy
-
-    #    def get_e_x_arr(self, sctx, eps_app_eng):
-#        e_app_vct_arr   = self._get_e_vct_arr( sctx, eps_app_eng )
-#        return e_app_vct_arr[:,0]
-#
-#    def get_e_y_arr(self, sctx, eps_app_eng):
-#        e_app_vct_arr   = self._get_e_vct_arr( sctx, eps_app_eng )
-#        return e_app_vct_arr[:,1]
-#
 
     def get_e_equiv_projection(self, sctx, eps_app_eng):
         '''

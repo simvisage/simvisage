@@ -5,17 +5,14 @@ Created on Mar 24, 2011
 '''
 
 from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
+    array, zeros,  dot, hstack, \
     identity
 from scipy.linalg import \
     inv
 from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, Dict, \
-    on_trait_change, Tuple, WeakRef, DelegatesTo, Property, cached_property
-
+    Instance, Int, Trait, Dict, \
+    DelegatesTo, Property
 from ibvpy.fets.fets_eval import FETSEval, RTraceEvalElemFieldVar
-
 
 #-------------------------------------------------------------------------
 # FETS2D4Q - 4 nodes iso-parametric quadrilateral element (2D, linear, Lagrange family)
@@ -30,6 +27,8 @@ from ibvpy.fets.fets_eval import FETSEval, RTraceEvalElemFieldVar
 # '_node_coord_map' (see below)
 #
 #-------------------------------------------------------------------------
+
+
 class FETS2DTF(FETSEval):
 
     debug_on = True
@@ -173,8 +172,7 @@ class FETS2DTF(FETSEval):
 
 def example_with_new_domain():
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDof, IBVPSolve as IS, DOTSEval
+        TStepper as TS, RTraceDomainListField, TLoop, TLine
 
     from ibvpy.mats.mats2D5.mats2D5_bond.mats2D_bond import MATS2D5Bond
     from ibvpy.api import BCDofGroup
@@ -185,8 +183,6 @@ def example_with_new_domain():
                                                G=10.))
 
     from ibvpy.mesh.fe_grid import FEGrid
-    from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
-    from ibvpy.mesh.fe_domain import FEDomain
     from mathkit.mfn import MFnLineArray
 
     # Discretization
@@ -197,7 +193,6 @@ def example_with_new_domain():
     mf = MFnLineArray(  # xdata = arange(10),
         ydata=array([0, 1, 2, 3]))
 
-    right_dof = 2
     tstepper = TS(sdomain=fe_grid,
                   bcond_list=[BCDofGroup(var='u', value=0., dims=[0, 1],
                                          get_dof_method=fe_grid.get_left_dofs),

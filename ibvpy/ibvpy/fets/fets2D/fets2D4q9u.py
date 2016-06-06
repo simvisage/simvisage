@@ -1,35 +1,20 @@
 
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-from math  import \
-    pow, fabs
-
 from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
+    array, zeros, dot, hstack, \
     identity
-
 from scipy.linalg import \
-    inv, det
-
-import time
+    inv
+from traits.api import \
+    Array, Float, \
+    Instance, Int
 
 from ibvpy.fets.fets_eval import FETSEval
 from ibvpy.mats.mats_eval import MATSEval
 
+
 #-------------------------------------------------------------------------
 # FETS2D4Q9U - 9 nodes subparametric quadrilateral (2D, quadratic, Lagrange familiy)
 #-------------------------------------------------------------------------
-
 #-------------------------------------------------------------------------
 # Element Information:
 #-------------------------------------------------------------------------
@@ -55,10 +40,7 @@ from ibvpy.mats.mats_eval import MATSEval
 # and the (linear) shape functions are derived by formula
 #
 #-------------------------------------------------------------------------
-
 #
-
-
 class FETS2D4Q9U(FETSEval):
     debug_on = True
 
@@ -226,21 +208,21 @@ class FETS2D4Q9U(FETSEval):
 if __name__ == '__main__':
     from ibvpy.api import \
         TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDofGroup, IBVPSolve as IS
+        TLine, BCDofGroup
 
     #from lib.mats.mats2D.mats_cmdm2D.mats_mdm2d import MACMDM
     from ibvpy.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
-    from ibvpy.mats.mats2D.mats2D_elastic.mats2D_elastic import MATS2DElastic
+    #from ibvpy.mats.mats2D.mats2D_elastic.mats2D_elastic import MATS2DElastic
     from ibvpy.mesh.fe_grid import FEGrid
 
-    #fets_eval = FETS2D4Q9U(mats_eval = MATS2DScalarDamage(strain_norm_type = 'Euclidean'))
-    fets_eval = FETS2D4Q9U(mats_eval=MATS2DElastic())
+    fets_eval = FETS2D4Q9U(mats_eval=MATS2DScalarDamage())
+    #fets_eval = FETS2D4Q9U(mats_eval=MATS2DElastic())
 
     # Discretization
     #
     domain = FEGrid(coord_max=(3., 3., 0.),
-                    shape = (3, 3),
-                    fets_eval = fets_eval)
+                    shape=(3, 3),
+                    fets_eval=fets_eval)
     print 'n_dofs', domain.n_dofs
 
     right_dof = 2
@@ -276,7 +258,7 @@ if __name__ == '__main__':
     global tloop
     tloop = TLoop(tstepper=ts,
                   DT=0.5,
-                  tline=TLine(min=0.0,  max=1.0))
+                  tline=TLine(min=0.0,  max=1.0, step=0.1))
 
     import cProfile
     cProfile.run('tloop.eval()', 'tloop_prof')

@@ -1,35 +1,17 @@
 
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, Group
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-
-from math  import \
-    pow, fabs
-
-from numpy import \
-    array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
-    identity
-
 from scipy.linalg import \
-    inv, det
-
-import time
-
+    inv
+from traits.api import \
+    Array, Float, \
+    Instance, Int
 from ibvpy.fets.fets_eval import FETSEval
 from ibvpy.mats.mats_eval import MATSEval
+import numpy as np
+
 
 #------------------------------------------------------------------------------
 # FETS2D9Q - 9 nodes isoparametric quadrilateral (2D, quadratic, Lagrange family)
 #------------------------------------------------------------------------------
-
 #------------------------------------------------------------------------------
 # Element Information:
 #------------------------------------------------------------------------------
@@ -62,8 +44,6 @@ from ibvpy.mats.mats_eval import MATSEval
 #                                  [  0., 0. ]])
 #
 #------------------------------------------------------------------------------
-
-
 class FETS2D9Q(FETSEval):
     debug_on = True
 
@@ -122,7 +102,7 @@ class FETS2D9Q(FETSEval):
         '''
         Return the value of shape functions for the specified local coordinate r
         '''
-        N_geo_mtx = zeros((1, 9), dtype='float_')
+        N_geo_mtx = np.zeros((1, 9), dtype='float_')
         N_geo_mtx[0, 0] = (
             r_pnt[0] * r_pnt[1] * (-1 + r_pnt[1]) * (-1 + r_pnt[0])) / 4.0
         N_geo_mtx[0, 1] = (
@@ -148,7 +128,7 @@ class FETS2D9Q(FETSEval):
         Return the matrix of shape function derivatives.
         Used for the construction of the Jacobi matrix.
         '''
-        dNr_geo_mtx = zeros((2, 9), dtype='float_')
+        dNr_geo_mtx = np.zeros((2, 9), dtype='float_')
         dNr_geo_mtx[0, 0] = (r_pnt[1] * (-1 + r_pnt[1]) * (-1 + r_pnt[0])
                              ) / 4.0 + (r_pnt[0] * r_pnt[1] * (-1 + r_pnt[1])) / 4.0
         dNr_geo_mtx[0, 1] = (r_pnt[1] * (-1 + r_pnt[1]) * (1 + r_pnt[0])
@@ -197,9 +177,9 @@ class FETS2D9Q(FETSEval):
         dofs. The matrix is evaluated for the specified local coordinate r_pnt.
         '''
         N = self.get_N_geo_mtx(r_pnt)
-        I_mtx = identity(self.n_nodal_dofs, float)
+        I_mtx = np.identity(self.n_nodal_dofs, float)
         N_mtx_list = [I_mtx * N[0, i] for i in range(0, N.shape[1])]
-        N_mtx = hstack(N_mtx_list)
+        N_mtx = np.hstack(N_mtx_list)
         return N_mtx
 
     def get_dNr_mtx(self, r_pnt):
@@ -212,8 +192,8 @@ class FETS2D9Q(FETSEval):
     def get_B_mtx(self, r_pnt, X_mtx):
         J_mtx = self.get_J_mtx(r_pnt, X_mtx)
         dNr_mtx = self.get_dNr_mtx(r_pnt)
-        dNx_mtx = dot(inv(J_mtx), dNr_mtx)
-        Bx_mtx = zeros((3, 18), dtype='float_')
+        dNx_mtx = np.dot(inv(J_mtx), dNr_mtx)
+        Bx_mtx = np.zeros((3, 18), dtype='float_')
         for i in range(0, 9):
             Bx_mtx[0, i * 2] = dNx_mtx[0, i]
             Bx_mtx[1, i * 2 + 1] = dNx_mtx[1, i]
@@ -226,7 +206,7 @@ class FETS2D9Q(FETSEval):
 if __name__ == '__main__':
     from ibvpy.api import \
         TStepper as TS, RTraceGraph, RTraceDomainListField, TLoop, \
-        TLine, BCDofGroup, IBVPSolve as IS, DOTSEval
+        TLine, BCDofGroup
 
     #from lib.mats.mats2D.mats_cmdm2D.mats_mdm2d import MACMDM
     #from ibvpy.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
@@ -239,8 +219,8 @@ if __name__ == '__main__':
 
     # Discretization
     domain = FEGrid(coord_max=(3., 3., 0.),
-                    shape = (4, 4),
-                    fets_eval = fets_eval)
+                    shape=(4, 4),
+                    fets_eval=fets_eval)
 
     right_dof = 2
     ts = TS(sdomain=domain,
