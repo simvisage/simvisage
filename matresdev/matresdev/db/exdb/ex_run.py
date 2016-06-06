@@ -198,7 +198,7 @@ class ExRun(HasTraits):
             f.close()
             theClass = _find_class(ex_type_klass)
             if theClass is None:
-                raise TypeError, 'class %s not found' % ex_type_klass
+                raise TypeError, 'class %s not found for file %s' % (ex_type_klass, self.ex_type_file_name)
             self.ex_type = theClass(data_file=self.data_file)
             self.unsaved = True
             read_ok = True

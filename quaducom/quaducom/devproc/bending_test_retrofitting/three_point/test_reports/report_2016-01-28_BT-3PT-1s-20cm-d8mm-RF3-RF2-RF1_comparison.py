@@ -2,8 +2,7 @@
 Created on Jan 28, 2015
 
 '''
-import os
-
+from matresdev.db.simdb.simdb import simdb
 from matresdev.db.exdb import ExRun
 from matresdev.db.simdb.simdb import simdb
 import numpy as np
