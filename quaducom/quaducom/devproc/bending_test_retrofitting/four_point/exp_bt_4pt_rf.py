@@ -29,15 +29,7 @@ from matresdev.db.matdb.trc.composite_cross_section import \
     CompositeCrossSection, plain_concrete
 from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
-from matresdev.db.simdb import \
-    SimDB
 import numpy as np
-
-
-# Access to the toplevel directory of the database
-#
-simdb = SimDB()
-
 
 class ExpBT4PTRF(ExType):
     '''Experiment: Bending Test Four Point with RetroFitting beam

@@ -2,13 +2,12 @@
 Created on Jan 28, 2015
 
 '''
-import os
-
+from matresdev.db.simdb.simdb import simdb
 from matresdev.db.exdb import ExRun
-from matresdev.db.simdb import SimDB
+
+import os
 import numpy as np
 import pylab as p
-simdb = SimDB()
 
 import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 
