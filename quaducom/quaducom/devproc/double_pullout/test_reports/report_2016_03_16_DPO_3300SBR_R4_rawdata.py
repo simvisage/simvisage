@@ -67,6 +67,16 @@ n_roving_array = np.array([
     9, 8, 8,
 ]).reshape(-1, 3)
 
+l_v_array = np.array([
+    50, 50, 50,
+    100, 100, 100,
+    150, 150, 150,
+    200, 200, 200,
+    250, 250, 250,
+    300, 300, 300,
+    350, 350, 350,
+]).reshape(-1, 3)
+
 gauge_dist = 120
 left_gauge_name = 'W10_li'
 right_gauge_name = 'W10_re'

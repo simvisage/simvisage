@@ -13,37 +13,25 @@
 # Created on Aug 19, 2009 by: rch, ascholzen
 
 from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Range, HasTraits, on_trait_change, Event, \
-    implements, Dict, Property, cached_property, Delegate, Self
-
+    Bool, Callable, Enum, \
+    Int, Trait, on_trait_change, \
+    Dict, Property, cached_property
 from traitsui.api import \
-    Item, View, HSplit, VSplit, VGroup, Group, Spring, Include
-
+    Item, View, Group, Spring, Include
 from numpy import \
-    array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-    fabs, linspace, vdot, identity, tensordot, \
-    sin as nsin, meshgrid, float_, ix_, \
-    vstack, hstack, sqrt as arr_sqrt, swapaxes, copy
-
+    array, zeros, outer, inner, transpose, dot, \
+    fabs, identity, tensordot, \
+    float_, \
+    sqrt as arr_sqrt, copy
 import numpy as np
-
-from math import \
-    pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
-
-from util.traits.either_type import EitherType
+from math import sqrt as scalar_sqrt
 from scipy.linalg import \
     eigh, inv
-
 from ibvpy.core.rtrace_eval import \
     RTraceEval
-
 # @todo parameterize for 2D and 2D5 - does not make sense for 3D
 from matsXD_cmdm_polar_discr import \
     PolarDiscr
-
-from matsXD_cmdm_phi_fn import \
-    PhiFnGeneral, PhiFnStrainSoftening, PhiFnStrainHardening
 
 #---------------------------------------------------------------------------
 # Material time-step-evaluator for Microplane-Damage-Model
