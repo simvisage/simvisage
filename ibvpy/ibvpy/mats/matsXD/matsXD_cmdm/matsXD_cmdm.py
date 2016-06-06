@@ -14,20 +14,19 @@
 
 from math import sqrt as scalar_sqrt
 from numpy import \
-    array, zeros, outer, inner, transpose, dot,  \
-    fabs,  identity, tensordot, \
-    float_,  \
-    sqrt as arr_sqrt,  copy
+    array, zeros, outer, inner, transpose, dot, \
+    fabs, identity, tensordot, \
+    float_, \
+    sqrt as arr_sqrt, copy
 from scipy.linalg import \
     eigh, inv
-from scipy.optimize import \
-    brentq
 from traits.api import \
     Bool, Callable, Enum, \
-    Int, Trait,  on_trait_change,  \
+    Int, Trait, on_trait_change, \
     Dict, Property, cached_property
 from traitsui.api import \
     Item, View, Group, Spring, Include
+
 from ibvpy.core.rtrace_eval import \
     RTraceEval
 from matsXD_cmdm_polar_discr import \

@@ -57,6 +57,16 @@ n_roving_array = np.array([
     9, 9,
 ]).reshape(-1, 2)
 
+l_v_array = np.array([
+    57, 52,
+    100, 100,
+    150, 150,
+    200, 200,
+    250, 250,
+    300, 300,
+    306, 368,
+]).reshape(-1, 2)
+
 gauge_dist = 65  # cm
 left_gauge_name = 'IWA1'
 right_gauge_name = 'IWA2'
