@@ -888,7 +888,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             raise ValueError('only valid for compliance version')
 
         e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(
-            self, sctx, e_max_arr_new, eps_app_eng))
+            self, sctx, e_msax_arr_new, eps_app_eng))
 
         self.update_state_variables(e_max_arr_new)
 
