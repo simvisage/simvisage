@@ -5,10 +5,9 @@ Created on Jan 28, 2015
 import os
 
 from matresdev.db.exdb import ExRun
-from matresdev.db.simdb import SimDB
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-simdb = SimDB()
 
 # specify font options for plots
 params = {'legend.fontsize': 12,

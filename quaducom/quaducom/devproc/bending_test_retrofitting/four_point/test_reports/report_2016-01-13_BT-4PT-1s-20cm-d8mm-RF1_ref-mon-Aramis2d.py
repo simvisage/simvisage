@@ -5,10 +5,10 @@ Created on Jan 28, 2015
 import os
 
 from matresdev.db.exdb import ExRun
-from matresdev.db.simdb import SimDB
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-simdb = SimDB()
+
 
 # specify font options for plots
 params = {'legend.fontsize': 12,
@@ -28,8 +28,8 @@ do = 'F-w-center'  # force-displacement
 # four point bending test (reference test without retrofitting / monotonic loading)
 #--------------------
 test_file_path = [os.path.join(simdb.exdata_dir,
-                              'bending_tests_retrofitting', 'four_point',
-                              '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d')]
+                               'bending_tests_retrofitting', 'four_point',
+                               '2016-01-13_BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d')]
 
 test_files = ['BT-4PT-1s-20cm-d8mm-RF1_ref-mon-Aramis2d.DAT']
 
@@ -42,6 +42,7 @@ label_cutoff = [-9]
 
 e_list = [ExRun(data_file=os.path.join(test_file_path[i], test_files[i]))
           for i in range(len(test_files))]
+
 
 def plot_all():
 
@@ -65,7 +66,7 @@ def plot_all():
 
         if do == 'strains-top-bottom':
             e._plot_strain_top_bottom_force(axes, linewidth=1.5, color=color_list[
-                                                idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
+                idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
 
             axes.set_xlabel('strain $\epsilon$ [1E-3]')
             axes.set_ylabel('vertical load $F$ [kN]')
@@ -81,11 +82,13 @@ def plot_all():
 
     if save_fig_to_file:
         # create a report-subfolder with the name of the script (without file extension '.py')
-        # and save it in the test-type-subfolders with the name and path as ex_type
+        # and save it in the test-type-subfolders with the name and path as
+        # ex_type
         test_series_name = os.path.basename(__file__)[:-3]
         subfolder_list = __file__.split(os.path.sep)
         devproc_idx = np.where(np.array(subfolder_list) == 'devproc')[0]
-        subfolder_path = subfolder_list[devproc_idx + 1:-2] + [test_series_name]
+        subfolder_path = subfolder_list[
+            devproc_idx + 1:-2] + [test_series_name]
         test_series_dir = os.path.join(simdb.report_dir)
         for subfolder_name in subfolder_path:
             test_series_dir = os.path.join(test_series_dir, subfolder_name)

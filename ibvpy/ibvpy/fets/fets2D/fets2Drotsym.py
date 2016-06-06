@@ -5,9 +5,6 @@ Created on Sep 3, 2009
 '''
 
 from math import pi, sqrt
-from numpy import \
-    array, zeros, dot, \
-    append, copy
 from scipy.linalg import \
     inv
 from traits.api import \
@@ -16,6 +13,7 @@ from traits.api import \
 
 from ibvpy.fets.fets_eval import \
     FETSEval
+import numpy as np
 
 
 #-------------------------------------------------------------------------
@@ -76,11 +74,11 @@ class FETS2Drotsym(FETSEval):
         J_mtx = self.get_J_mtx(r_pnt, X_mtx)
         dNr_mtx = self.get_dNr_mtx(r_pnt)
         N_mtx = self.get_N_mtx(r_pnt)
-        radius = dot(self.get_N_geo_mtx(r_pnt), X_mtx[:, 1])
+        radius = np.dot(self.get_N_geo_mtx(r_pnt), X_mtx[:, 1])
 
-        dNx_mtx = dot(inv(J_mtx), dNr_mtx)
+        dNx_mtx = np.dot(inv(J_mtx), dNr_mtx)
 
-        Bx_mtx = zeros((6, self.n_e_dofs), dtype='float_')
+        Bx_mtx = np.zeros((6, self.n_e_dofs), dtype='float_')
         for i in range(0, self. n_dof_r):
             Bx_mtx[0, i * 2] = dNx_mtx[0, i]  # eps_z
             Bx_mtx[1, i * 2 + 1] = dNx_mtx[1, i]  # eps_r
@@ -96,8 +94,8 @@ class FETS2Drotsym(FETSEval):
         @param X_mtx:
         '''
         #radius = 1.
-        circle = 2. * pi * dot(self.get_N_geo_mtx(r_pnt), X_mtx[:, 1])
-        return array(circle * self._get_J_det(r_pnt, X_mtx), dtype='float_')
+        circle = 2. * pi * np.dot(self.get_N_geo_mtx(r_pnt), X_mtx[:, 1])
+        return np.array(circle * self._get_J_det(r_pnt, X_mtx), dtype='float_')
 
     def adjust_spatial_context_for_point(self, sctx):
         '''Overloaded call to mats_eval.
@@ -110,7 +108,8 @@ class FETS2Drotsym(FETSEval):
         '''
         if sctx.X.shape[1] == 2:
             X_mtx_theta = sctx.X[:, 1] * 2 * pi
-            sctx.X_reg = append(copy(sctx.X), X_mtx_theta[:, None], axis=1)
+            sctx.X_reg = np.append(
+                np.copy(sctx.X), X_mtx_theta[:, None], axis=1)
 
 #----------------------- example --------------------
 
@@ -119,13 +118,10 @@ def example_with_new_domain():
     from ibvpy.api import \
         TStepper as TS, RTraceDomainListField, TLoop, \
         TLine, BCSlice
-    from ibvpy.mats.mats2D.mats2D_elastic.mats2D_elastic import MATS2DElastic
-    from ibvpy.mats.mats2D.mats2D_sdamage.mats2D_sdamage import MATS2DScalarDamage
-    from ibvpy.fets.fets2D.fets2D4q import FETS2D4Q
     from ibvpy.fets.fets2D.fets2D4q8u import FETS2D4Q8U
-    from ibvpy.api import BCDofGroup
-    from ibvpy.mats.mats3D.mats3D_cmdm.mats3D_cmdm import \
-        MATS3DMicroplaneDamage, PhiFnStrainSoftening
+    from ibvpy.mats.mats3D.mats3D_cmdm import \
+        MATS3DMicroplaneDamage
+    from ibvpy.mats.matsXD.matsXD_cmdm import PhiFnStrainSoftening
 
 #    mats =  MATS2DElastic(E=2,nu= .2,
 #                          stress_state= 'rotational_symetry')
@@ -140,9 +136,6 @@ def example_with_new_domain():
 
     fets_eval.vtk_r *= 0.9
     from ibvpy.mesh.fe_grid import FEGrid
-    from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
-    from ibvpy.mesh.fe_domain import FEDomain
-    from mathkit.mfn import MFnLineArray
 
     radius = sqrt(1. / pi)
 #    f_i = (radius/2.)*2*pi
@@ -151,7 +144,7 @@ def example_with_new_domain():
     # Discretization
     fe_grid = FEGrid(  # coord_min = (0.,radius/2.,0.),
         coord_max=(1., radius, 0.),
-        shape=(2, 2),
+        shape=(20, 20),
         fets_eval=fets_eval)
 
     tstepper = TS(sdomain=fe_grid,
