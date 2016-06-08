@@ -114,12 +114,14 @@ if __name__ == '__main__':
 #     explorer = MATSExplore(
 #         dim=MATS3DExplore(mats_eval=MATS3DElastic(E=30000., nu=0.2)))
 
-    phi_fn = PhiFnStrainHardeningLinear(alpha=0.5, beta=0.7)
-    phi_fn = PhiFnStrainHardening(Epp=1e-4, Efp=2e-4, Dfp=0.99, Elimit=8e-2)
+#     phi_fn = PhiFnStrainHardeningLinear(alpha=0.5, beta=0.7)
+#     phi_fn = PhiFnStrainHardening(Epp=1e-4, Efp=2e-4, Dfp=0.1, Elimit=8e-2)
+    phi_fn = PhiFnStrainSoftening(Epp=1e-4, Efp=2e-4, h=1.0)
     mats_eval = MATS2DMicroplaneDamage(nu=0.3,
                                        n_mp=30, phi_fn=phi_fn)
 
-    explorer = MATSExplore(dim=MATS2DExplore(mats_eval=mats_eval))
+    explorer = MATSExplore(dim=MATS2DExplore(mats_eval=mats_eval),
+                           n_steps=10)
 
     from ibvpy.plugins.ibvpy_app import IBVPyApp
     ibvpy_app = IBVPyApp(ibv_resource=explorer)

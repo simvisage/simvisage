@@ -174,7 +174,8 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
         from ibvpy.mats.mats2D.mats2D_rtrace_cylinder import MATS2DRTraceCylinder
 
         # overload the default configuration
-        c['bcond_list'] = [BCDofProportional(max_strain=0.006, alpha_rad=0.0)]
+        c['bcond_list'] = [
+            BCDofProportional(max_strain=0.003, alpha_rad=np.pi / 8.0)]
         c['rtrace_list'] += [
             MATS2DRTraceCylinder(name='Laterne',
                                  var_axis='time', idx_axis=0,
@@ -182,7 +183,7 @@ class MATS2DMicroplaneDamage(MATSXDMicroplaneDamage, MATS2DEval):
                                  record_on='update'),
         ]
 
-        c['tline'] = TLine(step=0.02, max=1)
+        c['tline'] = TLine(step=0.05, max=1)
         return c
 
     #-------------------------------------------------------------------------
