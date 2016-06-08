@@ -31,7 +31,6 @@ from matresdev.db.matdb.trc.fabric_layup \
     import FabricLayUp
 import numpy as np
 
-
 class ExpBT4PTRF(ExType):
     '''Experiment: Bending Test Four Point with RetroFitting beam
     '''
