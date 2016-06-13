@@ -164,6 +164,15 @@ class MATS2DElastic(MATS2DEval):
                 'max_principle_sig': self.get_max_principle_sig,
                 'strain_energy': self.get_strain_energy}
 
+    def _get_explorer_config(self):
+        '''Get the specific configuration of this material model in the explorer
+        '''
+        c = super(MATS2DElastic, self)._get_explorer_config()
+
+        from ibvpy.api import TLine
+        c['tline'] = TLine(step=1.0, max=1.0)
+        return c
+
 if __name__ == '__main__':
     #-------------------------------------------------------------------------
     # Example using the mats2d_explore
