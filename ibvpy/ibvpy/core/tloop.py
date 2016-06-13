@@ -380,6 +380,7 @@ class TLoop(IBVResource):
             self.report_load_step_start()
             self.k = 0
             step_flag = 'predictor'
+
             while self.k < self.KMAX:
 
                 self.report_iteration()

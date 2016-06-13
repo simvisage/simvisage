@@ -1,7 +1,7 @@
 from numpy import \
     ix_, array, float_
 from traits.api import Float, HasStrictTraits, \
-    Int,  Enum, \
+    Int,  Enum, on_trait_change, \
     Callable, List,  Any, implements
 from ibvpy.core.i_bcond import \
     IBCond

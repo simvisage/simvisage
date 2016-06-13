@@ -1,9 +1,5 @@
 from math import pi as Pi, cos, sin, exp, sqrt as scalar_sqrt
-from numpy import \
-    array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-    fabs, sqrt, linspace, vdot, identity, tensordot, \
-    sin as nsin, meshgrid, float_, ix_, \
-    vstack, hstack, sqrt as arr_sqrt
+from numpy import array,  zeros,  dot, float_, copy
 from scipy.linalg import eig, inv
 from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, \
@@ -20,6 +16,7 @@ from ibvpy.mats.mats_eval import IMATSEval
 # Material time-step-evaluator for Scalar-Damage-Model
 #---------------------------------------------------------------------------
 class MATS2DElastic(MATS2DEval):
+
     '''
     Elastic Model.
     '''
@@ -102,8 +99,7 @@ class MATS2DElastic(MATS2DEval):
 
         # You print the stress you just computed and the value of the apparent
         # E
-
-        return sigma, self.D_el
+        return sigma, copy(self.D_el)
 
     #-------------------------------------------------------------------------
     # Subsidiary methods realizing configurable features
