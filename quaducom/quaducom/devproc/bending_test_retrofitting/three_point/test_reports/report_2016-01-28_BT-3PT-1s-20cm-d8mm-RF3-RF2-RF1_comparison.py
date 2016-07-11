@@ -24,7 +24,7 @@ p.rcParams.update(params)
 # NOTE: 'do'-key is used for file name of saved image
 #--------------------
 do = 'F-w'  # force-displacement
-# do = 'crack-opening-shear-cracks'
+# do = 'crack-opening-shear-cracks' 
 
 #--------------------
 # bending test three point (with retrofitting / cyclic loading)
