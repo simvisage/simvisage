@@ -2,13 +2,13 @@
 Created on Jan 28, 2015
 
 '''
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
-from matresdev.db.exdb import ExRun
-
 import os
+
+from matresdev.db.exdb import ExRun
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
+
 
 # specify font options for plots
 params = {'legend.fontsize': 12,
@@ -39,7 +39,7 @@ color_list = ['k', 'grey']
 linestyle_list = ['-', '-']
 plot_asc_list = [1, 1]
 label_cutoff = [-18, -9]  # cutoff long label names at the end for cleaner legend display
-k_rho_list = [1.187, 1.187]  # = 9,1 mm^2 / 10,8 mm^2 = (5 rovings * 1,84 mm^2) / (90 mm^2/m * 0.12 m)
+k_rho_list = [1.0, 1.0]  # = width in pickle file adjusted to 10 cm (= 5 rovings)
 
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
