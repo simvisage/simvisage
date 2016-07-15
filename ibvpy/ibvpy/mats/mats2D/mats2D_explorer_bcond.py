@@ -68,7 +68,7 @@ class BCDofProportional(BCDof):
     alpha = 180 and 270 means pure pressure in e1 and e2, respectively
 
     Note that there is only a single kinematic constraint on strain,
-    the remaining strain components are calculating using the 
+    the remaining strain components are calculated using the 
     equilibrium loop    
     '''
 #    alpha_degree = Range( 0., 360., 0.,
@@ -96,5 +96,5 @@ class BCDofProportional(BCDof):
         alpha = self.alpha_rad  # Pi * self.alpha_degree / 180
         value, coeff = get_value_and_coeff(self.max_strain, alpha)
         self.value = value
-#         self.link_dofs = [1]
-#         self.link_coeffs = [coeff]
+        self.link_dofs = [1]
+        self.link_coeffs = [coeff]

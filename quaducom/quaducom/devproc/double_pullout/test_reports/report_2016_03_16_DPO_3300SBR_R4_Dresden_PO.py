@@ -70,7 +70,7 @@ l_v_array = np.array([
 gauge_dist = 65  # cm
 left_gauge_name = 'IWA1'
 right_gauge_name = 'IWA2'
-
+data_name = 'PO Dresden'
 
 def plot_all():
 

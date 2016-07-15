@@ -8,8 +8,7 @@ Created on 14.12.2015
 
 @author: alexander
 '''
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
+from matresdev.db.simdb.simdb import simdb
 from matresdev.db.exdb import ExRun
 
 import os

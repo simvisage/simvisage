@@ -80,6 +80,7 @@ l_v_array = np.array([
 gauge_dist = 120
 left_gauge_name = 'W10_li'
 right_gauge_name = 'W10_re'
+data_name = 'DPO Aachen'
 
 
 def plot_all():
