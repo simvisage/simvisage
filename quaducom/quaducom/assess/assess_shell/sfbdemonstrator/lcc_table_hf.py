@@ -10,30 +10,27 @@ for 'max_N*' and 'max_eta'.
 This file uses the 'LSTable'-class from the  file 'ls_table_hf' stored in the same package.
 '''
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, Enum, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Color, Bool, DelegatesTo, Callable
 
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, Tabbed, VGroup, \
     TableEditor, Group, ListEditor, VSplit, HSplit, VGroup, HGroup, Spring, \
     Include
 
-from etsproxy.mayavi import \
+from mayavi import \
     mlab
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
-from etsproxy.traits.ui.menu import \
+from traitsui.menu import \
     OKButton, CancelButton
 
-from etsproxy.traits.ui.tabular_adapter \
+from traitsui.tabular_adapter \
     import TabularAdapter
 
 from numpy import \
