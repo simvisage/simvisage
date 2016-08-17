@@ -4,43 +4,27 @@ Created on Jun 29, 2010
 @author: alexander
 '''
 
-from etsproxy.traits.api import \
-    HasTraits, Directory, List, Int, Float, Any, Enum, \
-    on_trait_change, File, Constant, Instance, Trait, \
+from traits.api import \
+    HasTraits, Directory, List, Int, Float, Enum, \
+    Instance, \
     Array, Str, Property, cached_property, WeakRef, \
-    Dict, Button, Color, Bool, DelegatesTo, Callable, \
+    Dict, Bool, Callable, \
     Trait
 
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, Tabbed, VGroup, \
     TableEditor, Group, ListEditor, VSplit, HSplit, VGroup, HGroup, Spring, \
     Include
 
-from etsproxy.mayavi import \
+from mayavi import \
     mlab
 
 import pylab as p
 
-from etsproxy.traits.ui.table_column import \
+from traitsui.table_column import \
     ObjectColumn
 
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
 import numpy as np
-
-from numpy import \
-    array, loadtxt, ones_like, \
-    vstack, hstack, \
-    copy, where, sum, \
-    ones, fabs, identity, \
-    max as ndmax, min as ndmin
 
 import os.path
 
@@ -164,7 +148,7 @@ class LC(HasTraits):
         as stack of all sr-column arrays.
         '''
         sd_dict = self.state_data_dict
-        return hstack([ sd_dict[ sr_key ] for sr_key in self.sr_columns ])
+        return np.hstack([ sd_dict[ sr_key ] for sr_key in self.sr_columns ])
 
 #    # deformation data
 #    #
@@ -310,7 +294,7 @@ class LCCTable(HasTraits):
         This yields an array of shape ( n_lc, n_elems, n_sr )
         '''
         sr_arr_list = [ lc.sr_arr for lc in self.lc_list ]
-        return array(sr_arr_list)
+        return np.array(sr_arr_list)
 
     #-------------------------------
     # Array dimensions:
@@ -391,7 +375,7 @@ class LCCTable(HasTraits):
             psi_value = getattr(self.lc_list[ imposed_idx ], psi_key)
             psi_list[ imposed_idx ] = psi_value
 
-        return array(psi_list, dtype='float_')
+        return np.array(psi_list, dtype='float_')
 
     # list containing names of the loading cases
     #
@@ -432,7 +416,7 @@ class LCCTable(HasTraits):
         #
         permutation_list = self._product(self.gamma_list)
 
-        combi_arr = array(permutation_list)
+        combi_arr = np.array(permutation_list)
 
         # check if imposed loads are defined
         # if not no further processing of 'combi_arr' is necessary:
@@ -444,7 +428,7 @@ class LCCTable(HasTraits):
             # characteristic values of each loading case.
             #
             if self.show_lc_characteristic:
-                combi_arr = vstack([ identity(self.n_lc), combi_arr ])
+                combi_arr = np.vstack([ np.identity(self.n_lc), combi_arr ])
 
             return combi_arr
 
@@ -477,22 +461,22 @@ class LCCTable(HasTraits):
             for imposed_idx in self.imposed_idx_list:
                 # copy in order to preserve initial state of the array
                 # and avoid in place modification
-                psi_arr = copy(psi_non_lead_arr)
+                psi_arr = np.copy(psi_non_lead_arr)
                 psi_arr[imposed_idx] = psi_lead_arr[imposed_idx]
-                combi_arr_lead_i = combi_arr[where(combi_arr[:, imposed_idx] != 0)] * psi_arr
+                combi_arr_lead_i = combi_arr[np.where(combi_arr[:, imposed_idx] != 0)] * psi_arr
                 combi_arr_psi_list.append(combi_arr_lead_i)
 
-            combi_arr_psi_no_0 = vstack(combi_arr_psi_list)
+            combi_arr_psi_no_0 = np.vstack(combi_arr_psi_list)
 
             # missing cases without any dead load have to be added
             # get combinations with all!! imposed = 0
             #
-            lcc_all_imposed_zero = where((combi_arr[:, self.imposed_idx_list] == 0)
+            lcc_all_imposed_zero = np.where((combi_arr[:, self.imposed_idx_list] == 0)
                                           .all(axis=1))
 
             # add to combinations
             #
-            combi_arr_psi = vstack((combi_arr[lcc_all_imposed_zero], combi_arr_psi_no_0))
+            combi_arr_psi = np.vstack((combi_arr[lcc_all_imposed_zero], combi_arr_psi_no_0))
 
         #---------------------------------------------------------------
         # get exclusive loading cases ('exclusive_to')
@@ -539,8 +523,8 @@ class LCCTable(HasTraits):
             # e.g.         0.0  0.0  0.0  --> sum = 0 --> true combi --> accepted combination (only body-loads)
             #              ...  ...  ...
             #
-            mask_arr = where(combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0)
-            true_combi = where(sum(mask_arr, axis=1) <= 1.0)
+            mask_arr = np.where(combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0)
+            true_combi = np.where(sum(mask_arr, axis=1) <= 1.0)
             combi_arr_psi_exclusive = combi_arr_psi_exclusive[ true_combi ]
 
         #---------------------------------------------------------------
@@ -561,14 +545,14 @@ class LCCTable(HasTraits):
             # Broadcasting is used for the bool evaluation:
             #
             if (row == combi_arr_psi_exclusive_unique).all(axis=1.0).any() == False:
-                combi_arr_psi_exclusive_unique = vstack((combi_arr_psi_exclusive_unique, row))
+                combi_arr_psi_exclusive_unique = np.vstack((combi_arr_psi_exclusive_unique, row))
 
         # if option is set to 'True' the loading case combination table
         # is enlarged with an identity matrix in order to see the
         # characteristic values of each loading case.
         #
         if self.show_lc_characteristic:
-            combi_arr_psi_exclusive_unique = vstack([ identity(self.n_lc), combi_arr_psi_exclusive_unique ])
+            combi_arr_psi_exclusive_unique = np.vstack([ np.identity(self.n_lc), combi_arr_psi_exclusive_unique ])
 
         return combi_arr_psi_exclusive_unique
 
@@ -615,8 +599,8 @@ class LCCTable(HasTraits):
         '''
         lcc_arr = self.lcc_arr
 
-        min_arr = ndmin(lcc_arr, axis=0)
-        max_arr = ndmax(lcc_arr, axis=0)
+        min_arr = np.min(lcc_arr, axis=0)
+        max_arr = np.max(lcc_arr, axis=0)
 
         return min_arr, max_arr
 
@@ -764,14 +748,14 @@ class LCCTable(HasTraits):
 
         # stack the list to an array in order to use ndmax-function
         #
-        assess_value_arr = hstack(assess_value_list)
+        assess_value_arr = np.hstack(assess_value_list)
         print 'assess_value_arr.shape', assess_value_arr.shape
 
         #----------------------------------------------
         # get the overall maximum values:
         #----------------------------------------------
 
-        assess_value_max = ndmax(assess_value_arr, axis=1)[:, None]
+        assess_value_max = np.max(assess_value_arr, axis=1)[:, None]
 
         #----------------------------------------------
         # plot
@@ -942,8 +926,8 @@ class LCCTable(HasTraits):
 
         # stack the list to an array in order to use plot-function
         #
-        m_Ed_arr = hstack(m_Ed_list)
-        n_Ed_arr = hstack(n_Ed_list)
+        m_Ed_arr = np.hstack(m_Ed_list)
+        n_Ed_arr = np.hstack(n_Ed_list)
         print 'm_Ed_arr.shape', m_Ed_arr.shape
 
         # get n_tRd, n_cRd, m_Rd
@@ -1320,7 +1304,7 @@ class LCCTableULS(LCCTable):
     psi_lead_arr = Property(Array, depends_on='lc_list_')
     @cached_property
     def _get_psi_lead_arr(self):
-        return ones(len(self.lc_list))
+        return np.ones(len(self.lc_list))
 
 class LCCTableSLS(LCCTable):
     '''LCCTable for serviceability limit state
@@ -1361,7 +1345,7 @@ class LCCTableSLS(LCCTable):
     #
     psi_lead_dict = Property(Dict)
     def _get_psi_lead_dict(self):
-        return {'rare' : ones_like(self._get_psi_arr('psi_0')) ,
+        return {'rare' : np.ones_like(self._get_psi_arr('psi_0')) ,
                 'freq' : self._get_psi_arr('psi_1'),
                 'perm' : self._get_psi_arr('psi_2')}
 

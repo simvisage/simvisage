@@ -78,10 +78,10 @@ def plot_all():
             e._plot_avg_strain_bottom_force(axes, linewidth=1.5, color=color_list[
                 idx], label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
 
-            axes.set_xlabel('strain $\epsilon$ [1E-3]')
-            axes.set_ylabel('vertical load $F$ [kN]')
+            axes.set_xlabel('Dehnung WA Horizontal $\epsilon$ [1E-3]')
+            axes.set_ylabel('$F$ [kN]')
             axes.axis([-.1, 8, 0., 70])
-
+            
     axes.grid()
     axes.legend(loc=4)
 

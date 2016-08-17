@@ -1,7 +1,5 @@
 if __name__ == '__main__':
 
-    from etsproxy.mayavi import \
-        mlab
 
     from matresdev.db.simdb import \
         SimDB
