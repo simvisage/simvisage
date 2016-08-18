@@ -782,6 +782,7 @@ class ExpTTDB(ExType):
     plot_templates = {'force / machine displacement': '_plot_force_displacement_machine',
                       'force / gauge displacement': '_plot_force_displacement',
                       'force / gauge displacement (ascending)': '_plot_force_displacement_asc',
+                      'force / gauge displacement (ascending average)': '_plot_force_displacement_asc_av',
                       'composite stress / strain': '_plot_sigc_eps',
                       'ironed composite stress / strain': '_plot_sigc_eps_ironed',
                       'interpolated composite stress / strain': '_plot_sigc_eps_interpolated',
@@ -856,6 +857,14 @@ class ExpTTDB(ExType):
             axes.plot(self.WA1_hinten[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+    def _plot_force_displacement_asc_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram (only the ascending branch, averaged between left, rigth, front and back)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+            w_hi = (self.W10_re + self.W10_li / 2 )
+            w_av = (w_hi + self.W10_vo) / 2
+            axes.plot(w_av[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
