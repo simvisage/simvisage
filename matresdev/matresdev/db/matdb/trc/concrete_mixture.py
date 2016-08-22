@@ -109,8 +109,26 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
                                            nu=0.2  # @todo: approximation only
                                            ),
-
-
+                'HPC_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'UHPC_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'HPC_SF1.5_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'UHPC_SF2.0_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
                                            }
             )
 

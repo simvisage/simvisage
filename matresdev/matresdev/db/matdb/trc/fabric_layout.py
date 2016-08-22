@@ -423,13 +423,17 @@ FabricLayOut.db = SimDBClassExt(
                                            ),
 #                            
                'CAR-6600-SBR_E0003' : FabricLayOut(
-                                           a_tex_0=90.,  # = 3.67 m^2 / 0.02 m
-                                           a_tex_90=90,
-                                           E_tex_0=245000.,  # yarn test with EP impregnation (3300tex)
-                                           E_tex_90=245000.,
-                                           s_tex_0=21.,
-                                           s_tex_90=21.,
-                                           ),                                                                                                                                  
+                                           a_tex_0=141.,  # = 3.67 m^2 / 0.026 m
+                                           a_tex_90=141,
+                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=26.,
+                                           s_tex_90=26.,
+                                           ),    
+               # styrol-butadiene impregnated Textile, Manufacturer: V.Fraas
+               # 100K (6600tex) rovings in 0-direction and 90-direction
+               # A_rov = 3.67mm^2
+               #                                                                                                                              
              }
             )
 
