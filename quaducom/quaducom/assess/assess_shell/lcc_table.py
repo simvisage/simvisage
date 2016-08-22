@@ -524,7 +524,7 @@ class LCCTable(HasTraits):
             #              ...  ...  ...
             #
             mask_arr = np.where(combi_arr_psi_exclusive[ :, exclusive_list_entry ] != 0, 1.0, 0.0)
-            true_combi = np.where(sum(mask_arr, axis=1) <= 1.0)
+            true_combi = np.where(np.sum(mask_arr, axis=1) <= 1.0)
             combi_arr_psi_exclusive = combi_arr_psi_exclusive[ true_combi ]
 
         #---------------------------------------------------------------
@@ -586,7 +586,7 @@ class LCCTable(HasTraits):
         # an array of all loading case combinations.
         # This yields an array of shape ( n_lcc, n_elem, n_sr )
         #
-        lcc_arr = sum(lc_combi_arr, axis=1)
+        lcc_arr = np.sum(lc_combi_arr, axis=1)
 
         return lcc_arr
 
