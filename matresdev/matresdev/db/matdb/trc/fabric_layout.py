@@ -326,8 +326,8 @@ FabricLayOut.db = SimDBClassExt(
                'Q85/85-CCE-21' : FabricLayOut(
                                            a_tex_0=85.,  # = 1.81 m^2 / 0.021 m
                                            a_tex_90=85,
-                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
-                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
                                            s_tex_0=21.,
                                            s_tex_90=21.,
                                            ),
@@ -335,8 +335,8 @@ FabricLayOut.db = SimDBClassExt(
                'Q95/95-CCE-38' : FabricLayOut(
                                            a_tex_0=95.,  # = 3.62 m^2 / 0.038 m
                                            a_tex_90=95,
-                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
-                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
                                            s_tex_0=38.,
                                            s_tex_90=38.,
                                            ),  
@@ -344,8 +344,8 @@ FabricLayOut.db = SimDBClassExt(
                'Q142/142-CCE-25' : FabricLayOut(
                                            a_tex_0=142,  # = 3.62 m^2 / 0.025 m
                                            a_tex_90=142,
-                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
-                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
                                            s_tex_0=25.,
                                            s_tex_90=25.,
                                            ), 
@@ -353,8 +353,8 @@ FabricLayOut.db = SimDBClassExt(
                'Q142/142-CCE-38' : FabricLayOut(
                                            a_tex_0=142,  # = 5.42 m^2 / 0.038 m
                                            a_tex_90=142,
-                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
-                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
                                            s_tex_0=38.,
                                            s_tex_90=38.,
                                            ), 
