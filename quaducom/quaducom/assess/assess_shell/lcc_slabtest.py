@@ -28,17 +28,19 @@ if __name__ == '__main__':
     #------------------------
     # define loading case:
     #------------------------
-    lc_list = [ LC(name='1MN-center-load', category='dead-load', file_name='LC1.txt',
-                   gamma_fav=1.0, gamma_unf=1.0)]
+    lc_list = [LC(name='1MN-center-load', category='dead-load', file_name='LC1.txt',
+                  gamma_fav=1.0, gamma_unf=1.0)]
 
     #--------------------------------------------------------
     # mean values for SFB-demonstrator (QS)
     #--------------------------------------------------------
-    # design values for quality tests of SFB-demonstrator (TT-SH2 and BT-SH4) on specimens with thickness 6 cm
+    # design values for quality tests of SFB-demonstrator
+    # (TT-SH2 and BT-SH4) on specimens with thickness 6 cm
 
     # tensile strength [kN/m]
     #
-    n_0_Rdt = n_90_Rdt = 996.4  # = 139.5 kN / 0.14 ### F_Rtm = 139.5 kN (mean value)
+    # = 139.5 kN / 0.14 ### F_Rtm = 139.5 kN (mean value)
+    n_0_Rdt = n_90_Rdt = 996.4
 
     # compressive strength [kN/m]
     #
@@ -54,9 +56,14 @@ if __name__ == '__main__':
                       reader_type='InfoCAD',
                       lc_list=lc_list,
                       show_lc_characteristic=False,
-                      strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
-                                                'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
-                      k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
+                      strength_characteristics={'n_0_Rdt': n_0_Rdt,
+                                                'm_0_Rd': m_0_Rd,
+                                                'n_Rdc': n_Rdc,
+                                                'n_90_Rdt': n_90_Rdt,
+                                                'm_90_Rd': m_90_Rd},
+                      # NO simplification used for 'k_alpha' on the resistance
+                      # side
+                      k_alpha_min=False,
                       )
 
     #--------------------------------------------------------------
@@ -89,6 +96,3 @@ if __name__ == '__main__':
     # brows the loading case combinations within an interactive table view
     #--------------------------------------------------------------
     lct.configure_traits()
-
-
-
