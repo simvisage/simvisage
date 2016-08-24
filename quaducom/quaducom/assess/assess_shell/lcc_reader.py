@@ -634,7 +634,7 @@ if __name__ == '__main__':
 
     import os
 
-    from etsproxy.mayavi import \
+    from mayavi import \
         mlab
 
     from lcc_table import LCCTableULS, LC
