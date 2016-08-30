@@ -97,7 +97,7 @@ if __name__ == '__main__':
     # nm-interaction plot (normal force - bending moment)
     #--------------------------------------------------------------
     #
-#        lct_Q.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-14')
+    lct_Q.plot_nm_interaction(save_fig_to_file='nm_interaction_hangar')
 #        lct_Q.plot_nm_interaction(add_max_min_nm_from_file='max_min_nm_arr_LC15-18', save_fig_to_file='nm_interaction_LC1-18')
 
     #--------------------------------------------------------------
