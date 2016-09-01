@@ -477,7 +477,7 @@ if __name__ == '__main__':
         # nm-interaction plot (normal force - bending moment)
         #--------------------------------------------------------------
         #
-#        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
+        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # interaction plot of material usage 'eta_nm' (utilization ratio)
