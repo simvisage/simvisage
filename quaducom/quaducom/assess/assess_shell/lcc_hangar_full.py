@@ -40,7 +40,7 @@ if __name__ == '__main__':
         # dead load
         #-------------------------------------------------------------
         # LC1:
-        LC(name='g_excl.P', category='dead-load', file_name='LC1.txt'
+        LC(name='g_exclP', category='dead-load', file_name='LC1.txt'
            ),
         #LC10:
         LC(name='P', category='dead-load', file_name='LC10.txt', gamma_unf = 1.00,
