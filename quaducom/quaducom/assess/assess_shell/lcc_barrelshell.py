@@ -1,8 +1,5 @@
 if __name__ == '__main__':
 
-    from etsproxy.mayavi import \
-        mlab
-
     from matresdev.db.simdb import \
         SimDB
 
@@ -32,21 +29,22 @@ if __name__ == '__main__':
         # first row elements (direct contact to support node)
         #
         support_elems_list = [692, 693, 2324, 2325, 744, 745, 2376, 2377, \
-        # second row elements (= adjacent elements to first row elements)
-        #
-                              691, 694, 2323, 2326, 743, 746, 2375, 2378 ]
-        cond_arr = np.array([elem_no != support_elem_number for support_elem_number in support_elems_list])
+                              # second row elements (= adjacent elements to first row elements)
+                              #
+                              691, 694, 2323, 2326, 743, 746, 2375, 2378]
+        cond_arr = np.array(
+            [elem_no != support_elem_number for support_elem_number in support_elems_list])
         cond_elem_active = np.product(cond_arr, axis=0)
 
         elem_active_idx = np.where(cond_elem_active)[0]
         if np.all(arr == lcc_table.geo_data_orig['t_elem_node_map'])\
-            or np.all(arr == lcc_table.geo_data_orig['q_elem_node_map']) \
-            or np.all(arr == lcc_table.geo_data_orig['t_idx'])\
-            or np.all(arr == lcc_table.geo_data_orig['q_idx'])\
-            or np.all(arr == lcc_table.lc_list[0].state_data_orig['ux'])\
-            or np.all(arr == lcc_table.lc_list[0].state_data_orig['uy'])\
-            or np.all(arr == lcc_table.lc_list[0].state_data_orig['uz'])\
-            or np.all(arr == lcc_table.lc_list[0].state_data_orig['node_U']):
+                or np.all(arr == lcc_table.geo_data_orig['q_elem_node_map']) \
+                or np.all(arr == lcc_table.geo_data_orig['t_idx'])\
+                or np.all(arr == lcc_table.geo_data_orig['q_idx'])\
+                or np.all(arr == lcc_table.lc_list[0].state_data_orig['ux'])\
+                or np.all(arr == lcc_table.lc_list[0].state_data_orig['uy'])\
+                or np.all(arr == lcc_table.lc_list[0].state_data_orig['uz'])\
+                or np.all(arr == lcc_table.lc_list[0].state_data_orig['node_U']):
             return arr
         else:
             return arr[elem_active_idx]
@@ -103,14 +101,15 @@ if __name__ == '__main__':
     if do == 'shell-test':
 
         lc_list = [
-                     LC(name='cable-FL-m3', category='imposed-load', file_name='LC22.txt',
-                        # loading case only used for evaluation of experimental test setup
-                        # (estimation of load-bearing capacity)
-                        # scale load factor in order to get evaluation within relevant values (>>0)
-                        gamma_unf=1000.0, gamma_fav=1.0,
-                        psi_0=1.0,
-                        ),
-                   ]
+            LC(name='cable-FL-m3', category='imposed-load', file_name='LC22.txt',
+               # loading case only used for evaluation of experimental test setup
+               # (estimation of load-bearing capacity)
+               # scale load factor in order to get evaluation within
+               # relevant values (>>0)
+               gamma_unf=1000.0, gamma_fav=1.0,
+               psi_0=1.0,
+               ),
+        ]
 
     #---------------------------------------------------------
     # (b) predimensioning
@@ -119,134 +118,141 @@ if __name__ == '__main__':
 
         lc_list = [
 
-                     #----------------------------------------------------------------------
-                     # dead load
-                     #----------------------------------------------------------------------
-                     # LC1:
-                     LC(name='g', category='dead-load', file_name='LC1.txt'
-                        ),
+            #------------------------------------------------------------------
+            # dead load
+            #---------------------------------------------------------
+            # LC1:
+            LC(name='g', category='dead-load', file_name='LC1.txt'
+               ),
 
-                     #----------------------------------------------------------------------
-                     # snow
-                     #----------------------------------------------------------------------
+            #---------------------------------------------------------
+            # snow
+            #---------------------------------------------------------
 
-                     # LC2:
-                     LC(name='s_hinten', category='imposed-load', file_name='LC2.txt',
-                        exclusive_to=['s_feld', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-                        ),
-                     # LC3:
-                     LC(name='s_feld', category='imposed-load', file_name='LC3.txt',
-                        exclusive_to=['s_hinten', 's_vorne', 's_links', 's_rechts', 's_komplett'],
-                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-                        ),
-                     # LC4:
-#                     LC(name='s_vorne', category='imposed-load', file_name='LC4.txt',
-#                        exclusive_to=['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
-#                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-#                        ),
-                     # LC5:
-                     LC(name='s_links', category='imposed-load', file_name='LC5.txt',
-                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_rechts', 's_komplett'],
-                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-                        ),
-                     # LC6:
-#                     LC(name='s_rechts', category='imposed-load', file_name='LC6.txt',
-#                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
-#                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-#                        ),
-                     # LC7:
-                     LC(name='s_komplett', category='imposed-load', file_name='LC7.txt',
-                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_rechts'],
-                        psi_0=0.5, psi_1=0.2, psi_2=0.0
-                        ),
+            # LC2:
+            LC(name='s_hinten', category='imposed-load', file_name='LC2.txt',
+               exclusive_to=[
+                   's_feld', 's_vorne', 's_links', 's_rechts', 's_komplett'],
+               psi_0=0.5, psi_1=0.2, psi_2=0.0
+               ),
+            # LC3:
+            LC(name='s_feld', category='imposed-load', file_name='LC3.txt',
+               exclusive_to=[
+                   's_hinten', 's_vorne', 's_links', 's_rechts', 's_komplett'],
+               psi_0=0.5, psi_1=0.2, psi_2=0.0
+               ),
+            # LC4:
+            #                     LC(name='s_vorne', category='imposed-load', file_name='LC4.txt',
+            #                        exclusive_to=['s_hinten', 's_feld', 's_links', 's_rechts', 's_komplett'],
+            #                        psi_0=0.5, psi_1=0.2, psi_2=0.0
+            #                        ),
+            # LC5:
+            LC(name='s_links', category='imposed-load', file_name='LC5.txt',
+               exclusive_to=[
+                   's_hinten', 's_feld', 's_vorne', 's_rechts', 's_komplett'],
+               psi_0=0.5, psi_1=0.2, psi_2=0.0
+               ),
+            # LC6:
+            #                     LC(name='s_rechts', category='imposed-load', file_name='LC6.txt',
+            #                        exclusive_to=['s_hinten', 's_feld', 's_vorne', 's_links', 's_komplett'],
+            #                        psi_0=0.5, psi_1=0.2, psi_2=0.0
+            #                        ),
+            # LC7:
+            LC(name='s_komplett', category='imposed-load', file_name='LC7.txt',
+               exclusive_to=[
+                   's_hinten', 's_feld', 's_vorne', 's_links', 's_rechts'],
+               psi_0=0.5, psi_1=0.2, psi_2=0.0
+               ),
 
-                     #----------------------------------------------------------------------
-                     # man load (1 KN)
-                     #----------------------------------------------------------------------
-#                     # LC8:
-#                     LC(name = 'Q_hinten_mitte', category = 'imposed-load', file_name = 'LC8.txt',
-#                        exclusive_to = ['Q_feld_mitte', 'Q_feld_li','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
-#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-#                        ),
-#                     # LC9:
-#                     LC(name = 'Q_feld_li', category = 'imposed-load', file_name = 'LC9.txt',
-#                        exclusive_to = ['Q_feld_mitte', 'Q_hinten_mitte','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
-#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-#                        ),
-#                     # LC10:
-#                     LC(name = 'Q_feld_mitte', category = 'imposed-load', file_name = 'LC10.txt',
-#                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
-#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-#                        ),
-#                     # LC11:
-#                     LC(name = 'Q_feld_re', category = 'imposed-load', file_name = 'LC11.txt',
-#                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
-#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-#                        ),
-#                     # LC12:
-#                     LC(name = 'Q_vorne_mitte', category = 'imposed-load', file_name = 'LC12.txt',
-#                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_feld_re'],
-#                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
-#                        ),
+            #---------------------------------------------------------
+            # man load (1 KN)
+            #---------------------------------------------------------
+            #                     # LC8:
+            #                     LC(name = 'Q_hinten_mitte', category = 'imposed-load', file_name = 'LC8.txt',
+            #                        exclusive_to = ['Q_feld_mitte', 'Q_feld_li','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
+            #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+            #                        ),
+            #                     # LC9:
+            #                     LC(name = 'Q_feld_li', category = 'imposed-load', file_name = 'LC9.txt',
+            #                        exclusive_to = ['Q_feld_mitte', 'Q_hinten_mitte','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
+            #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+            #                        ),
+            #                     # LC10:
+            #                     LC(name = 'Q_feld_mitte', category = 'imposed-load', file_name = 'LC10.txt',
+            #                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li','s_vorne', 's_hinten', 's_feld', 's_komplett', 's_links', 's_rechts','T_schwinden','w_vonlinks_komplett','w_vonrechts_komplett','w_druck_komplett','w_sog_komplett'],
+            #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+            #                        ),
+            #                     # LC11:
+            #                     LC(name = 'Q_feld_re', category = 'imposed-load', file_name = 'LC11.txt',
+            #                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_vorne_mitte'],
+            #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+            #                        ),
+            #                     # LC12:
+            #                     LC(name = 'Q_vorne_mitte', category = 'imposed-load', file_name = 'LC12.txt',
+            #                        exclusive_to = ['Q_hinten_mitte', 'Q_feld_li', 'Q_feld_mitte', 'Q_feld_re'],
+            #                        psi_0 = 0.0, psi_1 = 0.2, psi_2 = 0.0
+            #                        ),
 
-                     #----------------------------------------------------------------------
-                     # temperature
-                     #----------------------------------------------------------------------
+            #---------------------------------------------------------
+            # temperature
+            #---------------------------------------------------------
 
-#                     # LC13:
-#                     LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
-#                        exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
-#                        ),
-#                     # LC14:
-#                     LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
-#                        exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
-#                        ),
-#                     # LC15:
-#                     LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
-#                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
-#                        ),
-#                     # LC16:
-#                     LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
-#                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
-#                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
-#                        ),
+            #                     # LC13:
+            #                     LC(name = 'T_N_neg', category = 'imposed-load', file_name = 'LC13.txt',
+            #                        exclusive_to = ['T_N_pos', 'T_uo_neg', 'T_uo_pos'],
+            #                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
+            #                        ),
+            #                     # LC14:
+            #                     LC(name = 'T_N_pos', category = 'imposed-load', file_name = 'LC14.txt',
+            #                        exclusive_to = ['T_N_neg', 'T_uo_neg', 'T_uo_pos'],
+            #                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
+            #                        ),
+            #                     # LC15:
+            #                     LC(name = 'T_uo_neg', category = 'imposed-load', file_name = 'LC15.txt',
+            #                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_pos'],
+            #                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
+            #                        ),
+            #                     # LC16:
+            #                     LC(name = 'T_uo_pos', category = 'imposed-load', file_name = 'LC16.txt',
+            #                        exclusive_to = ['T_N_neg', 'T_N_pos', 'T_uo_neg'],
+            #                        psi_0 = 0.6, psi_1 = 0.5, psi_2 = 0.0
+            #                        ),
 
-                     #----------------------------------------------------------------------
-                     # shrinkage
-                     #----------------------------------------------------------------------
-                     # LC17:
-#                     LC(name='T_schwinden', category='imposed-load', file_name='LC17.txt',
-#                        psi_0=0.8, psi_1=0.7, psi_2=0.5,
-#                        ),
+            #---------------------------------------------------------
+            # shrinkage
+            #---------------------------------------------------------
+            # LC17:
+            #                     LC(name='T_schwinden', category='imposed-load', file_name='LC17.txt',
+            #                        psi_0=0.8, psi_1=0.7, psi_2=0.5,
+            #                        ),
 
-                     #----------------------------------------------------------------------
-                     # wind load
-                     #----------------------------------------------------------------------
-                     # LC42:
-                     LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC42.txt',
-                        exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-                        psi_0=0.6, psi_1=0.2, psi_2=0.0
-                        ),
-                     # LC43:
-#                     LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC43.txt',
-#                        exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-#                        psi_0=0.6, psi_1=0.2, psi_2=0.0
-#                        ),
-                     # LC44:
-                     LC(name='w_sog_komplett', category='imposed-load', file_name='LC44.txt',
-                        exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
-                        psi_0=0.6, psi_1=0.2, psi_2=0.0
-                        ),
-                     # LC45:
-                     LC(name='w_druck_komplett', category='imposed-load', file_name='LC45.txt',
-                        exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
-                        psi_0=0.6, psi_1=0.2, psi_2=0.0
-                        ),
-                   ]
+            #---------------------------------------------------------
+            # wind load
+            #---------------------------------------------------------
+            # LC42:
+            LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC42.txt',
+               exclusive_to=[
+                   'w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+               psi_0=0.6, psi_1=0.2, psi_2=0.0
+               ),
+            # LC43:
+            #                     LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC43.txt',
+            #                        exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+            #                        psi_0=0.6, psi_1=0.2, psi_2=0.0
+            #                        ),
+            # LC44:
+            LC(name='w_sog_komplett', category='imposed-load', file_name='LC44.txt',
+               exclusive_to=[
+                   'w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
+               psi_0=0.6, psi_1=0.2, psi_2=0.0
+               ),
+            # LC45:
+            LC(name='w_druck_komplett', category='imposed-load', file_name='LC45.txt',
+               exclusive_to=[
+                   'w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
+               psi_0=0.6, psi_1=0.2, psi_2=0.0
+               ),
+        ]
 
     #----------------------------------------------------------------------
     # (c) dimensioning with loads according to DIN EN 1991-1-3 (snow) and DIN EN 1991-1-4 (wind)
@@ -260,143 +266,147 @@ if __name__ == '__main__':
         #
         lc_list_Q = [
 
-                 #----------------------------------------------------------------------
-                 # dead load
-                 #----------------------------------------------------------------------
-                 # LC1:
-                 LC(name='g', category='dead-load', file_name='LC1.txt'
-                    ),
+            #------------------------------------------------------------------
+            # dead load
+            #-------------------------------------------------------------
+            # LC1:
+            LC(name='g', category='dead-load', file_name='LC1.txt'
+               ),
 
-                 #----------------------------------------------------------------------
-                 # snow
-                 #----------------------------------------------------------------------
+            #-------------------------------------------------------------
+            # snow
+            #-------------------------------------------------------------
 
-                 # LC2:
-                 LC(name='s_komplett', category='imposed-load', file_name='LC2.txt',
-                    exclusive_to=['s_verweht_re', 's_scheddach_re', 's_hinten', 's_feld'],
+            # LC2:
+            LC(name='s_komplett', category='imposed-load', file_name='LC2.txt',
+                    exclusive_to=[
+                        's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld'],
                     psi_0=0.5, psi_1=0.2, psi_2=0.0
-                    ),
-#                 # LC3:
-#                 LC(name='s_verweht_re', category='imposed-load', file_name='LC3.txt',
-#                    exclusive_to=['s_komplett', 's_scheddach_re', 's_hinten', 's_feld'],
-#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-#                    ),
-                 # LC4:
-                 LC(name='s_scheddach_re', category='imposed-load', file_name='LC4.txt',
-                    exclusive_to=['s_komplett', 's_verweht_re', 's_hinten', 's_feld'],
+               ),
+            #                 # LC3:
+            #                 LC(name='s_verweht_re', category='imposed-load', file_name='LC3.txt',
+            #                    exclusive_to=['s_komplett', 's_scheddach_re', 's_hinten', 's_feld'],
+            #                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+            #                    ),
+            # LC4:
+            LC(name='s_scheddach_re', category='imposed-load', file_name='LC4.txt',
+                    exclusive_to=[
+                        's_komplett', 's_verweht_re', 's_hinten', 's_feld'],
                     psi_0=0.5, psi_1=0.2, psi_2=0.0
-                    ),
-#                 # LC5:
-#                 LC(name='s_hinten', category='imposed-load', file_name='LC5.txt',
-#                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
-#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-#                    ),
-#                 # LC6:
-#                 LC(name='s_feld', category='imposed-load', file_name='LC6.txt',
-#                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
-#                    psi_0=0.5, psi_1=0.2, psi_2=0.0
-#                    ),
+               ),
+            #                 # LC5:
+            #                 LC(name='s_hinten', category='imposed-load', file_name='LC5.txt',
+            #                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
+            #                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+            #                    ),
+            #                 # LC6:
+            #                 LC(name='s_feld', category='imposed-load', file_name='LC6.txt',
+            #                    exclusive_to=['s_komplett', 's_verweht_re', 's_scheddach_re'],
+            #                    psi_0=0.5, psi_1=0.2, psi_2=0.0
+            #                    ),
 
-                 #----------------------------------------------------------------------
-                 # wind load
-                 #----------------------------------------------------------------------
-#                 # LC7:
-#                 LC(name='w_sog_komplett', category='imposed-load', file_name='LC7.txt',
-#                    exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
-#                    psi_0=0.6, psi_1=0.2, psi_2=0.0
-#                    ),
-                 # LC8:
-                 LC(name='w_druck_komplett', category='imposed-load', file_name='LC8.txt',
-                    exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
+            #-------------------------------------------------------------
+            # wind load
+            #-------------------------------------------------------------
+            #                 # LC7:
+            #                 LC(name='w_sog_komplett', category='imposed-load', file_name='LC7.txt',
+            #                    exclusive_to=['w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_druck_komplett'],
+            #                    psi_0=0.6, psi_1=0.2, psi_2=0.0
+            #                    ),
+            # LC8:
+            LC(name='w_druck_komplett', category='imposed-load', file_name='LC8.txt',
+                    exclusive_to=[
+                        'w_vonlinks_komplett', 'w_vonrechts_komplett', 'w_sog_komplett'],
                     psi_0=0.6, psi_1=0.2, psi_2=0.0
-                    ),
-#                 # LC9:
-#                 LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC9.txt',
-#                    exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
-#                    psi_0=0.6, psi_1=0.2, psi_2=0.0
-#                    ),
-                 # LC10:
-                 LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC10.txt',
-                    exclusive_to=['w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+               ),
+            #                 # LC9:
+            #                 LC(name='w_vonlinks_komplett', category='imposed-load', file_name='LC9.txt',
+            #                    exclusive_to=['w_vonrechts_komplett', 'w_sog_komplett', 'w_druck_komplett'],
+            #                    psi_0=0.6, psi_1=0.2, psi_2=0.0
+            #                    ),
+            # LC10:
+            LC(name='w_vonrechts_komplett', category='imposed-load', file_name='LC10.txt',
+                    exclusive_to=[
+                        'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett'],
                     psi_0=0.6, psi_1=0.2, psi_2=0.0
-                    ),
+               ),
 
-                 #----------------------------------------------------------------------
-                 # man load (1 KN)
-                 #----------------------------------------------------------------------
-#                 # LC11:
-#                 LC(name='Q_hinten', category='imposed-load', file_name='LC11.txt',
-#                    exclusive_to=[ 'Q_links', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-#                    ),
-#                 # LC12:
-#                 LC(name='Q_mitte', category='imposed-load', file_name='LC12.txt',
-#                    exclusive_to=[ 'Q_links', 'Q_hinten', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-#                    ),
-#                 # LC13:
-#                 LC(name='Q_links', category='imposed-load', file_name='LC13.txt',
-#                    exclusive_to=[ 'Q_hinten', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
-#                    psi_0=0.0, psi_1=0.2, psi_2=0.0
-#                    ),
-                 #----------------------------------------------------------------------
-                 # shrinkage
-                 #----------------------------------------------------------------------
-                 # LC14:
-                 LC(name='T_schwinden', category='imposed-load', file_name='LC14.txt',
+            #-------------------------------------------------------------
+            # man load (1 KN)
+            #-------------------------------------------------------------
+            #                 # LC11:
+            #                 LC(name='Q_hinten', category='imposed-load', file_name='LC11.txt',
+            #                    exclusive_to=[ 'Q_links', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+            #                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+            #                    ),
+            #                 # LC12:
+            #                 LC(name='Q_mitte', category='imposed-load', file_name='LC12.txt',
+            #                    exclusive_to=[ 'Q_links', 'Q_hinten', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+            #                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+            #                    ),
+            #                 # LC13:
+            #                 LC(name='Q_links', category='imposed-load', file_name='LC13.txt',
+            #                    exclusive_to=[ 'Q_hinten', 'Q_mitte', 's_komplett', 's_verweht_re', 's_scheddach_re', 's_hinten', 's_feld', 'w_vonrechts_komplett', 'w_vonlinks_komplett', 'w_sog_komplett', 'w_druck_komplett', 'T_schwinden'],
+            #                    psi_0=0.0, psi_1=0.2, psi_2=0.0
+            #                    ),
+            #-------------------------------------------------------------
+            # shrinkage
+            #-------------------------------------------------------------
+            # LC14:
+            LC(name='T_schwinden', category='imposed-load', file_name='LC14.txt',
                     psi_0=0.8, psi_1=0.7, psi_2=0.5,
-                    ),
+               ),
 
-                 # LC15:
-                 LC(name='T_N_pos', category='imposed-load', file_name='LC15.txt',
+            # LC15:
+            LC(name='T_N_pos', category='imposed-load', file_name='LC15.txt',
                     exclusive_to=['T_N_neg', 'T_uo_pos', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC16:
-                 LC(name='T_N_neg', category='imposed-load', file_name='LC16.txt',
+               ),
+            # LC16:
+            LC(name='T_N_neg', category='imposed-load', file_name='LC16.txt',
                     exclusive_to=['T_N_pos', 'T_uo_pos', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC17:
-                 LC(name='T_uo_pos', category='imposed-load', file_name='LC17.txt',
+               ),
+            # LC17:
+            LC(name='T_uo_pos', category='imposed-load', file_name='LC17.txt',
                     exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC18:
-                 LC(name='T_uo_neg', category='imposed-load', file_name='LC18.txt',
+               ),
+            # LC18:
+            LC(name='T_uo_neg', category='imposed-load', file_name='LC18.txt',
                     exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_pos'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
+               ),
 
-               ]
+        ]
 
         lc_list_T = [
 
-                 #----------------------------------------------------------------------
-                 # temperature (superpose separately = corresponds to conservatively setting psi_0 = 1.0)
-                 #----------------------------------------------------------------------
+            #------------------------------------------------------------------
+            # temperature (superpose separately = corresponds to conservatively setting psi_0 = 1.0)
+            #-------------------------------------------------------------
 
-                 # LC15:
-                 LC(name='T_N_pos', category='imposed-load', file_name='LC15.txt',
+            # LC15:
+            LC(name='T_N_pos', category='imposed-load', file_name='LC15.txt',
                     exclusive_to=['T_N_neg', 'T_uo_pos', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC16:
-                 LC(name='T_N_neg', category='imposed-load', file_name='LC16.txt',
+               ),
+            # LC16:
+            LC(name='T_N_neg', category='imposed-load', file_name='LC16.txt',
                     exclusive_to=['T_N_pos', 'T_uo_pos', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC17:
-                 LC(name='T_uo_pos', category='imposed-load', file_name='LC17.txt',
+               ),
+            # LC17:
+            LC(name='T_uo_pos', category='imposed-load', file_name='LC17.txt',
                     exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_neg'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-                 # LC18:
-                 LC(name='T_uo_neg', category='imposed-load', file_name='LC18.txt',
+               ),
+            # LC18:
+            LC(name='T_uo_neg', category='imposed-load', file_name='LC18.txt',
                     exclusive_to=['T_N_pos', 'T_N_neg', 'T_uo_pos'],
                     psi_0=1.0, psi_1=0.5, psi_2=0.0
-                    ),
-               ]
+               ),
+        ]
 
     #--------------------------------------------------------------
     # ULS evaluation
@@ -408,11 +418,13 @@ if __name__ == '__main__':
         # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
         #--------------------------------------------------------
         if 'use_QS_values':
-            # design values for quality tests of barrelshell (TTb-bs4 and BT_bs4) on specimens with thickness 2 cm
+            # design values for quality tests of barrelshell (TTb-bs4 and
+            # BT_bs4) on specimens with thickness 2 cm
 
             # tensile strength [kN/m]
             #
-            n_0_Rdt = n_90_Rdt = 476.  # = 25.7 (=F_tRd)/ 0.10 ### F_Rtm = 47.6 kN (mean value)
+            # = 25.7 (=F_tRd)/ 0.10 ### F_Rtm = 47.6 kN (mean value)
+            n_0_Rdt = n_90_Rdt = 476.
 
             # compressive strength [kN/m]
             #
@@ -420,7 +432,8 @@ if __name__ == '__main__':
 
             # bending strength [kNm/m]
             #
-            m_0_Rd = m_90_Rd = 3.3  # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
+            # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
+            m_0_Rd = m_90_Rd = 3.3
 
             print 'mean values (QS-bs4) used for strength characteristics  (no k_b; no reduction for scatter; no gamma_M)'
 
@@ -440,11 +453,16 @@ if __name__ == '__main__':
 
         lct = LCCTableULS(data_dir=data_dir,
                           reader_type='InfoCAD',
-#                          data_filter=remove_support_elems,
+                          #                          data_filter=remove_support_elems,
                           lc_list=lc_list,
-                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
-                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
-                          k_alpha_min=False,  # NO simplification used for 'k_alpha' on the resistance side
+                          strength_characteristics={'n_0_Rdt': n_0_Rdt,
+                                                    'm_0_Rd': m_0_Rd,
+                                                    'n_Rdc': n_Rdc,
+                                                    'n_90_Rdt': n_90_Rdt,
+                                                    'm_90_Rd': m_90_Rd},
+                          # NO simplification used for 'k_alpha' on the
+                          # resistance side
+                          k_alpha_min=False,
                           show_lc_characteristic=True
                           )
 
@@ -459,7 +477,7 @@ if __name__ == '__main__':
         # nm-interaction plot (normal force - bending moment)
         #--------------------------------------------------------------
         #
-#        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
+        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # interaction plot of material usage 'eta_nm' (utilization ratio)
@@ -505,9 +523,11 @@ if __name__ == '__main__':
                           reader_type='InfoCAD',
                           data_filter=remove_support_elems,
                           lc_list=lc_list,
-                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
-                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
-                          k_alpha_min=True,  # NO simplification used for 'k_alpha' on the resistance side
+                          strength_characteristics={'n_0_Rdt': n_0_Rdt, 'm_0_Rd': m_0_Rd, 'n_Rdc': n_Rdc,
+                                                    'n_90_Rdt': n_90_Rdt, 'm_90_Rd': m_90_Rd},
+                          # NO simplification used for 'k_alpha' on the
+                          # resistance side
+                          k_alpha_min=True,
                           show_lc_characteristic=False
                           )
 
@@ -548,14 +568,16 @@ if __name__ == '__main__':
         # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
         #--------------------------------------------------------
         if 'use_QS_values':
-            # design values for quality tests of barrelshell (TTb-bs4 and BT_bs4) on specimens with thickness 2 cm
+            # design values for quality tests of barrelshell (TTb-bs4 and
+            # BT_bs4) on specimens with thickness 2 cm
 
             # tensile strength [kN/m]
             #
             # use strength reduction factor 'k_b' for discontinuities in the fabric layers due to butt joints
             # NOTE: (omit as no butt joints are located in midfield):
             # i.e. k_b = 5/6 = 0.833333
-            n_0_Rdt = n_90_Rdt = 0.83333 * 257  # = 25.7 (=F_tRd)/ 0.10 ### F_Rtm = 47.6 kN (mean value)
+            # = 25.7 (=F_tRd)/ 0.10 ### F_Rtm = 47.6 kN (mean value)
+            n_0_Rdt = n_90_Rdt = 0.83333 * 257
 
             # compressive strength [kN/m]
             #
@@ -563,7 +585,8 @@ if __name__ == '__main__':
 
             # bending strength [kNm/m]
             #
-            m_0_Rd = m_90_Rd = 0.83333 * 1.8  # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
+            # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
+            m_0_Rd = m_90_Rd = 0.83333 * 1.8
 
             print 'design values (QS-bs4) used for strength characteristics'
 
@@ -586,28 +609,33 @@ if __name__ == '__main__':
         # LCCTable for imposed loads (without temperature)
         #
         lct_Q = LCCTableULS(data_dir=data_dir,
-                          reader_type='InfoCAD',
-                          data_filter=remove_support_elems,
-                          lc_list=lc_list_Q,
-                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
-                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
-                          k_alpha_min=False,  # simplification: use the minimum value for k_alpha on the resistance side
-#                          show_lc_characteristic = True
-                          )
+                            reader_type='InfoCAD',
+                            data_filter=remove_support_elems,
+                            lc_list=lc_list_Q,
+                            strength_characteristics={'n_0_Rdt': n_0_Rdt, 'm_0_Rd': m_0_Rd, 'n_Rdc': n_Rdc,
+                                                      'n_90_Rdt': n_90_Rdt, 'm_90_Rd': m_90_Rd},
+                            # simplification: use the minimum value for k_alpha
+                            # on the resistance side
+                            k_alpha_min=False,
+                            #                          show_lc_characteristic = True
+                            )
 
         # LCCTable for temperature loading cases only
         #
         lct_T = LCCTableULS(data_dir=data_dir,
-                          reader_type='InfoCAD',
-                          data_filter=remove_support_elems,
-                          lc_list=lc_list_T,
-                          strength_characteristics={'n_0_Rdt' : n_0_Rdt, 'm_0_Rd':m_0_Rd, 'n_Rdc' : n_Rdc,
-                                                    'n_90_Rdt' : n_90_Rdt, 'm_90_Rd':m_90_Rd},
-#                          k_alpha_min=True,  # simplification: use the minimum value for k_alpha on the resistance side
-                          k_alpha_min=False,  # NOTE: no simplification: use calculated values for k_alpha on the resistance side
-                                              #       and evaluation in 'alpha_1' AND 'alpha_2' direction
-#                          show_lc_characteristic = True
-                          )
+                            reader_type='InfoCAD',
+                            data_filter=remove_support_elems,
+                            lc_list=lc_list_T,
+                            strength_characteristics={'n_0_Rdt': n_0_Rdt, 'm_0_Rd': m_0_Rd, 'n_Rdc': n_Rdc,
+                                                      'n_90_Rdt': n_90_Rdt, 'm_90_Rd': m_90_Rd},
+                            # k_alpha_min=True,  # simplification: use the
+                            # minimum value for k_alpha on the resistance side
+                            # NOTE: no simplification: use calculated values
+                            # for k_alpha on the resistance side
+                            k_alpha_min=False,
+                            #       and evaluation in 'alpha_1' AND 'alpha_2' direction
+                            #                          show_lc_characteristic = True
+                            )
 
         #--------------------------------------------------------------
         # 'combi_arr': array with indices of all loading case combinations

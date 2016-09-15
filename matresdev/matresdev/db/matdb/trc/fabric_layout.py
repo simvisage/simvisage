@@ -322,7 +322,118 @@ FabricLayOut.db = SimDBClassExt(
                                            s_tex_0=21.,
                                            s_tex_90=21.,
                                            ),
-
+#
+               'Q85/85-CCE-21' : FabricLayOut(
+                                           a_tex_0=85.,  # = 1.81 m^2 / 0.021 m
+                                           a_tex_90=85,
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
+                                           s_tex_0=21.,
+                                           s_tex_90=21.,
+                                           ),
+#
+               'Q95/95-CCE-38' : FabricLayOut(
+                                           a_tex_0=95.,  # = 3.62 m^2 / 0.038 m
+                                           a_tex_90=95,
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
+                                           s_tex_0=38.,
+                                           s_tex_90=38.,
+                                           ),  
+#
+               'Q142/142-CCE-25' : FabricLayOut(
+                                           a_tex_0=142,  # = 3.62 m^2 / 0.025 m
+                                           a_tex_90=142,
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
+                                           s_tex_0=25.,
+                                           s_tex_90=25.,
+                                           ), 
+#
+               'Q142/142-CCE-38' : FabricLayOut(
+                                           a_tex_0=142,  # = 5.42 m^2 / 0.038 m
+                                           a_tex_90=142,
+                                           E_tex_0=246100.,  # Modulus from single yarn test data base
+                                           E_tex_90=246100., 
+                                           s_tex_0=38.,
+                                           s_tex_90=38.,
+                                           ), 
+#
+               'Q145/145-AAE-25' : FabricLayOut(
+                                           a_tex_0=145,  # = 3.69 m^2 / 0.025 m
+                                           a_tex_90=145,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=25.,
+                                           s_tex_90=25.,
+                                           ), 
+#
+               'Q121/121-AAE-38' : FabricLayOut(
+                                           a_tex_0=121,  # = 4.62 m^2 / 0.038 m
+                                           a_tex_90=121,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=38.,
+                                           s_tex_90=38.,
+                                           ),    
+#
+               'Q97/97-AAE-38' : FabricLayOut(
+                                           a_tex_0=97,  # = 3.69 m^2 / 0.038 m
+                                           a_tex_90=97,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=38.,
+                                           s_tex_90=38.,
+                                           ),
+#
+               'Q87/87-AAE-21' : FabricLayOut(
+                                           a_tex_0=87,  # = 1.85 m^2 / 0.025 m
+                                           a_tex_90=87,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=21.,
+                                           s_tex_90=21.,
+                                           ),
+#
+               'Q87/87-AAS-21' : FabricLayOut(
+                                           a_tex_0=87,  # = 1.85 m^2 / 0.025 m
+                                           a_tex_90=87,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=21.,
+                                           s_tex_90=21.,
+                                           ), 
+#
+               'Q142/142-CCS-25' : FabricLayOut(
+                                           a_tex_0=142,  # = 3.62 m^2 / 0.025 m
+                                           a_tex_90=142,
+                                           E_tex_0=65000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=25.,
+                                           s_tex_90=25.,
+                                           ),
+#
+               'R106/29-CGS-17x31' : FabricLayOut(
+                                           a_tex_0=106,  # = 1.81 m^2 / 0.017 m
+                                           a_tex_90=29,
+                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=65000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=17.,
+                                           s_tex_90=31.,
+                                           ),
+#                            
+               'CAR-6600-SBR_E0003' : FabricLayOut(
+                                           a_tex_0=141.,  # = 3.67 m^2 / 0.026 m
+                                           a_tex_90=141,
+                                           E_tex_0=245000.,  # ToDo: Verify Modulus by comparison to roving tests
+                                           E_tex_90=245000., # ToDo: Verify Modulus by comparison to roving tests
+                                           s_tex_0=26.,
+                                           s_tex_90=26.,
+                                           ),    
+               # styrol-butadiene impregnated Textile, Manufacturer: V.Fraas
+               # 100K (6600tex) rovings in 0-direction and 90-direction
+               # A_rov = 3.67mm^2
+               #                                                                                                                              
              }
             )
 

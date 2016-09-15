@@ -399,7 +399,8 @@ class ExpBT4PT(ExType):
                       'displacement (ironed/original - center)': '_plot_ironed_orig_force_deflection_center',
                       'displacement (ironed/original - left)': '_plot_ironed_orig_force_deflection_left',
                       'displacement (ironed/original - right)': '_plot_ironed_orig_force_deflection_right',
-                      'displacement (center, thirdpoints) (ironed, average)': '_plot_ironed_force_deflection_avg'
+                      'displacement (center, thirdpoints) (ironed, average)': '_plot_ironed_force_deflection_avg',
+                      'stress / deflection (center) - original': '_plot_stress_deflection_center_orig'
                       }
 
     default_plot_template = 'force / deflection (center)'
@@ -462,6 +463,28 @@ class ExpBT4PT(ExType):
         axes.plot(w_linear, F_linear, linestyle='--',
                   color='black', linewidth=linewidth)
 
+    n_fit_window_fraction = Float(0.1)
+    
+    def _plot_stress_deflection_center_orig(self, axes, n_roving, A_roving, deff, offset_w=0., color='black', linewidth=1., label=None):
+        '''calculate and plot the reinforcement stress and the deflection for comparison of different textiles
+        '''
+        # get only the ascending branch of the response curve
+        L = self.length
+        s_asc = self.Kraft[:self.max_force_idx + 1]*(L/5)*1000/(deff*0.95*n_roving*A_roving) 
+        w_asc = self.DB_mi_orig[:self.max_force_idx + 1]
+
+        # add curves
+        #
+        axes.plot(w_asc, s_asc, linewidth=linewidth, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'stress [MPa]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+        
+        
     n_fit_window_fraction = Float(0.1)
 
     def _plot_smoothed_force_deflection_center(self, axes):

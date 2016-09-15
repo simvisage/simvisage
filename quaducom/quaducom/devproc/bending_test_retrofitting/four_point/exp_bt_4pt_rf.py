@@ -471,12 +471,12 @@ class ExpBT4PTRF(ExType):
         # add curves
         #
 
-#         axes.plot(eps_HL, f_asc, linewidth=linewidth,
-#                   label='tension: eps_HL', color='k')
-#         axes.plot(eps_HM, f_asc, linewidth=linewidth,
-#                   label='tension: eps_HM', color='k')
+#        axes.plot(eps_HL, f_asc, linewidth=linewidth,
+#                   label= label + ' WA: HL', color='k')
+#        axes.plot(eps_HM, f_asc, linewidth=linewidth,
+#                   label= label + ' WA: HM', color='g')
         axes.plot(eps_HR, f_asc, linewidth=linewidth,
-                  label='tension: eps_HR', color='k')
+                  label= label + ' WA: HR', color='k')
 
         # add axes labels
         #

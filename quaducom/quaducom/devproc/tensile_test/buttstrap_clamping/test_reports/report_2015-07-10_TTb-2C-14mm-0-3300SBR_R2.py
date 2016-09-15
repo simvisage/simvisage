@@ -3,8 +3,7 @@ Created on Jan 28, 2015
 
 '''
 
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
+from matresdev.db.simdb.simdb import simdb
 from matresdev.db.exdb import ExRun
 
 import os

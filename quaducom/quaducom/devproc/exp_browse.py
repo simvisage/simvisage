@@ -24,8 +24,8 @@ from matresdev.db.simdb.simdb import simdb
 #
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
-ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
-                       'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT')
+#ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
+#                       'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
@@ -46,7 +46,11 @@ ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2015-09
 #                       'buttstrap_clamping',
 #                       '2015-03-23_TTb-2C-9mm-0-800SBR_Ring1',
 #                       'TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT')
-
+ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
+                       'buttstrap_clamping',
+                       '2016-03-22_TTb_TUWien',
+                       'P10_1.DAT')
+ 
 print os.path.exists(ex_path)
 
 doe_reader = ExRunView(data_file=ex_path)

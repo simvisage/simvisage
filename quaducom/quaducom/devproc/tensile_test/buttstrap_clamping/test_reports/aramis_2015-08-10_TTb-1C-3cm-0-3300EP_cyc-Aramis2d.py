@@ -7,9 +7,8 @@ Created on Jan 4, 2015 by scho
 if __name__ == '__main__':
 
     from exp_tt_aramis2d import ExpTTAramis2d
-    from matresdev.db.simdb import SimDB
+    from matresdev.db.simdb import simdb
     from aramis_cdt import AramisUI
-    simdb = SimDB()
     import os
     import numpy as np
 

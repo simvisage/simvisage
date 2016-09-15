@@ -9,9 +9,8 @@ from os import listdir
 import os
 
 import matplotlib.pyplot as plt
-from matresdev.db.simdb import SimDB
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
-simdb = SimDB()
 
 lines = ["-", "-.", ":"]
 linecycler = cycle(lines)
@@ -115,7 +114,7 @@ d_set = {}
 labels = []
 # fpath = 'D:\\data\\pull_out\\all'
 fpath = os.path.join(
-    simdb.exdata_dir, 'double_pullout', '2016-03-16_DPO-15mm-0-3300SBR_R4', 'processed_averaged_data_R1+R2+R3+R4')
+    simdb.exdata_dir, 'double_pullout_tests', '2016-03-16_DPO-15mm-0-3300SBR_R4', 'processed_averaged_data_R1+R2+R3+R4')
 
 
 for fname in listdir(fpath):

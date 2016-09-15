@@ -80,7 +80,7 @@ gauge_dist = 65  # cm
 left_gauge_name = 'IWA1'
 right_gauge_name = 'IWA2'
 w_scale = 1.0
-
+data_name = 'DPO Dresden'
 
 def plot_all():
 

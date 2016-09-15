@@ -10,9 +10,8 @@ import os
 import os
 
 import matplotlib.pyplot as plt
-from matresdev.db.simdb import SimDB
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
-simdb = SimDB()
 
 lines = ["-", "-.", ":"]
 linecycler = cycle(lines)
@@ -90,7 +89,7 @@ labels = []
 
 # 'processed_averaged_data_R1+R2+R3')
 fpath = os.path.join(
-    simdb.exdata_dir, 'double_pullout', '2015-12-14_DPO-15mm-0-3300SBR_R3', 'processed_averaged_data_R1+R2+R3')
+    simdb.exdata_dir, 'double_pullout_tests', '2015-12-14_DPO-15mm-0-3300SBR_R3', 'processed_averaged_data_R1+R2+R3')
 
 for fname in listdir(fpath):
 

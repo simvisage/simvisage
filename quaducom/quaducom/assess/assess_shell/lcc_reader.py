@@ -1,10 +1,10 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, \
     Property, WeakRef
 
 from numpy import array, random
-from etsproxy.tvtk.api import tvtk
+from tvtk.api import tvtk
 
 import os
 
@@ -634,7 +634,7 @@ if __name__ == '__main__':
 
     import os
 
-    from etsproxy.mayavi import \
+    from mayavi import \
         mlab
 
     from lcc_table import LCCTableULS, LC
