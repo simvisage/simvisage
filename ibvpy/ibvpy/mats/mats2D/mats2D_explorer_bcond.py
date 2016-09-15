@@ -54,6 +54,7 @@ def get_value_and_coeff(a, alpha):
 
 
 class BCDofProportional(BCDof):
+
     '''Convenience specialization of the BCDof with kinematic link between
     epsilon[0] and epsilon[1] corresponding to the angle - 
     proportion between the two strain components. 
