@@ -37,6 +37,6 @@ class MATS2DEval(MATSEval):
 
         # overload the default configuration
         c['bcond_list'] = [
-            BCDofProportional(max_strain=0.003, alpha_rad=np.pi / 8.0)]
+            BCDofProportional(max_strain=0.00016, alpha_rad=np.pi / 8.0)]
         c['tline'] = TLine(step=0.05, max=1)
         return c

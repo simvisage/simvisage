@@ -20,6 +20,7 @@ from util.traits.either_type import \
 
 
 class FEUnitElem(FEDomain):
+
     '''Unit volume for non-local or regularized material models.
     '''
     mats_eval = IMATSEval
@@ -37,6 +38,7 @@ class FEUnitElem(FEDomain):
 
 
 class MATSExplore(IBVModel):
+
     '''
     Simulate the loading histories of a material point in 2D space.
     '''
@@ -58,7 +60,7 @@ class MATSExplore(IBVModel):
 
     n_iterations = Float(10, enter_set=True, auto_set=False)
 
-    n_restarts = Float(0, enter_set=True, auto_set=False)
+    n_restarts = Float(5, enter_set=True, auto_set=False)
 
     def _dim_default(self):
         return MATS2DExplore(explorer=self)
@@ -80,7 +82,7 @@ class MATSExplore(IBVModel):
 
         tloop = TLoop(tstepper=self.ts,
                       KMAX=100, RESETMAX=self.n_restarts,
-                      tolerance=1e-8,
+                      tolerance=1e-7,
                       tline=TLine(min=0.0, step=1.0 / n_steps, max=1.0))
 
         return tloop
