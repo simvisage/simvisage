@@ -42,15 +42,15 @@ from matresdev.db.simdb.simdb import simdb
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2014-04-30_TTb-6c-2cm-0-TU_NxM1',
 #                                        'TTb-6c-2cm-0-TU-V16_NxM1.DAT')
 
-# ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
-#                       'buttstrap_clamping',
-#                       '2015-03-23_TTb-2C-9mm-0-800SBR_Ring1',
-#                       'TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT')
 ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
                        'buttstrap_clamping',
-                       '2016-03-22_TTb_TUWien',
-                       'P10_1.DAT')
- 
+                       '2015-03-23_TTb-2C-9mm-0-800SBR_Ring1',
+                       'TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT')
+#ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
+#                       'buttstrap_clamping',
+#                       '2016-03-22_TTb_TUWien',
+#                       'P10_1.DAT')
+# 
 print os.path.exists(ex_path)
 
 doe_reader = ExRunView(data_file=ex_path)
