@@ -12,21 +12,16 @@
 #
 #-------------------------------------------------------------------------
 
-import matplotlib
-matplotlib.use('WXAgg')
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx
-
 from matplotlib.figure import Figure
-import wx
-
 from traits.api import Instance, Int
-from traitsui.wx.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
+
 from mfn_plot_adapter import MFnPlotAdapter
 
+from util.traits.editors import MPLFigureEditor
 
-class _MFnMatplotlibEditor(Editor):
+
+class _MFnMatplotlibEditor(MPLFigureEditor):
 
     # @todo This is not used here, either activate or delete
     # scrollable  = True

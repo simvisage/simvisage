@@ -1,46 +1,30 @@
 
+from math import pi as Pi
+from numpy import \
+    array,  frompyfunc
 from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Range, HasStrictTraits, on_trait_change, Event, \
-    implements, Dict, Property, cached_property, Delegate, Button, \
-    Interface, WeakRef, String, List, Constant, Str, Class, TraitError, \
-    Any
-
-# Traits UI imports
+    Array, Bool, Callable,  Float, HasTraits, \
+    Instance,   Range,  on_trait_change,  \
+    Dict, Property, cached_property,   \
+    WeakRef, String, List, Constant, Str, Class, TraitError
 from traitsui.api import \
-    Item, View, HSplit, VSplit, VGroup, HGroup, Group, Spring, TabularEditor, \
+    Item, View, VSplit, HGroup, Group,  TabularEditor, \
     Include, Spring
-from traitsui.menu \
-    import OKButton, CancelButton
 from traitsui.tabular_adapter \
     import TabularAdapter
 
-from numpy import \
-    array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
-    fabs, sqrt, linspace, vdot, identity, tensordot, \
-    sin as nsin, meshgrid, float_, ix_, \
-    vstack, hstack, sqrt as arr_sqrt
-
-from mathkit.mfn import MFnLineArray
-
-from math import pi as Pi, cos, sin, exp
-
-from scipy.linalg import eig, inv
-
-from util.traits.either_type import EitherType
-
-# @todo change to mfn_polar
 from mathkit.mfn.mfn_polar.mfn_polar import MFnPolar
-
 from matsXD_cmdm_phi_fn import \
     IPhiFn, PhiFnStrainSoftening, PhiFnStrainHardening, PhiFnStrainHardeningLinear, \
     PhiFnGeneral, PhiFnGeneralExtended, PhiFnGeneralExtendedExp, PhiFnStrainHardeningBezier
+from util.traits.either_type import EitherType
 
+
+# Traits UI imports
+# @todo change to mfn_polar
 #-------------------------------------------------------------------------
 #                                     VariedParam
 #-------------------------------------------------------------------------
-
-
 class VariedParam(HasTraits):
 
     """
@@ -205,7 +189,6 @@ class PolarDiscr(HasTraits):
         params = self.phi_fn.identify_parameters()
         varset = {}
         for key in params:
-            par_val = getattr(self.phi_fn, key)
             varset[key] = VariedParam(phi_fn=self.phi_fn,
                                       mats_eval=self,
                                       varname=key)
@@ -305,7 +288,6 @@ if __name__ == '__main__':
     #    phi_fn_brittle_array = IsotropicPolarDiscr( phi_fn = phi_fn_brittle )
     #    phi_fn_brittle_array.configure_traits()
     #
-    from math import pi
 
     phi_fn_ductile = PhiFnStrainHardening()
     phi_fn_ductile_array = PolarDiscr(phi_fn=phi_fn_ductile)

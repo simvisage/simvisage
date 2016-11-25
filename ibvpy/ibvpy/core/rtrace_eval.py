@@ -4,9 +4,6 @@ from traits.api import Array, Bool, Callable, Enum, Float, HasTraits, \
     Dict, Property, cached_property, WeakRef, Delegate
 from traitsui.api import Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
 
-from traitsui.menu import NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-import wx
 #from etsproxy.pyface.tvtk.actor_editor import ActorEditor
 from i_tstepper_eval import ITStepperEval
 
