@@ -1,9 +1,4 @@
 '''
-Created on 15.12.2015
-
-@author: alexander
-'''
-'''
 Created on 14.12.2015
 
 @author: alexander
@@ -28,21 +23,26 @@ p.rcParams.update(params)
 #--------------------
 # TTb-2C-9mm-0-3300SBR-DK3_A5_R4
 #--------------------
-#do = 'sigtex-eps'  # gauge displacement
-do = 'F-w'  # Force / gauge displacement displacement
+do = 'sigtex-eps'  # stress / strain
+#do = 'F-w'  # Force / gauge displacement 
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
                              '2016-03-14_TTb-2C-9mm-0-3300SBR_R4')
 
-test_files = ['TTb-2C-9mm-0-3300SBR-DK3_A5_R4.DAT']
+test_files = ['TTb-2C-9mm-0-3300SBR-DK3_A5_R4.DAT', 
+              'TTb-2C-9mm-0-3300SBR-DK3_A6_R4.DAT', 
+              'TTb-2C-9mm-0-3300SBR-DK3_B1_R4.DAT', 
+              'TTb-2C-9mm-0-3300SBR-DK3_B2_R4.DAT',
+              'TTb-2C-9mm-0-3300SBR-DK3_C3_R4.DAT',
+              'TTb-2C-9mm-0-3300SBR-DK3_C4_R4.DAT',]
 
-n_rov_list = [10, 10]
-color_list = ['k', 'grey']
-linestyle_list = ['-', '-']
-plot_asc_list = [1, 1]
-label_cutoff = [-3, -3]  # cutoff long label names at the end for cleaner legend display
-k_rho_list = [1.187, 1.187]  # = 9,1 mm^2 / 10,8 mm^2 = (5 rovings * 1,84 mm^2) / (90 mm^2/m * 0.12 m)
+#n_rov_list = [10, 10]
+color_list = ['k', 'grey','red','blue',"green","teal"]
+linestyle_list = ['-', '-', '-', '-', '-', '-']
+plot_asc_list = [1, 1, 1, 1, 1, 1]
+label_cutoff = [-3, -3, -3, -3, -3, -3]  # cutoff long label names at the end for cleaner legend display
+k_rho_list = [1, 1, 1, 1, 1, 1]  # modification factor to ajust to actual textile area in the given width of the specimen
 
 e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
@@ -65,10 +65,10 @@ def plot_all():
                                               plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             else:
                 e._plot_tex_stress_strain(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
-            axes.set_ylabel('Textilspannung [MPa]')
-            axes.set_xlabel('Dehnung [1E+3]')
-            xlim = 60
-            ylim = 2500.
+            axes.set_ylabel('Textile Stress [MPa]')
+            axes.set_xlabel('Strain [1E+3]')
+            xlim = 15
+            ylim = 1500.
 
         if do == 'F-w':
             e._plot_force_displacement_asc(axes, color=color_list[idx], linewidth=1.5, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
@@ -85,7 +85,7 @@ def plot_all():
     # --------------------------------
     # save figure
     # --------------------------------
-    save_fig_to_file = True
+    save_fig_to_file = False
 
     if save_fig_to_file:
         # create a report-subfolder with the name of the script (without file extension '.py')
@@ -100,7 +100,7 @@ def plot_all():
 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, do + '.png')
+        filename = os.path.join(test_series_dir, do + '.eps')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 
