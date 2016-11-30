@@ -23,7 +23,7 @@ p.rcParams.update(params)
 # TTb-1C-3cm-3300EP
 #--------------------
 do = 'sigtex-eps'  # gauge displacement
-# do = 'F-w'  # machine displacement
+#do = 'F-w'  # machine displacement
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
@@ -102,7 +102,7 @@ def plot_all():
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, do + '.png')
-        p.savefig(filename)
+        p.savefig(filename, dpi=300)
         print 'figure saved to file %s' % (filename)
 
 if __name__ == '__main__':

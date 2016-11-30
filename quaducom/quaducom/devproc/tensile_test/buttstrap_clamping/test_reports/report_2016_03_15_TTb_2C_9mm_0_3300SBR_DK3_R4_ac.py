@@ -19,6 +19,7 @@ params = {'legend.fontsize': 12,
 p.rcParams.update(params)
 # print p.rcParams.keys()
 
+data_name = 'R4 Aachen'
 
 #--------------------
 # TTb-2C-9mm-0-3300SBR-DK3_A5_R4
@@ -43,8 +44,8 @@ linestyle_list = ['-', '-', '-', '-', '-', '-']
 plot_asc_list = [1, 1, 1, 1, 1, 1]
 label_cutoff = [-3, -3, -3, -3, -3, -3]  # cutoff long label names at the end for cleaner legend display
 k_rho_list = [1, 1, 1, 1, 1, 1]  # modification factor to ajust to actual textile area in the given width of the specimen
-
-e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
+n_roving_array = [18, 18, 18, 18, 18, 18]
+e_array = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
 def plot_all():
@@ -53,7 +54,7 @@ def plot_all():
 #     fig.subplots_adjust(
 #         left=0.07, right=0.97, bottom=0.08, top=0.96, wspace=0.25, hspace=0.2)
 
-    for idx, e_run in enumerate(e_list):
+    for idx, e_run in enumerate(e_array):
 
         e = e_run.ex_type
 
@@ -62,16 +63,16 @@ def plot_all():
         if do == 'sigtex-eps':
             if plot_asc_list[idx]:
                 e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5,
-                                              plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
+                                              plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
             else:
-                e._plot_tex_stress_strain(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
+                e._plot_tex_stress_strain(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_ylabel('Textile Stress [MPa]')
             axes.set_xlabel('Strain [1E+3]')
             xlim = 15
             ylim = 1500.
 
         if do == 'F-w':
-            e._plot_force_displacement_asc(axes, color=color_list[idx], linewidth=1.5, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
+            e._plot_force_displacement_asc(axes, color=color_list[idx], linewidth=1.5, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('Weg [mm]')
             axes.set_ylabel('Kraft [kN]')
             xlim = 5

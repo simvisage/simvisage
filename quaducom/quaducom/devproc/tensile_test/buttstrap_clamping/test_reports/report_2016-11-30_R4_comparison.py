@@ -13,7 +13,7 @@ import numpy as np
 import pylab as p
 #import report_2016_03_16_DPO_3300SBR_R4_Dresden as dd
 #import report_2016_03_16_DPO_3300SBR_R4_Dresden_PO as lz
-import report_2016_03_15_TTb_2C_9mm_0_3300SBR_DK3_R4_all as ac
+import report_2016_03_15_TTb_2C_9mm_0_3300SBR_DK3_R4_ac as ac
 print scipy.__version__
 
 
@@ -26,7 +26,7 @@ class PlotBase(HasTraits):
         axes = p.subplot(111)
         return axes
 
-class Plot_sig_eps(PlotBase):
+class PlotSE(PlotBase):
 
     def plot(self, dataset, axes, markerstyle=None, linestyle=None, color=None):
 
@@ -39,7 +39,7 @@ class Plot_sig_eps(PlotBase):
             if color == None:
                 color = dataset.color_list[idx]
             e = e_run.ex_type
-            e._plot_tex_stress_strain_asc(axes)
+            e._plot_tex_stress_strain_asc(axes, xscale=1000.)
 
     def decorate(self, axes):
         axes.grid()
@@ -52,13 +52,13 @@ class Plot_sig_eps(PlotBase):
 
 if __name__ == '__main__':
 
-    pw = Plot_sig_eps()
+    pw = PlotSE()
 #    pw = PlotRotation()
 #    pw = PlotFW()
     ax = pw.figure()
     #pw.plot(dd, ax, color='red', markerstyle='v', label='DPO Dresden')
     #pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o', linewidth=2, label='DPO Aachen')
-    pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o', linewidth=2)
+    pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o')
     pw.decorate(ax)
 
     p.show()
