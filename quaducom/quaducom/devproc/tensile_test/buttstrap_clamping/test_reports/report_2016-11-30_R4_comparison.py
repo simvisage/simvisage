@@ -39,11 +39,7 @@ class Plot_sig_eps(PlotBase):
             if color == None:
                 color = dataset.color_list[idx]
             e = e_run.ex_type
-            max_F_idx = np.argmax(e.Kraft)
-            axes.plot(e.w[:max_F_idx],
-                      e.Kraft[:max_F_idx] / n_r,
-                      linewidth=1.5,
-                      linestyle=linestyle, color=color)
+            e._plot_tex_stress_strain_asc(axes)
 
     def decorate(self, axes):
         axes.grid()
@@ -61,7 +57,6 @@ if __name__ == '__main__':
 #    pw = PlotFW()
     ax = pw.figure()
     #pw.plot(dd, ax, color='red', markerstyle='v', label='DPO Dresden')
-    #pw.plot(dd_po, ax, color='blue', markerstyle='D', label='PO Dresden')
     #pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o', linewidth=2, label='DPO Aachen')
     pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o', linewidth=2)
     pw.decorate(ax)
