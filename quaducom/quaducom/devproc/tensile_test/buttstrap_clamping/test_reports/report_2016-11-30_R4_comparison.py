@@ -22,25 +22,27 @@ class PlotBase(HasTraits):
     def figure(self):
         fig = p.figure(facecolor='white', figsize=(12, 9))
         fig.subplots_adjust(
-            left=0.07, right=0.97, bottom=0.08, top=0.96, wspace=0.25, hspace=0.2)
+            left=0.09, right=0.97, bottom=0.09, top=0.96, wspace=0.25, hspace=0.2)
         axes = p.subplot(111)
         return axes
 
 class PlotSE(PlotBase):
 
-    def plot(self, dataset, axes, markerstyle=None, linestyle=None, color=None):
+    def plot(self, dataset, axes, linestyle=None, color=None, label=None):
 
        # gauge_dist = dataset.gauge_dist
        # e_list = np.array(dataset.e_array).reshape(3, -1)
 
         for idx, (e_run, n_r) in enumerate(zip(dataset.e_array, dataset.n_roving_array)):
-            if linestyle == None:
-                linestyle = dataset.linestyle_list[idx]
-            if color == None:
-                color = dataset.color_list[idx]
+            if idx == 1:
+                lb = label
+            else:
+                lb = None
             e = e_run.ex_type
-            e._plot_tex_stress_strain_asc(axes, xscale=1000.)
-
+            e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=dataset.k_rho_list[idx], color=color, linewidth=1.5,
+                                           plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=lb)
+        
+        
     def decorate(self, axes):
         axes.grid()
         axes.set_xlabel('Textile Stress [MPa]')
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     ax = pw.figure()
     #pw.plot(dd, ax, color='red', markerstyle='v', label='DPO Dresden')
     #pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o', linewidth=2, label='DPO Aachen')
-    pw.plot(ac, ax, linestyle='dashed', color='black', markerstyle='o')
+    pw.plot(ac, ax, linestyle='dashed', color='black', label= 'R4 Aachen')
     pw.decorate(ax)
 
     p.show()

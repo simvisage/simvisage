@@ -24,8 +24,6 @@ data_name = 'R4 Aachen'
 #--------------------
 # TTb-2C-9mm-0-3300SBR-DK3_A5_R4
 #--------------------
-do = 'sigtex-eps'  # stress / strain
-#do = 'F-w'  # Force / gauge displacement 
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
@@ -60,23 +58,16 @@ def plot_all():
 
         axes = p.subplot(111)
 
-        if do == 'sigtex-eps':
-            if plot_asc_list[idx]:
-                e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5,
+        
+        if plot_asc_list[idx]:
+            e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5,
                                               plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
-            else:
-                e._plot_tex_stress_strain(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
-            axes.set_ylabel('Textile Stress [MPa]')
-            axes.set_xlabel('Strain [1E+3]')
-            xlim = 15
-            ylim = 1500.
-
-        if do == 'F-w':
-            e._plot_force_displacement_asc(axes, color=color_list[idx], linewidth=1.5, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
-            axes.set_xlabel('Weg [mm]')
-            axes.set_ylabel('Kraft [kN]')
-            xlim = 5
-            ylim = 50.
+        else:
+            e._plot_tex_stress_strain(axes, xscale=1000., k_rho=k_rho_list[idx], color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
+        axes.set_ylabel('Textile Stress [MPa]')
+        axes.set_xlabel('Strain [1E+3]')
+        xlim = 15
+        ylim = 1500.
 
         axes.axis([0., xlim, 0., ylim])
 
@@ -101,28 +92,11 @@ def plot_all():
 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, do + '.eps')
+        filename = os.path.join(test_series_dir, '.eps')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 
 if __name__ == '__main__':
     plot_all()
     p.show()
-
-# displacement gauge dropped off --> precess data
-#--------------------
-# TTb-2C-3cm-3300EP
-#--------------------
-# idx_1 = np.where(sig_tex_asc > 1091.)[0][0]
-# idx_2 = np.where(sig_tex_asc > 977.)[0][0]
-# idx_cut = np.where(sig_tex_asc > 1091.)[0]
-# K_cracked = (sig_tex_asc[idx_2] - sig_tex_asc[idx_1]) / (eps_asc[idx_2] - eps_asc[idx_1])
-# sig_tex_asc[idx_cut] = K_cracked * eps_asc[idx_cut]
-# idx_cut = np.where(sig_tex_asc < 1761.)[0]
-# sig_tex_asc = sig_tex_asc[idx_cut]
-# eps_asc = eps_asc[idx_cut]
-# print 'idx_1', idx_1
-# print 'idx_2', idx_2
-# print 'K_cracked', K_cracked
-# print 'sig_tex_asc[idx_1]', sig_tex_asc[idx_1]
 

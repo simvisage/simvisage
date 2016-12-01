@@ -90,7 +90,7 @@ class ExpTTDB(ExType):
 
     width = Float(0.12, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    gauge_length = Float(0.40, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.20, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     age = Int(28, unit='d', input=True, table_field=True,
               auto_set=False, enter_set=True)
@@ -116,7 +116,7 @@ class ExpTTDB(ExType):
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
-        fabric_layout_key = 'Q142/142-CCE-25'
+#        fabric_layout_key = 'Q142/142-CCE-25'
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
 #        fabric_layout_key2 = 'C-Grid-C50'
@@ -127,20 +127,20 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-05-11'
 #        fabric_layout_key = 'NWM3-016-09-b1'
 #         fabric_layout_key = 'CAR-3300-EP_Q90'
-#        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'sto-100'
 #        concrete_mixture_key = 'FIL-10-09'
-#        concrete_mixture_key = 'Pagel_TF10'
-        concrete_mixture_key = 'HPC_TU_WIEN'
+        concrete_mixture_key = 'Pagel_TF10'
+#        concrete_mixture_key = 'HPC_TU_WIEN'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 1
-        thickness = 0.02
+        n_layers = 2
+        thickness = 0.009
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -859,6 +859,9 @@ class ExpTTDB(ExType):
             axes.plot(self.WA1_hinten[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_force_displacement_asc_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
         '''plot force-displacement diagram (only the ascending branch, averaged between left, rigth, front and back)

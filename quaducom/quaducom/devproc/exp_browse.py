@@ -9,6 +9,7 @@ from matresdev.db.exdb.ex_run_view import ExRunView
 from matresdev.db.simdb.simdb import simdb
 
 
+
 # ex_path = os.path.join(simdb.exdata_dir, 'slab_tests', '2013-07-10_ST-6c-2cm-TU_bs2', 'ST-6c-2cm-TU_bs2.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-20_TT-12c-4cm-0-TU_SH3',
 #                       'TT-12c-4cm-TU-0-SH3-V2.DAT')
@@ -41,11 +42,14 @@ from matresdev.db.simdb.simdb import simdb
 
 # ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'buttstrap_clamping', '2014-04-30_TTb-6c-2cm-0-TU_NxM1',
 #                                        'TTb-6c-2cm-0-TU-V16_NxM1.DAT')
-
+#ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
+#                       'buttstrap_clamping',
+#                       '2016-03-18_TTb-2C-9mm-0-3300SBR_R4_Dresden',
+#                       'B3-Ia-DK3-A-1.DAT')
 ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
                        'buttstrap_clamping',
-                       '2015-03-23_TTb-2C-9mm-0-800SBR_Ring1',
-                       'TTb1-2C-9mm-0-800SBR-V1_R1S1.DAT')
+                       '2016-03-18_TTb-2C-9mm-0-3300SBR_R4_Dresden',
+                       'B3-Ia-DK3-A-1.DAT')
 #ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
 #                       'buttstrap_clamping',
 #                       '2016-03-22_TTb_TUWien',
