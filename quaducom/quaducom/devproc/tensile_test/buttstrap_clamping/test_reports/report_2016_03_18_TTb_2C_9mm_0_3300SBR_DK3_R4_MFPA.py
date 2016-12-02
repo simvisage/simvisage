@@ -21,25 +21,27 @@ params = {'legend.fontsize': 12,
 p.rcParams.update(params)
 # print p.rcParams.keys()
 
-data_name = 'R4 Aachen'
+data_name = 'R4 MFPA Leipzig'
+
+test_files = ['B3-Ia-DK3-A-3.DAT', 
+              'B3-Ia-DK3-A-4.DAT', 
+              'B3-Ia-DK3-B-5.DAT', 
+              'B3-Ia-DK3-B-6.DAT',
+              'B3-Ia-DK3-C-1.DAT',
+              'B3-Ia-DK3-C-2.DAT',
+              ]
 
 test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
-                             '2016-03-14_TTb-2C-9mm-0-3300SBR_R4')
+                             '2016-03-18_TTb-2C-9mm-0-3300SBR_R4_MFPA')
 
-test_files = ['TTb-2C-9mm-0-3300SBR-DK3_A5_R4.DAT', 
-              'TTb-2C-9mm-0-3300SBR-DK3_A6_R4.DAT', 
-              'TTb-2C-9mm-0-3300SBR-DK3_B1_R4.DAT', 
-              'TTb-2C-9mm-0-3300SBR-DK3_B2_R4.DAT',
-              'TTb-2C-9mm-0-3300SBR-DK3_C3_R4.DAT',
-              'TTb-2C-9mm-0-3300SBR-DK3_C4_R4.DAT',]
 
 #n_rov_list = [10, 10]
-color_list = ['k', 'grey','red','blue',"green","teal"]
-linestyle_list = ['-', '-', '-', '-', '-', '-']
-plot_asc_list = [1, 1, 1, 1, 1, 1]
-a_roving_list = [1.84, 1.84, 1.84, 1.84,1.84, 1.84,]
-label_cutoff = [-3, -3, -3, -3, -3, -3]  # cutoff long label names at the end for cleaner legend display
+color_list = ['k', 'grey','red','blue',"green", 'teal']
+linestyle_list = ['-', '-', '-', '-', '-','-',]
+plot_asc_list = [1, 1, 1, 1, 1, 1,]
+a_roving_list = [1.84, 1.84, 1.84, 1.84, 1.84, 1.84,]
+label_cutoff = [-3, -3, -3, -3, -3, -3,]  # cutoff long label names at the end for cleaner legend display
 e_array = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
 
@@ -57,10 +59,13 @@ def plot_all():
 
         
         if plot_asc_list[idx]:
-            e._plot_tex_stress_strain_asc(axes, xscale=1000.,  k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5,
-                                              plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
+            e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5,
+                                              plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:])
+            print 'k_roh =', e.n_rovings*a_roving_list[idx]/(e.A_tex)
+            print 'A_texcalculated=', e.A_tex
+            print 'A_texreal', e.n_rovings*a_roving_list[idx]
         else:
-            e._plot_tex_stress_strain(axes, xscale=1000.,  k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
+            e._plot_tex_stress_strain(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
         axes.set_ylabel('Textile Stress [MPa]')
         axes.set_xlabel('Strain [1E+3]')
         xlim = 15

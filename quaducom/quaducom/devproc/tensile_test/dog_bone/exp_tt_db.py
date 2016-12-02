@@ -96,6 +96,8 @@ class ExpTTDB(ExType):
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''
+    n_rovings = Float(0, unit='-', input=True, table_field=True,
+                  auto_set=False, enter_set=True)
 
     loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
                          auto_set=False, enter_set=True)
@@ -1253,6 +1255,7 @@ class ExpTTDB(ExType):
         HSplit(Group(
             Item('width', format_str="%.3f"),
             Item('gauge_length', format_str="%.3f"),
+            Item('n_rovings', format_str="%.0f"),
             springy=True,
             label='geometry',
             id='matresdev.db.exdb.ex_composite_tensile_test.geometry',
