@@ -29,8 +29,8 @@ test_file_path = os.path.join(simdb.exdata_dir,
                              'tensile_tests', 'buttstrap_clamping',
                              '2015-08-03_TTb-2C-14mm-0-3300SBR_cyc-Aramis2d')
 
-test_files = [ 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT',
-                'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
+test_files = [ 'TTb-2C-14mm-0-3300SBR-V1_cyc-Aramis2d.DAT']
+#               'TTb-2C-14mm-0-3300SBR-V3_Aramis2d.DAT']
 #                 'TTb-2C-14mm-0-3300SBR-V2_Aramis2d.DAT']
 #                 'TTb-2C-14mm-0-3300SBR-V5_Aramis2d.DAT']
 
@@ -50,11 +50,11 @@ e_list = [ExRun(data_file=os.path.join(test_file_path, test_file))
 
 # compare 'A_tex' as calculated in simdb based on 'a_tex_0 [mm^2/m]' and the specimen 'width [m]'
 # and the real number of rovings as counted in the test:
-for n, n_rov in enumerate(n_rov_list):
-    k_rho_list[n] = e_list[n].ex_type.A_tex / (n_rov * A_rov)
-print '\n'
-print 'k_rho_list (caclulated based on simdb data and n_rovings specified in script: \n', k_rho_list
-print '\n'
+#for n, n_rov in enumerate(n_rov_list):
+#    k_rho_list[n] = e_list[n].ex_type.A_tex / (n_rov * A_rov)
+#print '\n'
+#print 'k_rho_list (caclulated based on simdb data and n_rovings specified in script: \n', k_rho_list
+#print '\n'
 
 def plot_all():
 
@@ -81,8 +81,8 @@ def plot_all():
             e._plot_force_displacement_machine(axes, color=color_list[idx], linewidth=1.5, label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('Maschinenweg [mm]')
             axes.set_ylabel('Kraft [kN]')
-            xlim = 30
-            ylim = 60.
+            xlim = 20
+            ylim = 30.
 
         axes.axis([0., xlim, 0., ylim])
 
@@ -112,8 +112,8 @@ def plot_all():
 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, do + '.png')
-        p.savefig(filename)
+        filename = os.path.join(test_series_dir, do + '.eps')
+        p.savefig(filename, dpi=300)
         print 'figure saved to file %s' % (filename)
 
 if __name__ == '__main__':
