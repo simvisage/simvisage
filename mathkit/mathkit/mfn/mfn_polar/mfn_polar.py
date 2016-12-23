@@ -1,10 +1,12 @@
 
+import math
+import sys
+import time
+
+from chaco.api import PlotLabel
+from chaco.api import create_polar_plot
 from numpy import array, linspace, pi, arange, sin, cos, ones, frompyfunc, \
     where, hstack
-from chaco.api import create_polar_plot
-
-
-# Enthought library imports
 from traits.api import \
     Array, Enum, Float, HasTraits, Int, \
     Property, cached_property, Range, Str, TraitError
@@ -13,15 +15,9 @@ from traitsui.api import \
 from traitsui.menu import \
     OKButton, CancelButton, Action, Menu, MenuBar
 
-from chaco.api import PlotLabel
-from mfn_polar_editor import MFnPolarPlotItem
 
-
-import time
-import sys
-import math
-
-
+# Enthought library imports
+#from mfn_polar_editor import MFnPolarPlotItem
 class MFnWTHandler(Handler):
 
     def open_data(self, info):
@@ -141,24 +137,24 @@ class MFnPolar(HasTraits):
 
     plot_type = Enum('polar')
 
-    radiusplot = MFnPolarPlotItem("theta", ["radius", "plotrange_min",
-                                            "plotrange_max", "frac_noplot"],
-                                  type_trait="plot_type",
-
-                                  # Basic axis and label properties
-                                  #                                  show_label=False,
-                                  resizable=False,
-                                  width=260,
-                                  height=260,
-
-                                  # Plot properties
-                                  color="green",
-                                  bgcolor="lightyellow",
-
-                                  # Border, padding properties
-                                  border_visible=True,
-                                  show_label=False,
-                                  border_width=1)
+#     radiusplot = MFnPolarPlotItem("theta", ["radius", "plotrange_min",
+#                                             "plotrange_max", "frac_noplot"],
+#                                   type_trait="plot_type",
+#
+#                                   # Basic axis and label properties
+#                                   #                                  show_label=False,
+#                                   resizable=False,
+#                                   width=260,
+#                                   height=260,
+#
+#                                   # Plot properties
+#                                   color="green",
+#                                   bgcolor="lightyellow",
+#
+#                                   # Border, padding properties
+#                                   border_visible=True,
+#                                   show_label=False,
+#                                   border_width=1)
 
     radius_min = Property( Float, depends_on='current_theta,alpha,delta_alpha,\
                                                 delta_trans,strech_residual,\
@@ -240,7 +236,7 @@ class MFnPolar(HasTraits):
                     show_border=True,
                     label='Plot parameters'
                 ),
-                radiusplot
+                #                radiusplot
             ),
         ),
         buttons=[OKButton, CancelButton],

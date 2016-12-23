@@ -17,7 +17,6 @@ from traits.api import Instance, Int
 from traitsui.basic_editor_factory import BasicEditorFactory
 
 from mfn_plot_adapter import MFnPlotAdapter
-
 from util.traits.editors import MPLFigureEditor
 
 
@@ -38,11 +37,9 @@ class _MFnMatplotlibEditor(MPLFigureEditor):
 
     def init(self, parent):
 
+        super(_MFnMatplotlibEditor, self).init(parent)
         factory = self.factory
         self.adapter = factory.adapter
-
-        self.control = self._create_canvas(parent)
-        self.value.on_trait_change(self.update_editor, 'data_changed')
 
     def update_editor(self):
         figure = self.figure
@@ -61,16 +58,18 @@ class _MFnMatplotlibEditor(MPLFigureEditor):
         a = self.adapter
         fig = self.figure
 
-        panel = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        panel.SetSizer(sizer)
+        panel = super(_MFnMatplotlibEditor, self)._create_canvas(parent)
 
-        # matplotlib commands to create a canvas
-        mpl_control = FigureCanvas(panel, -1, fig)
-        toolbar = NavigationToolbar2Wx(mpl_control)
-
-        sizer.Add(toolbar, 0, wx.EXPAND)
-        sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW)
+#         panel = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
+#         sizer = wx.BoxSizer(wx.VERTICAL)
+#         panel.SetSizer(sizer)
+#
+#         # matplotlib commands to create a canvas
+#         mpl_control = FigureCanvas(panel, -1, fig)
+#         toolbar = NavigationToolbar2Wx(mpl_control)
+#
+#         sizer.Add(toolbar, 0, wx.EXPAND)
+#         sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW)
 
         if a.max_size:
             self.figure.canvas.SetMaxSize(a.max_size)

@@ -1,36 +1,31 @@
 
 from traits.api import \
     Array, Bool, Enum, Float, HasTraits, \
-    HasStrictTraits, Any, \
     Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Any, Range, \
+    Callable, List, Any, Range, \
     Delegate, Event, on_trait_change, Button, \
     Interface, Property, cached_property, WeakRef, Dict
-
 from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, \
+    Item, View, HGroup, VGroup, \
     HSplit, Group, Handler, VSplit
-
 from traitsui.menu import \
     NoButtons, OKButton, CancelButton, \
     Action
 
-import numpy as np
-
-from i_sdomain import ISDomain
-from sdomain import SDomain
-from scontext import SContext
 from bcond_mngr import BCondMngr
-from rtrace_mngr import RTraceMngr
+from i_sdomain import ISDomain
 from ibv_resource import IBVResource
-from tstepper_eval import ITStepperEval
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxArray
-
 from ibvpy.mesh.fe_domain import FEDomain
+from ibvpy.mesh.fe_grid import FEGrid
 from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
 from ibvpy.mesh.fe_subdomain import FESubDomain
-from ibvpy.mesh.fe_grid import FEGrid
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxArray
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
+import numpy as np
+from rtrace_mngr import RTraceMngr
+from scontext import SContext
+from sdomain import SDomain
+from tstepper_eval import ITStepperEval
 
 
 class TStepper(IBVResource):

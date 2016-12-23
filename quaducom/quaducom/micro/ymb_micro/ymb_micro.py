@@ -17,19 +17,17 @@
 
 from etsproxy.traits.api import \
     HasTraits, Instance, Property, cached_property, List, WeakRef
-
 from etsproxy.traits.ui.api import \
     View, Item, Group, VGroup, \
     TreeEditor, TreeNode, Handler
-
-from ymb_data import YMBSource, IYMBData, YMBCutData
-from ymb_data import YMBSlider
-from ymb_hist import YMBHist
 from ymb_auto_correl import YMBAutoCorrelView, YMBAutoCorrel
 from ymb_cross_correl import YMBCrossCorrel
-from ymb_view3d import YMBView3D
-from ymb_view2d import YMBView2D
+from ymb_data import YMBSlider
+from ymb_data import YMBSource, IYMBData, YMBCutData
+from ymb_hist import YMBHist
 from ymb_pullout import YMBPullOut
+from ymb_view2d import YMBView2D
+from ymb_view3d import YMBView3D
 
 
 class TitleHandler(Handler):
