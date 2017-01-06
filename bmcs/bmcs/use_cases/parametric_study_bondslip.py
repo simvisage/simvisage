@@ -5,27 +5,22 @@ Created on 02.01.2017
 '''
 from traits.api import \
     Instance, Property, \
-    List, Str, Trait, Button, cached_property
-
+    List, Str, Trait, Button
 from traitsui.api import \
     View, Item, UItem, VGroup, HGroup, spring
 
 from matmod.bond_slip_model import \
     BondSlipModel, Material, LoadingScenario
-    
 from matmod.mats_bondslip import \
     MATSEvalFatigue
-
+import matplotlib.gridspec as gridspec
+from utils.keyref import \
+    KeyRef
 from view.ui.bmcs_tree_node import \
     BMCSTreeNode
-    
 from view.window.bmcs_window import \
     BMCSWindow
 
-from utils.keyref import \
-    KeyRef
-    
-import matplotlib.gridspec as gridspec
 
 class UCPStudyElement(BMCSTreeNode):
     '''Class controlling plotting options
@@ -40,7 +35,7 @@ class UCPStudyElement(BMCSTreeNode):
                                 yellow='y',
                                 magneta='m',
                                 red='r')
-                      )
+                  )
 
     linestyle = Trait('solid', dict(solid='-',
                                     dashed='--',
@@ -49,17 +44,17 @@ class UCPStudyElement(BMCSTreeNode):
                       )
 
     tree_view = View(VGroup(Item('node_name', label='label'),
-                       Item('linestyle'),
-                       Item('color'),
-                       label='Plotting options'))
+                            Item('linestyle'),
+                            Item('color'),
+                            label='Plotting options'))
 
     def plot(self, fig):
         #ax = fig.add_subplot(1, 1, 1)
         self.content.plot(fig, color=self.color_, linestyle=self.linestyle_,
-                                 label=self.node_name)
+                          label=self.node_name)
 
-    def plot_ax(self, ax1 ,ax2 ,ax3):
-        self.content.plot_custom(ax1=ax1,ax2=ax2, ax3=ax3,  color=self.color_, linestyle=self.linestyle_,
+    def plot_ax(self, ax1, ax2, ax3):
+        self.content.plot_custom(ax1=ax1, ax2=ax2, ax3=ax3,  color=self.color_, linestyle=self.linestyle_,
                                  label=self.node_name)
 
 
@@ -67,21 +62,27 @@ class UCPStudyElementBMCS(UCPStudyElement):
     node_name = '<unnamed bond_slip>'
 
     tree_node_list = List(Instance(BMCSTreeNode))
+
     def _tree_node_list_default(self):
         return [BondSlipModel(mats_eval=MATSEvalFatigue())]
 
     content = Property(depends_on='tree_node_list')
+
     def _get_content(self):
         return self.tree_node_list[0]
+
     def _set_content(self, val):
         self.tree_node_list = [val]
-        
+
+
 class UCParametricStudy(BMCSTreeNode):
     node_name = Str('Parametric study')
 
-    element_to_add = Trait('BondSlipModel', {'BondSlipModel'  :   UCPStudyElementBMCS})
+    element_to_add = Trait(
+        'BondSlipModel', {'BondSlipModel':   UCPStudyElementBMCS})
 
     add_element = Button('Add')
+
     def _add_element_fired(self):
         self.append_node(self.element_to_add_())
 
@@ -91,6 +92,7 @@ class UCParametricStudy(BMCSTreeNode):
                      )
 
     tree_node_list = List(Instance(BMCSTreeNode))
+
     def _tree_node_list_default(self):
         return []
 
@@ -99,12 +101,12 @@ class UCParametricStudy(BMCSTreeNode):
         ax2 = fig.add_subplot(222)
         gs = gridspec.GridSpec(2, 2)
         ax3 = fig.add_subplot(gs[-1, :])
-        
-        for node in self.tree_node_list:
-            
-            node.plot_ax(ax1 ,ax2 ,ax3)
 
-        
+        for node in self.tree_node_list:
+
+            node.plot_ax(ax1, ax2, ax3)
+
+
 bond_slip_ps = UCParametricStudy()
 bond_slip_ps.element_to_add = 'BondSlipModel'
 bond_slip_ps.add_element = True
@@ -115,4 +117,3 @@ ucc.tree_node_list.append(bond_slip_ps)
 
 mxn_ps_view = BMCSWindow(root=ucc)
 mxn_ps_view.configure_traits()
-                
