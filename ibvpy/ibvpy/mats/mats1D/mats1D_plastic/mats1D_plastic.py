@@ -20,7 +20,7 @@ from traits.api import \
 from traitsui.api import \
     Item, View, HSplit, VSplit, VGroup, Group, Spring
 
-#from dacwt import DAC
+# from dacwt import DAC
 
 from numpy import \
     array, ones, zeros, outer, inner, transpose, dot, frompyfunc, \
@@ -143,7 +143,7 @@ class MATS1DPlastic(MATS1DEval):
         xi_trial = sigma_trial - q_n
         f_trial = abs(xi_trial) - (self.sigma_y + self.K_bar * alpha_n)
 
-        sig_n1 = zeros((1, ), dtype='float_')
+        sig_n1 = zeros((1,), dtype='float_')
         D_n1 = zeros((1, 1), dtype='float_')
         if f_trial <= 1e-8:
             sig_n1[0] = sigma_trial
@@ -151,10 +151,10 @@ class MATS1DPlastic(MATS1DEval):
         else:
             d_gamma = f_trial / (self.E + self.K_bar + self.H_bar)
             sig_n1[0] = sigma_trial - d_gamma * self.E * sign(xi_trial)
-            D_n1[0, 0] = ( self.E * ( self.K_bar + self.H_bar ) ) / \
+            D_n1[0, 0] = (self.E * (self.K_bar + self.H_bar)) / \
                 (self.E + self.K_bar + self.H_bar)
 
-        return sig_n1,
+        return sig_n1, D_n1
 
     #--------------------------------------------------------------------------
     # Subsidiary methods realizing configurable features

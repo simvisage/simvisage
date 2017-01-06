@@ -17,7 +17,7 @@ inherit from the BMCSTreeNode and supply the attributes
 from matplotlib.figure import \
     Figure
 from traits.api import \
-    HasStrictTraits, Instance, Button, Event
+    HasStrictTraits, Instance, Button, Event, Range, cached_property 
 from traits.etsconfig.api import ETSConfig
 from traitsui.api import \
     TreeEditor, TreeNode, View, Item, Group, \
@@ -78,8 +78,7 @@ class BMCSWindow(HasStrictTraits):
     figure = Instance(Figure)
 
     def _figure_default(self):
-        figure = Figure(facecolor='white')
-        figure.add_axes([0.08, 0.13, 0.85, 0.74])
+        figure = Figure()
         return figure
 
     data_changed = Event
@@ -96,6 +95,8 @@ class BMCSWindow(HasStrictTraits):
     def _clear_fired(self):
         self.figure.clear()
         self.data_changed = True
+        
+    #time = self.root.time
 
     view = View(HSplit(Group(Item('root',
                                   editor=tree_editor,
@@ -105,18 +106,18 @@ class BMCSWindow(HasStrictTraits):
                                   height=400),
                              ),
                        Group(HGroup(Item('replot', show_label=False),
-                                    Item('clear', show_label=False),
+                                    Item('clear', show_label=False)
                                     ),
                              Item('figure', editor=MPLFigureEditor(),
                                   resizable=True, show_label=False,
-                                  springy=True),
+                                  springy=True),#Item('self.root.time', label='t/T_max'),
                              label='plot sheet',
                              dock='tab',
                              )
                        ),
                 id='bmcstreeview_id',
                 width=0.9,
-                height=0.8,
+                height=0.5,
                 title='BMCS',
                 resizable=True,
                 handler=BMCSTreeViewHandler(),

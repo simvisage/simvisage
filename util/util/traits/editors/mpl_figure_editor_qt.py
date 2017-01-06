@@ -20,11 +20,6 @@ from traits.api import Any, Instance
 from traitsui.qt4.basic_editor_factory import BasicEditorFactory
 from traitsui.qt4.editor import Editor
 
-
-# We want matplotlib to use a QT backend
-matplotlib.use('Qt4Agg')
-
-
 class _MPLFigureEditor(Editor):
 
     scrollable = True

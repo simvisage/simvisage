@@ -7,8 +7,7 @@ Created on 05.12.2016
 from traits.api import implements, Int, Array, HasTraits, Instance, \
     Property, cached_property, Constant, Float, List
 import numpy as np
-
-
+from scipy.optimize import newton 
 
 class MATSEvalFatigue(HasTraits):
 
@@ -18,9 +17,9 @@ class MATSEvalFatigue(HasTraits):
     E_f = Float(170000, tooltip='Stiffness of the fiber [MPa]',
                 auto_set=False, enter_set=False)
 
-    E_b = Float(6000,
-                    label="E_b",
-                    desc="Bond stiffness [MPa]",
+    E_b = Float(200,
+                    label="G",
+                    desc="Shear Stiffness",
                     enter_set=True,
                     auto_set=False)
     
@@ -36,7 +35,7 @@ class MATSEvalFatigue(HasTraits):
                     enter_set=True,
                     auto_set=False)
     
-    S = Float(0.1,
+    S = Float(1,
                     label="S",
                     desc="Damage cumulation parameter",
                     enter_set=True,
@@ -48,14 +47,20 @@ class MATSEvalFatigue(HasTraits):
                     enter_set=True,
                     auto_set=False)
     
+    c = Float(1,
+                    label="c",
+                    desc="Damage cumulation parameter",
+                    enter_set=True,
+                    auto_set=False)
+    
     tau_pi_bar = Float(5,
                     label="Tau_pi_bar",
                     desc="Reversibility limit",
                     enter_set=True,
                     auto_set=False)
-    
+ 
     n_s = Constant(4)
-
+    
     def get_corr_pred(self, eps, d_eps, sig, t_n, t_n1, xs_pi, alpha, z, w):
       
         n_e, n_ip, n_s = eps.shape
@@ -63,9 +68,7 @@ class MATSEvalFatigue(HasTraits):
         D[:, :, 0, 0] = self.E_m
         D[:, :, 2, 2] = self.E_f
         
-        Y = 0.5 * self.E_b * eps[:, :, 1] ** 2
-        # sig[:, :, 1] = (1 - w) * self.E_b * eps[:, :, 1] + w * self.E_b * (eps[:, :, 1] - xs_pi)
-        # sig_pi = w * self.E_b * (eps[:, :, 1] - xs_pi)
+        Y = 0.5 * self.E_b * (eps[:, :, 1] - xs_pi)** 2
         sig_pi_trial = self.E_b * (eps[:, :, 1] - xs_pi)
         Z = self.K * z
         X = self.gamma * alpha
@@ -78,33 +81,109 @@ class MATSEvalFatigue(HasTraits):
         sig += d_sig
         
         # Return mapping 
-        delta_lamda = f / (self.E_b + self.gamma + self.K) * plas
+        delta_lamda = f / (self.E_b / (1 - w) + self.gamma + self.K) * plas
         # update all the state variables
-        xs_pi = xs_pi + delta_lamda * np.sign(sig_pi_trial - X)
-        # sig_pi = w * self.E_b * (eps[:, :, 1] - xs_pi)
-        sig[:, :, 1] = self.E_b * (1 - w) * eps[:, :, 1] + self.E_b * w * (eps[:, :, 1] - xs_pi)
+       
+       
+        w_new = w.flatten()
+        delta_lamda_new = delta_lamda.flatten()
+        Y_new = Y.flatten()
+        
+        for i in range (len(w_new)):
+            f_w_n = lambda w_n :  w_n - w_new[i] - ((1 - w_n) ** self.c) * (delta_lamda_new[i] * (Y_new[i] / self.S) ** self.r)
+            f_w_n2 = lambda w_n : 1 + self.c * ((1 - w_n) ** (self.c - 1)) * (delta_lamda_new[i] * (Y_new[i] / self.S) ** self.r)
+            w_n = newton(f_w_n, 0., fprime=f_w_n2 , tol=1e-6, maxiter=50) 
+            w_new[i] = w_n 
             
+        w = w_new.reshape(-1, 2)  
+          
+        #w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
+       
+        xs_pi = xs_pi + delta_lamda * np.sign(sig_pi_trial - X) / (1 - w)
+        sig[:, :, 1] = (1 - w) * self.E_b * (eps[:, :, 1] - xs_pi)
         X = X + self.gamma * delta_lamda * np.sign(sig_pi_trial - X)
         alpha = alpha + delta_lamda * np.sign(sig_pi_trial - X)
         z = z + delta_lamda
         
-        w_1 = w + ((Y / self.S) ** self.r) * delta_lamda #/(1 - w)
+        # Consistent tangent operator
+        D_ed = self.E_b * (1 - w) - ((1 - w) * self.E_b ** 2) / (self.E_b + (self.gamma + self.K) * (1 - w))\
+                                            - ((1 - w) ** self.c * (self.E_b ** 2) * ((Y / self.S) ** self.r)\
+                                            * np.sign(sig_pi_trial - X) * (eps[:, :, 1] - xs_pi)) / ((self.E_b / (1 - w)) + self.gamma + self.K)
         
-        befor = w_1 < 1
-        after = w_1 > 1
-        
-        w = w_1 * befor + 0.999 * after 
-        
-        
-         
-            # Consistent tangent operator
-        D_ed = self.E_b - (w * (self.E_b) ** 2) / (self.E_b + self.gamma + self.K)\
-        - (((self.E_b) ** 2) * xs_pi * ((Y / self.S) ** self.r) * np.sign(sig_pi_trial - X)) /  (self.E_b + self.gamma + self.K)
-             
         D[:, :, 1, 1] = (1 - w) * self.E_b * elas + D_ed * plas
         
-        #print'D_ed=', D[:, :, 1, 1]    
-        return sig, D, xs_pi, alpha, z, w   
-   
+
+        return sig, D, xs_pi, alpha, z, w  
+        
+    def get_bond_slip(self, s_arr):
+        '''for plotting the bond slip fatigue - Initial version modified modified threshold with cumulation-2 implicit
+        '''
+        # arrays to store the values
+        # nominal stress
+        tau_arr = np.zeros_like(s_arr)
+        # damage factor
+        w_arr = np.zeros_like(s_arr)
+        # sliding slip
+        xs_pi_arr = np.zeros_like(s_arr)
+        # max sliding
+        s_max = np.zeros_like(s_arr)
+        # max stress
+        tau_max = np.zeros_like(s_arr)
+        # cumulative sliding
+        xs_pi_cum = np.zeros_like(s_arr)
+
+        # state variables
+        tau_i = 0
+        alpha_i = 0.
+        xs_pi_i = 0
+        z_i = 0.
+        w_i = 0.  # damage
+        X_i = self.gamma * alpha_i
+        delta_lamda = 0
+        Z = self.K * z_i
+        xs_pi_cum_i = 0
     
-  
+        for i in range(1, len(s_arr)):
+            # print 'increment', i
+            s_i = s_arr[i]
+
+            tau_i = (1 - w_i) * self.E_b * (s_i - xs_pi_i)
+        
+            tau_i_1 = self.E_b * (s_i - xs_pi_i)
+        
+            Y_i = 0.5 * self.E_b * (s_i - xs_pi_i) ** 2
+        
+            # Threshold
+            f_pi_i = np.fabs(tau_i_1 - X_i) - self.tau_pi_bar - Z
+        
+            if f_pi_i > 1e-6:
+                # Return mapping 
+                delta_lamda = f_pi_i / (self.E_b / (1 - w_i) + self.gamma + self.K)
+                # update all the state variables
+            
+                ''' 
+                f_w_n = lambda w_n :  w_n - w_i - ((1 - w_n) ** c) * (delta_lamda * (Y_i / S) ** r)
+                f_w_n2 = lambda w_n : 1 + c * ((1 - w_n) ** (c - 1)) * (delta_lamda * (Y_i / S) ** r)
+                w_n = newton(f_w_n, 0., fprime=f_w_n2 , tol=1e-6, maxiter=10) 
+                w_i = w_n
+                '''
+                w_i = w_i + ((1 - w_i) ** self.c) * (delta_lamda * (Y_i / self.S) ** self.r)
+            
+                xs_pi_i = xs_pi_i + delta_lamda * np.sign(tau_i_1 - X_i) / (1 - w_i)
+            
+                Y_i = 0.5 * self.E_b * (s_i - xs_pi_i) ** 2
+            
+                tau_i = self.E_b * (1 - w_i) * (s_i - xs_pi_i)
+                X_i = X_i + self.gamma * delta_lamda * np.sign(tau_i_1 - X_i)
+                alpha_i = alpha_i + delta_lamda * np.sign(tau_i_1 - X_i)
+                z_i = z_i + delta_lamda
+                xs_pi_cum_i = xs_pi_cum_i + delta_lamda 
+
+            tau_arr[i] = tau_i
+            w_arr[i] = w_i
+            xs_pi_arr[i] = xs_pi_i
+            xs_pi_cum[i] = xs_pi_cum_i 
+
+        
+        return  tau_arr, w_arr, xs_pi_arr , xs_pi_cum
+

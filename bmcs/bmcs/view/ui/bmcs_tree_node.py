@@ -10,14 +10,14 @@ from traits.api import \
 
 from traitsui.api import \
     View
-
+from traits.api import Range  
 
 class BMCSLeafNode(HasStrictTraits):
     '''Base class of all model classes that can appear in a tree view.
     '''
     node_name = Str('<unnamed>')
 
-    def plot(self, fig):
+    def draw(self, fig):
         return
 
 
@@ -29,7 +29,7 @@ class BMCSTreeNode(HasStrictTraits):
     tree_node_list = List([])
 
     tree_view = View()
-
+    
     def append_node(self, node):
         '''Add a new subnode to the current node.
         Inform the tree view to select the new node within the view.

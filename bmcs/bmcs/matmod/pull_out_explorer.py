@@ -9,14 +9,21 @@ from traitsui.api import \
 from traitsui.menu import \
     Menu
 
-from bond_slip_model import \
-    Material, LoadingScenario, BondSlipModel
+    
+from pull_out_simulation import\
+ Material, LoadingScenario, Geometry, PullOutSimulation
 
 from view.window import BMCSWindow
 from view.window.bmcs_tree_view_handler import \
     plot_self, new_material, del_material
-#from matmod.bond_slip_model import LoadingScenario
+    
 from mats_bondslip import MATSEvalFatigue
+from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
+from Tloop import TLoop
+from TStepper import TStepper
+from ibvpy.api import BCDof
+
+
 
 if ETSConfig.toolkit == 'wx':
     from traitsui.wx.tree_editor import \
@@ -29,10 +36,10 @@ else:
         ETSConfig.toolkit
 
 
+
 # =========================================================================
 # Special TreeNode classes
 # =========================================================================
-
 
 material_node = TreeNode(node_for=[Material],
                          auto_open=False,
@@ -50,7 +57,15 @@ loading_scenario_node = TreeNode(node_for=[LoadingScenario],
                                  menu=Menu(CopyAction, plot_self),
                                  )
 
-bond_slip_model_node = TreeNode(node_for=[BondSlipModel],
+geometry_node = TreeNode(node_for=[Geometry],
+                                 auto_open=True,
+                                 children='tree_node_list',
+                                 label='node_name',
+                                 view='tree_view',
+                                 menu=Menu(CopyAction, plot_self),
+                                 )
+
+pull_out_simulation_node = TreeNode(node_for=[PullOutSimulation],
                                 auto_open=True,
                                 children='tree_node_list',
                                 label='node_name',
@@ -63,11 +78,28 @@ bond_slip_model_node = TreeNode(node_for=[BondSlipModel],
 # =========================================================================
 
 custom_node_list = [material_node, loading_scenario_node,
-                    bond_slip_model_node]
+                    geometry_node, pull_out_simulation_node]
+
+
+ts = TStepper()
+n_dofs = ts.domain.n_dofs
+loading_scenario = LoadingScenario()
+
+ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
+        var='u', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
+tl = TLoop(ts=ts)
 
 #loading_scenario = LoadingScenario()
-#material =Material()
+geometry = Geometry()
 
-model = BondSlipModel(mats_eval=MATSEvalFatigue())
+model = PullOutSimulation(
+        mats_eval=ts.mats_eval, fets_eval=ts.fets_eval
+        ,time_stepper=ts, time_loop = tl  ,geometry = Geometry(),loading_scenario = LoadingScenario())
+       
+
+
+#model = PullOutSimulation()#mats_eval = MATSEvalFatigue())#, fets_eval=FETS1D52ULRHFatigue(),
+                           #time_stepper=TStepper(), time_loop = TLoop())
+
 w = BMCSWindow(root=model)
 w.configure_traits()

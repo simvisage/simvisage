@@ -287,3 +287,7 @@ class MATS3DScalarDamage(MATS3DEval):
         return {'sig_app' : self.get_sig_app,
                 'omega'   : self.get_omega}
 
+    
+    
+    
+    
