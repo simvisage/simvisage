@@ -396,7 +396,7 @@ class TStepper(IBVResource):
         else:
 
             # On the other hand, the time-loop only requires the residuum
-            # which can be obtained withoug an additional
+            # which can be obtained without an additional
             # memory consumption by issuing an in-place switch of the sign
             #
             F_int *= -1  # in-place sign change of the internal forces
