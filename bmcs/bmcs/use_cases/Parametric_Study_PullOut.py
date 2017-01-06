@@ -26,8 +26,8 @@ import matplotlib.gridspec as gridspec
 
 from matmod.mats_bondslip import MATSEvalFatigue
 from matmod.fets1d52ulrhfatigue import FETS1D52ULRHFatigue
-from matmod.Tloop import TLoop
-from matmod.TStepper import TStepper
+from matmod.tloop import TLoop
+from matmod.tstepper import TStepper
 from ibvpy.api import BCDof
 
 class UCPStudyElement(BMCSTreeNode):
@@ -77,11 +77,11 @@ class UCPStudyElementBMCS(UCPStudyElement):
         loading_scenario = LoadingScenario()
 
         ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
-        var='u', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
+        var='f', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
         tl = TLoop(ts=ts)
         geometry = Geometry()
         model = PullOutSimulation(mats_eval=ts.mats_eval, fets_eval=ts.fets_eval
-        ,time_stepper=ts, time_loop = tl  ,geometry = Geometry(),loading_scenario = LoadingScenario())
+        ,time_stepper=ts, time_loop = tl  ,geometry = geometry,loading_scenario = loading_scenario)
         return [model]
 
     content = Property(depends_on='tree_node_list')

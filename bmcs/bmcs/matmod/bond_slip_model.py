@@ -23,7 +23,7 @@ import matplotlib.gridspec as gridspec
 class Material(BMCSLeafNode):
 
     node_name = Str('material parameters')
-    E_b = Float(2000,
+    E_b = Float(200,
                 label="E_b ",
                 desc="Bond Stiffness",
                 enter_set=True,
@@ -79,14 +79,14 @@ class LoadingScenario(BMCSLeafNode):
 
     node_name = Str('Loading Scenario')
     number_of_cycles = Float(1.0)
-    maximum_slip = Float(0.2)
+    maximum_slip = Float(2)
     number_of_increments = Float(200)
     loading_type = Enum("Monotonic", "Cyclic")
     amplitude_type = Enum("Increased_Amplitude", "Constant_Amplitude")
     loading_range = Enum("Non_symmetric", "Symmetric")
 
     d_t = Float(0.005)
-    t_max = Float(1.)
+    t_max = Float(2.)
     k_max = Float(100)
     tolerance = Float(1e-4)
 

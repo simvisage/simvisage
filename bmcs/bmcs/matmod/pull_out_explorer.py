@@ -19,8 +19,8 @@ from view.window.bmcs_tree_view_handler import \
     
 from mats_bondslip import MATSEvalFatigue
 from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
-from Tloop import TLoop
-from TStepper import TStepper
+from tloop import TLoop
+from tstepper import TStepper
 from ibvpy.api import BCDof
 
 
@@ -86,7 +86,7 @@ n_dofs = ts.domain.n_dofs
 loading_scenario = LoadingScenario()
 
 ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
-        var='u', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
+        var='f', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
 tl = TLoop(ts=ts)
 
 #loading_scenario = LoadingScenario()
@@ -94,12 +94,7 @@ geometry = Geometry()
 
 model = PullOutSimulation(
         mats_eval=ts.mats_eval, fets_eval=ts.fets_eval
-        ,time_stepper=ts, time_loop = tl  ,geometry = Geometry(),loading_scenario = LoadingScenario())
+        ,time_stepper=ts, time_loop = tl  ,geometry = geometry,loading_scenario = loading_scenario)
        
-
-
-#model = PullOutSimulation()#mats_eval = MATSEvalFatigue())#, fets_eval=FETS1D52ULRHFatigue(),
-                           #time_stepper=TStepper(), time_loop = TLoop())
-
 w = BMCSWindow(root=model)
 w.configure_traits()

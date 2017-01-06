@@ -1,16 +1,16 @@
 '''
 Created on 12.01.2016
-
 @author: Yingxiong
 '''
-import numpy as np
 from traits.api import HasTraits, Instance, \
     Property, cached_property, Float, List
-from mats_bondslip import MATSEvalFatigue
+
 from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
 from ibvpy.api import BCDof
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from ibvpy.mesh.fe_grid import FEGrid
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
+from mats_bondslip import MATSEvalFatigue
+import numpy as np
 
 
 class TStepper(HasTraits):
@@ -35,6 +35,7 @@ class TStepper(HasTraits):
     A = Property()
     '''array containing the A_m, L_b, A_f
     '''
+
     def _get_A(self):
         return np.array([self.fets_eval.A_m, self.fets_eval.P_b, self.fets_eval.A_f])
 
@@ -93,7 +94,7 @@ class TStepper(HasTraits):
         fets_eval = self.fets_eval
         domain = self.domain
 
-        n_s = mats_eval.n_s  - 1
+        n_s = mats_eval.n_s - 1
 
         n_dof_r = fets_eval.n_dof_r
         n_nodal_dofs = fets_eval.n_nodal_dofs
@@ -113,7 +114,7 @@ class TStepper(HasTraits):
 
         # shape function for the unknowns
         # [ d, n, i]
-        Nr = 0.5 * (1. + geo_r[:, :, None] * r_ip[None,:])
+        Nr = 0.5 * (1. + geo_r[:, :, None] * r_ip[None, :])
         dNr = 0.5 * geo_r[:, :, None] * np.array([1, 1])
 
         # [ i, n, d ]
@@ -127,9 +128,9 @@ class TStepper(HasTraits):
         B_N_n_rows, B_N_n_cols, N_idx = [1, 1], [0, 1], [0, 0]
         B_dN_n_rows, B_dN_n_cols, dN_idx = [0, 2], [0, 1], [0, 0]
         B_factors = np.array([-1, 1], dtype='float_')
-        B[:, :,:, B_N_n_rows, B_N_n_cols] = (B_factors[None, None,:] *
+        B[:, :, :, B_N_n_rows, B_N_n_cols] = (B_factors[None, None, :] *
                                               Nx[:, :, N_idx])
-        B[:, :,:, B_dN_n_rows, B_dN_n_cols] = dNx[:,:,:, dN_idx]
+        B[:, :, :, B_dN_n_rows, B_dN_n_cols] = dNx[:, :, :, dN_idx]
 
         return B
 
@@ -146,10 +147,11 @@ class TStepper(HasTraits):
         for bc in self.bc_list:
             bc.apply(step_flag, None, K_mtx, F_ext, t_n, t_n1)
 
-    def get_corr_pred(self, step_flag, U, d_U, eps, sig, t_n, t_n1, xs_pi, alpha, z, w):
+    def get_corr_pred(self, step_flag, U, d_U, eps, sig,
+                      t_n, t_n1, xs_pi, alpha, z, w):
         '''Function calculationg the residuum and tangent operator.
         '''
-        mats_eval = self.mats_eval 
+        mats_eval = self.mats_eval
         fets_eval = self.fets_eval
         domain = self.domain
         elem_dof_map = domain.elem_dof_map
@@ -166,14 +168,14 @@ class TStepper(HasTraits):
         d_u_n = d_u_e.reshape(n_e, n_dof_r, n_nodal_dofs)
         #[n_e, n_ip, n_s]
         d_eps = np.einsum('einsd,end->eis', self.B, d_u_n)
-        #print'B =', self.B
+        # print'B =', self.B
         # update strain
         eps += d_eps
 
         # material response state variables at integration point
         sig, D, xs_pi, alpha, z, w = mats_eval.get_corr_pred(
-            eps, d_eps, sig, t_n, t_n1,xs_pi, alpha, z, w)
-        #print'D=',D
+            eps, d_eps, sig, t_n, t_n1, xs_pi, alpha, z, w)
+        # print'D=',D
         # system matrix
         self.K.reset_mtx()
         Ke = np.einsum('i,s,einsd,eist,eimtf,ei->endmf',
@@ -186,7 +188,8 @@ class TStepper(HasTraits):
         # [n_e, n_n, n_dim_dof]
         Fe_int = np.einsum('i,s,eis,einsd,ei->end',
                            w_ip, self.A, sig, self.B, self.J_det)
-        F_int = -np.bincount(elem_dof_map.flatten(), weights=Fe_int.flatten())
-        self.apply_bc(step_flag, self.K, F_int, t_n, t_n1)
-        
-        return F_int, self.K, eps, sig, xs_pi, alpha, z, w, D
+        F_int = np.bincount(elem_dof_map.flatten(), weights=Fe_int.flatten())
+        F_ext = np.zeros_like(F_int, dtype=np.float_)
+        self.apply_bc(step_flag, self.K, F_ext, t_n, t_n1)
+
+        return F_ext - F_int, F_int, self.K, eps, sig, xs_pi, alpha, z, w, D
