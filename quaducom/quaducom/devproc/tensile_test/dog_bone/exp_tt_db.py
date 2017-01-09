@@ -65,7 +65,7 @@ import os
 
 class ExpTTDB(ExType):
 
-    '''Experiment: Tensile Test with dog bond shape
+    '''Experiment: Tensile Test with dog bone shape
     '''
 #    label = Str('dog bone tensile test')
 
