@@ -40,10 +40,10 @@ test_file_path = os.path.join(simdb.exdata_dir,
 color_list = ['k', 'grey','red','blue',"green", 'teal']
 linestyle_list = ['-', '-', '-', '-', '-','-',]
 plot_asc_list = [1, 1, 1, 1, 1, 1,]
-a_roving_list = [1.84, 1.84, 1.84, 1.84, 1.84, 1.84,]
 label_cutoff = [-3, -3, -3, -3, -3, -3,]  # cutoff long label names at the end for cleaner legend display
 e_array = [ExRun(data_file=os.path.join(test_file_path, test_file))
              for test_file in test_files]
+tension_max = np.zeros((len(test_files),))
 
 def plot_all():
 
@@ -57,17 +57,15 @@ def plot_all():
 
         axes = p.subplot(111)
 
-        
+        a_roving_0 = e.ccs.fabric_layup_list[1].a_roving_0        
         if plot_asc_list[idx]:
-            e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5,
+            e._plot_tex_stress_strain_asc(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_0), color=color_list[idx], linewidth=1.5,
                                               plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:])
-            print 'k_roh =', e.n_rovings*a_roving_list[idx]/(e.A_tex)
-            print 'A_texcalculated=', e.A_tex
-            print 'A_texreal', e.n_rovings*a_roving_list[idx]
         else:
-            e._plot_tex_stress_strain(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_list[idx]), color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
+            e._plot_tex_stress_strain(axes, xscale=1000., k_rho=e.A_tex/(e.n_rovings*a_roving_0), color=color_list[idx], linewidth=1.5, plot_analytical_stiffness_II=False, plot_analytical_stiffness_I=False, label=e_array[idx].ex_type.key[0:label_cutoff[idx]])
         axes.set_ylabel('Textile Stress [MPa]')
         axes.set_xlabel('Strain [1E+3]')
+        tension_max[idx] = 1000.*max(e.Kraft)/(e.n_rovings*a_roving_0)
         xlim = 15
         ylim = 1500.
 
@@ -75,6 +73,9 @@ def plot_all():
 
     axes.grid()
     axes.legend(loc=4)
+
+    print 'maximum tension =', tension_max
+    print 'average maximum tension =', np.average(tension_max)
 
     # --------------------------------
     # save figure

@@ -17,9 +17,9 @@ import report_2016_03_15_TTb_2C_9mm_0_3300SBR_DK3_R4_ac as ac
 print scipy.__version__
 
 # specify font options for plots
-params = {'legend.fontsize': 20,
+params = {'legend.fontsize': 30,
           'ps.fonttype': 42,
-          u'font.size':20,
+          u'font.size':30,
           u'font.family':'serif',
           u'font.style':'normal',
           u'font.serif': 'Times New Roman'}
@@ -32,7 +32,7 @@ class PlotBase(HasTraits):
     def figure(self):
         fig = p.figure(facecolor='white', figsize=(12, 9))
         fig.subplots_adjust(
-            left=0.09, right=0.97, bottom=0.09, top=0.96, wspace=0.25, hspace=0.2)
+            left=0.12, right=0.97, bottom=0.09, top=0.96, wspace=0.25, hspace=0.2)
         axes = p.subplot(111)
         return axes
 
