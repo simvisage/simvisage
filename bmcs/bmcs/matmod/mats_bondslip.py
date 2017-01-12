@@ -84,7 +84,7 @@ class MATSEvalFatigue(HasTraits):
         delta_lamda = f / (self.E_b / (1 - w) + self.gamma + self.K) * plas
         # update all the state variables
        
-       
+        '''
         w_new = w.flatten()
         delta_lamda_new = delta_lamda.flatten()
         Y_new = Y.flatten()
@@ -96,8 +96,8 @@ class MATSEvalFatigue(HasTraits):
             w_new[i] = w_n 
             
         w = w_new.reshape(-1, 2)  
-          
-        #w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
+        '''  
+        w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
        
         xs_pi = xs_pi + delta_lamda * np.sign(sig_pi_trial - X) / (1 - w)
         sig[:, :, 1] = (1 - w) * self.E_b * (eps[:, :, 1] - xs_pi)
