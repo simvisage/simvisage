@@ -72,7 +72,7 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 31000.,
                                            nu=0.2
                                            ),
-                'C3HF' : ConcreteMixture(
+                'C3-HF2-145-4' : ConcreteMixture(
                                            E_m28=44600.,  # @todo: approximation only
                                            # function for the evolution derived based on only
                                            # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
