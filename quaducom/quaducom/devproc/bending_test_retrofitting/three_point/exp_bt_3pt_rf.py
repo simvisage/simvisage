@@ -191,13 +191,13 @@ class ExpBT3PTRF(ExType):
         # displacement
         return argmax(self.Kraft)
 
-    def _plot_force_deflection(self, axes, offset_w=0., color='black', linewidth=1., label=None):
+    def _plot_force_deflection(self, axes, offset_w=0., color='black', linestyle='-', linewidth=1., label=None):
         f = self.Kraft
         w = self.WA_M2
 
         # add curves
         #
-        axes.plot(w, f, linewidth=linewidth, label=label, color=color)
+        axes.plot(w, f, linewidth=linewidth, linestyle=linestyle, label=label, color=color)
 
         # add axes labels
         #
