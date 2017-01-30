@@ -85,6 +85,7 @@ ts = TStepper()
 n_dofs = ts.domain.n_dofs
 loading_scenario = LoadingScenario()
 
+
 ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
         var='f', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
 tl = TLoop(ts=ts)

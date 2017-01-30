@@ -23,6 +23,7 @@ from view.ui.bmcs_tree_node import \
     BMCSTreeNode
 from view.window.bmcs_window import \
     BMCSWindow
+#from matmod.pull_out_explorer import loading_scenario
 
 
 class UCPStudyElement(BMCSTreeNode):
@@ -56,18 +57,18 @@ class UCPStudyElement(BMCSTreeNode):
         self.content.plot(fig, color=self.color_, linestyle=self.linestyle_,
                           label=self.node_name)
 
-    def plot_ax(self, ax1, ax2):
-        self.content.plot_custom(ax1=ax1, ax2=ax2,  color=self.color_, linestyle=self.linestyle_,
+    def plot_ax(self, ax1, ax2, ax3):
+        self.content.plot_custom(ax1=ax1, ax2=ax2,ax3=ax3 , color=self.color_, linestyle=self.linestyle_,
                                  label=self.node_name)
 
 
-class UCPStudyElementBMCS(UCPStudyElement):
-    node_name = '<unnamed pull_out>'
+class UCPStudyElementBMCS_LoadControl(UCPStudyElement):
+    node_name = '<unnamed pull_out_load_control>'
 
     tree_node_list = List(Instance(BMCSTreeNode))
 
     def _tree_node_list_default(self):
-
+        
         ts = TStepper()
         n_dofs = ts.domain.n_dofs
         loading_scenario = LoadingScenario()
@@ -89,13 +90,45 @@ class UCPStudyElementBMCS(UCPStudyElement):
 
     def _set_content(self, val):
         self.tree_node_list = [val]
+        
+class UCPStudyElementBMCS_DisplacementControl(UCPStudyElement):
+    node_name = '<unnamed pull_out_displacement_control>'
+
+    tree_node_list = List(Instance(BMCSTreeNode))
+
+    def _tree_node_list_default(self):
+        
+        ts = TStepper()
+        n_dofs = ts.domain.n_dofs
+        loading_scenario = LoadingScenario()
+        
+        ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
+            var='u', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
+
+        tl = TLoop(ts=ts)
+        geometry = Geometry()
+        model = PullOutSimulation(mats_eval=ts.mats_eval, fets_eval=ts.fets_eval,
+                                  time_stepper=ts, time_loop=tl,
+                                  geometry=geometry,
+                                  loading_scenario=loading_scenario)
+        return [model]
+
+    content = Property(depends_on='tree_node_list')
+
+    def _get_content(self):
+        return self.tree_node_list[0]
+
+    def _set_content(self, val):
+        self.tree_node_list = [val]        
+        
 
 
 class UCParametricStudy(BMCSTreeNode):
     node_name = Str('Parametric study')
 
     element_to_add = Trait(
-        'PullOutSimulation', {'PullOutSimulation':   UCPStudyElementBMCS})
+        'PullOutSimulation_Load_Control', {'PullOutSimulation_Load_Control':   UCPStudyElementBMCS_LoadControl , 
+                                          'PullOutSimulation_Displacement_Control':   UCPStudyElementBMCS_DisplacementControl})
 
     add_element = Button('Add')
 
@@ -113,17 +146,20 @@ class UCParametricStudy(BMCSTreeNode):
         return []
 
     def plot(self, fig):
-        ax1 = fig.add_subplot(121)
-        ax2 = fig.add_subplot(122)
-
+        ax1 = fig.add_subplot(221)
+        ax2 = fig.add_subplot(222)
+        gs = gridspec.GridSpec(2, 2)
+        ax3= fig.add_subplot(gs[-1, :])
+        
         for node in self.tree_node_list:
 
-            node.plot_ax(ax1, ax2)
+            node.plot_ax(ax1, ax2,ax3)
 
 
 pull_out_ps = UCParametricStudy()
-pull_out_ps.element_to_add = 'PullOutSimulation'
+pull_out_ps.element_to_add = 'PullOutSimulation_Load_Control'
 pull_out_ps.add_element = True
+pull_out_ps.element_to_add = 'PullOutSimulation_Displacement_Control'
 pull_out_ps.add_element = True
 
 ucc = BMCSTreeNode()

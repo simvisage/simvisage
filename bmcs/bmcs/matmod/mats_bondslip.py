@@ -58,6 +58,18 @@ class MATSEvalFatigue(HasTraits):
                     desc="Reversibility limit",
                     enter_set=True,
                     auto_set=False)
+    
+    pressure = Float(-5,
+                    label="Pressure",
+                    desc="Lateral pressure",
+                    enter_set=True,
+                    auto_set=False)
+    
+    a = Float(1.7,
+                    label="a",
+                    desc="Lateral pressure coefficient",
+                    enter_set=True,
+                    auto_set=False)
  
     n_s = Constant(4)
     
@@ -72,7 +84,7 @@ class MATSEvalFatigue(HasTraits):
         sig_pi_trial = self.E_b * (eps[:, :, 1] - xs_pi)
         Z = self.K * z
         X = self.gamma * alpha
-        f = np.fabs(sig_pi_trial - X) - self.tau_pi_bar - Z
+        f = np.fabs(sig_pi_trial - X) - self.tau_pi_bar - Z + self.a * self.pressure / 3
         
         elas = f <= 1e-6
         plas = f > 1e-6
@@ -84,7 +96,7 @@ class MATSEvalFatigue(HasTraits):
         delta_lamda = f / (self.E_b / (1 - w) + self.gamma + self.K) * plas
         # update all the state variables
        
-       
+        '''
         w_new = w.flatten()
         delta_lamda_new = delta_lamda.flatten()
         Y_new = Y.flatten()
@@ -96,8 +108,8 @@ class MATSEvalFatigue(HasTraits):
             w_new[i] = w_n 
             
         w = w_new.reshape(-1, 2)  
-          
-        #w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
+        '''  
+        w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
        
         xs_pi = xs_pi + delta_lamda * np.sign(sig_pi_trial - X) / (1 - w)
         sig[:, :, 1] = (1 - w) * self.E_b * (eps[:, :, 1] - xs_pi)
@@ -154,7 +166,7 @@ class MATSEvalFatigue(HasTraits):
             Y_i = 0.5 * self.E_b * (s_i - xs_pi_i) ** 2
         
             # Threshold
-            f_pi_i = np.fabs(tau_i_1 - X_i) - self.tau_pi_bar - Z
+            f_pi_i = np.fabs(tau_i_1 - X_i) - self.tau_pi_bar - Z + self.a * self.pressure / 3
         
             if f_pi_i > 1e-6:
                 # Return mapping 

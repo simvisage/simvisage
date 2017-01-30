@@ -64,13 +64,27 @@ class Material(BMCSLeafNode):
                        desc="Reversibility limit",
                        enter_set=True,
                        auto_set=False)
+    
+    pressure = Float(-5,
+                    label="Pressure",
+                    desc="Lateral pressure",
+                    enter_set=True,
+                    auto_set=False)
+    
+    a = Float(1.7,
+                    label="a",
+                    desc="Lateral pressure coefficient",
+                    enter_set=True,
+                    auto_set=False)
 
     view = View(VGroup(Group(Item('E_b'),
                              Item('tau_pi_bar'), show_border=True, label='Bond Stiffness and reversibility limit'),
                        Group(Item('gamma'),
                              Item('K'), show_border=True, label='Hardening parameters'),
                        Group(Item('S'),
-                             Item('r'), Item('c'), show_border=True, label='Damage cumulation parameters')))
+                             Item('r'), Item('c'), show_border=True, label='Damage cumulation parameters'),
+                       Group(Item('pressure'),
+                             Item('a'), show_border=True, label='Lateral Pressure')))
 
 
 
@@ -209,7 +223,9 @@ class BondSlipModel(BMCSTreeNode):
         self.mats_eval.r = self.material.r
         self.mats_eval.K = self.material.K
         self.mats_eval.c = self.material.c
-
+        self.mats_eval.a = self.material.a
+        self.mats_eval.pressure = self.material.pressure
+        
         s_arr = self.loading_scenario._get_d_array()
 
         tau_arr, w_arr, xs_pi_arr , xs_pi_cum = self.mats_eval.get_bond_slip(s_arr)
@@ -250,6 +266,8 @@ class BondSlipModel(BMCSTreeNode):
         self.mats_eval.r = self.material.r
         self.mats_eval.K = self.material.K
         self.mats_eval.c = self.material.c
+        self.mats_eval.a = self.material.a
+        self.mats_eval.pressure = self.material.pressure
 
         s_arr = self.loading_scenario._get_d_array()
 

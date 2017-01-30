@@ -95,13 +95,12 @@ class TLoop(HasTraits):
                 k += 1
                 step_flag = 'corrector'
 
-            # if np.all(w_last >=  0.999):
-                # print ' ----------> The bar is fully damged'
-                # break
+
             if k >= self.k_max:
                 print ' ----------> No Convergence any more'
                 break
             print t_n1
+            print 'K=', k
             t_n = t_n1
             # for i in range(1 ,len(D_record)):
             # print'D=', D_record#.flatten()#[-1:-1][-1, :, 1 , 1].flatten()
