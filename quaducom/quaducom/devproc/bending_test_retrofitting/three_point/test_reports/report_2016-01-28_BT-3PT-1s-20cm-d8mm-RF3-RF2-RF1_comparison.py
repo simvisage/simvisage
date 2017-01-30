@@ -12,10 +12,12 @@ import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 
 # specify font options for plots
 params = {'legend.fontsize': 12,
-          #         'legend.linewidth': 2,
-          u'font.size': 15,
-          u'font.family': 'serif',
-          u'font.style': 'normal'}
+          'ps.fonttype': 42,
+          u'font.size':15,
+          u'font.family':'sans-serif',
+          u'font.style':'normal',
+          u'font.serif': 'Arial'}
+
 p.rcParams.update(params)
 # print p.rcParams.keys()
 
@@ -54,8 +56,8 @@ test_files = [
 #--------------------
 # format plot
 #--------------------
-color_list = ['grey', 'k', 'b', 'g']
-linestyle_list = ['-', '-', '-', '-']
+color_list = ['grey', 'r', 'k', 'g']
+linestyle_list = ['-', ':', '-', '--']
 plot_orig_list = [1, 1, 1, 1]
 # cutoff long label names at the end for cleaner legend display
 label_cutoff = [-9, -9, -9, -9]
@@ -78,6 +80,7 @@ def plot_all():
         if do == 'F-w':
             e._plot_force_deflection(axes,
                                      linewidth=1.5,
+                                     linestyle=linestyle_list[idx],
                                      color=color_list[idx],
                                      label=e_list[idx].ex_type.key[0:label_cutoff[idx]])
             axes.set_xlabel('$w$ [mm]')
@@ -109,7 +112,7 @@ def plot_all():
 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, do + '.png')
+        filename = os.path.join(test_series_dir, do + '.eps')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 
