@@ -58,6 +58,18 @@ class MATSEvalFatigue(HasTraits):
                     desc="Reversibility limit",
                     enter_set=True,
                     auto_set=False)
+    
+    pressure = Float(-5,
+                    label="Pressure",
+                    desc="Lateral pressure",
+                    enter_set=True,
+                    auto_set=False)
+    
+    a = Float(1.7,
+                    label="a",
+                    desc="Lateral pressure coefficient",
+                    enter_set=True,
+                    auto_set=False)
  
     n_s = Constant(4)
     
@@ -72,7 +84,7 @@ class MATSEvalFatigue(HasTraits):
         sig_pi_trial = self.E_b * (eps[:, :, 1] - xs_pi)
         Z = self.K * z
         X = self.gamma * alpha
-        f = np.fabs(sig_pi_trial - X) - self.tau_pi_bar - Z
+        f = np.fabs(sig_pi_trial - X) - self.tau_pi_bar - Z + self.a * self.pressure / 3
         
         elas = f <= 1e-6
         plas = f > 1e-6
@@ -154,7 +166,7 @@ class MATSEvalFatigue(HasTraits):
             Y_i = 0.5 * self.E_b * (s_i - xs_pi_i) ** 2
         
             # Threshold
-            f_pi_i = np.fabs(tau_i_1 - X_i) - self.tau_pi_bar - Z
+            f_pi_i = np.fabs(tau_i_1 - X_i) - self.tau_pi_bar - Z + self.a * self.pressure / 3
         
             if f_pi_i > 1e-6:
                 # Return mapping 
