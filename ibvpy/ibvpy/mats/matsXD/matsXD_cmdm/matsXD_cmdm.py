@@ -142,7 +142,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
     def _get_identity_tns(self):
         '''
         Get the identity matrix (used only in formula for sum-type symmetrization)
-        '''
+        ''' 
         return identity(self.n_dim)
 
     #-------------------------------------------------------------------------
@@ -882,20 +882,21 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         Returns two arrays containing the microplane strain and stress vectors
         consistently derived based on the specified model version, i.e. either 'stiffness' or 'compliance'
         '''
-        # for compliance version only
+        # for compliance version only 
         #
         if self.model_version != 'compliance':
             raise ValueError('only valid for compliance version')
 
-        e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(
-            self, sctx, e_msax_arr_new, eps_app_eng))
+        raise ImportError, 'If this is needed include the import of the scipy package'
+        #e_max_arr_new = brentq(e_max_arr_new, self.get_lack_of_fit_psi_arr(
+        #    self, sctx, e_msax_arr_new, eps_app_eng))
 
-        self.update_state_variables(e_max_arr_new)
+        #self.update_state_variables(e_max_arr_new)
 
         # get the corresponding macroscopic stresses for D_mtx at time t_i+1
         # for strain
-        sig_app_eng, D_mtx_cv = self.get_corr_pred(
-            sctx, e_max_arr_new, eps_app_eng, 0, 0, 0)
+        #sig_app_eng, D_mtx_cv = self.get_corr_pred(
+        #    sctx, e_max_arr_new, eps_app_eng, 0, 0, 0)
 
     #-------------------------------------------------------------------------
     #-------------------------------------------------------------------------

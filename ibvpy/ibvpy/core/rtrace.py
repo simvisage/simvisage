@@ -14,7 +14,7 @@ from traitsui.menu import \
 
 from numpy import float_, zeros, arange, array, copy
 
-from mathkit.mfn import MFnLineArray
+from mathkit.mfn import MFnLineArray 
 
 #from rt_domain import RTraceDomainField
 
