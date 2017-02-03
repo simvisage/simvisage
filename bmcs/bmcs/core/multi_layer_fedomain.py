@@ -40,7 +40,7 @@ dN_mei = np.array([[dN_i_xi.subs(xi_, xi)]for xi in xi_m], dtype=np.float_)
 
 n_dim = 1
 n_c = 2
-n_e = 5
+n_e = 2
 n_e_n = 2
 n_e_dof = n_e_n * n_c * n_dim
 n_n_tot = n_e + 1

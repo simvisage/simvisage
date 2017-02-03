@@ -40,7 +40,7 @@ class TStepper(HasTraits):
         return np.array([self.fets_eval.A_m, self.fets_eval.P_b, self.fets_eval.A_f])
 
     # Number of elements
-    n_e_x = 10
+    n_e_x = 50
     # length
     L_x = Float(200)
 

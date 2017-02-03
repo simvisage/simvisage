@@ -94,7 +94,7 @@ class LoadingScenario(BMCSLeafNode):
     node_name = Str('Loading Scenario')
     number_of_cycles = Float(1.0)
     maximum_slip = Float(2)
-    number_of_increments = Float(200)
+    
     loading_type = Enum("Monotonic", "Cyclic")
     amplitude_type = Enum("Increased_Amplitude", "Constant_Amplitude")
     loading_range = Enum("Non_symmetric", "Symmetric")
@@ -103,13 +103,14 @@ class LoadingScenario(BMCSLeafNode):
     t_max = Float(2.)
     k_max = Float(100)
     tolerance = Float(1e-4)
-
+    
+    
     d_array = Property(
-        depends_on=' maximum_slip , number_of_cycles , loading_type , loading_range , amplitude_type ')
+        depends_on=' maximum_slip , number_of_cycles , loading_type , loading_range , amplitude_type , d_t , t_max')
 
     @cached_property
     def _get_d_array(self):
-
+        number_of_increments = self.t_max / self.d_t
         if self.loading_type == "Monotonic":
             self.number_of_cycles = 1
         d_levels = np.linspace(0, self.maximum_slip, self.number_of_cycles * 2)
@@ -118,7 +119,7 @@ class LoadingScenario(BMCSLeafNode):
         if self.amplitude_type == "Increased_Amplitude" and self.loading_range == "Symmetric":
             d_levels.reshape(-1, 2)[:, 0] *= -1
             d_history = d_levels.flatten()
-            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], self.number_of_increments)
+            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], number_of_increments)
                                for i in range(len(d_levels) - 1)])
 
             return d_arr
@@ -126,7 +127,7 @@ class LoadingScenario(BMCSLeafNode):
         if self.amplitude_type == "Increased_Amplitude" and self.loading_range == "Non_symmetric":
             d_levels.reshape(-1, 2)[:, 0] *= 0
             d_history = d_levels.flatten()
-            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], self.number_of_increments)
+            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], number_of_increments)
                                for i in range(len(d_levels) - 1)])
 
             return d_arr
@@ -136,7 +137,7 @@ class LoadingScenario(BMCSLeafNode):
             d_levels[0] = 0
             d_levels.reshape(-1, 2)[:, 1] = self.maximum_slip
             d_history = d_levels.flatten()
-            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], self.number_of_increments)
+            d_arr = np.hstack([np.linspace(d_history[i], d_history[i + 1], number_of_increments)
                                for i in range(len(d_levels) - 1)])
 
             return d_arr
@@ -145,7 +146,7 @@ class LoadingScenario(BMCSLeafNode):
             d_levels.reshape(-1, 2)[:, 0] *= 0
             d_levels.reshape(-1, 2)[:, 1] = self.maximum_slip
             s_history = d_levels.flatten()
-            d_arr = np.hstack([np.linspace(s_history[i], s_history[i + 1], self.number_of_increments)
+            d_arr = np.hstack([np.linspace(s_history[i], s_history[i + 1], number_of_increments)
                                for i in range(len(d_levels) - 1)])
 
             return d_arr

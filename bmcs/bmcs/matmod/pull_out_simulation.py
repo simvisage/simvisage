@@ -524,7 +524,8 @@ class PullOutSimulation(BMCSTreeNode):
                 #t = np.vstack((t,self.t_record[idx]))
               
         if   self.loading_scenario.loading_type == "Cyclic":
-            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max[1:-1] , 
+            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
+                     , u_max[1:-1] / u_max[-1], 
                      lw=linewidth, color=color,ls=linestyle, label=label)
             #ax3.set_xlim(0, 1)
             ax3.set_title('Max slip vs. number of cycles')
