@@ -109,9 +109,12 @@ class MATSEvalFatigue(HasTraits):
             
         w = w_new.reshape(-1, 2)  
         '''  
-        w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
+        #w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
        
         xs_pi = xs_pi + delta_lamda * np.sign(sig_pi_trial - X) / (1 - w)
+        Y = 0.5 * self.E_b * (eps[:, :, 1] - xs_pi)** 2
+        w = w + (1 - w)** self.c * (delta_lamda * (Y / self.S) ** self.r) 
+        
         sig[:, :, 1] = (1 - w) * self.E_b * (eps[:, :, 1] - xs_pi)
         X = X + self.gamma * delta_lamda * np.sign(sig_pi_trial - X)
         alpha = alpha + delta_lamda * np.sign(sig_pi_trial - X)
@@ -179,11 +182,12 @@ class MATSEvalFatigue(HasTraits):
                 w_n = newton(f_w_n, 0., fprime=f_w_n2 , tol=1e-6, maxiter=10) 
                 w_i = w_n
                 '''
-                w_i = w_i + ((1 - w_i) ** self.c) * (delta_lamda * (Y_i / self.S) ** self.r)
-            
+                
                 xs_pi_i = xs_pi_i + delta_lamda * np.sign(tau_i_1 - X_i) / (1 - w_i)
             
                 Y_i = 0.5 * self.E_b * (s_i - xs_pi_i) ** 2
+                
+                w_i = w_i + ((1 - w_i) ** self.c) * (delta_lamda * (Y_i / self.S) ** self.r)
             
                 tau_i = self.E_b * (1 - w_i) * (s_i - xs_pi_i)
                 X_i = X_i + self.gamma * delta_lamda * np.sign(tau_i_1 - X_i)

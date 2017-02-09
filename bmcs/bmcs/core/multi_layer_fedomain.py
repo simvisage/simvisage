@@ -33,7 +33,7 @@ import pylab as p
 import sympy as sp
 
 n_c = 2
-n_e = 1000
+n_e = 100
 
 DELTA_cd = np.identity(n_c)
 c1 = np.arange(n_c) + 1
