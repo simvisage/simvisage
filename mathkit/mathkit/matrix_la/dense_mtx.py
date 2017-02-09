@@ -1,19 +1,17 @@
 
-from traits.api import HasTraits, Array, Property, cached_property, Instance, \
-    Delegate, Any
 from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \
     hstack, meshgrid, vstack, dot, newaxis, c_, r_, copy, where, \
     ones
-#from sys_mtx_assembly import SysMtxAssembly
-
+from traits.api import HasTraits, Array, Property, cached_property, Instance, \
+    Delegate, Any
 from traitsui.api \
     import View, Item, TabularEditor
-
 from traitsui.tabular_adapter \
     import TabularAdapter
 
 
-class ArrayAdapter (TabularAdapter):
+#from sys_mtx_assembly import SysMtxAssembly
+class ArrayAdapter(TabularAdapter):
 
     columns = Property
 

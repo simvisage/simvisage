@@ -1,38 +1,27 @@
 
+from numpy import \
+    zeros, float_, ix_,  repeat, arange, array, dot
 from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
-    DelegatesTo
-
+    Array, Bool, implements, \
+    Instance, Int, \
+    WeakRef, Delegate, Property, cached_property, Dict
 from traitsui.api import \
     Item, View
-
 from traitsui.menu import \
     OKButton, CancelButton
-
-
-from numpy import \
-    zeros, float_, ix_, meshgrid, repeat, arange, array, dot, \
-    tensordot, sum
-
 from ibvpy.core.i_tstepper_eval import \
     ITStepperEval
+from ibvpy.core.rtrace_eval import RTraceEval
 from ibvpy.core.tstepper_eval import \
     TStepperEval
-
-from ibvpy.core.rtrace_eval import RTraceEval
 from ibvpy.fets.i_fets_eval import IFETSEval
-from mathkit.matrix_la.sys_mtx_array import SysMtxArray
 from ibvpy.mesh.i_fe_uniform_domain import IFEUniformDomain
+from mathkit.matrix_la.sys_mtx_array import SysMtxArray
 
-from time import time
 
 #-----------------------------------------------------------------------------
 # Integrator for a general regular domain.
 #-----------------------------------------------------------------------------
-
-
 class DOTSEval(TStepperEval):
 
     '''
@@ -200,8 +189,8 @@ class DOTSEval(TStepperEval):
         eps = dot(B_mtx, u)
         return array([[eps[0], eps[2]], [eps[2], eps[1]]])
 
-    # @todo: Jakub remove this - specific to two field problems
-    # Should be a tracer assocated with the element.
+    # Specific to two field problems
+    # Should be a tracer associated with the element.
     def get_eps_f(self, sctx, u):
         X_mtx = sctx.X
         r_pnt = sctx.loc
@@ -277,9 +266,11 @@ class DOTSEval(TStepperEval):
     # @todo - comment this procedure`
     def get_vtk_cell_data(self, position, point_offset, cell_offset):
         if position == 'nodes':
-            subcell_offsets, subcell_lengths, subcells, subcell_types = self.fets_eval.vtk_node_cell_data
+            subcell_offsets, subcell_lengths, subcells, subcell_types = \
+                self.fets_eval.vtk_node_cell_data
         elif position == 'int_pnts':
-            subcell_offsets, subcell_lengths, subcells, subcell_types = self.fets_eval.vtk_ip_cell_data
+            subcell_offsets, subcell_lengths, subcells, subcell_types = \
+                self.fets_eval.vtk_ip_cell_data
 
         if self.debug_cell_data:
             print 'subcell_offsets'
