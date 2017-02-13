@@ -125,7 +125,7 @@ w_m = fet.w_m
 dof_Eic = fe_grid.dof_grid.cell_dof_map
 I_Ei = fe_grid.geo_grid.cell_grid.cell_node_map
 X_Id = fe_grid.geo_grid.cell_grid.point_x_arr
-X_Eid = X_Id[I_Ei]
+X_Eid = X_Id[I_Ei, :]
 
 A_c = np.ones((n_c,), dtype=np.float_)
 # Geometry approximation / Jacobi transformation
