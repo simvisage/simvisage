@@ -17,7 +17,7 @@ inherit from the BMCSTreeNode and supply the attributes
 from matplotlib.figure import \
     Figure
 from traits.api import \
-    HasStrictTraits, Instance, Button, Event, Range, cached_property 
+    HasStrictTraits, Instance, Button, Event, Range, cached_property
 from traits.etsconfig.api import ETSConfig
 from traitsui.api import \
     TreeEditor, TreeNode, View, Item, Group, \
@@ -25,13 +25,13 @@ from traitsui.api import \
 from traitsui.menu import \
     Menu, MenuBar, Separator
 
+from bmcs.view.ui.bmcs_tree_node import \
+    BMCSTreeNode, BMCSLeafNode
 from bmcs_tree_view_handler import \
     BMCSTreeViewHandler, plot_self, menu_save, \
     menu_open, menu_exit
 from util.traits.editors.mpl_figure_editor import \
     MPLFigureEditor
-from view.ui.bmcs_tree_node import \
-    BMCSTreeNode, BMCSLeafNode
 
 
 if ETSConfig.toolkit == 'wx':
@@ -95,7 +95,7 @@ class BMCSWindow(HasStrictTraits):
     def _clear_fired(self):
         self.figure.clear()
         self.data_changed = True
-        
+
     #time = self.root.time
 
     view = View(HSplit(Group(Item('root',
@@ -110,7 +110,7 @@ class BMCSWindow(HasStrictTraits):
                                     ),
                              Item('figure', editor=MPLFigureEditor(),
                                   resizable=True, show_label=False,
-                                  springy=True),#Item('self.root.time', label='t/T_max'),
+                                  springy=True),  # Item('self.root.time', label='t/T_max'),
                              label='plot sheet',
                              dock='tab',
                              )

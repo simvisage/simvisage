@@ -41,8 +41,10 @@ PyQT: http://www.riverbankcomputing.co.uk/software/pyqt/intro
 '''
                           )
 
-    from bmcs.core import \
-        multi_layer_fedomain
+#     from bmcs.debontrix import \
+#         debontrix
+
+    import bmcs.use_cases.parametric_study_bondslip
 
 
 def close():

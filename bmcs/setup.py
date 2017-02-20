@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name="bmcs",
-    version="0.0.1a05",
+    version="0.0.1a08",
     author="Rostislav Chudoba, Yionxiung Li, Abedulgader Baktheer, Alexander Scholzen",
     author_email="rostislav.chudoba@rwth-aachen.de",
     description=("Suite of educational packages related to the course "

@@ -16,7 +16,7 @@ from traitsui.file_dialog import \
 from traitsui.menu import \
     Action
 
-from utils import \
+from bmcs.utils import \
     get_outfile
 
 

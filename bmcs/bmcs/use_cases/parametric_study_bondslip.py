@@ -9,17 +9,17 @@ from traits.api import \
 from traitsui.api import \
     View, Item, UItem, VGroup, HGroup, spring
 
-from matmod.bond_slip_model import \
+from bmcs.matmod.bond_slip_model import \
     BondSlipModel, Material, LoadingScenario
-from matmod.mats_bondslip import \
+from bmcs.matmod.mats_bondslip import \
     MATSEvalFatigue
-import matplotlib.gridspec as gridspec
-from utils.keyref import \
+from bmcs.utils.keyref import \
     KeyRef
-from view.ui.bmcs_tree_node import \
+from bmcs.view.ui.bmcs_tree_node import \
     BMCSTreeNode
-from view.window.bmcs_window import \
+from bmcs.view.window.bmcs_window import \
     BMCSWindow
+import matplotlib.gridspec as gridspec
 
 
 class UCPStudyElement(BMCSTreeNode):
@@ -105,7 +105,6 @@ class UCParametricStudy(BMCSTreeNode):
         for node in self.tree_node_list:
 
             node.plot_ax(ax1, ax2, ax3)
-
 
 bond_slip_ps = UCParametricStudy()
 bond_slip_ps.element_to_add = 'BondSlipModel'
