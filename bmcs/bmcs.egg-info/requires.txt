@@ -1,0 +1,7 @@
+traits>=4.0.0
+traitsui>=4.0.0
+pyface>=4.0.0
+numpy>=1.10.0
+scipy>=0.18.1
+sympy>=1.0
+matplotlib>=1.5.3

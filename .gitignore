@@ -4,4 +4,7 @@
 *.o
 *.so
 .svn
+*.swp
 .DS_Store
+**/build/
+**/dist/

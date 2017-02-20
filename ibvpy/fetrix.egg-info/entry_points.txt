@@ -1,0 +1,3 @@
+[gui_scripts]
+fetrix = fetrix.scripts.fetrix_app:main
+
