@@ -1,4 +1,0 @@
-bmcs
-ibvpy
-mathkit
-util

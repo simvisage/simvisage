@@ -1,7 +1,0 @@
-[gui_scripts]
-bundltrix = bmcs.scripts.bundltrix_app:main
-cracktrix = bmcs.scripts.cracktrix_app:main
-debontrix = bmcs.scripts.debontrix_app:main
-mxntrix = bmcs.scripts.mxntrix_app:main
-screenmix = bmcs.scripts.screenmix_app:main
-
