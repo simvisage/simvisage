@@ -1,0 +1,14 @@
+Metadata-Version: 1.1
+Name: fetrix
+Version: 0.0.1a0
+Summary: Initial boundary value problem yolver using generic finite element scripting core.
+Home-page: http://packages.python.org/bmcs
+Author: Rostislav Chudoba
+Author-email: rostislav.chudoba@rwth-aachen.de
+License: BSD
+Description: UNKNOWN
+Keywords: looples finite elements
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: BSD License
