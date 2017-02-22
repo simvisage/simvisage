@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name="bmcs",
-    version="0.0.1a08",
+    version="0.0.1a10",
     author="Rostislav Chudoba, Yionxiung Li, Abedulgader Baktheer, Alexander Scholzen",
     author_email="rostislav.chudoba@rwth-aachen.de",
     description=("Suite of educational packages related to the course "
@@ -20,13 +20,13 @@ setup(
     license="BSD",
     keywords="brittle matrix composite structures",
     url="http://packages.python.org/bmcs",
-    install_requires=['traits>=4.0.0',
-                      'traitsui>=4.0.0',
-                      'pyface>=4.0.0',
-                      'numpy>=1.10.0',
-                      'scipy>=0.18.1',
-                      'sympy>=1.0',
-                      'matplotlib>=1.5.3'],
+    #     install_requires=['traits>=4.0.0',
+    #                       'traitsui>=4.0.0',
+    #                       'pyface>=4.0.0',
+    #                       'numpy>=1.10.0',
+    #                       'scipy>=0.18.1',
+    #                       'sympy>=1.0',
+    #                       'matplotlib>=1.5.3'],
     packages=find_packages(),
     package_data={
         # If any package contains *.txt or *.rst files, include them:

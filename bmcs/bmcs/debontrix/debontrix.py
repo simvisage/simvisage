@@ -21,27 +21,30 @@ Planned extensions:
 @author: rch
 '''
 
-from traits.api import \
-    Int, implements, Array, \
-    List, Property, cached_property
 from ibvpy.fets.fets_eval import IFETSEval, FETSEval
 from ibvpy.mats.mats1D import MATS1DElastic
 from ibvpy.mesh.fe_grid import FEGrid
 from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
+from traits.api import \
+    Int, implements, Array, \
+    List, Property, cached_property
+
 import numpy as np
 import pylab as p
 import sympy as sp
 
-n_c = 2
-n_e = 100
 
-DELTA_cd = np.identity(n_c)
-c1 = np.arange(n_c) + 1
+n_C = 2
+n_E = 10
+
+ONE = np.ones((1,), dtype=np.float_)
+DELTA_cd = np.identity(n_C)
+c1 = np.arange(n_C) + 1
 SWITCH_cd = np.power(-1.0, c1[np.newaxis, :] + c1[:, np.newaxis])
 
 r_ = sp.symbols('r')
 
-L_x, L_y, L_z = n_e, 1, 1
+L_x, L_y, L_z = 1, 1, 1
 
 
 class FETS1D2L(FETSEval):
@@ -51,8 +54,8 @@ class FETS1D2L(FETSEval):
     implements(IFETSEval)
 
     dim_slice = slice(0, 1)
-    n_e_dofs = Int(2 * n_c)
-    n_nodal_dofs = Int(n_c)
+    n_e_dofs = Int(2 * n_C)
+    n_nodal_dofs = Int(n_C)
     dof_r = Array(value=[[-1], [1]])
     geo_r = Array(value=[[-1], [1]])
     vtk_r = Array(value=[[-1.], [1.]])
@@ -61,9 +64,8 @@ class FETS1D2L(FETSEval):
 
     r_m = Array(value=[[-1], [1]], dtype=np.float_)
     w_m = Array(value=[1, 1], dtype=np.float_)
-
-    # Integration parameters
-    ngp_r = 2
+#     r_m = Array(value=[[0.0]], dtype=np.float_)
+#     w_m = Array(value=[2.0], dtype=np.float_)
 
     Nr_i_geo = List([(1 - r_) / 2.0,
                      (1 + r_) / 2.0, ])
@@ -112,7 +114,7 @@ fet = FETS1D2L()
 
 fe_grid = FEGrid(coord_min=(0., ),
                  coord_max=(L_x, ),
-                 shape=(n_e, ),
+                 shape=(n_E, ),
                  fets_eval=fet)
 n_dof_tot = fe_grid.n_dofs
 
@@ -122,43 +124,55 @@ N_mi = fet.N_mi
 dN_mid = fet.dN_mid
 w_m = fet.w_m
 
-dof_Eic = fe_grid.dof_grid.cell_dof_map
+dof_EiCd = fe_grid.dof_grid.cell_dof_map[..., np.newaxis]
+dof_ECid = np.einsum('EiCd->ECid', dof_EiCd)
 I_Ei = fe_grid.geo_grid.cell_grid.cell_node_map
 X_Id = fe_grid.geo_grid.cell_grid.point_x_arr
 X_Eid = X_Id[I_Ei, :]
+X_Emd = np.einsum('mi,Eid->Emd', N_mi_geo, X_Eid)
 
-A_c = np.ones((n_c,), dtype=np.float_)
+A_C = np.ones((n_C,), dtype=np.float_)
+A_C[0] *= 10.0
+G = 1.0
 # Geometry approximation / Jacobi transformation
 J_Emde = np.einsum('mid,Eie->Emde', dN_mid_geo, X_Eid)
 J_det_Em = np.linalg.det(J_Emde)
 J_inv_Emed = np.linalg.inv(J_Emde)
 # Quadratic forms
 dN_Eimd = np.einsum('mid,Eied->Eime', dN_mid, J_inv_Emed)
-BB_ECidDjf = np.einsum('m, CD, C, Eimd,Ejmf,Em->EiCdjDf',
-                       w_m, DELTA_cd, A_c, dN_Eimd, dN_Eimd, J_det_Em)
-NN_ECidDjf = np.einsum('m, CD,mi,mj,Em->EiCjD',
-                       w_m, SWITCH_cd, N_mi, N_mi, J_det_Em) * 0.1
+BB_ECidDjf = np.einsum('m, CD, C, Eimd,Ejmf,Em->ECidDjf',
+                       w_m, DELTA_cd, A_C, dN_Eimd, dN_Eimd, J_det_Em)
+NN_ECidDjf = np.einsum('m, d,f,CD,mi,mj,Em->ECidDjf',
+                       w_m, ONE, ONE, SWITCH_cd, N_mi, N_mi, J_det_Em) * G
+K_ECidDjf = BB_ECidDjf + NN_ECidDjf
 # Stapled matrices
-BB_Eij = BB_ECidDjf.reshape(-1, fet.n_e_dofs, fet.n_e_dofs)
-NN_Eij = NN_ECidDjf.reshape(-1, fet.n_e_dofs, fet.n_e_dofs)
+K_Eij = K_ECidDjf.reshape(-1, fet.n_e_dofs, fet.n_e_dofs)
 # System matrix
-dof_E = dof_Eic.reshape(-1, fet.n_e_dofs)
+dof_E = dof_ECid.reshape(-1, fet.n_e_dofs)
 K = SysMtxAssembly()
-K.add_mtx_array(BB_Eij + NN_Eij, dof_E)
+K.add_mtx_array(K_Eij, dof_E)
 K.register_constraint(0, 0.0)
 K.register_constraint(n_dof_tot - 1, 0.01)
 F_ext = np.zeros((n_dof_tot,), np.float_)
 K.apply_constraints(F_ext)
 d = K.solve(F_ext)
 # Postprocessing
-d_Eic = d[dof_Eic]
-d_c = d_Eic.reshape(-1, n_c)
-X = X_Eid.flatten()
+X_J = X_Eid.flatten()
+X_M = X_Emd.flatten()
+d_ECid = d[dof_ECid]
+d_C = np.einsum('ECid->EidC', d_ECid).reshape(-1, n_C)
+eps_EmdC = np.einsum('Eimd,ECid->EmdC', dN_Eimd, d_ECid)
+eps_C = eps_EmdC.reshape(-1, n_C)
+sig_EmdC = eps_EmdC
+f_ECid = np.einsum('ECidDjf,EDjf->ECid', K_ECidDjf, d_ECid)
+f_Ei = f_ECid.reshape(-1, fet.n_e_dofs)
+f_I = np.bincount(dof_E.flatten(), weights=f_Ei.flatten())
+f_IC = f_I.reshape(-1, n_C)
+P = f_IC[-1, -1]
 
 
-def plot_pylab(X, d_c):
-    p.plot(X, d_c)
-    p.show()
+def plot_pylab(X, field_C):
+    p.plot(X, field_C)
 
 
 def plot_mlab(X, I_Ei):
@@ -172,4 +186,9 @@ def plot_mlab(X, I_Ei):
     print fe_grid.geo_grid.cell_grid.point_x_arr.shape
     print I_Ei
 
-plot_pylab(X, d_c)
+p.subplot(211)
+plot_pylab(X_Id.flatten(), f_IC)
+p.subplot(212)
+plot_pylab(X_J, eps_C)
+#plot_pylab(X_Id.flatten(), f_IC)
+p.show()

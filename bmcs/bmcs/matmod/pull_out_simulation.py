@@ -174,14 +174,7 @@ class LoadingScenario(BMCSLeafNode):
                 self.unloading_ratio
             d_history = d_2.flatten()
             d_arr = np.hstack((d_1, d_history))
-            '''
-            d_levels.reshape(-1, 2)[:,0] = self.maximum_loading * self.unloading_ratio
-            d_levels[0] = 0
-            d_levels.reshape(-1, 2)[:, 1] = self.maximum_loading
-            s_history = d_levels.flatten()
-            d_arr = np.hstack([np.linspace(s_history[i], s_history[i + 1], self.number_of_increments)
-                               for i in range(len(d_levels) - 1)])
-            '''
+            
             return d_arr
 
     time_func = Property(depends_on='maximum_loading, t_max , d_array')
@@ -320,8 +313,9 @@ class PullOutSimulation(BMCSTreeNode):
 
         ax2 = figure.add_subplot(232)
         ax2.cla()
-        ax2.plot(self.U_record[:, n_dof], self.F_record[:, n_dof] / 1000)
-        ax2.plot(self.U_record[-1, n_dof], self.F_record[-1, n_dof], 'ro')
+        ax2.plot(self.U_record[:, n_dof], self.F_record[:, n_dof] / 1000, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
+        ax2.plot(self.U_record[-1, n_dof], self.F_record[-1, n_dof]/ 1000, 'ro')
         ax2.set_title('pull-out force-displacement curve')
 
         ax3 = figure.add_subplot(233)
@@ -350,7 +344,7 @@ class PullOutSimulation(BMCSTreeNode):
         ax6.cla()
         ax6.plot(X_ip, self.sig_record[-1][:, :, 0].flatten())
         ax6.plot(X_ip, self.sig_record[-1][:, :, 2].flatten())
-        ax6.set_title('strain')
+        ax6.set_title('stress')
 
         # ax6 = figure.add_subplot(236)
         # ax6.cla()
@@ -507,7 +501,8 @@ class PullOutSimulation(BMCSTreeNode):
 
         # plotting the max slip for each cycle
         n = (len(self.loading_scenario.d_array) - 1) / 2
-        u_max = np.zeros(1)
+        u_max_1 = np.zeros(1)
+        u_max_2 = np.zeros(1)
         u_min = np.zeros(1)
         #E_ed = np.zeros(n)
         t = np.zeros(1)
@@ -518,21 +513,41 @@ class PullOutSimulation(BMCSTreeNode):
             if idx >= len(self.t_record):
                 break
             else:
+<<<<<<< HEAD
                 u_max = np.vstack((u_max, self.U_record[idx, n_dof]))
                 t = np.vstack((t, self.t_record[idx]))
 
         for i in range(1, n + 1, 1):
             idx = (2 * i) * (self.loading_scenario.t_max) / \
                 (2 * n * self.loading_scenario.d_t)
+=======
+                u_max_1 = np.vstack((u_max_1,self.U_record[idx, n_dof])) # max slip of the loaded end
+                u_max_2 = np.vstack((u_max_2,self.U_record[idx, 1])) # max slip of the unloaded end
+                t = np.vstack((t,self.t_record[idx]))
+                
+        for i in range(1, n+1  , 1):
+            idx = (2 * i ) * (self.loading_scenario.t_max) / (2 * n * self.loading_scenario.d_t)
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
             if idx >= len(self.t_record):
                 break
             else:
                 u_min = np.vstack((u_min, self.U_record[idx, n_dof]))
                 #t = np.vstack((t,self.t_record[idx]))
+<<<<<<< HEAD
 
         if self.loading_scenario.loading_type == "Cyclic":
             ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max[1:-1] / u_max[-1],
                      lw=linewidth, color=color, ls=linestyle, label=label)
+=======
+              
+        if  self.loading_scenario.loading_type == "Cyclic":
+            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
+                     , u_max_1[1:-1], 
+                     lw=linewidth, color=color,ls=linestyle, label=label)
+            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
+                     , u_max_2[1:-1], 
+                     lw=linewidth, color=color,ls=linestyle, label=label)
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
             #ax3.set_xlim(0, 1)
             ax3.set_title('Max slip vs. number of cycles')
             ax3.set_xlabel('N')
@@ -545,7 +560,7 @@ class PullOutSimulation(BMCSTreeNode):
             ax3.plot(t[1:-1] *(self.loading_scenario.number_of_cycles / self.loading_scenario.t_max),
                       (self.loading_scenario.maximum_loading - self.loading_scenario.maximum_loading * 
                        self.loading_scenario.unloading_ratio) / 
-                                (u_max[2:-1] - u_min[1:-1]), 
+                                (u_max[1:-1]), 
                                 lw=linewidth, color=color,
                                 ls=linestyle, label=label)
             ax3.set_xlim(0, 1)
