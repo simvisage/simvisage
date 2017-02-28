@@ -17,7 +17,7 @@ from core.tstepper import TStepper
 from core.tstepper_eval import TStepperEval
 from dots.dots_eval import DOTSEval
 from dots.dots_list_eval import DOTSListEval
-from fets.fets_eval import FETSEval, RTraceEvalElemFieldVar
+from fets.fets_eval import FETSEval, IFETSEval, RTraceEvalElemFieldVar
 from mesh.fe_domain import FEDomain
 from mesh.fe_grid import FEGrid
 from mesh.fe_grid_idx_slice import FEGridIdxSlice

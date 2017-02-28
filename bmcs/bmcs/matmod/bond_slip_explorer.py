@@ -3,6 +3,9 @@
 import os
 import pickle
 
+from bmcs.view.window import BMCSWindow
+from bmcs.view.window.bmcs_tree_view_handler import \
+    plot_self, new_material, del_material
 from traits.etsconfig.api import ETSConfig
 from traitsui.api import \
     TreeNode
@@ -11,13 +14,10 @@ from traitsui.menu import \
 
 from bond_slip_model import \
     Material, LoadingScenario, BondSlipModel
-
-from view.window import BMCSWindow
-from view.window.bmcs_tree_view_handler import \
-    plot_self, new_material, del_material
-#from matmod.bond_slip_model import LoadingScenario
 from mats_bondslip import MATSEvalFatigue
 
+
+#from matmod.bond_slip_model import LoadingScenario
 if ETSConfig.toolkit == 'wx':
     from traitsui.wx.tree_editor import \
         NewAction, DeleteAction, CopyAction, PasteAction
