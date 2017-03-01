@@ -14,6 +14,8 @@ inherit from the BMCSTreeNode and supply the attributes
 @author: rch
 '''
 
+from bmcs.view.ui.bmcs_tree_node import \
+    BMCSTreeNode, BMCSLeafNode
 from matplotlib.figure import \
     Figure
 from traits.api import \
@@ -24,14 +26,12 @@ from traitsui.api import \
     HSplit, HGroup
 from traitsui.menu import \
     Menu, MenuBar, Separator
+from util.traits.editors.mpl_figure_editor import \
+    MPLFigureEditor
 
-from bmcs.view.ui.bmcs_tree_node import \
-    BMCSTreeNode, BMCSLeafNode
 from bmcs_tree_view_handler import \
     BMCSTreeViewHandler, plot_self, menu_save, \
     menu_open, menu_exit
-from util.traits.editors.mpl_figure_editor import \
-    MPLFigureEditor
 
 
 if ETSConfig.toolkit == 'wx':
@@ -103,7 +103,7 @@ class BMCSWindow(HasStrictTraits):
                                   resizable=True,
                                   show_label=False,
                                   width=400,
-                                  height=400),
+                                  height=200),
                              ),
                        Group(HGroup(Item('replot', show_label=False),
                                     Item('clear', show_label=False)
@@ -117,7 +117,7 @@ class BMCSWindow(HasStrictTraits):
                        ),
                 id='bmcstreeview_id',
                 width=0.9,
-                height=0.5,
+                height=0.8,
                 title='BMCS',
                 resizable=True,
                 handler=BMCSTreeViewHandler(),
