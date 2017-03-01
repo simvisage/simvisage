@@ -513,32 +513,32 @@ class PullOutSimulation(BMCSTreeNode):
             if idx >= len(self.t_record):
                 break
             else:
-<<<<<<< HEAD
+#<<<<<<< HEAD
                 u_max = np.vstack((u_max, self.U_record[idx, n_dof]))
                 t = np.vstack((t, self.t_record[idx]))
 
         for i in range(1, n + 1, 1):
             idx = (2 * i) * (self.loading_scenario.t_max) / \
                 (2 * n * self.loading_scenario.d_t)
-=======
-                u_max_1 = np.vstack((u_max_1,self.U_record[idx, n_dof])) # max slip of the loaded end
-                u_max_2 = np.vstack((u_max_2,self.U_record[idx, 1])) # max slip of the unloaded end
-                t = np.vstack((t,self.t_record[idx]))
+#=======
+            u_max_1 = np.vstack((u_max_1,self.U_record[idx, n_dof])) # max slip of the loaded end
+            u_max_2 = np.vstack((u_max_2,self.U_record[idx, 1])) # max slip of the unloaded end
+            t = np.vstack((t,self.t_record[idx]))
                 
         for i in range(1, n+1  , 1):
             idx = (2 * i ) * (self.loading_scenario.t_max) / (2 * n * self.loading_scenario.d_t)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+#>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
             if idx >= len(self.t_record):
                 break
             else:
                 u_min = np.vstack((u_min, self.U_record[idx, n_dof]))
                 #t = np.vstack((t,self.t_record[idx]))
-<<<<<<< HEAD
+#<<<<<<< HEAD
 
         if self.loading_scenario.loading_type == "Cyclic":
             ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max[1:-1] / u_max[-1],
                      lw=linewidth, color=color, ls=linestyle, label=label)
-=======
+#=======
               
         if  self.loading_scenario.loading_type == "Cyclic":
             ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
@@ -547,7 +547,7 @@ class PullOutSimulation(BMCSTreeNode):
             ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
                      , u_max_2[1:-1], 
                      lw=linewidth, color=color,ls=linestyle, label=label)
->>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+#>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
             #ax3.set_xlim(0, 1)
             ax3.set_title('Max slip vs. number of cycles')
             ax3.set_xlabel('N')
