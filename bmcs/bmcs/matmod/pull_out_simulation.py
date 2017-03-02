@@ -3,6 +3,10 @@ Created on 12.01.2016
 @author: Yingxiong, ABaktheer, RChudoba
 '''
 
+from bmcs.matmod.tloop import TLoop
+from bmcs.matmod.tstepper import TStepper
+from bmcs.view.ui import BMCSTreeNode, BMCSLeafNode
+from ibvpy.core.bcond_mngr import BCondMngr
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
 from traits.api import \
@@ -10,14 +14,11 @@ from traits.api import \
     Range, on_trait_change, Array, List, Float
 from traitsui.api import \
     View, Item, Group, VGroup
+from util.traits.editors import MPLFigureEditor
 
-from bmcs.view.ui import BMCSTreeNode, BMCSLeafNode
 from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
 from mats_bondslip import MATSEvalFatigue
 import numpy as np
-from tloop import TLoop
-from tstepper import TStepper
-from util.traits.editors import MPLFigureEditor
 
 
 class Material(BMCSLeafNode):
@@ -100,7 +101,7 @@ class LoadingScenario(BMCSLeafNode):
 
     node_name = Str('Loading Scenario')
     number_of_cycles = Float(1.0)
-    maximum_loading = Float(0.2)
+    maximum_loading = Float(0.5)
     unloading_ratio = Range(0., 1., value=0.5)
     number_of_increments = Float(10)
     loading_type = Enum("Monotonic", "Cyclic")
@@ -174,7 +175,7 @@ class LoadingScenario(BMCSLeafNode):
                 self.unloading_ratio
             d_history = d_2.flatten()
             d_arr = np.hstack((d_1, d_history))
-            
+
             return d_arr
 
     time_func = Property(depends_on='maximum_loading, t_max , d_array')
@@ -211,7 +212,10 @@ class LoadingScenario(BMCSLeafNode):
                              Item('k_max'), show_border=True, label='Solver Settings')),
                 Group(Item('update', label='Plot Loading scenario')),
                 Item('figure', editor=MPLFigureEditor(),
-                     dock='horizontal', show_label=False), Item('time', label='t/T_max'))
+                     dock='horizontal',
+                     show_label=False),
+                Item('time', label='t/T_max')
+                )
 
 
 class PullOutSimulation(BMCSTreeNode):
@@ -222,7 +226,7 @@ class PullOutSimulation(BMCSTreeNode):
 
     def _tree_node_list_default(self):
 
-        return [self.material, self.geometry, self.loading_scenario]
+        return [self.material, self.geometry, self.loading_scenario, self.bcond_mngr]
 
     material = Instance(Material)
 
@@ -239,13 +243,40 @@ class PullOutSimulation(BMCSTreeNode):
     def _geometry_default(self):
         return Geometry()
 
-    mats_eval = Instance(MATSEvalFatigue)
+    mats_eval = Property(Instance(MATSEvalFatigue))
+    '''Material model'''
+    @cached_property
+    def _get_mats_eval(self):
+        return MATSEvalFatigue()
 
-    fets_eval = Instance(FETS1D52ULRHFatigue)
+    fets_eval = Property(Instance(FETS1D52ULRHFatigue))
+    '''Finite element time stepper implementing the corrector
+    predictor operators at the element level'''
+    @cached_property
+    def _get_fets_eval(self):
+        return FETS1D52ULRHFatigue()
 
-    time_stepper = Instance(TStepper)
+    time_stepper = Property(Instance(TStepper))
+    '''Objects representing the state of the model providing
+    the predictor and corrector functionality needed for time-stepping
+    algorithm.
+    '''
+    @cached_property
+    def _get_time_stepper(self):
+        return TStepper()
 
-    time_loop = Instance(TLoop)
+    time_loop = Property(Instance(TLoop))
+    '''Algorithm controlling the time stepping.
+    '''
+    @cached_property
+    def _get_time_loop(self):
+        return TLoop(ts=self.time_stepper)
+
+    bcond_mngr = Property(Instance(BCondMngr))
+
+    @cached_property
+    def _get_bcond_mngr(self):
+        return self.time_stepper.bcond_mngr
 
     t_record = Array
     U_record = Array
@@ -315,7 +346,8 @@ class PullOutSimulation(BMCSTreeNode):
         ax2.cla()
         ax2.plot(self.U_record[:, n_dof], self.F_record[:, n_dof] / 1000, lw=linewidth, color=color,
                  ls=linestyle, label=label)
-        ax2.plot(self.U_record[-1, n_dof], self.F_record[-1, n_dof]/ 1000, 'ro')
+        ax2.plot(
+            self.U_record[-1, n_dof], self.F_record[-1, n_dof] / 1000, 'ro')
         ax2.set_title('pull-out force-displacement curve')
 
         ax3 = figure.add_subplot(233)
@@ -403,7 +435,8 @@ class PullOutSimulation(BMCSTreeNode):
         ax1.set_xlabel('Slip')
         ax1.set_ylabel('Stress')
 
-        # self.U_record, self.F_record, self.sf_record, self.t_record, self.eps_record, self.sig_record, self.w_record = self.time_loop.eval()
+        #self.U_record, self.F_record, self.sf_record, self.t_record, \
+        #self.eps_record, self.sig_record, self.w_record = self.time_loop.eval()
         # n_dof = 2 * self.time_stepper.domain.n_active_elems + 1
 
         idx = (np.abs(self.time * max(self.t_record) - self.t_record)).argmin()
@@ -499,7 +532,7 @@ class PullOutSimulation(BMCSTreeNode):
         ax2.set_ylabel('Damage')
         ax2.legend(loc=4)
 
-        # plotting the max slip for each cycle
+        # plotting the max slip for each cycle (S_N curve)
         n = (len(self.loading_scenario.d_array) - 1) / 2
         u_max_1 = np.zeros(1)
         u_max_2 = np.zeros(1)
@@ -513,41 +546,27 @@ class PullOutSimulation(BMCSTreeNode):
             if idx >= len(self.t_record):
                 break
             else:
-#<<<<<<< HEAD
-                u_max = np.vstack((u_max, self.U_record[idx, n_dof]))
+                # max slip of the loaded end
+                u_max_1 = np.vstack((u_max_1, self.U_record[idx, n_dof]))
+                # max slip of the unloaded end
+                u_max_2 = np.vstack((u_max_2, self.U_record[idx, n_dof]))
                 t = np.vstack((t, self.t_record[idx]))
 
         for i in range(1, n + 1, 1):
             idx = (2 * i) * (self.loading_scenario.t_max) / \
                 (2 * n * self.loading_scenario.d_t)
-#=======
-            u_max_1 = np.vstack((u_max_1,self.U_record[idx, n_dof])) # max slip of the loaded end
-            u_max_2 = np.vstack((u_max_2,self.U_record[idx, 1])) # max slip of the unloaded end
-            t = np.vstack((t,self.t_record[idx]))
-                
-        for i in range(1, n+1  , 1):
-            idx = (2 * i ) * (self.loading_scenario.t_max) / (2 * n * self.loading_scenario.d_t)
-#>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
             if idx >= len(self.t_record):
                 break
             else:
                 u_min = np.vstack((u_min, self.U_record[idx, n_dof]))
                 #t = np.vstack((t,self.t_record[idx]))
-#<<<<<<< HEAD
 
         if self.loading_scenario.loading_type == "Cyclic":
-            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max[1:-1] / u_max[-1],
+            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max_1[1:-1],
                      lw=linewidth, color=color, ls=linestyle, label=label)
-#=======
-              
-        if  self.loading_scenario.loading_type == "Cyclic":
-            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
-                     , u_max_1[1:-1], 
-                     lw=linewidth, color=color,ls=linestyle, label=label)
-            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max)
-                     , u_max_2[1:-1], 
-                     lw=linewidth, color=color,ls=linestyle, label=label)
-#>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
+            ax3.plot(t[1:-1] * (self.loading_scenario.number_of_cycles / self.loading_scenario.t_max), u_max_2[1:-1],
+                     lw=linewidth, color=color, ls=linestyle, label=label)
+
             #ax3.set_xlim(0, 1)
             ax3.set_title('Max slip vs. number of cycles')
             ax3.set_xlabel('N')
@@ -604,3 +623,11 @@ class PullOutSimulation(BMCSTreeNode):
             ax1.set_xlabel('Slip(mm)'); ax1.set_ylabel('Force (KN)')
             ax1.legend(loc=4)       
         '''
+
+    trait_view = View(Item('fets_eval'),
+                      )
+
+if __name__ == '__main__':
+    print 'xxxx#'
+    ps1 = PullOutSimulation()
+    ps1.configure_traits()

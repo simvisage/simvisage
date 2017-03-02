@@ -3,12 +3,6 @@ Created on 02.01.2017
 
 @author: abaktheer
 '''
-from traits.api import \
-    Instance, Property, \
-    List, Str, Trait, Button, cached_property
-from traitsui.api import \
-    View, Item, UItem, VGroup, HGroup, spring
-
 from bmcs.matmod.fets1d52ulrhfatigue import FETS1D52ULRHFatigue
 from bmcs.matmod.mats_bondslip import MATSEvalFatigue
 from bmcs.matmod.pull_out_simulation import \
@@ -22,9 +16,17 @@ from bmcs.view.ui.bmcs_tree_node import \
 from bmcs.view.window.bmcs_window import \
     BMCSWindow
 from ibvpy.api import BCDof
+from traits.api import \
+    Instance, Property, \
+    List, Str, Trait, Button, cached_property
+from traitsui.api import \
+    View, Item, UItem, VGroup, HGroup, spring
+
 import matplotlib.gridspec as gridspec
 
 
+#from bmcs.matmod.tloop import TLoop
+#from bmcs.matmod.tstepper import TStepper
 #from matmod.pull_out_explorer import loading_scenario
 class UCPStudyElement(BMCSTreeNode):
     '''Class controlling plotting options
@@ -69,18 +71,13 @@ class UCPStudyElementBMCS_LoadControl(UCPStudyElement):
 
     def _tree_node_list_default(self):
 
-        ts = TStepper()
-        n_dofs = ts.domain.n_dofs
         loading_scenario = LoadingScenario()
-
-        ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
-            var='f', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
-        tl = TLoop(ts=ts)
+        bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
+            var='f', dof=-1, time_function=loading_scenario.time_func)]
         geometry = Geometry()
-        model = PullOutSimulation(mats_eval=ts.mats_eval, fets_eval=ts.fets_eval,
-                                  time_stepper=ts, time_loop=tl,
-                                  geometry=geometry,
+        model = PullOutSimulation(geometry=geometry,
                                   loading_scenario=loading_scenario)
+        model.time_stepper.bc_list = bc_list
         return [model]
 
     content = Property(depends_on='tree_node_list')
@@ -99,19 +96,13 @@ class UCPStudyElementBMCS_DisplacementControl(UCPStudyElement):
 
     def _tree_node_list_default(self):
 
-        ts = TStepper()
-        n_dofs = ts.domain.n_dofs
         loading_scenario = LoadingScenario()
-
-        ts.bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
-            var='u', dof=n_dofs - 1, time_function=loading_scenario.time_func)]
-
-        tl = TLoop(ts=ts)
+        bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
+            var='u', dof=-1, time_function=loading_scenario.time_func)]
         geometry = Geometry()
-        model = PullOutSimulation(mats_eval=ts.mats_eval, fets_eval=ts.fets_eval,
-                                  time_stepper=ts, time_loop=tl,
-                                  geometry=geometry,
+        model = PullOutSimulation(geometry=geometry,
                                   loading_scenario=loading_scenario)
+        model.time_stepper.bc_list = bc_list
         return [model]
 
     content = Property(depends_on='tree_node_list')
@@ -161,6 +152,7 @@ pull_out_ps.element_to_add = 'PullOutSimulation_Load_Control'
 pull_out_ps.add_element = True
 pull_out_ps.element_to_add = 'PullOutSimulation_Displacement_Control'
 pull_out_ps.add_element = True
+
 
 ucc = BMCSTreeNode()
 ucc.tree_node_list.append(pull_out_ps)

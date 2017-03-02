@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -14,50 +14,41 @@
 
 
 #from sys_matrix import SysSparseMtx, SysDenseMtx
-from numpy import array, zeros, arange, array_equal, hstack, dot, sqrt
-from scipy.linalg import norm
-
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
-from mathkit.matrix_la.coo_mtx import COOSparseMtx
-from mathkit.matrix_la.dense_mtx import DenseMtx
-import unittest
-
 from ibvpy.api import \
-    TStepper as TS, RTraceGraph, RTraceDomainField, TLoop, \
-    TLine, BCDof, IBVPSolve as IS, DOTSEval
-from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
-
-from ibvpy.mesh.fe_grid import FEGrid
+    TStepper as TS, RTraceGraph, TLoop, \
+    TLine, BCDof
 from ibvpy.fets.fets1D.fets1D2l import FETS1D2L
+from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
+from ibvpy.mesh.fe_grid import FEGrid
+
 
 if __name__ == '__main__':
 
-    fets_eval = FETS1D2L( mats_eval = MATS1DElastic( E = 10. ) )
+    fets_eval = FETS1D2L(mats_eval=MATS1DElastic(E=10.))
 
     # Discretization
-    domain = FEGrid( coord_max = ( 10., 0., 0. ),
-                                shape = ( 1, ),
-                                fets_eval = fets_eval )
+    domain = FEGrid(coord_max=(10., 0., 0.),
+                    shape=(1, ),
+                    fets_eval=fets_eval)
 
-    ts = TS( sdomain = domain,
-                  dof_resultants = True
-                        )
-    tloop = TLoop( tstepper = ts, debug = False,
-                        tline = TLine( min = 0.0, step = 1, max = 1.0 ) )
-
+    ts = TS(sdomain=domain,
+            dof_resultants=True
+            )
+    tloop = TLoop(tstepper=ts, debug=False,
+                  tline=TLine(min=0.0, step=1, max=1.0))
 
     '''Clamped bar loaded at the right end with unit displacement
     [00]-[01]-[02]-[03]-[04]-[05]-[06]-[07]-[08]-[09]-[10]
     'u[0] = 0, u[10] = 1'''
 
-    domain.coord_max = ( 1, 0, 0 )
-    domain.shape = ( 3, )
-    ts.bcond_list = [BCDof( var = 'u', dof = 0, value = 0. ),
-                     BCDof( var = 'u', dof = 1, link_dofs = [2], link_coeffs = [0.5] ),
-                     BCDof( var = 'u', dof = 3, value = 1. )]
-    ts.rtrace_list = [RTraceGraph( name = 'Fi,right over u_right (iteration)' ,
-                                       var_y = 'F_int', idx_y = 3,
-                                       var_x = 'U_k', idx_x = 3 )]
+    domain.coord_max = (1, 0, 0)
+    domain.shape = (3, )
+    ts.bcond_list = [BCDof(var='u', dof=0, value=0.),
+                     BCDof(var='u', dof=1, link_dofs=[2], link_coeffs=[0.5]),
+                     BCDof(var='u', dof=3, value=1.)]
+    ts.rtrace_list = [RTraceGraph(name='Fi,right over u_right (iteration)',
+                                  var_y='F_int', idx_y=3,
+                                  var_x='U_k', idx_x=3)]
 
     u = tloop.eval()
     # expected solution
@@ -66,3 +57,5 @@ if __name__ == '__main__':
     F = ts.F_int[-1]
 
     print 'F', F
+
+    ts.bcond_mngr.configure_traits()

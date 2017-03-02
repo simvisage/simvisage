@@ -1,14 +1,11 @@
 
+from bmcs.view.ui.bmcs_tree_node import BMCSTreeNode
+from ibvpy.core.i_bcond import IBCond
 from traits.api import \
-    HasTraits, \
     Instance,  \
     List
-
 from traitsui.api import \
-    View, Item, VSplit, \
     TableEditor, ObjectColumn
-
-from i_bcond import IBCond
 
 
 # The definition of the demo TableEditor:
@@ -22,9 +19,14 @@ bcond_list_editor = TableEditor(
 )
 
 
-class BCondMngr(HasTraits):
+class BCondMngr(BMCSTreeNode):
+
+    node_name = 'Boundary conditions'
 
     bcond_list = List(IBCond)
+
+    def _tree_node_list_default(self):
+        return self.bcond_list
 
     selected_bcond = Instance(IBCond)
 
@@ -45,9 +47,14 @@ class BCondMngr(HasTraits):
         for bcond in self.bcond_list:
             bcond.apply(step_flag, sctx, K, R, t_n, t_n1)
 
-    traits_view = View(VSplit(Item('bcond_list', style='custom', editor=bcond_list_editor,
-                                   show_label=False),
-                              Item('selected_bcond@', show_label=False)),
-                       resizable=True,
-                       kind='subpanel',
-                       )
+#     traits_view = View(VSplit(Item('bcond_list', style='custom', editor=bcond_list_editor,
+#                                    show_label=False),
+#                               Item('selected_bcond@', show_label=False)),
+#                        resizable=True,
+#                        kind='subpanel',
+#                        )
+
+if __name__ == '__main__':
+    from ibvpy.api import BCDof
+    bc = BCondMngr(bcond_list=[BCDof(), BCDof()])
+    bc.configure_traits()

@@ -1,14 +1,14 @@
-from numpy import \
-    ix_, array, float_
-from traits.api import Float, HasStrictTraits, \
-    Int,  Enum, on_trait_change, \
-    Callable, List,  Any, implements
+from bmcs.view.ui import BMCSLeafNode
 from ibvpy.core.i_bcond import \
     IBCond
+from numpy import \
+    ix_, array, float_
+from traits.api import Float, \
+    Int,  Enum, \
+    Callable, List,  Any, implements
 
 
-class BCDof(HasStrictTraits):
-
+class BCDof(BMCSLeafNode):
     '''
     Implements the IBC functionality for a constrained dof.
     '''

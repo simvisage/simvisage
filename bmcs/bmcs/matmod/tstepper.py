@@ -2,18 +2,19 @@
 Created on 12.01.2016
 @author: Yingxiong
 '''
-from traits.api import HasTraits, Instance, \
+from ibvpy.api import BCDof
+from ibvpy.core.bcond_mngr import BCondMngr
+from ibvpy.mesh.fe_grid import FEGrid
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
+from traits.api import HasStrictTraits, Instance, \
     Property, cached_property, Float, List
 
 from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
-from ibvpy.api import BCDof
-from ibvpy.mesh.fe_grid import FEGrid
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from mats_bondslip import MATSEvalFatigue
 import numpy as np
 
 
-class TStepper(HasTraits):
+class TStepper(HasStrictTraits):
 
     '''Time stepper object for non-linear Newton-Raphson solver.
     '''
@@ -55,7 +56,28 @@ class TStepper(HasTraits):
                         fets_eval=self.fets_eval)
         return domain
 
-    bc_list = List(Instance(BCDof))
+    # Boundary condition manager
+    #
+    bcond_mngr = Instance(BCondMngr)
+
+    def _bcond_mngr_default(self):
+        return BCondMngr()
+
+    # Convenience constructor
+    #
+    # This property provides the possibility to write
+    # tstepper.bcond_list = [BCDof(var='u',dof=5,value=0, ... ]
+    # The result gets propageted to the BCondMngr
+    #
+    bcond_list = Property(List(BCDof))
+
+    def _get_bcond_list(self):
+        print 'getting bcond_list'
+        return self.bcond_mngr.bcond_list
+
+    def _set_bcond_list(self, bcond_list):
+        print 'assigning', bcond_list
+        self.bcond_mngr.bcond_list = bcond_list
 
     J_mtx = Property(depends_on='L_x')
     '''Array of Jacobian matrices.
