@@ -44,7 +44,13 @@ PyQT: http://www.riverbankcomputing.co.uk/software/pyqt/intro
 #     from bmcs.debontrix import \
 #         debontrix
 
-    import bmcs.use_cases.parametric_study_bondslip
+    from bmcs.debontrix.debontrix_window import \
+        DebonTrixWindow
+
+    from bmcs.debontrix.debontrix_window import \
+        DebonTrixModel, FETS1D2L
+    tv = DebonTrixWindow(model=DebonTrixModel(fets_eval=FETS1D2L()))
+    tv.configure_traits()
 
 
 def close():

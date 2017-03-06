@@ -321,8 +321,8 @@ class PullOutSimulation(BMCSTreeNode):
         self.time_loop.tolerance = self.loading_scenario.tolerance
 
         # assign the bc
-        self.time_stepper.bc_list[1].value = 1
-        self.time_stepper.bc_list[
+        self.time_stepper.bcond_list[1].value = 1
+        self.time_stepper.bcond_list[
             1].time_function = self.loading_scenario.time_func
 
         # self.time = 1.00
@@ -418,8 +418,8 @@ class PullOutSimulation(BMCSTreeNode):
         self.time_loop.tolerance = self.loading_scenario.tolerance
 
         # assign the bc
-        self.time_stepper.bc_list[1].value = 1
-        self.time_stepper.bc_list[
+        self.time_stepper.bcond_list[1].value = 1
+        self.time_stepper.bcond_list[
             1].time_function = self.loading_scenario.time_func
 
         # self.time = 1.00
@@ -505,8 +505,8 @@ class PullOutSimulation(BMCSTreeNode):
         self.time_loop.tolerance = self.loading_scenario.tolerance
 
         # assign the bc
-        self.time_stepper.bc_list[1].value = 1
-        self.time_stepper.bc_list[
+        self.time_stepper.bcond_list[1].value = 1
+        self.time_stepper.bcond_list[
             1].time_function = self.loading_scenario.time_func
 
         self.U_record, self.F_record, self.sf_record, self.t_record, self.eps_record, \

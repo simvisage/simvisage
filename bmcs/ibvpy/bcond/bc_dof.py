@@ -1,11 +1,12 @@
-from bmcs.view.ui import BMCSLeafNode
-from ibvpy.core.i_bcond import \
-    IBCond
 from numpy import \
     ix_, array, float_
 from traits.api import Float, \
     Int,  Enum, \
     Callable, List,  Any, implements
+
+from ibvpy.core.i_bcond import \
+    IBCond
+from view.ui import BMCSLeafNode
 
 
 class BCDof(BMCSLeafNode):

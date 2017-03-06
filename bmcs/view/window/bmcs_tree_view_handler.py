@@ -120,3 +120,46 @@ class BMCSTreeViewHandler(Handler):
 
     def _cancel_fired(self):
         self._ui.dispose()
+
+    #=========================================================================
+    # Toolbar actions
+    #=========================================================================
+
+    def run(self, info):
+        info.object.run_calculation()
+
+    def stop(self, info):
+        info.object.stop_calculation()
+
+    def replot(self, info):
+        info.object.replot()
+
+    def clear(self, info):
+        info.object.clear()
+
+    def anim(self, info):
+        info.object.anim()
+
+    def render(self, info):
+        info.object.render()
+
+    def save(self, info):
+        info.object.save()
+
+    def load(self, info):
+        info.object.load()
+
+action_strings = \
+    [('Run', 'run_calculation', 'Run calculation'),
+     ('Interrupt', 'interrupt_calculation', 'Interrupt calculation'),
+     ('Plot', 'replot', 'Replot current diagrams'),
+     ('Clear', 'clear', 'Clear current diagrams'),
+     ('Save', 'save', 'Save session'),
+     ('Load', 'load', 'Load session'),
+     ('Animate', 'anim', 'Animate current session'),
+     ('Render', 'render', 'Render current session')]
+
+toolbar_actions = [Action(name=name,
+                          action=action,
+                          tooltip=tooltip)
+                   for name, action, tooltip in action_strings]

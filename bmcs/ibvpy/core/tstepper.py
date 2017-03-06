@@ -301,6 +301,13 @@ class TStepper(IBVResource):
         self.kw = {}
         self.args = []
 
+    F_int = Property(depends_on='sdomain.changed_structure')
+
+    @cached_property
+    def _get_F_int(self):
+        n_dofs = self.sdomain.n_dofs
+        return np.zeros(n_dofs, 'float_')
+
     def eval(self, step_flag, U_k, d_U, t_n, t_n1):
         '''Get the tangential operator (system matrix) and residuum
         associated with the current time step.
@@ -326,6 +333,7 @@ class TStepper(IBVResource):
         # Reset the system matrix (constraints are preserved)
         #
         self.K.reset_mtx()
+        self.F_int[:] = 0.0
 
         # Put the spatial domain into the spatial context
         #
@@ -336,8 +344,9 @@ class TStepper(IBVResource):
 
         # Let the time sub-stepper evaluate its contribution.
         #
-        F_int, K_mtx = self.tse_integ.get_corr_pred(sctx, U_k, d_U, t_n, t_n1,
-                                                    *self.args, **self.kw)
+        K_mtx = self.tse_integ.get_corr_pred(sctx, U_k, d_U, t_n, t_n1,
+                                             self.F_int,
+                                             *self.args, **self.kw)
 
         # Promote the system matrix to the SysMtxAssembly
         # Supported representation of the system matrix is
@@ -355,7 +364,7 @@ class TStepper(IBVResource):
         elif isinstance(K_mtx, SysMtxAssembly):
             self.K.sys_mtx_arrays = K_mtx.sys_mtx_arrays
 
-        norm_F_int = np.linalg.norm(F_int)
+        norm_F_int = np.linalg.norm(self.F_int)
         # Switch off the global update flag
         #
         sctx.update_state_on = False
@@ -363,22 +372,6 @@ class TStepper(IBVResource):
         # Apply the boundary conditions
         #
         if self.dof_resultants == True:
-
-            # The code below is somewhat wasteful as it explicitly constructs the
-            # array of external forces and then makes the subraction
-            # F_ext - F_int to obtain the residual forces. As a result, there two unnecessary
-            # intermediate instances of the vector of the size [n_dofs].
-            #
-            # The two arrays are needed only for postprocessing, if there is a need
-            # to get the reaction forces at particular DOF stored in F_int
-            # or when the imposed time-dependent loading in a DOF should be visualized
-            # for verification, the two vectors must be defined as
-            # attributes of the tstepper objects. For this reasons, the more demanding
-            # implementation is used here.
-            #
-            # Remember F_int
-            #
-            self.F_int = F_int
 
             # Prepare F_ext by zeroing it
             #
@@ -399,17 +392,18 @@ class TStepper(IBVResource):
             # which can be obtained without an additional
             # memory consumption by issuing an in-place switch of the sign
             #
-            F_int *= -1  # in-place sign change of the internal forces
+            self.F_int *= -1  # in-place sign change of the internal forces
             #
             # Then F_int can be used as the target for the boundary conditions
             #
-            self.bcond_mngr.apply(step_flag, sctx, self.K, F_int, t_n, t_n1)
+            self.bcond_mngr.apply(
+                step_flag, sctx, self.K, self.F_int, t_n, t_n1)
 
             #
             # The subtraction F_ext - F_int has then been performed implicitly
             # and the residuum can be returned by issuing
             #
-            return self.K, F_int, norm_F_int
+            return self.K, self.F_int, norm_F_int
 
     def update_state(self, U):
         '''

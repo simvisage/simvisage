@@ -1,49 +1,38 @@
 
-from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
-    Instance, Int, Trait, Str, List, TraitDict, Any, \
-    on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
-    Class
+import types
 
+from numpy import \
+    array, zeros, float_, dot, hstack, arange, argmin, broadcast_arrays, c_
+from scipy.linalg import \
+    det
+from scipy.spatial.distance import \
+    cdist
+from traits.api import \
+    Array, Bool, Float, implements, \
+    Instance, Int, Trait, List, Any, \
+    Delegate, Property, cached_property, Dict, \
+    Class
 from traitsui.api import \
     View, Item, Group
 
-from numpy import \
-    array, zeros, float_, dot, hstack, arange, argmin, broadcast_arrays, c_, \
-    zeros_like
-
-from scipy.linalg import \
-    det
-
-from scipy.spatial.distance import \
-    cdist
-
+from i_fets_eval import IFETSEval
 from ibvpy.core.i_tstepper_eval import \
     ITStepperEval
-
-from ibvpy.core.tstepper_eval import \
-    TStepperEval
-
-from ibvpy.mats.mats_eval import \
-    IMATSEval
-
-from ibvpy.dots.dots_eval import \
-    DOTSEval
-
 from ibvpy.core.rtrace_eval import \
     RTraceEval
-
-from i_fets_eval import IFETSEval
-
+from ibvpy.core.tstepper_eval import \
+    TStepperEval
+from ibvpy.dots.dots_eval import \
+    DOTSEval
+from ibvpy.mats.mats_eval import \
+    IMATSEval
+import numpy as np
 from tvtk.tvtk_classes import tvtk_helper
 
-import types
 
 #-------------------------------------------------------------------
 # Numpy extension
 #-------------------------------------------------------------------
-
-
 def oriented_3d_array(arr, axis):
     '''In order to use the indices as spatial locators
     the array of gauss points is augmented with newaxes into 3D
@@ -390,11 +379,8 @@ class FETSEval(TStepperEval):
         r_pnt = sctx.r_pnt
         X_mtx = sctx.X
 
-        # TODO - efficiency in the extraction of the global coordinates. Is broadcasting
-        # a possibility - we only need to augment the matrix with zero coordinates in the
-        # in the unhandled dimensions.
-        #
-        return dot(self.get_N_geo_mtx(r_pnt)[0], X_mtx)
+        return np.einsum('', self.Nr_i_geo, X_mtx)
+        return dot(self.get_N_geo(r_pnt), X_mtx)
 
     def get_x_pnt(self, sctx):
         '''
@@ -408,7 +394,7 @@ class FETSEval(TStepperEval):
         # a possibility - we only need to augment the matrix with zero coordinates in the
         # in the unhandled dimensions.
         #
-        return dot(self.get_N_geo_mtx(r_pnt)[0], x_mtx)
+        return dot(self.get_N_geo(r_pnt), x_mtx)
 
     def map_r2X(self, r_pnt, X_mtx):
         '''
@@ -418,7 +404,7 @@ class FETSEval(TStepperEval):
         '''
         # print "mapping ",dot( self.get_N_geo_mtx(r_pnt)[0], X_mtx )," ",
         # r_pnt
-        return dot(self.get_N_geo_mtx(r_pnt)[0], X_mtx)
+        return dot(self.get_N_geo(r_pnt), X_mtx)
 
     # Number of element DOFs
     #

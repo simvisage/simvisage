@@ -4,21 +4,20 @@ Created on 14. 4. 2014
 @author: Vancikv
 '''
 
+from traits.api import Range
 from traits.api import \
     HasStrictTraits, Str, List, WeakRef, \
     Property, cached_property
-
 from traitsui.api import \
     View
-from traits.api import Range  
+
 
 class BMCSLeafNode(HasStrictTraits):
     '''Base class of all model classes that can appear in a tree view.
     '''
     node_name = Str('<unnamed>')
 
-    def draw(self, fig):
-        return
+    ui = WeakRef
 
 
 class BMCSTreeNode(HasStrictTraits):
@@ -28,18 +27,15 @@ class BMCSTreeNode(HasStrictTraits):
 
     tree_node_list = List([])
 
+    ui = WeakRef
+
     tree_view = View()
-    
+
     def append_node(self, node):
         '''Add a new subnode to the current node.
         Inform the tree view to select the new node within the view.
         '''
         self.tree_node_list.append(node)
-
-    def plot(self, fig):
-        '''Plot the content of the current node.
-        '''
-        return
 
 
 class ReinfLayoutTreeNode(BMCSTreeNode):

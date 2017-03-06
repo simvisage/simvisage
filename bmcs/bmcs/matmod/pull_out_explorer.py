@@ -27,8 +27,10 @@ else:
 
 loading_scenario = LoadingScenario()
 
-bc_list = [BCDof(var='u', dof=0, value=0.0), BCDof(
-    var='u', dof=-1, time_function=loading_scenario.time_func)]
+bc_list = [BCDof(node_name='fixed left end', var='u',
+                 dof=0, value=0.0),
+           BCDof(node_name='pull-out displacement', var='u', dof=-1,
+                 time_function=loading_scenario.time_func)]
 
 #loading_scenario = LoadingScenario()
 geometry = Geometry()

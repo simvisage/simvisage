@@ -1,28 +1,11 @@
 
 from traits.api import \
-    Array, Bool, Enum, Float, HasTraits, \
-    HasStrictTraits, \
-    Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Any, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, Property, cached_property, WeakRef, Dict
-
-from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit
-
-from traitsui.menu import \
-    NoButtons, OKButton, CancelButton, \
-    Action
-
+    Float, HasTraits, \
+    Trait, WeakRef, Dict
 from traits.api import \
     implements
 
-from numpy import zeros, float_
-
 from i_tstepper_eval import ITStepperEval
-
-from rtrace_eval import RTraceEval
 
 
 class TStepperEval(HasTraits):

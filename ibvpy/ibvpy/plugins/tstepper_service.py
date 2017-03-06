@@ -1,5 +1,14 @@
 
 
+from ibvpy.core.tstepper import TStepper
+from ibvpy.mesh.fe_grid import FEGrid
+from ibvpy.mesh.fe_ls_domain import FELSDomain
+from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
+from ibvpy.mesh.xfe_subdomain import XFESubDomain
+from ibvpy.plugins.mayavi_engine import get_engine
+from mathkit.matrix_la.dense_mtx import DenseMtx
+from mathkit.matrix_la.sys_mtx_array import SysMtxArray
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from mayavi.filters.api import PolyDataNormals
 from mayavi.filters.api import WarpScalar
 from mayavi.modules.api import Surface
@@ -12,19 +21,9 @@ from traitsui.api \
     TreeEditor, TreeNode, Handler
 from traitsui.menu \
     import Menu, Action, Separator
-from traitsui.wx.tree_editor \
+from traitsui.qt4.tree_editor \
     import NewAction
 from tvtk.api import tvtk
-
-from ibvpy.core.tstepper import TStepper
-from ibvpy.mesh.fe_grid import FEGrid
-from ibvpy.mesh.fe_ls_domain import FELSDomain
-from ibvpy.mesh.fe_refinement_grid import FERefinementGrid
-from ibvpy.mesh.xfe_subdomain import XFESubDomain
-from ibvpy.plugins.mayavi_engine import get_engine
-from mathkit.matrix_la.dense_mtx import DenseMtx
-from mathkit.matrix_la.sys_mtx_array import SysMtxArray
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 
 
 draw_action = Action(
