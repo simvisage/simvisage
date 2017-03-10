@@ -3,19 +3,22 @@ from traits.api import \
     HasTraits, Int, Array, Property, cached_property, List, Trait, Dict, \
     Any, Bool, Float
 from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \
-                hstack, meshgrid, vstack, dot, newaxis, c_, r_, copy, where, \
-                ones, append, unique, compress, array_equal, allclose
+    hstack, meshgrid, vstack, dot, newaxis, c_, r_, copy, where, \
+    ones, append, unique, compress, array_equal, allclose
 from types import ListType
 from coo_mtx import COOSparseMtx
 from dense_mtx import DenseMtx
 from sys_mtx_array import SysMtxArray
 from math import fabs
 
+
 class Constraint(HasTraits):
 
     u_a = Property(Float)
+
     def _set_u_a(self, value):
         self._u_a = value * self._freeze_coeff
+
     def _get_u_a(self):
         return self._u_a
 
@@ -23,6 +26,7 @@ class Constraint(HasTraits):
     # applied for overruled constraints
     #
     _freeze_coeff = 1.0
+
     def freeze(self):
         self._freeze_coeff = 0.0
 
@@ -34,7 +38,9 @@ class Constraint(HasTraits):
         return 'a = %d, u_a = %g, alpha = %s, ix_a = %s' % \
             (self.a, self.u_a, str(self.alpha), str(self.ix_a))
 
+
 class SysMtxAssembly(HasTraits):
+
     '''Class intermediating between the time stepper and the linear algebra solver.
 
     Handling of constraints.
@@ -97,12 +103,13 @@ class SysMtxAssembly(HasTraits):
     # matrix type to be used when solving the system
     #
     matrix_type = Trait('coord',
-                         {'dense' : DenseMtx,
-                          'coord' : COOSparseMtx })
+                        {'dense': DenseMtx,
+                         'coord': COOSparseMtx})
 
     # number of degrees of freedom
     #
     n_dofs = Property(Int)
+
     def _get_n_dofs(self):
         n_dofs = 0
         # must iterate over all arrays to get the maximum number of DOFs
@@ -116,7 +123,7 @@ class SysMtxAssembly(HasTraits):
         '''Add an array of matrices with the dof map
         '''
         sys_mtx_arr = SysMtxArray(dof_map_arr=dof_map_arr,
-                                   mtx_arr=mtx_arr)
+                                  mtx_arr=mtx_arr)
         self.sys_mtx_arrays.append(sys_mtx_arr)
 
     def add_mtx(self, mtx, dof_map=None):
@@ -126,8 +133,8 @@ class SysMtxAssembly(HasTraits):
             dof_map = arange(mtx.shape[0])
 
         sys_mtx_array = SysMtxArray(dof_map_arr=dof_map[None, ...],
-                                     mtx_arr=mtx[None, ...]
-                                     )
+                                    mtx_arr=mtx[None, ...]
+                                    )
         self.sys_mtx_arrays.append(sys_mtx_array)
         return sys_mtx_array
 
@@ -138,8 +145,8 @@ class SysMtxAssembly(HasTraits):
             dof_map = arange(mtx.shape[0])
 
         link_mtx = SysMtxArray(dof_map_arr=dof_map[None, ...],
-                                     mtx_arr=mtx[None, ...]
-                                     )
+                               mtx_arr=mtx[None, ...]
+                               )
         self.link_matrices.append(link_mtx)
 
     debug = Bool(False)
@@ -160,13 +167,13 @@ class SysMtxAssembly(HasTraits):
                 print 'new constraint: a:', a, 'u_a', u_a, 'alpha', alpha, 'ix_a', ix_a
 
         else:
-            # duplicate specification, if it is identical with the 
+            # duplicate specification, if it is identical with the
             # previous one simply ignore it, otherwise throw and exception.
             #
             # Handle the "corner" and "edge" constraints. The rule is, the
             # zero-constraint overrules the non-zero or a link constraint.
             if constraint.u_a == 0 and constraint.alpha.shape[0] == 0 and \
-                constraint.ix_a.shape[0] == 0 :
+                    constraint.ix_a.shape[0] == 0:
                 # ignore the non-zero constraint
                 # the zero-constraint prevails
                 #
@@ -183,16 +190,18 @@ class SysMtxAssembly(HasTraits):
                 if self.debug:
                     print 'frozen constraint:', constraint
             elif  not constraint.u_a == u_a or \
-                not allclose(constraint.alpha, alpha, rtol=1e-4) or \
-                not array_equal(constraint.ix_a, ix_a):
+                    not allclose(constraint.alpha, alpha, rtol=1e-4) or \
+                    not array_equal(constraint.ix_a, ix_a):
                 raise ValueError, \
-                'contradicting constraint definition:\n' \
-                'a = %d, u = %f, alpha = %s, ix_a = %s\n' \
-                'previous constraint:\n%s' % (a, u_a, alpha, ix_a, constraint)
+                    'contradicting constraint definition:\n' \
+                    'a = %d, u = %f, alpha = %s, ix_a = %s\n' \
+                    'previous constraint:\n%s' % (
+                        a, u_a, alpha, ix_a, constraint)
 
         return constraint
 
     sorted_constraints = Property(depends_on='constraints[]')
+
     @cached_property
     def _get_sorted_constraints(self):
 
@@ -230,6 +239,7 @@ class SysMtxAssembly(HasTraits):
         return sorted_c, swapped_values
 
     cached_addresses = Property(depends_on='constraints[]')
+
     @cached_property
     def _get_cached_addresses(self):
         cached_addresses = []
@@ -279,13 +289,13 @@ class SysMtxAssembly(HasTraits):
     def apply_constraints(self, rhs):
         # apply the constraints
         for constraint, ix_maps in zip(self.sorted_constraints,
-                                          self.cached_addresses):
+                                       self.cached_addresses):
             if self.debug:
                 print 'applying constraint', constraint
 
             self._apply_constraint(rhs, constraint, ix_maps)
 
-        self._rhs = rhs # rhs that should be used for solving the system
+        self._rhs = rhs  # rhs that should be used for solving the system
 
     def get_sys_mtx_arrays(self):
         '''Return the complete list of matrix arrays including constraints.
@@ -298,6 +308,7 @@ class SysMtxAssembly(HasTraits):
         return str(DenseMtx(assemb=self))
 
     mtx = Property
+
     def _get_mtx(self):
         return DenseMtx(assemb=self).mtx
 
@@ -334,7 +345,7 @@ class SysMtxAssembly(HasTraits):
 #            alpha2 = zeros( ix_layout.shape[0], dtype = float )
 #            alpha2[ix_K.shape[0]:] = alpha
 
-        ix_mask = ix_orig_layout != a # deactivate the constrained dof
+        ix_mask = ix_orig_layout != a  # deactivate the constrained dof
 
         prev_same_i_list = []
         alpha_same_i_list = []
@@ -342,15 +353,15 @@ class SysMtxAssembly(HasTraits):
             prev_same_i = where(ix_K == ix)[0][0]
             prev_same_i_list.append(prev_same_i)
             if prev_same_i < i:
-#                    K_n_a2[prev_same_i] += K_n_a2[i]
-                ix_mask[i] = False # deactivate the added value
+                #                    K_n_a2[prev_same_i] += K_n_a2[i]
+                ix_mask[i] = False  # deactivate the added value
 
             if ix in ix_a:
                 alpha_same_i = where(ix_a == ix)[0][0]
                 alpha_same_i_list.append(alpha_same_i)
                 alpha_same_i += ix_K.shape[0]
 #                    alpha2[i] = alpha2[ alpha_same_i ]
-                ix_mask[ alpha_same_i ] = False
+                ix_mask[alpha_same_i] = False
             else:
                 alpha_same_i_list.append(0)
 
@@ -390,7 +401,7 @@ class SysMtxAssembly(HasTraits):
 
         # fill the link matrix itself
         #
-        #### @todo: split - 
+        # @todo: split -
         link_mtx = zeros((link_mtx_sz, link_mtx_sz), dtype=float)
 #        link_mtx[0,0] = - K_a_a
 #        link_mtx[0,1:] = K_a_a * alpha.transpose()
@@ -398,13 +409,13 @@ class SysMtxAssembly(HasTraits):
 #        K_n_a_alpha = dot( K_n_a[:,None], alpha[None,:] )
 #        link_mtx[1:,1:] = K_n_a_alpha + K_n_a_alpha.transpose()
 
-        #### Add the link matrix
+        # Add the link matrix
         #
         self.add_link_mtx(mtx=link_mtx, dof_map=link_dof_map)
 
         return (alpha, ix_a, dof_ix_array, link_dof_map,
-                 ix_orig_layout, ix_layout, ix_mask, link_mtx,
-                 array(prev_same_i_list, dtype='int_'), array(alpha_same_i_list, dtype='int_'))
+                ix_orig_layout, ix_layout, ix_mask, link_mtx,
+                array(prev_same_i_list, dtype='int_'), array(alpha_same_i_list, dtype='int_'))
 
     def _apply_constraint(self, rhs, constraint, ix_map):
         '''
@@ -430,7 +441,7 @@ class SysMtxAssembly(HasTraits):
             P_a = rhs[a]
             rhs[a] = 0
 
-            self._add_col_to_vector(dof_ix_array, rhs, factor= -u_a)
+            self._add_col_to_vector(dof_ix_array, rhs, factor=-u_a)
 
             K_a_a = self._get_diag_elem(dof_ix_array)
 
@@ -456,7 +467,7 @@ class SysMtxAssembly(HasTraits):
             alpha2 = zeros(ix_orig_layout.shape[0], dtype=float)
             alpha2[ix_K.shape[0]:] = alpha
 
-            #ix_mask = ix_layout != a # deactivate the constrained dof
+            # ix_mask = ix_layout != a # deactivate the constrained dof
 
             for i, ix in enumerate(ix_K):
                 #prev_same_i = where( ix_K == ix )[0][0]
@@ -468,7 +479,7 @@ class SysMtxAssembly(HasTraits):
                     #alpha_same_i = where( ix_a == ix )[0][0]
                     alpha_same_i = alpha_same_i_array[i]
                     alpha_same_i += ix_K.shape[0]
-                    alpha2[i] = alpha2[ alpha_same_i ]
+                    alpha2[i] = alpha2[alpha_same_i]
 
             K_n_a = compress(ix_mask, K_n_a2)
             alpha = compress(ix_mask, alpha2)
@@ -484,7 +495,7 @@ class SysMtxAssembly(HasTraits):
             P_a = rhs[a]
             rhs[a] = 0
 
-            self._add_col_to_vector(dof_ix_array, rhs, factor= -u_a)
+            self._add_col_to_vector(dof_ix_array, rhs, factor=-u_a)
 
             K_a_a = self._get_diag_elem(dof_ix_array)
 
@@ -503,7 +514,7 @@ class SysMtxAssembly(HasTraits):
 
             # Redistribute the load applied to the constrained dof
             #
-            rhs[ ix_layout ] += alpha.transpose() * P_a
+            rhs[ix_layout] += alpha.transpose() * P_a
 
             # fill the link matrix itself
             #
@@ -514,11 +525,11 @@ class SysMtxAssembly(HasTraits):
             K_n_a_alpha = dot(K_n_a[:, None], alpha[None, :])
             link_mtx[1:, 1:] = K_n_a_alpha + K_n_a_alpha.transpose()
 
-            #### Add the link matrix
+            # Add the link matrix
             #
             # This has been moved to the cached part _get_ix_maps
             # - the link matrices are only modified in-place.
-            # 
+            #
             #self.add_mtx( mtx = link_mtx, dof_map = link_dof_map )
 
         return
@@ -528,7 +539,7 @@ class SysMtxAssembly(HasTraits):
         related to the dof
         '''
         return [mtx_array.get_dof_ix_array(dof)
-                for mtx_array in self.get_sys_mtx_arrays() ]
+                for mtx_array in self.get_sys_mtx_arrays()]
 
     def _zero_rc(self, dof_ix_arrays):
         for mtx_array, dof_ix_array in zip(self.get_sys_mtx_arrays(), dof_ix_arrays):

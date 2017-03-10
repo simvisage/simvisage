@@ -31,6 +31,7 @@ class MATS3DEval(MATSEval):
     def _get_explorer_config(self):
         '''Get the specific configuration of this material model in the explorer
         '''
+
         c = super(MATS3DEval, self)._get_explorer_config()
 
         from ibvpy.api import TLine
