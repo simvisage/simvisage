@@ -72,6 +72,13 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 31000.,
                                            nu=0.2
                                            ),
+                'C3-HF2-165-4' : ConcreteMixture(
+                                           E_m28=44600.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time=lambda t: 44600.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
                 'barrelshell' : ConcreteMixture(
 #                                           E_m28 = 22721., #
                                            E_m28=19800.,  # based on cylinder tests
@@ -129,7 +136,12 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
                                            nu=0.2  # @todo: approximation only
                                            ),
-                                           }
+                'Hilo_Test_271216/2' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                                           }                                   
             )
 
 if __name__ == '__main__':

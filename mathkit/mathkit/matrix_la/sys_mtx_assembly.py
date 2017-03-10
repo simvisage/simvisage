@@ -1,4 +1,10 @@
 
+from math import fabs
+from types import ListType
+
+from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \
+    hstack, meshgrid, vstack, dot, newaxis, c_, r_, copy, where, \
+    ones, append, unique, compress, array_equal, allclose
 from traits.api import \
     HasTraits, Int, Array, Property, cached_property, List, Trait, Dict, \
     Any, Bool, Float
@@ -9,7 +15,6 @@ from types import ListType
 from coo_mtx import COOSparseMtx
 from dense_mtx import DenseMtx
 from sys_mtx_array import SysMtxArray
-from math import fabs
 
 
 class Constraint(HasTraits):
@@ -256,10 +261,10 @@ class SysMtxAssembly(HasTraits):
         if self.debug:
             print 'SysMtxAssembly:', id(self)
 
-        if rhs == None and self._rhs == None:
+        if rhs is None and self._rhs is None:
             raise ValueError, 'No right hand side available'
 
-        if rhs != None:
+        if not rhs is None:
             self.apply_constraints(rhs)
 
         if matrix_type:

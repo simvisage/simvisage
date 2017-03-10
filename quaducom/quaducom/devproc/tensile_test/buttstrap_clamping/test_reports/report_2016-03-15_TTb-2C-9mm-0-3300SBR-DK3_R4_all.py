@@ -105,7 +105,7 @@ def plot_all():
 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, do + '.png')
+        filename = os.path.join(test_series_dir, do + '.eps')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 

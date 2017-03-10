@@ -77,7 +77,6 @@ if __name__ == '__main__':
                      ),
                  # LC6:
                  # w_asym:
-                 #
                  LC(name='w_asym', category='imposed-load', file_name='LC6.csv',
                      exclusive_to=['w_pos', 'w_neg', 'w_int', 'WF'],
                      psi_0=0.6, psi_1=0.2, psi_2=0.0
