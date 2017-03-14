@@ -98,7 +98,7 @@ class TLine(HasTraits):
                        )
 
 
-class CompTimer(object):
+class CompTimer(HasTraits):
 
     def __init__(self, name):
         self.name = name
@@ -244,6 +244,14 @@ class TLoop(IBVResource):
 
     sync_resp_tracing = Bool(False)
     _updated = Int(0)
+    eval_timer = Instance(CompTimer)
+    iter_timer = Instance(CompTimer)
+    crpr_timer = Instance(CompTimer)
+    solv_timer = Instance(CompTimer)
+    rtrace_mngr_timer = Instance(CompTimer)
+
+    _updated = Int(0)
+
     eval_timer = Instance(CompTimer)
     iter_timer = Instance(CompTimer)
     crpr_timer = Instance(CompTimer)

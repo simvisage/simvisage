@@ -484,7 +484,7 @@ class MATSXDMicroplaneDamage(PolarDiscr):
         # effective element length in the direction of principle strains
         #----------------------------------------------------------------------
         if self.regularization:
-            h = self.get_regularizing_length(sctx, eps_app_eng)
+            h = self.get_regularizing_length(sctx.X_reg, eps_app_eng)
             self.phi_fn.h = h
 
         #----------------------------------------------------------------------

@@ -254,7 +254,6 @@ class RTraceArraySnapshot(RTrace):
         self.trace.ydata = self.y
 
     def clear(self):
-        # @todo:
         self.x = np.zeros((0,), dtype='float_')
         self.y = np.zeros((0,), dtype='float_')
 
