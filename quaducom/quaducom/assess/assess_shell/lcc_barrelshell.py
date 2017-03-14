@@ -53,9 +53,9 @@ if __name__ == '__main__':
     # define directory:
     #------------------------
 
-#    do = 'shell-test'
+    do = 'shell-test'
 #    do = 'predimensioning'
-    do = 'dimensioning'
+#    do = 'dimensioning'
 
     # specify weather to use strength characteristics of ZiE-test series or QS-test series
     #
@@ -106,7 +106,7 @@ if __name__ == '__main__':
                # (estimation of load-bearing capacity)
                # scale load factor in order to get evaluation within
                # relevant values (>>0)
-               gamma_unf=1000.0, gamma_fav=1.0,
+               gamma_unf=100.0, gamma_fav=1.0,
                psi_0=1.0,
                ),
         ]
@@ -477,13 +477,14 @@ if __name__ == '__main__':
         # nm-interaction plot (normal force - bending moment)
         #--------------------------------------------------------------
         #
-#        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
+        lct.plot_nm_interaction(save_fig_to_file='nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # interaction plot of material usage 'eta_nm' (utilization ratio)
         #--------------------------------------------------------------
         #
-#        lct.plot_eta_nm_interaction(save_fig_to_file='eta_nm_interaction_shell-test')
+        lct.plot_eta_nm_interaction(
+            save_fig_to_file='eta_nm_interaction_shell-test')
 
         #--------------------------------------------------------------
         # plot of structure with color indication of material usage 'eta_nm' (utilization ratio)
