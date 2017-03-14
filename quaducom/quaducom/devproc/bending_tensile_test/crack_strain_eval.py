@@ -1,7 +1,7 @@
 '''
 Created on Jul 1, 2014
 
-Script evaluating the mxn interaction between
+Script evaluating the mxn_simple_script interaction between
 tensile and bending load
 '''
 

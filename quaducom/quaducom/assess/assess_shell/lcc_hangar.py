@@ -18,8 +18,8 @@ if __name__ == '__main__':
     #
     data_dir = os.path.join(simdb.simdb_dir,
                             'simdata',
-                            'input_data_barrelshell',
-                            '2cm-feines-Netz-EC1',
+                            'input_data_hangar',
+                            'half',
                             )
 
     #------------------------
@@ -55,23 +55,23 @@ if __name__ == '__main__':
     ]
 
     #--------------------------------------------------------
-    # strength characteristics (design) values for barrelshell
-    # (specimens thickness = 2 cm; specimn width = 10 cm; 6 layers carbon)
+    # strength characteristics (design) assumed
+    # (specimens thickness = 40 cm; internal lever 35 cm,  specimen width = 100 cm; 2 layers Q140/140-CCE-38)
     #--------------------------------------------------------
     # tensile strength [kN/m]
     #
-    n_0_Rdt = n_90_Rdt = 223.  # [kN/m] # ZiE value
+    n_0_Rdt = n_90_Rdt = 9240.  # [kN/m] # 2*3300*140/100 kN
 
     # bending strength [kNm/m]
     #
-    m_0_Rd = m_90_Rd = 1.7  # [kNm/m] # ZiE value
+    m_0_Rd = m_90_Rd = 161.7  # [kNm/m] # 0.35*3300*140*/100 kNm/m
 
     # compressive strength [kN/m]
     # (design value; f_cd = 37,5 MPa)
     #
-    n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
+    n_Rdc = 15000.  # = 37,5 MPa * (100 cm * 40 cm) * 0.1
 
-    print 'design values (ZiE) used for strength characteristics'
+    print 'design values calculated by hand for strength characteristics'
 
     # LCCTable for imposed loads (without temperature)
     #
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     # nm-interaction plot (normal force - bending moment)
     #--------------------------------------------------------------
     #
-#        lct_Q.plot_nm_interaction(save_fig_to_file='nm_interaction_LC1-14')
+    lct_Q.plot_nm_interaction(save_fig_to_file='nm_interaction_hangar')
 #        lct_Q.plot_nm_interaction(add_max_min_nm_from_file='max_min_nm_arr_LC15-18', save_fig_to_file='nm_interaction_LC1-18')
 
     #--------------------------------------------------------------

@@ -4,7 +4,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+<<<<<<< HEAD
 .pydevproject
+=======
+>>>>>>> branch 'master' of https://rosoba@github.com/simvisage/simvisage.git
 
 # C extensions
 *.so

@@ -3,6 +3,8 @@
 	<name>mathkit</name>
 	<comment></comment>
 	<projects>
+		<project>spirrid</project>
+		<project>util</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

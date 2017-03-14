@@ -52,6 +52,18 @@ class FabricLayOut(SimDBClass):
         angle_rad = pi / 180. * angle_degree
         return self.E_tex_0 * cos(angle_rad) + self.E_tex_90 * sin(angle_rad)
 
+    a_roving_0 = Property(Float, depends_on='a_tex_0, s_tex_0')
+    @cached_property
+    def _get_a_roving_0(self):
+        n_rovings_in_m = 1000.0 / self.s_tex_0
+        return self.a_tex_0 / n_rovings_in_m
+        
+    a_roving_90 = Property(Float, depends_on='a_tex_90, s_tex_90')
+    @cached_property
+    def _get_a_roving_90(self):
+        n_rovings_in_m = 1000.0 / self.s_tex_90
+        return self.a_tex_90 / n_rovings_in_m
+        
     # view:
     traits_view = View(
                       Item('key'     , style='readonly'),
@@ -61,6 +73,8 @@ class FabricLayOut(SimDBClass):
                       Item('E_tex_90', style='readonly', format_str="%.0f"),
                       Item('s_tex_0' , style='readonly', format_str="%.1f"),
                       Item('s_tex_90', style='readonly', format_str="%.1f"),
+                      Item('a_roving_0' , style='readonly', format_str="%.1f"),
+                      Item('a_roving_90', style='readonly', format_str="%.1f"),
                       resizable=True,
                       scrollable=True
                       )

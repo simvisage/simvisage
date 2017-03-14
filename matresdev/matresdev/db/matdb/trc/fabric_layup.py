@@ -203,6 +203,8 @@ class FabricLayUp(SimDBClass):
         '''
         return sum(self.E_tex_arr) / self.n_layers
 
+    a_roving_0 = DelegatesTo('fabric_layout_ref')
+    a_roving_0 = DelegatesTo('fabric_layout_ref')
     #------------------------------------------------------------------
     # layup view:
     #------------------------------------------------------------------
