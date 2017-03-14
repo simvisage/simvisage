@@ -15,7 +15,7 @@ from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
 from matresdev.db.simdb import \
     SimDB
 import numpy as np
-from quaducom.devproc.format_plot import format_plot
+from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
 from sim_st import SimSTDB
 import pickle
 

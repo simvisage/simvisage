@@ -162,7 +162,7 @@ class MATSEval(HasStrictTraits, TStepperEval):
         # of eigenvectors eigvec
         #
         eps_one = eigvec[:, -1]
-
+        print X_mtx
         # Project the coordinate vectors into the determined direction
         #
         proj = dot(X_mtx, eps_one)
@@ -202,6 +202,30 @@ class MATSEval(HasStrictTraits, TStepperEval):
                                             var_x='sig_app', idx_x=0,
                                             var_y='sig_app', idx_y=1,
                                             record_on='update'),
+                                RTraceGraph(name='Stress - Strain',
+                                            var_x='F_int', idx_x=0,
+                                            var_y='U_k', idx_y=0,
+                                            record_on='update'),
+                                RTraceGraph(name='Strain - Strain',
+                                            var_x='U_k', idx_x=0,
+                                            var_y='U_k', idx_y=1,
+                                            record_on='update'),
+                                RTraceGraph(name='Stress - Stress',
+                                            var_x='F_int', idx_x=0,
+                                            var_y='F_int', idx_y=1,
+                                            record_on='update'),
+                                RTraceGraph(name='sig1 - eps1',
+                                            var_x='F_int', idx_x=0,
+                                            var_y='U_k', idx_y=0,
+                                            record_on='update'),
+                                RTraceGraph(name='sig2 - sig3',
+                                            var_x='F_int', idx_x=1,
+                                            var_y='F_int', idx_y=2,
+                                            record_on='update'),
+                                RTraceGraph(name='eps2 - eps3',
+                                            var_x='U_k', idx_x=1,
+                                            var_y='U_k', idx_y=2,
+                                            record_on='update')
                                 ],
                 'tline': TLine(step=0.1, max=1.0)
                 }

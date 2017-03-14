@@ -58,7 +58,7 @@ import numpy as np
 import pylab as p
 
 # Interpolation
-from simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
+from matresdev.simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
 
 from hp_shell import HPShell
 

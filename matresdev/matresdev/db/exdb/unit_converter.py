@@ -3,14 +3,14 @@ Created on Apr 22, 2010
 
 @author: alexander
 '''
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo, Regex
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
@@ -47,7 +47,7 @@ from etsproxy.traits.ui.table_filter \
 from etsproxy.traits.ui.file_dialog  \
     import open_file, FileInfo, TextInfo, ImageInfo
 
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import View,TabularEditor
     
 from etsproxy.traits.ui.tabular_adapter \

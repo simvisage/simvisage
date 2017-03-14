@@ -3,7 +3,6 @@
 	<name>stats</name>
 	<comment></comment>
 	<projects>
-		<project>etsproxy</project>
 		<project>mathkit</project>
 		<project>util</project>
 	</projects>

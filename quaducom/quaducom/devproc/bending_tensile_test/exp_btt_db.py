@@ -23,30 +23,23 @@
 #
 #
 
-from etsproxy.traits.api import \
+from traits.api import \
     Int, Float, \
     on_trait_change, Instance, \
     Array, Property, cached_property, \
     Bool, Event, implements, \
     DelegatesTo, Str
-
-import numpy as np
-
-from etsproxy.traits.ui.api \
+from traitsui.api \
     import View, Item, HSplit, Group, VSplit
-
+from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
+from matresdev.db.exdb.ex_run_table import ExRunClassExt
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
-
-from aramis_cdt import AramisInfo, AramisFieldData, AramisCDT
-
-from matresdev.db.matdb.trc.fabric_layup \
-    import FabricLayUp
-
 from matresdev.db.matdb.trc.composite_cross_section \
     import CompositeCrossSection, plain_concrete
-
-from matresdev.db.exdb.ex_run_table import ExRunClassExt
+from matresdev.db.matdb.trc.fabric_layup \
+    import FabricLayUp
+import numpy as np
 
 
 class ExpBTTDB(ExType):

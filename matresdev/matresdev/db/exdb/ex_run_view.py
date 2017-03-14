@@ -12,39 +12,29 @@
 #
 # Created on Jan 19, 2010 by: rch
 
-from etsproxy.traits.api import \
-    Instance, File, List, on_trait_change, Bool, \
-    Event, Enum
-
-from etsproxy.traits.ui.api import \
-    View, Item, ModelView, HSplit, VSplit, \
-    Group, FileEditor
-
-from traitsui.menu import \
-    Action, HelpAction, Menu, \
-    MenuBar, ToolBar
-
-from traitsui.key_bindings import \
-    KeyBinding, KeyBindings
-
-from pyface.api import \
-    ImageResource, confirm, YES
-
-from util.traits.editors.mpl_figure_editor import \
-    MPLFigureEditor
+import os
 
 from matplotlib.figure import \
     Figure
+from pyface.api import \
+    ImageResource, confirm, YES
+from traits.api import \
+    Instance, File, List, on_trait_change, Bool, \
+    Event, Enum
+from traitsui.api import \
+    View, Item, ModelView, HSplit, VSplit, \
+    Group, FileEditor
+from traitsui.key_bindings import \
+    KeyBinding, KeyBindings
+from traitsui.menu import \
+    Action, HelpAction, Menu, \
+    MenuBar, ToolBar
+from util.traits.editors.mpl_figure_editor import \
+    MPLFigureEditor
 
 from ex_run import \
     ExRun
-
-import os
-
-# Access to the toplevel directory of the database
-#
-from matresdev.db.simdb import SimDB
-simdb = SimDB()
+from matresdev.db.simdb.simdb import simdb
 
 
 class ExRunView(ModelView):
@@ -300,41 +290,42 @@ class ExRunView(ModelView):
 
     def default_traits_view(self):
 
-        return View(HSplit(
-            VSplit(
-                Item('data_file@', editor=FileEditor(filter_name='filter'),
-                     show_label=False),
-                Group(
-                    Item('figure', editor=MPLFigureEditor(),
-                         resizable=True, show_label=False),
-                    id='simexdb.plot_sheet',
-                    label='plot sheet',
+        return View(
+            HSplit(
+                VSplit(
+                    Item('data_file@', editor=FileEditor(filter_name='filter'),
+                         show_label=False),
+                    Group(
+                        Item('figure', editor=MPLFigureEditor(),
+                             resizable=True, show_label=False),
+                        id='simexdb.plot_sheet',
+                        label='plot sheet',
+                        dock='tab',
+                    ),
+                    Group(
+                        Item('plot_template'),
+                        columns=1,
+                        label='plot parameters',
+                        id='simexdb.plot_params',
+                        dock='tab',
+                    ),
+                    id='simexdb.plot.vsplit',
                     dock='tab',
                 ),
-                Group(
-                    Item('plot_template'),
-                    columns=1,
-                    label='plot parameters',
-                    id='simexdb.plot_params',
+                VSplit(
+                    Item('model@',
+                         id='simexdb.run.split',
+                         dock='tab',
+                         resizable=True,
+                         label='experiment run',
+                         show_label=False),
+                    id='simexdb.mode_plot_data.vsplit',
                     dock='tab',
+                    scrollable=True
                 ),
-                id='simexdb.plot.vsplit',
+                id='simexdb.hsplit',
                 dock='tab',
             ),
-            VSplit(
-                Item('model@',
-                     id='simexdb.run.split',
-                     dock='tab',
-                     resizable=True,
-                     label='experiment run',
-                     show_label=False),
-                id='simexdb.mode_plot_data.vsplit',
-                dock='tab',
-                scrollable=True
-            ),
-            id='simexdb.hsplit',
-            dock='tab',
-        ),
             key_bindings=self.key_bindings,
             menubar=self.default_menubar(),
             toolbar=self.default_toolbar(),
@@ -342,15 +333,17 @@ class ExRunView(ModelView):
             title='Simvisage: experiment database browser',
             id='simexdb',
             dock='tab',
-            buttons=['Ok'],  # , 'Cancel' ],
+            buttons=['Ok'],
             height=1.0,
-            width=1.0)
+            width=1.0
+        )
 
 if __name__ == '__main__':
 
     #    ex_path = os.path.join( simdb.exdata_dir, 'bending_tests', 'ZiE_2011-06-08_BT-12c-6cm-0-TU', 'BT-12c-6cm-0-Tu-V4.raw' )
 
-    ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2011-06-10_TT-12c-6cm-90-TU_ZiE',
+    ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
+                           'dog_bone', '2011-06-10_TT-12c-6cm-90-TU_ZiE',
                            'TT-12c-6cm-90-TU-V1.DAT')
 
 #    ex_path = os.path.join( simdb.exdata_dir, 'plate_tests', 'PT-6a-ibac',

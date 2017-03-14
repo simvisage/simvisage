@@ -65,7 +65,7 @@ import os
 
 class ExpTTDB(ExType):
 
-    '''Experiment: Tensile Test with dog bond shape
+    '''Experiment: Tensile Test with dog bone shape
     '''
 #    label = Str('dog bone tensile test')
 
@@ -88,15 +88,17 @@ class ExpTTDB(ExType):
     # specify inputs:
     # -------------------------------------------------------------------------
 
-    width = Float(0.120, unit='m', input=True, table_field=True,
+    width = Float(0.12, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    gauge_length = Float(0.40, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.20, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     age = Int(28, unit='d', input=True, table_field=True,
 
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''
+    n_rovings = Float(0, unit='-', input=True, table_field=True,
+                  auto_set=False, enter_set=True)
 
     loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
                          auto_set=False, enter_set=True)
@@ -117,6 +119,7 @@ class ExpTTDB(ExType):
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
+#        fabric_layout_key = 'Q142/142-CCE-25'
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
 #        fabric_layout_key2 = 'C-Grid-C50'
@@ -126,8 +129,8 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-04-11'
 #        fabric_layout_key = '2D-05-11'
 #        fabric_layout_key = 'NWM3-016-09-b1'
-        fabric_layout_key = 'CAR-3300-EP_Q90'
-#         fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+#         fabric_layout_key = 'CAR-3300-EP_Q90'
+        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
@@ -135,11 +138,12 @@ class ExpTTDB(ExType):
 #        concrete_mixture_key = 'sto-100'
 #        concrete_mixture_key = 'FIL-10-09'
         concrete_mixture_key = 'Pagel_TF10'
+#        concrete_mixture_key = 'HPC_TU_WIEN'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 1
-        thickness = 0.03
+        n_layers = 2
+        thickness = 0.009
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -402,6 +406,15 @@ class ExpTTDB(ExType):
             # average strains
             #
             eps_m = (eps_V + eps_H) / 2.
+
+#         if hasattr(self, "WA1_vorne"):
+#             print 'hasattr(self, "WA1_vorne")'
+#         if hasattr(self, "WA1_hinten"):
+#             print 'hasattr(self, "WA1_hinten")'
+#         if hasattr(self, "WA2_links"):
+#             print 'hasattr(self, "WA2_links")'
+#         if hasattr(self, "WA3_rechts"):
+#             print 'hasattr(self, "WA3_rechts")'
 
         if (hasattr(self, "WA1_vorne") or hasattr(self, "WA1_hinten")) and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
             WA2_links = np.copy(self.WA2_links)
@@ -771,8 +784,10 @@ class ExpTTDB(ExType):
     # plot templates
     # -------------------------------------------------------------------------
 
-    plot_templates = {'force / gauge displacement': '_plot_force_displacement',
+    plot_templates = {'force / machine displacement': '_plot_force_displacement_machine',
+                      'force / gauge displacement': '_plot_force_displacement',
                       'force / gauge displacement (ascending)': '_plot_force_displacement_asc',
+                      'force / gauge displacement (ascending average)': '_plot_force_displacement_asc_av',
                       'composite stress / strain': '_plot_sigc_eps',
                       'ironed composite stress / strain': '_plot_sigc_eps_ironed',
                       'interpolated composite stress / strain': '_plot_sigc_eps_interpolated',
@@ -785,6 +800,14 @@ class ExpTTDB(ExType):
                       }
 
     default_plot_template = 'force / gauge displacement'
+
+    def _plot_force_displacement_machine(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram
+        '''
+        if hasattr(self, "Weg") and hasattr(self, "Kraft"):
+            axes.plot(-self.Weg, self.Kraft, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.set_xlabel('displacement [mm]')
+            axes.set_ylabel('force [kN]')
 
     def _plot_force_displacement(self, axes):
         '''plot force-displacement diagram
@@ -805,13 +828,13 @@ class ExpTTDB(ExType):
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
-            axes.plot(self.WA1_vorne, self.Kraft)
-            axes.plot(self.WA2_links, self.Kraft)
-            axes.plot(self.WA3_rechts, self.Kraft)
+            axes.plot(self.WA1_vorne, self.Kraft, color='b')
+            axes.plot(self.WA2_links, self.Kraft, color='r')
+            axes.plot(self.WA3_rechts, self.Kraft, color='g')
         if hasattr(self, "WA1_hinten") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
-            axes.plot(self.WA1_hinten, self.Kraft)
-            axes.plot(self.WA2_links, self.Kraft)
-            axes.plot(self.WA3_rechts, self.Kraft)
+            axes.plot(self.WA1_hinten, self.Kraft, color='b')
+            axes.plot(self.WA2_links, self.Kraft, color='r')
+            axes.plot(self.WA3_rechts, self.Kraft, color='g')
 
     def _plot_force_displacement_asc(self, axes, color='black', linewidth=1., linestyle='-', label=None):
         '''plot force-displacement diagram (only the ascending branch)
@@ -839,6 +862,17 @@ class ExpTTDB(ExType):
             axes.plot(self.WA1_hinten[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+
+    def _plot_force_displacement_asc_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram (only the ascending branch, averaged between left, rigth, front and back)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+            w_hi = (self.W10_re + self.W10_li / 2 )
+            w_av = (w_hi + self.W10_vo) / 2
+            axes.plot(w_av[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_sigc_eps(self, axes, color='black', linewidth=1., linestyle='-'):
         '''plot composite stress-strain diagram
@@ -1027,7 +1061,7 @@ class ExpTTDB(ExType):
 
     # scaleable plotting methods
     #
-    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
+    def _plot_tex_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=False):
         '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
         '''
         #---------------
@@ -1035,12 +1069,14 @@ class ExpTTDB(ExType):
         #---------------
         K_I = self.E_c / self.rho_c * k_rho
         print 'K_I = E_c (simdb)', self.E_c
+        print 'rho_c (simdb)= ', self.rho_c
         rho_new = self.rho_c / k_rho
+        print 'rho_c (n_rov)= ', rho_new
         K_I = self.E_c / rho_new
-        print 'K_I = E_c (new)', K_I
+        print 'K_I = E_c (new) =', K_I
         E_tex = self.ccs.E_tex
         K_IIb = E_tex
-        print 'K_IIb = E_tex ', K_IIb
+        print 'K_IIb = E_tex =', K_IIb
         #---------------
         if plot_analytical_stiffness == True:
             plot_analytical_stiffness_I = True
@@ -1078,6 +1114,64 @@ class ExpTTDB(ExType):
 
         axes.plot(eps_asc_scaled, sig_tex_interpolated, color=color,
                   linewidth=linewidth, linestyle=linestyle, label=label)
+
+    # scaleable plotting methods
+    #
+    def _plot_tex_stress_strain(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=False):
+        '''plot the textile stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
+        '''
+        #---------------
+        # plot stiffness KI and KII if option is set to True
+        #---------------
+        K_I = self.E_c / self.rho_c * k_rho
+        print 'K_I = E_c (simdb)', self.E_c
+        print 'self.rho_c', self.rho_c
+        rho_new = self.rho_c / k_rho
+        print 'rho_new', rho_new
+        K_I = self.E_c / rho_new
+        print 'K_I = E_c (new)', K_I
+        E_tex = self.ccs.E_tex
+        K_IIb = E_tex
+        print 'K_IIb = E_tex ', K_IIb
+        #---------------
+        if plot_analytical_stiffness == True:
+            plot_analytical_stiffness_I = True
+            plot_analytical_stiffness_II = True
+        #---------------
+        if plot_analytical_stiffness_I == True:
+            print 'plot analytical stiffness (K_I)'
+            # plot the stiffness of the composite (K_I) - uncracked state)
+            eps_lin = array(
+                [0, self.sig_tex_max / K_I], dtype='float_') * xscale
+            sig_lin = array([0, self.sig_tex_max], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        if plot_analytical_stiffness_II == True:
+            print 'plot analytical stiffness (K_IIb)'
+            # plot the stiffness of the garn (K_IIb - cracked state)
+            eps_lin = array([0, self.eps_max], dtype='float_') * xscale
+            sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
+            axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
+        #---------------
+        # plot stress-strain curves
+        #---------------
+        if interpolated == True:
+            # use ironed date (without initial offset)
+            # scale by scale-factor scale_factor = 1000. for setting strain
+            # unite to "permile"
+            eps_asc_scaled = self.eps_c_interpolated * xscale
+            sig_tex_interpolated = k_rho * self.sig_c_interpolated / self.rho_c
+        else:
+            # use ironed date (still contains initial offset)
+            # scale by scale-factor scale_factor = 1000. for setting strain
+            # unite to "permile"
+            eps_scaled = self.eps * xscale
+            sig_tex_interpolated = k_rho * self.sig_c / self.rho_c
+
+        axes.plot(eps_scaled, sig_tex_interpolated, color=color,
+                  linewidth=linewidth, linestyle=linestyle, label=label)
+
+
 
     def _plot_comp_stress_strain_asc(self, axes, color='blue', linewidth=1.0, linestyle='-', label=None, f=None, xscale=1., k_rho=1.0, plot_analytical_stiffness_I=True, plot_analytical_stiffness_II=True, plot_analytical_stiffness=False, interpolated=True):
         '''plot the composite stress-strain curve; plot styles are configurable; analytical stiffness values are displayed if desired;
@@ -1162,6 +1256,7 @@ class ExpTTDB(ExType):
         HSplit(Group(
             Item('width', format_str="%.3f"),
             Item('gauge_length', format_str="%.3f"),
+            Item('n_rovings', format_str="%.0f"),
             springy=True,
             label='geometry',
             id='matresdev.db.exdb.ex_composite_tensile_test.geometry',

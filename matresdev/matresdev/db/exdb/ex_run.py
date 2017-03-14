@@ -64,38 +64,30 @@
 #   the ExpTools and SimTools.
 #
 
-from etsproxy.traits.api import \
+import os
+from os.path import join
+import pickle
+from traits.api import \
     HasTraits, \
     on_trait_change, File, Instance, Trait, \
     Property, cached_property, \
     Bool, Event, implements
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, \
     FileEditor
-
 from traitsui.menu import \
     OKButton, CancelButton
 
-import os
-from util.find_class import _find_class
-
-import pickle
 import apptools.persistence.state_pickler as spickle
-
-from i_ex_run import \
-    IExRun
 from ex_type import \
     ExType
+from i_ex_run import \
+    IExRun
 from i_ex_type import \
     IExType
+from matresdev.db.simdb import simdb
+from util.find_class import _find_class
 
-from os.path import join
-
-from matresdev.db.simdb import \
-    SimDB
-
-simdb = SimDB()
 
 data_file_editor = FileEditor(filter=['*.DAT'])
 
@@ -205,6 +197,8 @@ class ExRun(HasTraits):
             ex_type_klass = f.read().split('\n')[0]  # use trim here
             f.close()
             theClass = _find_class(ex_type_klass)
+            if theClass is None:
+                raise TypeError, 'class %s not found for file %s' % (ex_type_klass, self.ex_type_file_name)
             self.ex_type = theClass(data_file=self.data_file)
             self.unsaved = True
             read_ok = True

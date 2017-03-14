@@ -20,6 +20,7 @@ from util.traits.either_type import \
 
 
 class FEUnitElem(FEDomain):
+
     '''Unit volume for non-local or regularized material models.
     '''
     mats_eval = IMATSEval
@@ -36,6 +37,7 @@ class FEUnitElem(FEDomain):
         return sctx
 
 class MATSExplore(IBVModel):
+
     '''
     Simulate the loading histories of a material point in 2D space.
     '''
@@ -57,7 +59,7 @@ class MATSExplore(IBVModel):
 
     n_iterations = Float(10, enter_set=True, auto_set=False)
 
-    n_restarts = Float(0, enter_set=True, auto_set=False)
+    n_restarts = Float(5, enter_set=True, auto_set=False)
 
     def _dim_default(self):
         return MATS2DExplore(explorer=self)
@@ -79,7 +81,7 @@ class MATSExplore(IBVModel):
 
         tloop = TLoop(tstepper=self.ts,
                       KMAX=100, RESETMAX=self.n_restarts,
-                      tolerance=1e-8,
+                      tolerance=1e-7,
                       tline=TLine(min=0.0, step=1.0 / n_steps, max=1.0))
 
         return tloop
@@ -96,12 +98,9 @@ if __name__ == '__main__':
     from ibvpy.mats.mats2D.mats2D_cmdm.mats2D_cmdm import \
         MATS2DMicroplaneDamage
 
-    from ibvpy.mats.matsXD.matsXD_cmdm.matsXD_cmdm_phi_fn import \
-        PhiFnStrainHardeningLinear
-
-    phi_fn = PhiFnStrainHardeningLinear(alpha=0.5, beta=0.7)
-    explorer = MATSExplore(dim=MATS2DExplore(mats_eval=MATS2DMicroplaneDamage(n_mp=30,
-                                                                              phi_fn=phi_fn)))
+    from ibvpy.mats.matsXD.matsXD_cmdm import \
+        PhiFnStrainHardeningLinear, PhiFnStrainSoftening, \
+        PhiFnStrainHardening
 
 #     from ibvpy.mats.mats2D5.mats2D5_cmdm.mats2D5_cmdm import \
 #         MATS2D5MicroplaneDamage
@@ -115,6 +114,15 @@ if __name__ == '__main__':
 #     phi_fn = PhiFnStrainHardeningLinear(alpha=0.5, beta=0.7)
 #     explorer = MATSExplore(
 #         dim=MATS3DExplore(mats_eval=MATS3DElastic(E=30000., nu=0.2)))
+
+#     phi_fn = PhiFnStrainHardeningLinear(alpha=0.5, beta=0.7)
+#     phi_fn = PhiFnStrainHardening(Epp=1e-4, Efp=2e-4, Dfp=0.1, Elimit=8e-2)
+    phi_fn = PhiFnStrainSoftening(Epp=1e-4, Efp=2e-4, h=1.0)
+    mats_eval = MATS2DMicroplaneDamage(nu=0.3,
+                                       n_mp=30, phi_fn=phi_fn)
+
+    explorer = MATSExplore(dim=MATS2DExplore(mats_eval=mats_eval),
+                           n_steps=10)
 
     from ibvpy.plugins.ibvpy_app import IBVPyApp
     ibvpy_app = IBVPyApp(ibv_resource=explorer)

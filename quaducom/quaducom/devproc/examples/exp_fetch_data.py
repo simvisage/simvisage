@@ -7,7 +7,8 @@ access the data.
 
 @author: rch
 '''
-
+#from traits.etsconfig.api import ETSConfig
+#ETSConfig.toolkit = 'wx'
 from matresdev.db import SimDB
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ import os
 
 simdb = SimDB()
 
-from quaducom.devproc.format_plot import format_plot
+from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
 # from matplotlib.font_manager import FontProperties
 # font = FontProperties()
 

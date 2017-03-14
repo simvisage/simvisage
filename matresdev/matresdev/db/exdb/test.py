@@ -3,12 +3,12 @@ Created on Apr 28, 2010
 
 @author: alexander
 '''
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Float, Property, cached_property, \
     Instance, File, List, on_trait_change, Int, Tuple, Bool, \
     DelegatesTo, Event, Str, Button, Dict, Array, Any, Enum, Callable
     
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
     CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler, \
     Group, CancelButton, FileEditor

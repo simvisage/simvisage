@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,36 +12,25 @@
 #
 # Created on Apr 15, 2010 by: rch
 
-from etsproxy.traits.api import \
-    HasTraits, HasStrictTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
-    Directory, List, Property, Float, cached_property, Constant
-
-from etsproxy.traits.ui.api import \
-    View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
-    CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
-
-from traitsui.menu import Action, CloseAction, HelpAction, Menu, \
-                                     MenuBar, NoButtons, Separator, ToolBar
-
-from traitsui.tabular_adapter \
-    import TabularAdapter
-
-from traitsui.table_column import \
-    ObjectColumn
-
-from traitsui.tabular_adapter \
-    import TabularAdapter, AnITabularAdapter
-
-from matresdev.db.simdb import \
-    SimDB
-
 import os
 import pickle
 import string
+from traits.api import \
+    HasTraits, HasStrictTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
+    Directory, List, Property, Float, cached_property, Constant
+from traitsui.api import \
+    View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
+    CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
+from traitsui.menu import Action, CloseAction, HelpAction, Menu, \
+    MenuBar, NoButtons, Separator, ToolBar
+from traitsui.table_column import \
+    ObjectColumn
+from traitsui.tabular_adapter \
+    import TabularAdapter
+from traitsui.tabular_adapter \
+    import TabularAdapter, AnITabularAdapter
 
-# Access to the toplevel directory of the database
-#
-simdb = SimDB()
+from matresdev.db.simdb.simdb import simdb
 
 
 class SimDBTableAdapter (TabularAdapter):
@@ -52,7 +41,7 @@ class SimDBTableAdapter (TabularAdapter):
     # EXTRACT FACTOR NAMES AS COLUMNS FOR TABLE EDITOR
     #-------------------------------------------------------------------
     def _get_columns(self):
-        cols = [ ('index', 'index') ]  # , ('key', 'dbkey') ]
+        cols = [('index', 'index')]  # , ('key', 'dbkey') ]
         obj = self.object
         for field_name in obj.field_names:
             cols.append((field_name, field_name))
@@ -67,19 +56,22 @@ class SimDBTableAdapter (TabularAdapter):
     index_width = Float(50)
 
     index_text = Property
-    def _get_index_text (self):
+
+    def _get_index_text(self):
         return str(self.row)
 
     key_width = Float(120)
     key_text = Property
+
     def _get_key_text(self):
         factor_idx = self.column - 1
-        value = self.object.instances[ self.row, factor_idx ]
+        value = self.object.instances[self.row, factor_idx]
         return str(value)
 
 simdb_table_editor = TabularEditor(adapter=SimDBTableAdapter(),
-                                    selected='selected_instance'
-                                     )
+                                   selected='selected_instance'
+                                   )
+
 
 class SimDBClass(HasTraits):
     '''Base class for instances storable as in SimDBClassExt'''
@@ -96,12 +88,15 @@ class SimDBClass(HasTraits):
         '''
         self.db.save_item(self.key, self)
 
-#------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Class Extension - global persistent container of class instances
-#------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
 class SimDBClassExt(HasStrictTraits):
 
     category = Enum('matdata', 'exdata')
+
     def _category_default(self):
         return 'matdata'
 
@@ -117,11 +112,13 @@ class SimDBClassExt(HasStrictTraits):
     verbose = Enum('none', 'io', 'del')
 
     classname = Property(depends_on='klass')
+
     @cached_property
     def _get_classname(self):
         return self.klass.__name__
 
     field_names = Property
+
     def _get_field_names(self):
         '''
         Get the dictionary of factors provided by the simulation model.
@@ -139,22 +136,25 @@ class SimDBClassExt(HasStrictTraits):
     constants = Dict({})
 
     keyed_constants = Property(List)
+
     def _get_keyed_constants(self):
         for key, c in self.constants.items():
             c.key = key
         return self.constants
 
     dirname = Str
+
     def _dirname_default(self):
         '''Name of the directory for the data of the class
         '''
         klass_dir = self.klass.__name__
         full_path = (simdb.simdb_dir, self.category) \
-                      + tuple(self.path) + (klass_dir,)
+            + tuple(self.path) + (klass_dir,)
         path = os.path.join(*full_path)
         return path
 
     dir = Directory()
+
     def _dir_default(self):
         '''Directory for the data of the class
         '''
@@ -171,6 +171,7 @@ class SimDBClassExt(HasStrictTraits):
         return self.dirname
 
     instances = Dict
+
     def _instances_default(self):
         '''Read the content of the directory
         '''
@@ -188,22 +189,24 @@ class SimDBClassExt(HasStrictTraits):
                 print '%s.db: reading %s' % (self.klass.__name__, key)
 
             try:
-                instances[ key ] = pickle.load(obj_file)
+                instances[key] = pickle.load(obj_file)
             except ImportError, e:
                 print 'file name %s' % obj_file
                 raise ImportError, e
 
             # let the object know its key
             print key
-            instances[ key ].key = key
+            instances[key].key = key
             obj_file.close()
         return instances
 
     inst_list = Property
+
     def _get_inst_list(self):
         return self.keyed_constants.values() + self.instances.values()
 
     selected_instance = Instance(SimDBClass)
+
     def _selected_instance_default(self):
         if len(self.inst_list) > 0:
             return self.inst_list[0]
@@ -234,7 +237,7 @@ class SimDBClassExt(HasStrictTraits):
         else:
             self.save_item(key, value)
             # register the object in the memory as well
-            self.instances[ key ] = value
+            self.instances[key] = value
 
     def save_item(self, key, value):
         for x in string.whitespace:
@@ -257,7 +260,8 @@ class SimDBClassExt(HasStrictTraits):
         if it == None:
             it = self.instances.get(key, None)
             if it == None:
-                raise ValueError, 'No database object with the key %s for class %s' % (key, self.classname)
+                raise ValueError, 'No database object with the key %s for class %s' % (
+                    key, self.classname)
         return it
 
     def __delitem__(self, key):
@@ -273,55 +277,54 @@ class SimDBClassExt(HasStrictTraits):
             obj_file_name = os.path.join(self.dir, key + '.pickle')
             if os.path.exists(obj_file_name):
                 os.remove(obj_file_name)
-            del self.instances[ key ]
+            del self.instances[key]
 
     def delete_instances(self):
         for key in self.instances.keys():
             self.__delitem__(key)
 
-    #---------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # VIEW
-    #---------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     traits_view = View(
-                    HSplit(
-                           VSplit(
-                                   VGroup(
-                                         HGroup(Item('classname',
-                                                     style='readonly',
-                                                     label='database extension class')
-                                                ),
-                                         Item('inst_list',
-                                               editor=simdb_table_editor,
-                                               show_label=False,
-                                               style='custom'),
-                                         label='database table',
-                                         id='simbd.table.instances',
-                                         dock='tab',
-                                         ),
-                                   id='simdb.table.left',
-                                 ),
-                           VGroup(
-                               VGroup(
-                                     Item('selected_instance@',
-                                           resizable=True,
-                                           show_label=False),
-                                     label='instance',
-                                     id='simdb.table.instance',
-                                     dock='tab',
-                                     scrollable=True,
-                                     ),
-                                id='simdb.table.right',
-                                layout='split',
-                                label='selected instance',
-                                dock='tab',
-                                ),
-                            id='simdb.table.splitter',
-                        ),
-                        id='simdb.table',
-                        dock='tab',
-                        resizable=True,
-                        buttons=['OK', 'Cancel'],
-                        height=0.8, width=0.8,
-                        )
-
+        HSplit(
+            VSplit(
+                VGroup(
+                    HGroup(Item('classname',
+                                style='readonly',
+                                label='database extension class')
+                           ),
+                    Item('inst_list',
+                         editor=simdb_table_editor,
+                         show_label=False,
+                         style='custom'),
+                    label='database table',
+                    id='simbd.table.instances',
+                    dock='tab',
+                ),
+                id='simdb.table.left',
+            ),
+            VGroup(
+                VGroup(
+                    Item('selected_instance@',
+                         resizable=True,
+                         show_label=False),
+                    label='instance',
+                    id='simdb.table.instance',
+                    dock='tab',
+                    scrollable=True,
+                ),
+                id='simdb.table.right',
+                layout='split',
+                label='selected instance',
+                dock='tab',
+            ),
+            id='simdb.table.splitter',
+        ),
+        id='simdb.table',
+        dock='tab',
+        resizable=True,
+        buttons=['OK', 'Cancel'],
+        height=0.8, width=0.8,
+    )

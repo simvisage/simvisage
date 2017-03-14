@@ -1,26 +1,15 @@
-from etsproxy.traits.api import \
-    Array, Bool, Enum, Float, HasTraits, \
-    Instance, Int, Trait, Str, Enum, \
-    Callable, List, TraitDict, Range, \
-    Delegate, Event, on_trait_change, Button, \
-    Interface, implements, Property, cached_property
+
+from traits.api import \
+    HasTraits, \
+    Instance,  \
+    List
 
 from traitsui.api import \
-    Item, View, HGroup, ListEditor, VGroup, \
-    HSplit, Group, Handler, VSplit
+    View, Item, VSplit, \
+    TableEditor, ObjectColumn
 
-from traitsui.api \
-    import View, Item, VSplit, TableEditor, ListEditor
-
-from traitsui.table_filter \
-    import TableFilter, RuleTableFilter, RuleFilterTemplate, \
-    MenuFilterTemplate, EvalFilterTemplate, EvalTableFilter
-
-from traitsui.table_column \
-    import ObjectColumn, ExpressionColumn
-
-from numpy import ix_, array, int_, dot, newaxis, float_, copy
 from i_bcond import IBCond
+
 
 # The definition of the demo TableEditor:
 bcond_list_editor = TableEditor(

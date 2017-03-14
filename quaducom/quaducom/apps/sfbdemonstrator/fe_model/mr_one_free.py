@@ -16,7 +16,7 @@
 '''
 MUSHROOF - Demostrator SFB532
 
-@todos 
+@todos
 1) geo_transform for the bottom bar [Done]
 
 '''
@@ -63,7 +63,7 @@ from scipy.interpolate import Rbf
 
 from geo_column import GEOColumn
 
-from simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
+from matresdev.simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
 
 from hp_shell import HPShell
 
@@ -71,144 +71,160 @@ from mush_roof_model import MushRoofModel
 
 from time import time
 
-class MRone_free( MushRoofModel ):
+class MRone_free(MushRoofModel):
 
-    implements( ISimModel )
+    implements(ISimModel)
     mushroof_part = 'one'
     #===============================================================================
     # fe_grid
     #===============================================================================
-    
-    n_elems_xy_quarter = Int(4, ps_levels = [3,15,5])
-    n_elems_z = Int(2, ps_levels = [1,4,2] )
-    n_elems_per_column_height = Int( 3, ps_levels = [3,6,2]   )
-    
+
+    n_elems_xy_quarter = Int(4, ps_levels=[3, 15, 5])
+    n_elems_z = Int(2, ps_levels=[1, 4, 2])
+    n_elems_per_column_height = Int(3, ps_levels=[3, 6, 2])
+
     vtk_r = Float(0.95)
-    #default column
-    fe_column = Instance( FETSEval, transient = True )
-    def _fe_column_default( self ):
+    # default column
+    fe_column = Instance(FETSEval, transient=True)
+    def _fe_column_default(self):
         fets = self.fe_quad_serendipity
         fets.vtk_r *= self.vtk_r
         return fets
-    #default roof
-    fe_roof = Instance( FETSEval, ps_levels = ['fe_linear',
+    # default roof
+    fe_roof = Instance(FETSEval, ps_levels=['fe_linear',
                                                 'fe2d5_quad_serendipity',
                                                 'fe_quad_serendipity',
-                                                'fe_quad_lagrange' ], depends_on='+vtk_r, +initial_strain' )
-    def _fe_roof_default( self ):
-        fets = self.fe_quad_serendipity
+                                                'fe_quad_lagrange' ], depends_on='+vtk_r, +initial_strain')
+    def _fe_roof_default(self):
+        fets = self.fe_quad_serendipity_roof
         fets.vtk_r *= self.vtk_r
         return fets
 
-    fe_grid_roof = Property( Instance( FEGrid ), depends_on = '+ps_levels, +input' )
+    # shell
+    #
+    hp_shell = Property(Instance(HPShell) , depends_on='+ps_levels, +input')
     @cached_property
-    def _get_fe_grid_roof( self ):
-        return FEGrid( coord_min = ( 0.0, 0.0, 0.0 ),
-                       coord_max = ( 1.0, 1.0, 1.0 ),
-                       geo_transform = self.hp_shell,
-                       shape = ( self.n_elems_xy, self.n_elems_xy, self.n_elems_z ),
-                       fets_eval = self.fe_roof )
+    def _get_hp_shell(self):
+        return HPShell(length_xy_quarter=self.length_xy_quarter,
+                        length_z=self.length_z,
+                        n_elems_xy_quarter=self.n_elems_xy_quarter,
+                        n_elems_z=self.n_elems_z,
+                        scalefactor_delta_h=self.scalefactor_delta_h,
+                        const_reinf_layer_elem=self.const_reinf_layer_elem,
+                        width_top_col=self.width_top_col,
+                        mushroof_part=self.mushroof_part,
+                        shift_array=self.shift_array,
+                        X0=self.X0)
 
-    fe_grid_column = Property( Instance( FEGrid ), depends_on = '+ps_levels, +input' )
+    fe_grid_roof = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
     @cached_property
-    def _get_fe_grid_column( self ):
-        return  FEGrid( coord_min = ( 0.0, 0.0, 0.0 ),
-                        coord_max = ( 1.0, 1.0, 1.0 ),
-                        geo_transform = self.column,
-                        shape = ( self.n_elems_col,self.n_elems_col, self.n_elems_per_column_height ),
-                        fets_eval = self.fe_column )
+    def _get_fe_grid_roof(self):
+        return FEGrid(coord_min=(0.0, 0.0, 0.0),
+                       coord_max=(1.0, 1.0, 1.0),
+                       geo_transform=self.hp_shell,
+                       shape=(self.n_elems_xy, self.n_elems_xy, self.n_elems_z),
+                       fets_eval=self.fe_roof)
+
+    fe_grid_column = Property(Instance(FEGrid), depends_on='+ps_levels, +input')
+    @cached_property
+    def _get_fe_grid_column(self):
+        return  FEGrid(coord_min=(0.0, 0.0, 0.0),
+                        coord_max=(1.0, 1.0, 1.0),
+                        geo_transform=self.column,
+                        shape=(self.n_elems_col, self.n_elems_col, self.n_elems_per_column_height),
+                        fets_eval=self.fe_column)
 
     #===============================================================================
     # ps_study
     #===============================================================================
-    def peval( self ):
+    def peval(self):
         '''
         Evaluate the model and return the array of results specified
         in the method get_sim_outputs.
         '''
         U = self.tloop.eval()
         u_x_corner1 = U[ self.edge_corner_1_dof ][0, 0, 0]
-        #u_x_corner2 = U[ self.edge_corner_2_dof ][0, 0, 0]
+        # u_x_corner2 = U[ self.edge_corner_2_dof ][0, 0, 0]
         u_z_corner1 = U[ self.edge_corner_1_dof ][0, 0, 2]
-        #u_z_corner2 = U[ self.edge_corner_2_dof ][0, 0, 2]
-        #max_princ_stress = max( self.max_princ_stress._get_field_data().flatten() )
+        # u_z_corner2 = U[ self.edge_corner_2_dof ][0, 0, 2]
+        # max_princ_stress = max( self.max_princ_stress._get_field_data().flatten() )
 
-        return array( [ u_x_corner1,
+        return array([ u_x_corner1,
                       # u_x_corner2,
-                       u_z_corner1,])
-                       #u_z_corner2,
-                       #max_princ_stress ], dtype = 'float_' )
+                       u_z_corner1, ])
+                       # u_z_corner2,
+                       # max_princ_stress ], dtype = 'float_' )
 
-    def get_sim_outputs( self ):
+    def get_sim_outputs(self):
         '''
         Specifies the results and their order returned by the model
         evaluation.
         '''
-        return [ SimOut( name = 'u_x', unit = 'm' ),
+        return [ SimOut(name='u_x', unit='m'),
                 # SimOut( name = 'u_x_corner2', unit = 'm' ),
-                 SimOut( name = 'u_z', unit = 'm' ),]
-                 #SimOut( name = 'u_z_corner2', unit = 'm' ),
-                 #SimOut( name = 'maximum principle stress', unit = 'MPa' ), ]
+                 SimOut(name='u_z', unit='m'), ]
+                 # SimOut( name = 'u_z_corner2', unit = 'm' ),
+                 # SimOut( name = 'maximum principle stress', unit = 'MPa' ), ]
 
-    link_column_list = Property( List, depends_on = '+ps_levels, +input' )
+    link_column_list = Property(List, depends_on='+ps_levels, +input')
     @cached_property
     def _get_link_column_list(self):
 
         roof = self.fe_grid_roof
         column = self.fe_grid_column
-        link_column_list =[]
-        for i in range (0,self.n_elems_col):
-            slice = [BCSlice( var = 'u'  , dims = [0, 1, 2],
-                              slice = roof[self.n_elems_xy_quarter - self.n_elems_col + i,
-                                           self.n_elems_xy_quarter +i, 0,
+        link_column_list = []
+        for i in range (0, self.n_elems_col):
+            slice = [BCSlice(var='u'  , dims=[0, 1, 2],
+                              slice=roof[self.n_elems_xy_quarter - self.n_elems_col + i,
+                                           self.n_elems_xy_quarter + i, 0,
                                            0, 0, 0 ],
-                              link_slice = column[ 0 , i, -1, 0, 0, -1], link_coeffs = [1.0],
-                              value = 0. )]
-            link_column_list = link_column_list  + slice
-        for i in range (0,self.n_elems_col):
-            slice = [BCSlice( var = 'u'  , dims = [0, 1, 2],
-                              slice = roof[self.n_elems_xy_quarter  + i +1 ,
-                                           self.n_elems_xy_quarter -self.n_elems_col +i +1 , 0,
+                              link_slice=column[ 0 , i, -1, 0, 0, -1], link_coeffs=[1.0],
+                              value=0.)]
+            link_column_list = link_column_list + slice
+        for i in range (0, self.n_elems_col):
+            slice = [BCSlice(var='u'  , dims=[0, 1, 2],
+                              slice=roof[self.n_elems_xy_quarter + i + 1 ,
+                                           self.n_elems_xy_quarter - self.n_elems_col + i + 1 , 0,
                                            0, 0, 0 ],
-                              link_slice = column[ -1 , i, -1, -1, -1, -1],
-                              link_coeffs = [1.0],
-                              value = 0. )]
-            link_column_list = link_column_list  + slice
-        
-        for i in range (0,self.n_elems_col):
-            slice = [BCSlice( var = 'u'  , dims = [0, 1, 2],
-                              slice = roof[self.n_elems_xy_quarter  + i  ,
-                                           self.n_elems_xy_quarter + self.n_elems_col -i , 0,
+                              link_slice=column[ -1 , i, -1, -1, -1, -1],
+                              link_coeffs=[1.0],
+                              value=0.)]
+            link_column_list = link_column_list + slice
+
+        for i in range (0, self.n_elems_col):
+            slice = [BCSlice(var='u'  , dims=[0, 1, 2],
+                              slice=roof[self.n_elems_xy_quarter + i  ,
+                                           self.n_elems_xy_quarter + self.n_elems_col - i , 0,
                                            0, 0, 0 ],
-                              link_slice = column[ i, -1 , -1, 0, -1, -1],
-                              link_coeffs = [1.0],
-                              value = 0. )]
-            link_column_list = link_column_list  + slice
-        
-        for i in range (0,self.n_elems_col):
-            slice = [BCSlice( var = 'u'  , dims = [0, 1, 2],
-                              slice = roof[self.n_elems_xy_quarter - self.n_elems_col + i +1 ,
-                                           self.n_elems_xy_quarter - i -1 , 0,
+                              link_slice=column[ i, -1 , -1, 0, -1, -1],
+                              link_coeffs=[1.0],
+                              value=0.)]
+            link_column_list = link_column_list + slice
+
+        for i in range (0, self.n_elems_col):
+            slice = [BCSlice(var='u'  , dims=[0, 1, 2],
+                              slice=roof[self.n_elems_xy_quarter - self.n_elems_col + i + 1 ,
+                                           self.n_elems_xy_quarter - i - 1 , 0,
                                            0, 0, 0 ],
-                              link_slice = column[ i , 0 , -1, -1, 0, -1],
-                              link_coeffs = [1.0],
-                              value = 0. )]
-            link_column_list = link_column_list  + slice
-       
+                              link_slice=column[ i , 0 , -1, -1, 0, -1],
+                              link_coeffs=[1.0],
+                              value=0.)]
+            link_column_list = link_column_list + slice
+
         return link_column_list
-    
+
     #----------------------------------------------------
     # response tracer
     #----------------------------------------------------
-        
+
     rtrace_list = List
-    def _rtrace_list_default( self ):
+    def _rtrace_list_default(self):
         return [  self.max_princ_stress, self.sig_app, self.u]
-    
-              
-    tloop = Property( depends_on = '+ps_levels, +input' )
+
+
+    tloop = Property(depends_on='+ps_levels, +input')
     @cached_property
-    def _get_tloop( self ):
+    def _get_tloop(self):
         roof = self.fe_grid_roof
         column = self.fe_grid_column
 
@@ -221,26 +237,26 @@ class MRone_free( MushRoofModel ):
         #----------------------------------------------------
 
         #--- LC1: dead load
-        # g = 22.4 kN/m^3 
-        # orientation: global z-direction; 
-        material_density_roof = -0.0224 # [MN/m^3]
-        material_density_column = -0.026 # [MN/m^3]
+        # g = 22.4 kN/m^3
+        # orientation: global z-direction;
+        material_density_roof = -0.0224  # [MN/m^3]
+        material_density_column = -0.026  # [MN/m^3]
 
-        #--- LC2 additional dead load 
-        # gA = 0,20 kN/m^2 
-        # orientation: global z-direction (following the curved structure); 
-        surface_load_gA = -0.20e-3 # [MN/m^2]
+        #--- LC2 additional dead load
+        # gA = 0,20 kN/m^2
+        # orientation: global z-direction (following the curved structure);
+        surface_load_gA = -0.20e-3  # [MN/m^2]
 
         #--- LC3 snow
-        # s = 0,79 kN/m^2 
-        # orientation: global z-direction (projection); 
-        surface_load_full_s = -0.84e-3 # [MN/m^2]
-        surface_load_half_s = -0.84e-3 * 0.5 # [MN/m^2]
+        # s = 0,79 kN/m^2
+        # orientation: global z-direction (projection);
+        surface_load_full_s = -0.84e-3  # [MN/m^2]
+        surface_load_half_s = -0.84e-3 * 0.5  # [MN/m^2]
 
-        #--- LC4 wind (pressure) 
-        # w = 0,13 kN/m^2 
-        # orientation: local t-direction (surface normal); 
-        surface_load_front_edge_w = 0.91e-3   # [MN/m^2]
+        #--- LC4 wind (pressure)
+        # w = 0,13 kN/m^2
+        # orientation: local t-direction (surface normal);
+        surface_load_front_edge_w = 0.91e-3  # [MN/m^2]
 #        surface_load_back_edge_w = 0.39e-3 # [MN/m^2]
         surface_load_x_pos_w = -0.13e-3
         surface_load_x_neg_w = 0.89e-3
@@ -250,19 +266,19 @@ class MRone_free( MushRoofModel ):
 #        surface_load_left_edge_w = # [MN/m^2]
 #        surface_load_right_edge_w = # [MN/m^2]
 
-        # NOTE: additional line-loads at the edge of the roof need to be considered!  
+        # NOTE: additional line-loads at the edge of the roof need to be considered!
 
         upper_surface = roof[:, :, -1, :, :, -1]
         whole_roof = roof[:, :, :, :, :, :]
 
-        #edges
+        # edges
         #
         front_edge_roof = roof[0, :, -1, 0, :, -1]
 #        back_edge_roof = roof[-1, :, -1, -1, :, -1]
         side_edge_roof = roof[:, 0, -1, :, 0, -1]
 
 
-        #sides
+        # sides
         #
         x_pos_surface = roof[self.n_elems_xy_quarter:, :, -1, :, :, -1]
         x_neg_surface = roof[:self.n_elems_xy_quarter, :, -1, :, :, -1]
@@ -278,36 +294,36 @@ class MRone_free( MushRoofModel ):
 #                              integ_domain = 'global',
 #                              slice = whole_column ),
 
-##                     # LC2: additional dead load
-                     BCSlice( var = 'f', value = -1.0e-3, dims = [2],
-                              integ_domain = 'global',
-                              slice = upper_surface ),
-##
-##                     # LC3: snow load         
+# #                     # LC2: additional dead load
+                     BCSlice(var='f', value=-1.0e-3, dims=[2],
+                              integ_domain='global',
+                              slice=upper_surface),
+# #
+# #                     # LC3: snow load
 #                     BCSlice( var = 'f', value = surface_load_full_s, dims = [2],
 #                              integ_domain = 'global',
 #                              slice = upper_surface ),
-##                     BCSlice( var = 'f', value = surface_load_full_s, dims = [2],
-##                              integ_domain = 'global',
-##                              slice = x_pos_surface ),
-##                      #LC4: wind load
-##
-##                     #front edge
-###                     BCSlice( var = 'f', value = surface_load_front_edge_w, dims = [0],
-###                              integ_domain = 'global',
-###                              slice = front_edge_roof ),
+# #                     BCSlice( var = 'f', value = surface_load_full_s, dims = [2],
+# #                              integ_domain = 'global',
+# #                              slice = x_pos_surface ),
+# #                      #LC4: wind load
+# #
+# #                     #front edge
+# ##                     BCSlice( var = 'f', value = surface_load_front_edge_w, dims = [0],
+# ##                              integ_domain = 'global',
+# ##                              slice = front_edge_roof ),
 #####                     #back edge
 ####                     BCSlice( var = 'f', value = surface_load_back_edge_w, dims = [0],
 ####                              integ_domain = 'global',
 ####                              slice = back_edge_roof ),
-###                     #top
+# ##                     #top
 #                      BCSlice( var = 'f', value = surface_load_x_pos_w, dims = [2],
 #                              integ_domain = 'global',
 #                              slice = whole_roof ),
-###                     #side
-###                     BCSlice( var = 'f', value = surface_load_side, dims = [1],
-###                              integ_domain = 'global',
-###                              slice = side_edge_roof ),
+# ##                     #side
+# ##                     BCSlice( var = 'f', value = surface_load_side, dims = [1],
+# ##                              integ_domain = 'global',
+# ##                              slice = side_edge_roof ),
 
 
                     ]
@@ -315,14 +331,14 @@ class MRone_free( MushRoofModel ):
 
 
 
-        bc_list = [# column
-                        BCSlice( var = 'u', dims = [0, 1, 2],
-                                     slice = column[ :, :, 0, :, :, 0 ],
-                                     value = 0.0 ),]
-                                
+        bc_list = [  # column
+                        BCSlice(var='u', dims=[0, 1, 2],
+                                     slice=column[ :, :, 0, :, :, 0 ],
+                                     value=0.0), ]
 
-        #bc_corner_load   = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = roof[-1,-1,-1,-1,-1,-1] )
-        #bc_topface_load  = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = roof[:,:,-1,:,:,-1] )
+
+        # bc_corner_load   = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = roof[-1,-1,-1,-1,-1,-1] )
+        # bc_topface_load  = BCSlice( var = 'f', value = -nodal_load, dims = [2], slice = roof[:,:,-1,:,:,-1] )
 
         w_z = roof[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
 
@@ -333,30 +349,30 @@ class MRone_free( MushRoofModel ):
 #
 #        rtrace_list = [ self.f_w_diagram ] + self.rtrace_list
 
-        ts = TS( sdomain = [roof, column],
-                 dof_resultants = True,
-                 bcond_list = bc_list + force_bc +self.link_column_list,
+        ts = TS(sdomain=[roof, column],
+                 dof_resultants=True,
+                 bcond_list=bc_list + force_bc + self.link_column_list,
 #                 bcond_list = [bc_column_support,
 #                               ] + force_bc,
 
-                 rtrace_list = self.rtrace_list
+                 rtrace_list=self.rtrace_list
                )
 
         # Add the time-loop control
-        tloop = TLoop( tstepper = ts,
-                       tolerance = 1e-4,
-                       tline = self.tline )
+        tloop = TLoop(tstepper=ts,
+                       tolerance=1e-4,
+                       tline=self.tline)
 
         return tloop
 
 if __name__ == '__main__':
 
-    sim_model = MRone_free( n_elems_xy_quarter = 5,
-                            n_elems_z = 2,
-                            shift_elems_column = True,
-                            n_elems_col = 2,
-                            vtk_r = 1.0,
-                            n_elems_per_column_height = 5)
+    sim_model = MRone_free(n_elems_xy_quarter=5,
+                            n_elems_z=2,
+                            shift_elems_column=True,
+                            n_elems_col=2,
+                            vtk_r=1.0,
+                            n_elems_per_column_height=5)
 
 #    interior_elems = sim_model.fe_grid_column[ 1:-1, 1:-1, :, :, :, : ].elems
 #    sim_model.fe_grid_column.inactive_elems = list( interior_elems )
@@ -371,21 +387,21 @@ if __name__ == '__main__':
 
        sim_model.peval()
        from ibvpy.plugins.ibvpy_app import IBVPyApp
-       app = IBVPyApp( ibv_resource = sim_model )
+       app = IBVPyApp(ibv_resource=sim_model)
        app.main()
 
     elif do == 'ps':
 
-        sim_ps = SimPStudy( sim_model = sim_model )
+        sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
 
     elif do == 'pickle':
 
         import pickle
         filename = '/tmp/sim.pickle'
-        file = open( filename, 'w' )
-        pickle.dump( sim_model, file )
+        file = open(filename, 'w')
+        pickle.dump(sim_model, file)
         file.close()
-        file = open( filename, 'r' )
-        sm = pickle.load( file )
+        file = open(filename, 'r')
+        sm = pickle.load(file)
         file.close()

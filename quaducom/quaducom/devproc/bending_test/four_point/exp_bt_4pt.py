@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,98 +12,34 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+import csv
+from numpy import array, fabs, where, copy, ones, argsort, \
+    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, unique, around
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, DelegatesTo, \
     Callable
-
-from etsproxy.util.home_directory import \
-    get_home_directory
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
 
-# # overload the 'get_label' method from 'Item' to display units in the label
-from util.traits.ui.item import \
-    Item
-
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from matplotlib.figure import Figure
-
-import os
-
-import csv
-
-from numpy import array, fabs, where, copy, ones, argsort, \
-    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot, unique, around
-
-import numpy as np
-
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-from mathkit.mfn import MFnLineArray
-from mathkit.mfn.mfn_line.mfn_matplotlib_editor import \
-    MFnMatplotlibEditor
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
-from string import replace
-from os.path import exists
-
-#-----------------------------------------------------------------------------------
-# ExDesignReader
-#-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
-from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor, VGroup, HGroup
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
+from mathkit.array.smoothing import smooth
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
-
-from mathkit.array.smoothing import smooth
-
-from matresdev.db.matdb.trc.fabric_layup \
-    import FabricLayUp
-
-from matresdev.db.matdb.trc.fabric_layout \
-    import FabricLayOut
-
-from matresdev.db.matdb.trc.concrete_mixture \
-    import ConcreteMixture
-
+from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
+from matresdev.db.exdb.loadtxt_novalue import loadtxt_novalue
 from matresdev.db.matdb.trc.composite_cross_section import \
     CompositeCrossSection, plain_concrete
-
-from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
-
-from matresdev.db.simdb import \
-    SimDB
-
-from matresdev.db.exdb.loadtxt_novalue import loadtxt_novalue
-
-# Access to the toplevel directory of the database
-#
-simdb = SimDB()
+from matresdev.db.matdb.trc.concrete_mixture \
+    import ConcreteMixture
+from matresdev.db.matdb.trc.fabric_layout \
+    import FabricLayOut
+from matresdev.db.matdb.trc.fabric_layup \
+    import FabricLayUp
+import numpy as np
 
 
 class ExpBT4PT(ExType):
@@ -120,35 +56,37 @@ class ExpBT4PT(ExType):
     #--------------------------------------------------------------------
 
     input_change = Event
+
     @on_trait_change('+input, ccs.input_change, +ironing_param')
     def _set_input_change(self):
         self.input_change = True
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # specify inputs:
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     # effective length of the bending test specimen
     # (does not include the 5cm part at each side of the specimens that leaps over the support lines)
     #
     length = Float(1.75, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                   auto_set=False, enter_set=True)
     width = Float(0.2, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                  auto_set=False, enter_set=True)
     thickness = Float(0.055, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                      auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
     age = Int(28, unit='d', input=True, table_field=True,
-                             auto_set=False, enter_set=True)
+              auto_set=False, enter_set=True)
     loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
-                            auto_set=False, enter_set=True)
+                         auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
     # composite cross section
     #--------------------------------------------------------------------------
 
     ccs = Instance(CompositeCrossSection)
+
     def _ccs_default(self):
         '''default settings'
         '''
@@ -158,21 +96,21 @@ class ExpBT4PT(ExType):
         orientation_fn_key = 'all0'
         n_layers = 1
 #         s_tex_z = 0.060 / (n_layers + 1)
-        ccs = CompositeCrossSection (
-                    fabric_layup_list=[
-#                             plain_concrete(s_tex_z * 0.5),
-                            FabricLayUp (
-                                   n_layers=n_layers,
-                                   orientation_fn_key=orientation_fn_key,
-#                                    s_tex_z=s_tex_z,
-                                   s_tex_z=0.030,  # [m]
-                                   fabric_layout_key=fabric_layout_key
-                                   ),
-                            plain_concrete(0.025),  # [m]
-#                             plain_concrete(s_tex_z * 0.5)
-                                        ],
-                    concrete_mixture_key=concrete_mixture_key
-                    )
+        ccs = CompositeCrossSection(
+            fabric_layup_list=[
+                #                             plain_concrete(s_tex_z * 0.5),
+                FabricLayUp(
+                    n_layers=n_layers,
+                    orientation_fn_key=orientation_fn_key,
+                    #                                    s_tex_z=s_tex_z,
+                    s_tex_z=0.030,  # [m]
+                    fabric_layout_key=fabric_layout_key
+                ),
+                plain_concrete(0.025),  # [m]
+                #                             plain_concrete(s_tex_z * 0.5)
+            ],
+            concrete_mixture_key=concrete_mixture_key
+        )
         return ccs
 
     #--------------------------------------------------------------------------
@@ -180,7 +118,9 @@ class ExpBT4PT(ExType):
     #--------------------------------------------------------------------------
 
     # E-modulus of the composite at the time of testing
-    E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
+    E_c = Property(
+        Float, unit='MPa', depends_on='input_change', table_field=True)
+
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
@@ -190,10 +130,9 @@ class ExpBT4PT(ExType):
     # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
-
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # define processing
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     # put this into the ironing procedure processor
     #
@@ -202,7 +141,8 @@ class ExpBT4PT(ExType):
                       ironing_param=True)
 
     data_array_ironed = Property(Array(float),
-                                  depends_on='data_array, +ironing_param, +axis_selection')
+                                 depends_on='data_array, +ironing_param, +axis_selection')
+
     @cached_property
     def _get_data_array_ironed(self):
         '''remove the jumps in the displacement curves
@@ -219,11 +159,12 @@ class ExpBT4PT(ExType):
 
             # use ironing method only for columns of the displacement gauges.
             #
-#            print 'self.names_and_units[0]',self.names_and_units[0]
-#            print 'self.names_and_units',self.names_and_units
-            if self.names_and_units[0][ idx ] not in {'Kraft', 'Bezugskanal', 'DMS_o',
-                # for PEEKEL software check the following names:
-                'Datum/Uhrzeit', 'Kraft', 'Weg', 'DMS'}:
+            #            print 'self.names_and_units[0]',self.names_and_units[0]
+            #            print 'self.names_and_units',self.names_and_units
+            if self.names_and_units[0][idx] not in {'Kraft', 'Bezugskanal', 'DMS_o',
+                                                    # for PEEKEL software check
+                                                    # the following names:
+                                                    'Datum/Uhrzeit', 'Kraft', 'Weg', 'DMS'}:
 
                 # 1d-array corresponding to column in data_array
                 data_arr = copy(data_array_ironed[:, idx])
@@ -242,8 +183,8 @@ class ExpBT4PT(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
-                print 'force', unique(around(-self.data_array[jump_idx, 1], 2))
+#                 print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
+#                 print 'force', unique(around(-self.data_array[jump_idx, 1], 2))
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -301,7 +242,8 @@ class ExpBT4PT(ExType):
             # (measuring length l_0 = 0.45 m)
             self.W10_u -= self.W10_u[0]
             self.W10_u *= -1
-            # compressive strain at the upper side of the bending specimen at midspan [mm]
+            # compressive strain at the upper side of the bending specimen at
+            # midspan [mm]
             self.DMS_o -= self.DMS_o[0]
             # change unite from [nm/m], i.e. [10^(-6)*m / m], to [mm]
             self.DMS_o /= 1000.
@@ -311,17 +253,20 @@ class ExpBT4PT(ExType):
             DB_mi_orig = self.data_array[:, 2]
             DB_mi_orig -= DB_mi_orig[0]
             DB_mi_orig *= -1
-            self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
+            self.add_trait(
+                "DB_mi_orig", Array(value=DB_mi_orig, transient=True))
 
             DB_li_orig = self.data_array[:, 4]
             DB_li_orig -= DB_li_orig[0]
             DB_li_orig *= -1
-            self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
+            self.add_trait(
+                "DB_li_orig", Array(value=DB_li_orig, transient=True))
 
             DB_re_orig = self.data_array[:, 5]
             DB_re_orig -= DB_re_orig[0]
             DB_re_orig *= -1
-            self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
+            self.add_trait(
+                "DB_re_orig", Array(value=DB_re_orig, transient=True))
 
         # PEEKEL-measuring software:
         #
@@ -355,7 +300,8 @@ class ExpBT4PT(ExType):
             # (measuring length l_0 = 0.30 m)
             self.WA_unten -= self.WA_unten[0]
             self.WA_unten *= -1
-            # compressive strain at the upper side of the bending specimen at midspan [mm]
+            # compressive strain at the upper side of the bending specimen at
+            # midspan [mm]
             self.DMS -= self.DMS[0]
             # change unite from [nm/m], i.e. [10^(-6)*m / m], to [mm]
             self.DMS /= 1000.
@@ -366,19 +312,24 @@ class ExpBT4PT(ExType):
             DB_mi_orig = np.copy(self.data_array[:, 5])
             DB_mi_orig -= DB_mi_orig[0]
             DB_mi_orig *= -1
-            self.add_trait("DB_mi_orig", Array(value=DB_mi_orig, transient=True))
+            self.add_trait(
+                "DB_mi_orig", Array(value=DB_mi_orig, transient=True))
 
             DB_li_orig = np.copy(self.data_array[:, 3])
             DB_li_orig -= DB_li_orig[0]
             DB_li_orig *= -1
-            self.add_trait("DB_li_orig", Array(value=DB_li_orig, transient=True))
+            self.add_trait(
+                "DB_li_orig", Array(value=DB_li_orig, transient=True))
 
             DB_re_orig = np.copy(self.data_array[:, 7])
             DB_re_orig -= DB_re_orig[0]
             DB_re_orig *= -1
-            self.add_trait("DB_re_orig", Array(value=DB_re_orig, transient=True))
+
+            self.add_trait(
+                "DB_re_orig", Array(value=DB_re_orig, transient=True))
 
     K_bending_elast_c = Property(Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_K_bending_elast_c(self):
         '''calculate the analytical bending stiffness of the beam (4 point bending)
@@ -406,7 +357,9 @@ class ExpBT4PT(ExType):
         print 'K_bending_elast_c', K_bending_elast_c
         return K_bending_elast_c
 
-    K_bending_elast_thirdpoints = Property(Array('float_'), depends_on='input_change')
+    K_bending_elast_thirdpoints = Property(
+        Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_K_bending_elast_thirdpoints(self):
         '''calculate the analytical bending stiffness of the beam (4 point bending)
@@ -434,29 +387,32 @@ class ExpBT4PT(ExType):
         print 'K_bending_elast_thirdpoints', K_bending_elast_thirdpoints
         return K_bending_elast_thirdpoints
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # plot templates
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
-    plot_templates = {'force / deflection (center)'            : '_plot_force_deflection_center',
-                      'force / deflection (center) - original' : '_plot_force_deflection_center_orig',
-                      'smoothed force / deflection (center)'   : '_plot_smoothed_force_deflection_center',
-                      'force / deflection (thirdpoints)'       : '_plot_force_deflection_thirdpoints',
-                      'strain (top/bottom) / force'            : '_plot_strain_top_bottom_force',
+    plot_templates = {'force / deflection (center)': '_plot_force_deflection_center',
+                      'force / deflection (center) - original': '_plot_force_deflection_center_orig',
+                      'smoothed force / deflection (center)': '_plot_smoothed_force_deflection_center',
+                      'force / deflection (thirdpoints)': '_plot_force_deflection_thirdpoints',
+                      'strain (top/bottom) / force': '_plot_strain_top_bottom_force',
                       'displacement (ironed/original - center)': '_plot_ironed_orig_force_deflection_center',
-                      'displacement (ironed/original - left)'  : '_plot_ironed_orig_force_deflection_left',
-                      'displacement (ironed/original - right)' : '_plot_ironed_orig_force_deflection_right',
-                      'displacement (center, thirdpoints) (ironed, average)' : '_plot_ironed_force_deflection_avg'
-                     }
+                      'displacement (ironed/original - left)': '_plot_ironed_orig_force_deflection_left',
+                      'displacement (ironed/original - right)': '_plot_ironed_orig_force_deflection_right',
+                      'displacement (center, thirdpoints) (ironed, average)': '_plot_ironed_force_deflection_avg',
+                      'stress / deflection (center) - original': '_plot_stress_deflection_center_orig'
+                      }
 
     default_plot_template = 'force / deflection (center)'
 
     # get only the ascending branch of the response curve
     #
     max_force_idx = Property(Int)
+
     def _get_max_force_idx(self):
         '''get the index of the maximum force'''
-        # NOTE: processed data returns positive values for force and displacement
+        # NOTE: processed data returns positive values for force and
+        # displacement
         return argmax(self.Kraft)
 
     def _plot_force_deflection_center(self, axes, offset_w=0., color='black', linewidth=1., label=None):
@@ -479,7 +435,8 @@ class ExpBT4PT(ExType):
         K_c = self.K_bending_elast_c
         w_linear = np.array([0., f_max / K_c])
         F_linear = np.array([0., f_max])
-        axes.plot(w_linear, F_linear, linestyle='--', color='black', linewidth=linewidth)
+        axes.plot(w_linear, F_linear, linestyle='--',
+                  color='black', linewidth=linewidth)
 
     def _plot_force_deflection_center_orig(self, axes, offset_w=0., color='black', linewidth=1., label=None):
         '''plot the original data before jumps has been processed out
@@ -503,9 +460,31 @@ class ExpBT4PT(ExType):
         K_c = self.K_bending_elast_c
         w_linear = np.array([0., f_max / K_c])
         F_linear = np.array([0., f_max])
-        axes.plot(w_linear, F_linear, linestyle='--', color='black', linewidth=linewidth)
+        axes.plot(w_linear, F_linear, linestyle='--',
+                  color='black', linewidth=linewidth)
 
+    n_fit_window_fraction = Float(0.1)
+    
+    def _plot_stress_deflection_center_orig(self, axes, n_roving, A_roving, deff, offset_w=0., color='black', linewidth=1., label=None):
+        '''calculate and plot the reinforcement stress and the deflection for comparison of different textiles
+        '''
+        # get only the ascending branch of the response curve
+        L = self.length
+        s_asc = self.Kraft[:self.max_force_idx + 1]*(L/5)*1000/(deff*0.95*n_roving*A_roving) 
+        w_asc = self.DB_mi_orig[:self.max_force_idx + 1]
 
+        # add curves
+        #
+        axes.plot(w_asc, s_asc, linewidth=linewidth, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'stress [MPa]'
+#        axes.set_xlabel('%s' % (xkey,))
+#        axes.set_ylabel('%s' % (ykey,))
+        
+        
     n_fit_window_fraction = Float(0.1)
 
     def _plot_smoothed_force_deflection_center(self, axes):
@@ -522,7 +501,6 @@ class ExpBT4PT(ExType):
         # add curves
         #
         axes.plot(w_smooth, f_smooth, color='blue', linewidth=2)
-
 
     def _plot_force_deflection_thirdpoints(self, axes):
         '''deflection at the third points (under the loading points)
@@ -550,18 +528,18 @@ class ExpBT4PT(ExType):
         # get only the ascending branch of the response curve
         f_asc = self.Kraft[:self.max_force_idx + 1]
         # compressive strain (top) [permile]
-        eps_c = self.DMS_o [:self.max_force_idx + 1]
+        eps_c = self.DMS_o[:self.max_force_idx + 1]
         # tensile strain (bottom) [permile];
 
         # NOTE: measuring length is not specified in 'exp_bt'-setup!
         # @todo: add this as configurable trait in the 'exp_bt' setup!
         if hasattr(self, "W10_u"):
             # NOTE: only valid for constant measuring length l_0 = 0.45m
-            eps_t = self.W10_u [:self.max_force_idx + 1] / 0.45
+            eps_t = self.W10_u[:self.max_force_idx + 1] / 0.45
 
         if hasattr(self, "WA_unten"):
             # NOTE: only valid for constant measuring length l_0 = 0.30m
-            eps_t = self.WA_unten [:self.max_force_idx + 1] / 0.30
+            eps_t = self.WA_unten[:self.max_force_idx + 1] / 0.30
 
         # add curves
         #
@@ -599,7 +577,6 @@ class ExpBT4PT(ExType):
 #        fw_arr = np.hstack([F_asc[:, None], w_ironed_asc[:, None]])
 #        print 'fw_arr.shape', fw_arr.shape
 #        np.savetxt('BT-4PT-12c-6cm-TU-SH4-V1_f-w_interpolated.csv', fw_arr, delimiter='    ')
-
 
     def _plot_ironed_orig_force_deflection_left(self, axes):
         '''plot original displacement (left) as measured by the displacement gauge
@@ -640,39 +617,40 @@ class ExpBT4PT(ExType):
         w_r_ironed_asc = self.DB_re[:self.max_force_idx + 1]
         w_lr_avg = (w_l_ironed_asc + w_r_ironed_asc) / 2.
         axes.plot(w_lr_avg, F_asc, color='black', linewidth=1.5, linestyle='-')
-        axes.plot(w_c_ironed_asc, F_asc, color='black', linewidth=1.5, linestyle='-')
+        axes.plot(
+            w_c_ironed_asc, F_asc, color='black', linewidth=1.5, linestyle='-')
         xkey = 'deflection [mm]'
         ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
 #        axes.set_ylabel('%s' % (ykey,))
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # view
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     traits_view = View(VGroup(
-                         Group(
-                              Item('length', format_str="%.3f"),
-                              Item('width', format_str="%.3f"),
-                              Item('thickness', format_str="%.3f"),
-                              label='geometry'
-                              ),
-                         Group(
-                              Item('loading_rate'),
-                              Item('age'),
-                              label='loading rate and age'
-                              ),
-                         Group(
-                              Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
-                              Item('ccs@', show_label=False),
-                              label='composite cross section'
-                              )
-                         ),
-                        scrollable=True,
-                        resizable=True,
-                        height=0.8,
-                        width=0.6
-                        )
+        Group(
+            Item('length', format_str="%.3f"),
+            Item('width', format_str="%.3f"),
+            Item('thickness', format_str="%.3f"),
+            label='geometry'
+        ),
+        Group(
+            Item('loading_rate'),
+            Item('age'),
+            label='loading rate and age'
+        ),
+        Group(
+            Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
+            Item('ccs@', show_label=False),
+            label='composite cross section'
+        )
+    ),
+        scrollable=True,
+        resizable=True,
+        height=0.8,
+        width=0.6
+    )
 
 if __name__ == '__main__':
 

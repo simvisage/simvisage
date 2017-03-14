@@ -3,7 +3,8 @@
 	<name>mathkit</name>
 	<comment></comment>
 	<projects>
-		<project>etsproxy</project>
+		<project>spirrid</project>
+		<project>util</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

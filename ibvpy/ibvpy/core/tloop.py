@@ -147,7 +147,7 @@ class TLoopHandler(Handler):
 
 RecalcAction = Action(name='Recalculate', action='recalculate')
 
-from etsproxy.traits.ui.api import TreeNodeObject
+from traitsui.api import TreeNodeObject
 from warnings import warn
 
 
@@ -388,6 +388,7 @@ class TLoop(IBVResource):
             self.report_load_step_start()
             self.k = 0
             step_flag = 'predictor'
+
             while self.k < self.KMAX:
 
                 self.report_iteration()

@@ -12,14 +12,14 @@
 #
 # Created on Feb 23, 2010 by: rch
 
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo, Expression, Regex, Callable
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item
 
 # overload the 'get_label' method from 'Item' to display units in the label
@@ -203,6 +203,8 @@ class FabricLayUp(SimDBClass):
         '''
         return sum(self.E_tex_arr) / self.n_layers
 
+    a_roving_0 = DelegatesTo('fabric_layout_ref')
+    a_roving_0 = DelegatesTo('fabric_layout_ref')
     #------------------------------------------------------------------
     # layup view:
     #------------------------------------------------------------------

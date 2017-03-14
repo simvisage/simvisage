@@ -3,14 +3,14 @@ Created on Apr 1, 2010
 
 @author: alexander
 '''
-from etsproxy.traits.api import \
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, \
     DelegatesTo, Callable
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     InstanceEditor, HGroup, Spring
@@ -72,6 +72,13 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 31000.,
                                            nu=0.2
                                            ),
+                'C3-HF2-165-4' : ConcreteMixture(
+                                           E_m28=44600.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time=lambda t: 44600.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
                 'barrelshell' : ConcreteMixture(
 #                                           E_m28 = 22721., #
                                            E_m28=19800.,  # based on cylinder tests
@@ -109,9 +116,32 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
                                            nu=0.2  # @todo: approximation only
                                            ),
-
-
-                                           }
+                'HPC_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'UHPC_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'HPC_SF1.5_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'UHPC_SF2.0_TU_WIEN' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                'Hilo_Test_271216/2' : ConcreteMixture(
+                                           E_m28=30000.,  # @todo: approximation only
+                                           get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),
+                                           }                                   
             )
 
 if __name__ == '__main__':

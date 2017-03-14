@@ -1,11 +1,11 @@
 
-from etsproxy.traits.api import \
+from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
     Instance, Int, Trait, Str, List, TraitDict, Any, \
     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict, \
     Class
 
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, Group
 
 from numpy import \
