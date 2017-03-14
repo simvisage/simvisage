@@ -686,7 +686,6 @@ if __name__ == '__main__':
     #
 #    r.plot_sd(mlab, gd, 'mx', state_data = sd, warp_factor = 1000.)
 
-
 #    # get mapping from 'geo_data'
 #    #
 #    t_elem_node_map = gd['t_elem_node_map']
