@@ -82,7 +82,7 @@ def plot_all():
             e = e_run.ex_type
             axes = p.subplot(111)
             axes.plot(l_v, e.Kraft.max() / n_r,
-                      'o', markersize=8, color='r',
+                      markerstyle= 'o', markersize=8, color='r',
                       #label = test_files[idx].split('.')[0]
                       )
 
