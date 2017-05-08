@@ -1111,6 +1111,8 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             MATS2DMicroplaneDamageTraceGfmac, \
             MATS2DMicroplaneDamageTraceEtmac, MATS2DMicroplaneDamageTraceUtmac
 
+        print 'matsXD_cmdm called'
+
         c['rtrace_list'] += [
             RTraceGraph(name='time - microplane damage',
                         var_x='time', idx_x=0,
@@ -1133,6 +1135,11 @@ class MATSXDMicroplaneDamage(PolarDiscr):
             RTraceGraph(name='e_T - s_T',
                         var_x='e_T_arr', idx_x=0,
                         var_y='s_T_arr', idx_y=0,
+                        record_on='update'),
+
+            RTraceGraph(name='time - fracture energy',
+                        var_x='time', idx_x=0,
+                        var_y='fracture_energy', idx_y=0,
                         record_on='update'),
 
             RTraceArraySnapshot(name='equiv_projection',

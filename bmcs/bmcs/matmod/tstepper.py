@@ -2,13 +2,14 @@
 Created on 12.01.2016
 @author: Yingxiong
 '''
+from ibvpy.api import BCDof
+from ibvpy.core.bcond_mngr import BCondMngr
+from ibvpy.mesh.fe_grid import FEGrid
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from traits.api import HasTraits, Instance, \
     Property, cached_property, Float, List
 
 from fets1d52ulrhfatigue import FETS1D52ULRHFatigue
-from ibvpy.api import BCDof
-from ibvpy.mesh.fe_grid import FEGrid
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from mats_bondslip import MATSEvalFatigue
 import numpy as np
 
@@ -40,7 +41,7 @@ class TStepper(HasTraits):
         return np.array([self.fets_eval.A_m, self.fets_eval.P_b, self.fets_eval.A_f])
 
     # Number of elements
-    n_e_x = 50
+    n_e_x = 20
     # length
     L_x = Float(200)
 
@@ -55,7 +56,25 @@ class TStepper(HasTraits):
                         fets_eval=self.fets_eval)
         return domain
 
-    bc_list = List(Instance(BCDof))
+    # Boundary condition manager
+    #
+    bcond_mngr = Instance(BCondMngr)
+
+    def _bcond_mngr_default(self):
+        return BCondMngr()
+
+    bcond_list = Property(List(BCDof))
+    '''Convenience constructor
+    This property provides the possibility to write
+    tstepper.bcond_list = [BCDof(var='u',dof=5,value=0, ... ]
+    The result gets propagated to the BCondMngr
+    '''
+
+    def _get_bcond_list(self):
+        return self.bcond_mngr.bcond_list
+
+    def _set_bcond_list(self, bcond_list):
+        self.bcond_mngr.bcond_list = bcond_list
 
     J_mtx = Property(depends_on='L_x')
     '''Array of Jacobian matrices.
@@ -138,13 +157,13 @@ class TStepper(HasTraits):
         '''Insert initial boundary conditions at the start up of the calculation.. 
         '''
         self.K = SysMtxAssembly()
-        for bc in self.bc_list:
+        for bc in self.bcond_list:
             bc.apply_essential(self.K)
 
     def apply_bc(self, step_flag, K_mtx, F_ext, t_n, t_n1):
         '''Apply boundary conditions for the current load increement
         '''
-        for bc in self.bc_list:
+        for bc in self.bcond_list:
             bc.apply(step_flag, None, K_mtx, F_ext, t_n, t_n1)
 
     def get_corr_pred(self, step_flag, U, d_U, eps, sig,

@@ -13,11 +13,11 @@ from traits.api import \
 from traitsui.api import \
     View, Item, Group, VGroup, HSplit, TreeEditor, TreeNode
 
+from bmcs.view.ui import BMCSTreeNode, BMCSLeafNode
+import matplotlib.gridspec as gridspec
 from mats_bondslip import MATSEvalFatigue
 import numpy as np
 from util.traits.editors import MPLFigureEditor
-from view.ui import BMCSTreeNode, BMCSLeafNode
-import matplotlib.gridspec as gridspec
 
 
 class Material(BMCSLeafNode):
@@ -52,7 +52,7 @@ class Material(BMCSLeafNode):
               desc="Damage cumulation parameter",
               enter_set=True,
               auto_set=False)
-    
+
     c = Float(1,
               label="c ",
               desc="Damage cumulation parameter",
@@ -64,18 +64,18 @@ class Material(BMCSLeafNode):
                        desc="Reversibility limit",
                        enter_set=True,
                        auto_set=False)
-    
+
     pressure = Float(-5,
-                    label="Pressure",
-                    desc="Lateral pressure",
-                    enter_set=True,
-                    auto_set=False)
-    
+                     label="Pressure",
+                     desc="Lateral pressure",
+                     enter_set=True,
+                     auto_set=False)
+
     a = Float(1.7,
-                    label="a",
-                    desc="Lateral pressure coefficient",
-                    enter_set=True,
-                    auto_set=False)
+              label="a",
+              desc="Lateral pressure coefficient",
+              enter_set=True,
+              auto_set=False)
 
     view = View(VGroup(Group(Item('E_b'),
                              Item('tau_pi_bar'), show_border=True, label='Bond Stiffness and reversibility limit'),
@@ -87,14 +87,12 @@ class Material(BMCSLeafNode):
                              Item('a'), show_border=True, label='Lateral Pressure')))
 
 
-
-
 class LoadingScenario(BMCSLeafNode):
 
     node_name = Str('Loading Scenario')
     number_of_cycles = Float(1.0)
     maximum_slip = Float(2)
-    
+
     loading_type = Enum("Monotonic", "Cyclic")
     amplitude_type = Enum("Increased_Amplitude", "Constant_Amplitude")
     loading_range = Enum("Non_symmetric", "Symmetric")
@@ -103,8 +101,7 @@ class LoadingScenario(BMCSLeafNode):
     t_max = Float(2.)
     k_max = Float(100)
     tolerance = Float(1e-4)
-    
-    
+
     d_array = Property(
         depends_on=' maximum_slip , number_of_cycles , loading_type , loading_range , amplitude_type , d_t , t_max')
 
@@ -193,29 +190,32 @@ class BondSlipModel(BMCSTreeNode):
     node_name = Str('Bond_slip_model')
 
     tree_node_list = List([])
+
     def _tree_node_list_default(self):
         # print 'NODE', self.material
         return [self.material, self.loading_scenario]
 
     material = Instance(Material)
+
     def _material_default(self):
         return Material()
-    
+
     loading_scenario = Instance(LoadingScenario)
+
     def _loading_scenario_default(self):
         return LoadingScenario()
 
     mats_eval = Instance(MATSEvalFatigue)
 
     figure = Instance(Figure)
+
     def _figure_default(self):
         figure = Figure(facecolor='white')
         figure.add_axes([0.08, 0.13, 0.85, 0.74])
         return figure
 
-
     def plot(self, figure, color='blue', linestyle='-',
-                    linewidth=1, label='<unnamed>'):
+             linewidth=1, label='<unnamed>'):
         # assign the material parameters
         self.mats_eval.E_b = self.material.E_b
         self.mats_eval.gamma = self.material.gamma
@@ -226,40 +226,44 @@ class BondSlipModel(BMCSTreeNode):
         self.mats_eval.c = self.material.c
         self.mats_eval.a = self.material.a
         self.mats_eval.pressure = self.material.pressure
-        
+
         s_arr = self.loading_scenario._get_d_array()
 
-        tau_arr, w_arr, xs_pi_arr , xs_pi_cum = self.mats_eval.get_bond_slip(s_arr)
-        
+        tau_arr, w_arr, xs_pi_arr, xs_pi_cum = self.mats_eval.get_bond_slip(
+            s_arr)
+
         ax1 = figure.add_subplot(221)
         ax1.cla()
-        ax1.plot(s_arr, tau_arr , lw=linewidth, color=color,
-                ls=linestyle, label=label)
+        ax1.plot(s_arr, tau_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax1.set_title('Slip - Stress')
-        ax1.set_xlabel('Slip'); ax1.set_ylabel('Stress')
-        #ax1.legend()
-        
+        ax1.set_xlabel('Slip')
+        ax1.set_ylabel('Stress')
+        # ax1.legend()
+
         ax2 = figure.add_subplot(222)
         ax2.cla()
-        ax2.plot(s_arr , w_arr, lw=linewidth, color=color,
-                ls=linestyle, label=label)
+        ax2.plot(s_arr, w_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax2.set_title('Slip - Damage')
-        ax2.set_xlabel('Slip'); ax2.set_ylabel('Damage')
+        ax2.set_xlabel('Slip')
+        ax2.set_ylabel('Damage')
         ax2.set_ylim([0, 1])
-        #ax2.legend()
-        
+        # ax2.legend()
+
         gs = gridspec.GridSpec(2, 2)
         ax3 = figure.add_subplot(gs[-1, :])
-        ax3.plot(xs_pi_cum , w_arr,lw=linewidth, color=color,
-                ls=linestyle, label=label)
+        ax3.plot(xs_pi_cum, w_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax3.set_title('Cumulative sliding - Damage')
         ax3.set_ylim([0, 1])
-        ax3.set_xlabel('Cumulative sliding'); ax3.set_ylabel('Damage')
-        #ax3.legend()
-        
-    def plot_custom(self, ax1,ax2,ax3, color='blue', linestyle='-',
+        ax3.set_xlabel('Cumulative sliding')
+        ax3.set_ylabel('Damage')
+        # ax3.legend()
+
+    def plot_custom(self, ax1, ax2, ax3, color='blue', linestyle='-',
                     linewidth=1, label='<unnamed>'):
-    
+
         self.mats_eval.E_b = self.material.E_b
         self.mats_eval.gamma = self.material.gamma
         self.mats_eval.S = self.material.S
@@ -272,28 +276,32 @@ class BondSlipModel(BMCSTreeNode):
 
         s_arr = self.loading_scenario._get_d_array()
 
-        tau_arr, w_arr, xs_pi_arr , xs_pi_cum = self.mats_eval.get_bond_slip(s_arr)
-        
-        ax1.plot(s_arr, tau_arr , lw=linewidth, color=color,
-                ls=linestyle, label=label)
+        tau_arr, w_arr, xs_pi_arr, xs_pi_cum = self.mats_eval.get_bond_slip(
+            s_arr)
+
+        ax1.plot(s_arr, tau_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax1.set_title('Slip - Stress')
-        ax1.set_xlabel('Slip'); ax1.set_ylabel('Stress')
+        ax1.set_xlabel('Slip')
+        ax1.set_ylabel('Stress')
         ax1.legend()
 
-        ax2.plot(s_arr , w_arr, lw=linewidth, color=color,
-                ls=linestyle, label=label)
+        ax2.plot(s_arr, w_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax2.set_title('Slip - Damage')
-        ax2.set_xlabel('Slip'); ax2.set_ylabel('Damage')
+        ax2.set_xlabel('Slip')
+        ax2.set_ylabel('Damage')
         ax2.set_ylim([0, 1])
         ax2.legend()
-        
-        ax3.plot(xs_pi_cum , w_arr,lw=linewidth, color=color,
-                ls=linestyle, label=label)
+
+        ax3.plot(xs_pi_cum, w_arr, lw=linewidth, color=color,
+                 ls=linestyle, label=label)
         ax3.set_title('Cumulative sliding - Damage')
         ax3.set_ylim([0, 1])
-        ax3.set_xlabel('Cumulative sliding'); ax3.set_ylabel('Damage')
+        ax3.set_xlabel('Cumulative sliding')
+        ax3.set_ylabel('Damage')
         ax3.legend()
-    
+
 '''
 if __name__ == '__main__':
 

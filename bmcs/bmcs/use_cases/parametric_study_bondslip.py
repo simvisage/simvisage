@@ -3,23 +3,23 @@ Created on 02.01.2017
 
 @author: abaktheer
 '''
+from bmcs.matmod.bond_slip_model import \
+    BondSlipModel, Material, LoadingScenario
+from bmcs.matmod.mats_bondslip import \
+    MATSEvalFatigue
+from bmcs.utils.keyref import \
+    KeyRef
+from bmcs.view.ui.bmcs_tree_node import \
+    BMCSTreeNode
+from bmcs.view.window.bmcs_window import \
+    BMCSWindow
 from traits.api import \
     Instance, Property, \
     List, Str, Trait, Button
 from traitsui.api import \
     View, Item, UItem, VGroup, HGroup, spring
 
-from matmod.bond_slip_model import \
-    BondSlipModel, Material, LoadingScenario
-from matmod.mats_bondslip import \
-    MATSEvalFatigue
 import matplotlib.gridspec as gridspec
-from utils.keyref import \
-    KeyRef
-from view.ui.bmcs_tree_node import \
-    BMCSTreeNode
-from view.window.bmcs_window import \
-    BMCSWindow
 
 
 class UCPStudyElement(BMCSTreeNode):
@@ -106,7 +106,6 @@ class UCParametricStudy(BMCSTreeNode):
 
             node.plot_ax(ax1, ax2, ax3)
 
-
 bond_slip_ps = UCParametricStudy()
 bond_slip_ps.element_to_add = 'BondSlipModel'
 bond_slip_ps.add_element = True
@@ -115,5 +114,5 @@ bond_slip_ps.add_element = True
 ucc = BMCSTreeNode()
 ucc.tree_node_list.append(bond_slip_ps)
 
-mxn_ps_view = BMCSWindow(root=ucc)
+mxn_ps_view = BMCSWindow(root=ucc)node
 mxn_ps_view.configure_traits()

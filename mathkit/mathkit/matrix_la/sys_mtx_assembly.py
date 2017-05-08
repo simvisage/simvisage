@@ -8,7 +8,10 @@ from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \
 from traits.api import \
     HasTraits, Int, Array, Property, cached_property, List, Trait, Dict, \
     Any, Bool, Float
-
+from numpy import allclose, arange, eye, linalg, ones, ix_, array, zeros, \
+    hstack, meshgrid, vstack, dot, newaxis, c_, r_, copy, where, \
+    ones, append, unique, compress, array_equal, allclose
+from types import ListType
 from coo_mtx import COOSparseMtx
 from dense_mtx import DenseMtx
 from sys_mtx_array import SysMtxArray
@@ -42,6 +45,7 @@ class Constraint(HasTraits):
 
 
 class SysMtxAssembly(HasTraits):
+
     '''Class intermediating between the time stepper and the linear algebra solver.
 
     Handling of constraints.
