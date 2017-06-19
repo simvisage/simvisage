@@ -25,9 +25,9 @@ p.rcParams.update(params)
 test_file_path = os.path.join(simdb.exdata_dir,
                              'shear_tests', 'three_point', '2017-05-04_SH-3PT-1G-3cm')
 
-test_files = ['SH3-60V1.DAT', 
-              'SH3-60V2.DAT', 
-              'SH3-60V3.DAT',]
+test_files = ['SH3105V1.DAT', 
+              'SH3105V2.DAT', 
+              'SH3105V3.DAT',]
 
 color_list = ['red','blue','green',]
 linestyle_list = ['-', '-', '-',]
@@ -57,7 +57,7 @@ def plot_all():
         axes.axis([0., xlim, 0., ylim])
 
     axes.grid(b=True, which='major', color='gray', linestyle='-', linewidth = .5,)
-    axes.legend(loc=4)
+    axes.legend(loc=2)
     # --------------------------------
     # save figure
     # --------------------------------
@@ -76,7 +76,7 @@ def plot_all():
  
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
-        filename = os.path.join(test_series_dir, '60.pdf')
+        filename = os.path.join(test_series_dir, '105.pdf')
         p.savefig(filename)
         print 'figure saved to file %s' % (filename)
 

@@ -180,7 +180,9 @@ class ExpSH3PT(ExType):
 
     plot_templates = {'force / gauge displacement': '_plot_force_displacement',
                       'force / deflection': '_plot_force_deflection',
+                      'shearforce / deflection': '_plot_shearforce_deflection',
                       'force / deflection ascending': '_plot_force_deflection_asc',
+                      'shearforce / deflection ascending':'_plot_shearforce_deflection_asc',
                       }
 
     default_plot_template = 'force / deflection'
@@ -222,6 +224,21 @@ class ExpSH3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
 
+    def _plot_shearforce_deflection(self, axes, offset_w=0., color='black', linestyle='-', linewidth=1., label=None):
+        f = 0.5 * self.Kraft
+        w = 0.5 * (self.Ver_re + self.Ver_li)
+
+        # add curves
+        #
+        axes.plot(w, f, linewidth=linewidth, linestyle=linestyle, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'force [kN]'
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
+        
     def _plot_force_deflection_asc(self, axes, offset_w=0., color='black', linestyle='-', linewidth=1., label=None):
         f = self.Kraft
         w = 0.5 * (self.Ver_re + self.Ver_li)
@@ -237,6 +254,20 @@ class ExpSH3PT(ExType):
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
 
+    def _plot_shearforce_deflection_asc(self, axes, offset_w=0., color='black', linestyle='-', linewidth=1., label=None):
+        f = 0.5 * self.Kraft
+        w = 0.5 * (self.Ver_re + self.Ver_li)
+
+        # add curves
+        #
+        axes.plot(w[:self.max_force_idx + 1], f[:self.max_force_idx + 1], linewidth=linewidth, linestyle=linestyle, label=label, color=color)
+
+        # add axes labels
+        #
+        xkey = 'deflection [mm]'
+        ykey = 'shearforce [kN]'
+        axes.set_xlabel('%s' % (xkey,))
+        axes.set_ylabel('%s' % (ykey,))
 
     #-------------------------------------------------------------------------
     # view
