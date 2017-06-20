@@ -53,9 +53,9 @@ marker_array = np.array([
 
 color_array = np.array([
     'b', 'b', 'b',
-    'r', 'r', 'r',
-    'g', 'g', 'g',
-    'orange', 'orange', 'orange',
+    'b', 'b', 'b',
+    'b', 'b', 'b',
+    'b', 'b', 'b',
 ]).reshape(-1, 3)
 
 ad_array = np.array([
@@ -82,17 +82,20 @@ def plot_all():
                       )
 
     axes.grid(b=True, which='major', color='gray', linestyle='-', linewidth = .5,)
-    axes.set_xlabel('a/d [-]')
-    axes.set_ylabel('Querkraft [kN]')
-
+    axes.set_xlabel('a/d [-]', fontsize = 16)
+    axes.set_ylabel('Querkraft [kN]', fontsize = 16)
+    axes.tick_params(axis='both', which='major', labelsize=16)
+    
+    
     # Create custom legend
-    markersquare, = axes.plot([],"s", color='k', markersize=12, label='uneindeutiges Versagen')
+
     markertriangle, = axes.plot([],'^', color='k', markersize=12, label='Querkraftversagen')
     markercircle, =  axes.plot([],'o', color='k', markersize=12, label='Biegeversagen')
-    handles = [markersquare, markertriangle, markercircle,]
+    markersquare, = axes.plot([],"s", color='k', markersize=12, label='uneindeutiges Versagen')
+    handles = [markertriangle, markercircle, markersquare]
     labels = [h.get_label() for h in handles] 
     axes.legend(handles=handles, labels=labels, numpoints=1,fontsize = 16,)
-    axes.axis([0., 7, 0., 10])
+    axes.axis([0., 8, 0., 10])
 
 if __name__ == '__main__':
     plot_all()
