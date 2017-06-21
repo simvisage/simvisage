@@ -5,6 +5,7 @@
 	<projects>
 		<project>ibvpy</project>
 		<project>mathkit</project>
+		<project>quaducom</project>
 		<project>util</project>
 	</projects>
 	<buildSpec>
