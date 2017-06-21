@@ -1,39 +1,32 @@
 
+from time import time
+
+from ibvpy.core.i_tstepper_eval import \
+    ITStepperEval
+from ibvpy.core.rtrace_eval import RTraceEval
+from ibvpy.core.tstepper_eval import \
+    TStepperEval
+from ibvpy.fets.fets_eval import IFETSEval
+from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
+from numpy import \
+    zeros, float_, ix_, meshgrid
 from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property, Dict
-
 from traitsui.api import \
     Item, View
-
 from traitsui.menu import \
     OKButton, CancelButton
 
-from numpy import \
-    zeros, float_, ix_, meshgrid
-
-from ibvpy.core.i_tstepper_eval import \
-    ITStepperEval
-from ibvpy.core.tstepper_eval import \
-    TStepperEval
-
-from ibvpy.core.rtrace_eval import RTraceEval
-from ibvpy.fets.fets_eval import IFETSEval
-from mathkit.matrix_la.sys_mtx_assembly import SysMtxAssembly
 from dots_eval import DOTSEval
 
-from time import time
 
 #-----------------------------------------------------------------------------
 # Integrator for a simple 1D domain.
 #-----------------------------------------------------------------------------
-
-
 class DOTSListEval(TStepperEval):
-
-    '''
-    Domain with uniform FE-time-step-eval.
+    '''Domain with uniform FE-time-step-eval.
     '''
     implements(ITStepperEval)
 
@@ -119,11 +112,12 @@ class DOTSListEval(TStepperEval):
 
     traits_view = View()
 
+
 if __name__ == '__main__':
 
     from ibvpy.api import \
-        TStepper as TS, RTraceGraph, RTraceDomainField, TLoop, \
-        TLine, BCDof, IBVPSolve as IS, DOTSEval
+        TStepper as TS, RTraceGraph, TLoop, \
+        TLine, BCDof
     from ibvpy.mats.mats1D.mats1D_elastic.mats1D_elastic import MATS1DElastic
     from ibvpy.mesh.fe_grid import FEGrid
     from ibvpy.mesh.fe_domain_list import FEDomainList
@@ -133,13 +127,13 @@ if __name__ == '__main__':
 
     # Discretization
     fe_domain1 = FEGrid(coord_max=(3., 0., 0.),
-                        shape = (3, ),
-                        fets_eval = fets_eval)
+                        shape=(3, ),
+                        fets_eval=fets_eval)
 
     fe_domain2 = FEGrid(coord_min=(3., 0., 0.),
-                        coord_max = (6., 0., 0.),
-                        shape = (3, ),
-                        fets_eval = fets_eval)
+                        coord_max=(6., 0., 0.),
+                        shape=(3, ),
+                        fets_eval=fets_eval)
 
     fe_domain = FEDomainList(subdomains=[fe_domain1, fe_domain2])
 

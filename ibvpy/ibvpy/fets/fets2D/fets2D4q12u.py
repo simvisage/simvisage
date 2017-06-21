@@ -1,4 +1,6 @@
 
+from ibvpy.fets.fets_eval import FETSEval
+from ibvpy.mats.mats_eval import MATSEval
 from numpy import \
     array, zeros, dot
 from scipy.linalg import \
@@ -6,8 +8,6 @@ from scipy.linalg import \
 from traits.api import \
     Array, Float, \
     Instance, Int
-from ibvpy.fets.fets_eval import FETSEval
-from ibvpy.mats.mats_eval import MATSEval
 
 
 #-------------------------------------------------------------------------
