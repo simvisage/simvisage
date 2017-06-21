@@ -11,10 +11,12 @@ import numpy as np
 import pylab as p
 
 
-params = {'legend.fontsize': 10,
+params = {'legend.fontsize': 16,
           # 'legend.linewidth': 2
           }
 p.rcParams.update(params)
+
+data_name = '3-Punkt-Schubversuch'
 
 test_files = [
     'SH3-60V1.DAT',
@@ -94,7 +96,7 @@ def plot_all():
     markersquare, = axes.plot([],"s", color='k', markersize=12, label='uneindeutiges Versagen')
     handles = [markertriangle, markercircle, markersquare]
     labels = [h.get_label() for h in handles] 
-    axes.legend(handles=handles, labels=labels, numpoints=1,fontsize = 16,)
+    axes.legend(handles=handles, labels=labels, numpoints=1,)
     axes.axis([0., 8, 0., 10])
 
 if __name__ == '__main__':

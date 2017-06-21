@@ -60,11 +60,13 @@ class ExpSH4PT(ExType):
     # effective length of the shear test specimen
     # (does not include the part at each side of the specimens that leaps over the support lines)
     #
-    length = Float(0.12, unit='m', input=True, table_field=True,
+    length = Float(0.36, unit='m', input=True, table_field=True,
                    auto_set=False, enter_set=True)
-    length_left = Float(0.06, unit='m', input=True, table_field=True,
+    length_left = Float(0.09, unit='m', input=True, table_field=True,
                         auto_set=False, enter_set=True)
-    length_right = Float(0.06, unit='m', input=True, table_field=True,
+    length_center = Float(0.18, unit='m', input=True, table_field=True,
+                         auto_set=False, enter_set=True)  
+    length_right = Float(0.09, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     width = Float(0.19, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
