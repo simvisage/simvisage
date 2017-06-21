@@ -24,7 +24,6 @@ from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
 from ibvpy.mats.mats_explore import MATSExplore
 from mathkit.mfn import MFnLineArray
 from matplotlib.figure import Figure
-from numpy import copy, array, hstack, loadtxt, savetxt
 from pyface.api import ImageResource
 from scipy.optimize import brentq, newton, fsolve, brenth
 from traits.api import \
@@ -40,6 +39,7 @@ from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 
 from matresdev.db.exdb.ex_run import ExRun
 from matresdev.db.simdb import SimDB
+import numpy as np
 import numpy as np
 import pylab as p
 
@@ -302,9 +302,9 @@ class MATSCalibDamageFn(MATSExplore):
         # add new pair in fitted_phi_fn
         # ------------------------------------
         # consisting of 'e_max_value_new' and 'phi_trial'
-        x = hstack([self.fitted_phi_fn.xdata[:],
-                    current_time + self.step_size])
-        y = hstack([self.fitted_phi_fn.ydata[:], phi_trial])
+        x = np.hstack([self.fitted_phi_fn.xdata[:],
+                       current_time + self.step_size])
+        y = np.hstack([self.fitted_phi_fn.ydata[:], phi_trial])
         self.fitted_phi_fn.set(xdata=x, ydata=y)
         self.fitted_phi_fn.data_changed = True
 
@@ -442,9 +442,9 @@ class MATSCalibDamageFn(MATSExplore):
 
             # update phi_data:
             #
-            x = hstack([self.fitted_phi_fn.xdata[:],
-                        current_time + self.step_size])
-            y = hstack([self.fitted_phi_fn.ydata[:], phi_new])
+            x = np.hstack([self.fitted_phi_fn.xdata[:],
+                           current_time + self.step_size])
+            y = np.hstack([self.fitted_phi_fn.ydata[:], phi_new])
 
             axes.plot(x, y, color='blue', linewidth=2)
             self.data_changed = True
