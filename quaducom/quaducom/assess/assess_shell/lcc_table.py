@@ -988,7 +988,7 @@ class LCCTable(HasTraits):
         #
         p.figure(facecolor='white')  # white background
 
-        p.plot(m_Ed_arr, n_Ed_arr, 'wo', markersize=3)  # blue dots
+        p.plot(m_Ed_arr, n_Ed_arr, 'co', markersize=20)  # blue dots
         x = np.array([0, m_Rd])
         y1 = np.array([ n_Rdc, 0. ])
         y2 = np.array([ n_Rdt, 0. ])
@@ -1205,7 +1205,7 @@ class LCCTable(HasTraits):
         #
         p.figure(facecolor='white', figsize=(5.6, 10))  # white background
 
-        p.plot(eta_m_arr, eta_n_arr, 'wo', markersize=3)  # blue dots
+        p.plot(eta_m_arr, eta_n_arr, 'wo', markersize=30)  # blue dots
         x = np.array([0, 1. ])
         y1 = np.array([ -1., 0. ])
         y2 = np.array([  1., 0. ])
