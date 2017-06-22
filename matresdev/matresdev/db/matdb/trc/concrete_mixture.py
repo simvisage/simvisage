@@ -79,6 +79,13 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 44600.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
                                            nu=0.2  # @todo: approximation only
                                            ),
+                'C3-HF2-155-5' : ConcreteMixture(
+                                           E_m28=44600.,  # @todo: approximation only, no values determined yet
+                                           # function for the evolution derived based on only
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time=lambda t: 44600.,  # determine e-modulus;
+                                           nu=0.2  # @todo: approximation only
+                                           ),      
                 'barrelshell' : ConcreteMixture(
 #                                           E_m28 = 22721., #
                                            E_m28=19800.,  # based on cylinder tests
