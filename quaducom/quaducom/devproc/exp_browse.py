@@ -25,7 +25,6 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests', 'dog_bone', '2012-03-2
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'four_point', '2015-09-02_BT-1C-55mm-0-3300SBR_cyc-Aramis2d',
-#                       'BT-1C-55mm-0-3300EP-V2_S3P2(11)-Aramis2d.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2013-07-02_BT-6c-2cm-0-TU_bs4',
 #                       'BT-6c-2cm-0-TU-V1_bs4.DAT')
 # ex_path = os.path.join(simdb.exdata_dir, 'bending_tensile_test', '2014-06-12_BTT-4c-2cm-0-TU_MxN2',
@@ -58,8 +57,9 @@ print os.path.exists(ex_path)
 
 doe_reader = ExRunView(data_file=ex_path)
 
+
+
 # print 'model', doe_reader.model.ex_type.Kraft
-# print 'model', doe_reader.model.ex_type.WA_VL
 # print 'model', doe_reader.model.ex_type.WA_VR
 # print 'model', doe_reader.model.ex_type.WA_HL
 # print 'model', doe_reader.model.ex_type.WA_HR

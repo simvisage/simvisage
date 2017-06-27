@@ -12,7 +12,7 @@ from core.rtrace_eval import RTraceEval
 from core.rtrace_mngr import RTraceMngr
 from core.scontext import SContext
 from core.sdomain import SDomain
-from core.tloop import TLine, TLoop
+from core.tloop import TLoop, TLine
 from core.tstepper import TStepper
 from core.tstepper_eval import TStepperEval
 from dots.dots_eval import DOTSEval

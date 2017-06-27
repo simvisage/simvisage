@@ -1,3 +1,4 @@
+from ibvpy.fets.fets_eval import FETSEval
 from numpy import \
     array, zeros, int_, float_, ix_, dot, linspace, hstack, vstack, arange, \
     identity
@@ -7,8 +8,6 @@ from traits.api import \
     Array, Bool, Callable, Enum, Float, HasTraits, Interface, implements, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     on_trait_change, Tuple, WeakRef, Delegate, Property, cached_property
-
-from ibvpy.fets.fets_eval import FETSEval
 
 
 #-------------------------------------------------------------------------
@@ -146,6 +145,8 @@ def run_example():
                   ]
                   )
 
+    print tstepper.setup()
+    return
     # Add the time-loop control
     tloop = TLoop(tstepper=tstepper, debug=False,
                   tline=TLine(min=0.0,  step=1.0, max=1.0))
@@ -157,6 +158,7 @@ def run_example():
     #from ibvpy.plugins.ibvpy_app import IBVPyApp
     #app = IBVPyApp( ibv_resource = tloop )
     # app.main()
+
 
 if __name__ == '__main__':
     run_example()

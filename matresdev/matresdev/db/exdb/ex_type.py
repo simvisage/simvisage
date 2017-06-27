@@ -16,17 +16,16 @@
 
 import ConfigParser
 import importlib
-
 import os
-
 from string import split
 import string
 import sys
+import zipfile
+
 from traits.api import \
     File, \
     Array, Str, Property, cached_property, \
-    Dict, Bool, implements, Float, Callable, List
-import zipfile
+    Dict, Bool, implements, Float, Callable
 
 from i_ex_type import \
     IExType

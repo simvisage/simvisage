@@ -16,19 +16,15 @@ import os
 import pickle
 import string
 from traits.api import \
-    HasTraits, HasStrictTraits, Dict, Str, Enum, Instance, Int, Class, Type, \
-    Directory, List, Property, Float, cached_property, Constant
+    HasTraits, HasStrictTraits, Dict, Str, Enum, Instance,  Type, \
+    Directory, List, Property, Float, cached_property
 from traitsui.api import \
-    View, Item, Tabbed, VGroup, HGroup, ModelView, HSplit, VSplit, \
-    CheckListEditor, EnumEditor, TableEditor, TabularEditor, Handler
-from traitsui.menu import Action, CloseAction, HelpAction, Menu, \
-    MenuBar, NoButtons, Separator, ToolBar
-from traitsui.table_column import \
-    ObjectColumn
+    View, Item, VGroup, HGroup, HSplit, VSplit, \
+    TabularEditor
+
+
 from traitsui.tabular_adapter \
     import TabularAdapter
-from traitsui.tabular_adapter \
-    import TabularAdapter, AnITabularAdapter
 
 from matresdev.db.simdb.simdb import simdb
 

@@ -16,37 +16,35 @@
 Generic implementation of the time loop.
 '''
 
+from math import pow, fabs
+import os
+from threading import Thread
+import time
+from warnings import warn
+from weakref import ref
+
+from ibvpy.core.astrategy import AStrategyBase
+from ibvpy.core.ibv_resource import IBVResource
+from ibvpy.core.rtrace_mngr import RTraceMngr
+from ibvpy.core.tstepper import TStepper
 from traits.api import Array, Bool, Enum, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, \
     Callable, List, TraitDict, Any, Range, \
     Delegate, Event, on_trait_change, Button, Property, \
     cached_property, property_depends_on, Event, \
     Directory
-
+from traits.util.home_directory import get_home_directory
+from traitsui.api import TreeNodeObject
 from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, \
     HSplit, Group, Handler, VSplit, RangeEditor, spring
 from traitsui.menu import NoButtons, OKButton, CancelButton, \
     Action
 
-from weakref import ref
-
-from math import pow, fabs
 import numpy as np
 
-from ibvpy.core.rtrace_mngr import RTraceMngr
-from ibvpy.core.astrategy import AStrategyBase
-
-from threading import Thread
-import time
-import os
-from ibvpy.core.ibv_resource import IBVResource
-
-from traits.util.home_directory import get_home_directory
 
 # import pymem
-from ibvpy.core.tstepper import TStepper
-
 LOGGING_ON = False
 
 if LOGGING_ON:
@@ -98,7 +96,7 @@ class TLine(HasTraits):
                        )
 
 
-class CompTimer(object):
+class CompTimer(HasTraits):
 
     def __init__(self, name):
         self.name = name
@@ -145,10 +143,8 @@ class TLoopHandler(Handler):
 #            self.computation_thread = Thread(target=info.object.eval, name="computation")
 #            self.computation_thread.start()
 
-RecalcAction = Action(name='Recalculate', action='recalculate')
 
-from traitsui.api import TreeNodeObject
-from warnings import warn
+RecalcAction = Action(name='Recalculate', action='recalculate')
 
 
 class TLoop(IBVResource):
@@ -244,6 +240,14 @@ class TLoop(IBVResource):
 
     sync_resp_tracing = Bool(False)
     _updated = Int(0)
+    eval_timer = Instance(CompTimer)
+    iter_timer = Instance(CompTimer)
+    crpr_timer = Instance(CompTimer)
+    solv_timer = Instance(CompTimer)
+    rtrace_mngr_timer = Instance(CompTimer)
+
+    _updated = Int(0)
+
     eval_timer = Instance(CompTimer)
     iter_timer = Instance(CompTimer)
     crpr_timer = Instance(CompTimer)
@@ -663,6 +667,7 @@ class TLoop(IBVResource):
                 height=0.75, width=0.75,
                 handler=TLoopHandler(),
                 buttons=[OKButton, CancelButton, RecalcAction])
+
 
 if LOGGING_ON:
     import logging.config
