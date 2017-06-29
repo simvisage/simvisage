@@ -106,7 +106,7 @@ if __name__ == '__main__':
                # (estimation of load-bearing capacity)
                # scale load factor in order to get evaluation within
                # relevant values (>>0)
-               gamma_unf=1000.0, gamma_fav=1.0,
+               gamma_unf=100.0, gamma_fav=1.0,
                psi_0=1.0,
                ),
         ]

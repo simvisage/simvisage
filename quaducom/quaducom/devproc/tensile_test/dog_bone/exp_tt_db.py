@@ -93,6 +93,7 @@ class ExpTTDB(ExType):
     gauge_length = Float(0.20, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
     age = Int(28, unit='d', input=True, table_field=True,
+
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''

@@ -36,7 +36,6 @@ class FEUnitElem(FEDomain):
         sctx.mats_state_array = np.zeros(state_arr_size, 'float_')
         return sctx
 
-
 class MATSExplore(IBVModel):
 
     '''

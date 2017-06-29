@@ -153,12 +153,8 @@ class MATSEval(HasStrictTraits, TStepperEval):
 
     # This is only relevant for strain softening models
     #
-    def get_regularizing_length(self, sctx, eps_app_eng, *args, **kw):
+    def get_regularizing_length(self, X_mtx, eps_app_eng, *args, **kw):
 
-        X_mtx = sctx.X_reg
-
-        # first principle strain unit vector
-        #
         eigval, eigvec = eigh(self.map_eps_eng_to_mtx(eps_app_eng))
 
         # Get the eigenvector associated with maximum aigenvalue
