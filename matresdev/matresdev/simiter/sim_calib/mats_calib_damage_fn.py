@@ -38,16 +38,12 @@ from traitsui.menu import \
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 
 from matresdev.db.exdb.ex_run import ExRun
-from matresdev.db.simdb import SimDB
-import numpy as np
+from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
 
 
 data_file_editor = FileEditor(filter=['*.DAT'])
-
-
-simdb = SimDB()
 
 
 # ---------------------------------------------------
@@ -66,7 +62,8 @@ class MATSCalibDamageFnController(Handler):
         calibrator = ui_info.object
 
         calibrator.init()
-        fit_response = calibrator.fit_response()
+        calibrator.fit_response()
+        calibrator.store()
 
 # ---------------------------------------------------
 # Calibrator of the damage function from uniaxial test:
@@ -205,8 +202,8 @@ class MATSCalibDamageFn(MATSExplore):
         ctt_key = str(self.composite_tensile_test.key)
         filename = os.path.join(simdata_dir, 'eps-sig-arr_' + ctt_key + '.csv')
 
-        xdata, ydata = ctt.eps_c_interpolated_smoothed[:,
-                                                       None], ctt.sig_c_interpolated_smoothed[:, None]
+        xdata, ydata = ctt.eps_c_interpolated_smoothed[:, None], \
+            ctt.sig_c_interpolated_smoothed[:, None]
         eps_sig_arr = np.hstack([xdata, ydata])
         print 'eps_sig_arr'
         np.savetxt(filename, eps_sig_arr, delimiter=';')
@@ -374,6 +371,9 @@ class MATSCalibDamageFn(MATSExplore):
 
     param_key = Str('')
 
+    xtol = Float(1e-6,
+                 label='lack-of-fit tolerance')
+
     def fit_response(self):
         '''iterate phi_trial in each incremental step such that the
         lack of fit between the calculated stress and the target
@@ -413,7 +413,7 @@ class MATSCalibDamageFn(MATSExplore):
                 # Here xtol is used to specify the allowed RELATIVE error!
                 # therefore the relative lack of fit is returned in
                 # method 'get_lack_of_fit'
-                _xtol = 1.0e-6
+                _xtol = self.xtol
                 phi_new = brentq(self.get_lack_of_fit, 0., phi_old, xtol=_xtol)
                 # @todo: check if 'brenth' gives better fitting results; faster?
 #                phi_new = brenth( self.get_lack_of_fit, 0., phi_old )
@@ -476,6 +476,8 @@ class MATSCalibDamageFn(MATSExplore):
 #            print '(g%)' %(n)
 
         self.fitted_phi_fn.changed = True
+
+    def store(self):
         mats_key = self.dim.mats_eval.__class__.__name__
         ctt_key = str(self.composite_tensile_test.key)
         if self.store_fitted_phi_fn:
@@ -652,7 +654,7 @@ class MATSCalibDamageFn(MATSExplore):
         if os.path.isdir(simdata_dir) == False:
             os.makedirs(simdata_dir)
 
-        ctt_key = str(self.composite_tensile_test.key)
+        ctt_key = self.test_key
         filename = os.path.join(simdata_dir, ctt_key + self.param_key + '.pdf')
         p.savefig(filename)
         print 'plot_trail_steps.png saved to file %s' % (filename)
@@ -661,6 +663,11 @@ class MATSCalibDamageFn(MATSExplore):
         print 'plot_trail_steps.png saved to file %s' % (filename)
 
         p.show()
+
+    test_key = Property
+
+    def _get_test_key(self):
+        return str(self.composite_tensile_test.key)
 
     #-------------------------------------------------------------------------
     # User interaction
@@ -1014,8 +1021,14 @@ def run():
         # run fitting procedure
         #------------------------------------------------------------------
         #
+        import pylab as p
+        ax = p.subplot(111)
+        fitter.mfn_line_array_target.mpl_plot(ax)
+        p.show()
+
         fitter.init()
         fitter.fit_response()
+        fitter.store()
         fitter.plot_trial_steps()
 
     return
