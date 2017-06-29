@@ -811,12 +811,12 @@ def run():
 
         test_file = join(simdb.exdata_dir,
                          'tensile_tests',
-                         'dog_bone',
-                         #                              'buttstrap_clamping',
+ #                        'dog_bone',
+                         'buttstrap_clamping',
 
-                         '2010-02-09_TT-10g-3cm-a-TR_TRC11',
+                         '2013-07-18_TTb-6c-2cm-0-TU_bs5',
                          #                              'TT11-10a-average.DAT' )
-                         'TT-10g-3cm-a-TR-average.DAT')
+                         'TTb-6c-2cm-0-TU-V3_bs5.DAT')
 
         #-----------------------------------
         # tests for 'BT-3PT-12c-6cm-TU_ZiE'
@@ -963,8 +963,8 @@ def run():
 #        E_c = 29940.2
 #        E_c = 29100.
 #        E_c = 22390.4
-#        E_c = 18709.5
-        E_c = 28700.
+        E_c = 18709.5
+#        E_c = 28700.
 
         # smallest value for matrix E-modulus obtained from cylinder tests (d=150mm)
 #        E_m = 18709.5
@@ -975,7 +975,7 @@ def run():
         nu = 0.20
         ex_run.ex_type.ccs.concrete_mixture_ref.nu = nu
 
-        n_steps = 200
+        n_steps = 100
         fitter.n_steps = n_steps
 
         fitter.format_ticks = True
