@@ -86,7 +86,7 @@ def plot_all():
         test_series_dir = os.path.join(simdb.report_dir)
         for subfolder_name in subfolder_path:
             test_series_dir = os.path.join(test_series_dir, subfolder_name)
-
+ 
         if not os.path.exists(test_series_dir):
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, '.eps')
