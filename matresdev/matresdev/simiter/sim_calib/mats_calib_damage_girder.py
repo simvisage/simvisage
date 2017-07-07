@@ -13,8 +13,8 @@ import pylab as p
 test_file = os.path.join(simdb.exdata_dir,
                          'tensile_tests',
                          'buttstrap_clamping',
-                         '2017-06-22-TTb-sig-eps-dresden-girder',
-                         'tt-sig-eps-800tex-test.txt')
+                         '2017-07-04-TTb-sig-eps-800tex-dresden',
+                         'tt-dk2-800tex.txt')
 
 
 class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
