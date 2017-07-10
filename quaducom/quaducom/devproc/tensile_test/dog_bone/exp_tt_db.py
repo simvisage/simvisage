@@ -813,10 +813,10 @@ class ExpTTDB(ExType):
         '''plot force-displacement diagram
         '''
         if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
-            axes.plot(self.W10_re, self.Kraft, color='b')
-            axes.plot(self.W10_li, self.Kraft, color='r')
+            axes.plot(self.W10_re, self.Kraft)
+            axes.plot(self.W10_li, self.Kraft)
             if hasattr(self, "W10_vo"):
-                axes.plot(self.W10_vo, self.Kraft, color='g')
+                axes.plot(self.W10_vo, self.Kraft)
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
@@ -836,19 +836,24 @@ class ExpTTDB(ExType):
             axes.plot(self.WA2_links, self.Kraft, color='r')
             axes.plot(self.WA3_rechts, self.Kraft, color='g')
 
-    def _plot_force_displacement_asc(self, axes, color=None,  linewidth=1., linestyle='-', label=None):
+    def _plot_force_displacement_asc(self, axes, color='black', linewidth=1., linestyle='-', label=None):
         '''plot force-displacement diagram (only the ascending branch)
         '''
-        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
-            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color='b', linewidth=linewidth, linestyle=linestyle, label=label)
-            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color='r', linewidth=linewidth, linestyle=linestyle, label=label)
-            if hasattr(self, "W10_vo"):
-                axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc, color='g', linewidth=linewidth, linestyle=linestyle, label=label)
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
+            #
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_vo[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA_VL") and hasattr(self, "WA_VR") and hasattr(self, "WA_HL") and hasattr(self, "WA_HR"):
+            #
             axes.plot(self.WA_VL[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA_VR[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA_HL[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA_HR[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+#            axes.set_xlabel('%s' % ('displacement [mm]',))
+#            axes.set_ylabel('%s' % ('force [kN]',))
         if hasattr(self, "WA1_vorne") and hasattr(self, "WA2_links") and hasattr(self, "WA3_rechts"):
             axes.plot(self.WA1_vorne[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
@@ -857,13 +862,15 @@ class ExpTTDB(ExType):
             axes.plot(self.WA1_hinten[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA2_links[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
             axes.plot(self.WA3_rechts[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
-
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            axes.plot(self.W10_re[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
+            axes.plot(self.W10_li[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 
     def _plot_force_displacement_asc_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
-        '''plot force-displacement diagram (only the ascending branch, averaged between left, right, front and back)
+        '''plot force-displacement diagram (only the ascending branch, averaged between left, rigth, front and back)
         '''
         if hasattr(self, "W10_re") and hasattr(self, "W10_li") and hasattr(self, "W10_vo"):
-            w_hi = (self.W10_re + self.W10_li) / 2 
+            w_hi = (self.W10_re + self.W10_li / 2 )
             w_av = (w_hi + self.W10_vo) / 2
             axes.plot(w_av[:self.max_stress_idx + 1], self.F_asc, color=color, linewidth=linewidth, linestyle=linestyle, label=label)
 

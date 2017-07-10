@@ -3,7 +3,7 @@ import os.path
 
 from mathkit.array.smoothing import smooth
 from mathkit.mfn import MFnLineArray
-from traits.api import Array
+
 from matresdev.db.simdb.simdb import simdb
 from mats_calib_damage_fn import MATSCalibDamageFn
 import numpy as np
@@ -13,30 +13,18 @@ import pylab as p
 test_file = os.path.join(simdb.exdata_dir,
                          'tensile_tests',
                          'buttstrap_clamping',
-                         '2017-06-22-TTb-sig-eps-dresden-girder',
-                         'tt-dk3-800tex.txt')
-
-
-def read_test_data(test_file):
-    data = np.loadtxt(test_file)
-    xdata, ydata = data.T
-    xdata = np.hstack([[0], xdata])
-    ydata = np.hstack([[0], ydata])
-    f_max_idx = np.argmax(ydata)
-    xdata *= 0.001
-    return xdata[:f_max_idx], ydata[:f_max_idx]
+                         '2017-07-04-TTb-sig-eps-800tex-dresden',
+                         'tt-dk2-800tex.txt')
 
 
 class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
 
-    xdata = Array(np.float_)
-    ydata = Array(np.float_)
-
     def _get_mfn_line_array_target(self):
-
-        srange = 70
-        eps = smooth(xdata, srange, 'flat')
-        sig = smooth(ydata, srange, 'flat')
+        data = np.loadtxt(test_file)
+        xdata, ydata = data.T
+        xdata *= 0.001
+        eps = xdata  # smooth(xdata, 8, 'flat')
+        sig = ydata  # smooth(ydata, 8, 'flat')
 
         return MFnLineArray(xdata=eps, ydata=sig)
 
@@ -44,19 +32,20 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
         return 'girder_dresden'
 
 
-xdata, ydata = read_test_data(test_file)
-
 cf = MATSCalibDamageFnSigEps(xtol=1e-3)
 ax = p.subplot(121)
 
-E_c = np.average((ydata[10:100] - ydata[0]) / (xdata[10:100] - xdata[0]))
+data = np.loadtxt(test_file)
+xdata, ydata = data.T
+xdata *= 0.001
+
+E_c = np.average((ydata[1:3] - ydata[0]) / (xdata[1:3] - xdata[0]))
 print 'e_mod', E_c
 
 p.plot([0, 0.001], [0, E_c * 0.001], color='blue')
 
 p.plot(xdata, ydata)
 cf.mfn_line_array_target.mpl_plot(ax)
-p.show()
 
 
 def run():
