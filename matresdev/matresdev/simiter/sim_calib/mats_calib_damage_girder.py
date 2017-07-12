@@ -13,7 +13,7 @@ import pylab as p
 test_file = os.path.join(simdb.exdata_dir,
                          'tensile_tests',
                          'buttstrap_clamping',
-                         '2017-07-04-TTb-sig-eps-800tex-dresden',
+                         '2017-06-22-TTb-sig-eps-dresden-girder',
                          'tt-dk2-800tex.txt')
 
 
