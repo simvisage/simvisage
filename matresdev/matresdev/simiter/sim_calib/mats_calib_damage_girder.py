@@ -23,8 +23,12 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
         data = np.loadtxt(test_file)
         xdata, ydata = data.T
         xdata *= 0.001
-        eps = xdata  # smooth(xdata, 8, 'flat')
-        sig = ydata  # smooth(ydata, 8, 'flat')
+
+        xdata = xdata[:np.argmax(ydata)]
+        ydata = ydata[:np.argmax(ydata)]
+
+        eps = smooth(xdata, 60, 'flat')
+        sig = smooth(ydata, 60, 'flat')
 
         return MFnLineArray(xdata=eps, ydata=sig)
 
@@ -38,8 +42,18 @@ ax = p.subplot(121)
 data = np.loadtxt(test_file)
 xdata, ydata = data.T
 xdata *= 0.001
+xdata = xdata[:np.argmax(ydata)]
+ydata = ydata[:np.argmax(ydata)]
+del_idx = np.arange(60)
+xdata = np.delete(xdata, del_idx)
+ydata = np.delete(ydata, del_idx)
+xdata = np.append(0.0, xdata)
+ydata = np.append(0.0, ydata)
 
-E_c = np.average((ydata[1:3] - ydata[0]) / (xdata[1:3] - xdata[0]))
+eps = smooth(xdata, 60, 'flat')
+sig = smooth(ydata, 60, 'flat')
+
+E_c = np.average((ydata[2:4] - ydata[0]) / (xdata[2:4] - xdata[0]))
 print 'e_mod', E_c
 
 p.plot([0, 0.001], [0, E_c * 0.001], color='blue')
