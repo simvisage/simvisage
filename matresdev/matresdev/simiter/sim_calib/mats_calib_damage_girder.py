@@ -15,7 +15,7 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
     test_file = File
 
     def _get_mfn_line_array_target(self):
-        data = np.loadtxt(test_file)
+        data = np.loadtxt(self.test_file)
         xdata, ydata = data.T
         xdata *= 0.001
 
@@ -46,23 +46,30 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
         return 'girder_dresden'
 
 
-file_names = ['tt-dk1-800tex.txt',
-              'tt-dk2-800tex.txt',
-              'tt-dk3-800tex.txt',
-              'tt-dk4-800tex.txt']
-
-test_files = [os.path.join(simdb.exdata_dir,
-                           'tensile_tests',
-                           'buttstrap_clamping',
-                           '2017-06-22-TTb-sig-eps-dresden-girder',
-                           file_name)
-              for file_name in file_names
-              ]
+file_names_800 = ['tt-dk1-800tex.txt',
+                  'tt-dk2-800tex.txt',
+                  'tt-dk3-800tex.txt',
+                  'tt-dk4-800tex.txt']
 
 
-def show_input(test_file):
+file_names_3300 = ['tt-dk1-3300tex.txt',
+                   'tt-dk2-3300tex.txt',
+                   'tt-dk3-3300tex.txt',
+                   'tt-dk4-3300tex.txt']
+
+
+def get_test_files(test_file_names):
+    return [os.path.join(simdb.exdata_dir,
+                         'tensile_tests',
+                         'buttstrap_clamping',
+                         '2017-06-22-TTb-sig-eps-dresden-girder',
+                         file_name)
+            for file_name in test_file_names
+            ]
+
+
+def show_input(ax, test_file):
     cf = MATSCalibDamageFnSigEps(test_file=test_file, xtol=1e-3)
-    ax = p.subplot(121)
 
     data = np.loadtxt(test_file)
     xdata, ydata = data.T
@@ -87,10 +94,9 @@ def show_input(test_file):
     cf.mfn_line_array_target.mpl_plot(ax)
 
 
-for test_file in test_files:
-    show_input(test_file)
-
-p.show()
+def show_test_files(ax, file_names):
+    for test_file in get_test_files(file_names):
+        show_input(ax, test_file)
 
 
 def run(test_file):
@@ -196,28 +202,40 @@ def run(test_file):
     fitter.fitted_phi_fn.mpl_plot(ax)
     # p.show()
 
-    return [fitter.fitted_phi_fn.xdata, fitter.fitted_phi_fn.ydata]
+    return fitter.fitted_phi_fn.xdata, fitter.fitted_phi_fn.ydata, E_c
 
 
-def calibrate():
-    for test_file in test_files:
-        xdata, ydata = run(test_file)
+def calibrate(file_names):
+    for test_file in get_test_files(file_names):
+        xdata, ydata, E_c = run(test_file)
         results = np.c_[xdata, ydata]
         np.savetxt(test_file + 'phi_data', results)
+        with open(test_file + 'E_c', 'w') as f:
+            f.write(r'''E_c = %g''' % E_c)
     p.show()
 
 
-def show_results():
-    for test_file in test_files:
-        ax = p.subplot(111)
+def show_results(ax, file_names):
+    for test_file in get_test_files(file_names):
+        fname = os.path.basename(test_file)
         results = np.loadtxt(test_file + 'phi_data')
         xdata, ydata = results.T
+        with open(test_file + 'E_c', 'r') as f:
+            E_c_str = f.read()
 #         xdata = smooth(xdata, 6, 'flat')
 #         ydata = smooth(ydata, 6, 'flat')
-        ax.plot(xdata, ydata)
+        ax.plot(xdata, ydata, label='%s: %s' % (fname, E_c_str))
         ax.set_ylim(ymin=0.0)
-    p.show()
+    p.legend(loc=1)
 
 
 if __name__ == '__main__':
-    show_results()
+    ax = p.subplot(221)
+    show_test_files(ax, file_names_800)
+    ax = p.subplot(222)
+    show_results(ax, file_names_800)
+    ax = p.subplot(223)
+    show_test_files(ax, file_names_3300)
+    ax = p.subplot(224)
+    show_results(ax, file_names_3300)
+    p.show()
