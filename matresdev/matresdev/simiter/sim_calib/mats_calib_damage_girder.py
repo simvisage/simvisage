@@ -3,52 +3,103 @@ import os.path
 
 from mathkit.array.smoothing import smooth
 from mathkit.mfn import MFnLineArray
-
+from traits.api import File
 from matresdev.db.simdb.simdb import simdb
 from mats_calib_damage_fn import MATSCalibDamageFn
 import numpy as np
 import pylab as p
 
 
-test_file = os.path.join(simdb.exdata_dir,
-                         'tensile_tests',
-                         'buttstrap_clamping',
-                         '2017-06-22-TTb-sig-eps-dresden-girder',
-                         'tt-sig-eps-800tex-test.txt')
-
-
 class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
 
+    test_file = File
+
     def _get_mfn_line_array_target(self):
-        data = np.loadtxt(test_file)
+        data = np.loadtxt(self.test_file)
         xdata, ydata = data.T
         xdata *= 0.001
-        eps = xdata  # smooth(xdata, 8, 'flat')
-        sig = ydata  # smooth(ydata, 8, 'flat')
+
+        xdata = xdata[:np.argmax(ydata)]
+        ydata = ydata[:np.argmax(ydata)]
+
+        eps = smooth(xdata, 60, 'flat')
+        sig = smooth(ydata, 60, 'flat')
 
         return MFnLineArray(xdata=eps, ydata=sig)
+
+    def get_E_c(self):
+
+        data = np.loadtxt(self.test_file)
+        xdata, ydata = data.T
+        xdata *= 0.001
+        xdata = xdata[:np.argmax(ydata)]
+        ydata = ydata[:np.argmax(ydata)]
+        del_idx = np.arange(60)
+        xdata = np.delete(xdata, del_idx)
+        ydata = np.delete(ydata, del_idx)
+        xdata = np.append(0.0, xdata)
+        ydata = np.append(0.0, ydata)
+        E_c = np.average((ydata[2:4] - ydata[0]) / (xdata[2:4] - xdata[0]))
+        return E_c
 
     def _get_test_key(self):
         return 'girder_dresden'
 
 
-cf = MATSCalibDamageFnSigEps(xtol=1e-3)
-ax = p.subplot(121)
-
-data = np.loadtxt(test_file)
-xdata, ydata = data.T
-xdata *= 0.001
-
-E_c = np.average((ydata[1:3] - ydata[0]) / (xdata[1:3] - xdata[0]))
-print 'e_mod', E_c
-
-p.plot([0, 0.001], [0, E_c * 0.001], color='blue')
-
-p.plot(xdata, ydata)
-cf.mfn_line_array_target.mpl_plot(ax)
+file_names_800 = ['tt-dk1-800tex.txt',
+                  'tt-dk2-800tex.txt',
+                  'tt-dk3-800tex.txt',
+                  'tt-dk4-800tex.txt']
 
 
-def run():
+file_names_3300 = ['tt-dk1-3300tex.txt',
+                   'tt-dk2-3300tex.txt',
+                   'tt-dk3-3300tex.txt',
+                   'tt-dk4-3300tex.txt']
+
+
+def get_test_files(test_file_names):
+    return [os.path.join(simdb.exdata_dir,
+                         'tensile_tests',
+                         'buttstrap_clamping',
+                         '2017-06-22-TTb-sig-eps-dresden-girder',
+                         file_name)
+            for file_name in test_file_names
+            ]
+
+
+def show_input(ax, test_file):
+    cf = MATSCalibDamageFnSigEps(test_file=test_file, xtol=1e-3)
+
+    data = np.loadtxt(test_file)
+    xdata, ydata = data.T
+    xdata *= 0.001
+    xdata = xdata[:np.argmax(ydata)]
+    ydata = ydata[:np.argmax(ydata)]
+    del_idx = np.arange(60)
+    xdata = np.delete(xdata, del_idx)
+    ydata = np.delete(ydata, del_idx)
+    xdata = np.append(0.0, xdata)
+    ydata = np.append(0.0, ydata)
+
+    eps = smooth(xdata, 60, 'flat')
+    sig = smooth(ydata, 60, 'flat')
+
+    E_c = np.average((ydata[2:4] - ydata[0]) / (xdata[2:4] - xdata[0]))
+    print 'e_mod', E_c
+
+    p.plot([0, 0.001], [0, E_c * 0.001], color='blue')
+
+    p.plot(xdata, ydata)
+    cf.mfn_line_array_target.mpl_plot(ax)
+
+
+def show_test_files(ax, file_names):
+    for test_file in get_test_files(file_names):
+        show_input(ax, test_file)
+
+
+def run(test_file):
     #-------------------------------------------------------------------------
     # Example using the mats2d_explore
     #-------------------------------------------------------------------------
@@ -88,7 +139,8 @@ def run():
 #    print 'normals', mats_eval._MPN
 #    print 'weights', mats_eval._MPW
 
-    fitter = MATSCalibDamageFnSigEps(KMAX=300,
+    fitter = MATSCalibDamageFnSigEps(test_file=test_file,
+                                     KMAX=300,
                                      tolerance=5e-4,  # 0.01,
                                      RESETMAX=0,
                                      dim=MATS2DExplore(
@@ -116,7 +168,7 @@ def run():
     fitter.n_steps = n_steps
 
     fitter.format_ticks = True
-
+    E_c = fitter.get_E_c()
     fitter.dim.mats_eval.E = E_c
     fitter.dim.mats_eval.nu = nu
 
@@ -148,56 +200,42 @@ def run():
     ax = p.subplot(122)
     print 'plotting'
     fitter.fitted_phi_fn.mpl_plot(ax)
+    # p.show()
+
+    return fitter.fitted_phi_fn.xdata, fitter.fitted_phi_fn.ydata, E_c
+
+
+def calibrate(file_names):
+    for test_file in get_test_files(file_names):
+        xdata, ydata, E_c = run(test_file)
+        results = np.c_[xdata, ydata]
+        np.savetxt(test_file + 'phi_data', results)
+        with open(test_file + 'E_c', 'w') as f:
+            f.write(r'''E_c = %g''' % E_c)
     p.show()
 
-    return
 
-    #---------------------------
-    # basic testing of fitter methods:
-    #---------------------------
-
-    # set to True for basic testing of the methods:
-    basic_tests = False
-
-    if basic_tests:
-        fitter.run_through()
-        #    fitter.tloop.rtrace_mngr.rtrace_bound_list[0].configure_traits()
-        fitter.tloop.rtrace_mngr.rtrace_bound_list[0].redraw()
-        last_strain_run_through = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.xdata[:]
-        last_stress_run_through = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.ydata[:]
-        print 'last strain (run-through) value', last_strain_run_through
-        print 'last stress (run-through) value', last_stress_run_through
-
-        fitter.tloop.reset()
-        fitter.run_step_by_step()
-        # fitter.tloop.rtrace_mngr.rtrace_bound_list[0].configure_traits()
-        fitter.tloop.rtrace_mngr.rtrace_bound_list[0].redraw()
-        last_strain_step_by_step = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.xdata[:]
-        last_stress_step_by_step = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.ydata[:]
-        print 'last stress (step-by-step) value', last_stress_step_by_step
-
-        fitter.run_trial_step()
-        fitter.run_trial_step()
-        fitter.tloop.rtrace_mngr.rtrace_bound_list[0].redraw()
-        strain_after_trial_steps = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.xdata[:]
-        stress_after_trial_steps = fitter.tloop.rtrace_mngr.rtrace_bound_list[0].trace.ydata[:]
-        print 'stress after trial', stress_after_trial_steps
-
-        fitter.init()
-        # fitter.mats2D_eval.configure_traits()
-        lof = fitter.get_lack_of_fit(1.0)
-        print '1', lof
-        lof = fitter.get_lack_of_fit(0.9)
-        print '2', lof
-
-        # fitter.tloop.rtrace_mngr.configure_traits()
-        fitter.run_trial_step()
-
-    else:
-        from ibvpy.plugins.ibvpy_app import IBVPyApp
-        ibvpy_app = IBVPyApp(ibv_resource=fitter)
-        ibvpy_app.main()
+def show_results(ax, file_names):
+    for test_file in get_test_files(file_names):
+        fname = os.path.basename(test_file)
+        results = np.loadtxt(test_file + 'phi_data')
+        xdata, ydata = results.T
+        with open(test_file + 'E_c', 'r') as f:
+            E_c_str = f.read()
+#         xdata = smooth(xdata, 6, 'flat')
+#         ydata = smooth(ydata, 6, 'flat')
+        ax.plot(xdata, ydata, label='%s: %s' % (fname, E_c_str))
+        ax.set_ylim(ymin=0.0)
+    p.legend(loc=1)
 
 
 if __name__ == '__main__':
-    run()
+    ax = p.subplot(221)
+    show_test_files(ax, file_names_800)
+    ax = p.subplot(222)
+    show_results(ax, file_names_800)
+    ax = p.subplot(223)
+    show_test_files(ax, file_names_3300)
+    ax = p.subplot(224)
+    show_results(ax, file_names_3300)
+    p.show()
