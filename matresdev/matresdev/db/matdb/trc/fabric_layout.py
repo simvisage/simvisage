@@ -349,8 +349,8 @@ FabricLayOut.db = SimDBClassExt(
                'Q95/95-CCE-38' : FabricLayOut(
                                            a_tex_0=95.,  # = 3.62 m^2 / 0.038 m
                                            a_tex_90=95,
-                                           E_tex_0=246100.,  # Modulus from single yarn test data base
-                                           E_tex_90=246100., 
+                                           E_tex_0=226474.,  # Modulus from single yarn test data base
+                                           E_tex_90=236362., 
                                            s_tex_0=38.,
                                            s_tex_90=38.,
                                            ),  

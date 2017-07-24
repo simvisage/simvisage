@@ -67,6 +67,8 @@ class ExpSH3PT(ExType):
                   auto_set=False, enter_set=True)
     thickness = Float(0.03, unit='m', input=True, table_field=True,
                       auto_set=False, enter_set=True)
+    eff_depth = Float(0.015, unit='m', input=True,  table_field=True,
+                      auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
     age = Int(242, unit='d', input=True, table_field=True,
@@ -280,6 +282,7 @@ class ExpSH3PT(ExType):
             Item('length_right', format_str="%.3f"),
             Item('width', format_str="%.3f"),
             Item('thickness', format_str="%.3f"),
+            Item('eff_depth', format_str="%.3f"),
             label='geometry'
         ),
         Group(

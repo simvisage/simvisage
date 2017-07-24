@@ -90,14 +90,14 @@ class ExpTTDB(ExType):
 
     width = Float(0.12, unit='m', input=True, table_field=True,
                   auto_set=False, enter_set=True)
-    gauge_length = Float(0.20, unit='m', input=True, table_field=True,
+    gauge_length = Float(0.45, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
-    age = Int(28, unit='d', input=True, table_field=True,
+    age = Int(17, unit='d', input=True, table_field=True,
 
               auto_set=False, enter_set=True)
     '''Age of the concrete at the time of testing.
     '''
-    n_rovings = Float(0, unit='-', input=True, table_field=True,
+    n_rovings = Float(3, unit='-', input=True, table_field=True,
                   auto_set=False, enter_set=True)
 
     loading_rate = Float(1.0, unit='mm/min', input=True, table_field=True,
@@ -116,10 +116,11 @@ class ExpTTDB(ExType):
 
     def _ccs_default(self):
         '''default settings correspond to
-        setup '9u_MAG-07-03_PZ-0708-1'
+        current test series'
         '''
         print 'ccs default used'
 #        fabric_layout_key = 'Q142/142-CCE-25'
+        fabric_layout_key = 'Q95/95-CCE-38'
 #        fabric_layout_key = 'MAG-07-03'
 #        fabric_layout_key = '2D-02-06a'
 #        fabric_layout_key2 = 'C-Grid-C50'
@@ -130,20 +131,21 @@ class ExpTTDB(ExType):
 #        fabric_layout_key = '2D-05-11'
 #        fabric_layout_key = 'NWM3-016-09-b1'
 #         fabric_layout_key = 'CAR-3300-EP_Q90'
-        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
+#        fabric_layout_key = 'CAR-3300-SBR_BTZ2'
 #        fabric_layout_key = 'Grid-600'
 #        fabric_layout_key = '2D-15-10'
 #        concrete_mixture_key = 'PZ-0708-1'
 #        concrete_mixture_key = 'barrelshell'
 #        concrete_mixture_key = 'sto-100'
 #        concrete_mixture_key = 'FIL-10-09'
-        concrete_mixture_key = 'Pagel_TF10'
+#        concrete_mixture_key = 'Pagel_TF10'
 #        concrete_mixture_key = 'HPC_TU_WIEN'
+        concrete_mixture_key = 'T08_Boegel'
         orientation_fn_key = 'all0'
 #        orientation_fn_key = 'all90'
 #        orientation_fn_key = '90_0'
-        n_layers = 2
-        thickness = 0.009
+        n_layers = 1
+        thickness = 0.03
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -797,6 +799,7 @@ class ExpTTDB(ExType):
                       'smoothed composite stress / strain': '_plot_sigc_eps_smoothed',
                       'textile stress / strain': '_plot_sigtex_eps',
                       'smoothed textile stress / strain': '_plot_sigtex_eps_smoothed',
+                      'textile stress / strain (ascending)': '_plot_tex_stress_strain_asc',
                       }
 
     default_plot_template = 'force / gauge displacement'
