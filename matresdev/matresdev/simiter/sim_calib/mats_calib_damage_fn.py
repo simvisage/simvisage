@@ -391,6 +391,8 @@ class MATSCalibDamageFn(MATSExplore):
 
         axes = figure.axes[0]
 
+        phi_max_factor = Float(1.0)
+
         print 'n_steps', self.n_steps
         for n in range(self.n_steps):
 
@@ -414,10 +416,13 @@ class MATSCalibDamageFn(MATSExplore):
                 # therefore the relative lack of fit is returned in
                 # method 'get_lack_of_fit'
                 _xtol = self.xtol
-                phi_new = brentq(self.get_lack_of_fit, 0., phi_old, xtol=_xtol)
+                phi_max = min(1.0, phi_old * self.phi_max_factor)
+                phi_min = phi_old * 0.2  # 0.0  # phi_old * 0.3
+                phi_new = brentq(self.get_lack_of_fit,
+                                 phi_min, phi_max, xtol=_xtol)
                 # @todo: check if 'brenth' gives better fitting results; faster?
 #                phi_new = brenth( self.get_lack_of_fit, 0., phi_old )
-                print '(#) n = ', n
+                print '(#) n = ', n, phi_new, phi_max, phi_old, phi_old - phi_new
             except ValueError:
 
                 if self.log:
@@ -427,7 +432,8 @@ class MATSCalibDamageFn(MATSExplore):
                     print 'get_lack_of_fit(0.) = ', lof_0
                     print 'Use old value for phi_trial. phi_old = ', phi_old
                 else:
-                    print '(!) n = ', n
+                    print '(!) n = ', n, phi_new, phi_max, phi_old, phi_old - phi_new
+                    phi_new = phi_old
 
             # current time corresponds to the current strain applied
             #
@@ -762,7 +768,7 @@ def run():
     }
 
     mats_eval = MATS2DMicroplaneDamage(
-        n_mp=30,
+        n_mp=15,
         # mats_eval = MATS1DMicroplaneDamage(
         elastic_debug=False,
         stress_state='plane_stress',
