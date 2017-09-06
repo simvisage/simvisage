@@ -371,6 +371,8 @@ class MATSCalibDamageFn(MATSExplore):
 
     param_key = Str('')
 
+    phi_max_factor = Float(1.0)
+
     xtol = Float(1e-6,
                  label='lack-of-fit tolerance')
 
@@ -390,8 +392,6 @@ class MATSCalibDamageFn(MATSExplore):
         figure = self.figure
 
         axes = figure.axes[0]
-
-        phi_max_factor = Float(1.0)
 
         print 'n_steps', self.n_steps
         for n in range(self.n_steps):

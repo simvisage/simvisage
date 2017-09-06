@@ -1,4 +1,3 @@
-
 from os.path import join
 import os.path
 
@@ -13,7 +12,7 @@ from ibvpy.mats.mats_explore import MATSExplore
 from mathkit.array.smoothing import smooth
 from mathkit.mfn import MFnLineArray
 from numpy import average
-from traits.api import File
+from traits.api import File, Bool
 
 from matresdev.db.simdb.simdb import simdb
 from mats_calib_damage_fn import MATSCalibDamageFn
@@ -25,16 +24,22 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
 
     test_file = File
 
+    smooth = Bool(True)
+
     def _get_mfn_line_array_target(self):
         data = np.loadtxt(self.test_file)
         xdata, ydata = data.T
-        xdata *= 0.001
 
-        xdata = xdata[:np.argmax(ydata)]
-        ydata = ydata[:np.argmax(ydata)]
+        if self.smooth:
+            xdata *= 0.001
 
-        eps = smooth(xdata, 60, 'flat')
-        sig = smooth(ydata, 60, 'flat')
+            xdata = xdata[:np.argmax(ydata)]
+            ydata = ydata[:np.argmax(ydata)]
+            eps = smooth(xdata, 60, 'flat')
+            sig = smooth(ydata, 60, 'flat')
+        else:
+            eps = xdata
+            sig = ydata
 
         return MFnLineArray(xdata=eps, ydata=sig)
 
@@ -71,22 +76,27 @@ def get_test_files(test_file_names):
             ]
 
 
-def show_test_file(ax, test_file):
-    cf = MATSCalibDamageFnSigEps(test_file=test_file, xtol=1e-3)
+def show_test_file(ax, test_file, smooth=True):
+    cf = MATSCalibDamageFnSigEps(test_file=test_file,
+                                 xtol=1e-3, smooth=smooth)
 
     data = np.loadtxt(test_file)
     xdata, ydata = data.T
-    xdata *= 0.001
-    xdata = xdata[:np.argmax(ydata)]
-    ydata = ydata[:np.argmax(ydata)]
-    del_idx = np.arange(60)
-    xdata = np.delete(xdata, del_idx)
-    ydata = np.delete(ydata, del_idx)
-    xdata = np.append(0.0, xdata)
-    ydata = np.append(0.0, ydata)
 
-    eps = smooth(xdata, 60, 'flat')
-    sig = smooth(ydata, 60, 'flat')
+    if smooth:
+        xdata *= 0.001
+        xdata = xdata[:np.argmax(ydata)]
+        ydata = ydata[:np.argmax(ydata)]
+        del_idx = np.arange(60)
+        xdata = np.delete(xdata, del_idx)
+        ydata = np.delete(ydata, del_idx)
+        xdata = np.append(0.0, xdata)
+        ydata = np.append(0.0, ydata)
+        eps = smooth(xdata, 60, 'flat')
+        sig = smooth(ydata, 60, 'flat')
+    else:
+        eps = xdata
+        sig = ydata
 
     E_c = np.average((ydata[2:4] - ydata[0]) / (xdata[2:4] - xdata[0]))
     E_c = 20000.0
@@ -98,12 +108,14 @@ def show_test_file(ax, test_file):
     cf.mfn_line_array_target.mpl_plot(ax)
 
 
-def show_test_files(ax, file_names):
+def show_test_files(ax, file_names, smooth=True):
     for test_file in get_test_files(file_names):
-        show_test_file(ax, test_file)
+        show_test_file(ax, test_file, smooth)
 
 
-def calibrate_damage_function(ax, test_file, phi_max_factor=1.0, n_steps=30):
+def calibrate_damage_function(ax, test_file,
+                              phi_max_factor=1.0, n_steps=30,
+                              smooth=True):
     #-------------------------------------------------------------------------
     # Example using the mats2d_explore
     #-------------------------------------------------------------------------
@@ -143,7 +155,8 @@ def calibrate_damage_function(ax, test_file, phi_max_factor=1.0, n_steps=30):
                                          explorer_config=ec,
                                      ),
                                      store_fitted_phi_fn=True,
-                                     log=False
+                                     log=False,
+                                     smooth=smooth
                                      )
 
     #------------------------------------------------------------------
@@ -298,11 +311,12 @@ def verify_damage_functions(ax, file_names, E_c=20000.0):
 
 
 def calibrate_damage_functions(ax, file_names,
-                               phi_max_factor=1.0, n_steps=30):
+                               phi_max_factor=1.0,
+                               n_steps=30, smooth=True):
     for test_file in get_test_files(file_names):
         xdata, ydata, E_c = calibrate_damage_function(ax, test_file,
                                                       phi_max_factor,
-                                                      n_steps)
+                                                      n_steps, smooth)
         results = np.c_[xdata, ydata]
         np.savetxt(test_file + 'phi_data', results)
         with open(test_file + 'E_c', 'w') as f:
@@ -344,20 +358,21 @@ file_names_3300 = [
     'tt-dk4-3300tex.txt'
 ]
 
-if __name__ == '__main__':
+
+def calibrate_damage_fn_for_all_tests():
     p.figure(figsize=(9, 6))
     ax = p.subplot(241)
     show_test_files(ax, file_names_800)
-#     ax = p.subplot(242)
-#     calibrate_damage_functions(ax, file_names_800, 1.0, n_steps=100)
+    ax = p.subplot(242)
+    calibrate_damage_functions(ax, file_names_800, 1.0, n_steps=100)
     ax = p.subplot(243)
     show_damage_functions(ax, file_names_800)
     ax = p.subplot(244)
     verify_damage_functions(ax, file_names_800)
     ax = p.subplot(245)
     show_test_files(ax, file_names_3300)
-#     ax = p.subplot(246)
-#     calibrate_damage_functions(ax, file_names_3300, 1.5, n_steps=30)
+    ax = p.subplot(246)
+    calibrate_damage_functions(ax, file_names_3300, 1.5, n_steps=30)
     ax = p.subplot(247)
     show_damage_functions(ax, file_names_3300)
     ax = p.subplot(248)
@@ -373,3 +388,47 @@ if __name__ == '__main__':
     np.savetxt(phi_fn_3300_name, np.c_[e_data, phi_data])
 
     p.show()
+
+
+def calibrate_modified_rho():
+    def get_tf(tf): return get_test_files([tf])[0]
+
+    f800 = 'tt-t5mm-800tex.txt'
+    mf800 = get_tf('m' + f800)
+    eps, sig = np.loadtxt(get_tf(f800))
+
+    np.savetxt(get_tf('m' + f800), np.c_[eps, sig])
+    f3300 = 'tt-t5mm-3300tex.txt'
+    mf3300 = get_tf('m' + f3300)
+    eps, sig = np.loadtxt(get_tf(f3300))
+    np.savetxt(mf3300, np.c_[eps, sig])
+
+    file_names_800 = [mf800]
+
+    p.figure(figsize=(9, 6))
+
+    ax = p.subplot(241)
+    show_test_files(ax, file_names_800, smooth=False)
+    ax = p.subplot(242)
+    calibrate_damage_functions(ax, file_names_800, 1.0,
+                               n_steps=100, smooth=False)
+    ax = p.subplot(243)
+    show_damage_functions(ax, file_names_800)
+    ax = p.subplot(244)
+    verify_damage_functions(ax, file_names_800)
+
+    file_names_3300 = [mf3300]
+    ax = p.subplot(245)
+    show_test_files(ax, file_names_3300, smooth=False)
+    ax = p.subplot(246)
+    calibrate_damage_functions(ax, file_names_3300, 1.0,
+                               n_steps=100, smooth=False)
+    ax = p.subplot(247)
+    show_damage_functions(ax, file_names_3300)
+    ax = p.subplot(248)
+    verify_damage_functions(ax, file_names_3300)
+    p.show()
+
+
+if __name__ == '__main__':
+    calibrate_modified_rho()
