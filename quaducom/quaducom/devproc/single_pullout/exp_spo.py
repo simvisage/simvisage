@@ -14,6 +14,9 @@
 
 
 import os
+
+from numpy import  fabs, where, copy, \
+    argmax, unique, around
 from traits.api import \
     Int, Float, \
     on_trait_change, Instance, \
@@ -74,10 +77,21 @@ class ExpSPO(ExType):
     '''Number of rovings within a cross section.
     '''
 
+    lb_roving = Float(19, unit='mm', input=True, table_field=True,
+                      auto_set=False, enter_set=True)
+    '''embedment length of the roving.
+    '''
+
     A_roving = Float(0.000001, unit='mm2', input=True, table_field=True,
                      auto_set=False, enter_set=True)
     '''Cross sectional area of a roving.
     '''
+    A_tex = Property(Float, unit='mm^2', depends_on='input_change')
+    '''Total cross-sectional-area of the textile reinforcement.
+    '''
+    @cached_property
+    def _get_A_tex(self):
+        return self.ccs.a_tex * self.width
 
     gauge_length = Float(0.25, unit='m', input=True, table_field=True,
                          auto_set=False, enter_set=True)
@@ -109,11 +123,11 @@ class ExpSPO(ExType):
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
         print 'ccs default used'
-        fabric_layout_key = 'Q121/121-AAE-38'
-        concrete_mixture_key = 'C3-HF2-155-5'
+        fabric_layout_key = 'Q95/95-CCE-38'
+        concrete_mixture_key = 'C3-HF2-165-4'
         orientation_fn_key = 'all0'
         n_layers = 1
-        thickness = 0.021
+        thickness = 0.04
 
         s_tex_z = thickness / (n_layers + 1)
         ccs = CompositeCrossSection(
@@ -131,7 +145,7 @@ class ExpSPO(ExType):
         )
         return ccs
 
-  # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Get properties of the composite
     # --------------------------------------------------------------------------
 
@@ -165,9 +179,21 @@ class ExpSPO(ExType):
     '''Total cross-sectional-area of the textile reinforcement.
     '''
 
+    max_force_idx = Property(Int)
+
     @cached_property
-    def _get_A_tex(self):
-        return self.ccs.a_tex * self.width
+    def _get_max_force_idx(self):
+        '''get the index of the maximum force'''
+        # NOTE: processed data returns positive values for force and
+        # displacement
+        return argmax(self.Kraft)
+
+    F_asc = Property(Array('float_'), depends_on='input_change')
+    '''Ascending branch of the force
+    '''
+    @cached_property
+    def _get_F_asc(self):
+        return self.Kraft[:self.max_force_idx + 1]
 
     E_c28 = DelegatesTo('ccs', listenable=False)
     '''E-modulus of the composite after 28 days.
@@ -212,26 +238,15 @@ class ExpSPO(ExType):
             self.W10_li -= self.W10_li[0]
             self.W10_li *= -1
 
-    '''Stress in the textile fabrics cross section.
-    '''
-    @cached_property
-    def _get_sig_tex(self):
-        # measured force:
-        force = self.Kraft  # [kN]
-        # cross sectional area of the reinforcement:
-        A_tex = self.A_tex
-        # calculated stresses:
-        sig_tex = (force * 1000.) / A_tex  # [MPa]
-        return sig_tex
-
     # -------------------------------------------------------------------------
     # plot templates
     # -------------------------------------------------------------------------
 
     plot_templates = {'force / machine displacement': '_plot_force_displacement_machine',
                       'force / gauge displacement': '_plot_force_displacement',
-                      'per yarn force / gauge displacement': '_plot_yforce_displacement',
-                      'textile stress / gauge displacement': '_plot_sigtex_displacement',
+                      'force / gauge displacement (ascending)': '_plot_force_displacement_asc',
+                      'force / gauge displacement (average)': '_plot_force_displacement_av',
+                      'force / gauge displacement (ascending average)': '_plot_force_displacement_asc_av',
                       }
 
     default_plot_template = 'per yarn force / gauge displacement'
@@ -258,24 +273,40 @@ class ExpSPO(ExType):
 #            axes.set_xlabel('%s' % ('displacement [mm]',))
 #            axes.set_ylabel('%s' % ('force [kN]',))
 
-    def _plot_yforce_displacement(self, axes, color='black',
-                                  linewidth=1., linestyle='-',
-                                  label=None):
-        '''plot per-yarn force-displacement diagram
+    def _plot_force_displacement_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram (averaged between left, right, front and back)
         '''
-        F_max_idx = np.argmax(self.Kraft)
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            w_hi = (self.W10_re + self.W10_li / 2)
+            if hasattr(self, "W10_vo"):
+                w_av = (w_hi + self.W10_vo) / 2
+                axes.plot(w_av, self.Kraft, color=color,
+                          linewidth=linewidth, linestyle=linestyle, label=label)
+            else:
+                axes.plot(w_hi, self.Kraft, color=color,
+                          linewidth=linewidth, linestyle=linestyle, label=label)
 
-        print 'PLOTTING'
-        axes.plot(self.w, self.Kraft / self.n_rovings, color=color,
-                  linewidth=linewidth, linestyle=linestyle, label=label)
-        axes.set_xlabel('displacement [mm]')
-        axes.set_ylabel('force [kN]')
+    def _plot_force_displacement_asc(self, axes):
+        '''plot force-displacement diagram (only the ascending branch)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            axes.plot(self.W10_re[:self.max_force_idx + 1], self.F_asc)
+            axes.plot(self.W10_li[:self.max_force_idx + 1], self.F_asc)
+            if hasattr(self, "W10_vo"):
+                axes.plot(self.W10_vo[:self.max_force_idx + 1], self.F_asc)
 
-    def _plot_sigtex_displacement(self, axes, color='black',
-                                  linewidth=1., linestyle='-',
-                                  label=None):
-        pass
-
+    def _plot_force_displacement_asc_av(self, axes, color='black', linewidth=1., linestyle='-', label=None):
+        '''plot force-displacement diagram (only the ascending branch, averaged between left, right, front and back)
+        '''
+        if hasattr(self, "W10_re") and hasattr(self, "W10_li"):
+            w_hi = (self.W10_re + self.W10_li / 2)
+            if hasattr(self, "W10_vo"):
+                w_av = (w_hi + self.W10_vo) / 2
+                axes.plot(w_av[:self.max_force_idx + 1], self.F_asc, color=color,
+                          linewidth=linewidth, linestyle=linestyle, label=label)
+            else:
+                axes.plot(w_hi[:self.max_force_idx + 1], self.F_asc, color=color,
+                          linewidth=linewidth, linestyle=linestyle, label=label)
     # ---------------------------------
     # view
     # ---------------------------------
@@ -284,6 +315,7 @@ class ExpSPO(ExType):
         HSplit(Group(
             Item('width', format_str="%.3f"),
             Item('gauge_length', format_str="%.3f"),
+            Item('lb_roving', format_str="%.0f"),
             springy=True,
             label='geometry',
             id='matresdev.db.exdb.ex_composite_tensile_test.geometry',
@@ -310,18 +342,7 @@ class ExpSPO(ExType):
         #                               dock = 'tab',
         #                               scrollable = True,
         #                               ),
-        Group(
-            Item('E_c', visible_when='derived_data_available',
-                 style='readonly', show_label=True, format_str="%.0f"),
-            #             Item('PYF_max', visible_when='derived_data_available',
-            #                  style='readonly', emphasized=True, format_str="%.2f"),
-            #             Item('sig_tex_max', visible_when='derived_data_available',
-            # style='readonly', emphasized=True, format_str="%.2f"),
-            label='output characteristics',
-            id='matresdev.db.exdb.ex_composite_tensile_test.vgroup.outputs',
-            dock='tab',
-            scrollable=True,
-        ),
+
         scrollable=True,
         id='matresdev.db.exdb.ex_composite_tensile_test.vgroup',
         dock='tab',
@@ -336,19 +357,20 @@ class ExpSPO(ExType):
 
 ExpSPO.db = ExRunClassExt(klass=ExpSPO)
 
-# if __name__ == '__main__':
-# 
-#     import pylab as p
-#     fig = p.figure(facecolor='white', figsize=(12, 9))
-# 
-#     test_file_path = os.path.join(simdb.exdata_dir,
-#                                   'double_pullout',
-#                                   '2016-03-16_DPO-15mm-0-3300SBR_R4',
-#                                   'raw_data',
-#                                   'DPO-70cm-0-3300SBR-V2_R4.DAT'
-#                                   )
-#     exrun = ExRun(data_file=test_file_path)
-# 
-#     axes = p.subplot(111)
-#     exrun.ex_type._plot_yforce_displacement(axes)
-#     p.show()
+if __name__ == '__main__':
+    #
+    #     import pylab as p
+    #     fig = p.figure(facecolor='white', figsize=(12, 9))
+    #
+    #     test_file_path = os.path.join(simdb.exdata_dir,
+    #                                   'double_pullout',
+    #                                   '2016-03-16_DPO-15mm-0-3300SBR_R4',
+    #                                   'raw_data',
+    #                                   'DPO-70cm-0-3300SBR-V2_R4.DAT'
+    #                                   )
+    #     exrun = ExRun(data_file=test_file_path)
+    #
+    #     axes = p.subplot(111)
+    #     exrun.ex_type._plot_yforce_displacement(axes)
+    #     p.show()
+    ExpSPO.db.configure_traits()
