@@ -1,5 +1,5 @@
-__author__ = 'Benjamin Camps'
-__email__ = 'bcamps@imb.rwth-aachen.de'
+__author__ = 'campsb'
+__date__ = 'Nov 8, 2017'
 
 
 import os
