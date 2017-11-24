@@ -54,9 +54,9 @@ n_roving_array = np.repeat(n_roving_array, 21).reshape(-1, 1)
 l_v_array = np.array([19, 18, 19, 20, 19.5, 19.5, 20,
                       19.5, 22, 37, 39, 37, 38, 37, 38.5, 78, 77, 77, 152, 153, 152, ]).reshape(-1, 1)
 
-color_list = ['r', 'r', 'r', 'r', 'r', 'k', 'k', 'k', 'k', 'g', 'g', 'g', 'g',
+color_list = ['k', 'k', 'k', 'k', 'k', 'r', 'r', 'r', 'r', 'g', 'g', 'g', 'g',
               'g', 'g', 'darkblue', 'darkblue', 'darkblue', 'purple', 'purple', 'purple']
-marker_list = ['^', '^', '^', '^', '^', 'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o',
+marker_list = ['o', 'o', 'o', 'o', 'o', '^', '^', '^', '^', 'o', 'o', 'o', 'o',
                'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
 
 
@@ -95,9 +95,9 @@ def plot_all():
     newlegend = p.gca().add_artist(first_legend)
 
     markertriangle, = axes.plot(
-        [], 'o', color='k', markersize=12, label='Mit Querbewehrung')
+        [], 'o', color='k', markersize=12, label='Mit Querroving')
     markercircle, =  axes.plot(
-        [], '^', color='r', markersize=12, label='Ohne Querbewehrung')
+        [], '^', color='r', markersize=12, label='Ohne Querroving')
     handles = [markertriangle, markercircle]
     labels = [h.get_label() for h in handles]
     axes.legend(
