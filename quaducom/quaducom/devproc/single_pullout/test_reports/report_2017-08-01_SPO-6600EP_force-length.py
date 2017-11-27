@@ -39,6 +39,12 @@ test_files = [
     'SPOK1521.DAT',
     'SPOK1522.DAT',
     'SPOK1523.DAT',
+    'SPOK62A1.DAT',
+    'SPOK62A2.DAT',
+    'SPOK62A3.DAT',
+    'SPOK62B1.DAT',
+    'SPOK62B2.DAT',
+    'SPOK62B3.DAT',
 ]
 
 test_file_path = os.path.join(simdb.exdata_dir,
@@ -49,15 +55,15 @@ e_array = np.array([ExRun(data_file=os.path.join(test_file_path, test_file))
                     for test_file in test_files]).reshape(-1, 1)
 
 n_roving_array = np.array([1])
-n_roving_array = np.repeat(n_roving_array, 21).reshape(-1, 1)
+n_roving_array = np.repeat(n_roving_array, 27).reshape(-1, 1)
 
 l_v_array = np.array([19, 18, 19, 20, 19.5, 19.5, 20,
-                      19.5, 22, 37, 39, 37, 38, 37, 38.5, 78, 77, 77, 152, 153, 152, ]).reshape(-1, 1)
+                      19.5, 22, 37, 39, 37, 38, 37, 38.5, 78, 77, 77, 152, 153, 152, 59.5, 58.4, 56.7, 66.1, 65.8, 72.2, ]).reshape(-1, 1)
 
 color_list = ['k', 'k', 'k', 'k', 'k', 'r', 'r', 'r', 'r', 'g', 'g', 'g', 'g',
-              'g', 'g', 'darkblue', 'darkblue', 'darkblue', 'purple', 'purple', 'purple']
+              'g', 'g', 'darkblue', 'darkblue', 'darkblue', 'purple', 'purple', 'purple', 'k', 'k', 'k', 'teal', 'teal', 'teal', ]
 marker_list = ['o', 'o', 'o', 'o', 'o', '^', '^', '^', '^', 'o', 'o', 'o', 'o',
-               'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
+               'o', 'o', 'D', 'D', 'D', 'D', 'D', 'D', 'o', 'o', 'o', 'D', 'D', 'D', ]
 
 
 def plot_all():
@@ -94,11 +100,13 @@ def plot_all():
         loc=2, markerscale=1., fontsize=20, numpoints=1,)
     newlegend = p.gca().add_artist(first_legend)
 
-    markertriangle, = axes.plot(
-        [], 'o', color='k', markersize=12, label='Mit Querroving')
     markercircle, =  axes.plot(
         [], '^', color='r', markersize=12, label='Ohne Querroving')
-    handles = [markertriangle, markercircle]
+    markertriangle, = axes.plot(
+        [], 'o', color='k', markersize=12, label='1 Querroving')
+    markerdiamond, = axes.plot(
+        [], 'D', color='teal', markersize=12, label='2 Querrovings')
+    handles = [markercircle, markertriangle, markerdiamond]
     labels = [h.get_label() for h in handles]
     axes.legend(
         handles=handles, markerscale=1., fontsize=20, numpoints=1, loc=4)
