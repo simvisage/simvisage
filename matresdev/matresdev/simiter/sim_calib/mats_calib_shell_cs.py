@@ -625,16 +625,21 @@ def show_sig_eps_f_3300_800():
     print 'E_c_3300_800', rho_3300_800 * E_f_3300_800
 
     ax = p.subplot(131)
-    ax.plot(eps_f_800, sig_f_800)
-    ax.plot(eps_f_3300, sig_f_3300)
-    ax.plot(eps_f_3300_800, sig_f_3300_800, label='a_f=%g' % a_f)
+    ax.plot(eps_f_800, sig_f_800, color='red')
+    ax.plot(eps_f_3300, sig_f_3300, color='blue')
+    ax.plot(eps_f_3300_800, sig_f_3300_800, label='a_f=%g' % a_f,
+            color='green')
     ax.legend()
 
     ax = p.subplot(132)
-    ax.plot(eps_f_800, rho_800 * np.array(sig_f_800))
-    ax.plot(eps_f_3300, rho_3300 * np.array(sig_f_3300))
-    ax.plot(eps_f_3300_800, rho_3300_800 * sig_f_3300_800)
-    ax.plot(eps_f_3300, rho_3300_800 * np.array(sig_f_3300))
+    ax.plot(eps_f_800, rho_800 * np.array(sig_f_800),
+            color='red')
+    ax.plot(eps_f_3300, rho_3300 * np.array(sig_f_3300),
+            color='blue')
+    ax.plot(eps_f_3300_800, rho_3300_800 * sig_f_3300_800,
+            color='green')
+    ax.plot(eps_f_3300, rho_3300_800 * np.array(sig_f_3300),
+            color='orange')
     ax.legend()
 
     ax = p.subplot(133)
@@ -647,14 +652,14 @@ def show_sig_eps_f_3300_800():
     sig_c_3300_800 = ((1.0 - rho_3300_800) * sig_m_3300 +
                       rho_3300_800 * sig_f_3300_800)
 
-    p.plot(eps_c, sig_c_3300_800, lw=5)
-    calib_series_800.avg_calibrator.fn_sig_c_eps.mpl_plot(ax)
-    calib_series_3300.avg_calibrator.fn_sig_c_eps.mpl_plot(ax)
+    p.plot(eps_c, sig_c_3300_800, lw=5, color='green')
+    calib_series_800.avg_calibrator.fn_sig_c_eps.mpl_plot(ax, color='red')
+    calib_series_3300.avg_calibrator.fn_sig_c_eps.mpl_plot(ax, color='blue')
 
     p.show()
 
 
 if __name__ == '__main__':
-    # show_all_tests()
+    show_all_tests()
     # calibrate_damage_fn_for_all_tests()
-    show_sig_eps_f_3300_800()
+    # show_sig_eps_f_3300_800()

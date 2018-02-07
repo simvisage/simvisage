@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 #
 # Copyright (c) 2009, IMB, RWTH Aachen.
 # All rights reserved.
@@ -12,97 +12,76 @@
 #
 # Created on Feb 15, 2010 by: rch
 
-from etsproxy.traits.api import \
+import csv
+import os
+from os.path import exists
+from string import replace
+
+from mathkit.array.smoothing import smooth
+from mathkit.mfn import MFnLineArray
+from mathkit.mfn.mfn_line.mfn_matplotlib_editor import \
+    MFnMatplotlibEditor
+from matplotlib.figure import Figure
+from numpy import \
+    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot
+from numpy import array, fabs, where, copy, ones, argsort
+from traits.api import \
     HasTraits, Directory, List, Int, Float, Any, \
     on_trait_change, File, Constant, Instance, Trait, \
     Array, Str, Property, cached_property, WeakRef, \
     Dict, Button, Bool, Enum, Event, implements, DelegatesTo, \
     Callable
-
-from etsproxy.traits.ui.api import \
+from traitsui.api import \
     View, Item, DirectoryEditor, TabularEditor, HSplit, VGroup, \
     TableEditor, EnumEditor, Handler, FileEditor, VSplit, Group, \
     HGroup, Spring
-
-# # overload the 'get_label' method from 'Item' to display units in the label
+from traitsui.menu import \
+    OKButton, CancelButton
+from traitsui.table_column import \
+    ObjectColumn
+from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from util.traits.ui.item import \
     Item
 
-from etsproxy.traits.ui.table_column import \
-    ObjectColumn
-
-from etsproxy.traits.ui.menu import \
-    OKButton, CancelButton
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from matplotlib.figure import Figure
-
-import os
-
-import csv
-
-from numpy import array, fabs, where, copy, ones, argsort
-
-import numpy as np
-
-from numpy import \
-    loadtxt, argmax, polyfit, poly1d, frompyfunc, dot
-
-from etsproxy.traits.ui.table_filter \
-    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
-           EvalTableFilter
-
-from mathkit.mfn import MFnLineArray
-from mathkit.mfn.mfn_line.mfn_matplotlib_editor import \
-    MFnMatplotlibEditor
-
-#-- Tabular Adapter Definition -------------------------------------------------
-
-from string import replace
-from os.path import exists
-
-#-----------------------------------------------------------------------------------
-# ExDesignReader
-#-----------------------------------------------------------------------------------
-from etsproxy.traits.ui.file_dialog  \
-    import open_file, FileInfo, TextInfo, ImageInfo
-
-from etsproxy.traits.ui.api \
-    import View, Item, TabularEditor, VGroup, HGroup
-
-from etsproxy.traits.ui.tabular_adapter \
-    import TabularAdapter
-
 from matresdev.db.exdb.ex_type import ExType
 from matresdev.db.exdb.i_ex_type import IExType
-
-from mathkit.array.smoothing import smooth
-
-from matresdev.db.matdb.trc.fabric_layup \
-    import FabricLayUp
-
-from matresdev.db.matdb.trc.fabric_layout \
-    import FabricLayOut
-
-from matresdev.db.matdb.trc.concrete_mixture \
-    import ConcreteMixture
-
+from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
 from matresdev.db.matdb.trc.composite_cross_section import \
     CompositeCrossSection, plain_concrete
-
-from matresdev.db.exdb.loadtxt_bending import loadtxt_bending
-
+from matresdev.db.matdb.trc.concrete_mixture \
+    import ConcreteMixture
+from matresdev.db.matdb.trc.fabric_layout \
+    import FabricLayOut
+from matresdev.db.matdb.trc.fabric_layup \
+    import FabricLayUp
 from matresdev.db.simdb import \
     SimDB
+import numpy as np
+from traitsui.api \
+    import View, Item, TabularEditor, VGroup, HGroup
+from traitsui.file_dialog  \
+    import open_file, FileInfo, TextInfo, ImageInfo
+from traitsui.table_filter \
+    import EvalFilterTemplate, MenuFilterTemplate, RuleFilterTemplate, \
+    EvalTableFilter
+from traitsui.tabular_adapter \
+    import TabularAdapter
+from traitsui.tabular_adapter \
+    import TabularAdapter
 
+
+# # overload the 'get_label' method from 'Item' to display units in the label
+#-- Tabular Adapter Definition -------------------------------------------
+#-------------------------------------------------------------------------
+# ExDesignReader
+#-------------------------------------------------------------------------
 # Access to the toplevel directory of the database
 #
 simdb = SimDB()
 
 # class ExpBendingTestThreePoint(ExType):
+
+
 class ExpBT3PT(ExType):
     '''Experiment: Bending Test Three Point
     '''
@@ -117,32 +96,34 @@ class ExpBT3PT(ExType):
     #--------------------------------------------------------------------
 
     input_change = Event
+
     @on_trait_change('+input, ccs.input_change, +ironing_param')
     def _set_input_change(self):
         self.input_change = True
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # specify inputs:
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     length = Float(0.46, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                   auto_set=False, enter_set=True)
     width = Float(0.1, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                  auto_set=False, enter_set=True)
     thickness = Float(0.02, unit='m', input=True, table_field=True,
-                           auto_set=False, enter_set=True)
+                      auto_set=False, enter_set=True)
 
     # age of the concrete at the time of testing
     age = Int(33, unit='d', input=True, table_field=True,
-                             auto_set=False, enter_set=True)
+              auto_set=False, enter_set=True)
     loading_rate = Float(4.0, unit='mm/min', input=True, table_field=True,
-                            auto_set=False, enter_set=True)
+                         auto_set=False, enter_set=True)
 
     #--------------------------------------------------------------------------
     # composite cross section
     #--------------------------------------------------------------------------
 
     ccs = Instance(CompositeCrossSection)
+
     def _ccs_default(self):
         '''default settings
         '''
@@ -158,19 +139,19 @@ class ExpBT3PT(ExType):
 #        orientation_fn_key = '90_0'
         n_layers = 6
         s_tex_z = 0.020 / (n_layers + 1)
-        ccs = CompositeCrossSection (
-                    fabric_layup_list=[
-                            plain_concrete(s_tex_z * 0.5),
-                            FabricLayUp (
-                                   n_layers=n_layers,
-                                   orientation_fn_key=orientation_fn_key,
-                                   s_tex_z=s_tex_z,
-                                   fabric_layout_key=fabric_layout_key
-                                   ),
-                            plain_concrete(s_tex_z * 0.5)
-                                        ],
-                    concrete_mixture_key=concrete_mixture_key
-                    )
+        ccs = CompositeCrossSection(
+            fabric_layup_list=[
+                plain_concrete(s_tex_z * 0.5),
+                FabricLayUp(
+                    n_layers=n_layers,
+                    orientation_fn_key=orientation_fn_key,
+                    s_tex_z=s_tex_z,
+                    fabric_layout_key=fabric_layout_key
+                ),
+                plain_concrete(s_tex_z * 0.5)
+            ],
+            concrete_mixture_key=concrete_mixture_key
+        )
         return ccs
 
     #--------------------------------------------------------------------------
@@ -178,7 +159,9 @@ class ExpBT3PT(ExType):
     #--------------------------------------------------------------------------
 
     # E-modulus of the composite at the time of testing
-    E_c = Property(Float, unit='MPa', depends_on='input_change', table_field=True)
+    E_c = Property(Float, unit='MPa',
+                   depends_on='input_change', table_field=True)
+
     def _get_E_c(self):
         return self.ccs.get_E_c_time(self.age)
 
@@ -188,9 +171,9 @@ class ExpBT3PT(ExType):
     # reinforcement ration of the composite
     rho_c = DelegatesTo('ccs', listenable=False)
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # define processing
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     # flag distinguishes weather data from a displacement gauge is available
     # stored in a separate ASC-file with a corresponding file name
@@ -238,6 +221,7 @@ class ExpBT3PT(ExType):
             print 'WARNING: data_file with path %s does not exist == False' % (self.data_file)
 
     names_and_units = Property(depends_on='data_file')
+
     @cached_property
     def _get_names_and_units(self):
         '''names and units corresponding to the returned '_data_array' by 'loadtxt_bending'
@@ -248,6 +232,7 @@ class ExpBT3PT(ExType):
         return names, units
 
     names_and_units_ASC = Property(depends_on='data_file')
+
     @cached_property
     def _get_names_and_units_ASC(self):
         ''' Extract the names and units of the measured data.
@@ -271,6 +256,7 @@ class ExpBT3PT(ExType):
         return names, units
 
     factor_list_ASC = Property(depends_on='data_file')
+
     def _get_factor_list_ASC(self):
         return self.names_and_units_ASC[0]
 
@@ -279,19 +265,21 @@ class ExpBT3PT(ExType):
         the processed data array.
         '''
         for i, factor in enumerate(self.factor_list):
-            self.add_trait(factor, Array(value=self.processed_data_array[:, i], transient=True))
+            self.add_trait(factor, Array(
+                value=self.processed_data_array[:, i], transient=True))
 
         if self.flag_ASC_file:
             for i, factor in enumerate(self.factor_list_ASC):
-                self.add_trait(factor, Array(value=self.data_array_ASC[:, i], transient=True))
-
-
+                self.add_trait(factor, Array(
+                    value=self.data_array_ASC[:, i], transient=True))
 
     elastomer_law = Property(depends_on='input_change')
+
     @cached_property
     def _get_elastomer_law(self):
 
-        elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point', '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE', 'elastomer_f-w.raw')
+        elastomer_path = os.path.join(simdb.exdata_dir, 'bending_tests', 'three_point',
+                                      '2011-06-10_BT-3PT-12c-6cm-0-TU_ZiE', 'elastomer_f-w.raw')
         _data_array_elastomer = loadtxt_bending(elastomer_path)
 
         # force [kN]:
@@ -304,10 +292,12 @@ class ExpBT3PT(ExType):
         #
         w_elastomer = -1.0 * _data_array_elastomer[:, 0].flatten()
 
-        mfn_displacement_elastomer = MFnLineArray(xdata=F_elastomer, ydata=w_elastomer)
+        mfn_displacement_elastomer = MFnLineArray(
+            xdata=F_elastomer, ydata=w_elastomer)
         return frompyfunc(mfn_displacement_elastomer.get_value, 1, 1)
 
     w_wo_elast = Property(depends_on='input_change')
+
     @cached_property
     def _get_w_wo_elast(self):
         # use the machine displacement for the center displacement:
@@ -317,11 +307,13 @@ class ExpBT3PT(ExType):
         return self.w_raw - self.elastomer_law(self.F_raw)
 
     M_ASC = Property(Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_M_ASC(self):
         return self.F_ASC * self.length / 4.0
 
     M_raw = Property(Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_M_raw(self):
         return self.F_raw * self.length / 4.0
@@ -339,6 +331,7 @@ class ExpBT3PT(ExType):
 #        return -self.Kraft[:self.max_force_idx + 1]
 
     K_bending_elast = Property(Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_K_bending_elast(self):
         '''calculate the analytical bending stiffness of the beam (3 point bending)
@@ -365,6 +358,7 @@ class ExpBT3PT(ExType):
         return K_bending_elast
 
     F_cr = Property(Array('float_'), depends_on='input_change')
+
     @cached_property
     def _get_F_cr(self):
         '''calculate the analytical cracking load of the beam
@@ -467,33 +461,31 @@ class ExpBT3PT(ExType):
             #
             self.M_ASC
 
-
-
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # plot templates
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     plot_templates = {
-                      'force / machine displacement (incl. w_elast)'   : '_plot_force_machine_displacement',
-                      'force / machine displacement (without w_elast)' : '_plot_force_machine_displacement_wo_elast',
-                      'force / machine displacement (without w_elast, interpolated)' : '_plot_force_machine_displacement_wo_elast_interpolated',
-                      'force / machine displacement (analytical offset)' : '_plot_force_machine_displacement_wo_elast_analytical_offset',
+        'force / machine displacement (incl. w_elast)': '_plot_force_machine_displacement',
+        'force / machine displacement (without w_elast)': '_plot_force_machine_displacement_wo_elast',
+        'force / machine displacement (without w_elast, interpolated)': '_plot_force_machine_displacement_wo_elast_interpolated',
+        'force / machine displacement (analytical offset)': '_plot_force_machine_displacement_wo_elast_analytical_offset',
 
-                      'force / gauge displacement'                     : '_plot_force_gauge_displacement',
-                      'force / gauge displacement (analytical offset)' : '_plot_force_gauge_displacement_with_analytical_offset',
-                      'force / gauge displacement (interpolated)'      : '_plot_force_gauge_displacement_interpolated',
+        'force / gauge displacement': '_plot_force_gauge_displacement',
+        'force / gauge displacement (analytical offset)': '_plot_force_gauge_displacement_with_analytical_offset',
+        'force / gauge displacement (interpolated)': '_plot_force_gauge_displacement_interpolated',
 
-#                       'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
-#                       'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
-#
-                      'moment / eps_c (ASC)'                           : '_plot_moment_eps_c_ASC',
-                      'moment / eps_c (raw)'                           : '_plot_moment_eps_c_raw',
-#
-#                       'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
-#                       'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw',
-#
-#                       'analytical bending stiffness'                   :  '_plot_analytical_bending_stiffness'
-                     }
+        #                       'smoothed force / gauge displacement'            : '_plot_smoothed_force_gauge_displacement',
+        #                       'smoothed force / machine displacement'          : '_plot_smoothed_force_machine_displacement_wo_elast',
+        #
+        'moment / eps_c (ASC)': '_plot_moment_eps_c_ASC',
+        'moment / eps_c (raw)': '_plot_moment_eps_c_raw',
+        #
+        #                       'smoothed moment / eps_c (ASC)'                  : '_plot_smoothed_moment_eps_c_ASC',
+        #                       'smoothed moment / eps_c (raw)'                  : '_plot_smoothed_moment_eps_c_raw',
+        #
+        #                       'analytical bending stiffness'                   :  '_plot_analytical_bending_stiffness'
+    }
 
     default_plot_template = 'force / deflection (displacement gauge)'
 
@@ -513,7 +505,8 @@ class ExpBT3PT(ExType):
         I_yy = t ** 3 * w / 12.
 
         delta_11 = L ** 3 / 48 / E_c / I_yy
-        K_linear = 1 / delta_11  # [MN/m] bending stiffness with respect to a force applied at center of the beam
+        # [MN/m] bending stiffness with respect to a force applied at center of the beam
+        K_linear = 1 / delta_11
         w_linear = 2 * np.array([0., 1.])
         F_linear = 2 * np.array([0., K_linear])
         axes.plot(w_linear, F_linear, linestyle='--')
@@ -528,7 +521,8 @@ class ExpBT3PT(ExType):
         #
         f_asc = self.F_raw[:max_force_idx + 1]
         w_asc = self.w_wo_elast[:max_force_idx + 1]
-        axes.plot(w_asc, f_asc, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(w_asc, f_asc, color=color,
+                  linewidth=linewidth, linestyle=linestyle)
         # plot analytical bending stiffness
         #
         w_linear = 2 * np.array([0., 1.])
@@ -555,19 +549,20 @@ class ExpBT3PT(ExType):
         #
         idx_10 = np.where(f_asc > f_asc[-1] * 0.10)[0][0]
         idx_8 = np.where(f_asc > f_asc[-1] * 0.08)[0][0]
-        f8 = f_asc[ idx_8 ]
-        f10 = f_asc[ idx_10 ]
-        w8 = w_asc[ idx_8 ]
-        w10 = w_asc[ idx_10 ]
+        f8 = f_asc[idx_8]
+        f10 = f_asc[idx_10]
+        w8 = w_asc[idx_8]
+        w10 = w_asc[idx_10]
         m = (f10 - f8) / (w10 - w8)
         delta_w = f8 / m
         w0 = w8 - delta_w * 0.9
 #         print 'w0', w0
-        f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]])
-        w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])
+        f_asc_interpolated = np.hstack([0., f_asc[idx_8:]])
+        w_asc_interpolated = np.hstack([w0, w_asc[idx_8:]])
 #         print 'type( w_asc_interpolated )', type(w_asc_interpolated)
         w_asc_interpolated -= float(w0)
-        axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(w_asc_interpolated, f_asc_interpolated,
+                  color=color, linewidth=linewidth, linestyle=linestyle)
 
 #        fw_arr = np.hstack([f_asc_interpolated[:, None], w_asc_interpolated[:, None]])
 #        print 'fw_arr.shape', fw_arr.shape
@@ -578,7 +573,6 @@ class ExpBT3PT(ExType):
         w_linear = 2 * np.array([0., 1.])
         F_linear = 2 * np.array([0., self.K_bending_elast])
         axes.plot(w_linear, F_linear, linestyle='--')
-
 
     def _plot_force_machine_displacement_wo_elast_analytical_offset(self, axes, color='green', linewidth=1., linestyle='-'):
 
@@ -605,7 +599,8 @@ class ExpBT3PT(ExType):
         #
         W_yy = t ** 2 * w / 6.
 
-        K_I_analytic = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        # [MN/m] bending stiffness with respect to center moment
+        K_I_analytic = W_yy * E_c
         K_I_analytic *= 1000.  # [kN/m] bending stiffness with respect to center moment
 
         # interpolate the starting point of the center deflection curve based on the slope of the curve
@@ -625,23 +620,24 @@ class ExpBT3PT(ExType):
 
         w_lin_analytic = f_asc[idx_lin] / self.K_bending_elast
 
-        f_asc_offset_analytic = f_asc[ idx_lin: ]
-        w_asc_offset_analytic = w_asc[ idx_lin: ]
+        f_asc_offset_analytic = f_asc[idx_lin:]
+        w_asc_offset_analytic = w_asc[idx_lin:]
         w_asc_offset_analytic -= np.array([w_lin_epsc])
         w_asc_offset_analytic += np.array([w_lin_analytic])
 
-        axes.plot(w_asc_offset_analytic, f_asc_offset_analytic, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(w_asc_offset_analytic, f_asc_offset_analytic,
+                  color=color, linewidth=linewidth, linestyle=linestyle)
         # plot analytical bending stiffness
         #
         w_linear = 2 * np.array([0., 1.])
         F_linear = 2 * np.array([0., self.K_bending_elast])
         axes.plot(w_linear, F_linear, linestyle='--')
 
-
     def _plot_force_machine_displacement(self, axes, color='black', linewidth=1., linestyle='-'):
         xdata = self.w_raw
         ydata = self.F_raw
-        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(xdata, ydata, color=color,
+                  linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -657,8 +653,8 @@ class ExpBT3PT(ExType):
         # skip the first values (= first seconds of testing)
         # and start with the analytical bending stiffness instead to avoid artificial offset of F-w-diagram
         #
-#         w_max = np.max(self.w_ASC)
-#         cut_idx = np.where(self.w_ASC > 0.001 * w_max)[0]
+        #         w_max = np.max(self.w_ASC)
+        #         cut_idx = np.where(self.w_ASC > 0.001 * w_max)[0]
 
         cut_idx = np.where(self.w_ASC > 0.01)[0]
 
@@ -686,9 +682,11 @@ class ExpBT3PT(ExType):
 
         xdata = self.w_raw
         ydata = self.F_raw
-        axes.plot(xdata, ydata, color='blue', linewidth=linewidth, linestyle=linestyle)
+        axes.plot(xdata, ydata, color='blue',
+                  linewidth=linewidth, linestyle=linestyle)
 
-        axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(w_asc_interpolated, f_asc_interpolated,
+                  color=color, linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -699,7 +697,6 @@ class ExpBT3PT(ExType):
         F_linear = 2 * np.array([0., self.K_bending_elast])
         axes.plot(w_linear, F_linear, linestyle='--')
 
-
     def _plot_force_gauge_displacement(self, axes, offset_w=0., color='black', linewidth=1., linestyle='-'):
         xdata = self.w_ASC
         ydata = self.F_ASC
@@ -707,7 +704,8 @@ class ExpBT3PT(ExType):
         # specify offset if force does not start at the origin
         xdata += offset_w
 
-        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(xdata, ydata, color=color,
+                  linewidth=linewidth, linestyle=linestyle)
 #        xkey = 'deflection [mm]'
 #        ykey = 'force [kN]'
 #        axes.set_xlabel('%s' % (xkey,))
@@ -757,17 +755,17 @@ class ExpBT3PT(ExType):
         #
         idx_10 = np.where(f_asc > f_asc[-1] * 0.10)[0][0]
         idx_8 = np.where(f_asc > f_asc[-1] * 0.08)[0][0]
-        f8 = f_asc[ idx_8 ]
-        f10 = f_asc[ idx_10 ]
-        w8 = w_asc[ idx_8 ]
-        w10 = w_asc[ idx_10 ]
+        f8 = f_asc[idx_8]
+        f10 = f_asc[idx_10]
+        w8 = w_asc[idx_8]
+        w10 = w_asc[idx_10]
         m = (f10 - f8) / (w10 - w8)
         delta_w = f8 / m
         w0 = w8 - delta_w * 0.9
         print 'w0', w0
 
-        f_asc_interpolated = np.hstack([0., f_asc[ idx_8: ]])
-        w_asc_interpolated = np.hstack([w0, w_asc[ idx_8: ]])
+        f_asc_interpolated = np.hstack([0., f_asc[idx_8:]])
+        w_asc_interpolated = np.hstack([w0, w_asc[idx_8:]])
         print 'type( w_asc_interpolated )', type(w_asc_interpolated)
         w_asc_interpolated -= float(w0)
 
@@ -775,15 +773,14 @@ class ExpBT3PT(ExType):
 #        f_asc_interpolated = np.hstack([0., f_asc[ idx_10: ]])
 #        w_asc_interpolated = np.hstack([0, w_asc[ idx_10: ] - w_asc[idx_10] + w_offset])
 
-        axes.plot(w_asc_interpolated, f_asc_interpolated, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(w_asc_interpolated, f_asc_interpolated,
+                  color=color, linewidth=linewidth, linestyle=linestyle)
 
         # plot analytical bending stiffness
         #
         w_linear = 2 * np.array([0., 1.])
         F_linear = 2 * np.array([0., self.K_bending_elast])
         axes.plot(w_linear, F_linear, linestyle='--')
-
-
 
     def _plot_smoothed_force_machine_displacement_wo_elast(self, axes):
 
@@ -814,7 +811,6 @@ class ExpBT3PT(ExType):
 
         # axes.plot( w0_lin, f0_lin, color = 'black' )
 
-
     def _plot_moment_eps_c_ASC(self, axes):
         xkey = 'compressive strain [1*E-3]'
         ykey = 'moment [kNm]'
@@ -836,12 +832,12 @@ class ExpBT3PT(ExType):
 
         max_M = np.max(self.M_raw)
 
-        K_linear = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        # [MN/m] bending stiffness with respect to center moment
+        K_linear = W_yy * E_c
         K_linear *= 1000.  # [kN/m] bending stiffness with respect to center moment
         w_linear = np.array([0., max_M / K_linear])
         M_linear = np.array([0., max_M])
         axes.plot(w_linear, M_linear, linestyle='--')
-
 
     def _plot_moment_eps_c_raw(self, axes, color='black', linewidth=1.5, linestyle='-'):
         xkey = 'compressive strain [1*E-3]'
@@ -850,7 +846,8 @@ class ExpBT3PT(ExType):
         ydata = self.M_raw
         axes.set_xlabel('%s' % (xkey,))
         axes.set_ylabel('%s' % (ykey,))
-        axes.plot(xdata, ydata, color=color, linewidth=linewidth, linestyle=linestyle)
+        axes.plot(xdata, ydata, color=color,
+                  linewidth=linewidth, linestyle=linestyle)
         # plot stiffness in uncracked state
         t = self.thickness
         w = self.width
@@ -864,17 +861,17 @@ class ExpBT3PT(ExType):
 
         max_M = np.max(self.M_raw)
 
-        K_linear = W_yy * E_c  # [MN/m] bending stiffness with respect to center moment
+        # [MN/m] bending stiffness with respect to center moment
+        K_linear = W_yy * E_c
         K_linear *= 1000.  # [kN/m] bending stiffness with respect to center moment
         w_linear = np.array([0., max_M / K_linear])
         M_linear = np.array([0., max_M])
         axes.plot(w_linear, M_linear, linestyle='--')
 
-
-
     n_fit_window_fraction = Float(0.1)
 
     smoothed_M_eps_c_ASC = Property(depends_on='input_change')
+
     @cached_property
     def _get_smoothed_M_eps_c_ASC(self):
         # get the index of the maximum stress
@@ -888,17 +885,21 @@ class ExpBT3PT(ExType):
         return m_smoothed, eps_c_smoothed
 
     smoothed_eps_c_ASC = Property
+
     def _get_smoothed_eps_c_ASC(self):
         return self.smoothed_M_eps_c_ASC[1]
 
     smoothed_M_ASC = Property
+
     def _get_smoothed_M_ASC(self):
         return self.smoothed_M_eps_c_ASC[0]
 
     def _plot_smoothed_moment_eps_c_ASC(self, axes):
-        axes.plot(self.smoothed_eps_c_ASC, self.smoothed_M_ASC, color='blue', linewidth=2)
+        axes.plot(self.smoothed_eps_c_ASC, self.smoothed_M_ASC,
+                  color='blue', linewidth=2)
 
     smoothed_M_eps_c_raw = Property(depends_on='input_change')
+
     @cached_property
     def _get_smoothed_M_eps_c_raw(self):
         # get the index of the maximum stress
@@ -912,43 +913,47 @@ class ExpBT3PT(ExType):
         return m_smoothed, eps_c_smoothed
 
     smoothed_eps_c_raw = Property
+
     def _get_smoothed_eps_c_raw(self):
         return self.smoothed_M_eps_c_raw[1]
 
     smoothed_M_raw = Property
+
     def _get_smoothed_M_raw(self):
         return self.smoothed_M_eps_c_raw[0]
 
     def _plot_smoothed_moment_eps_c_raw(self, axes):
-        axes.plot(self.smoothed_eps_c_raw, self.smoothed_M_raw, color='blue', linewidth=2)
+        axes.plot(self.smoothed_eps_c_raw, self.smoothed_M_raw,
+                  color='blue', linewidth=2)
 
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # view
-    #--------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     traits_view = View(VGroup(
-                         Group(
-                              Item('length', format_str="%.3f"),
-                              Item('width', format_str="%.3f"),
-                              Item('thickness', format_str="%.3f"),
-                              label='geometry'
-                              ),
-                         Group(
-                              Item('loading_rate'),
-                              Item('age'),
-                              label='loading rate and age'
-                              ),
-                         Group(
-                              Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
-                              Item('ccs@', show_label=False),
-                              label='composite cross section'
-                              )
-                         ),
-                        scrollable=True,
-                        resizable=True,
-                        height=0.8,
-                        width=0.6
-                        )
+        Group(
+            Item('length', format_str="%.3f"),
+            Item('width', format_str="%.3f"),
+            Item('thickness', format_str="%.3f"),
+            label='geometry'
+        ),
+        Group(
+            Item('loading_rate'),
+            Item('age'),
+            label='loading rate and age'
+        ),
+        Group(
+            Item('E_c', show_label=True, style='readonly', format_str="%.0f"),
+            Item('ccs@', show_label=False),
+            label='composite cross section'
+        )
+    ),
+        scrollable=True,
+        resizable=True,
+        height=0.8,
+        width=0.6
+    )
+
 
 if __name__ == '__main__':
 
