@@ -71,7 +71,7 @@ def plot_all():
     fig = p.figure(
         facecolor='white', figsize=(30 / 2.54, 20 / 2.54), dpi=100)
     fig.suptitle(
-        'Q95/95-CCE-38 // C3-HF2-165-4 // 40mm Probendicke', fontsize=20)
+        'Q95/95-CCE-38 // C3-HF2-165-4 0 Grad // 40mm Probendicke', fontsize=20)
     fig.subplots_adjust(
         left=0.1, right=0.96, bottom=0.1, top=0.93, wspace=0.25, hspace=0.2)
 
@@ -84,6 +84,7 @@ def plot_all():
                       marker=marker_list[idx], markersize=8, color=color_list[idx],
                       #label = test_files[idx].split('.')[0]
                       )
+            print e.Kraft.max()
 # Print Ultimate tensile stress (average value) = 3221 N/mm2
     F_r = 3221 * 3.62 / 1000
     f_r = [F_r, F_r]
