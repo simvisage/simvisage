@@ -18,52 +18,27 @@ params = {'legend.fontsize': 20,
 p.rcParams.update(params)
 
 test_files = [
-    'SPOK19A1.DAT',
-    'SPOK19A2.DAT',
-    'SPOK19A3.DAT',
-    'SPOK19A4.DAT',
-    'SPOK19A6.DAT',
-    'SPOK19B1.DAT',
-    'SPOK19B2.DAT',
-    'SPOK19B4.DAT',
-    'SPOK19B5.DAT',
-    'SPOK38-1.DAT',
-    'SPOK38-2.DAT',
-    'SPOK38-3.DAT',
-    'SPOK38-4.DAT',
-    'SPOK38-5.DAT',
-    'SPOK38-6.DAT',
-    'SPOK76-1.DAT',
-    'SPOK76-2.DAT',
-    'SPOK76-3.DAT',
-    'SPOK1521.DAT',
-    'SPOK1522.DAT',
-    'SPOK1523.DAT',
-    'SPOK62A1.DAT',
-    'SPOK62A2.DAT',
-    'SPOK62A3.DAT',
-    'SPOK62B1.DAT',
-    'SPOK62B2.DAT',
-    'SPOK62B3.DAT',
+    'SPOS19-1.DAT',
+    'SPOS19-2.DAT',
+    'SPOS38-1.DAT',
+    'SPOS38-2.DAT',
+
 ]
 
 test_file_path = os.path.join(simdb.exdata_dir,
                               'single_pullout_tests',
-                              '2017-08-01_SPO-1C-40mm-0-3,62EP')
+                              '2017-08-03_SPO-1C-40mm-90-3,62EP')
 
 e_array = np.array([ExRun(data_file=os.path.join(test_file_path, test_file))
                     for test_file in test_files]).reshape(-1, 1)
 
 n_roving_array = np.array([1])
-n_roving_array = np.repeat(n_roving_array, 27).reshape(-1, 1)
+n_roving_array = np.repeat(n_roving_array, 4).reshape(-1, 1)
 
-l_v_array = np.array([19, 18, 19, 20, 19.5, 19.5, 20,
-                      19.5, 22, 37, 39, 37, 38, 37, 38.5, 78, 77, 77, 152, 153, 152, 59.5, 58.4, 56.7, 66.1, 65.8, 72.2, ]).reshape(-1, 1)
+l_v_array = np.array([20.5, 22, 38.5, 39.5, ]).reshape(-1, 1)
 
-color_list = ['k', 'k', 'k', 'k', 'k', 'r', 'r', 'r', 'r', 'g', 'g', 'g', 'g',
-              'g', 'g', 'darkblue', 'darkblue', 'darkblue', 'purple', 'purple', 'purple', 'k', 'k', 'k', 'teal', 'teal', 'teal', ]
-marker_list = ['o', 'o', 'o', 'o', 'o', '^', '^', '^', '^', 'o', 'o', 'o', 'o',
-               'o', 'o', 'D', 'D', 'D', 'D', 'D', 'D', 'o', 'o', 'o', 'D', 'D', 'D', ]
+color_list = ['r', 'r', 'k', 'k', ]
+marker_list = ['^', '^', 'o', 'o', ]
 
 
 def plot_all():
@@ -71,7 +46,7 @@ def plot_all():
     fig = p.figure(
         facecolor='white', figsize=(30 / 2.54, 20 / 2.54), dpi=100)
     fig.suptitle(
-        'Q95/95-CCE-38 // C3-HF2-165-4 0 Grad // 40mm Probendicke', fontsize=20)
+        'Q95/95-CCE-38 // C3-HF2-165-4 90 Grad // 40mm Probendicke', fontsize=20)
     fig.subplots_adjust(
         left=0.1, right=0.96, bottom=0.1, top=0.93, wspace=0.25, hspace=0.2)
 
@@ -105,16 +80,16 @@ def plot_all():
         [], '^', color='r', markersize=12, label='Ohne Querroving')
     markertriangle, = axes.plot(
         [], 'o', color='k', markersize=12, label='1 Querroving')
-    markerdiamond, = axes.plot(
-        [], 'D', color='teal', markersize=12, label='2 Querrovings')
-    handles = [markercircle, markertriangle, markerdiamond]
+#    markerdiamond, = axes.plot(
+#        [], 'D', color='teal', markersize=12, label='2 Querrovings')
+    handles = [markercircle, markertriangle, ]
     labels = [h.get_label() for h in handles]
     axes.legend(
         handles=handles, markerscale=1., fontsize=20, numpoints=1, loc=4)
 
-    major_xticks = np.arange(0, 201, 20)
+    major_xticks = np.arange(0, 51, 10)
     major_yticks = np.arange(0, 16, 1)
-    axes.axis([0., 200, 0., 15])
+    axes.axis([0., 50, 0., 15])
     axes.set_xticks(major_xticks)
     axes.set_yticks(major_yticks)
 
