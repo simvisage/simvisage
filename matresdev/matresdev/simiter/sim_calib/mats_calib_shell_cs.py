@@ -1,7 +1,7 @@
 
 from os.path import join
 
-from ibvpy.api import RTraceGraph
+from ibvpy.api import RTDofGraph
 from ibvpy.mats.mats2D.mats2D_cmdm.mats2D_cmdm import \
     MATS2DMicroplaneDamage
 from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
@@ -159,8 +159,8 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
         sig_c, eps = self.sig_c_eps
         eps_f_max = eps[-1]
         sig_cf_max = self.E_cf * eps_f_max
-
         delta_sig_c = sig_c[-1] - sig_cf_max
+
         if delta_sig_c < 0:
 
             sig_cf_max += delta_sig_c
@@ -368,10 +368,10 @@ class MATSCalibDamageFnSigEps(MATSCalibDamageFn):
         e_data, phi_data = e_phi_data.T
         E_c = self.get_E_c()
 
-        rt = RTraceGraph(name='stress - strain',
-                         var_x='eps_app', idx_x=0,
-                         var_y='sig_app', idx_y=0,
-                         record_on='update')
+        rt = RTDofGraph(name='stress - strain',
+                        var_x='eps_app', idx_x=0,
+                        var_y='sig_app', idx_y=0,
+                        record_on='update')
         ec = {
             # overload the default configuration
             'bcond_list': [BCDofProportional(max_strain=np.max(e_data),
@@ -662,4 +662,4 @@ def show_sig_eps_f_3300_800():
 if __name__ == '__main__':
     show_all_tests()
     # calibrate_damage_fn_for_all_tests()
-    # show_sig_eps_f_3300_800()
+    show_sig_eps_f_3300_800()
