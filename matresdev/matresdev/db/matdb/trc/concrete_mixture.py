@@ -123,6 +123,13 @@ ConcreteMixture.db = SimDBClassExt(
                                            get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
                                            nu=0.2  # @todo: approximation only
                                            ),
+                'Pagel_TF10_Leipzig' : ConcreteMixture(
+                                           E_m28=32700.,  # @todo: approximation only
+                                           # function for the evolution derived based on only
+                                           # three values: Em0 = 0, Em7 = 23600, Em28 = 28700
+                                           get_E_m_time=lambda t: 32700.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
+                                           nu=0.2  # @todo: approximation only
+                                           ),                       
                 'HPC_TU_WIEN' : ConcreteMixture(
                                            E_m28=30000.,  # @todo: approximation only
                                            get_E_m_time=lambda t: 30000.,  # @todo: specify time function for evolution of E-modulus; so far value for 28d is used;
