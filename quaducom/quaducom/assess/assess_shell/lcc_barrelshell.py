@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     import os
 
-    from lcc_table import LCCTableULS, LC, LCCTableSLS
+    from .lcc_table import LCCTableULS, LC, LCCTableSLS
 
     # Access to the top level directory of the database
     #
@@ -435,7 +435,7 @@ if __name__ == '__main__':
             # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
             m_0_Rd = m_90_Rd = 3.3
 
-            print 'mean values (QS-bs4) used for strength characteristics  (no k_b; no reduction for scatter; no gamma_M)'
+            print('mean values (QS-bs4) used for strength characteristics  (no k_b; no reduction for scatter; no gamma_M)')
 
         else:
             # tensile strength [kN/m]
@@ -518,7 +518,7 @@ if __name__ == '__main__':
         #
         n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
 
-        print 'design values used for strength characteristics'
+        print('design values used for strength characteristics')
 
         lct = LCCTableULS(data_dir=data_dir,
                           reader_type='InfoCAD',
@@ -536,7 +536,7 @@ if __name__ == '__main__':
         # 'combi_arr': array with indices of all loading case combinations
         #--------------------------------------------------------------
         #
-        print 'lct.combi_arr', lct.combi_arr.shape
+        print('lct.combi_arr', lct.combi_arr.shape)
 #        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------
@@ -589,7 +589,7 @@ if __name__ == '__main__':
             # = 0.18 (=M_Rd) / 0.10 ### M_Rm = 0.33 kNm (mean value)
             m_0_Rd = m_90_Rd = 0.83333 * 1.8
 
-            print 'design values (QS-bs4) used for strength characteristics'
+            print('design values (QS-bs4) used for strength characteristics')
 
         else:
             # tensile strength [kN/m]
@@ -605,7 +605,7 @@ if __name__ == '__main__':
             #
             n_Rdc = 750.  # = 37,5 MPa * (100 cm * 2 cm) * 0.1
 
-            print 'design values (ZiE) used for strength characteristics'
+            print('design values (ZiE) used for strength characteristics')
 
         # LCCTable for imposed loads (without temperature)
         #
@@ -642,7 +642,7 @@ if __name__ == '__main__':
         # 'combi_arr': array with indices of all loading case combinations
         #--------------------------------------------------------------
         #
-        print 'lct_Q.combi_arr', lct_Q.combi_arr.shape, '\n'
+        print('lct_Q.combi_arr', lct_Q.combi_arr.shape, '\n')
 #        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter=';')
 
         #--------------------------------------------------------------

@@ -26,7 +26,7 @@ from etsproxy.traits.api import \
 from numpy import \
     c_, ix_, mgrid, transpose, shape
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
@@ -43,7 +43,7 @@ def delete_second_rows( arr, nx = 20, ny = 20 ):
     '''Remove the second and second to last column and row from the regular grid of points.
     for lowerface_4x4m.robj and upperface_4x4m.robj data file
     '''
-    print '--- deleting second rows ---'
+    print('--- deleting second rows ---')
     va = arr
     va = va.reshape( ( nx, ny, 3 ) )
     va_a = vstack( [ va[ :1, :, : ], va[ 2:-2, :, : ], va[-1:, :, : ] ] )
@@ -86,7 +86,7 @@ class HPShell( HasTraits ):
 
         filter = self.geo_filter.get( self.geo_input_name, None )
         if filter != None:
-            v_arr = filter( v_arr )
+            v_arr = list(filter( v_arr ))
         return v_arr
 
     # array of the vertex positions in global 
@@ -96,7 +96,7 @@ class HPShell( HasTraits ):
     def _get_vl_arr( self ):
         vl_arr = self._read_arr( 'lowerface_' )
         if self.cut_off_lowerface == True:
-            print '--- lower face z-coords cut off ---'
+            print('--- lower face z-coords cut off ---')
 
             # z-values of the coords from the lower face are cut off. 
             # From the highest z-coordinate of the lower face the vertical
@@ -128,7 +128,7 @@ class HPShell( HasTraits ):
     def get_mid_surface_and_thickness( self, points, perpendicular_t = True ):
         '''Return the global coordinates of the supplied local points.
         '''
-        print '*** get mid surface and thickness ***'
+        print('*** get mid surface and thickness ***')
 
         #-----------------------------------------------
         # get the global coordinates as defined in the 
@@ -266,7 +266,7 @@ class HPShell( HasTraits ):
         if perpendicular_t == True:
             # delta shift of x and y for estimation of slope will be done in 4 direction
             # 0, 45, 90 and 135 degrees 
-            print "--- perpendicular ---"
+            print("--- perpendicular ---")
             delta = 0.000001
 
             # shift in x
@@ -321,7 +321,7 @@ class HPShell( HasTraits ):
         Stb Data needs to have same range of values in X and Y direction and same unit [m],
         as defined as length_x and length_y
         '''
-        print '*** reading thickness data from file: ', file_name, ' ***'
+        print('*** reading thickness data from file: ', file_name, ' ***')
 
         # get the column headings defined in the second row 
         # of the csv thickness input file
@@ -374,7 +374,7 @@ class HPShell( HasTraits ):
         as a text delimiter.
         Note that some lines do not contain values !
         '''
-        print '*** reading nodal coordinates from file: ', file_name, ' ***'
+        print('*** reading nodal coordinates from file: ', file_name, ' ***')
 
         file = open( file_name, 'r' )
 
@@ -436,7 +436,7 @@ class HPShell( HasTraits ):
     def export_midsurface_data( self, node_no, x, y, z_middle, file_name, empty_lines_idx ):
         '''exports data to csv - worksheet
         '''
-        print '*** writing middle surface data to file,', file_name, ' ***'
+        print('*** writing middle surface data to file,', file_name, ' ***')
 
         data = c_[node_no, x, y, z_middle]
         file = open( file_name, 'w' )
@@ -451,7 +451,7 @@ class HPShell( HasTraits ):
         #
         if len( empty_lines_idx ) != 0:
 
-            print '--- file contains ', len( empty_lines_idx ), ' empty_lines ---'
+            print('--- file contains ', len( empty_lines_idx ), ' empty_lines ---')
 
             # file without empty lines
             #
@@ -479,7 +479,7 @@ class HPShell( HasTraits ):
             file.writelines( lines[-1 ] )
 
             file.close()
-            print '--- empty lines added to file ---'
+            print('--- empty lines added to file ---')
 
         return
 
@@ -487,10 +487,10 @@ class HPShell( HasTraits ):
     def export_thickness_data( self, elem_no, x, y, t, file_name ):
         '''exports data to csv - worksheet
         '''
-        print '*** writing thickness data to file,', file_name, ' ***'
+        print('*** writing thickness data to file,', file_name, ' ***')
 
         data = c_[elem_no, x, y, t * 1000]
-        print shape( data )
+        print(shape( data ))
         writer = csv.writer( open( file_name, 'w' ), delimiter = ";", lineterminator = "\n" )
         writer.writerow( ['element_number', 'x[m]', 'y[m]', 't[mm]'] )
         writer.writerows( data )
@@ -500,7 +500,7 @@ class HPShell( HasTraits ):
     def show( self, x, y, z_middle, displayed_value ):
         """Test contour_surf on regularly spaced co-ordinates like MayaVi.
         """
-        print '*** plotting data***'
+        print('*** plotting data***')
         s = points3d( X, Y, z_middle, displayed_value, colormap = "gist_rainbow", mode = "cube", scale_factor = 0.3 )
 
         sb = colorbar( s )
@@ -560,10 +560,10 @@ if __name__ == '__main__':
     hp = HPShell( cut_off_lowerface = True,
                   delta_h_scalefactor = delta_h_scalefactor )
 
-    print '*** INPUT ***'
-    print '--- number of shells = ', n_shells, ' ---'
-    print '--- delta h scale factor = ', delta_h_scalefactor, ' ---'
-    print '---', delta_h_scalefactor_str, ' ---\n'
+    print('*** INPUT ***')
+    print('--- number of shells = ', n_shells, ' ---')
+    print('--- delta h scale factor = ', delta_h_scalefactor, ' ---')
+    print('---', delta_h_scalefactor_str, ' ---\n')
 
     #------------------------------------------------------------------
     # THICKNESS
@@ -572,7 +572,7 @@ if __name__ == '__main__':
     # (NOTE: the thickness coordinates are defined in the middle of the elements)  
     # --> t_elem in [mm]
     #------------------------------------------------------------------
-    print '*** CALCULATE THICKNESS *** '
+    print('*** CALCULATE THICKNESS *** ')
 
     # 1) read x,y coord values from csv-file used to specify shell thickness  
     #
@@ -592,8 +592,8 @@ if __name__ == '__main__':
     # 2) get thickness data calculated using 'get_thickness_and_middlesurface' 
     #
     xi , yi , z_middle , t = hp.get_mid_surface_and_thickness( c_[X, Y], perpendicular_t = True )
-    print "thickness at corner must evaluate to 62 mm (almost no slope): ", t[ argmax( z_middle ) ]
-    print "minimum thickness must evaluate to about 60 mm (if perpendicular = True)", min( t )
+    print("thickness at corner must evaluate to 62 mm (almost no slope): ", t[ argmax( z_middle ) ])
+    print("minimum thickness must evaluate to about 60 mm (if perpendicular = True)", min( t ))
 
     # 3) export thickness to file
     #
@@ -616,8 +616,8 @@ if __name__ == '__main__':
     # in the order of the supplied csv coordinates (x,y) 
     # --> z_node in [m]
     #------------------------------------------------------------------
-    print '\n'
-    print '*** CALCULATE MIDSURFACE *** '
+    print('\n')
+    print('*** CALCULATE MIDSURFACE *** ')
 
     # 1) read x,y coords from csv-file used to specify shell middle surface
     # (NOTE: the midsurface coordinates are defined at the nodes)  
@@ -628,15 +628,15 @@ if __name__ == '__main__':
     # 2) get midsurface data calculated using 'get_thickness_and_middlesurface' 
     #
     xi , yi , z_middle , t = hp.get_mid_surface_and_thickness( c_[X, Y], perpendicular_t = True )
-    print "position and value of lowest shell thickness: ", t[argmin( t )], ' at node ', argmin( t )
+    print("position and value of lowest shell thickness: ", t[argmin( t )], ' at node ', argmin( t ))
 
     # shift coordinate system in z-direction to start with node_no = 0 
     # at position (x,y,z) = (0,0,0). Change the sign in order to point with 
     # the z-coordinate down.  
 
-    print ' - - -z - coordinates before shifting:- - -'
-    print 'z_middle[0] ( z value in origin: must evaluate to 31cm / 2 = 15, 5 cm; origin at lowerface cut off position )', z_middle[0]
-    print 'z_middle[-1] ( edge value ) must evaluate to 1, 03 m = delta h + 6cm / 2', z_middle[-1]
+    print(' - - -z - coordinates before shifting:- - -')
+    print('z_middle[0] ( z value in origin: must evaluate to 31cm / 2 = 15, 5 cm; origin at lowerface cut off position )', z_middle[0])
+    print('z_middle[-1] ( edge value ) must evaluate to 1, 03 m = delta h + 6cm / 2', z_middle[-1])
     z_middle -= z_middle[0]
     z_middle *= -1
 
@@ -650,9 +650,9 @@ if __name__ == '__main__':
 #        z_middle -= 2.85
 #        delta_h_scalefactor_str = delta_h_scalefactor_str + '_285'
 
-    print ' - - -z - coordinates after shifting:- - -'
-    print 'z_middle[0] ( must evaluate to 0 )', z_middle[0]
-    print 'z_middle[-1] ( must evaluate to 100 cm - 31cm / 2 + 6cm / 2 = 87, 5 cm )', z_middle[-1]
+    print(' - - -z - coordinates after shifting:- - -')
+    print('z_middle[0] ( must evaluate to 0 )', z_middle[0])
+    print('z_middle[-1] ( must evaluate to 100 cm - 31cm / 2 + 6cm / 2 = 87, 5 cm )', z_middle[-1])
 
     # 3) export middle surface to file
     #    

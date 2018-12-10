@@ -112,7 +112,7 @@ class SigFlCalib(HasTraits):
     @cached_property
     def _get_s_tex_z(self):
         return self.thickness / (self.n_layers + 1)
-    print 's_tex_z', s_tex_z
+    print('s_tex_z', s_tex_z)
 
     # actual strain at the top and bottom surface of the cross section [-]
     # for a given combined loading situation (N,M):
@@ -150,7 +150,7 @@ class SigFlCalib(HasTraits):
         '''CALIBRATION: derive the unknown constitutive law of the layer
         (effective crack bridge law)
         '''
-        print 'calib_layer_response called'
+        print('calib_layer_response called')
 
         eps_t, var_a = u
 
@@ -195,8 +195,8 @@ class SigFlCalib(HasTraits):
             eps_arr = np.array([ 0., eps_fail])
             sig_tex_arr = E_yarn * eps_arr
             # E_yarn 131176.670505
-            print 'E_yarn', E_yarn
-            print 'sig_fail', sig_fail
+            print('E_yarn', E_yarn)
+            print('sig_fail', sig_fail)
 
         elif self.calib_config == 'root1':
             # use strain at the lowest textile layer as rupture strain
@@ -324,7 +324,7 @@ class SigFlCalib(HasTraits):
 
             sig_tex_arr = var_a * eps_arr ** 3. + var_b * eps_arr ** 2. + var_c * eps_arr
 
-        print'eps_t1', eps_t_i_arr[0]
+        print('eps_t1', eps_t_i_arr[0])
 
         # function for cb-law
         xdata = eps_arr
@@ -334,7 +334,7 @@ class SigFlCalib(HasTraits):
 #        print 'xdata',xdata
 #        print 'ydata',ydata
 #        print 'var_b', var_b
-        print 'var_a', var_a
+        print('var_a', var_a)
 
 #        # get the slope of the cb-function to check for monotony
 #        #
@@ -357,7 +357,7 @@ class SigFlCalib(HasTraits):
         # passed in general so that if calibration method is called 'layer_response' works correctly
         # use option u_sol = () instead of argument
 
-        print 'eval_layer_response_f called'
+        print('eval_layer_response_f called')
 
         eps_lo, eps_up = self.eps_lo, self.eps_up
         eps_t = eps_lo
@@ -400,7 +400,7 @@ class SigFlCalib(HasTraits):
     def eval_layer_response_t(self, u):
         '''EVALUATION for tension case: using the calibrated constitutive law of the layer
         '''
-        print 'eval_layer_response_t called'
+        print('eval_layer_response_t called')
 
         eps_lo, eps_up = self.eps_lo, self.eps_up
         eps_t_lo = abs(eps_lo)
@@ -436,7 +436,7 @@ class SigFlCalib(HasTraits):
         '''EVALUATION for compression case: using the calibrated constitutive law of the layer
         '''
 
-        print 'eval_layer_response_c called'
+        print('eval_layer_response_c called')
         eps_lo, eps_up = self.eps_lo, self.eps_up
         eps_c_lo = abs(eps_lo)
         eps_c_up = abs(eps_up)
@@ -507,7 +507,7 @@ class SigFlCalib(HasTraits):
     def _get_sig_c_mfn_block(self):
         '''simplified constant stress-strain-diagram of the concrete (EC2)
         '''
-        print 'sig_c: block'
+        print('sig_c: block')
         # (for standard concrete)
         f_ck = self.f_ck + 8.
         if f_ck <= 50:
@@ -537,7 +537,7 @@ class SigFlCalib(HasTraits):
     def _get_sig_c_mfn_bilinear(self):
         '''bilinear stress-strain-diagram of the concrete
         '''
-        print 'sig_c: bilinear'
+        print('sig_c: bilinear')
         # (for standard concrete)
         f_ck = self.f_ck + 8.
         if f_ck <= 50.:
@@ -546,9 +546,9 @@ class SigFlCalib(HasTraits):
         # (for high strength concrete)
         else :
             eps_c3 = (1.75 + 0.55 * ((f_ck - 50.) / 40.)) / 1000.
-            print 'eps_c3', eps_c3
+            print('eps_c3', eps_c3)
             eps_cu3 = (2.6 + 35. * ((90. - f_ck) / 100.) ** 4.) / 1000.
-            print 'eps_cu3', eps_cu3
+            print('eps_cu3', eps_cu3)
         # concrete law with limit for eps_c
 
         xdata = np.hstack([0., eps_c3, eps_cu3])
@@ -561,7 +561,7 @@ class SigFlCalib(HasTraits):
     def _get_sig_c_mfn_quadratic_2(self):
         '''quadratic_2 stress-strain-diagram of the concrete
         '''
-        print 'sig_c: quadratic_2'  # parabola-rectangle-diagram
+        print('sig_c: quadratic_2')  # parabola-rectangle-diagram
         # (for standard concrete)
         f_ck = self.f_ck + 8.
         if f_ck <= 50.:
@@ -589,7 +589,7 @@ class SigFlCalib(HasTraits):
     def _get_sig_c_mfn_quadratic(self):
         '''quadratic stress-strain-diagram of the concrete
         '''
-        print 'sig_c: quadratic'
+        print('sig_c: quadratic')
         # (for all concretes up to f_cm=88 N/mm2) #max epislon_c1u
         f_cm = self.f_ck + 8.
         E_tan = 22. * (f_cm / 10) ** 0.3 * 1000.
@@ -606,7 +606,7 @@ class SigFlCalib(HasTraits):
 
         elif self.f_ck > 50.:
             eps_c1u = (2.8 + 27. * (((98. - f_cm) / 100.) ** 4.)) / 1000.
-            print 'eps_c1u', eps_c1u
+            print('eps_c1u', eps_c1u)
             eps_arr = np.linspace(0., eps_c1u, num=100.)
 
         k = E_tan / E_sec
@@ -702,10 +702,10 @@ class SigFlCalib(HasTraits):
         # all stress cases refer to a stress configuration in which M is positive
         # (maximum eps_c at the top, maximum eps_t at the bottom of the cross-section
         #
-        print '------------- iteration: %g ----------------------------' % (self.n)
+        print('------------- iteration: %g ----------------------------' % (self.n))
 
 
-        print 'self.calc_mode', self.calc_mode
+        print('self.calc_mode', self.calc_mode)
 
         self.get_eps_c_arr = self.stress_case
         self.eval_config = self.stress_case
@@ -723,7 +723,7 @@ class SigFlCalib(HasTraits):
         # (characteristic value)
         #
         N_tk = sum(f_t_i_arr)
-        print 'N_tk', N_tk
+        print('N_tk', N_tk)
 
         # total tensile force of all layers of the composite tensile zone [kN]:
         # (design value)
@@ -744,7 +744,7 @@ class SigFlCalib(HasTraits):
         z_c_arr = x * self.xi_arr
 
         N_ck = sum(f_c_arr)
-        print 'N_ck', N_ck
+        print('N_ck', N_ck)
 
 #        # total compressive force of the composite compressive zone [kN]:
 #        # (design value)
@@ -759,10 +759,10 @@ class SigFlCalib(HasTraits):
         # (characteristic value)
         #
         M_tk = np.dot(f_t_i_arr, z_t_i_arr)
-        print 'M_tk', M_tk
+        print('M_tk', M_tk)
 
         M_ck = np.dot(f_c_arr, z_c_arr)
-        print 'M_ck', M_ck
+        print('M_ck', M_ck)
 
         N_internal = -N_ck + N_tk
 
@@ -781,12 +781,12 @@ class SigFlCalib(HasTraits):
 
         N_external = N
         d_N = N_internal - N_external
-        print 'd_N', d_N
+        print('d_N', d_N)
 
         M = abs(M)
         M_external = M
         d_M = M_internal - M_external
-        print 'd_M', d_M
+        print('d_M', d_M)
 
         return np.array([ d_N, d_M ], dtype=float)
 
@@ -839,7 +839,7 @@ class SigFlCalib(HasTraits):
         elif self.eps_up >= 0 and self.eps_lo >= 0:
             stress_case = 'tension'
 
-        print 'stress_case: ', stress_case
+        print('stress_case: ', stress_case)
         return stress_case
 
 
@@ -900,7 +900,7 @@ class SigFlCalib(HasTraits):
 
     def get_sig_max(self, u):
         sig_max = np.max(self.get_sig_comp_i_arr(u))
-        print 'sig_max', sig_max
+        print('sig_max', sig_max)
         return sig_max
 
     # solution vector returned by 'fit_response'
@@ -910,7 +910,7 @@ class SigFlCalib(HasTraits):
     def calib_sig_t_mfn(self):
         '''calibrate the effective crack bridge law
         '''
-        print "'calib_sig_t_mfn' called"
+        print("'calib_sig_t_mfn' called")
         self.calc_mode = 'calib'
         self.stress_case = 'flexion'
         u_sol = self.fit_response()
@@ -922,7 +922,7 @@ class SigFlCalib(HasTraits):
         '''plot calibrated effective crack bridge law
         '''
         import pylab as p
-        print "'plot_sig_t_mfn' called"
+        print("'plot_sig_t_mfn' called")
         # graph shows sig_comp at the height of the textile layer in [MPa]
         layer_arr = np.arange(self.n_layers)
         sig_comp_i_arr = self.get_sig_comp_i_arr(u)
@@ -934,7 +934,7 @@ class SigFlCalib(HasTraits):
         '''plot concrete law
         '''
         import pylab as p
-        print "'plot_sig_c_mfn' called"
+        print("'plot_sig_c_mfn' called")
         # graph shows sig_c in [MPa]
         eps_arr = self.sig_c_mfn.xdata
         sig_c_arr = self.sig_c_mfn.ydata
@@ -946,7 +946,7 @@ class SigFlCalib(HasTraits):
         '''
         import pylab as p
         p.figure(facecolor='white')
-        print "'plot_sig_c_mfn' called"
+        print("'plot_sig_c_mfn' called")
         # graph shows sig_c in [MPa]
         eps_arr = self.sig_t_mfn.xdata
         # print 'eps_arr', eps_arr
@@ -959,7 +959,7 @@ class SigFlCalib(HasTraits):
         '''evaluate the normal force and bending moment for given strains at the top and bottom
         using a calibrated crack bridge law;
         '''
-        print "'eval_N_M' called"
+        print("'eval_N_M' called")
         # reset iteration counter
 #        self.n = 0
         self.eps_lo = eps_lo
@@ -990,9 +990,9 @@ if __name__ == '__main__':
     # crack bridge function 'var_a' for a given 'eps_c_fail'
     #------------------------------------------------
     #
-    print '\n'
-    print 'setup SigFlCalib'
-    print '\n'
+    print('\n')
+    print('setup SigFlCalib')
+    print('\n')
     sig_fl_calib = SigFlCalib(# mean concrete strength after 9 days
                                # 7d: f_ck,cube = 62 MPa; f_ck,cyl = 62/1.2=52
                                # 9d: f_ck,cube = 66.8 MPa; f_ck,cyl = 55,7
@@ -1053,11 +1053,11 @@ if __name__ == '__main__':
 
     # ## call calibration and get 'u_sol':
     #
-    print 'XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    print('XXX CALIB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
     max_sig = sig_fl_calib.get_sig_max(u_sol)
-    print 'u_sol', u_sol
+    print('u_sol', u_sol)
 #    print 'eps_c_fail', sig_fl_calib.eps_c_fail
 #    print 'eps_t_fail', sig_fl_calib.eps_t_fail
 #    print 'max_sig', max_sig

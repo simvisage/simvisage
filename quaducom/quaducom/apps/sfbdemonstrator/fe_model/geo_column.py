@@ -63,4 +63,4 @@ if __name__ == '__main__':
     X, Y, Z = mgrid[0:1:11j, 0:1:11j , 0:1:4j]
     gpoints = c_[ X.flatten(), Y.flatten(), Z.flatten() ]
 
-    print col( gpoints )
+    print(col( gpoints ))

@@ -121,7 +121,7 @@ if __name__ == '__main__':
     sfc = SFC_Hui(l0=1., d=0.007, tau=0.1, sigma0=2200., rho=5.0)
     x = np.linspace(0.1, 2.5, 300)
     pdf_x = sfc.p_x(10., x)
-    print 'mean distance between fragment centroids = ', 2. / np.trapz(pdf_x, x)
+    print('mean distance between fragment centroids = ', 2. / np.trapz(pdf_x, x))
     cdf_x = np.hstack((0., cumtrapz(pdf_x * x, x)))
     plt.plot(x, pdf_x, label='PDF')
     plt.plot(x, cdf_x, label='CDF')

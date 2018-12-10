@@ -26,7 +26,7 @@ d_file = os.path.join(test_file_path, test_file + '-disp-binary')
 
 force = np.fromfile(f_file)
 disp = np.fromfile(d_file)
-print len(disp)
+print(len(disp))
 plt.plot(np.arange(800000), disp[-800000::])
 
 # v1============================================================

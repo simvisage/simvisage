@@ -16,9 +16,9 @@ import pylab as p
 # specify font options for plots
 params = {'legend.fontsize': 12,
           #         'legend.linewidth': 2,
-          u'font.size': 15,
-          u'font.family': 'serif',
-          u'font.style': 'normal'}
+          'font.size': 15,
+          'font.family': 'serif',
+          'font.style': 'normal'}
 p.rcParams.update(params)
 # print p.rcParams.keys()
 
@@ -54,7 +54,7 @@ def plot_all():
         else:
             e._plot_shearforce_deflection(
                 axes, color=color_list[idx], linewidth=1.5, label=test_files[idx].split('.')[0])
-        print e.Kraft.max()
+        print(e.Kraft.max())
         axes.set_ylabel('Querkraft [KN]')
         axes.set_xlabel('Mitteldurchbiegung [mm]')
         xlim = 10
@@ -86,7 +86,7 @@ def plot_all():
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, '90.pdf')
         p.savefig(filename)
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
 if __name__ == '__main__':
     plot_all()

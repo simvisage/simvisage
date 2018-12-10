@@ -144,7 +144,7 @@ class ExpBT4PTRF(ExType):
         '''remove the jumps in the displacement curves
         due to resetting the displacement gauges.
         '''
-        print '*** curve ironing activated ***'
+        print('*** curve ironing activated ***')
 
         # each column from the data array corresponds to a measured parameter
         # e.g. displacement at a given point as function of time u = f(t))
@@ -176,8 +176,8 @@ class ExpBT4PTRF(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][idx], ': ', jump_idx.shape[0]
-                print 'force', unique(around(-self.data_array[jump_idx, 1], 2))
+                print('number of jumps removed in data_arr_ironed for', self.names_and_units[0][idx], ': ', jump_idx.shape[0])
+                print('force', unique(around(-self.data_array[jump_idx, 1], 2)))
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -195,7 +195,7 @@ class ExpBT4PTRF(ExType):
         If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
-        print '*** process source data ***'
+        print('*** process source data ***')
 
         super(ExpBT4PTRF, self).process_source_data()
 
@@ -216,9 +216,9 @@ class ExpBT4PTRF(ExType):
         self.Kraft *= -1
 
         # add weight of load introduction to force
-        print 'add weight of steel traverse to force'
+        print('add weight of steel traverse to force')
         self.Kraft += self.weight_load_introduction
-        print 'force at initial state ', self.weight_load_introduction
+        print('force at initial state ', self.weight_load_introduction)
         # @todo: interpolate an initial deformation based on the initial force and the initial stiffness
         #       measured in order to start the F-w-curve at the origin!
 
@@ -323,7 +323,7 @@ class ExpBT4PTRF(ExType):
         K_bending_elast_c = 1 / delta_11
 #         print 'K_bending_elast_c', K_bending_elast_c
 
-        print 'K_bending_elast_c', K_bending_elast_c
+        print('K_bending_elast_c', K_bending_elast_c)
         return K_bending_elast_c
 
     #-------------------------------------------------------------------------

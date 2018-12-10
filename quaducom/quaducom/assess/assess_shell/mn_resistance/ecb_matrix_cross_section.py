@@ -13,12 +13,12 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HGroup
 
-from ecb_cross_section_component import \
+from .ecb_cross_section_component import \
     ECBCrossSectionComponent, \
     ECB_COMPONENT_CHANGE, \
     ECB_COMPONENT_AND_EPS_CHANGE
 
-from ecb_cross_section_state import \
+from .ecb_cross_section_state import \
     ECBCrossSectionState
 
 from util.traits.editors.mpl_figure_editor import \
@@ -30,13 +30,13 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_law import \
+from .ecb_law import \
     ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
-from constitutive_law import \
+from .constitutive_law import \
     ConstitutiveLawModelView
 
-from cc_law import \
+from .cc_law import \
     CCLawBase, CCLawBlock, CCLawLinear, CCLawQuadratic, CCLawQuad
 
 import numpy as np
@@ -192,6 +192,6 @@ if __name__ == '__main__':
     state = ECBCrossSectionState(eps_lo=0.02)
     ecs = ECBMatrixCrossSection(state=state, height=0.4)
 
-    print 'zz_ti_arr', ecs.zz_ti_arr
-    print 'ecb_lo', ecs.state.eps_lo
+    print('zz_ti_arr', ecs.zz_ti_arr)
+    print('ecb_lo', ecs.state.eps_lo)
     #ecs.configure_traits()

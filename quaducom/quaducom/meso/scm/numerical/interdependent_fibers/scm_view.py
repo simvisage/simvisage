@@ -11,7 +11,7 @@ from spirrid.rv import RV
 from stats.misc.random_field.random_field_1D import RandomField
 import numpy as np
 import copy
-from scm_model import SCM
+from .scm_model import SCM
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.hom_CB_elastic_mtrx import CompositeCrackBridge
 import matplotlib.pyplot as plt
 

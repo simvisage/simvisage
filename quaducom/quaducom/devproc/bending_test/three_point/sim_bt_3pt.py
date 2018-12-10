@@ -76,7 +76,7 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from geo_supprt import \
+from .geo_supprt import \
     GeoSUPPRT
 
 class MATS3DElastomerZ(MATS3DElastic):
@@ -222,7 +222,7 @@ class SimBT3PT(IBVModel):
         #
         elem_size = self.sym_specmn_length / self.shape_x
         width_supprt = self.shape_supprt_x * elem_size
-        print 'width_supprt = ', width_supprt
+        print('width_supprt = ', width_supprt)
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
@@ -292,7 +292,7 @@ class SimBT3PT(IBVModel):
     @cached_property
     def _get_elstmr_mats(self):
         E_elstmr = self.E_elstmr
-        print 'effective elastomer E_modulus', E_elstmr
+        print('effective elastomer E_modulus', E_elstmr)
         return MATS3DElastic(E=E_elstmr,
                              nu=0.4)
 
@@ -564,7 +564,7 @@ class SimBT3PT(IBVModel):
             supprt_dofs_z = np.unique(supprt[self.shape_supprt_x / 2, self.shape_y / 2, 0, 0, 0, 0].dofs[:, :, 2].flatten())
         else:
             supprt_dofs_z = np.unique(specmn[-1, :, 0, -1, :, 0].dofs[:, :, 2].flatten())
-        print 'supprt_dofs_z (unique)', supprt_dofs_z
+        print('supprt_dofs_z (unique)', supprt_dofs_z)
 
         if self.elstmr_flag:
             elstmr = self.elstmr_fe_grid
@@ -573,12 +573,12 @@ class SimBT3PT(IBVModel):
             # center_top_line_dofs
             #
             load_dofs_z = np.unique(mid_specmn[0, :, -1, 0, :, -1].dofs[:, :, 2].flatten())
-        print 'load_dofs_z used for integration of force: ', load_dofs_z
+        print('load_dofs_z used for integration of force: ', load_dofs_z)
 
         # center top z-dof
         #
         center_top_dof_z = mid_specmn[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
-        print 'center_top_dof used for displacement tracing: ', center_top_dof_z
+        print('center_top_dof used for displacement tracing: ', center_top_dof_z)
 
         # force-displacement-diagram (LOAD)
         # (surface load on the elstmr or line load at specimen center)
@@ -684,7 +684,7 @@ class SimBT3PTDB(SimBT3PT):
     #-----------------
     #
     ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
-                             CCSUnitCell.db.keys(),
+                             list(CCSUnitCell.db.keys()),
                              simdb=True, input=True,
                              auto_set=False, enter_set=True)
 
@@ -748,7 +748,7 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m
+        print('E_m (from ccs)', E_m)
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -757,7 +757,7 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c
+        print('E_c (from ccs)', E_c)
         return E_c
 
     # Poisson's ratio
@@ -766,10 +766,10 @@ class SimBT3PTDB(SimBT3PT):
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu
+        print('nu (from ccs)', nu)
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20'
+        print('nu set explicitly to 0.20')
         nu = 0.2
         return nu
 

@@ -27,16 +27,16 @@ from etsproxy.traits.trait_types import DelegatesTo
 import os
 from stats.pdistrib.pdistrib import PDistrib, IPDistrib
 
-from ymb_data import YMBSource, IYMBData, YMBCutData, YMBSegmentData, YMBData
-from ymb_data import YMBSlider
-from ymb_hist import YMBHist
-from ymb_auto_correl import YMBAutoCorrelView, YMBAutoCorrel
-from ymb_cross_correl import YMBCrossCorrel
-from ymb_view3d import YMBView3D
-from ymb_view2d import YMBView2D
-from ymb_pullout import YMBPullOut
-from ymb_pdistrib import YMBDistrib
-from ymb_micro import YMBMicro
+from .ymb_data import YMBSource, IYMBData, YMBCutData, YMBSegmentData, YMBData
+from .ymb_data import YMBSlider
+from .ymb_hist import YMBHist
+from .ymb_auto_correl import YMBAutoCorrelView, YMBAutoCorrel
+from .ymb_cross_correl import YMBCrossCorrel
+from .ymb_view3d import YMBView3D
+from .ymb_view2d import YMBView2D
+from .ymb_pullout import YMBPullOut
+from .ymb_pdistrib import YMBDistrib
+from .ymb_micro import YMBMicro
 
 from matresdev.db.simdb import SimDB
 from os.path import join
@@ -56,15 +56,15 @@ rc('axes', labelsize=14)
 start_tex = '''
 \documentclass[a4paper,10pt,oneside,final,titlepage,onecolumn]{report}
 
-\usepackage{ucs}
-\usepackage[utf8x]{inputenc}
-\usepackage{amsmath}
-\usepackage[english]{babel}
-\usepackage[T1]{fontenc}
-\usepackage[pdftex]{graphicx}
+\\usepackage{ucs}
+\\usepackage[utf8x]{inputenc}
+\\usepackage{amsmath}
+\\usepackage[english]{babel}
+\\usepackage[T1]{fontenc}
+\\usepackage[pdftex]{graphicx}
 
-\usepackage[pdftex]{hyperref}
-\usepackage{graphicx}
+\\usepackage[pdftex]{hyperref}
+\\usepackage{graphicx}
 
 \date{}
 
@@ -167,9 +167,9 @@ class YMBReport(HasTraits):
         if self.corr_plot_slack_on == True:
             self._save_corr_plot_slack_fired()
 
-        print '================'
-        print 'Figure(s) saved'
-        print '================'
+        print('================')
+        print('Figure(s) saved')
+        print('================')
 
 
     #################################
@@ -210,9 +210,9 @@ class YMBReport(HasTraits):
         body_out.write(end_tex)
         body_out.close()
         os.system('cd ' + self.tex_dir + ';pdflatex -shell-escape ' + texfile)
-        print '=============================='
-        print 'Report written to %s', texfile
-        print '=============================='
+        print('==============================')
+        print('Report written to %s', texfile)
+        print('==============================')
         os.system('acroread ' + pdffile + ' &')
 
     #################################
@@ -574,7 +574,7 @@ class YMBReport(HasTraits):
                       label='plot3d',
                       id='report.plot3d'),
                 resizable=True,
-                title=u"Yarn name",
+                title="Yarn name",
                 handler=TitleHandler(),
                 id='report.main',
                )

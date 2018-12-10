@@ -17,9 +17,9 @@ import pylab as p
 # specify font options for plots
 params = {'legend.fontsize': 12,
 #         'legend.linewidth': 2,
-          u'font.size':12,
-          u'font.family':'Times New Roman',
-          u'font.style':'normal'}
+          'font.size':12,
+          'font.family':'Times New Roman',
+          'font.style':'normal'}
 p.rcParams.update(params)
 # print p.rcParams.keys()
 
@@ -101,7 +101,7 @@ def plot_all():
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, 'fig1.pdf')
         p.savefig(filename)
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
 if __name__ == '__main__':
     plot_all()

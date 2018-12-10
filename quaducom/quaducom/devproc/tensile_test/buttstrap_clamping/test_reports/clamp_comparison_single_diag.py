@@ -56,12 +56,12 @@ clamp_1_imap = np.where(tf_array[:, 1] == 'clamp 1.0')
 clamp_23_map = np.logical_or(
     tf_array[:, 1] == 'clamp 2.0', tf_array[:, 1] == 'clamp 3.0-alpha')
 clamp_23_imap = np.where(clamp_23_map)
-print clamp_23_imap
+print(clamp_23_imap)
 
-print 'series 1', np.average(sig_tex_max_arr[series_1_imap]), np.std(sig_tex_max_arr[series_1_imap])
-print 'series 2', np.average(sig_tex_max_arr[series_2_imap]), np.std(sig_tex_max_arr[series_2_imap])
-print 'clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap]), np.std(sig_tex_max_arr[clamp_1_imap])
-print 'clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig_tex_max_arr[clamp_23_imap])
+print('series 1', np.average(sig_tex_max_arr[series_1_imap]), np.std(sig_tex_max_arr[series_1_imap]))
+print('series 2', np.average(sig_tex_max_arr[series_2_imap]), np.std(sig_tex_max_arr[series_2_imap]))
+print('clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap]), np.std(sig_tex_max_arr[clamp_1_imap]))
+print('clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig_tex_max_arr[clamp_23_imap]))
 
 
 def plot_all():

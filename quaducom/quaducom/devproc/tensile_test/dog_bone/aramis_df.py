@@ -32,11 +32,11 @@ file_name = os.path.join(simdb.exdata_dir, 'tensile_tests',
 
 
 home_dir = os.path.expanduser('~')
-print 'home_dir', home_dir
+print('home_dir', home_dir)
 file_name = os.path.join(home_dir, 'Trash', 'V3', 'TT-V3-Stufe-0-82.txt')
 
 #file_name = os.path.join(home_dir, 'uni', '6-Semester', 'Praktikum', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1-Stufe-0-300.txt')
-print 'file_name', file_name
+print('file_name', file_name)
 
 #file_name = os.path.join('C:\\', 'Praktikum_Massivbau', 'ARAMIS', 'V1', 'TT-V1TT-V1-Stufe-0-300.txt')
 #file_name = 'C:\\Praktikum_Massivbau\ARAMIS\V1\TT-V1-Stufe-0-300.txt'
@@ -45,13 +45,13 @@ input_arr = np.loadtxt(file_name,
                     usecols=[0, 1, 2, 3, 4, 8, 9, 10]
     )
 
-print 'data', input_arr.shape
+print('data', input_arr.shape)
 
-print 'first row', input_arr[0, :]
+print('first row', input_arr[0, :])
 # identify the points that do not belong to the specimen
 # 
 select_idx = np.where(input_arr[:, 4] < -50.0)
-print 'select_idx', select_idx
+print('select_idx', select_idx)
 data_arr = input_arr[ select_idx[0], :]
 data_arr = input_arr
 
@@ -61,8 +61,8 @@ X_arr = x_arr
 L_x = np.max(x_arr) - np.min(x_arr)
 L_y = np.max(y_arr) - np.min(y_arr)
 
-print 'L_x', L_x
-print 'L_y', L_y
+print('L_x', L_x)
+print('L_y', L_y)
 
 x_idx = np.array(data_arr[:, 0], dtype=int)
 y_idx = np.array(data_arr[:, 1], dtype=int)
@@ -76,8 +76,8 @@ y_min, y_max = np.min(y_idx), np.max(y_idx)
 n_x = x_max - x_min
 n_y = y_max - y_min
 
-print 'n_x', n_x
-print 'n_y', n_y
+print('n_x', n_x)
+print('n_y', n_y)
 
 # construct the mask for elements to be ignored
 mask_idx_array = np.zeros((n_x + 1, n_y + 1), dtype=bool)
@@ -206,10 +206,10 @@ ux_arr[x_idx_zeros, y_idx_zeros] = ux_avg[x_idx_zeros]
 
 ux_min, ux_max = np.min(ux_arr), np.max(ux_arr)
 dux = ux_max - ux_min
-print '-----------------------------------'
-print 'total displacement', dux
-print 'miDle crack width', dux / 17.0
-print '-----------------------------------'
+print('-----------------------------------')
+print('total displacement', dux)
+print('miDle crack width', dux / 17.0)
+print('-----------------------------------')
 
 # generate the elem_node_map
 
@@ -249,7 +249,7 @@ crack_idx_avg = ((dd44_ux_avg[1:] * dd44_ux_avg[:-1] < 0.0) *
 w_arr = d4_ux_arr[np.where(crack_idx_arr)]
 w_avg = np.max(d4_ux_arr[np.where(crack_idx_avg)], axis=1)
 
-print 'crack_openings', w_avg
+print('crack_openings', w_avg)
 
 crack_avg = np.array(crack_idx_avg, dtype=float) * 0.2
 
@@ -294,10 +294,10 @@ p.show()
 
 #m.quiver3d(*qargs)
 
-print 'X_arr', X_arr.shape
-print 'y_arr', y_arr.shape
-print 'z_arr', z_arr.shape
-print 'd4_ux_arr', ux_arr.shape
+print('X_arr', X_arr.shape)
+print('y_arr', y_arr.shape)
+print('z_arr', z_arr.shape)
+print('d4_ux_arr', ux_arr.shape)
 
 #s = m.points3d(X_arr,
 #               y_arr,

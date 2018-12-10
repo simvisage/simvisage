@@ -79,12 +79,12 @@ class ExpATTDB(ExpTTDB):
         # as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
         #
         if np.average(eps_re) < 0.0001:
-            print "displacement gauge 'WA_re' has not been used. Use value of \
-                'WA_li' instead"
+            print("displacement gauge 'WA_re' has not been used. Use value of \
+                'WA_li' instead")
             eps_re = eps_li
         if np.average(eps_li) < 0.0001:
-            print "displacement gauge 'WA_li' has not been used. Use value of\
-                 'WA_re' instead"
+            print("displacement gauge 'WA_li' has not been used. Use value of\
+                 'WA_re' instead")
             eps_li = eps_re
 
         # average strains
@@ -158,7 +158,7 @@ class ExpATTDB(ExpTTDB):
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
-        print '---------------------CRACK DETECTION STEP', crack_detection_step
+        print('---------------------CRACK DETECTION STEP', crack_detection_step)
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad)
@@ -184,7 +184,7 @@ class ExpATTDB(ExpTTDB):
         std = np.std(x, ddof=1)
         mn = np.min(x)
         mx = np.max(x)
-        print '---------------', mu, std, mn, mx
+        print('---------------', mu, std, mn, mx)
         return mu, std, mn, mx
 
     F_t_aramis_asc = Property(depends_on='data_file,aramis_resolution_key')
@@ -262,7 +262,7 @@ class ExpATTDB(ExpTTDB):
         dux_t_cr_list = []
 
         for step, time in enumerate(self.t_aramis_asc):
-            print 'time', time
+            print('time', time)
             fd.current_step = step
             ux_avg = fd.ux_arr_avg
             ux_cr_mid = ux_avg[self.cr_mid_idx]
@@ -293,7 +293,7 @@ class ExpATTDB(ExpTTDB):
     @cached_property
     def _get_deps_t_cr(self):
         eps_t_cr = self.eps_t_cr
-        print 'shape', eps_t_cr.shape
+        print('shape', eps_t_cr.shape)
         n_eps = eps_t_cr.shape[0]
         idx_frame = 0.1 * n_eps
         deps_t_cr = eps_t_cr[1:,:] - eps_t_cr[:-1,:]
@@ -307,13 +307,13 @@ class ExpATTDB(ExpTTDB):
         return np.min(self.eps_t_cr, axis=1)
 
     def _plot_F_t_aramis_asc(self, ax, **kwds):
-        print 't_aramis_asc', self.t_aramis_asc.shape
-        print 'F_t_aramis_asc', self.F_t_aramis_asc.shape
+        print('t_aramis_asc', self.t_aramis_asc.shape)
+        print('F_t_aramis_asc', self.F_t_aramis_asc.shape)
         ax.plot(self.t_aramis_asc, self.F_t_aramis_asc, **kwds)
 
     def _plot_eps_t_aramis_asc(self, ax, **kwds):
-        print 't_aramis_asc', self.t_aramis_asc.shape
-        print 'eps_t_aramis_asc', self.eps_aramis_asc.shape
+        print('t_aramis_asc', self.t_aramis_asc.shape)
+        print('eps_t_aramis_asc', self.eps_aramis_asc.shape)
         ax.plot(self.t_aramis_asc, self.eps_aramis_asc, **kwds)
 
     def _plot_F_eps_aramis_asc(self, ax, **kwds):

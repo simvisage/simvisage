@@ -132,8 +132,8 @@ if __name__ == '__main__':
     df_threshold = 0.0
     ddf_threshold = 0.0
     Df = df[delta_arg2:-delta_arg2]
-    print Df.shape
-    print ddf.shape
+    print(Df.shape)
+    print(ddf.shape)
     up_args_dd = np.where(((Df[1:] * Df[:-1] < df_threshold) *
                            ((ddf[1:] + ddf[:-1]) / 2.0 < ddf_threshold)))[0]
     up_args_d = up_args_dd + delta_arg2

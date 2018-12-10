@@ -37,10 +37,10 @@ from numpy import \
     copy, c_, newaxis, argmax, where, sqrt, frompyfunc, sum, \
     ones, transpose, shape, append, argmin, argmax, fabs
 
-from ls_table import \
+from .ls_table import \
     LSTable, ULS, SLS
 
-from lcc_table import \
+from .lcc_table import \
     LCCTable, LCCTableULS, LCCTableSLS, LCC, LC
 
 from math import pi
@@ -106,7 +106,7 @@ class TestCombiArr( unittest.TestCase ):
             # obtained using InfoGraph:
             #
             n_combi = self.n_combi_list[i]
-            print 'n_combi', n_combi
+            print('n_combi', n_combi)
 
             # check if values are equal:
             #

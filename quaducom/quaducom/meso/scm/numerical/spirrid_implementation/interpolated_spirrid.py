@@ -42,7 +42,7 @@ def orthogonalize_filled(args):
         if isinstance(arg, np.ndarray):
             array_list.append(meshgrid[i])
             i += 1
-        elif isinstance(arg, types.FloatType):
+        elif isinstance(arg, float):
             array_list.append(np.ones_like(meshgrid[0]) * arg)
     return array_list
 
@@ -115,7 +115,7 @@ class RangeAdaption(HasTraits):
     @cached_property
     def _get_tvar_dict(self):
         tvar_dict = copy.deepcopy(self.spirrid.theta_vars)
-        for key, value in zip(tvar_dict.keys(), tvar_dict.values()):
+        for key, value in zip(list(tvar_dict.keys()), list(tvar_dict.values())):
             if isinstance(value, RV):
                 tvar_dict[key] = value._distr.mean
         return tvar_dict
@@ -344,9 +344,9 @@ class InterpolatedSPIRRID(HasTraits):
 
     @cached_property
     def _get_interp_grid(self):
-        print 'evaluating mean response and adapting ranges...'
+        print('evaluating mean response and adapting ranges...')
         spirrid_result = self.spirrid_result
-        print 'complete'
+        print('complete')
         axes_values = self.initial_eps_vars
         ni = NDIdxInterp(data=spirrid_result, axes_values=axes_values)
         return ni
@@ -384,8 +384,8 @@ class InterpolatedSPIRRID(HasTraits):
                 # store the particular result for BC ll and lr into the result array
                 result[:, :, i, j] = mu_w_x_interp
                 current_loop = i * len(Lr) + j + 1
-                print 'progress: %2.1f %%' % \
-                (current_loop / float(loops_tot) * 100.)
+                print('progress: %2.1f %%' % \
+                (current_loop / float(loops_tot) * 100.))
         return result
 
     initial_eps_vars = Property(List(Array))
@@ -455,7 +455,7 @@ if __name__ == '__main__':
                                     )
 
     isp = InterpolatedSPIRRID(adaption=ra)
-    print 'no res', isp(isp.adaption.load_sigma_c, np.linspace(-50, 50, 20), 50., 50.)
+    print('no res', isp(isp.adaption.load_sigma_c, np.linspace(-50, 50, 20), 50., 50.))
 
     rf = CBEMClampedFiberStressResidualSP()
     ra = RangeAdaption(load_sigma_c_max=22.0,
@@ -481,7 +481,7 @@ if __name__ == '__main__':
                                     )
 
     isp = InterpolatedSPIRRID(adaption=ra)
-    print 'res', isp(isp.adaption.load_sigma_c, np.linspace(-50, 50, 20), 50., 50.)
+    print('res', isp(isp.adaption.load_sigma_c, np.linspace(-50, 50, 20), 50., 50.))
 
     def plot():
         sigma = isp.adaption.load_sigma_c

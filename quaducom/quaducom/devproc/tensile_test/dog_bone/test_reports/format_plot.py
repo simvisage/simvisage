@@ -30,10 +30,10 @@ def format_plot(axes, fontsize=16, xformat="%.0f", yformat="%.0f", xlim=None, yl
     # format ticks for plot
     #
     locs, labels = axes.xticks()
-    axes.xticks(locs, map(lambda x: xformat % x, locs), fontproperties=font)
+    axes.xticks(locs, [xformat % x for x in locs], fontproperties=font)
     axes.xlabel(xlabel, fontproperties=font)
 
     locs, labels = axes.yticks()
-    axes.yticks(locs, map(lambda x: yformat % x, locs), fontproperties=font)
+    axes.yticks(locs, [yformat % x for x in locs], fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
 

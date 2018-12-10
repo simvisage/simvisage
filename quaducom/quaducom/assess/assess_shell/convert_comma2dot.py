@@ -33,14 +33,14 @@ if __name__ == '__main__':
                             )
 
     data_dir_ = os.path.join(data_dir, 'state_data', 'Auflagerreaktionen')
-    print 'data_dir_', data_dir_
+    print('data_dir_', data_dir_)
     filenames = os.listdir(data_dir_)  # list of filenames in that dir
-    print 'filenames', filenames
+    print('filenames', filenames)
 
     for filename in filenames:
-        print 'reading %s' % filename
+        print('reading %s' % filename)
         if filename.endswith('.txt'):
-            print os.path.join(data_dir_, filename)
+            print(os.path.join(data_dir_, filename))
             infile = open(os.path.join(data_dir_, filename), 'r')
             data = infile.read()
             # print data
@@ -51,14 +51,14 @@ if __name__ == '__main__':
             outfile.close()
 
     data_dir_ = os.path.join(data_dir, 'state_data', 'Flaechenschnittgroessen', 'Schwerpunkt')
-    print 'data_dir_', data_dir_
+    print('data_dir_', data_dir_)
     filenames = os.listdir(data_dir_)  # list of filenames in that dir
-    print 'filenames', filenames
+    print('filenames', filenames)
 
     for filename in filenames:
-        print 'reading %s' % filename
+        print('reading %s' % filename)
         if filename.endswith('.txt'):
-            print os.path.join(data_dir_, filename)
+            print(os.path.join(data_dir_, filename))
             infile = open(os.path.join(data_dir_, filename), 'r')
             data = infile.read()
             # print data
@@ -69,14 +69,14 @@ if __name__ == '__main__':
             outfile.close()
 
     data_dir_ = os.path.join(data_dir, 'state_data', 'Knotendeformationen')
-    print 'data_dir_', data_dir_
+    print('data_dir_', data_dir_)
     filenames = os.listdir(data_dir_)  # list of filenames in that dir
-    print 'filenames', filenames
+    print('filenames', filenames)
 
     for filename in filenames:
-        print 'reading %s' % filename
+        print('reading %s' % filename)
         if filename.endswith('.txt'):
-            print os.path.join(data_dir_, filename)
+            print(os.path.join(data_dir_, filename))
             infile = open(os.path.join(data_dir_, filename), 'r')
             data = infile.read()
             # print data
@@ -87,14 +87,14 @@ if __name__ == '__main__':
             outfile.close()
 
     data_dir_ = os.path.join(data_dir, 'geo_data')
-    print 'data_dir_', data_dir_
+    print('data_dir_', data_dir_)
     filenames = os.listdir(data_dir_)  # list of filenames in that dir
-    print 'filenames', filenames
+    print('filenames', filenames)
 
     for filename in filenames:
-        print 'reading %s' % filename
+        print('reading %s' % filename)
         if filename.endswith('.txt'):
-            print os.path.join(data_dir_, filename)
+            print(os.path.join(data_dir_, filename))
             infile = open(os.path.join(data_dir_, filename), 'r')
             data = infile.read()
             # print data

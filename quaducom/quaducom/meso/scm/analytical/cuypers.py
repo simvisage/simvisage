@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import weibull_min
 from scipy.special import gamma
-from material import Material
-from reinf_cross_section import SimplyRatio, GridReinforcement
+from .material import Material
+from .reinf_cross_section import SimplyRatio, GridReinforcement
 from util.traits.either_type import EitherType
 from math import cos, pi as Pi, e
 

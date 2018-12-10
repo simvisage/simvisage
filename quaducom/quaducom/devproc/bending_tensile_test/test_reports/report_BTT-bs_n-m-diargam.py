@@ -126,6 +126,6 @@ if __name__ == '__main__':
         p.savefig(filename, format='pdf')
         filename = os.path.join(test_series_dir, 'n-m-diagr.png')
         p.savefig(filename, format='png')
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
     p.show()

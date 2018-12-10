@@ -57,12 +57,12 @@ clamp_1_imap = np.where(tf_array[:, 1] == 'clamp 1.0')
 clamp_23_map = np.logical_or(
     tf_array[:, 1] == 'clamp 2.0', tf_array[:, 1] == 'clamp 3.0')
 clamp_23_imap = np.where(clamp_23_map)
-print clamp_23_imap
+print(clamp_23_imap)
 
-print 'series 1', np.average(sig_tex_max_arr[series_1_imap]), np.std(sig_tex_max_arr[series_1_imap])
-print 'series 2', np.average(sig_tex_max_arr[series_2_imap]), np.std(sig_tex_max_arr[series_2_imap])
-print 'clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap]), np.std(sig_tex_max_arr[clamp_1_imap])
-print 'clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig_tex_max_arr[clamp_23_imap])
+print('series 1', np.average(sig_tex_max_arr[series_1_imap]), np.std(sig_tex_max_arr[series_1_imap]))
+print('series 2', np.average(sig_tex_max_arr[series_2_imap]), np.std(sig_tex_max_arr[series_2_imap]))
+print('clamp - Jesse', np.average(sig_tex_max_arr[clamp_1_imap]), np.std(sig_tex_max_arr[clamp_1_imap]))
+print('clamp - Scholzen', np.average(sig_tex_max_arr[clamp_23_imap]), np.std(sig_tex_max_arr[clamp_23_imap]))
 
 header_template = '''===============================================================
 IMB Tensile test report - %s
@@ -96,7 +96,7 @@ def eval_sig_tex_eps(smooth=False):
             out_file = os.path.join(
                 dir_name, base_name + '-eps-sigtex_raw.csv')
 
-        print 'writing output to', out_file
+        print('writing output to', out_file)
 
         mid_layer = e.ccs.fabric_layup_list[1]
         fabric_type = mid_layer.fabric_layout_key

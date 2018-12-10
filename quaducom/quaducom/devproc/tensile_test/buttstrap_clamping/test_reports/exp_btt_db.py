@@ -58,7 +58,7 @@ class ExpBTTDB(ExType):
 
     @on_trait_change('+input, ccs.input_change')
     def _set_input_change(self):
-        print '*** raising input change in CTT'
+        print('*** raising input change in CTT')
         self.input_change = True
 
     #--------------------------------------------------------------------------
@@ -96,7 +96,7 @@ class ExpBTTDB(ExType):
         '''default settings correspond to
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
-        print 'ccs default used'
+        print('ccs default used')
         fabric_layout_key = '2D-05-11'
         concrete_mixture_key = 'barrelshell'
         orientation_fn_key = 'all0'
@@ -553,7 +553,7 @@ class ExpBTTDB(ExType):
     def _plot_w_t(self, axes):
         '''Displacement versus time
         '''
-        print 'self.w_asc', self.w_asc
+        print('self.w_asc', self.w_asc)
         axes.plot(self.t_asc, self.w_asc, color='black')
         axes.xaxis.tick_bottom()
         axes.set_xlabel('t [sec]')
@@ -683,10 +683,10 @@ class ExpBTTDB(ExType):
     def _get_t_aramis(self):
         step_times = self.aramis_field_data.step_times + 5
         # step_times = self.aramis_field_data.step_times + self.start_time_aramis
-        print 'self.start_time_aramis', self.start_time_aramis
-        print '-----------------------------t_max_ARAMIS', step_times[-1]
+        print('self.start_time_aramis', self.start_time_aramis)
+        print('-----------------------------t_max_ARAMIS', step_times[-1])
         t_max = self.t[self.w_cut_idx]
-        print '-----------------------------t_max_ASCII', t_max
+        print('-----------------------------t_max_ASCII', t_max)
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
@@ -709,7 +709,7 @@ class ExpBTTDB(ExType):
         # x = 1
         # print 'x ', x
         # return self.aramis_info.number_of_steps - x
-        print '-----------------------------n_steps_cut2', len(self.t_aramis_cut)
+        print('-----------------------------n_steps_cut2', len(self.t_aramis_cut))
         return len(self.t_aramis_cut)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key')
@@ -741,7 +741,7 @@ class ExpBTTDB(ExType):
     def _get_aramis_cdt(self):
         ad = self.aramis_field_data
         crack_detection_step = ad.current_step
-        print '---------------------CRACK DETECTION STEP', crack_detection_step
+        print('---------------------CRACK DETECTION STEP', crack_detection_step)
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
@@ -833,11 +833,11 @@ class ExpBTTDB(ExType):
         crack_idx_arr1 = np.array(crack_idx_list)
         crack_idx_arr2 = np.rollaxis(crack_idx_arr1, 1, 0)
         crack_idx_arr = crack_idx_arr2[0]
-        print 'crack_idx_arr', crack_idx_arr
+        print('crack_idx_arr', crack_idx_arr)
 
         # get the indices of the middle between two cracks
         crack_mid_idx_arr = (crack_idx_arr[0:-1] + crack_idx_arr[1:]) / 2
-        print 'crack_mid_idx_arr', crack_mid_idx_arr
+        print('crack_mid_idx_arr', crack_mid_idx_arr)
         i_max = len(crack_mid_idx_arr)
         # print 'i_max', i_max
 
@@ -914,13 +914,13 @@ class ExpBTTDB(ExType):
         # print 'crack_mid_idx_arr', crack_mid_idx_arr
 
         idx_failure_crack = crack_idx_arr[max_idx + 1]
-        print 'idx_failure_crack', idx_failure_crack
-        print 'shape_ad.x_arr_0', np.shape(field_data.x_arr_0)
-        print 'number_failure_crack', max_idx + 2
+        print('idx_failure_crack', idx_failure_crack)
+        print('shape_ad.x_arr_0', np.shape(field_data.x_arr_0))
+        print('number_failure_crack', max_idx + 2)
         idx_border1 = crack_mid_idx_arr[max_idx]
-        print 'idx_border1 ', idx_border1
+        print('idx_border1 ', idx_border1)
         idx_border2 = crack_mid_idx_arr[max_idx + 1]
-        print 'idx_border2 ', idx_border2
+        print('idx_border2 ', idx_border2)
 
         return idx_failure_crack, idx_border1, idx_border2
 
@@ -1216,7 +1216,7 @@ class ExpBTTDB(ExType):
         else:
             F_beg_idx = F_idx[0]
 
-        print 'F_beg_idx', F_beg_idx
+        print('F_beg_idx', F_beg_idx)
         return F_beg_idx
 
     t_N_arr = Property(depends_on='data_file,aramis_resolution_key')
@@ -1282,7 +1282,7 @@ class ExpBTTDB(ExType):
             N_end_idx = len(self.N_t_aramis)
         else:
             N_end_idx = self.F_beg_idx
-        print 'N_end_idx', N_end_idx
+        print('N_end_idx', N_end_idx)
 
         if t_N != []:
             for step in range(0, N_end_idx, 1):
@@ -1313,7 +1313,7 @@ class ExpBTTDB(ExType):
                     eps_N = np.array(eps_N_list, dtype='f')
 
             # print 'eps_N_list', eps_N
-            print 'eps_N[-1]', eps_N[-1] * 1000
+            print('eps_N[-1]', eps_N[-1] * 1000)
             return eps_N
 
     N_t_N = Property(depends_on='data_file,aramis_resolution_key')
@@ -1333,7 +1333,7 @@ class ExpBTTDB(ExType):
             # print 'N_end_idx' , N_end_idx
             N_t_N = self.N_t_aramis[0:N_end_idx]
             # print 'self.N_t_aramis[0:t_N_idx]', N_t_N
-            print 'N_t_N[-1]', N_t_N[-1]
+            print('N_t_N[-1]', N_t_N[-1])
             return N_t_N
 
     eps_M = Property(depends_on='data_file,aramis_resolution_key')
@@ -1387,12 +1387,12 @@ class ExpBTTDB(ExType):
             # print 'len_eps_min_M', len(eps_min_M)
 
             # print 'eps_max_M_list', eps_max_M
-            print 'eps_max_M[-1]', eps_max_M[-1] * 1000
-            print 'eps_max_M[0]', eps_max_M[0] * 1000
+            print('eps_max_M[-1]', eps_max_M[-1] * 1000)
+            print('eps_max_M[0]', eps_max_M[0] * 1000)
 
             # print 'eps_min_M_list', eps_min_M
-            print 'eps_min_M[-1]', eps_min_M[-1] * 1000
-            print 'eps_min_M[0]', eps_min_M[0] * 1000
+            print('eps_min_M[-1]', eps_min_M[-1] * 1000)
+            print('eps_min_M[0]', eps_min_M[0] * 1000)
 
             return eps_max_M, eps_min_M
 
@@ -1409,7 +1409,7 @@ class ExpBTTDB(ExType):
             F_t_F = self.F_t_aramis[self.F_beg_idx:]
             # print 'self.F_t_aramis[self.F_beg_idx:]', F_t_F
             # print 'len_F_t_F', len(F_t_F)
-            print 'F_t_F[-1]', F_t_F[-1]
+            print('F_t_F[-1]', F_t_F[-1])
             return F_t_F
 
     M_t_F = Property(depends_on='data_file,aramis_resolution_key')
@@ -1425,7 +1425,7 @@ class ExpBTTDB(ExType):
             M_t_F = self.M_t_aramis[self.F_beg_idx:]
             # print 'self.F_t_aramis[self.F_beg_idx:]', F_t_F
             # print 'len_F_t_F', len(F_t_F)
-            print 'M_t_F[-1]', M_t_F[-1]
+            print('M_t_F[-1]', M_t_F[-1])
             return M_t_F
 
     #-------------------------------------------------------------------------

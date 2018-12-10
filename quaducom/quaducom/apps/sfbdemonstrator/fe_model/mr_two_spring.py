@@ -54,20 +54,20 @@ from numpy import \
 from ibvpy.mats.mats3D.mats3D_tensor import map3d_sig_eng_to_mtx
 from math import sqrt, asin, acos, pi as Pi
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
 from scipy.interpolate import Rbf
 
-from geo_column import GEOColumn
+from .geo_column import GEOColumn
 
 from simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray#, SimArrayView
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 from matplotlib.pyplot import bar, show, axhline, ion, ioff, xlabel, ylabel, title, figure, savefig
 
@@ -83,7 +83,7 @@ def construct_fe_domain( fe_domain_list ):
         elif isinstance( d, FESubDomain ):
             d.domain = _sdomain
         else:
-            raise TypeError, 'The list can contain only FEGrid or FERefinementGrid'
+            raise TypeError('The list can contain only FEGrid or FERefinementGrid')
     return _sdomain
 
 class MRtwo( MushRoofModel ):
@@ -289,7 +289,7 @@ class MRtwo( MushRoofModel ):
         '''exports X_F_export and F_export data to csv - worksheet
         '''
 
-        print '*** writing hinge force data data to file,', filename, ' ***'
+        print('*** writing hinge force data data to file,', filename, ' ***')
 
         X_data = self.X_F_export.reshape( -1, 3 )
         F_data = self.F_export.reshape( -1, 3 )
@@ -311,7 +311,7 @@ class MRtwo( MushRoofModel ):
     def export_edge_u_data( self, filename = 'U_data.csv' ):
         '''exports X_U_export and U_export data to csv - worksheet
         '''
-        print '*** writing displacement data to file,', filename, ' ***'
+        print('*** writing displacement data to file,', filename, ' ***')
 
         X_data = self.X_U_export.reshape( -1, 3 )
         U_data = self.U_export.reshape( -1, 3 )
@@ -1326,14 +1326,14 @@ if __name__ == '__main__':
 
     sim_model = MRtwo()
     do = 'export_hinge'
-    print sim_model.k_v_op
-    print sim_model.k_v_ip
-    print sim_model.k_n_ip
+    print(sim_model.k_v_op)
+    print(sim_model.k_v_ip)
+    print(sim_model.k_n_ip)
 
 
     if do == 'ui':
 
-        print 'ui'
+        print('ui')
 
         sim_model.lc = 'lc_g'
         dofs_u = sim_model.dofs_u[0].shape
@@ -1359,7 +1359,7 @@ if __name__ == '__main__':
 
     if do == 'export_hinge':
 
-        print 'export_hinge'
+        print('export_hinge')
 
 
         #loading cases
@@ -1511,9 +1511,9 @@ if __name__ == '__main__':
                     sim_model.shift_array = shift_array_dict[link_case]
                     sim_model.not_linked_elem = not_linked_dict[link_case]
                     sim_model.lc = lc
-                    print  'link_type', sim_model.link_type
-                    print 'loading_case:', sim_model.lc
-                    print "n_elems_quarter_xy", sim_model.n_elems_quarter_xy
+                    print('link_type', sim_model.link_type)
+                    print('loading_case:', sim_model.lc)
+                    print("n_elems_quarter_xy", sim_model.n_elems_quarter_xy)
                     sim_model.peval()
                     sim_model.export_int_force_data( filename = 'spring_1_' + link_type + '_' + link_case + '_hf_' + lc + '.csv' )
                     sim_model.export_edge_u_data( filename = 'spring_1_' + link_type + '_' + link_case + '_u_' + lc + '.csv' )
@@ -1568,7 +1568,7 @@ if __name__ == '__main__':
 
 
         if cs == 'shell':
-            print output_array.shape
+            print(output_array.shape)
             y_0 = output_array[:, 0, :]
             y_1 = output_array[:, 1, :]
 #            y_2 = output_array[:,2,:]
@@ -1693,7 +1693,7 @@ if __name__ == '__main__':
 
         filename = 'cs_' + cs + '.csv'
 #        
-        print '*** writing study data to file,', filename, ' ***'
+        print('*** writing study data to file,', filename, ' ***')
 
         if cs == 'column':
             X_data = vstack( ( hstack( ( n_dofs_0.reshape( -1, 1 ), ones_like( n_dofs_0.reshape( -1, 1 ) ) * 2, y_0 ) ) ) )

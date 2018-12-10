@@ -38,7 +38,7 @@ from math import pi
 from string import split
 import os
 
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
 
 class LSArrayAdapter (TabularAdapter):
 

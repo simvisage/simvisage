@@ -148,7 +148,7 @@ class ExpSH4PT(ExType):
         If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
-        print '*** process source data ***'
+        print('*** process source data ***')
 
         super(ExpSH4PT, self).process_source_data()
 
@@ -165,9 +165,9 @@ class ExpSH4PT(ExType):
         self.Kraft *= -1
 
         # add weight of load introduction to force
-        print 'add weight of steel traverse to force'
+        print('add weight of steel traverse to force')
         self.Kraft += self.weight_load_introduction
-        print 'force at initial state ', self.weight_load_introduction
+        print('force at initial state ', self.weight_load_introduction)
 
         # (reset displacement gauges by their initial values and change sign
         # in order to return a positive value for a displacement)

@@ -30,8 +30,8 @@ from traitsui.table_column import \
     ObjectColumn
 from traitsui.tabular_adapter \
     import TabularAdapter
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
-from ls_table import \
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+from .ls_table import \
     LSTable, ULS, SLS
 import numpy as np
 import pylab as p
@@ -131,7 +131,7 @@ class LC(HasTraits):
     @cached_property
     def _get_state_data_dict(self):
         d = {}
-        for k, arr in self.state_data_orig.items():
+        for k, arr in list(self.state_data_orig.items()):
             d[k] = self.data_filter(self.lcc_table, arr)
         return d
 
@@ -341,8 +341,8 @@ class LCCTable(HasTraits):
         needs to be defined. In the original version of 'itertools.product'
         the function takes a tuple as argument ("*args").
         """
-        pools = map(
-            tuple, args)  # within original version args defined as *args
+        pools = list(map(
+            tuple, args))  # within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -420,10 +420,10 @@ class LCCTable(HasTraits):
         # printouts:
         #
         if self.ls == 'ULS':
-            print '*** load case combinations for limit state ULS ***'
+            print('*** load case combinations for limit state ULS ***')
         else:
-            print '*** load case combinations for limit state SLS ***'
-            print '*** SLS combination used: % s ***' % (self.combination_SLS)
+            print('*** load case combinations for limit state SLS ***')
+            print('*** SLS combination used: % s ***' % (self.combination_SLS))
 
         #---------------------------------------------------------------
         # get permutations of safety factors ('gamma')
@@ -666,7 +666,7 @@ class LCCTable(HasTraits):
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
-        for k, arr in self.geo_data_orig.items():
+        for k, arr in list(self.geo_data_orig.items()):
             d[k] = self.data_filter(self, arr)
         return d
 
@@ -841,7 +841,7 @@ class LCCTable(HasTraits):
         # stack the list to an array in order to use ndmax-function
         #
         assess_value_arr = hstack(assess_value_list)
-        print 'assess_value_arr.shape', assess_value_arr.shape
+        print('assess_value_arr.shape', assess_value_arr.shape)
 
         #----------------------------------------------
         # get the overall maximum values:
@@ -863,14 +863,14 @@ class LCCTable(HasTraits):
         # save assess values to file in order to superpose them later
         #
         if save_assess_values_to_file != None:
-            print 'assess_values saved to file %s' % (save_assess_values_to_file)
+            print('assess_values saved to file %s' % (save_assess_values_to_file))
             assess_value_arr = plot_col
             np.savetxt(save_assess_values_to_file, assess_value_arr)
 
         # add read in saved assess values to be superposed with currently read in assess values
         #
         if add_assess_values_from_file != None:
-            print 'superpose assess_value_arr with values read in from file %s' % (add_assess_values_from_file)
+            print('superpose assess_value_arr with values read in from file %s' % (add_assess_values_from_file))
             assess_value_arr = np.loadtxt(add_assess_values_from_file)
             plot_col += assess_value_arr
 
@@ -988,7 +988,7 @@ class LCCTable(HasTraits):
         #
         m_Ed_arr = hstack(m_Ed_list)
         n_Ed_arr = hstack(n_Ed_list)
-        print 'm_Ed_arr.shape', m_Ed_arr.shape
+        print('m_Ed_arr.shape', m_Ed_arr.shape)
 
         # get n_tRd, n_cRd, m_Rd
         #
@@ -1001,7 +1001,7 @@ class LCCTable(HasTraits):
         # use simplification with minimum value for k_alpha = 0.707
         # and lower resistance of 0- or 90-degree direction
         #
-        print 'simplification with k_alpha,min = 0.707 has been used for plot'
+        print('simplification with k_alpha,min = 0.707 has been used for plot')
         m_Rd = min(m_0_Rd, m_90_Rd) * 0.707
         n_Rdt = min(n_0_Rdt, n_90_Rdt) * 0.707
 
@@ -1036,7 +1036,7 @@ class LCCTable(HasTraits):
             # save max and min values to file
             #
             np.savetxt(save_max_min_nm_to_file, max_min_nm_arr)
-            print 'max_min_nm_arr saved to file %s' % (save_max_min_nm_to_file)
+            print('max_min_nm_arr saved to file %s' % (save_max_min_nm_to_file))
 
         #----------------------------------------------
         # plot
@@ -1080,7 +1080,7 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
+            print('figure saved to file %s' % (save_fig_to_file))
             p.savefig(save_fig_to_file, format='png')
 
         p.show()
@@ -1119,7 +1119,7 @@ class LCCTable(HasTraits):
             # add read in saved values to be superposed with currently read in values
             #
             if add_max_min_eta_nm_from_file != None:
-                print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
+                print("superpose max values for 'eta_n' and 'eta_m' with currently loaded values")
                 max_min_eta_nm_arr = np.loadtxt(add_max_min_eta_nm_from_file)
                 max_eta_n_arr = max_min_eta_nm_arr[:, 0][:, None]
                 min_eta_n_arr = max_min_eta_nm_arr[:, 1][:, None]
@@ -1181,7 +1181,7 @@ class LCCTable(HasTraits):
         #
         eta_n_arr = np.hstack(eta_n_list)
         eta_m_arr = np.hstack(eta_m_list)
-        print 'eta_n_arr.shape', eta_n_arr.shape
+        print('eta_n_arr.shape', eta_n_arr.shape)
 
         # save max-values to file in order to superpose them later
         #
@@ -1211,7 +1211,7 @@ class LCCTable(HasTraits):
             # save max values to file
             #
             np.savetxt(save_max_min_eta_nm_to_file, max_min_eta_nm_arr)
-            print 'max_min_eta_nm_arr saved to file %s' % (save_max_min_eta_nm_to_file)
+            print('max_min_eta_nm_arr saved to file %s' % (save_max_min_eta_nm_to_file))
 
         #----------------------------------------------
         # plot
@@ -1255,7 +1255,7 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' % (save_fig_to_file)
+            print('figure saved to file %s' % (save_fig_to_file))
             p.savefig(save_fig_to_file, format='png')
 
         p.show()

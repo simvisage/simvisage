@@ -257,12 +257,12 @@ class SCM(HasTraits):
                             )
                 
                 self.CB_objects_lst.append(new_CB)
-                print 'crack #'+str(len(self.CB_objects_lst) + 1), 'evaluated, time: ', t.clock() - s, 's, Gf = ', self.CB_model.Gf
+                print('crack #'+str(len(self.CB_objects_lst) + 1), 'evaluated, time: ', t.clock() - s, 's, Gf = ', self.CB_model.Gf)
 
             except:
 #                 #plt.plot(np.hstack((0.0,self.cracking_W_lst)), np.hstack((0.0,self.cracking_stresses_lst)), color='blue', lw=2)
 #                 #plt.show()
-                print 'composite saturated'
+                print('composite saturated')
                 break
 
     
@@ -307,5 +307,5 @@ if __name__ == '__main__':
                   )
         scm.evaluate()
         cracks.append(len(scm.CB_objects_lst))
-    print Gf
-    print cracks
+    print(Gf)
+    print(cracks)

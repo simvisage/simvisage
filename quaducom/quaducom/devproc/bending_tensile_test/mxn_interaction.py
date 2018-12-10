@@ -5,7 +5,7 @@ Script evaluating the mxn_simple_script interaction between
 tensile and bending load
 '''
 
-from exp_btt_db import ExpBTTDB
+from .exp_btt_db import ExpBTTDB
 from matresdev.db.simdb import SimDB
 from aramis_cdt import AramisInfo, AramisUI, AramisFieldData, AramisCDT, AramisUI
 # AramisData, AramisBSA,
@@ -126,11 +126,11 @@ def plot_all():
         ax2.set_ylabel('w [mm]')
         ax2.legend(loc=9)
 
-        print '-----------------------------n_steps', e.aramis_info.number_of_steps
-        print '-----------------------------n_steps_cut1', len(e.t_aramis)
-        print 'max tension strain', (e.eps_t_aramis[0] * 1000)[-1]
-        print 'min compression strain', (e.eps_t_aramis[1] * 1000)[-1]
-        print 'max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000)
+        print('-----------------------------n_steps', e.aramis_info.number_of_steps)
+        print('-----------------------------n_steps_cut1', len(e.t_aramis))
+        print('max tension strain', (e.eps_t_aramis[0] * 1000)[-1])
+        print('min compression strain', (e.eps_t_aramis[1] * 1000)[-1])
+        print('max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000))
 
     axes = p.subplot(234)
     for e in e_list:
@@ -175,7 +175,7 @@ def plot_all():
         # print 'e.A_tex', e.A_tex
         # print  'sig_tex', sig_tex
 
-        print 'tensile_text_max tension strain', eps_mean[-1] * 1000
+        print('tensile_text_max tension strain', eps_mean[-1] * 1000)
 
         # p.plot(eps_mean * 1000, sig_c, label='sig_c')
 

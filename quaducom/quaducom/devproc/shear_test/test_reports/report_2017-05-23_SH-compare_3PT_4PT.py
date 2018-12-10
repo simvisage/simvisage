@@ -11,8 +11,8 @@ from matresdev.db.exdb import ExRun
 from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-import report_2017_05_04_SH_3PT_comparison_a_d as threePT
-import report_2017_05_23_SH_4PT_comparison_a_d as fourPT
+from . import report_2017_05_04_SH_3PT_comparison_a_d as threePT
+from . import report_2017_05_23_SH_4PT_comparison_a_d as fourPT
 
 class PlotBase(HasTraits):
 

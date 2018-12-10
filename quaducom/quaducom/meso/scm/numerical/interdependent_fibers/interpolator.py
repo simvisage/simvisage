@@ -123,8 +123,8 @@ class Interpolator(HasTraits):
                             mu_epsf_arr = np.hstack((mu_epsf_arr, mu_epsf))
                             epsm_arr = np.hstack((epsm_arr, epsm))
                         current_loop = i * len(L_arr) + j + 1
-                        print 'progress: %2.1f %%' % \
-                        (current_loop / float(loops_tot) * 100.)
+                        print('progress: %2.1f %%' % \
+                        (current_loop / float(loops_tot) * 100.))
                 points = np.array([Ll_arr, Lr_arr, x_arr, sigma_c_arr])
                 interp_arr_points = open('interp_arr_points.pkl', 'wb')
                 pickle.dump([points, max_sigma_c_arr], interp_arr_points, -1)

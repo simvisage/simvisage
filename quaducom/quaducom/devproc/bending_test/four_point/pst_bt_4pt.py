@@ -85,8 +85,8 @@ simdb = SimDB()
 
 from pickle import dump, load
 
-from sim_bt_4pt import SimBT4PT
-from sim_bt_4pt import SimBT4PTDB
+from .sim_bt_4pt import SimBT4PT
+from .sim_bt_4pt import SimBT4PTDB
 
 from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
 
@@ -175,23 +175,23 @@ if __name__ == '__main__':
     tolerance = sim_model.tolerance
     n_mp = sim_model.n_mp
 
-    print '\n'
-    print '### calculation settings: ###'
-    print 'ccs_unit_cell_key', ccs_unit_cell_key
-    print 'calibration_test', calibration_test
-    print 'length', length
-    print 'width', width
-    print 'thickness', thickness
-    print 'outer_zone_shape_x', outer_zone_shape_x
-    print 'load_zone_shape_x', load_zone_shape_x,
-    print 'mid_zone_shape_x', mid_zone_shape_x
-    print 'shape_y', shape_y
-    print 'shape_z', shape_z
-    print 'E_m', E_m
-    print 'nu', nu
-    print 'tolerance', tolerance
-    print 'n_mp', n_mp
-    print '\n'
+    print('\n')
+    print('### calculation settings: ###')
+    print('ccs_unit_cell_key', ccs_unit_cell_key)
+    print('calibration_test', calibration_test)
+    print('length', length)
+    print('width', width)
+    print('thickness', thickness)
+    print('outer_zone_shape_x', outer_zone_shape_x)
+    print('load_zone_shape_x', load_zone_shape_x, end=' ')
+    print('mid_zone_shape_x', mid_zone_shape_x)
+    print('shape_y', shape_y)
+    print('shape_z', shape_z)
+    print('E_m', E_m)
+    print('nu', nu)
+    print('tolerance', tolerance)
+    print('n_mp', n_mp)
+    print('\n')
 
 #--------------------------------------------------------------
 # do: ui / validation / show_last_result / pstudy
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         # plot phi_fn (extended plot range)
         #
         xmax = sim_model.damage_function.xdata[-1]
-        print 'xmax', xmax
+        print('xmax', xmax)
         x = linspace(0, 3 * xmax, 1000)
         phi_fn = frompyfunc(phi_fn, 1, 1)
         y = phi_fn(x)
@@ -304,7 +304,7 @@ if __name__ == '__main__':
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxo%gl%gm%gy%gz%g_s%se%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
                         % (phi_fn_class, length, thickness, outer_zone_shape_x, load_zone_shape_x, mid_zone_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
-            print 'param_key = %s' % param_key
+            print('param_key = %s' % param_key)
 
             # f-w-diagram_center
             #
@@ -313,7 +313,7 @@ if __name__ == '__main__':
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             dump(sim_model.f_w_diagram_center.trace, file)
-            print 'pickle file saved to file: %s' % file_name
+            print('pickle file saved to file: %s' % file_name)
             file.close()
             sim_model.f_w_diagram_center.trace.mpl_plot(p, color='red')
 
@@ -324,7 +324,7 @@ if __name__ == '__main__':
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             dump(sim_model.f_w_diagram_supprt.trace, file)
-            print 'pickle file saved to file: %s' % file_name
+            print('pickle file saved to file: %s' % file_name)
             file.close()
             sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
 
@@ -335,7 +335,7 @@ if __name__ == '__main__':
             pickle_file_path = join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             dump(sim_model.f_w_diagram_supprt.trace, file)
-            print 'pickle file saved to file: %s' % file_name
+            print('pickle file saved to file: %s' % file_name)
             file.close()
             sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='blue')
 
@@ -372,7 +372,7 @@ if __name__ == '__main__':
             png_file_path = join(png_path, param_key + '.png')
             p.title(param_key, fontsize=8)
             p.savefig(png_file_path, dpi=300.)
-            print 'png-file saved to file: %s' % png_file_path
+            print('png-file saved to file: %s' % png_file_path)
             p.show()
 
         app.main()
@@ -415,7 +415,7 @@ if __name__ == '__main__':
         #
         param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%g_h%g_sxo%gl%gm%gy%gz%g_s%se%s_Em%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
                     % (phi_fn_class, length, thickness, outer_zone_shape_x, load_zone_shape_x, mid_zone_shape_x, shape_y, shape_z, supprt_flag[0], elstmr_flag[0], E_m, nu, tolerance, w_max, tstep, n_mp)
-        print 'param_key = %s' % param_key
+        print('param_key = %s' % param_key)
 
         #------------------
         # simulation

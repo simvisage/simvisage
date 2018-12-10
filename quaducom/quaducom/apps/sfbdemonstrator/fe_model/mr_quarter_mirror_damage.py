@@ -26,7 +26,7 @@ for i in range(0, 15):
     out_fname_top = os.path.join(img_dir, 'damage_top_%02d.png' % i)
     out_fname_bot = os.path.join(img_dir, 'damage_bot_%02d.png' % i)
 
-    print 'writing images to', in_fname, out_fname_top
+    print('writing images to', in_fname, out_fname_top)
     pipelines = [tools.pipeline.open(in_fname) for i in range(4)]
     points_arr = [pipeline.outputs[0].points.to_array() for pipeline in pipelines ]
 

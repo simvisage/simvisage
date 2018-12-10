@@ -60,9 +60,9 @@ import pylab as p
 # Interpolation
 from matresdev.simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 from matresdev.db.matdb.trc.ccs_unit_cell import \
     CCSUnitCell, DamageFunctionEntry
@@ -165,7 +165,7 @@ class MRquarter(MushRoofModel):
         '''
         U = self.tloop.eval()
         u_center_top_z = U[ self.center_top_dof ][0, 0, 2]
-        print 'u_center_top_z', u_center_top_z
+        print('u_center_top_z', u_center_top_z)
         return np.array([ u_center_top_z], dtype='float_')
 #        max_princ_stress = max(self.max_princ_stress._get_field_data().flatten())
 #        return np.array([ u_center_top_z, max_princ_stress ],
@@ -364,7 +364,7 @@ class MRquarterDB(MRquarter):
     #-----------------
     #
     ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
-                              CCSUnitCell.db.keys(),
+                              list(CCSUnitCell.db.keys()),
                               simdb=True, input=True,
                               auto_set=False, enter_set=True)
 
@@ -394,7 +394,7 @@ class MRquarterDB(MRquarter):
                                 depends_on='+input')
     @cached_property
     def _get_damage_function(self):
-        print 'getting damage function'
+        print('getting damage function')
         return self.ccs_unit_cell_ref.get_param(self.material_model, self.calibration_test)
 
     #-----------------
@@ -478,7 +478,7 @@ if __name__ == '__main__':
     if do == 'eval':
 #        sim_model.tloop.eval()
 
-        print 'eval', sim_model.peval()
+        print('eval', sim_model.peval())
 
     if do == 'ui':
         sim_model.tloop.eval()
@@ -573,14 +573,14 @@ if __name__ == '__main__':
             max_lambda = np.max(lambda_)
             ax1.set_ylim(0, max_lambda * 1.1)
 
-            f_diag = fw_diags.values()[-1]
+            f_diag = list(fw_diags.values())[-1]
             # f_w.trace.plot(p, color='black')
             w, lambda_ = f_diag
             load_factor_plot(ax1, max_w)
 
             p.show()
 
-            max_lambda = np.array([ lambda_[-1] for (w, lambda_) in fw_diags.values() ], dtype='f')
+            max_lambda = np.array([ lambda_[-1] for (w, lambda_) in list(fw_diags.values()) ], dtype='f')
             n_elems_arr = np.array(n_elems_list, dtype='f')
             p.plot(n_elems_arr, max_lambda)
             p.show()

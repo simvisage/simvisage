@@ -13,7 +13,7 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HGroup
 
-from ecb_cross_section_state import \
+from .ecb_cross_section_state import \
     ECBCrossSectionState
 
 import numpy as np

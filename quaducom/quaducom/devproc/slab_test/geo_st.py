@@ -69,7 +69,7 @@ class GeoST(HasTraits):
 #    L1 = Float(0.30, input = True)
 
     def __call__(self, pts):
-        print '*** geo_slab_test called ***'
+        print('*** geo_slab_test called ***')
 
         x_, y_, z_ = pts.T
 
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     fp1 = st(gpoints)
 
     # save x,y,z - node coordinates of FE-mesh to file
-    print fp1.shape
+    print(fp1.shape)
     from matresdev.db.simdb import SimDB
     simdb = SimDB()
     import os
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         os.makedirs(simdata_dir)
     filename = os.path.join(simdata_dir, 'FE-mesh_ST-80cm_nxy11.csv')
     np.savetxt(filename, fp1, delimiter=';')
-    print 'xyz_arr saved to file %s' % (filename)
+    print('xyz_arr saved to file %s' % (filename))
 
     mlab.points3d(fp1[:, 0], fp1[:, 1], fp1[:, 2],
                    scale_factor=0.01 ,

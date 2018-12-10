@@ -92,7 +92,7 @@ def plot_all():
     for idx, (e_treatment, e_treatment_n_r) in enumerate(zip(e_array,
                                                              n_roving_array)):
         for e_run, n_r in zip(e_treatment, e_treatment_n_r):
-            print 'id', idx
+            print('id', idx)
             e = e_run.ex_type
             axes.plot(e.w, e.Kraft / n_r, linewidth=1.5,
                       linestyle=linestyle_list[idx], color=color_list[idx])

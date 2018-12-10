@@ -71,7 +71,7 @@ class YMBSource(HasTraits):
             if match:
                 files.append(os.path.abspath(os.path.join(self.data_dir, fname)))
                 num.append(int(match.group(1)))
-        num, files = zip(*sorted(zip(num, files)))
+        num, files = list(zip(*sorted(zip(num, files))))
         y_arr = array([])
         z_arr = array([])
         r_arr = array([])
@@ -80,7 +80,7 @@ class YMBSource(HasTraits):
         offset = array([])
 
         for n, file in zip(num, files):
-            print 'reading cut data_file %s -- slice %i' % (file, n)
+            print('reading cut data_file %s -- slice %i' % (file, n))
             data = loadtxt(file , delimiter=' ',
                               skiprows=1,
                               usecols=None)
@@ -101,10 +101,10 @@ class YMBSource(HasTraits):
         y_shift = min(y_arr)
         z_shift = min(z_arr)
         if y_shift < 0:
-            print 'y-coordinites shifted by %f' % y_shift
+            print('y-coordinites shifted by %f' % y_shift)
             y_arr = y_arr - y_shift
         if z_shift < 0:
-            print 'z-coordinites shifted by %f' % z_shift
+            print('z-coordinites shifted by %f' % z_shift)
             z_arr = z_arr - z_shift
         return y_arr, z_arr, r_arr, d_arr, cf_component_arr, cumsum(offset)
 
@@ -140,7 +140,7 @@ class YMBSource(HasTraits):
             First cut has x-coordinate = 0
             Return NumPy array
         '''
-        print 'reading data_file -- slice_height.txt'
+        print('reading data_file -- slice_height.txt')
         cut_x_file = join(self.data_dir, 'cut_x.txt')
         cut_x = loadtxt(cut_x_file, dtype='float',
                                 skiprows=1, usecols=(1, 3)) / self.px2mum
@@ -155,7 +155,7 @@ class YMBSource(HasTraits):
             Read connectivity data.
             Return NumPy array
         '''
-        print 'reading data_file -- connectivity.txt'
+        print('reading data_file -- connectivity.txt')
         connectivity_file = join(self.data_dir, 'connectivity.txt')
         connect = loadtxt(connectivity_file, delimiter=' ', dtype='float', skiprows=1)
         # replace 0 by -1 (-1 = not identified)

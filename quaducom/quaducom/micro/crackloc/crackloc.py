@@ -171,7 +171,7 @@ class MATS1DCrackLoc( MATS1DDamage ):
         # print the stress you just computed and the value of the apparent E
         X_pnt = sctx.fets_eval.get_X_pnt( sctx )
         alpha = self.get_alpha( X_pnt[0] )
-        print 'X', X_pnt, 'alpha', alpha, 'sigma', sigma
+        print('X', X_pnt, 'alpha', alpha, 'sigma', sigma)
         return  sigma, D_e_dam
 
     def _get_state_variables( self, sctx, eps_app_eng, update_on = False ):
@@ -295,8 +295,8 @@ class TSCrackLoc( TStepper ):
     #
     def eval( self, step_flag, U_k, d_U, t_n, t_n1 ):
 
-        print 'concrete dofs'
-        print self.concrete_dofs
+        print('concrete dofs')
+        print(self.concrete_dofs)
 
         if step_flag == 'corrector':
 
@@ -326,7 +326,7 @@ class TSCrackLoc( TStepper ):
         # set the trial state for the obtained strain
         self.mats_eval.set_trial_state( eps )
 
-        print 'BEGIN TS'
+        print('BEGIN TS')
         # run the standard calculation
         return super( TSCrackLoc, self ).eval( step_flag, U_k, d_U, t_n, t_n1 )
 
@@ -399,7 +399,7 @@ class SimCrackLoc( IBVModel ):
                           fets_eval = self.fets )
 
         right_dofs = domain[-1, -1, -1, :].dofs[0, :, 0]
-        print 'concrete_dofs', id( domain ), domain[:, 0, :, 0].dofs
+        print('concrete_dofs', id( domain ), domain[:, 0, :, 0].dofs)
         # Response tracers
         self.stress_strain = RTraceGraph( name = 'Fi,right over u_right (iteration)' ,
                                    var_y = 'F_int', idx_y = right_dofs[0],
@@ -463,7 +463,7 @@ class SimCrackLoc( IBVModel ):
         tloop = TLoop( tstepper = ts, KMAX = 200, debug = True, tolerance = 1e-5,
                        tline = TLine( min = 0.0, step = 1.0, max = 1.0 ) )
 
-        print ts.rte_dict.keys()
+        print(list(ts.rte_dict.keys()))
         U = tloop.eval()
 
         self.plot()
@@ -672,7 +672,7 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'eval':
-        print 'eval', sim_model.peval()
+        print('eval', sim_model.peval())
     if do == 'ui':
         sim_model.configure_traits()
 

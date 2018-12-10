@@ -15,7 +15,7 @@ from numpy import \
     shape, sqrt, frompyfunc, ones_like, zeros_like, ones, any, all, \
     sort, argsort, concatenate, add
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 from os.path import join
@@ -161,7 +161,7 @@ class HPShell( HasTraits ):
         v_arr = read_rsurface( file_path )
         filter = self.geo_filter.get( self.geo_input_name, None )
         if filter != None:
-            v_arr = filter( v_arr )
+            v_arr = list(filter( v_arr ))
         return v_arr
 
     # array of the vertex positions in global 
@@ -171,7 +171,7 @@ class HPShell( HasTraits ):
     def _get_vl_arr( self ):
         vl_arr = self._read_arr( 'lowerface_' )
         if self.cut_off_lowerface == True:
-            print '--- lower face z-coords cut off ---'
+            print('--- lower face z-coords cut off ---')
 
             # z-values of the coords from the lower face are cut off. 
             # From the highest z-coordinate of the lower face the vertical
@@ -203,14 +203,14 @@ class HPShell( HasTraits ):
         # values must range between 0 and 1
         #
         xi, yi, zi = points[:, 0], points[:, 1], points[:, 2]
-        print "xi", xi
-        print "xi.shape", xi.shape
+        print("xi", xi)
+        print("xi.shape", xi.shape)
 
         # size of total structure
         #
         # @todo: move to class definition of "mushroof_model" and send to "__call__"
         scale_size = self.scale_size
-        print "scale_size", scale_size
+        print("scale_size", scale_size)
 
         # @todo: add "_quarter" (see above)
         length_x_tot = self.length_x * scale_size
@@ -226,7 +226,7 @@ class HPShell( HasTraits ):
 #                return abs( 2.0 * coords - 1.0 )
 
             if self.mushroof_part == 'detail':
-                print 'in d_origin_fn'
+                print('in d_origin_fn')
                 return abs( 1.0 * coords - 0.5 ) * scale_size
 
 #            # @todo: corresponding "scale_factor" needs to be added 
@@ -239,7 +239,7 @@ class HPShell( HasTraits ):
         # (= values of the distance to the origin as absolute value)
         #
         xi_rbf = d_origin_fn( self, xi )
-        print 'xi_rbf', xi_rbf
+        print('xi_rbf', xi_rbf)
         yi_rbf = d_origin_fn( self, yi )
 
         # normalized coordinates of the vertices for lower- and upperface
@@ -302,7 +302,7 @@ class HPShell( HasTraits ):
         #
         X, Y, Z = self.X0
 
-        print '--- geometric transformation done ---'
+        print('--- geometric transformation done ---')
 
         # multiply the local grid points with the real dimensions in order to obtain the 
         # global coordinates of the mushroof_part:
@@ -335,7 +335,7 @@ if __name__ == '__main__':
     gpoints = c_[ X.flatten(), Y.flatten(), Z.flatten() ]
 
     fp1 = hp( gpoints )
-    print shape( fp1 )
+    print(shape( fp1 ))
     mlab.points3d( fp1[:, 0], fp1[:, 1], fp1[:, 2], scale_factor = 0.05 , resolution = 8 )
 
     mlab.show()

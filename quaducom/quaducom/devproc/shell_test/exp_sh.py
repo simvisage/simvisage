@@ -188,7 +188,7 @@ class ExpSH(ExType):
         '''remove the jumps in the displacement curves 
         due to resetting the displacement gauges. 
         '''
-        print '*** curve ironing activated ***'
+        print('*** curve ironing activated ***')
 
         # each column from the data array corresponds to a measured parameter 
         # e.g. displacement at a given point as function of time u = f(t))
@@ -229,7 +229,7 @@ class ExpSH(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
+                print('number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0])
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -252,7 +252,7 @@ class ExpSH(ExType):
         A minor mistake is made depending on how much time passes
         before the cylinder has contact with the slab.
         '''
-        print '*** process source data ***'
+        print('*** process source data ***')
 
         self._read_data_array()
         # curve ironing:

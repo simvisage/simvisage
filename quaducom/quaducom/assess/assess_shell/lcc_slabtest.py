@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     import os
 
-    from lcc_table import LCCTableULS, LC, LCCTableSLS
+    from .lcc_table import LCCTableULS, LC, LCCTableSLS
 
     # Access to the top level directory of the database
     #

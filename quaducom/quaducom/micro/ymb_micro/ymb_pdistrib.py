@@ -8,8 +8,8 @@ from etsproxy.traits.api import Float, Property, cached_property, Int, \
 from stats.pdistrib.pdistrib import IPDistrib
 from numpy import mean, hstack, cumsum, select, min, max, vectorize, random
 import numpy as np
-from ymb_hist import YMBHist
-from ymb_data import YMBCutData
+from .ymb_hist import YMBHist
+from .ymb_data import YMBCutData
 from scipy.interpolate import interp1d
 from spirrid.rv import RV
 
@@ -118,7 +118,7 @@ class YMB_RV(RV):
 
 if __name__ == '__main__':
 
-    from ymb_data import YMBData, YMBSlider, YMBSource
+    from .ymb_data import YMBData, YMBSlider, YMBSource
 
     data = YMBCutData(source=YMBSource())
 
@@ -126,10 +126,10 @@ if __name__ == '__main__':
 
     ymb_pd = YMBDistrib(slider=slider, n_int=20)
 
-    print ymb_pd.x_array.shape
-    print ymb_pd.pdf_array.shape
-    print ymb_pd.interp_pdf(-1)
-    print ymb_pd.interp_pdf(0.1)
+    print(ymb_pd.x_array.shape)
+    print(ymb_pd.pdf_array.shape)
+    print(ymb_pd.interp_pdf(-1))
+    print(ymb_pd.interp_pdf(0.1))
 
     import pylab as p
     x = np.linspace(0, ymb_pd.x_array[-1], 10000)
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     x -= dx / 2.0
 
     y = ymb_pd.interp_pdf(x)
-    print 'integ', np.trapz(y, x)
+    print('integ', np.trapz(y, x))
     p.plot(x, y)
     p.show()
 

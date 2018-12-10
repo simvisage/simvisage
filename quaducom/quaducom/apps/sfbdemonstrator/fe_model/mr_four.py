@@ -37,19 +37,19 @@ from numpy import \
 from ibvpy.mats.mats3D.mats3D_tensor import map3d_sig_eng_to_mtx
 from math import sqrt, asin, acos, pi as Pi
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
 from scipy.interpolate import Rbf
 
-from geo_column import GEOColumn
+from .geo_column import GEOColumn
 
 from matresdev.simiter.sim_pstudy import ISimModel, SimOut, SimPStudy
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 
 class MRfour(MushRoofModel):
@@ -475,12 +475,12 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'eval':
-        print 'eval', sim_model.peval()
+        print('eval', sim_model.peval())
 
     if do == 'ui':
 
 #        sim_model.peval()
-        print sim_model.n_elems_col
+        print(sim_model.n_elems_col)
         from ibvpy.plugins.ibvpy_app import IBVPyApp
         app = IBVPyApp(ibv_resource=sim_model)
         app.main()

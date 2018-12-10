@@ -247,9 +247,9 @@ if __name__ == '__main__':
         plt.figure()
         cbcsp = CBEMClampedFiberSP()
         x = linspace(-100, 40, 7)
-        print x
+        print(x)
         q = cbcsp(.1, x, t, l, Af, Ef, Am, Em, theta, xi, phi, Ll, Lr, Nf)
-        print q
+        print(q)
         plt.plot(x, q, lw=2, color='black', label='force along filament')
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)

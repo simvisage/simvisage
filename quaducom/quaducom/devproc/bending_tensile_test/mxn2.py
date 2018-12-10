@@ -7,7 +7,7 @@ tensile and bending load
 
 if __name__ == '__main__':
 
-    from exp_btt_db import ExpBTTDB
+    from .exp_btt_db import ExpBTTDB
     from matresdev.db.simdb import SimDB
     from aramis_cdt import AramisInfo, AramisFieldData, AramisUI, AramisCDT
     simdb = SimDB()
@@ -136,10 +136,10 @@ if __name__ == '__main__':
             eps_min_M_0 = eps_min_M [0]
             delta_eps_min_M = eps_min_M - eps_min_M_0
             # p.tick_params
-            print 'test_file', test_file
-            print 'delta_eps_max_M', delta_eps_max_M
-            print 'delta_eps_min_M', delta_eps_min_M
-            print 'M', e.M_t_F
+            print('test_file', test_file)
+            print('delta_eps_max_M', delta_eps_max_M)
+            print('delta_eps_min_M', delta_eps_min_M)
+            print('M', e.M_t_F)
 
             delta_eps_I = [0, 12.34]
             M_I_a = 0.017
@@ -213,7 +213,7 @@ if __name__ == '__main__':
         elif len(t_N) == 0:
             F_beg_idx = 0
 
-        print 'F_beg_idx', F_beg_idx
+        print('F_beg_idx', F_beg_idx)
 
         # else:
             # F_beg_idx_n = np.shape(t_N) [0]

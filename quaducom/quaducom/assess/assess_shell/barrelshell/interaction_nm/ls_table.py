@@ -29,7 +29,7 @@ from traitsui.table_column import \
 from traitsui.tabular_adapter \
     import TabularAdapter
 
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
 import numpy as np
 
 
@@ -447,8 +447,8 @@ class SLS(LS):
         f_m = self.f_m
         A = self.A  # [m**2/m]
         W = self.W  # [m**3/m]
-        print 'A', A
-        print 'W', W
+        print('A', A)
+        print('W', W)
 
         n_sig_lo = self.n_sig_lo  # [kN/m]
         m_sig_lo = self.m_sig_lo  # [kNm/m]
@@ -905,7 +905,7 @@ class ULS(LS):
         #-------------------------------------------------
         if self.eval_mode == 'massivbau':
 
-            print 'eval_mode == "massivbau"'
+            print('eval_mode == "massivbau"')
 
             zs = self.zs
             z = self.z
@@ -1039,7 +1039,7 @@ class ULS(LS):
         #
         if self.eval_mode == 'princ_sig_level_1':
 
-            print "NOTE: the principle tensile stresses are used to evaluate 'n_tex'"
+            print("NOTE: the principle tensile stresses are used to evaluate 'n_tex'")
             # conservative evaluated based on a resulting tensile force of the composite cross section[kN/m]
             # derived from the maximum value of the tensile stresses at the top or the bottom of the cross section
             # i.e. sig1_max = min( 0, max( self.sig1_up, self.sig1_lo ) )
@@ -1233,8 +1233,8 @@ class ULS(LS):
             # 'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)
             #-------------------------------------------------
             #
-            print "NOTE: the principle tensile stresses are used to evaluate the deflection angle"
-            print "      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
+            print("NOTE: the principle tensile stresses are used to evaluate the deflection angle")
+            print("      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)")
 
             # simplification of the transformation formula only valid for assumption of
             # arrangement of the textile reinforcement approximately orthogonal to the global coordinate system
@@ -1255,7 +1255,7 @@ class ULS(LS):
                 cos(beta_q_up) * (1 - beta_q_up_deg / 90.)
 
             if self.ls_table.k_alpha_min == True:
-                print "minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values"
+                print("minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values")
                 # NOTE: conservative simplification: k_alpha_min = 0.707 used
                 #
                 n_Rdt_lo = n_Rdt_up = min(

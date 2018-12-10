@@ -11,7 +11,7 @@ from numpy import min, array, histogram2d, vstack, hstack, corrcoef, prod, ones,
 from scipy.optimize import leastsq
 from scipy.stats import spearmanr
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from ymb_data import IYMBData, YMBSegmentData, YMBSource, var_dict, YMBCutData
+from .ymb_data import IYMBData, YMBSegmentData, YMBSource, var_dict, YMBCutData
 from matplotlib.pyplot  import setp
 import numpy.ma as ma
 
@@ -41,7 +41,7 @@ class YMBAutoCorrel(HasTraits):
     input_change = Event
     @on_trait_change('var_enum, data.input_change')
     def _set_input_change(self):
-        print 'YMBAutoCorrel input change'
+        print('YMBAutoCorrel input change')
         self.input_change = True
 
     corr_arr = Property(Array, depends_on='var_enum, data.input_change')
@@ -112,7 +112,7 @@ class YMBAutoCorrelView(HasTraits):
     @on_trait_change('correl_data.input_change, +modified')
     def _redraw(self):
         # TODO: set correct ranges, fix axis range (axes.xlim)
-        print 'redrawing xxxx'
+        print('redrawing xxxx')
         figure = self.figure
         figure.clear()
         var_data = self.correl_data.corr_arr

@@ -15,7 +15,7 @@ from numpy import \
     shape, sqrt, frompyfunc, ones_like, zeros_like, ones, any, all, \
     sort, argsort, concatenate, add
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 from os.path import join
@@ -182,7 +182,7 @@ class HPShell(HasTraits):
 #        print 'v_arr.shape before filtering \n', v_arr.shape
         filter = self.geo_filter.get(self.geo_input_name, None)
         if filter != None:
-            v_arr = filter(v_arr)
+            v_arr = list(filter(v_arr))
 #        print 'v_arr after filtering \n', v_arr
 #        print 'v_arr.shape after filtering \n', v_arr.shape
         return v_arr
@@ -195,7 +195,7 @@ class HPShell(HasTraits):
     def _get_vl_arr(self):
         vl_arr = self._read_arr('lowerface_')
         if self.cut_off_lowerface == True:
-            print '--- lower face z-coords cut off ---'
+            print('--- lower face z-coords cut off ---')
 
             # z-values of the coords from the lower face are cut off. 
             # From the highest z-coordinate of the lower face the vertical
@@ -428,9 +428,9 @@ class HPShell(HasTraits):
             # arrange and check data
             #
             if self.t_reinf_layer > self.t_shell / 2. or self.n_elems_z < 3:
-                print '--- constant edge element transformation canceled ---'
-                print 'the following condition needs to be fullfilled: \n'
-                print 'self.t_reinf_layer <= self.t_shell/2 and self.n_elems_z >= 3'
+                print('--- constant edge element transformation canceled ---')
+                print('the following condition needs to be fullfilled: \n')
+                print('self.t_reinf_layer <= self.t_shell/2 and self.n_elems_z >= 3')
             else:
                 n_elems_z = float(self.n_elems_z)
                 # normed thickness will evaluate as t_reinf_layer at each element
@@ -450,7 +450,7 @@ class HPShell(HasTraits):
                 zi_[zi_inter] = t_reinf_layer_[zi_inter] + \
                                 (zi_[zi_inter] - delta_) / (1 - 2 * delta_)\
                                  * (1 - 2 * t_reinf_layer_[zi_inter])
-                print '--- constant edge elements transformation done ---'
+                print('--- constant edge elements transformation done ---')
 
         # thickness is multiplied by the supplied zi coordinate
         #
@@ -460,7 +460,7 @@ class HPShell(HasTraits):
         #
         X_0, Y_0, Z_0 = self.X0
 
-        print '--- geometric transformation done ---'
+        print('--- geometric transformation done ---')
 
         # multiply the local grid points with the real dimensions in order to obtain the 
         # global coordinates of the mushroof_part:

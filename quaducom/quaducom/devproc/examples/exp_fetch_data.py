@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     from quaducom.devproc.tensile_test.dog_bone.exp_tt_db import ExpTTDB
 
-    print ExpTTDB.db.instances.keys()
-    print ExpTTDB.db['TT-12c-6cm-0-TU-SH1-V3']
+    print(list(ExpTTDB.db.instances.keys()))
+    print(ExpTTDB.db['TT-12c-6cm-0-TU-SH1-V3'])
 
     ExpTTDB.db['TT-12c-6cm-0-TU-SH1-V3'].configure_traits()

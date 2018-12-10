@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     import os
 
-    from lcc_table import LCCTableULS, LC, LCCTableSLS
+    from .lcc_table import LCCTableULS, LC, LCCTableSLS
 
     # Access to the top level directory of the database
     #
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     n_Rdc = 15045.  
     
     
-    print 'design values calculated by hand for strength characteristics'
+    print('design values calculated by hand for strength characteristics')
 
     # LCCTable for imposed loads (without temperature)
     #

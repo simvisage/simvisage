@@ -35,7 +35,7 @@ from numpy import \
     ones, transpose, shape, append, argmin, fabs, identity, \
     max as ndmax, min as ndmin
 
-from ls_table_ntex import \
+from .ls_table_ntex import \
     LSTable, ULS, SLS
 
 from math import pi
@@ -134,7 +134,7 @@ class LC(HasTraits):
         to a csv-file using ';' as filed delimiter and ' ' (blank)
         as text delimiter.
         '''
-        print '*** read state data from file: %s ***' % (file_name)
+        print('*** read state data from file: %s ***' % (file_name))
 
         # get the column headings defined in the second row
         # of the csv soliciotations input file
@@ -205,7 +205,7 @@ class LC(HasTraits):
     @cached_property
     def _get_state_data_dict(self):
         d = {}
-        for k, arr in self.state_data_orig.items():
+        for k, arr in list(self.state_data_orig.items()):
             d[k] = self.data_filter(arr)
         return d
 
@@ -319,8 +319,8 @@ class LCCTable(HasTraits):
             if not all(lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
                 not all(lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
                 not all(lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
-                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % (self.lc_list[0].name, lc.name)
+                raise ValueError("coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                        % (self.lc_list[0].name, lc.name))
                 return False
 
             # check external consistency:
@@ -328,11 +328,11 @@ class LCCTable(HasTraits):
             # input files (e.g. 'LC1.csv') defined in 'lc_list')
             #
             if not all(self.geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                        % (self.lc_list[0].name, lc.name)
+                raise ValueError("element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                        % (self.lc_list[0].name, lc.name))
                 return False
 
-        print '*** input files checked for consistency (OK) ***'
+        print('*** input files checked for consistency (OK) ***')
         return True
 
     #-------------------------------
@@ -381,7 +381,7 @@ class LCCTable(HasTraits):
         needs to be defined. In the original version of 'itertools.product'
         the function takes a tuple as argument ("*args").
         """
-        pools = map(tuple, args)  # within original version args defined as *args
+        pools = list(map(tuple, args))  # within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -456,10 +456,10 @@ class LCCTable(HasTraits):
         # printouts:
         #
         if self.ls == 'ULS':
-            print '*** load case combinations for limit state ULS ***'
+            print('*** load case combinations for limit state ULS ***')
         else:
-            print '*** load case combinations for limit state SLS ***'
-            print '*** SLS combination used: % s ***' % (self.combination_SLS)
+            print('*** load case combinations for limit state SLS ***')
+            print('*** SLS combination used: % s ***' % (self.combination_SLS))
 
         #---------------------------------------------------------------
         # get permutations of safety factors ('gamma')
@@ -671,7 +671,7 @@ class LCCTable(HasTraits):
         to a csv - file using ';' as filed delimiter and ' ' ( blank )
         as text delimiter.
         '''
-        print '*** read geo data from file: %s ***' % (file_name)
+        print('*** read geo data from file: %s ***' % (file_name))
 
 
         # coordinates [m]:
@@ -747,7 +747,7 @@ class LCCTable(HasTraits):
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
-        for k, arr in self.geo_data_orig.items():
+        for k, arr in list(self.geo_data_orig.items()):
             d[ k ] = self.data_filter(arr)
         return d
 
@@ -1169,7 +1169,7 @@ if __name__ == '__main__':
 
     if plot_n_tex_all_lcc == True:
 
-        print 'lct.combi_arr', lct.combi_arr
+        print('lct.combi_arr', lct.combi_arr)
 
         # get the list of all loading case combinations:
         #

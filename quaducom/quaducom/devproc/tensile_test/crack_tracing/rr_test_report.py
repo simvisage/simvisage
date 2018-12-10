@@ -3,7 +3,7 @@ Created on Jan 28, 2015
 
 '''
 
-from exp_att_db import ExpATTDB, f_interp1d
+from .exp_att_db import ExpATTDB, f_interp1d
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
 from matresdev.db.exdb import ExRun
@@ -96,8 +96,8 @@ def plot_all():
         axes.set_ylabel('F [kN]')
         axes.legend(loc=2)
 
-        print '-----------------------------n_steps', e.aramis_info.number_of_steps
-        print '-----------------------------n_steps_cut1', len(e.t_aramis)
+        print('-----------------------------n_steps', e.aramis_info.number_of_steps)
+        print('-----------------------------n_steps_cut1', len(e.t_aramis))
 
         axes = p.subplot(234)
 

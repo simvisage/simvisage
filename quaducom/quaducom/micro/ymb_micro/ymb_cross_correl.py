@@ -9,9 +9,9 @@ from etsproxy.traits.ui.api import Group
 from matplotlib.figure import Figure
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from numpy import arange
-from ymb_data import IYMBData, YMBSegmentData, YMBSource, var_dict
+from .ymb_data import IYMBData, YMBSegmentData, YMBSource, var_dict
 import numpy.ma as ma
-from ymb_auto_correl import MatSpearman
+from .ymb_auto_correl import MatSpearman
 
 from etsproxy.traits.ui.api \
     import View, Item, TabularEditor
@@ -59,7 +59,7 @@ class YMBCrossCorrel(HasTraits):
     corr_arr = Property(Array, depends_on='data.input_change')
     @cached_property
     def _get_corr_arr(self):
-        print 'redrawing cross correl'
+        print('redrawing cross correl')
         # get the list of names and sort them alphabetically
         corr_data = ma.hstack(self.var_arr_list)
         # @kelidas: return small differences between ma and numpy corrcoef

@@ -148,7 +148,7 @@ class ExpBT4PT(ExType):
         '''remove the jumps in the displacement curves
         due to resetting the displacement gauges.
         '''
-        print '*** curve ironing activated ***'
+        print('*** curve ironing activated ***')
 
         # each column from the data array corresponds to a measured parameter
         # e.g. displacement at a given point as function of time u = f(t))
@@ -202,7 +202,7 @@ class ExpBT4PT(ExType):
         If necessary modify the assigned data, i.e. change
         the sign or specify an offset for the specific test setup.
         '''
-        print '*** process source data ***'
+        print('*** process source data ***')
 
         super(ExpBT4PT, self).process_source_data()
 
@@ -354,7 +354,7 @@ class ExpBT4PT(ExType):
         K_bending_elast_c = 1 / delta_11
 #         print 'K_bending_elast_c', K_bending_elast_c
 
-        print 'K_bending_elast_c', K_bending_elast_c
+        print('K_bending_elast_c', K_bending_elast_c)
         return K_bending_elast_c
 
     K_bending_elast_thirdpoints = Property(
@@ -384,7 +384,7 @@ class ExpBT4PT(ExType):
         K_bending_elast_thirdpoints = 1 / delta_11
 #         print 'K_bending_elast', K_bending_elast
 
-        print 'K_bending_elast_thirdpoints', K_bending_elast_thirdpoints
+        print('K_bending_elast_thirdpoints', K_bending_elast_thirdpoints)
         return K_bending_elast_thirdpoints
 
     #-------------------------------------------------------------------------

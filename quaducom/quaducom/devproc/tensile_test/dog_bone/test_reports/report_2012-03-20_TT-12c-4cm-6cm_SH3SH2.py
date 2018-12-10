@@ -18,7 +18,7 @@ from matresdev.db.simdb.simdb_class import \
 
 simdb = SimDB()
 
-from format_plot import format_plot
+from .format_plot import format_plot
 from matplotlib.font_manager import FontProperties
 font = FontProperties()
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
         filename = os.path.join(test_series_dir, do + '_sig' + sig_flag + '-epsu.png')
         p.savefig(filename, format='png')
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
     p.show()
 
@@ -141,9 +141,9 @@ if __name__ == '__main__':
     eps_u_arr = np.hstack(eps_u_list)
     sig_c_arr = np.hstack(sig_c_list)
     sig_tex_arr = np.hstack(sig_tex_list)
-    print 'eps_u_arr', eps_u_arr
-    print 'sig_c_arr', sig_c_arr
-    print 'sig_tex_arr', sig_tex_arr
+    print('eps_u_arr', eps_u_arr)
+    print('sig_c_arr', sig_c_arr)
+    print('sig_tex_arr', sig_tex_arr)
 
     # --------------------------------
     # calculate average, standard deviation and coreficient of variation
@@ -196,8 +196,8 @@ if __name__ == '__main__':
         output_str = output_str + r"\end{tabular} " + "\n"
         output_str = output_str + r"\end{table} " + "\n"
 
-        print 'output_str \n', output_str
+        print('output_str \n', output_str)
 
         f.write(output_str)
-        print 'table data saved to file %s' % (filename)
+        print('table data saved to file %s' % (filename))
 

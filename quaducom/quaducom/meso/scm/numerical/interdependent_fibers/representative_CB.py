@@ -103,8 +103,8 @@ class RepresentativeCB(HasTraits):
                     w_interpolators[i, j] = w_interpolators[
                         j, i] = w_interpolator
                 current_loop = i * len(self.BC_range) + j + 1
-                print 'progress: %2.1f %%' % \
-                    (current_loop / float(loops_tot) * 100.)
+                print('progress: %2.1f %%' % \
+                    (current_loop / float(loops_tot) * 100.))
         interp_max_sigma_c = interp2d(
             self.BC_range, self.BC_range, max_sigma_c_arr, fill_value=None)
         return interp_max_sigma_c, epsm_interpolators, w_interpolators, epsf_interpolators

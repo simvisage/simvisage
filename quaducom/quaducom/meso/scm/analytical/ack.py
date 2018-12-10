@@ -1,4 +1,4 @@
-from material import Material
+from .material import Material
 from etsproxy.traits.api import HasTraits, Float, Instance, Property
 
 
@@ -38,8 +38,8 @@ class ACK(HasTraits):
     def plot_diagram(self):
         Ec = self.material.E_c
         sigma_cu = self.sigma_mu * Ec / self.material.E_m
-        print 'ecxact = ', sigma_cu - self.eps2 * self.material.E_f * self.material.V_f
-        print .334 * self.sigma_mu * self.material.V_m
+        print('ecxact = ', sigma_cu - self.eps2 * self.material.E_f * self.material.V_f)
+        print(.334 * self.sigma_mu * self.material.V_m)
         eps_list = [0, self.eps1, self.eps2, self.eps3]
         sigma_list = [0, sigma_cu, sigma_cu, self.sigma_max]
 

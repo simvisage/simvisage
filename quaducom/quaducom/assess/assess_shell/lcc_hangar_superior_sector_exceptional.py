@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     import os
 
-    from lcc_table import LCCTableULS, LC, LCCTableSLS
+    from .lcc_table import LCCTableULS, LC, LCCTableSLS
 
     # Access to the top level directory of the database
     #
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     n_Rdc = 18069.  
     
     
-    print 'design values calculated by hand for strength characteristics'
+    print('design values calculated by hand for strength characteristics')
 
     # LCCTable for imposed loads (without temperature)
     #
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     # 'combi_arr': array with indices of all loading case combinations
     #--------------------------------------------------------------
     #
-    print 'lct_Q.combi_arr', lct_Q.combi_arr.shape, '\n'
+    print('lct_Q.combi_arr', lct_Q.combi_arr.shape, '\n')
 #        np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter=';')
 
     #--------------------------------------------------------------

@@ -185,7 +185,7 @@ class ExpBT3PT(ExType):
         '''
         if exists(self.data_file):
 
-            print 'READ FILE'
+            print('READ FILE')
             file_split = self.data_file.split('.')
 
             # first check if a '.csv' file exists. If yes use the
@@ -196,9 +196,9 @@ class ExpBT3PT(ExType):
             if not os.path.exists(file_name):
                 file_name = file_split[0] + '.raw'
                 if not os.path.exists(file_name):
-                    raise IOError, 'file %s does not exist' % file_name
+                    raise IOError('file %s does not exist' % file_name)
 
-            print 'file_name', file_name
+            print('file_name', file_name)
             _data_array = loadtxt_bending(file_name)
             self.data_array = _data_array
 
@@ -207,10 +207,10 @@ class ExpBT3PT(ExType):
             #
             file_name = file_split[0] + '.ASC'
             if not os.path.exists(file_name):
-                print 'NOTE: no data from displacement gauge is available (no .ASC file)'
+                print('NOTE: no data from displacement gauge is available (no .ASC file)')
                 self.flag_ASC_file = False
             else:
-                print 'NOTE: additional data from displacement gauge for center deflection is available (.ASC-file loaded)!'
+                print('NOTE: additional data from displacement gauge for center deflection is available (.ASC-file loaded)!')
                 self.flag_ASC_file = True
                 # add data array read in from .ASC-file; the values are assigned by '_set_array_attribs' based on the
                 # read in values in 'names_and_units' read in from the corresponding .DAT-file
@@ -218,7 +218,7 @@ class ExpBT3PT(ExType):
                 self.data_array_ASC = loadtxt(file_name,
                                               delimiter=';')
         else:
-            print 'WARNING: data_file with path %s does not exist == False' % (self.data_file)
+            print('WARNING: data_file with path %s does not exist == False' % (self.data_file))
 
     names_and_units = Property(depends_on='data_file')
 
@@ -228,7 +228,7 @@ class ExpBT3PT(ExType):
         '''
         names = ['w_raw', 'eps_c_raw', 'F_raw']
         units = ['mm', '1*E-3', 'N']
-        print 'names, units from .raw-file', names, units
+        print('names, units from .raw-file', names, units)
         return names, units
 
     names_and_units_ASC = Property(depends_on='data_file')
@@ -252,7 +252,7 @@ class ExpBT3PT(ExType):
                 names.append(name)
                 units.append(unit)
 
-        print 'names, units extracted from .DAT-file', names, units
+        print('names, units extracted from .DAT-file', names, units)
         return names, units
 
     factor_list_ASC = Property(depends_on='data_file')
@@ -439,16 +439,16 @@ class ExpBT3PT(ExType):
             if hasattr(self, "W10_u") and hasattr(self, "WA50"):
                 if W10_u_avg > WA50_avg:
                     self.w_ASC = self.W10_u
-                    print 'self.W10_u assigned to self.w_ASC'
+                    print('self.W10_u assigned to self.w_ASC')
                 else:
                     self.w_ASC = self.WA50
-                    print 'self.WA50 assigned to self.w_ASC'
+                    print('self.WA50 assigned to self.w_ASC')
             elif hasattr(self, "W10_u"):
                 self.w_ASC = self.W10_u
-                print 'self.W10_u assigned to self.w_ASC'
+                print('self.W10_u assigned to self.w_ASC')
             elif hasattr(self, "WA50"):
                 self.w_ASC = self.WA50
-                print 'self.WA50 assigned to self.w_ASC'
+                print('self.WA50 assigned to self.w_ASC')
 
             # convert strain from [permille] to [-],
             # switch to positive values for compressive strains
@@ -611,10 +611,10 @@ class ExpBT3PT(ExType):
 #         idx_lin = 50
 
 #        idx_lin = np.where(M_asc - M_asc[0] / eps_c_asc <= 0.90 * K_I_analytic)[0][0]
-        print 'idx_lin', idx_lin
-        print 'F_asc[idx_lin]', f_asc[idx_lin]
-        print 'M_asc[idx_lin]', M_asc[idx_lin]
-        print 'w_asc[idx_lin]', w_asc[idx_lin]
+        print('idx_lin', idx_lin)
+        print('F_asc[idx_lin]', f_asc[idx_lin])
+        print('M_asc[idx_lin]', M_asc[idx_lin])
+        print('w_asc[idx_lin]', w_asc[idx_lin])
 
         w_lin_epsc = w_asc[idx_lin]
 
@@ -658,17 +658,17 @@ class ExpBT3PT(ExType):
 
         cut_idx = np.where(self.w_ASC > 0.01)[0]
 
-        print 'F_cr ', self.F_cr
+        print('F_cr ', self.F_cr)
 #         cut_idx = np.where(self.F_ASC > 0.6 * self.F_cr)[0]
 
-        print 'cut_idx', cut_idx[0]
-        print 'w_ASC[cut_idx[0]]', self.w_ASC[cut_idx[0]]
+        print('cut_idx', cut_idx[0])
+        print('w_ASC[cut_idx[0]]', self.w_ASC[cut_idx[0]])
         xdata = np.copy(self.w_ASC[cut_idx])
         ydata = np.copy(self.F_ASC[cut_idx])
 
         # specify offset if force does not start at the origin with value 0.
         F_0 = ydata[0]
-        print 'F_0 ', F_0
+        print('F_0 ', F_0)
         offset_w = F_0 / self.K_bending_elast
         xdata -= xdata[0]
         xdata += offset_w
@@ -762,11 +762,11 @@ class ExpBT3PT(ExType):
         m = (f10 - f8) / (w10 - w8)
         delta_w = f8 / m
         w0 = w8 - delta_w * 0.9
-        print 'w0', w0
+        print('w0', w0)
 
         f_asc_interpolated = np.hstack([0., f_asc[idx_8:]])
         w_asc_interpolated = np.hstack([w0, w_asc[idx_8:]])
-        print 'type( w_asc_interpolated )', type(w_asc_interpolated)
+        print('type( w_asc_interpolated )', type(w_asc_interpolated))
         w_asc_interpolated -= float(w0)
 
 #        w_offset = f_asc[idx_10] / self.K_bending_elast

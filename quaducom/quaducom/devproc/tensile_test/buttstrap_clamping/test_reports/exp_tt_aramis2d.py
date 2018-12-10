@@ -145,10 +145,10 @@ class ExpTTAramis2d(ExpTTDB):
     def _get_t_aramis(self):
         step_times = self.aramis_field_data.step_times
         # step_times = self.aramis_field_data.step_times + self.start_time_aramis
-        print 'self.start_time_aramis', self.start_time_aramis
-        print '-----------------------------t_max_ARAMIS', step_times[-1]
+        print('self.start_time_aramis', self.start_time_aramis)
+        print('-----------------------------t_max_ARAMIS', step_times[-1])
         t_max = self.t[-1]
-        print '-----------------------------t_max_ASCII', t_max
+        print('-----------------------------t_max_ASCII', t_max)
         # @todo: make this using the first occurence of the condition and cut the array using slice
         return step_times[np.where(step_times < t_max)]
 
@@ -171,7 +171,7 @@ class ExpTTAramis2d(ExpTTDB):
         # x = 1
         # print 'x ', x
         # return self.aramis_info.number_of_steps - x
-        print '-----------------------------n_steps_cut2', len(self.t_aramis_cut)
+        print('-----------------------------n_steps_cut2', len(self.t_aramis_cut))
         return len(self.t_aramis_cut)
 
     aramis_info = Property(depends_on='data_file,aramis_resolution_key,input_change')
@@ -188,7 +188,7 @@ class ExpTTAramis2d(ExpTTDB):
     '''
     @cached_property
     def _get_aramis_field_data(self):
-        print '_get_aramis_field_data'
+        print('_get_aramis_field_data')
         t_fail = self.t_asc[-1]
         ad = AramisFieldData(aramis_info=self.aramis_info,
                              integ_radius=self.integ_radius,
@@ -205,13 +205,13 @@ class ExpTTAramis2d(ExpTTDB):
     '''
     @cached_property
     def _get_aramis_cdt(self):
-        print '_get_aramis_cdt'
+        print('_get_aramis_cdt')
         ad = self.aramis_field_data
         crack_detection_step = self.crack_detaction_step
         # if crack-detections-step is set to current step:
         if self.crack_detaction_current_step:
             crack_detection_step = ad.current_step
-        print '---------------------CRACK DETECTION STEP', crack_detection_step
+        print('---------------------CRACK DETECTION STEP', crack_detection_step)
         return AramisCDT(aramis_info=self.aramis_info,
                          crack_detection_step=crack_detection_step,
                          aramis_data=ad,
@@ -268,11 +268,11 @@ class ExpTTAramis2d(ExpTTDB):
         crack_idx_arr1 = np.array(crack_idx_list)
         crack_idx_arr2 = np.rollaxis(crack_idx_arr1, 1, 0)
         crack_idx_arr = crack_idx_arr2[0]
-        print 'crack_idx_arr', crack_idx_arr
+        print('crack_idx_arr', crack_idx_arr)
 
         # get the indices of the middle between two cracks
         crack_mid_idx_arr = (crack_idx_arr[0:-1] + crack_idx_arr[1:]) / 2
-        print 'crack_mid_idx_arr', crack_mid_idx_arr
+        print('crack_mid_idx_arr', crack_mid_idx_arr)
         i_max = len(crack_mid_idx_arr)
         # print 'i_max', i_max
 
@@ -349,13 +349,13 @@ class ExpTTAramis2d(ExpTTDB):
         # print 'crack_mid_idx_arr', crack_mid_idx_arr
 
         idx_failure_crack = crack_idx_arr[max_idx + 1]
-        print 'idx_failure_crack', idx_failure_crack
-        print 'shape_ad.x_arr_0', np.shape(field_data.x_arr_0)
-        print 'number_failure_crack', max_idx + 2
+        print('idx_failure_crack', idx_failure_crack)
+        print('shape_ad.x_arr_0', np.shape(field_data.x_arr_0))
+        print('number_failure_crack', max_idx + 2)
         idx_border1 = crack_mid_idx_arr[max_idx]
-        print 'idx_border1 ', idx_border1
+        print('idx_border1 ', idx_border1)
         idx_border2 = crack_mid_idx_arr[max_idx + 1]
-        print 'idx_border2 ', idx_border2
+        print('idx_border2 ', idx_border2)
 
         return idx_failure_crack, idx_border1, idx_border2
 

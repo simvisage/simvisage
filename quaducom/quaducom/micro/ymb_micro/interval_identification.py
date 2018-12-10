@@ -20,24 +20,24 @@ def i_ident():
 
     switches = where(data[0:-1] * data[1:] < 0)[0]
 
-    print data
-    print 'switches'
+    print(data)
+    print('switches')
     switches = hstack([array([-1]), switches, [len(data) - 1]])
-    print switches
+    print(switches)
 
-    print 'current cut position'
+    print('current cut position')
     cut_pos = 11
 
-    print 'find the indices of the interval at 5-th cut'
+    print('find the indices of the interval at 5-th cut')
     idx = where(switches >= cut_pos)[0][0]
 
     right_limit = switches[ idx ] + 1
     left_limit = switches[ idx - 1 ] + 1
 
-    print 'right_limit', right_limit
-    print 'left_limit', left_limit
+    print('right_limit', right_limit)
+    print('left_limit', left_limit)
 
-    print data[ left_limit: right_limit ]
+    print(data[ left_limit: right_limit ])
 
 def i_ident_2d():
     from numpy import searchsorted, split, dtype
@@ -47,37 +47,37 @@ def i_ident_2d():
                    [ -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ]])
     # data = random( ( 2000, 15 ) ) - .5
     data = data / abs(data)
-    print 'data', data
+    print('data', data)
 
-    r = range(0, data.shape[0])
+    r = list(range(0, data.shape[0]))
     switches = where(data[:, 0:-1] * data[:, 1:] < 0)
-    print 'switches', switches
+    print('switches', switches)
     switch_idx = searchsorted(switches[0], r)
-    print 'switch_idx', switch_idx
+    print('switch_idx', switch_idx)
     spl = split(switches[1], switch_idx[1:])
-    print 'spl', spl
+    print('spl', spl)
     spl = [hstack([array([-1]), x, [data.shape[1] - 1]]) for x in spl]
 
-    print data
-    print 'switches', spl
+    print(data)
+    print('switches', spl)
 
-    print 'current cut position'
+    print('current cut position')
     cut_pos = 5
 
-    print 'find the indices of the interval at 5-th cut'
+    print('find the indices of the interval at 5-th cut')
     idx = [where(x >= cut_pos)[0][0] for x in spl]
     # idx = array( idx )
-    print idx
+    print(idx)
 
     right_limit = [spl[x][ id ] + 1 for x, id in zip(r, idx)]
     left_limit = [spl[x][ id - 1 ] + 1 for x, id in zip(r, idx)]
 
-    print 'right_limit', right_limit
-    print 'left_limit', left_limit
+    print('right_limit', right_limit)
+    print('left_limit', left_limit)
 
     res = array([sum(x[ ll: rl ]) for x, ll, rl in zip(data, left_limit, right_limit)])
     res[res > 0] = 0
-    print 'array of free lengths in segment -%i-' % cut_pos, abs(res)
+    print('array of free lengths in segment -%i-' % cut_pos, abs(res))
 
 
 # i_ident()

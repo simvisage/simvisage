@@ -16,7 +16,7 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup, RangeEditor, InstanceEditor
 
-from ecb_law_calib import \
+from .ecb_law_calib import \
     ECBLCalib
 
 import numpy as np
@@ -32,7 +32,7 @@ class ECBLMNDiagram(HasTraits):
 
     modified = Event
     def set_modified(self):
-        print 'MN:set_modifeid'
+        print('MN:set_modifeid')
         self.modified = True
 
     # cross section
@@ -41,7 +41,7 @@ class ECBLMNDiagram(HasTraits):
     calibrated_ecb_law = Property(depends_on='modified')
     @cached_property
     def _get_calibrated_ecb_law(self):
-        print 'NEW CALIBRATION'
+        print('NEW CALIBRATION')
         return self.calib.calibrated_ecb_law
 
     eps_cu = Property()

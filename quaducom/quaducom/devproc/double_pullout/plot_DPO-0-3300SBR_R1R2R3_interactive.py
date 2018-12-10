@@ -100,7 +100,7 @@ for fname in listdir(fpath):
     flabel = flabel.replace('cm', '')
     flabel = flabel.replace('.asc', '')
     labels.append(flabel)
-    print 'flabel', flabel
+    print('flabel', flabel)
 
     if 'g' in flabel:
         marker = 'x'
@@ -126,7 +126,7 @@ for fname in listdir(fpath):
     rax[flabel].set_ylim((-0.2, 1))
     rax[flabel].set_xlim((-2, 4))
 
-print 'd_set.keys()', d_set.keys()
+print('d_set.keys()', list(d_set.keys()))
 # plt.legend(loc=2, ncol=2)
 plt.subplots_adjust(left=0.35)
 

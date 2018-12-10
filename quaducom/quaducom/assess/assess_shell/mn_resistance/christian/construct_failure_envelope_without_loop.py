@@ -20,7 +20,7 @@ import numpy as np
 
 from mathkit.mfn import MFnLineArray
 
-from sig_fl_calib import SigFlCalib
+from .sig_fl_calib import SigFlCalib
 
 import pylab as p
 
@@ -34,9 +34,9 @@ if __name__ == '__main__':
     # crack bridge function 'var_a' for a given 'eps_c'
     #------------------------------------------------
     #
-    print '\n'
-    print 'setup SigFlCalib'
-    print '\n'
+    print('\n')
+    print('setup SigFlCalib')
+    print('\n')
     sig_fl_calib = SigFlCalib( # concrete strength after 9 days
                                #
                                f_ck = 55.7,
@@ -74,14 +74,14 @@ if __name__ == '__main__':
                               )
 
     
-    print '1 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    print('1 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
     sig_fl_calib.calib_sig_t_mfn()
     u_sol = sig_fl_calib.u_sol
     max_sig = sig_fl_calib.get_sig_max( u_sol )     
-    print 'eps_c_fail', sig_fl_calib.eps_c_fail
-    print 'eps_t_fail', sig_fl_calib.eps_t_fail
-    print 'max_sig', sig_fl_calib.get_sig_max( u_sol )                      
+    print('eps_c_fail', sig_fl_calib.eps_c_fail)
+    print('eps_t_fail', sig_fl_calib.eps_t_fail)
+    print('max_sig', sig_fl_calib.get_sig_max( u_sol ))                      
 #    sig_fl_calib.plot_sig_t_mfn( u_sol )
     
     
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # get 'eps_lo', 'esp_up' for given/calibrated cb-law 
     #------------------------------------------------
 
-    print '2 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    print('2 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
     
     # reproduce the forces for the calibration test:
     #
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     #------------------------------------------------
     # 3 construct failure envelope for a given value of eps_n 
     #------------------------------------------------
-    print '3 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    print('3 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
     
     n_A = 20
     n_B = 20
@@ -126,7 +126,7 @@ if __name__ == '__main__':
                 
     eps_c_fail = 3.3/1000.
     eps_t_fail = sig_fl_calib.eps_t_fail
-    print'eps_t_fail ',eps_t_fail
+    print('eps_t_fail ',eps_t_fail)
     # mainly tension
     
     eps_lo_arr_A1 = np.linspace( eps_t_fail,   eps_t_fail, n_A )
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 #    thickness_list = [ 0.06]
     n_layers_list  = [   4,    8,    12,   16,   20]
     thickness_list = [0.06, 0.06,  0.06, 0.06, 0.06]
-    zip_list = zip( n_layers_list, thickness_list  )
+    zip_list = list(zip( n_layers_list, thickness_list  ))
     legend_list = n_layers_list 
 #    
     # constant 'rho_tex':

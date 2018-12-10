@@ -81,7 +81,7 @@ class ExpTTDB(ExType):
 
     @on_trait_change('+input, ccs.input_change')
     def _set_input_change(self):
-        print '*** raising input change in CTT'
+        print('*** raising input change in CTT')
         self.input_change = True
 
     # -------------------------------------------------------------------------
@@ -118,7 +118,7 @@ class ExpTTDB(ExType):
         '''default settings correspond to
         current test series'
         '''
-        print 'ccs default used'
+        print('ccs default used')
 #        fabric_layout_key = 'Q142/142-CCE-25'
 #        fabric_layout_key = 'Q95/95-CCE-38'
 #        fabric_layout_key = 'MAG-07-03'
@@ -260,7 +260,7 @@ class ExpTTDB(ExType):
             self.W10_li *= -1
 
         if hasattr(self, "W10_vli"):
-            print 'change_varname WA_VL = W10_vli etc'
+            print('change_varname WA_VL = W10_vli etc')
             self.WA_VL = self.W10_vli
         if hasattr(self, "W10_vre"):
             self.WA_VR = self.W10_vre
@@ -270,7 +270,7 @@ class ExpTTDB(ExType):
             self.WA_HR = self.W20_hre
 
         if hasattr(self, "Wvo_li"):
-            print 'change_varname WA_VL = Wvo_li etc'
+            print('change_varname WA_VL = Wvo_li etc')
             self.WA_VL = self.Wvo_li
         if hasattr(self, "Wvo_re"):
             self.WA_VR = self.Wvo_re
@@ -347,13 +347,13 @@ class ExpTTDB(ExType):
             # below the average is performed as = 0.5*( 0.5*(W10_re + W10_li) + W10_vo)
             #
             if np.average(eps_re) < 0.0001:
-                print "displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead"
+                print("displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead")
                 eps_re = eps_li
             if np.average(eps_li) < 0.0001:
-                print "displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead"
+                print("displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead")
                 eps_li = eps_re
             if np.average(eps_vo) < 0.0001:
-                print "displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead"
+                print("displacement gauge 'WA_vo' has not been used. Use average value of 'WA_li' and 'WA_re' instead")
                 eps_vo = (eps_li + eps_re) / 2.
 
             # average strains
@@ -371,10 +371,10 @@ class ExpTTDB(ExType):
             eps_li = W10_li / (self.gauge_length * 1000.)  # [mm/mm]
             eps_re = W10_re / (self.gauge_length * 1000.)
             if np.average(eps_re) < 0.0001:
-                print "displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead"
+                print("displacement gauge 'WA_re' has not been used. Use value of 'WA_li' instead")
                 eps_re = eps_li
             if np.average(eps_li) < 0.0001:
-                print "displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead"
+                print("displacement gauge 'WA_li' has not been used. Use value of 'WA_re' instead")
                 eps_li = eps_re
             eps_m = (eps_li + eps_re) / 2.
 
@@ -1072,22 +1072,22 @@ class ExpTTDB(ExType):
         # plot stiffness KI and KII if option is set to True
         #---------------
         K_I = self.E_c / self.rho_c * k_rho
-        print 'K_I = E_c (simdb)', self.E_c
-        print 'rho_c (simdb)= ', self.rho_c
+        print('K_I = E_c (simdb)', self.E_c)
+        print('rho_c (simdb)= ', self.rho_c)
         rho_new = self.rho_c / k_rho
-        print 'rho_c (n_rov)= ', rho_new
+        print('rho_c (n_rov)= ', rho_new)
         K_I = self.E_c / rho_new
-        print 'K_I = E_c (new) =', K_I
+        print('K_I = E_c (new) =', K_I)
         E_tex = self.ccs.E_tex
         K_IIb = E_tex
-        print 'K_IIb = E_tex =', K_IIb
+        print('K_IIb = E_tex =', K_IIb)
         #---------------
         if plot_analytical_stiffness == True:
             plot_analytical_stiffness_I = True
             plot_analytical_stiffness_II = True
         #---------------
         if plot_analytical_stiffness_I == True:
-            print 'plot analytical stiffness (K_I)'
+            print('plot analytical stiffness (K_I)')
             # plot the stiffness of the composite (K_I) - uncracked state)
             eps_lin = array(
                 [0, self.sig_tex_max / K_I], dtype='float_') * xscale
@@ -1095,7 +1095,7 @@ class ExpTTDB(ExType):
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         #---------------
         if plot_analytical_stiffness_II == True:
-            print 'plot analytical stiffness (K_IIb)'
+            print('plot analytical stiffness (K_IIb)')
             # plot the stiffness of the garn (K_IIb - cracked state)
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
@@ -1128,22 +1128,22 @@ class ExpTTDB(ExType):
         # plot stiffness KI and KII if option is set to True
         #---------------
         K_I = self.E_c / self.rho_c * k_rho
-        print 'K_I = E_c (simdb)', self.E_c
-        print 'self.rho_c', self.rho_c
+        print('K_I = E_c (simdb)', self.E_c)
+        print('self.rho_c', self.rho_c)
         rho_new = self.rho_c / k_rho
-        print 'rho_new', rho_new
+        print('rho_new', rho_new)
         K_I = self.E_c / rho_new
-        print 'K_I = E_c (new)', K_I
+        print('K_I = E_c (new)', K_I)
         E_tex = self.ccs.E_tex
         K_IIb = E_tex
-        print 'K_IIb = E_tex ', K_IIb
+        print('K_IIb = E_tex ', K_IIb)
         #---------------
         if plot_analytical_stiffness == True:
             plot_analytical_stiffness_I = True
             plot_analytical_stiffness_II = True
         #---------------
         if plot_analytical_stiffness_I == True:
-            print 'plot analytical stiffness (K_I)'
+            print('plot analytical stiffness (K_I)')
             # plot the stiffness of the composite (K_I) - uncracked state)
             eps_lin = array(
                 [0, self.sig_tex_max / K_I], dtype='float_') * xscale
@@ -1151,7 +1151,7 @@ class ExpTTDB(ExType):
             axes.plot(eps_lin, sig_lin, color='grey', linestyle='--')
         #---------------
         if plot_analytical_stiffness_II == True:
-            print 'plot analytical stiffness (K_IIb)'
+            print('plot analytical stiffness (K_IIb)')
             # plot the stiffness of the garn (K_IIb - cracked state)
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')
@@ -1184,34 +1184,34 @@ class ExpTTDB(ExType):
         # plot stiffness KI and KII if option is set to True
         #---------------
         K_I = self.E_c  # depending of the testing age
-        print 'K_I = E_c (simdb)', self.E_c
-        print 'E_tex (simdb)', self.ccs.E_tex
-        print 'E_m (simdb)', self.E_m
-        print 'age (simdb)', self.age
+        print('K_I = E_c (simdb)', self.E_c)
+        print('E_tex (simdb)', self.ccs.E_tex)
+        print('E_m (simdb)', self.E_m)
+        print('age (simdb)', self.age)
         rho_new = self.ccs.rho_c / k_rho
         K_I = (1 - rho_new) * self.E_m + rho_new * self.ccs.E_tex
-        print 'K_I (new)', K_I
-        print 'rho_c (new)', self.ccs.rho_c / k_rho
+        print('K_I (new)', K_I)
+        print('rho_c (new)', self.ccs.rho_c / k_rho)
 #        K_I = self.E_c28
         E_tex = self.ccs.E_tex
         K_IIb = E_tex * self.rho_c
-        print 'K_IIb = E_tex * self.rho_c', K_IIb
+        print('K_IIb = E_tex * self.rho_c', K_IIb)
         K_IIb = E_tex * rho_new
-        print 'K_IIb = E_tex * rho_new', K_IIb
+        print('K_IIb = E_tex * rho_new', K_IIb)
         # ---------------
         if plot_analytical_stiffness == True:
             plot_analytical_stiffness_I = True
             plot_analytical_stiffness_II = True
         # ---------------
         if plot_analytical_stiffness_I == True:
-            print 'plot analytical stiffness (K_I)'
+            print('plot analytical stiffness (K_I)')
             eps_lin = array([0, self.sig_c_max / K_I], dtype='float_') * xscale
             sig_lin = array([0, self.sig_c_max], dtype='float_')
             axes.plot(
                 eps_lin, sig_lin, color='grey', linestyle='--', linewidth=linewidth)
         # ---------------
         if plot_analytical_stiffness_II == True:
-            print 'plot analytical stiffness (K_IIb)'
+            print('plot analytical stiffness (K_IIb)')
             # plot the stiffness of the garn (K_IIb - cracked state)
             eps_lin = array([0, self.eps_max], dtype='float_') * xscale
             sig_lin = array([0, self.eps_max * K_IIb], dtype='float_')

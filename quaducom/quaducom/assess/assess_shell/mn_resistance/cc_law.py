@@ -11,7 +11,7 @@ import numpy as np
 
 from mathkit.mfn import MFnLineArray
 
-from constitutive_law import CLBase
+from .constitutive_law import CLBase
 
 import sympy as sp
 
@@ -142,8 +142,8 @@ class CCLawQuadratic(CCLawBase):
         xdata = eps_arr
         ydata = sig_c_arr
 
-        print 'cc', xdata
-        print 'cc', ydata
+        print('cc', xdata)
+        print('cc', ydata)
         return MFnLineArray(xdata=xdata, ydata=ydata)
 
 class CCLawQuad(CCLawBase):
@@ -172,12 +172,12 @@ class CCLawQuad(CCLawBase):
 if __name__ == '__main__':
 
     import pylab as p
-    from constitutive_law import ConstitutiveLawModelView
+    from .constitutive_law import ConstitutiveLawModelView
     #cc_law = CCLawQuadratic(f_ck = 40.0, eps_c_u = 0.004)
     cc_law = CCLawQuad()
-    print cc_law.mfn
+    print(cc_law.mfn)
 
-    print cc_law.mfn_vct([0, 0.004, 0.01])
+    print(cc_law.mfn_vct([0, 0.004, 0.01]))
 
     colors = ['red', 'green', 'blue', 'orange', 'black', 'magenta', 'yellow']
     f_ck_arr = np.linspace(55, 85, 6)

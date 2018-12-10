@@ -172,7 +172,7 @@ class SCM(HasTraits):
         next emerging crack calculated as the difference between
         the current matrix stress and strength. See the scipy newton call above.
         '''
-        print 'W = ', W
+        print('W = ', W)
         if W <= 0.0 or W > 0.3 * len(self.crack_positions_lst):
             min_strength = np.min(self.matrix_strength)
             residuum = min_strength - self.CB_model.E_c * W / self.length
@@ -214,7 +214,7 @@ class SCM(HasTraits):
             #try:
             s = t.clock()
             sigmac_pre_crack, position_new_crack, W_pre_crack = self.find_next_crack()
-            print 'evaluation of the matrix crack #'+str(len(self.cracking_stresses_lst) + 1), t.clock() - s, 's'
+            print('evaluation of the matrix crack #'+str(len(self.cracking_stresses_lst) + 1), t.clock() - s, 's')
             if len(self.cracking_W_lst) > 1000:
                 plt.plot(self.x_arr, self.sigma_m(W=W_pre_crack) / self.CB_model.E_m, color='blue', lw=2)
                 plt.plot(self.x_arr, self.matrix_strength / self.CB_model.E_m, color='black', lw=2)

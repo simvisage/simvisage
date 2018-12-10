@@ -48,8 +48,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'mn-trc-shell'
-copyright = u'2014, IMB'
+project = 'mn-trc-shell'
+copyright = '2014, IMB'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -186,8 +186,8 @@ latex_font_size = '12pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'oricrete.tex', u'MN-TRC-Shell Documentation',
-   u'Rostislav Chudoba, Alexander Scholzen', 'manual'),
+  ('index', 'oricrete.tex', 'MN-TRC-Shell Documentation',
+   'Rostislav Chudoba, Alexander Scholzen', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -231,8 +231,8 @@ latex_preamble = '''
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mn-tex-shell', u'mn-tex-shell documentation',
-     [u'Rostislav Chudoba, Alexander Scholzen'], 1)
+    ('index', 'mn-tex-shell', 'mn-tex-shell documentation',
+     ['Rostislav Chudoba, Alexander Scholzen'], 1)
 ]
 
 

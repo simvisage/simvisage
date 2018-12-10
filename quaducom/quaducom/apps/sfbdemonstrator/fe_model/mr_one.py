@@ -56,20 +56,20 @@ from numpy import \
 from ibvpy.mats.mats3D.mats3D_tensor import map3d_sig_eng_to_mtx
 from math import sqrt, asin, acos, pi as Pi
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
 from scipy.interpolate import Rbf
 
-from geo_column import GEOColumn
+from .geo_column import GEOColumn
 
 from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 from time import time
 
@@ -219,11 +219,11 @@ class MRone(MushRoofModel):
 #        self.visual_force_bar( F_hinge_y.flatten()
 #                               , y_label = "internal force y [MN]"
 #                               , Title = 'F_Hinge_y_shrinkage' )
-        print "u_edge", U_edge
-        print "n_elems_xy_col", self.n_elems_col_xy
-        print "n_elems_z_col", self.n_elems_col_z
-        print "n_elems_xy_quarter", self.n_elems_xy_quarter
-        print "n_elems_z", self.n_elems_z
+        print("u_edge", U_edge)
+        print("n_elems_xy_col", self.n_elems_col_xy)
+        print("n_elems_z_col", self.n_elems_col_z)
+        print("n_elems_xy_quarter", self.n_elems_xy_quarter)
+        print("n_elems_z", self.n_elems_z)
 
 
 
@@ -568,7 +568,7 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'eval':
-        print 'eval', sim_model.peval()
+        print('eval', sim_model.peval())
 
     if do == 'ui':
 
@@ -607,7 +607,7 @@ if __name__ == '__main__':
 
 
         if cs == 'shell':
-            print output_array.shape
+            print(output_array.shape)
             y_0 = output_array[:, 0, :]
             y_1 = output_array[:, 1, :]
 #            y_2 = output_array[:,2,:]
@@ -734,7 +734,7 @@ if __name__ == '__main__':
 
         filename = 'cs_' + cs + '.csv'
 #
-        print '*** writing study data to file,', filename, ' ***'
+        print('*** writing study data to file,', filename, ' ***')
 
         if cs == 'column':
             X_data = vstack((hstack((n_dofs_0.reshape(-1, 1), ones_like(n_dofs_0.reshape(-1, 1)) * 2, y_0))))

@@ -60,7 +60,7 @@ def plot_all():
         e = e_run.ex_type
         e.aramis_resolution_key = res_key
 
-        print
+        print()
         # print 'crack filter', e.crack_filter_avg
         params = param_dict.get(os.path.basename(e.data_file))
         e.aramis_cdt.aramis_data.integ_radius = params[0]
@@ -133,10 +133,10 @@ def plot_all():
         m = e.aramis_cdt.crack_detect_mask_avg.copy()
         cr_idx = np.where(m)[0]
         x = e.aramis_field_data.x_arr_0[0, :]
-        print 'position', [x[cr_idx]]
+        print('position', [x[cr_idx]])
 
         # print the crack initiating force
-        print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
+        print('force', [e.F_t_aramis_asc[argmax_deps_t_cr]])
 
         axes = p.subplot(235)
         axes.plot(e.F_t_aramis_asc, eps_t_cr)
@@ -149,11 +149,11 @@ def plot_all():
         m = e.aramis_cdt.crack_detect_mask_avg.copy()
         cr_idx = np.where(m)[0]
         x = e.aramis_field_data.x_arr_0[0, :]
-        print 'position', [x[cr_idx]]
+        print('position', [x[cr_idx]])
 
         # print the crack initiating force
-        print 'force', [e.F_t_aramis_asc[argmax_deps_t_cr]]
-        print 'force', [np.sort(e.F_t_aramis_asc[argmax_deps_t_cr])]
+        print('force', [e.F_t_aramis_asc[argmax_deps_t_cr]])
+        print('force', [np.sort(e.F_t_aramis_asc[argmax_deps_t_cr])])
 
         p.show()
         aui = AramisUI(aramis_info=e.aramis_info,

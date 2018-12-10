@@ -12,7 +12,7 @@ from etsproxy.traits.api import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, ModelView, VGroup, HGroup, RangeEditor, InstanceEditor
 
-from constitutive_law import CLBase
+from .constitutive_law import CLBase
 
 import numpy as np
 
@@ -200,7 +200,7 @@ class ECBLPiecewiseLinear(ECBLBase):
         self.sig_arr = sig_arr
 
 if __name__ == '__main__':
-    from constitutive_law import ConstitutiveLawModelView
+    from .constitutive_law import ConstitutiveLawModelView
     #ecbl = ECBLFBM()
     ecbl = ECBLPiecewiseLinear()
     ew = ConstitutiveLawModelView(model = ecbl)

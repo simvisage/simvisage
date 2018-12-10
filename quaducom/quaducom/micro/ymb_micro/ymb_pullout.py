@@ -35,19 +35,19 @@ from util.traits.editors.mpl_figure_editor import \
 
 from spirrid.rf import RF
 
-from ymb_pdistrib import YMB_RV
+from .ymb_pdistrib import YMB_RV
 
 from matplotlib.figure import Figure
 
-from ymb_data import YMBSource, YMBCutData, YMBSegmentData, YMBSlider, IYMBData
+from .ymb_data import YMBSource, YMBCutData, YMBSegmentData, YMBSlider, IYMBData
 
-from ymb_pdistrib import YMBDistrib
+from .ymb_pdistrib import YMBDistrib
 
 from spirrid import SPIRRID, RV
 
 from stats.pdistrib.pdistrib import PDistrib, IPDistrib
 
-from yarn_symmetrical import DoublePulloutSym
+from .yarn_symmetrical import DoublePulloutSym
 
 class YarnPullOut(HasTraits):
     '''Idealization of the double sided pullout using the SPIRRID
@@ -132,8 +132,8 @@ class YarnPullOut(HasTraits):
         if self.pdf_xi_on:
             s.theta_vars['xi'] = RV('weibull_min', shape=4.54, scale=0.017)  # RV( pd = self.pdf_xi, name = 'xi', n_int = self.n_G_ipts )
 
-        print self.pdf_theta.interp_ppf([0.01, 0.02])
-        print YMB_RV('theta', distr=self.pdf_theta, n_int=self.n_G_ipts).distr.interp_ppf([0.01, 0.02])
+        print(self.pdf_theta.interp_ppf([0.01, 0.02]))
+        print(YMB_RV('theta', distr=self.pdf_theta, n_int=self.n_G_ipts).distr.interp_ppf([0.01, 0.02]))
         if self.pdf_theta_on:
             s.theta_vars['theta'] = YMB_RV('theta', distr=self.pdf_theta, n_int=self.n_G_ipts)
 

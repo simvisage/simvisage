@@ -53,7 +53,7 @@ ex_path = os.path.join(simdb.exdata_dir, 'tensile_tests',
 #                       '2016-03-22_TTb_TUWien',
 #                       'P10_1.DAT')
 #
-print os.path.exists(ex_path)
+print(os.path.exists(ex_path))
 
 doe_reader = ExRunView(data_file=ex_path)
 

@@ -16,7 +16,7 @@ from etsproxy.traits.api import \
     implements, Trait, cached_property, Property, Float
 from spirrid import SPIRRID
 from spirrid.sampling import FunctionRandomization, MonteCarlo
-from interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
+from .interpolated_spirrid import InterpolatedSPIRRID, RangeAdaption
 from stats.misc.random_field.random_field_1D import RandomField
 from operator import attrgetter
 import numpy as np

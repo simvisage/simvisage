@@ -266,4 +266,4 @@ plt.show()
 ##########################################################################
 # Ausgabe der maximalen Werte fuer statische Versuche
 
-print(daten.iloc[daten[F].idxmax()])
+print((daten.iloc[daten[F].idxmax()]))

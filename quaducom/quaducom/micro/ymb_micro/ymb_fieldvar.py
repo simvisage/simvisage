@@ -20,7 +20,7 @@ from matplotlib.figure import Figure
 from matplotlib.mlab import griddata
 from numpy import ones_like, array, zeros_like, linspace, max, diff, min
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from ymb_data import \
+from .ymb_data import \
     IYMBData, YMBSegmentData, YMBCutData, YMBSource, var_dict
 import numpy.ma as ma
 from matplotlib.colors import LinearSegmentedColormap

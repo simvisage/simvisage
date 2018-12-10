@@ -71,7 +71,7 @@ class BarelShellGeo(HasTraits):
     L1 = Float(1.30, input = True)
 
     def __call__(self, pts):
-        print '*** geo_barrel_shell called ***'
+        print('*** geo_barrel_shell called ***')
 
         x_, y_, z_ = pts.T
 

@@ -49,7 +49,7 @@ if __name__ == '__main__':
     N_ip_sym = data_arr[:N, 3] * 1000.
     V_ip_sym = data_arr[:N, 4] * 1000.
     V_op_sym = data_arr[:N, 5] * 1000.
-    print 'X_sym.shape', X_sym.shape
+    print('X_sym.shape', X_sym.shape)
     #
     X_r01 = data_arr[N:, 0]
     Y_r01 = data_arr[N:, 1]
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     N_ip_r01 = data_arr[N:, 3] * 1000.
     V_ip_r01 = data_arr[N:, 4] * 1000.
     V_op_r01 = data_arr[N:, 5] * 1000.
-    print 'Y_r01.shape', Y_r01.shape
+    print('Y_r01.shape', Y_r01.shape)
     #
 
     do = 'N_ip'
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 #    fig.tight_layout()
     simdata_dir = os.path.join(simdb.simdata_dir, 'show_results')
     p.savefig(os.path.join(simdata_dir, filename + '_' + do), format='pdf', dpi=600.)
-    print 'png saved to file ' + filename
+    print('png saved to file ' + filename)
     p.show()
 
 

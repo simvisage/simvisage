@@ -31,8 +31,8 @@ class Reinforcement(HasTraits):
     @on_trait_change('n_int')
     def check(self):
         if self.n_int < 50:
-            print 'Warning: integration with', self.n_int, 'points might not be accurate enough'
-            print 'a minimum of 50 integration points is recommended'
+            print('Warning: integration with', self.n_int, 'points might not be accurate enough')
+            print('a minimum of 50 integration points is recommended')
 
 
 class ContinuousFibers(Reinforcement):

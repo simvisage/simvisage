@@ -7,11 +7,11 @@ from traits.api import \
     Event, on_trait_change, \
     implements, Property, cached_property
 
-from geo_lip import \
+from .geo_lip import \
     GeoLIP
-from geo_st import \
+from .geo_st import \
     GeoST
-from geo_supprt import \
+from .geo_supprt import \
     GeoSUPPRT
 from ibvpy.api import \
     TStepper as TS, TLoop, TLine, \
@@ -94,11 +94,11 @@ def format_plot(axes, xlim=None, ylim=None, xlabel='', ylabel=''):
     # format ticks for plot
     #
     locs, labels = axes.xticks()
-    axes.xticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+    axes.xticks(locs, ["%.0f" % x for x in locs], fontproperties=font)
     axes.xlabel(xlabel, fontproperties=font)
 
     locs, labels = axes.yticks()
-    axes.yticks(locs, map(lambda x: "%.0f" % x, locs), fontproperties=font)
+    axes.yticks(locs, ["%.0f" % x for x in locs], fontproperties=font)
     axes.ylabel(ylabel, fontproperties=font)
 
 
@@ -118,7 +118,7 @@ class SimST(IBVModel):
 
     @on_trait_change('+input,ccs_unit_cell.input_change')
     def _set_input_change(self):
-        print 'xxx input_change Event', self.i
+        print('xxx input_change Event', self.i)
         self.i += 1
         self.input_change = True
 
@@ -260,7 +260,7 @@ class SimST(IBVModel):
         elem_size = (self.length / 2.0 - self.radius_plate) / \
             (self.shape_xy - self.shape_R)
         width_supprt = self.shape_supprt_xy * elem_size
-        print 'width_supprt = ', width_supprt
+        print('width_supprt = ', width_supprt)
         return GeoSUPPRT(thickness_supprt=self.thickness_supprt,
                          width_supprt=width_supprt,
                          xyoffset=0.,
@@ -314,7 +314,7 @@ class SimST(IBVModel):
         #        import pylab as p
         #        self.phi_fn.mfn.mpl_plot(p)
         #        p.show()
-        print 'self.n_mp', self.n_mp
+        print('self.n_mp', self.n_mp)
         specmn_mats = MATS2D5MicroplaneDamage(
             E=self.E_c,
             #                                E=self.E_specmn_mats,
@@ -336,7 +336,7 @@ class SimST(IBVModel):
         #        import pylab as p
         #        self.phi_fn.mfn.mpl_plot(p)
         #        p.show()
-        print 'self.n_mp', self.n_mp
+        print('self.n_mp', self.n_mp)
         specmn_mats = MATS2D5MicroplaneDamage(
             E=self.E_c,
             #                                 E=self.E_m,  # relevant for compressive behavior/used for calibration of phi_fn
@@ -360,7 +360,7 @@ class SimST(IBVModel):
         #        sig = max_f / area
         #        E_elast = sig / max_eps
         E_elast = self.E_c / 10.
-        print 'effective elastomer E_modulus', E_elast
+        print('effective elastomer E_modulus', E_elast)
         return MATS3DElastic(E=E_elast,
                              nu=0.2)
 #                             nu = 0.4)
@@ -573,8 +573,8 @@ class SimST(IBVModel):
     def _get_tloop(self):
 
         specmn = self.specmn_fe_grid
-        print 'XXX specmn_fe_grid.n_dofs', specmn.n_dofs
-        print 'XXX specmn_fe_grid.dof_grid', specmn.dof_grid.dofs.shape
+        print('XXX specmn_fe_grid.n_dofs', specmn.n_dofs)
+        print('XXX specmn_fe_grid.dof_grid', specmn.dof_grid.dofs.shape)
 
         if self.elstmr_flag:
             elstmr = self.elstmr_fe_grid
@@ -627,7 +627,7 @@ class SimST(IBVModel):
             # fixed support with sliding connection to the plate
             #---------------------------
 
-            print 'four sided tappered support with center rotation'
+            print('four sided tappered support with center rotation')
             # allow movement of the support's outer corner node only in the 45-degree direction
             # by linking the corresponding degrees of freedom
             #
@@ -663,7 +663,7 @@ class SimST(IBVModel):
 
                 supprt_dof_z = supprt[
                     self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
-                print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+                print('supprt_dof_z used for internal force tracing ', supprt_dof_z)
 
             else:
                 # link specimen bottom nodes in the slab corner with the top nodes of the tappered support in z-direction
@@ -682,7 +682,7 @@ class SimST(IBVModel):
 
                 supprt_dof_z = supprt[
                     self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
-                print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+                print('supprt_dof_z used for internal force tracing ', supprt_dof_z)
 
         else:
             # Var_1: place support at the corner / reduce the edge length of the slab in the model to effective values,
@@ -700,7 +700,7 @@ class SimST(IBVModel):
                                   self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0])
             supprt_dof_z = specmn[
                 self.idx_supprt_center_elem, self.idx_supprt_center_elem, 0, 0, 0, 0].dofs[0, 0, 2]
-            print 'supprt_dof_z used for internal force tracing ', supprt_dof_z
+            print('supprt_dof_z used for internal force tracing ', supprt_dof_z)
 
         #--------------------------------------------------------------
         # boundary conditions for loading
@@ -749,8 +749,8 @@ class SimST(IBVModel):
             # dofs for RTrace f-w-diagram
             #
             load_dofs_z = elstmr[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
-            print 'load_dofs_z', load_dofs_z
-            print 'load_dofs_z.shape', load_dofs_z.shape
+            print('load_dofs_z', load_dofs_z)
+            print('load_dofs_z.shape', load_dofs_z.shape)
 
         # if no elastomer is modeled
         #
@@ -779,9 +779,9 @@ class SimST(IBVModel):
                 # slice or in both x- and y-line slice
                 load_dofs_z = np.unique(
                     np.hstack([dofs_line_Rx, dofs_line_Ry]))
-                print 'dofs_line_Rx', dofs_line_Rx
-                print 'dofs_line_Ry', dofs_line_Ry
-                print 'load_dofs_z', load_dofs_z
+                print('dofs_line_Rx', dofs_line_Rx)
+                print('dofs_line_Ry', dofs_line_Ry)
+                print('load_dofs_z', load_dofs_z)
 
             # if no geometry transformation for the slab is used (regular rectangular mesh only)
             #
@@ -791,12 +791,12 @@ class SimST(IBVModel):
                 bc_w = [BCSlice(var='u', value=w_max, dims=[2],
                                 slice=specmn[-1, -1, -1, -1, -1, -1])]  # only top node
                 load_dofs_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
-                print 'load_dofs_z', load_dofs_z
-                print 'load_dofs_z.shape', load_dofs_z.shape
+                print('load_dofs_z', load_dofs_z)
+                print('load_dofs_z.shape', load_dofs_z.shape)
                 load_dofs_z = np.array(
                     [specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]])
-                print 'load_dofs_z', load_dofs_z
-                print 'load_dofs_z.shape', load_dofs_z.shape
+                print('load_dofs_z', load_dofs_z)
+                print('load_dofs_z.shape', load_dofs_z.shape)
 
 #                ### var 2 displacement applied at all center nodes (all nodes in the symmetry axis)
 #                #
@@ -825,7 +825,7 @@ class SimST(IBVModel):
         #--------------------------------------------------------------
 
         center_top_dof_z = specmn[-1, -1, -1, -1, -1, -1].dofs[0, 0, 2]
-        print 'center_top_dof used for displacement tracing: ', center_top_dof_z
+        print('center_top_dof used for displacement tracing: ', center_top_dof_z)
 
         self.f_w_diagram_center = RTraceGraph(name='displacement (center) - force',
                                               var_x='U_k', idx_x=center_top_dof_z,
@@ -903,15 +903,15 @@ class SimST(IBVModel):
         if self.elstmr_flag:
             bcond_list += [bc_el_symplane_yz, bc_el_symplane_xz, link_el_sp]
 
-        print 'bcond_list', bcond_list
-        print 'bcond_list', len(bcond_list)
-        print 'bcond_list', np.product(bcond_list[1].dofs.shape)
-        print 'bcond_list', [np.product(bcond_list[0].dofs.shape),
+        print('bcond_list', bcond_list)
+        print('bcond_list', len(bcond_list))
+        print('bcond_list', np.product(bcond_list[1].dofs.shape))
+        print('bcond_list', [np.product(bcond_list[0].dofs.shape),
                              np.product(bcond_list[1].dofs.shape),
                              np.product(bcond_list[2].dofs.shape),
                              np.product(bcond_list[3].dofs.shape),
                              np.product(bcond_list[4].dofs.shape),
-                             np.product(bcond_list[5].dofs.shape)]
+                             np.product(bcond_list[5].dofs.shape)])
 
         #--------------------------------------------------------------
         # ts
@@ -1027,7 +1027,7 @@ class SimSTDB(SimST):
     #-----------------
     #
     ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
-                             CCSUnitCell.db.keys(),
+                             list(CCSUnitCell.db.keys()),
                              simdb=True, input=True,
                              auto_set=False, enter_set=True)
 
@@ -1130,7 +1130,7 @@ class SimSTDB(SimST):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m
+        print('E_m (from ccs)', E_m)
 #        E_m = 29100.
 #        print 'E_m set explicitly to ', E_m
         return E_m
@@ -1142,9 +1142,9 @@ class SimSTDB(SimST):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c
+        print('E_c (from ccs)', E_c)
         E_c = 18709.5
-        print 'E_c set explicitly to 18709.5'
+        print('E_c set explicitly to 18709.5')
 #        print 'E_c set explicitly to 29100.'
 #        E_c = 29100.
         return E_c
@@ -1156,10 +1156,10 @@ class SimSTDB(SimST):
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu
+        print('nu (from ccs)', nu)
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20'
+        print('nu set explicitly to 0.20')
         nu = 0.2
         return nu
 

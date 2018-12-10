@@ -151,7 +151,7 @@ fcw = FlawCenteredGeoTransform()
 fcw_v = frompyfunc( fcw.h, 1, 1 )
 
 points = linspace( 0, 1, 11 )
-print 'pppppppppp', fcw( points[:, None] )
+print('pppppppppp', fcw( points[:, None] ))
 
 
 
@@ -557,7 +557,7 @@ class SimCrackLoc( IBVModel ):
         idata = argsort( xdata )
         p.fill( xdata[idata], ydata[idata], facecolor = 'gray', alpha = 0.2 )
 
-        print 'max omega', max( ydata[idata] )
+        print('max omega', max( ydata[idata] ))
 
         p.set_ylim( ymin = 0, ymax = 1.0 )
         p.set_xlabel( 'bar axis [mm]' )
@@ -854,7 +854,7 @@ if __name__ == '__main__':
 
     if do == 'eval':
         u = sim_model.peval()
-        print u
+        print(u)
         sim_model.plot_tracers()
         p.show()
     if do == 'ui':

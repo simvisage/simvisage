@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # changes concerning 'Rxyz': overload the default definitions of
     # 'LC' without changing the default class names
     # as those are used in the definition of LCCTable
-    from lcc_table_Rxyz import LCCTableULS, LC
+    from .lcc_table_Rxyz import LCCTableULS, LC
 
     # Access to the top level directory of the database
     #
@@ -369,7 +369,7 @@ if __name__ == '__main__':
         # 'combi_arr': array with indices of all loading case combinations
         #--------------------------------------------------------------
         #
-        print 'lct_Q.combi_arr', lct_Q.combi_arr.shape 
+        print('lct_Q.combi_arr', lct_Q.combi_arr.shape) 
         np.savetxt('combi_arr_wo_temp_LCs', lct_Q.combi_arr, delimiter = ';')
 
         #--------------------------------------------------------------

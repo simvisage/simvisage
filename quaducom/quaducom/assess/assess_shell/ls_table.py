@@ -35,7 +35,7 @@ from math import pi
 from string import split
 import os
 
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
 
 class LSArrayAdapter (TabularAdapter):
 
@@ -659,12 +659,12 @@ class ULS(LS):
         # 2nd-principle stress direction = minimum (compressive) stresses
         #-------------------------------------------------
         #
-        print "NOTE: the principle tensile stresses are used to evaluate the deflection angle 'beta', i.e. k_alpha(beta)"
-        print "      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)"
-        print "      'eta_nm_tot' is evaluated both for 1st and 2nd principle direction"
+        print("NOTE: the principle tensile stresses are used to evaluate the deflection angle 'beta', i.e. k_alpha(beta)")
+        print("      'eta_nm_tot' is evaluated based on linear nm-interaction (derived from test results)")
+        print("      'eta_nm_tot' is evaluated both for 1st and 2nd principle direction")
 
         if self.ls_table.k_alpha_min == True:
-            print "minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values"
+            print("minimum value 'k_alpha_min'=0.707 has been used to evaluate resistance values")
             # NOTE: conservative simplification: k_alpha_min = 0.707 used
             #
             n_Rdt_lo_1 = n_Rdt_up_1 = n_Rdt_lo_2 = n_Rdt_up_2 = min(self.n_0_Rdt, self.n_90_Rdt) * 0.707 * np.ones_like(self.elem_no)

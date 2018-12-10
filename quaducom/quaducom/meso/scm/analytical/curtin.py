@@ -3,7 +3,7 @@ Created on Apr 20, 2012
 stress - strain relation for composites according to Ahn and Curtin 1996
 @author: rostar
 '''
-from material import Material
+from .material import Material
 from etsproxy.traits.api import Float, Property, cached_property, Instance, HasTraits
 from scipy.stats import weibull_min
 import numpy as np
@@ -152,12 +152,12 @@ class Curtin(HasTraits):
         eta = U[0] * self.delta / U[1]
         self.eta_comp = eta
         Lstar = U[0] * np.trapz((xL - 2 * self.delta) * self.PL(xL, eta), xL)
-        print self.PL(self.delta, eta)
+        print(self.PL(self.delta, eta))
         dN = -U[0] * self.PM(np.array([self.delta]), eta) * \
             self.diff_delta + self.sigma_mu_distr(Lstar).pdf(sigma)
         dL = -U[0] * self.delta * self.PM(self.delta, eta) * self.diff_delta
         res = np.array([dN, dL]).flatten()
-        print res
+        print(res)
         return res
 
     def solveODE(self):

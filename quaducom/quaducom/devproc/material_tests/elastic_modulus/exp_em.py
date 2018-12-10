@@ -198,7 +198,7 @@ class ExpEM(ExType):
     def _read_data_array(self):
         ''' Read the experiment data. 
         '''
-        print 'READ FILE'
+        print('READ FILE')
         _data_array = np.loadtxt( self.data_file, delimiter = ';', skiprows = 2, usecols = (4,5,10,17,20) )
         self.data_array = _data_array
 

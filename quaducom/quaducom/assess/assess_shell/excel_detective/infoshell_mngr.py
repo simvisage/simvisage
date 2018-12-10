@@ -321,10 +321,10 @@ class InfoShellMngr( HasTraits ):
         if not all( self.geo_data['X'] ) == all( self.state_data['X'] ) or \
             not all( self.geo_data['Y'] ) == all( state_data['Y'] ) or \
             not all( self.geo_data['Z'] ) == all( state_data['Z'] ):
-            raise ValueError, 'coordinates in file % s and file % s are not identical. Check input files for consistency ! ' \
-                    % ( self.geo_data_file, self.state_data_file )
+            raise ValueError('coordinates in file % s and file % s are not identical. Check input files for consistency ! ' \
+                    % ( self.geo_data_file, self.state_data_file ))
         else:
-            print ' *** input files checked for consistency ( OK ) *** '
+            print(' *** input files checked for consistency ( OK ) *** ')
             return True
 
 
@@ -361,7 +361,7 @@ if __name__ == '__main__':
     ifs = InfoShellMngr( state_data_file = 'input_state_data.csv',
                          geo_data_file = 'input_geo_data.csv' )
 
-    print ifs.info_shell_uls.assess_value
+    print(ifs.info_shell_uls.assess_value)
 #    print ifs.info_shell_sls.assess_value
 
     ifs.configure_traits()

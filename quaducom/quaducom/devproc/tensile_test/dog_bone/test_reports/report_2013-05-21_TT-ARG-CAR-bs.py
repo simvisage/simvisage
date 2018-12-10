@@ -19,7 +19,7 @@ from traits.api import \
     Delegate, Event, on_trait_change, Button, \
     Interface, implements, Property, cached_property
 
-from format_plot import format_plot
+from .format_plot import format_plot
 from mathkit.mfn.mfn_line.mfn_line import \
     MFnLineArray
 from matresdev.db.exdb.ex_run_view import \
@@ -144,6 +144,6 @@ if __name__ == '__main__':
         filename = os.path.join(
             test_series_dir, do + '_sig' + sig_flag + '-epsu.png')
         p.savefig(filename, format='png')
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
     p.show()

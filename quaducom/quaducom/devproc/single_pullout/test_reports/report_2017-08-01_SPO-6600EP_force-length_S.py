@@ -12,9 +12,9 @@ import pylab as p
 
 
 params = {'legend.fontsize': 20,
-          u'font.size': 20,
-          u'font.family': 'Times New Roman',
-          u'font.style': 'normal'}
+          'font.size': 20,
+          'font.family': 'Times New Roman',
+          'font.style': 'normal'}
 p.rcParams.update(params)
 
 test_files = [
@@ -59,7 +59,7 @@ def plot_all():
                       marker=marker_list[idx], markersize=8, color=color_list[idx],
                       #label = test_files[idx].split('.')[0]
                       )
-            print e.Kraft.max()
+            print(e.Kraft.max())
 # Print Ultimate tensile stress (average value) = 3221 N/mm2
     F_r = 3221 * 3.62 / 1000
     f_r = [F_r, F_r]

@@ -40,7 +40,7 @@ from numpy import \
     ones, transpose, shape, append, argmin, fabs, identity, unique, vdot, \
     max as ndmax, min as ndmin
 
-from ls_table_hf import \
+from .ls_table_hf import \
     LSTable, ULS, SLS
 
 from math import pi
@@ -145,7 +145,7 @@ class LC( HasTraits ):
         '''read state data and geo data from csv-file using ';' as filed delimiter and ' ' (blank)
         as text delimiter.
         '''
-        print '*** read state data from file: %s ***' % ( file_name )
+        print('*** read state data from file: %s ***' % ( file_name ))
 
         input_arr = loadtxt( file_name , delimiter = ';', skiprows = 2, usecols = ( 2, 3, 4, 8, 9 ) )
 
@@ -183,7 +183,7 @@ class LC( HasTraits ):
     @cached_property
     def _get_data_dict( self ):
         d = {}
-        for k, arr in self.data_orig.items():
+        for k, arr in list(self.data_orig.items()):
             d[k] = self.data_filter( arr )
         return d
 
@@ -214,7 +214,7 @@ class LC( HasTraits ):
         read state data and geo date from csv-file using ';' as filed delimiter and ' ' (blank)
         as text delimiter for displacement.
         '''
-        print '*** read state data from file: %s ***' % ( file_name_u )
+        print('*** read state data from file: %s ***' % ( file_name_u ))
 
         # get the column headings defined in the first row 
         # of the csv displacement input file
@@ -251,8 +251,8 @@ class LC( HasTraits ):
         self.Y_u = input_arr[:, Y_idx] + 3.5
         self.Z_u = input_arr[:, Z_idx]
 
-        print 'self.X_u',self.X_u
-        print 'self.Y_u',self.Y_u
+        print('self.X_u',self.X_u)
+        print('self.Y_u',self.Y_u)
 
         # hinge forces [kN]
         #
@@ -413,7 +413,7 @@ class LCCTable( HasTraits ):
         needs to be defined. In the original version of 'itertools.product' 
         the function takes a tuple as argument ("*args"). 
         """
-        pools = map( tuple, args ) #within original version args defined as *args
+        pools = list(map( tuple, args )) #within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -488,10 +488,10 @@ class LCCTable( HasTraits ):
         # printouts:
         #
         if self.ls == 'ULS':
-            print '*** load case combinations for limit state ULS ***'
+            print('*** load case combinations for limit state ULS ***')
         else:
-            print '*** load case combinations for limit state SLS ***'
-            print '*** SLS combination used: % s ***' % ( self.combination_SLS )
+            print('*** load case combinations for limit state SLS ***')
+            print('*** SLS combination used: % s ***' % ( self.combination_SLS ))
 
         #---------------------------------------------------------------
         # get permutations of safety factors ('gamma')

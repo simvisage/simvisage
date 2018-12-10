@@ -12,9 +12,9 @@ import unittest
 from numpy import min, array, all, sum, round
 from os.path import join
 from matresdev.db.simdb import SimDB
-from StringIO import StringIO
-from ymb_data import YMBCutData, YMBSource, yarn_list
-from ymb_micro import YMBMicro
+from io import StringIO
+from .ymb_data import YMBCutData, YMBSource, yarn_list
+from .ymb_micro import YMBMicro
 import numpy.ma as ma
 
 simdb = SimDB()
@@ -32,7 +32,7 @@ class S(YMBSource):
 
 class TestYarnSource_0(unittest.TestCase):
     def setUp(self):
-        print 'setting up'
+        print('setting up')
         source = S(yarn_type=yarn, root_dir='')
         self.yarn_data = YMBCutData(source=source, cf_limit=0.0)
 
@@ -100,30 +100,30 @@ class TestYarnSource_0(unittest.TestCase):
                                  [0.1, 0.3, 0.5, 0.5, 0.5, -1, -1, -1, -1]],
                                  mask=mask[:, 1:], fill_value= -1.0)
 
-        print 'x_array test'
+        print('x_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[0] - x_true), decimals=10) == 0, True)
-        print 'y_array test'
+        print('y_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[1] - y_true), decimals=10) == 0, True)
-        print 'z_array test'
+        print('z_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[2] - z_true), decimals=10) == 0, True)
-        print 'contact fraction test'
+        print('contact fraction test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[5] - cf_true), decimals=10) == 0, True)
-        print 'segment bond free length x test'
+        print('segment bond free length x test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length_x - bfl_x_true_0), decimals=10) == 0, True)
-        print 'segment bond free length test'
+        print('segment bond free length test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length - bfl_true_0), decimals=10) == 0, True)
-        print 'segment length between cuts test'
+        print('segment length between cuts test')
         self.assertEqual(round(sum(self.yarn_data.fs_length_between_cuts - length), decimals=10) == 0, True)
-        print 'slack test'
+        print('slack test')
         self.assertEqual(round(sum(self.yarn_data.fs_slack - slack_true), decimals=10) == 0, True)
 
 
-        print 'yarn cf = 0 tested'
+        print('yarn cf = 0 tested')
 
 
 class TestYarnSource_50(unittest.TestCase):
     def setUp(self):
-        print 'setting up'
+        print('setting up')
         self.yarn_data = YMBCutData(source=S(yarn_type=yarn), cf_limit=0.5)
 
     def test_cut_data(self):
@@ -190,30 +190,30 @@ class TestYarnSource_50(unittest.TestCase):
                                  [0.1, 0.3, 0.5, 0.5, 0.5, -1, -1, -1, -1]],
                                  mask=mask[:, 1:], fill_value= -1.0)
 
-        print 'x_array test'
+        print('x_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[0] - x_true), decimals=10) == 0, True)
-        print 'y_array test'
+        print('y_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[1] - y_true), decimals=10) == 0, True)
-        print 'z_array test'
+        print('z_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[2] - z_true), decimals=10) == 0, True)
-        print 'contact fraction test'
+        print('contact fraction test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[5] - cf_true), decimals=10) == 0, True)
-        print 'segment bond free length x test'
+        print('segment bond free length x test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length_x - bfl_x_true_50), decimals=10) == 0, True)
-        print 'segment bond free length test'
+        print('segment bond free length test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length - bfl_true_50), decimals=10) == 0, True)
-        print 'segment length between cuts test'
+        print('segment length between cuts test')
         self.assertEqual(round(sum(self.yarn_data.fs_length_between_cuts - length), decimals=10) == 0, True)
-        print 'slack test'
+        print('slack test')
         self.assertEqual(round(sum(self.yarn_data.fs_slack - slack_true), decimals=10) == 0, True)
 
 
-        print 'yarn cf = 50 tested'
+        print('yarn cf = 50 tested')
 
 
 class TestYarnSource_100(unittest.TestCase):
     def setUp(self):
-        print 'setting up'
+        print('setting up')
         self.yarn_data = YMBCutData(source=S(yarn_type=yarn), cf_limit=1.0)
 
     def test_cut_data(self):
@@ -281,25 +281,25 @@ class TestYarnSource_100(unittest.TestCase):
                                  [0.1, 0.3, 0.5, 0.5, 0.5, -1, -1, -1, -1]],
                                  mask=mask[:, 1:], fill_value= -1.0)
 
-        print 'x_array test'
+        print('x_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[0] - x_true), decimals=10) == 0, True)
-        print 'y_array test'
+        print('y_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[1] - y_true), decimals=10) == 0, True)
-        print 'z_array test'
+        print('z_array test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[2] - z_true), decimals=10) == 0, True)
-        print 'contact fraction test'
+        print('contact fraction test')
         self.assertEqual(round(sum(self.yarn_data.cut_data[5] - cf_true), decimals=10) == 0, True)
-        print 'segment bond free length x test'
+        print('segment bond free length x test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length_x - bfl_x_true_100), decimals=10) == 0, True)
-        print 'segment bond free length test'
+        print('segment bond free length test')
         self.assertEqual(round(sum(self.yarn_data.fs_bond_free_length - bfl_true_100), decimals=10) == 0, True)
-        print 'segment length between cuts test'
+        print('segment length between cuts test')
         self.assertEqual(round(sum(self.yarn_data.fs_length_between_cuts - length), decimals=10) == 0, True)
-        print 'slack test'
+        print('slack test')
         self.assertEqual(round(sum(self.yarn_data.fs_slack - slack_true), decimals=10) == 0, True)
 
 
-        print 'yarn cf = 100 tested'
+        print('yarn cf = 100 tested')
 
 if __name__ == '__main__':
     unittest.main()

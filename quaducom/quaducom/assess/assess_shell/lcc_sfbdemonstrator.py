@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     import os
 
-    from lcc_table import LCCTableULS, LC
+    from .lcc_table import LCCTableULS, LC
 
     # Access to the top level directory of the database
     #
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     # 'combi_arr': array with indices of all loading case combinations
     #--------------------------------------------------------------
     #
-    print 'lct.combi_arr', lct.combi_arr.shape, '\n'
+    print('lct.combi_arr', lct.combi_arr.shape, '\n')
 #     np.savetxt('combi_arr_LC1-12', lct.combi_arr, delimiter=';')
 
     #--------------------------------------------------------------

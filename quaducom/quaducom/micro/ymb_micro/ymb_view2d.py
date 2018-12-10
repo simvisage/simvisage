@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from numpy import hstack
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from numpy import ceil, max
-from ymb_data import YMBData, YMBSource, YMBSegmentData, var_dict
+from .ymb_data import YMBData, YMBSource, YMBSegmentData, var_dict
 
 
 cdict = {

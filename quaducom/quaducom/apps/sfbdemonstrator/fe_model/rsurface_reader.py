@@ -25,7 +25,7 @@ def read_rsurface( filename ):
         if line[0] == "v" and line[0:2] != "vp":
             # split each line and cut of the "v"-key
             coords = line.split()
-            x, y, z = map( float, coords[1:] )
+            x, y, z = list(map( float, coords[1:] ))
             vertices_list.append( [x, y, z] )
 
     # convert the ordered list of x,y,z-coordinats in an 
@@ -85,11 +85,11 @@ if __name__ == '__main__':
     vl_arr_, vu_arr_ = normalize_rsurfaces( vl_arr, vu_arr )
 
     # print the normalized coordinates 
-    print 'vl_arr - normalized'
-    print vl_arr
-    print '\n'
+    print('vl_arr - normalized')
+    print(vl_arr)
+    print('\n')
 
-    print 'vu_arr - normalized'
-    print vu_arr_
+    print('vu_arr - normalized')
+    print(vu_arr_)
 
 

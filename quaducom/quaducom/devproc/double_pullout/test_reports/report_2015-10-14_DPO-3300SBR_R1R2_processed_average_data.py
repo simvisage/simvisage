@@ -254,7 +254,7 @@ if do == 'R1_all':
 
 for fname in sorted(listdir(fpath), reverse=True):
 
-    print 'file', fpath, fname
+    print('file', fpath, fname)
     data = np.loadtxt(os.path.join(fpath, fname), delimiter=';')
     flabel = fname.replace('-0-3300SBR', '')
     flabel = flabel.replace('DPO-', '')
@@ -306,7 +306,7 @@ if save_fig_to_file:
         os.makedirs(test_series_dir)
     filename = os.path.join(test_series_dir, do + '.png')
     p.savefig(filename)
-    print 'figure saved to file %s' % (filename)
+    print('figure saved to file %s' % (filename))
 
 
 p.show()

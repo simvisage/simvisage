@@ -57,7 +57,7 @@ class ExpDPODB(ExType):
 
     @on_trait_change('+input, ccs.input_change')
     def _set_input_change(self):
-        print '*** raising input change in CTT'
+        print('*** raising input change in CTT')
         self.input_change = True
 
     avg_disp = Callable
@@ -110,7 +110,7 @@ class ExpDPODB(ExType):
         '''default settings correspond to
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
-        print 'ccs default used'
+        print('ccs default used')
         fabric_layout_key = 'CAR-3300-SBR_BTZ2'
         concrete_mixture_key = 'Pagel_TF10'
         orientation_fn_key = 'all0'
@@ -232,7 +232,7 @@ class ExpDPODB(ExType):
             self.W10_li *= -1
 
         if hasattr(self, "W10_vli"):
-            print 'change_varname WA_VL = W10_vli etc'
+            print('change_varname WA_VL = W10_vli etc')
             self.WA_VL = self.W10_vli
         if hasattr(self, "W10_vre"):
             self.WA_VR = self.W10_vre
@@ -242,7 +242,7 @@ class ExpDPODB(ExType):
             self.WA_HR = self.W20_hre
 
         if hasattr(self, "Wvo_li"):
-            print 'change_varname WA_VL = Wvo_li etc'
+            print('change_varname WA_VL = Wvo_li etc')
             self.WA_VL = self.Wvo_li
         if hasattr(self, "Wvo_re"):
             self.WA_VR = self.Wvo_re
@@ -356,7 +356,7 @@ class ExpDPODB(ExType):
         '''
         F_max_idx = np.argmax(self.Kraft)
 
-        print 'PLOTTING'
+        print('PLOTTING')
         axes.plot(self.w, self.Kraft / self.n_rovings, color=color,
                   linewidth=linewidth, linestyle=linestyle, label=label)
         axes.set_xlabel('displacement [mm]')

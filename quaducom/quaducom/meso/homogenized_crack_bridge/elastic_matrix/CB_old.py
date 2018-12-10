@@ -346,7 +346,7 @@ class CompositeCrackBridge(HasTraits):
                 damage = damage.x
                 self.damage_initial_value = damage
             except:
-                print 'fast opt method does not converge: switched to a slower, robust method for this step'
+                print('fast opt method does not converge: switched to a slower, robust method for this step')
                 damage = root(self.damage_residuum, np.ones_like(self.sorted_depsf) * 0.2,
                               method='krylov')
                 damage = damage.x

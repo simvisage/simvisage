@@ -11,18 +11,18 @@ from matresdev.db.exdb import ExRun
 from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-import report_2016_03_18_TTb_2C_9mm_0_3300SBR_DK3_R4_dd as dd
-import report_2016_03_18_TTb_2C_9mm_0_3300SBR_DK3_R4_MFPA as mfpa
-import report_2016_03_15_TTb_2C_9mm_0_3300SBR_DK3_R4_ac as ac
-print scipy.__version__
+from . import report_2016_03_18_TTb_2C_9mm_0_3300SBR_DK3_R4_dd as dd
+from . import report_2016_03_18_TTb_2C_9mm_0_3300SBR_DK3_R4_MFPA as mfpa
+from . import report_2016_03_15_TTb_2C_9mm_0_3300SBR_DK3_R4_ac as ac
+print(scipy.__version__)
 
 # specify font options for plots
 params = {'legend.fontsize': 30,
           'ps.fonttype': 42,
-          u'font.size':30,
-          u'font.family':'serif',
-          u'font.style':'normal',
-          u'font.serif': 'Times New Roman'}
+          'font.size':30,
+          'font.family':'serif',
+          'font.style':'normal',
+          'font.serif': 'Times New Roman'}
 
 p.rcParams.update(params)
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, '1'+ '.eps')
         p.savefig(filename)
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
     p.show()
 

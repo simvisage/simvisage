@@ -11,10 +11,10 @@ from matresdev.db.exdb import ExRun
 from matresdev.db.simdb.simdb import simdb
 import numpy as np
 import pylab as p
-import report_2016_03_16_DPO_3300SBR_R4_Dresden as dd
-import report_2016_03_16_DPO_3300SBR_R4_Dresden_PO as dd_po
-import report_2016_03_16_DPO_3300SBR_R4_rawdata as ac
-print scipy.__version__
+from . import report_2016_03_16_DPO_3300SBR_R4_Dresden as dd
+from . import report_2016_03_16_DPO_3300SBR_R4_Dresden_PO as dd_po
+from . import report_2016_03_16_DPO_3300SBR_R4_rawdata as ac
+print(scipy.__version__)
 
 
 class PlotBase(HasTraits):

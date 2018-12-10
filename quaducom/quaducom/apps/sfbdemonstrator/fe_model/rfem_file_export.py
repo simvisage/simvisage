@@ -26,7 +26,7 @@ from etsproxy.traits.api import \
 from numpy import \
     c_, ix_, mgrid, transpose, shape
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
@@ -34,7 +34,7 @@ from scipy.interpolate import Rbf
 
 from math import pi
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
 import csv
 
@@ -44,7 +44,7 @@ from etsproxy.mayavi.api import Engine
 def get_mid_surface_and_thickness( hp_shell, points, perpendicular_t = True ):
     '''Return the global coordinates of the supplied local points.
     '''
-    print '*** get mid surface and thickness ***'
+    print('*** get mid surface and thickness ***')
 
     #-----------------------------------------------
     # get the global coordinates as defined in the 
@@ -183,7 +183,7 @@ def get_mid_surface_and_thickness( hp_shell, points, perpendicular_t = True ):
     if perpendicular_t == True:
         # delta shift of x and y for estimation of slope will be done in 4 direction
         # 0, 45, 90 and 135 degrees 
-        print "--- perpendicular ---"
+        print("--- perpendicular ---")
         delta = 0.000001
 
         # shift in x
@@ -238,7 +238,7 @@ def _read_thickness_data( file_name ):
     Stb Data needs to have same range of values in X and Y direction and same unit [m],
     as defined as length_xy_quarter and length_xy_quarter
     '''
-    print '*** reading thickness data from file: ', file_name, ' ***'
+    print('*** reading thickness data from file: ', file_name, ' ***')
 
     # get the column headings defined in the second row 
     # of the csv thickness input file
@@ -291,7 +291,7 @@ def _read_nodal_coords( file_name ):
     as a text delimiter.
     Note that some lines do not contain values !
     '''
-    print '*** reading nodal coordinates from file: ', file_name, ' ***'
+    print('*** reading nodal coordinates from file: ', file_name, ' ***')
 
     file = open( file_name, 'r' )
 
@@ -353,7 +353,7 @@ def compare_thickness_values( thickness, thickness_stb ):
 def export_midsurface_data( node_no, x, y, z_middle, file_name, empty_lines_idx ):
     '''exports data to csv - worksheet
     '''
-    print '*** writing middle surface data to file,', file_name, ' ***'
+    print('*** writing middle surface data to file,', file_name, ' ***')
 
     data = c_[node_no, x, y, z_middle]
     file = open( file_name, 'w' )
@@ -368,7 +368,7 @@ def export_midsurface_data( node_no, x, y, z_middle, file_name, empty_lines_idx 
     #
     if len( empty_lines_idx ) != 0:
 
-        print '--- file contains ', len( empty_lines_idx ), ' empty_lines ---'
+        print('--- file contains ', len( empty_lines_idx ), ' empty_lines ---')
 
         # file without empty lines
         #
@@ -396,7 +396,7 @@ def export_midsurface_data( node_no, x, y, z_middle, file_name, empty_lines_idx 
         file.writelines( lines[-1 ] )
 
         file.close()
-        print '--- empty lines added to file ---'
+        print('--- empty lines added to file ---')
 
     return
 
@@ -404,10 +404,10 @@ def export_midsurface_data( node_no, x, y, z_middle, file_name, empty_lines_idx 
 def export_thickness_data( elem_no, x, y, t, file_name ):
     '''exports data to csv - worksheet
     '''
-    print '*** writing thickness data to file,', file_name, ' ***'
+    print('*** writing thickness data to file,', file_name, ' ***')
 
     data = c_[elem_no, x, y, t * 1000]
-    print shape( data )
+    print(shape( data ))
     writer = csv.writer( open( file_name, 'w' ), delimiter = ";", lineterminator = "\n" )
     writer.writerow( ['element_number', 'x[m]', 'y[m]', 't[mm]'] )
     writer.writerows( data )
@@ -417,7 +417,7 @@ def export_thickness_data( elem_no, x, y, t, file_name ):
 def show( hp_shell, x, y, z_middle, displayed_value ):
     """Test contour_surf on regularly spaced co-ordinates like MayaVi.
     """
-    print '*** plotting data***'
+    print('*** plotting data***')
     s = points3d( X, Y, z_middle, displayed_value, colormap = "gist_rainbow", mode = "cube", scale_factor = 0.3 )
 
     sb = colorbar( s )
@@ -473,7 +473,7 @@ if __name__ == '__main__':
     n_shells_str = '1shell_7x7m'
     scalefactor_delta_h_str = 'delta_h_865mm'
 
-    print '*** INPUT ***'
+    print('*** INPUT ***')
 
     #------------------------------------------------------------------
     # THICKNESS
@@ -482,7 +482,7 @@ if __name__ == '__main__':
     # (NOTE: the thickness coordinates are defined in the middle of the elements)  
     # --> t_elem in [mm]
     #------------------------------------------------------------------
-    print '*** CALCULATE THICKNESS *** '
+    print('*** CALCULATE THICKNESS *** ')
 
     # 1) read x,y coord values from csv-file used to specify shell thickness  
     #
@@ -502,8 +502,8 @@ if __name__ == '__main__':
     # 2) get thickness data calculated using 'get_thickness_and_middlesurface' 
     #
     xi , yi , z_middle , t = get_mid_surface_and_thickness( hp, c_[X, Y], perpendicular_t = False )
-    print "thickness at corner must evaluate to 60 mm (almost no slope): ", t[ argmax( z_middle ) ]
-    print "minimum thickness must evaluate to about 60 mm (check if option 'perpendicular_t' is necessary)", min( t )
+    print("thickness at corner must evaluate to 60 mm (almost no slope): ", t[ argmax( z_middle ) ])
+    print("minimum thickness must evaluate to about 60 mm (check if option 'perpendicular_t' is necessary)", min( t ))
 
     # 3) export thickness to file
     #
@@ -512,7 +512,7 @@ if __name__ == '__main__':
 
     # 4) plot midsurface and thickness in mayavi
     #
-    print '*** plotting data - thickness***'
+    print('*** plotting data - thickness***')
 
     mlab.figure( figure = "elem_coords and thickness",
              bgcolor = ( 1.0, 1.0, 1.0 ),
@@ -533,34 +533,34 @@ if __name__ == '__main__':
     # in the order of the supplied csv coordinates (x,y) 
     # --> z_node in [m]
     #------------------------------------------------------------------
-    print '\n'
-    print '*** CALCULATE MIDSURFACE *** '
+    print('\n')
+    print('*** CALCULATE MIDSURFACE *** ')
 
     # 1) read x,y coords from csv-file used to specify shell middle surface
     # (NOTE: the midsurface coordinates are defined at the nodes)  
     #
     file_name = 'RFEM_file_export/input_data_nodal_coords_' + n_shells_str + '_' + scalefactor_delta_h_str + '.csv'
     node_no, X, Y, Z, empty_lines_idx = _read_nodal_coords( file_name )
-    print '*** number of empty lines: ', len(empty_lines_idx)
+    print('*** number of empty lines: ', len(empty_lines_idx))
 
     # 2) get midsurface data calculated using 'get_thickness_and_middlesurface' 
     #
     xi , yi , z_middle , t = get_mid_surface_and_thickness( hp, c_[X, Y], perpendicular_t = False )
-    print "position and value of lowest shell thickness: ", t[argmin( t )], ' at node ', argmin( t )
+    print("position and value of lowest shell thickness: ", t[argmin( t )], ' at node ', argmin( t ))
 
     # shift coordinate system in z-direction to start with node_no = 0 
     # at position (x,y,z) = (0,0,0). Change the sign in order to point with 
     # the z-coordinate down.  
 
-    print ' - - -z - coordinates before shifting:- - -'
-    print 'xi[420]', xi[420]
-    print 'yi[420]', yi[420]
-    print 'z_middle[420] ( z value in center: must evaluate to 31cm / 2 = 15, 5 cm; origin at lowerface cut off position )', z_middle[420]
-    print 'z_middle[406] ( edge center value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[406]
-    print 'z_middle[0] ( corner value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[0]
-    print 'z_middle[-1] ( corner value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[-1]
-    print 'xi[0]', xi[0]
-    print 'yi[0]', yi[0]
+    print(' - - -z - coordinates before shifting:- - -')
+    print('xi[420]', xi[420])
+    print('yi[420]', yi[420])
+    print('z_middle[420] ( z value in center: must evaluate to 31cm / 2 = 15, 5 cm; origin at lowerface cut off position )', z_middle[420])
+    print('z_middle[406] ( edge center value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[406])
+    print('z_middle[0] ( corner value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[0])
+    print('z_middle[-1] ( corner value ) must evaluate to 0,895 m = delta h + 6cm / 2', z_middle[-1])
+    print('xi[0]', xi[0])
+    print('yi[0]', yi[0])
 
     z_middle -= z_middle[420]
     z_middle *= -1
@@ -575,11 +575,11 @@ if __name__ == '__main__':
 #        z_middle -= 2.85
 #        scalefactor_delta_h_str = scalefactor_delta_h_str + '_285'
 
-    print ' - - -z - coordinates after shifting:- - -'
-    print 'z_middle[420] = center ( must evaluate to 0 )', z_middle[420]
-    print 'z_middle[406] = edge ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[406]
-    print 'z_middle[0] = corner ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[0]
-    print 'z_middle[-1] = corner ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[-1]
+    print(' - - -z - coordinates after shifting:- - -')
+    print('z_middle[420] = center ( must evaluate to 0 )', z_middle[420])
+    print('z_middle[406] = edge ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[406])
+    print('z_middle[0] = corner ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[0])
+    print('z_middle[-1] = corner ( must evaluate to 86,5 cm - 31cm / 2 + 6cm / 2 = 74 cm )', z_middle[-1])
 
     # 3) export middle surface to file
     #    

@@ -7,7 +7,7 @@ Created on Jan 4, 2015 by scho
 
 if __name__ == '__main__':
 
-    from exp_tt_aramis2d import ExpTTAramis2d
+    from .exp_tt_aramis2d import ExpTTAramis2d
     from matresdev.db.simdb import SimDB
     from aramis_cdt import AramisUI
     simdb = SimDB()
@@ -64,7 +64,7 @@ if __name__ == '__main__':
                           )
 
     e_run.process_source_data()
-    print 'crack filter', e_run.crack_filter_avg
+    print('crack filter', e_run.crack_filter_avg)
 
     #-------------------------------------------
     # non-deformed coordinates of the measuring field
@@ -82,12 +82,12 @@ if __name__ == '__main__':
     ly_right = y[0, -1] - y[-1, -1]
     lx_avg = (lx_bottom + lx_top) / 2.
     ly_avg = (ly_right + ly_left) / 2.
-    print 'Measuring field length: lx_bottom ', lx_bottom
-    print 'Measuring field length: lx_top ', lx_top
-    print 'Measuring field length: ly_left ', ly_left
-    print 'Measuring field length: ly_right ', ly_right
-    print 'Measuring field length: lx_avg ', lx_avg
-    print 'Measuring field length: ly_avg ', ly_avg
+    print('Measuring field length: lx_bottom ', lx_bottom)
+    print('Measuring field length: lx_top ', lx_top)
+    print('Measuring field length: ly_left ', ly_left)
+    print('Measuring field length: ly_right ', ly_right)
+    print('Measuring field length: lx_avg ', lx_avg)
+    print('Measuring field length: ly_avg ', ly_avg)
 
     #-------------------------------------------
     # resolution used for aramis evaluation
@@ -99,9 +99,9 @@ if __name__ == '__main__':
     Xs = int(X_list[1])
     Yf = int(Y_list[0])
     Ys = int(Y_list[1])
-    print 'res_key_list', res_key_list
-    print 'X_list', X_list
-    print 'Y_list', Y_list
+    print('res_key_list', res_key_list)
+    print('X_list', X_list)
+    print('Y_list', Y_list)
 
     #-------------------------------------------
     # average pixel size
@@ -110,10 +110,10 @@ if __name__ == '__main__':
     lenght_px_x = np.mean(dist_x / Xs)
     dist_y = y[:, 1:] - y[:, :-1]
     lenght_px_y = np.mean(dist_y / Ys)
-    print 'Mean, std, min, max of facets center distance [mm]: x-direction', np.mean(dist_x), np.std(dist_x), np.min(dist_x), np.max(dist_x)
-    print 'Mean, std, min, max of facets center distance [mm]: y-direction', np.mean(dist_y), np.std(dist_y), np.min(dist_y), np.max(dist_y)
-    print 'Mean and std of pixel size [mm]: x-direction', np.mean(dist_x / Xs), np.std(dist_x / Xs)
-    print 'Mean and std of pixel size [mm]: y-direction', np.mean(dist_y / Ys), np.std(dist_y / Ys)
+    print('Mean, std, min, max of facets center distance [mm]: x-direction', np.mean(dist_x), np.std(dist_x), np.min(dist_x), np.max(dist_x))
+    print('Mean, std, min, max of facets center distance [mm]: y-direction', np.mean(dist_y), np.std(dist_y), np.min(dist_y), np.max(dist_y))
+    print('Mean and std of pixel size [mm]: x-direction', np.mean(dist_x / Xs), np.std(dist_x / Xs))
+    print('Mean and std of pixel size [mm]: y-direction', np.mean(dist_y / Ys), np.std(dist_y / Ys))
 
     #-------------------------------------------
     # apply scale factor 2d to coordinates, displacements and crack field arrays
@@ -127,8 +127,8 @@ if __name__ == '__main__':
     e_run.aramis_field_data.left_i = integ_radius_crack
     right_i = e_run.aramis_field_data.right_i
     e_run.aramis_field_data.right_i -= integ_radius_crack
-    print 'left_i', left_i
-    print 'right_i', right_i
+    print('left_i', left_i)
+    print('right_i', right_i)
 
     #-------------------------------------------
     # scale gylphs for mlab.points3d
@@ -142,12 +142,12 @@ if __name__ == '__main__':
     glyph_l_length *= overlap_factor
     glyph_t_length = dist_t / range_t
     glyph_t_length *= overlap_factor
-    print 'range_l', range_l
-    print 'range_t', range_t
-    print 'dist_l', dist_l
-    print 'dist_t', dist_t
-    print 'glyph_l_length', glyph_l_length
-    print 'glyph_t_length', glyph_t_length
+    print('range_l', range_l)
+    print('range_t', range_t)
+    print('dist_l', dist_l)
+    print('dist_t', dist_t)
+    print('glyph_l_length', glyph_l_length)
+    print('glyph_t_length', glyph_t_length)
 
     #-------------------------------------------
     # start aramis user interface

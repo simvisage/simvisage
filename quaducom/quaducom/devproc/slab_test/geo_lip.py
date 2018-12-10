@@ -45,7 +45,7 @@ class GeoLIP(HasTraits):
     thickness_plate = Float(0.006, input = True)
 
     def __call__(self, pts):
-        print '*** geo_load_introduction_plate called ***' 
+        print('*** geo_load_introduction_plate called ***') 
         
         x_, y_, z_ = pts.T
                 

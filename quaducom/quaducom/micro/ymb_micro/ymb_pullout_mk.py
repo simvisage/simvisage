@@ -23,8 +23,8 @@ from matplotlib.figure import Figure
 from numpy import array, linspace, frompyfunc, mean, sort, trapz, sqrt
 from stats.pdistrib.pdistrib import IPDistrib
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from ymb_data import YMBSource, YMBCutData, YMBSlider, IYMBData
-from ymb_pullout import YarnPullOut
+from .ymb_data import YMBSource, YMBCutData, YMBSlider, IYMBData
+from .ymb_pullout import YarnPullOut
 from stats.pdistrib.pdistrib import PDistrib
 from quaducom.crackbridge.yarn_symmetrical import DoublePulloutSym
 
@@ -289,7 +289,7 @@ class MKPullOut(HasTraits):
     # select the concrete mixture from the concrete database:
     #--------------------------------------------------------------------------------
 
-    param_distribs_key = Enum(MKPullOutParamDistribs.db.keys(),
+    param_distribs_key = Enum(list(MKPullOutParamDistribs.db.keys()),
                                  simdb=True, input=True,
                                  auto_set=False, enter_set=True)
 

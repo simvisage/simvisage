@@ -1,2 +1,2 @@
 
-from exp_tt_db import ExpTTDB
+from .exp_tt_db import ExpTTDB

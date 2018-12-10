@@ -22,13 +22,13 @@ from numpy import \
     linspace, frompyfunc
 
 from spirrid.rf import RF
-from brittle_filament import Filament
+from .brittle_filament import Filament
 from cb_clamped_fiber import CBClampedFiber
 from cb_infinite_fiber import CBInfiniteFiber
-from cb_short_fiber import CBShortFiber
-from po_clamped_fiber import POClampedFiber
-from po_infinite_fiber import POInfiniteFiber
-from po_short_fiber import POShortFiber
+from .cb_short_fiber import CBShortFiber
+from .po_clamped_fiber import POClampedFiber
+from .po_infinite_fiber import POInfiniteFiber
+from .po_short_fiber import POShortFiber
 
 class WikiGen(HasTraits):
 

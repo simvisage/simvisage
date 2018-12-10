@@ -196,7 +196,7 @@ class ExpST(ExType):
         '''remove the jumps in the displacement curves
         due to resetting the displacement gauges.
         '''
-        print '*** curve ironing activated ***'
+        print('*** curve ironing activated ***')
 
         # each column from the data array corresponds to a measured parameter
         # e.g. displacement at a given point as function of time u = f(t))
@@ -228,7 +228,7 @@ class ExpST(ExType):
                 # jump exceeds the defined tolerance criteria
                 jump_idx = where(fabs(jump_arr) > jump_crit)[0]
 
-                print 'number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0]
+                print('number of jumps removed in data_arr_ironed for', self.names_and_units[0][ idx ], ': ', jump_idx.shape[0])
                 # glue the curve at each jump together
                 for jidx in jump_idx:
                     # get the offsets at each jump of the curve
@@ -251,7 +251,7 @@ class ExpST(ExType):
         A minor mistake is made depending on how much time passes
         before the cylinder has contact with the slab.
         '''
-        print '*** process source data ***'
+        print('*** process source data ***')
 
         self._read_data_array()
         # curve ironing:
@@ -263,7 +263,7 @@ class ExpST(ExType):
         self._set_array_attribs()
 
         if 'WA_M' not in self.factor_list:
-            print '*** NOTE: Displacement gauge at center ("WA_M") missing. Cylinder displacement ("Weg") is used instead! ***'
+            print('*** NOTE: Displacement gauge at center ("WA_M") missing. Cylinder displacement ("Weg") is used instead! ***')
             self.WA_M = self.Weg
 
 
@@ -330,7 +330,7 @@ class ExpST(ExType):
 #        max_force_idx = -2
         f_asc = -self.Kraft[:max_force_idx + 1]
 
-        print 'self.factor_list', self.factor_list
+        print('self.factor_list', self.factor_list)
         header_string = ''
         for i in self.factor_list[2:]:
             header_string = header_string + i + '; '
@@ -431,7 +431,7 @@ class ExpST(ExType):
         # composite E-modulus
         #
         E_c = self.E_c
-        print 'E_c', E_c
+        print('E_c', E_c)
 
         if self.thickness == 0.02 and self.edge_length == 0.80 and plot_elastic_stiffness == True:
             K_linear = E_c / 24900. * 1.056  # [MN/m]=[kN/mm] bending stiffness with respect to center force

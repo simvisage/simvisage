@@ -60,19 +60,19 @@ from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
-from geo_column import GEOColumn
+from .geo_column import GEOColumn
 
 #from hp_shell import HPShell
-from hp_shell_conn_detail import HPShell
+from .hp_shell_conn_detail import HPShell
 
-from geo_hp_shell import GeoHPShell
+from .geo_hp_shell import GeoHPShell
 
 from mathkit.geo.transform.square2circle import GeoSquare2Circle
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 
 class MRDetail(MushRoofModel):
@@ -186,11 +186,11 @@ class MRDetail(MushRoofModel):
 
         mid_idx = self.mid_idx
         idx_min, idx_max = self.idx_min, self.idx_max
-        print 'idx_min', idx_min
-        print 'idx_max', idx_max
+        print('idx_min', idx_min)
+        print('idx_max', idx_max)
         interior_elems = fe_grid[ idx_min:idx_max, idx_min:idx_max, :, :, :, : ].elems
         fe_grid.inactive_elems = list(interior_elems)
-        print 'elems', interior_elems
+        print('elems', interior_elems)
         return fe_grid
 
     n_hollow_elems = Int(1)
@@ -402,7 +402,7 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'ui':
-        print '*** ui ***'
+        print('*** ui ***')
 
         sim_model.lc = 'lc_w_asym'
 

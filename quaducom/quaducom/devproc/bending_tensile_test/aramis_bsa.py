@@ -153,8 +153,8 @@ class AramisBSA(AramisCDT):
 
         x_cz = (y2 * x1) / (x2 + x1)
 
-        print 'x_cz'
-        print x_cz
+        print('x_cz')
+        print(x_cz)
         return x_cz
 
 if __name__ == '__main__':

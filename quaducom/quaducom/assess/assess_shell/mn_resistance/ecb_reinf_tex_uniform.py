@@ -21,13 +21,13 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_law import \
+from .ecb_law import \
     ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
-from constitutive_law import \
+from .constitutive_law import \
     ConstitutiveLawModelView
 
-from ecb_reinf_component import \
+from .ecb_reinf_component import \
     ECBReinfComponent, \
     ECB_COMPONENT_CHANGE, \
     ECB_COMPONENT_AND_EPS_CHANGE
@@ -333,21 +333,21 @@ if __name__ == '__main__':
                            cc_law_type='quadratic'
                            )
 
-    print 'initial'
+    print('initial')
     ecs.eps_up = -0.0033
     ecs.eps_lo = 0.014
 
-    print 'z_cj'
-    print ecs.z_cj_arr
-    print ecs.eps_cj_arr
-    print 'x', ecs.x
+    print('z_cj')
+    print(ecs.z_cj_arr)
+    print(ecs.eps_cj_arr)
+    print('x', ecs.x)
 
     eps_tex_u = ecs.convert_eps_lo_2_tex_u(0.014)
-    print 'eps_tex_u', eps_tex_u
+    print('eps_tex_u', eps_tex_u)
     eps_lo = ecs.convert_eps_tex_u_2_lo(eps_tex_u)
-    print 'eps_lo', eps_lo
+    print('eps_lo', eps_lo)
 
-    print 'M', ecs.M
-    print 'N', ecs.N
+    print('M', ecs.M)
+    print('N', ecs.N)
 
     ecs.configure_traits()

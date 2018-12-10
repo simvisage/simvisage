@@ -7,7 +7,7 @@ tensile and bending load
 
 if __name__ == '__main__':
 
-    from exp_btt_db import ExpBTTDB
+    from .exp_btt_db import ExpBTTDB
     from matresdev.db.simdb import SimDB
     from aramis_cdt import AramisInfo, AramisUI, AramisFieldData, AramisCDT, AramisUI
     simdb = SimDB()
@@ -69,11 +69,11 @@ if __name__ == '__main__':
         p.ylabel('w [mm]')
         p.legend(loc=1)
 
-        print '-----------------------------n_steps', e.aramis_info.number_of_steps
-        print '-----------------------------n_steps_cut1', len(e.t_aramis)
-        print 'max tension strain', max(e.eps_t_aramis[0] * 1000)
-        print 'min compression strain', min(e.eps_t_aramis[1] * 1000)
-        print 'max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000)
+        print('-----------------------------n_steps', e.aramis_info.number_of_steps)
+        print('-----------------------------n_steps_cut1', len(e.t_aramis))
+        print('max tension strain', max(e.eps_t_aramis[0] * 1000))
+        print('min compression strain', min(e.eps_t_aramis[1] * 1000))
+        print('max tension strain in first reinforcement layer', max(e.eps1_t_aramis * 1000))
 
 
     p.subplot(223)

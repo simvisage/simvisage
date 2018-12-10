@@ -41,7 +41,7 @@ class GeoSUPPRT(HasTraits):
     thickness_supprt = Float(0.02, input = True)
 
     def __call__(self, pts):
-        print '*** geo_slab_test called ***' 
+        print('*** geo_slab_test called ***') 
         
         L = self.width_supprt
         t = self.thickness_supprt

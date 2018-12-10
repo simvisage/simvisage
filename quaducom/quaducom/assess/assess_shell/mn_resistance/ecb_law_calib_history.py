@@ -27,16 +27,16 @@ from matplotlib.figure import \
 from scipy.optimize import fsolve
 from scipy.optimize import broyden1
 
-from constitutive_law import \
+from .constitutive_law import \
     ConstitutiveLawModelView
 
-from ecb_cross_section_state import \
+from .ecb_cross_section_state import \
     ECBCrossSectionState
 
 from ecb_cross_section_geo import \
     ECBCrossSectionGeo
 
-from ecb_law import ECBLBase
+from .ecb_law import ECBLBase
 
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -109,9 +109,9 @@ class ECBLCalibHist(HasStrictTraits):
         N_t (=total tensile force of the reinforcement layers)
         '''
 
-        print '--------------------iteration', self.n, '------------------------'
+        print('--------------------iteration', self.n, '------------------------')
 
-        print 'u', u
+        print('u', u)
 
         sig_arr = np.hstack([[0.0], u[self.n_states:]])
         d_eps_arr = np.hstack([[0.0], u[:self.n_states]])
@@ -142,7 +142,7 @@ class ECBLCalibHist(HasStrictTraits):
 
         dR = np.array(d_MN_list, dtype = float)
 
-        print 'R', dR
+        print('R', dR)
         return dR
 
     # solution vector returned by 'fit_response'
@@ -174,7 +174,7 @@ class ECBLCalibHist(HasStrictTraits):
     calibrated_ecb_law = Property(depends_on = 'modified')
     @cached_property
     def _get_calibrated_ecb_law(self):
-        print 'NEW CALIBRATION'
+        print('NEW CALIBRATION')
         u = self.u_sol
         eps_tex_u = self.cs_states[-1].convert_eps_lo_2_tex_u(u[self.n_states - 1])
         c_params = np.hstack([[0.0], u[self.n_states:]])
@@ -230,7 +230,7 @@ class ECBLCalibHistModelView(ModelView):
         eps_arr = [[cs_state.eps_up, cs_state.eps_lo]
                      for cs_state in self.cs_states ]
         eps_range = np.asarray(eps_arr)
-        print 'eps_range', eps_range
+        print('eps_range', eps_range)
         return (-np.max(eps_range[:, 1]), -np.min(eps_range[:, 0]))
 
     f_range = Property
@@ -238,7 +238,7 @@ class ECBLCalibHistModelView(ModelView):
         f_arr = [[np.max(cs_state.f_ti_arr), np.min(cs_state.f_cj_arr)]
                      for cs_state in self.cs_states ]
         f_range = np.asarray(f_arr)
-        print 'eps_range', f_range
+        print('eps_range', f_range)
         return (-np.max(f_range[:, 0]), -np.min(f_range[:, 1]))
 
     data_changed = Event
@@ -310,7 +310,7 @@ if __name__ == '__main__':
 
     exrun = ExRun(ex_path)
 
-    print 'F_max', np.max(exrun.ex_type.F)
+    print('F_max', np.max(exrun.ex_type.F))
 
     eps_c = exrun.ex_type.eps_c_smoothed
     M = exrun.ex_type.M_smoothed
@@ -323,13 +323,13 @@ if __name__ == '__main__':
 
     #M_arr = np.linspace(0, M_max, n_states + 1)[1:]
     cf = np.linspace(0.8, 1.0, n_states)
-    print 'cf', cf
+    print('cf', cf)
     M_arr = cf * M_max
     eps_c_arr = eps_c_M_vct_fn(M_arr)
 
-    print 'eps_c_max', eps_c_max
-    print 'M_arr', M_arr
-    print 'eps_c_arr', eps_c_arr
+    print('eps_c_max', eps_c_max)
+    print('M_arr', M_arr)
+    print('eps_c_arr', eps_c_arr)
 
     cs_geo = ECBCrossSectionGeo(
                    # mean concrete strength after 9 days
@@ -358,14 +358,14 @@ if __name__ == '__main__':
                    )
 
 
-    print ec.cs_geo.ecb_law.n_eps
-    print ec.n_states
+    print(ec.cs_geo.ecb_law.n_eps)
+    print(ec.n_states)
     u0 = ec.u0
-    print 'u0', u0
+    print('u0', u0)
 
     u_sol = ec.u_sol
-    print 'u_sol', u_sol
-    print 'E_eff', u_sol[ ec.n_states] / u_sol[0]
+    print('u_sol', u_sol)
+    print('E_eff', u_sol[ ec.n_states] / u_sol[0])
 
     ecv = ECBLCalibHistModelView(model = ec)
 

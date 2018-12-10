@@ -33,10 +33,10 @@ from matresdev.db.simdb import \
 
 import os
 
-from ls_table import \
+from .ls_table import \
     LSTable, ULS, SLS
 
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD
 
 simdb = SimDB()
 
@@ -126,7 +126,7 @@ class LC(HasTraits):
     @cached_property
     def _get_state_data_dict(self):
         d = {}
-        for k, arr in self.state_data_orig.items():
+        for k, arr in list(self.state_data_orig.items()):
             d[ k ] = self.data_filter(self.lcc_table, arr)
         return d
 
@@ -330,7 +330,7 @@ class LCCTable(HasTraits):
         needs to be defined. In the original version of 'itertools.product'
         the function takes a tuple as argument ("*args").
         """
-        pools = map(tuple, args)  # within original version args defined as *args
+        pools = list(map(tuple, args))  # within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -405,10 +405,10 @@ class LCCTable(HasTraits):
         # printouts:
         #
         if self.ls == 'ULS':
-            print '*** load case combinations for limit state ULS ***'
+            print('*** load case combinations for limit state ULS ***')
         else:
-            print '*** load case combinations for limit state SLS ***'
-            print '*** SLS combination used: % s ***' % (self.combination_SLS)
+            print('*** load case combinations for limit state SLS ***')
+            print('*** SLS combination used: % s ***' % (self.combination_SLS))
 
         #---------------------------------------------------------------
         # get permutations of safety factors ('gamma')
@@ -641,7 +641,7 @@ class LCCTable(HasTraits):
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
-        for k, arr in self.geo_data_orig.items():
+        for k, arr in list(self.geo_data_orig.items()):
             d[ k ] = self.data_filter(self, arr)
         return d
 
@@ -654,14 +654,14 @@ class LCCTable(HasTraits):
     def _get_lcc_list(self):
         '''list of loading case combinations (instances of LCC)
         '''
-        print '################### constructing lcc_list ##################'
+        print('################### constructing lcc_list ##################')
 
         combi_arr = self.combi_arr
         lcc_arr = self.lcc_arr
         sr_columns = self.sr_columns
         n_lcc = self.n_lcc
 
-        print '################### arrays accessed ##################'
+        print('################### arrays accessed ##################')
 
         # return a dictionary of the stress resultants
         # this is used by LSTable to determine the stress
@@ -674,7 +674,7 @@ class LCCTable(HasTraits):
             for i_sr, name in enumerate(sr_columns):
                 state_data_dict[ name ] = lcc_arr[ i_lcc, :, i_sr ][:, None]
 
-            print '################### lcc %s ##################' % str(i_lcc)
+            print('################### lcc %s ##################' % str(i_lcc))
 
             lcc = LCC(# lcc_table = self,
                        factors=combi_arr[ i_lcc, : ],
@@ -695,7 +695,7 @@ class LCCTable(HasTraits):
 
             lcc_list.append(lcc)
 
-        print '################### returning lcc_list ##################'
+        print('################### returning lcc_list ##################')
 
         return lcc_list
 
@@ -717,7 +717,7 @@ class LCCTable(HasTraits):
                     - save figure with specified name within "/simdb/simdata/lcc_table/output_images/save_fig_to_file.png"
                     - superpose data values, i.e. from imposed loads and temperature loads
         '''
-        print '################### plotting assess_value ##################'
+        print('################### plotting assess_value ##################')
 
         #----------------------------------------
         # script to get the maximum values of 'assess_value'
@@ -749,7 +749,7 @@ class LCCTable(HasTraits):
         # stack the list to an array in order to use ndmax-function
         #
         assess_value_arr = np.hstack(assess_value_list)
-        print 'assess_value_arr.shape', assess_value_arr.shape
+        print('assess_value_arr.shape', assess_value_arr.shape)
 
         #----------------------------------------------
         # get the overall maximum values:
@@ -777,7 +777,7 @@ class LCCTable(HasTraits):
             filename = os.path.join(simdata_dir, save_assess_values_to_file)
             assess_value_arr = plot_col
             np.savetxt(filename, assess_value_arr)
-            print 'assess_values saved to file %s' % (filename)
+            print('assess_values saved to file %s' % (filename))
 
         # add read in saved assess values to be superposed with currently read in assess values
         #
@@ -790,7 +790,7 @@ class LCCTable(HasTraits):
             filename = os.path.join(simdata_dir, add_assess_values_from_file)
             assess_value_arr = np.loadtxt(filename)
             plot_col += assess_value_arr
-            print 'superpose assess_value_arr with values read in from file %s' % (filename)
+            print('superpose assess_value_arr with values read in from file %s' % (filename))
 
 #        # if n_tex is negative plot 0 instead:
 #        #
@@ -823,7 +823,7 @@ class LCCTable(HasTraits):
                 os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file + '.png')
             mlab.savefig(filename)  # , format='png')
-            print 'figure saved to file %s' % (filename)
+            print('figure saved to file %s' % (filename))
 
         mlab.show()
 
@@ -928,7 +928,7 @@ class LCCTable(HasTraits):
         #
         m_Ed_arr = np.hstack(m_Ed_list)
         n_Ed_arr = np.hstack(n_Ed_list)
-        print 'm_Ed_arr.shape', m_Ed_arr.shape
+        print('m_Ed_arr.shape', m_Ed_arr.shape)
 
         # get n_tRd, n_cRd, m_Rd
         #
@@ -941,7 +941,7 @@ class LCCTable(HasTraits):
         # use simplification with minimum value for k_alpha = 0.707
         # and lower resistance of 0- or 90-degree direction
         #
-        print 'simplification with k_alpha,min = 0.707 has been used for plot'
+        print('simplification with k_alpha,min = 0.707 has been used for plot')
         m_Rd = min(m_0_Rd, m_90_Rd) * 0.707
         n_Rdt = min(n_0_Rdt, n_90_Rdt) * 0.707
 
@@ -980,7 +980,7 @@ class LCCTable(HasTraits):
                 os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, save_max_min_nm_to_file)
             np.savetxt(filename, max_min_nm_arr)
-            print 'max_min_nm_arr saved to file %s' % (filename)
+            print('max_min_nm_arr saved to file %s' % (filename))
 
         #----------------------------------------------
         # plot
@@ -1033,7 +1033,7 @@ class LCCTable(HasTraits):
             if os.path.isdir(img_dir) == False:
                 os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file)
-            print 'figure saved to file %s' % (filename)
+            print('figure saved to file %s' % (filename))
             p.savefig(filename, format='png')
 
         p.show()
@@ -1091,7 +1091,7 @@ class LCCTable(HasTraits):
             # add read in saved values to be superposed with currently read in values
             #
             if add_max_min_eta_nm_from_file != None:
-                print "superpose max values for 'eta_n' and 'eta_m' with currently loaded values"
+                print("superpose max values for 'eta_n' and 'eta_m' with currently loaded values")
                 simdata_dir = os.path.join(simdb.simdata_dir, 'lcc_table')
                 # check if directory exist otherwise create
                 #
@@ -1163,7 +1163,7 @@ class LCCTable(HasTraits):
         #
         eta_n_arr = np.hstack(eta_n_list)
         eta_m_arr = np.hstack(eta_m_list)
-        print 'eta_n_arr.shape', eta_n_arr.shape
+        print('eta_n_arr.shape', eta_n_arr.shape)
 
         # save max-values to file in order to superpose them later
         #
@@ -1197,7 +1197,7 @@ class LCCTable(HasTraits):
                 os.makedirs(simdata_dir)
             filename = os.path.join(simdata_dir, save_max_min_eta_nm_to_file)
             np.savetxt(filename, max_min_eta_nm_arr)
-            print 'max_min_eta_nm_arr saved to file %s' % (filename)
+            print('max_min_eta_nm_arr saved to file %s' % (filename))
 
         #----------------------------------------------
         # plot
@@ -1251,7 +1251,7 @@ class LCCTable(HasTraits):
             if os.path.isdir(img_dir) == False:
                 os.makedirs(img_dir)
             filename = os.path.join(img_dir, save_fig_to_file)
-            print 'figure saved to file %s' % (filename)
+            print('figure saved to file %s' % (filename))
             p.savefig(filename, format='png')
 
         p.show()

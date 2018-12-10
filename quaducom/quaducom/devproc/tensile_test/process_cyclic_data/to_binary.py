@@ -29,8 +29,8 @@ fout = file_[:-4] + '-binary'
 a.tofile(fout)
 
 
-print len(a)
+print(len(a))
 
 b = np.fromfile(fout)
 
-print len(b)
+print(len(b))

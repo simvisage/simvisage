@@ -16,7 +16,7 @@ from numpy import \
 
 from math import sqrt, asin, acos
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
 # Interpolation
@@ -65,7 +65,7 @@ class GeoHPShell( HasTraits ):
         vl_arr = read_rsurface( self.geo_file_lower )
 
         if self.cut_off_lowerface == True:
-            print '--- lower face z-coords cut off ---'
+            print('--- lower face z-coords cut off ---')
 
             # z-values of the coords from the lower face are cut off. 
             # From the highest z-coordinate of the lower face the vertical
@@ -155,8 +155,8 @@ if __name__ == '__main__':
     hp = GeoHPShell()
 
     points = arange( 21 ).reshape( 7, 3 ) / 20.
-    print points
-    print hp( points )
+    print(points)
+    print(hp( points ))
     
     
     from numpy import mgrid, c_, hstack, vstack, shape

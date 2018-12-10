@@ -580,10 +580,10 @@ class ULS( LS ):
     # f_tex,d = f_tex,k / 1,5 = 33.6 kN/m
     #
     f_Rtex_l = f_Rtex_q = 34.3
-    print 'NOTE: f_Rtex_l = f_Rtex_q = set to %g kN/m !' % ( f_Rtex_l )
+    print('NOTE: f_Rtex_l = f_Rtex_q = set to %g kN/m !' % ( f_Rtex_l ))
 
     k_fl = 7.95 / 6.87
-    print 'NOTE: k_fl = set to %g [-] !' % ( k_fl )
+    print('NOTE: k_fl = set to %g [-] !' % ( k_fl ))
 
 
     # ------------------------------------------------------------
@@ -672,7 +672,7 @@ class ULS( LS ):
 
         f_t_sig = self.sig1_lo * self.D_elem * 1000.
         if princ_stress_eval == True:
-            print "NOTE: the principle tensile stresses are used to evaluate 'n_tex'"
+            print("NOTE: the principle tensile stresses are used to evaluate 'n_tex'")
             # resulting tensile force of the composite cross section[kN]
             # the entire (!) cross section is used!
             # as the maximum value of the tensile stresses at the top or the bottom 
@@ -1275,8 +1275,8 @@ class LSTable( HasTraits ):
         (NOTE: list order is undefined because it is constructed from a dictionary)
         '''
         ls_list = []
-        for sr in self.sr_tree.values():
-            for dir in sr.values():
+        for sr in list(self.sr_tree.values()):
+            for dir in list(sr.values()):
                 ls_list.append( dir )
         return ls_list
 

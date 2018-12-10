@@ -77,7 +77,7 @@ from matresdev.db.simdb import \
 from matresdev.db.simdb.simdb_class import \
     SimDBClass, SimDBClassExt
 
-from barel_shell_geo import \
+from .barel_shell_geo import \
     BarelShellGeo
 
 simdb = SimDB()
@@ -218,7 +218,7 @@ class SimBS(IBVModel):
         area = self.elem_length_x ** 2
         sig = max_f / area
         E_elast = sig / max_eps
-        print 'effective elastomer E_modulus', E_elast
+        print('effective elastomer E_modulus', E_elast)
         return MATS3DElastic(E = E_elast,
                               nu = 0.2)
 
@@ -476,7 +476,7 @@ class SimBS(IBVModel):
                 rtrace_list = rtrace_list
                 )
 
-        print 'tstep', self.tstep
+        print('tstep', self.tstep)
         # Add the time-loop control
         tloop = TLoop(tstepper = ts,
 
@@ -521,7 +521,7 @@ class SimBSDB(SimBS):
     #-----------------
     #
     ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
-                              CCSUnitCell.db.keys(),
+                              list(CCSUnitCell.db.keys()),
                               simdb = True, input = True,
                               auto_set = False, enter_set = True)
 
@@ -612,15 +612,15 @@ if __name__ == '__main__':
                          tstep = 0.2
                          )
 
-    print 'sim_model.ccs_unit_cell_key', sim_model.ccs_unit_cell_key
-    print 'sim_model.damage_function', sim_model.damage_function
+    print('sim_model.ccs_unit_cell_key', sim_model.ccs_unit_cell_key)
+    print('sim_model.damage_function', sim_model.damage_function)
 
     # plot the used 'phi_fn'
     #
     import pylab as p
     mfn = sim_model.damage_function
     eps_last = sim_model.damage_function.xdata[-1]
-    print 'eps_last', eps_last
+    print('eps_last', eps_last)
 #    mfn.mpl_plot(p)
 #    sim_model.phi_fn.mfn.mpl_plot(p)
     phi_fn_vect = np.vectorize(sim_model.phi_fn.get_value)

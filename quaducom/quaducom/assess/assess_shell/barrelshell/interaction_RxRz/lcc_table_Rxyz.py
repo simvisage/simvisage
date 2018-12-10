@@ -41,13 +41,13 @@ import numpy as np
 
 import os.path
 
-from ls_table_Rxyz import \
+from .ls_table_Rxyz import \
     ULSRxyz as ULS, SLSRxyz as SLS 
 
-from ls_table_Rxyz import \
+from .ls_table_Rxyz import \
     LSTableRxyz, ULSRxyz, SLSRxyz
 
-from lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
+from .lcc_reader import LCCReader, LCCReaderRFEM, LCCReaderInfoCAD, LCCReaderInfoCADRxyz
 
 class LC(HasTraits):
     '''Loading case class
@@ -135,7 +135,7 @@ class LC(HasTraits):
     @cached_property
     def _get_state_data_dict(self):
         d = {}
-        for k, arr in self.state_data_orig.items():
+        for k, arr in list(self.state_data_orig.items()):
             d[k] = self.data_filter(self.lcc_table, arr)
         return d
 
@@ -315,7 +315,7 @@ class LCCTable(HasTraits):
         needs to be defined. In the original version of 'itertools.product'
         the function takes a tuple as argument ("*args").
         """
-        pools = map(tuple, args) #within original version args defined as *args
+        pools = list(map(tuple, args)) #within original version args defined as *args
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]
@@ -390,10 +390,10 @@ class LCCTable(HasTraits):
         # printouts:
         #
         if self.ls == 'ULS':
-            print '*** load case combinations for limit state ULS ***'
+            print('*** load case combinations for limit state ULS ***')
         else:
-            print '*** load case combinations for limit state SLS ***'
-            print '*** SLS combination used: % s ***' % (self.combination_SLS)
+            print('*** load case combinations for limit state SLS ***')
+            print('*** SLS combination used: % s ***' % (self.combination_SLS))
 
         #---------------------------------------------------------------
         # get permutations of safety factors ('gamma')
@@ -578,7 +578,7 @@ class LCCTable(HasTraits):
     lcc_arr_new = Array
     
     def _set_lcc_arr(self):
-        print '_set_lcc_arr called!'
+        print('_set_lcc_arr called!')
         self.lcc_arr = self.lcc_arr_new
 #        return self.lcc_arr_new
 
@@ -646,7 +646,7 @@ class LCCTable(HasTraits):
     @cached_property
     def _get_geo_data_dict(self):
         d = {}
-        for k, arr in self.geo_data_orig.items():
+        for k, arr in list(self.geo_data_orig.items()):
             d[ k ] = self.data_filter(self, arr)
         return d
 
@@ -760,7 +760,7 @@ class LCCTable(HasTraits):
         #
         Rx_Ed_arr = hstack( Rx_Ed_list )
         Rz_Ed_arr = hstack( Rz_Ed_list )
-        print 'Rz_Ed_arr.shape', Rz_Ed_arr.shape
+        print('Rz_Ed_arr.shape', Rz_Ed_arr.shape)
 
         # get Rx_Rd, Rz_Rd 
         #
@@ -797,7 +797,7 @@ class LCCTable(HasTraits):
             # save max and min values to file
             #
             np.savetxt( save_max_min_RxRz_to_file, max_min_RxRz_arr )
-            print 'max_min_RxRz_arr saved to file %s' %(save_max_min_RxRz_to_file)
+            print('max_min_RxRz_arr saved to file %s' %(save_max_min_RxRz_to_file))
 
         #----------------------------------------------
         # plot
@@ -806,8 +806,8 @@ class LCCTable(HasTraits):
         p.figure(facecolor = 'white') # white background
 
         p.plot(Rx_Ed_arr, Rz_Ed_arr, 'wo', markersize=3) # blue dots
-        print 'Rx_Ed_arr', Rx_Ed_arr
-        print 'Rz_Ed_arr', Rz_Ed_arr
+        print('Rx_Ed_arr', Rx_Ed_arr)
+        print('Rz_Ed_arr', Rz_Ed_arr)
         x = np.array([0, Rx_Rd])
         y1 = np.array([ -Rz_Rd, 0. ])
 
@@ -818,13 +818,13 @@ class LCCTable(HasTraits):
 #            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
 #            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
 #            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
-            print 'show_tension_only == False'
+            print('show_tension_only == False')
 
         if show_tension_only == True:
 #            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
 #            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
             p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
-            print 'show_tension_only == True'
+            print('show_tension_only == True')
 
         ax.spines['left'].set_position(('data', 0))
         ax.spines['right'].set_color('none')
@@ -842,7 +842,7 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' %(save_fig_to_file)
+            print('figure saved to file %s' %(save_fig_to_file))
             p.savefig( save_fig_to_file, format='png' )
         
         p.show()
@@ -862,7 +862,7 @@ class LCCTable(HasTraits):
         '''plot the eta_RxRz-interaction for all loading case combinations
         NOTE: the same superposition assumptions are made as used for method 'plot_RxRz_interaction'
         '''
-        print 'plot_eta_RxRz_interaction; superposition based on max/min values of Rx and Rz'
+        print('plot_eta_RxRz_interaction; superposition based on max/min values of Rx and Rz')
 
         # get the list of all loading case combinations:
         #
@@ -954,7 +954,7 @@ class LCCTable(HasTraits):
         #
         eta_Rx_arr = hstack( eta_Rx_list )
         eta_Rz_arr = hstack( eta_Rz_list )
-        print 'eta_Rx_arr.shape', eta_Rx_arr.shape
+        print('eta_Rx_arr.shape', eta_Rx_arr.shape)
 
         #----------------------------------------------
         # plot
@@ -974,14 +974,14 @@ class LCCTable(HasTraits):
 #            ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1., 1.2])
 #            ax.set_yticks([140., 120, 100, 80., 60., 40., 20., 0.])
 #            p.axis([0., 1.05 * Rx_Rd, -1.2 * Rz_Rd, 0.]) # set plotting range for axis
-            print 'show_tension_only == False'
+            print('show_tension_only == False')
 
         if show_tension_only == True:
             ax.set_xticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
             ax.set_yticks([0., 0.2, 0.4, 0.6, 0.8, 1.])
             p.axis([0., 1., 1., 0.]) # set plotting range for axis
 
-            print 'show_tension_only == True'
+            print('show_tension_only == True')
 
         p.plot(x,y1,'k--', linewidth=2.0) # black dashed line
         p.plot(x,y2,'k--', linewidth=2.0) # black dashed line
@@ -993,7 +993,7 @@ class LCCTable(HasTraits):
         # save figure as png-file
         #
         if save_fig_to_file != None:
-            print 'figure saved to file %s' %(save_fig_to_file)
+            print('figure saved to file %s' %(save_fig_to_file))
             p.savefig( save_fig_to_file, format='png' )
 
         p.show()

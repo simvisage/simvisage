@@ -254,7 +254,7 @@ if __name__ == '__main__':
 
     if do == 'eval':
         sim_model.n_elems_xy = 14
-        print 'eval', sim_model.peval()
+        print('eval', sim_model.peval())
 
     if do == 'ui':
 

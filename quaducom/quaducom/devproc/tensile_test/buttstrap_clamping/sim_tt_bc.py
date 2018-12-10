@@ -548,7 +548,7 @@ if __name__ == '__main__':
     do = 'ui'
 
     if do == 'ui':
-        print '*** ui ***'
+        print('*** ui ***')
 
         # evaluation
         #

@@ -65,7 +65,7 @@ class MushRoofModelNonLin( MRquarter ):
     # composite cross section unit cell:
     #-----------------
     #
-    ccs_unit_cell_key = Enum( CCSUnitCell.db.keys(),
+    ccs_unit_cell_key = Enum( list(CCSUnitCell.db.keys()),
                               simdb = True, input = True,
                               auto_set = False, enter_set = True )
 

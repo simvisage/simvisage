@@ -59,7 +59,7 @@ class ExpSPO(ExType):
 
     @on_trait_change('+input, ccs.input_change')
     def _set_input_change(self):
-        print '*** raising input change in CTT'
+        print('*** raising input change in CTT')
         self.input_change = True
 
     avg_disp = Callable
@@ -122,7 +122,7 @@ class ExpSPO(ExType):
         '''default settings correspond to
         setup '9u_MAG-07-03_PZ-0708-1'
         '''
-        print 'ccs default used'
+        print('ccs default used')
         fabric_layout_key = 'Q95/95-CCE-38'
         concrete_mixture_key = 'C3-HF2-165-4'
         orientation_fn_key = 'all0'

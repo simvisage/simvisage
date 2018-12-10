@@ -528,7 +528,7 @@ class ULS( LS ):
         '''
         V_ed = self.N_ip / 2
         N_ed = self.V_op * 2
-        print "shape", self.N_ip.shape
+        print("shape", self.N_ip.shape)
 #        N = sqrt( N_ip ** 2 + V_ip ** 2 )
 #        N = N_ip
 #        V = V_op
@@ -540,7 +540,7 @@ class ULS( LS ):
 
 
         eta_tot = ( eta_V + eta_N ) / 1.2
-        print "eta_tot", eta_tot.shape
+        print("eta_tot", eta_tot.shape)
         eta_tot = where( eta_tot < eta_V, eta_V, eta_tot )
         eta_tot = where( eta_tot < eta_N, eta_N, eta_tot )
 
@@ -690,4 +690,4 @@ class LSTable( HasTraits ):
 if __name__ == '__main__':
 
     ls = LS()
-    print ls.ls_table
+    print(ls.ls_table)

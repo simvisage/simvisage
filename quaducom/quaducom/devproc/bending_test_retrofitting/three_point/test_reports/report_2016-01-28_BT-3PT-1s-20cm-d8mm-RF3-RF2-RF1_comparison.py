@@ -13,10 +13,10 @@ import quaducom.devproc.bending_test_retrofitting.four_point.exp_bt_4pt_rf
 # specify font options for plots
 params = {'legend.fontsize': 12,
           'ps.fonttype': 42,
-          u'font.size':15,
-          u'font.family':'sans-serif',
-          u'font.style':'normal',
-          u'font.serif': 'Arial'}
+          'font.size':15,
+          'font.family':'sans-serif',
+          'font.style':'normal',
+          'font.serif': 'Arial'}
 
 p.rcParams.update(params)
 # print p.rcParams.keys()
@@ -114,7 +114,7 @@ def plot_all():
             os.makedirs(test_series_dir)
         filename = os.path.join(test_series_dir, do + '.eps')
         p.savefig(filename)
-        print 'figure saved to file %s' % (filename)
+        print('figure saved to file %s' % (filename))
 
 if __name__ == '__main__':
     plot_all()

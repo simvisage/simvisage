@@ -59,14 +59,14 @@ import csv
 from matresdev.simiter.sim_pstudy import\
     ISimModel, SimOut, SimPStudy, SimArray, SimArrayView
 
-from rsurface_reader import \
+from .rsurface_reader import \
     read_rsurface, normalize_rsurfaces
 
-from geo_column import GEOColumn
+from .geo_column import GEOColumn
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 
-from mush_roof_model import MushRoofModel
+from .mush_roof_model import MushRoofModel
 
 
 class MRtwo(MushRoofModel):
@@ -455,7 +455,7 @@ class MRtwo(MushRoofModel):
         '''exports X_F_export and F_export data to csv - worksheet
         '''
 
-        print '*** writing hinge force data data to file,', filename, ' ***'
+        print('*** writing hinge force data data to file,', filename, ' ***')
 
         X_data = self.X_F_export.reshape(-1, 3)
         F_data = self.F_export.reshape(-1, 3)
@@ -477,7 +477,7 @@ class MRtwo(MushRoofModel):
     def export_edge_u_data(self, filename='U_data.csv'):
         '''exports X_U_export and U_export data to csv - worksheet
         '''
-        print '*** writing displacement data to file,', filename, ' ***'
+        print('*** writing displacement data to file,', filename, ' ***')
 
         X_data = self.X_U_export.reshape(-1, 3)
         U_data = self.U_export.reshape(-1, 5)
@@ -1793,7 +1793,7 @@ if __name__ == '__main__':
 
 
     if do == 'eval':
-        print '*** eval ***'
+        print('*** eval ***')
         sim_model.peval()
 
         # get the internal forces at the bottom support of the columns and
@@ -1815,20 +1815,20 @@ if __name__ == '__main__':
             Mx = sum(F_z * (X - Xs))
             My = sum(F_z * (Y - Ys))
 
-            print 'support', idx
-            print 'Mx', Mx
-            print 'My', My
+            print('support', idx)
+            print('Mx', Mx)
+            print('My', My)
 
     if do == 'ui':
-        print '*** ui ***'
+        print('*** ui ***')
 
         link_type = sim_model.link_type
         link_case = 'equal_100cm_7m'
 #        link_case = 'equal_25cm_7m'
         lc = sim_model.lc
-        print 'link_type', link_type
-        print 'link_case', link_case
-        print 'lc', lc
+        print('link_type', link_type)
+        print('link_case', link_case)
+        print('lc', lc)
 
         # evaluation
         #
@@ -2051,9 +2051,9 @@ if __name__ == '__main__':
 
                 for lc in lc_list:
 
-                        print 'link_type:', link_type
-                        print 'link_case:', link_case
-                        print 'loading_case:', lc
+                        print('link_type:', link_type)
+                        print('link_case:', link_case)
+                        print('loading_case:', lc)
 
                         # add the middle-edge node to the linking points:
                         #
@@ -2088,7 +2088,7 @@ if __name__ == '__main__':
     # parametric studies
     #
     elif do == 'ps':
-        print "*** ps ***"
+        print("*** ps ***")
         sim_ps = SimPStudy(sim_model=sim_model)
         sim_ps.configure_traits()
 

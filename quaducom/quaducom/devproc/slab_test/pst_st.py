@@ -16,7 +16,7 @@ from matresdev.db.simdb import \
     SimDB
 import numpy as np
 from quaducom.devproc.tensile_test.dog_bone.test_reports import format_plot
-from sim_st import SimSTDB
+from .sim_st import SimSTDB
 import pickle
 
 simdb = SimDB()
@@ -227,18 +227,18 @@ if __name__ == '__main__':
     tolerance = sim_model.tolerance
     n_mp = sim_model.n_mp
 
-    print '\n'
-    print '### calculation settings: ###'
-    print 'ccs_unit_cell_key', ccs_unit_cell_key
-    print 'calibration_test', calibration_test
-    print 'length', length
-    print 'thickness', thickness
-    print 'shape_xy', shape_xy
-    print 'E_m', E_m
-    print 'nu', nu
-    print 'tolerance', tolerance
-    print 'n_mp', n_mp
-    print '\n'
+    print('\n')
+    print('### calculation settings: ###')
+    print('ccs_unit_cell_key', ccs_unit_cell_key)
+    print('calibration_test', calibration_test)
+    print('length', length)
+    print('thickness', thickness)
+    print('shape_xy', shape_xy)
+    print('E_m', E_m)
+    print('nu', nu)
+    print('tolerance', tolerance)
+    print('n_mp', n_mp)
+    print('\n')
 
 #--------------------------------------------------------------
 # do: ui / validation / show_last_result / pstudy
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 #        phi_fn_exp.mfn.plot(p, color = 'green', linewidth = 3)
 
         xmax = sim_model.damage_function.xdata[-1]
-        print 'xmax', xmax
+        print('xmax', xmax)
         x = np.linspace(0, 3 * xmax, 1000)
         phi_fn = np.frompyfunc(phi_fn, 1, 1)
         y = phi_fn(x)
@@ -366,13 +366,13 @@ if __name__ == '__main__':
             calibration_test = sim_model.calibration_test
             length = sim_model.length
             thickness = sim_model.thickness
-            print 'thickness', thickness
+            print('thickness', thickness)
             radius_plate = sim_model.radius_plate
             shape_xy = sim_model.shape_xy
             shape_z = sim_model.shape_z
             shape_R = sim_model.shape_R
             E = sim_model.specmn_mats.E
-            print 'E', E
+            print('E', E)
             nu = sim_model.nu
             tolerance = sim_model.tolerance
             phi_fn_class = sim_model.phi_fn_class.__name__
@@ -386,7 +386,7 @@ if __name__ == '__main__':
             #
             param_key = sim_model_name + '_' + ccs_unit_cell_key + '_' + calibration_test + '_%s_L%gh%gR%g_sxy%gz%gR%g_s%sg%s_E%g_nu%g_tol%g_w%g_ts%g_nmp%g' \
                 % (phi_fn_class, length, thickness, radius_plate, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
-            print 'param_key = %s' % param_key
+            print('param_key = %s' % param_key)
 
             # f-w-diagram_center
             #
@@ -395,7 +395,7 @@ if __name__ == '__main__':
             pickle_file_path = os.path.join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             pickle.dump(sim_model.f_w_diagram_center.trace, file)
-            print 'pickle file saved to file: %s' % file_name
+            print('pickle file saved to file: %s' % file_name)
             file.close()
             sim_model.f_w_diagram_center.trace.mpl_plot(p, color='grey')
 
@@ -406,16 +406,16 @@ if __name__ == '__main__':
             pickle_file_path = os.path.join(pickle_path, file_name)
             file = open(pickle_file_path, 'w')
             pickle.dump(sim_model.f_w_diagram_supprt.trace, file)
-            print 'pickle file saved to file: %s' % file_name
+            print('pickle file saved to file: %s' % file_name)
             file.close()
 #            sim_model.f_w_diagram_supprt.trace.mpl_plot(p, color='grey')
 
             w_asc = sim_model.f_w_diagram_supprt.trace.xdata
             f_asc = sim_model.f_w_diagram_supprt.trace.ydata
-            print 'f_asc.shape', f_asc.shape
-            print 'w_asc.shape', w_asc.shape
+            print('f_asc.shape', f_asc.shape)
+            print('w_asc.shape', w_asc.shape)
             fw_arr = np.hstack([f_asc[:, None], w_asc[:, None]])
-            print 'fw_arr.shape', fw_arr.shape
+            print('fw_arr.shape', fw_arr.shape)
             np.savetxt(param_key + '.csv', fw_arr, delimiter=';')
 
             #--------------------
@@ -471,8 +471,8 @@ if __name__ == '__main__':
 #            p.title(param_key, fontsize=8)
             p.savefig(png_file_path, dpi=600.)
             p.savefig(pdf_file_path)
-            print 'png-file saved to file: %s' % png_file_path
-            print 'pdf-file saved to file: %s' % pdf_file_path
+            print('png-file saved to file: %s' % png_file_path)
+            print('pdf-file saved to file: %s' % pdf_file_path)
 #            p.show()
 
         app.main()
@@ -536,7 +536,7 @@ if __name__ == '__main__':
                 % (phi_fn_class, length, thickness, radius_plate, shape_xy, shape_z, shape_R, supprt_flag[0], geo_st_flag[0], E, nu, tolerance, w_max, tstep, n_mp)
             param_key = 'SimSTDB_barrelshell_2D-05-11_0.00286_all0_TTb-6c-2cm-0-TU-V1_bs5_age28_Ec18709.5_nu0.2_nsteps100_smoothed_PhiFnGeneralExtended_L0.8h0.02R0.04_sxy10z2R2_sTgT_E18709.5_nu0.2_tol5e-05_w-0.04_ts0.05_nmp30'
 
-            print 'param_key = %s' % param_key
+            print('param_key = %s' % param_key)
 
             #------------------
             # simulation

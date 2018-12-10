@@ -17,11 +17,11 @@ def scaledown_data(data_arr, n_avg):
     shape; in general that doesn't effect the data as the measuring is continued after rupture
     or high frequency measurements is used'''
     n_rows = data_arr.shape[0]
-    print 'n_rows', n_rows
+    print('n_rows', n_rows)
     n_steps = (n_rows - n_avg) / n_avg
-    print 'n_steps', n_steps
+    print('n_steps', n_steps)
     n_max = n_steps * n_avg
-    print 'n_max', n_max
+    print('n_max', n_max)
     avg_list = [data_arr[i:n_max:n_avg] for i in range(n_avg)]
     avg_arr = np.array(avg_list)
     data_arr_ = np.mean(avg_arr, 0)

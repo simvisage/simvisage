@@ -23,16 +23,16 @@ from matplotlib.figure import \
 
 from scipy.optimize import fsolve
 
-from constitutive_law import \
+from .constitutive_law import \
     ConstitutiveLawModelView
 
-from ecb_cross_section_state import \
+from .ecb_cross_section_state import \
     ECBCrossSectionState
 
 from ecb_cross_section_geo import \
     ECBCrossSectionGeo
 
-from ecb_law import ECBLBase
+from .ecb_law import ECBLBase
 
 from matresdev.db.simdb import SimDB
 simdb = SimDB()
@@ -86,7 +86,7 @@ class ECBLCalibState(HasStrictTraits):
         N_t (=total tensile force of the reinforcement layers)
         '''
 
-        print '--------------------iteration', self.n, '------------------------'
+        print('--------------------iteration', self.n, '------------------------')
         self.n += 1
         # set iteration counter
         #
@@ -135,7 +135,7 @@ class ECBLCalibState(HasStrictTraits):
     calibrated_ecb_law = Property(depends_on = 'modified')
     @cached_property
     def _get_calibrated_ecb_law(self):
-        print 'NEW CALIBRATION'
+        print('NEW CALIBRATION')
         self.cs_geo.ecb_law.set_cparams(*self.u_sol)
         return self.cs_geo.ecb_law
 
@@ -162,7 +162,7 @@ class ECBLCalibStateVoss(ECBLCalibState):
         N_t (=total tensile force of the reinforcement layers)
         '''
 
-        print '--------------------iteration', self.n, '------------------------'
+        print('--------------------iteration', self.n, '------------------------')
         self.n += 1
         # set iteration counter
         #
@@ -186,7 +186,7 @@ class ECBLCalibStateVoss(ECBLCalibState):
     calibrated_ecb_law = Property(depends_on = 'modified')
     @cached_property
     def _get_calibrated_ecb_law(self):
-        print 'NEW CALIBRATION'
+        print('NEW CALIBRATION')
         self.cs_geo.ecb_law.set_cparams(*self.u_sol)
         eps_lo, eps_up = self.u_sol
         eps_tex_u = self.cs_state.convert_eps_lo_2_tex_u(eps_lo)
@@ -257,9 +257,9 @@ if __name__ == '__main__':
     # crack bridge function 'var_a' for a given 'eps_c_u'
     #------------------------------------------------
     #
-    print '\n'
-    print 'setup ECBLCalibState'
-    print '\n'
+    print('\n')
+    print('setup ECBLCalibState')
+    print('\n')
     p.plot([0, 0], [0, 2.4e3])
 
     cs_geo = ECBCrossSectionGeo(
@@ -313,13 +313,13 @@ if __name__ == '__main__':
         sig_tex_u_list = []
         eps_c_list = []
         for E_tex in E_tex_arr:
-            print 'CALIBRATE FOR E_tex', E_tex
+            print('CALIBRATE FOR E_tex', E_tex)
             ec.E_tex = E_tex
             ec.n = 0
             ec.u_sol
             sig_tex_u = ec.calibrated_ecb_law.sig_arr[-1]
             eps_c_u = ec.u_sol[1]
-            print 'sig_tex_u', sig_tex_u
+            print('sig_tex_u', sig_tex_u)
             sig_tex_u_list.append(sig_tex_u)
             eps_c_list.append(eps_c_u)
 

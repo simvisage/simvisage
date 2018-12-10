@@ -17,16 +17,16 @@ import pylab as p
 
 from scipy.optimize import fsolve
 
-from ecb_cross_section import \
+from .ecb_cross_section import \
     ECBCrossSection
 
-from ecb_reinf_tex_uniform import \
+from .ecb_reinf_tex_uniform import \
     ECBReinfTexUniform
 
-from ecb_matrix_cross_section import \
+from .ecb_matrix_cross_section import \
     ECBMatrixCrossSection
 
-from ecb_law import ECBLBase
+from .ecb_law import ECBLBase
 
 from util.traits.editors.mpl_figure_editor import  \
     MPLFigureEditor
@@ -85,8 +85,8 @@ class ECBLCalib(HasStrictTraits):
         eps_up = -self.cs.eps_c_u
         eps_lo = self.cs.convert_eps_tex_u_2_lo(u0[0])
 
-        print 'eps_up', eps_up
-        print 'eps_lo', eps_lo
+        print('eps_up', eps_up)
+        print('eps_lo', eps_lo)
 
         return np.array([eps_lo, u0[1] ], dtype='float')
 
@@ -99,7 +99,7 @@ class ECBLCalib(HasStrictTraits):
         N_t (=total tensile force of the reinforcement layers)
         '''
 
-        print '--------------------iteration', self.n, '------------------------'
+        print('--------------------iteration', self.n, '------------------------')
         self.n += 1
         # set iteration counter
         #
@@ -145,7 +145,7 @@ class ECBLCalib(HasStrictTraits):
     '''
     @cached_property
     def _get_calibrated_ecb_law(self):
-        print 'NEW CALIBRATION'
+        print('NEW CALIBRATION')
         self.ecb_law.set_cparams(*self.u_sol)
         return self.ecb_law
 
@@ -218,9 +218,9 @@ if __name__ == '__main__':
     # crack bridge function 'var_a' for a given 'eps_c_u'
     #------------------------------------------------
     #
-    print '\n'
-    print 'setup ECBLCalib'
-    print '\n'
+    print('\n')
+    print('setup ECBLCalib')
+    print('\n')
     p.plot([0, 0], [0, 2.4e3])
 
     ec = ECBLCalib(# mean concrete strength after 9 days
@@ -246,15 +246,15 @@ if __name__ == '__main__':
 
         #for ecbl_type in ['linear', 'cubic', 'fbm']:
         for ecbl_type in ['cubic']:
-            print 'CALIB TYPE', ecbl_type
+            print('CALIB TYPE', ecbl_type)
             ec.n = 0
             ec.cs.ecb_law_type = ecbl_type
             ec.cs.ecb_law.sig_tex_u = sig_tex_u
             ec.get_lack_of_fit(ec.u0)
 
             ec.calibrated_ecb_law.mfn.plot(p, color=color, linewidth=8)
-            print 'E_yarn', ec.calibrated_ecb_law.mfn.get_diff(0.00001)
-            print 'INTEG', ec.calibrated_ecb_law.mfn.integ_value
+            print('E_yarn', ec.calibrated_ecb_law.mfn.get_diff(0.00001))
+            print('INTEG', ec.calibrated_ecb_law.mfn.integ_value)
 
 #            ec.ecbl_type = 'bilinear'
 #            ec.ecbl.sig_tex_u = sig_tex_u

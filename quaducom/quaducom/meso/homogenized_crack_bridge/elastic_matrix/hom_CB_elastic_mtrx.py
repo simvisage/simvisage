@@ -14,8 +14,8 @@ The evaluation is array based.
 import numpy as np
 from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Instance, List, Array, Tuple, Bool
-from hom_CB_cont_fibers import CrackBridgeContFibers
-from hom_CB_short_fibers import CrackBridgeShortFibers
+from .hom_CB_cont_fibers import CrackBridgeContFibers
+from .hom_CB_short_fibers import CrackBridgeShortFibers
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
 from quaducom.meso.homogenized_crack_bridge.elastic_matrix.reinforcement import Reinforcement, ContinuousFibers, ShortFibers
 from traits.has_traits import on_trait_change

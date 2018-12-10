@@ -213,14 +213,14 @@ class SCM(HasTraits):
                 sigc_min = newton(self.residuum, sigc_min)
                 try:
                     sigc_min = brentq(self.residuum, 0.0, sigc_min - 1e-10)
-                    print 'another root found!!!'
+                    print('another root found!!!')
                 except:
                     pass
-                print 'evaluation of the matrix crack #'+str(len(self.cracking_stress_lst) + 1), t.clock() - s, 's'
+                print('evaluation of the matrix crack #'+str(len(self.cracking_stress_lst) + 1), t.clock() - s, 's')
             except:
-                print 'composite saturated'
+                print('composite saturated')
                 break
-            print 'current strength = ', self.get_current_strnegth(sigc_min)
+            print('current strength = ', self.get_current_strnegth(sigc_min))
             crack_position = self.x_arr[np.argmin(self.matrix_strength - 
                                                   self.sigma_m(sigc_min))]
             self.crack_positions_lst.append(crack_position)
@@ -229,7 +229,7 @@ class SCM(HasTraits):
 #             plt.plot(self.x_arr, self.matrix_strength, color='black', lw=2)
 #             plt.show()
             if float(crack_position) == last_pos:
-                print last_pos
+                print(last_pos)
                 raise ValueError('''got stuck in loop,
                 try to adapt x, w, BC ranges''')
             last_pos = float(crack_position)

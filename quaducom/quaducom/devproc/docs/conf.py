@@ -52,8 +52,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'TrcDevProc'
-copyright = u'2013, Rostislav Chudoba'
+project = 'TrcDevProc'
+copyright = '2013, Rostislav Chudoba'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -190,8 +190,8 @@ latex_font_size = '12pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'trcdevproc.tex', u'trcdevproc Documentation',
-     u'Rostislav Chudoba', 'manual'),
+    ('index', 'trcdevproc.tex', 'trcdevproc Documentation',
+     'Rostislav Chudoba', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -235,8 +235,8 @@ latex_preamble = '''
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'trcdevproc', u'TrcDevProc Documentation',
-     [u'Rostislav Chudoba'], 1)
+    ('index', 'trcdevproc', 'TrcDevProc Documentation',
+     ['Rostislav Chudoba'], 1)
 ]
 
 

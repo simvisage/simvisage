@@ -222,7 +222,7 @@ class SimBT4PT(IBVModel):
         def _get_elstmr_mats(self):
             # specify a small elastomer stiffness (approximation)
             E_elast = self.E_c / 10.
-            print 'effective elastomer E_modulus', E_elast
+            print('effective elastomer E_modulus', E_elast)
             return MATS3DElastic(E=E_elast,
                                  nu=0.4)
 
@@ -481,7 +481,7 @@ class SimBT4PT(IBVModel):
             elastomer = self.elstmr_fe_grid
             elstmr_top_dofs_z = elastomer[:, :, -1, :, :, -1].dofs[:, :, 2].flatten()
             load_dofs_z = np.unique(elstmr_top_dofs_z)
-            print 'load_dofs_z', load_dofs_z
+            print('load_dofs_z', load_dofs_z)
         else:
             # LINE LOAD TOP OF LOAD ZONE
             # dofs at center line of the specmn load zone (used to integrate the force)
@@ -489,26 +489,26 @@ class SimBT4PT(IBVModel):
             #
             load_zone_spec_topline_dofs_z = load_zone_spec[0, :, -1, -1, :, -1].dofs[:, :, 2].flatten()
             load_dofs_z = np.unique(load_zone_spec_topline_dofs_z)
-            print 'load_dofs_z', load_dofs_z
+            print('load_dofs_z', load_dofs_z)
 
         # SUPPRT LINE
         # dofs at support line of the specmn (used to integrate the force)
         #
         outer_zone_spec_supprtline_dofs_z = outer_zone_spec[-1, :, 0, -1, :, 0].dofs[:, :, 2].flatten()
         supprt_dofs_z = np.unique(outer_zone_spec_supprtline_dofs_z)
-        print 'supprt_dofs_z', supprt_dofs_z
+        print('supprt_dofs_z', supprt_dofs_z)
 
         # CENTER DOF (used for tracing of the displacement)
         #
         center_bottom_dof = mid_zone_spec[0, 0, 0, 0, 0, 0].dofs[0, 0, 2]
-        print 'center_bottom_dof', center_bottom_dof
+        print('center_bottom_dof', center_bottom_dof)
 
         # THIRDPOINT DOF (used for tracing of the displacement) 
         # dofs at center middle of the laod zone at the bottom side
         #
         # NOTE: slice index in x-direction is only valid for load_zone_shape_x = 2 !
         thirdpoint_bottom_dof = load_zone_spec[0, 0, 0, -1, 0, 0].dofs[0, 0, 2]
-        print 'thirdpoint_bottom_dof', thirdpoint_bottom_dof
+        print('thirdpoint_bottom_dof', thirdpoint_bottom_dof)
 
         # force-displacement-diagram (CENTER) 
         # 
@@ -620,7 +620,7 @@ class SimBT4PTDB(SimBT4PT):
     #-----------------
     #
     ccs_unit_cell_key = Enum('FIL-10-09_2D-05-11_0.00462_all0',
-                             CCSUnitCell.db.keys(),
+                             list(CCSUnitCell.db.keys()),
                              simdb=True, input=True,
                              auto_set=False, enter_set=True)
 
@@ -686,7 +686,7 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_E_m(self):
         E_m = self.ccs_unit_cell_ref.get_E_m_time(self.age)
-        print 'E_m (from ccs)', E_m
+        print('E_m (from ccs)', E_m)
         return E_m
 
     # composite E-modulus (taken from 'ccs_unit_cell')
@@ -695,7 +695,7 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_E_c(self):
         E_c = self.ccs_unit_cell_ref.get_E_c_time(self.age)
-        print 'E_c (from ccs)', E_c
+        print('E_c (from ccs)', E_c)
         return E_c
 
     # Poisson's ratio 
@@ -704,10 +704,10 @@ class SimBT4PTDB(SimBT4PT):
     @cached_property
     def _get_nu(self):
         nu = self.ccs_unit_cell_ref.nu
-        print 'nu (from ccs)', nu
+        print('nu (from ccs)', nu)
         # set nu explicitly corresponding to settings in 'mats_calib_damage_fn'
         #
-        print 'nu set explicitly to 0.20'
+        print('nu set explicitly to 0.20')
         nu = 0.2
         return nu
 

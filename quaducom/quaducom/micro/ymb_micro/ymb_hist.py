@@ -19,7 +19,7 @@ from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
 from pylab import setp
 from numpy import histogram, prod, invert, linspace, sqrt, mean, var
-from ymb_data import YMBCutData, YMBSegmentData, YMBSlider, YMBSource
+from .ymb_data import YMBCutData, YMBSegmentData, YMBSlider, YMBSource
 
 
 class YMBHist(HasTraits):

@@ -1,5 +1,5 @@
 
-from StringIO import StringIO
+from io import StringIO
 import os
 
 from numpy import array, random
@@ -42,7 +42,7 @@ class LCCReaderRFEM(LCCReader):
         '''
         file_name = os.path.join(self.data_dir, f_name)
 
-        print '*** read state data from file: %s ***' % (file_name)
+        print('*** read state data from file: %s ***' % (file_name))
 
         # get the column headings defined in the second row
         # of the csv soliciotations input file
@@ -109,7 +109,7 @@ class LCCReaderRFEM(LCCReader):
         to a csv - file using ';' as filed delimiter and ' ' ( blank )
         as text delimiter.
         '''
-        print '*** read geo data from file: %s ***' % (file_name)
+        print('*** read geo data from file: %s ***' % (file_name))
 
         # coordinates [m]:
         # (NOTE: corrds are taken from the state data file of the first loading case)
@@ -186,8 +186,8 @@ class LCCReaderRFEM(LCCReader):
             if not all(lc_list[0].state_data_dict['X'] == lc.state_data_dict['X']) and \
                     not all(lc_list[0].state_data_dict['Y'] == lc.state_data_dict['Y']) and \
                     not all(lc_list[0].state_data_dict['Z'] == lc.state_data_dict['Z']):
-                raise ValueError, "coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                    % (self.lc_list[0].name, lc.name)
+                raise ValueError("coordinates in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                    % (self.lc_list[0].name, lc.name))
                 return False
 
             # check external consistency:
@@ -195,11 +195,11 @@ class LCCReaderRFEM(LCCReader):
             # input files (e.g. 'LC1.csv') defined in 'lc_list')
             #
             if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
-                    % (lc_list[0].name, lc.name)
+                raise ValueError("element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for consistency!" \
+                    % (lc_list[0].name, lc.name))
                 return False
 
-        print '*** input files checked for consistency (OK) ***'
+        print('*** input files checked for consistency (OK) ***')
         return True
 
 
@@ -211,12 +211,12 @@ class LCCReaderInfoCAD(LCCReader):
                                  'Flaechenschnittgroessen',
                                  'Schwerpunkt', f_name)
 
-        print '*** read state data from file: %s ***' % (file_name)
+        print('*** read state data from file: %s ***' % (file_name))
 
         input_arr = np.loadtxt(file_name)
 
-        elem_no_idx, nx_idx, ny_idx, nxy_idx, mx_idx, my_idx, mxy_idx = range(
-            0, 7)
+        elem_no_idx, nx_idx, ny_idx, nxy_idx, mx_idx, my_idx, mxy_idx = list(range(
+            0, 7))
 
         # element number:
         #
@@ -238,12 +238,12 @@ class LCCReaderInfoCAD(LCCReader):
                                  'Knotendeformationen',
                                  f_name)
 
-        print '*** read deformation data from file: %s ***' % (file_name)
+        print('*** read deformation data from file: %s ***' % (file_name))
 
         input_arr = np.loadtxt(file_name)
 
-        node_no_idx, ux_idx, uy_idx, uz_idx, phix_idx, phiy_idx, phiz_idx = range(
-            0, 7)
+        node_no_idx, ux_idx, uy_idx, uz_idx, phix_idx, phiy_idx, phiz_idx = list(range(
+            0, 7))
 
         ux = input_arr[:, [ux_idx]]
         uy = input_arr[:, [uy_idx]]
@@ -313,9 +313,9 @@ class LCCReaderInfoCAD(LCCReader):
         elem_file = os.path.join(geo_dir, 'Elementbeschreibung.txt')
         thic_file = os.path.join(geo_dir, 'Querschnittswerte.txt')
 
-        print '*** read geo data from node file: %s ***' % (node_file)
-        print '*** read geo data from elem file: %s ***' % (elem_file)
-        print '*** read geo data from thic files: %s ***' % (thic_file)
+        print('*** read geo data from node file: %s ***' % (node_file))
+        print('*** read geo data from elem file: %s ***' % (elem_file))
+        print('*** read geo data from thic files: %s ***' % (thic_file))
 
         node_arr = np.loadtxt(node_file)
 
@@ -368,7 +368,7 @@ class LCCReaderInfoCAD(LCCReader):
 
         idx_list = []
         d_list = []
-        nr_lines = range(0, len(lines), 2)
+        nr_lines = list(range(0, len(lines), 2))
         for line in line_arr[nr_lines]:
             nr, idx_str, id, d_str = line.split()
             idx = int(idx_str)
@@ -547,15 +547,15 @@ class LCCReaderInfoCAD(LCCReader):
                       scale_factor=0.05)
 
     def check_for_consistency(self, lc_list, geo_data_dict):
-        print '*** check for consistency ***'
+        print('*** check for consistency ***')
 
         for lc in lc_list:
             # check internal LC-consitency:
             # (compare elem_no of first LC with all other LC's in 'lc_list')
             #
             if not all(lc_list[0].state_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for internal consistency!" \
-                    % (self.lc_list[0].name, lc.name)
+                raise ValueError("element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for internal consistency!" \
+                    % (self.lc_list[0].name, lc.name))
                 return False
 
             # check external consistency:
@@ -563,11 +563,11 @@ class LCCReaderInfoCAD(LCCReader):
             # input files (e.g. 'LC1.txt') defined in 'lc_list')
             #
             if not all(geo_data_dict['elem_no'] == lc.state_data_dict['elem_no']):
-                raise ValueError, "element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for external consistency!" \
-                    % (lc_list[0].name, lc.name)
+                raise ValueError("element numbers in loading case '%s' and loading case '%s' are not identical. Check input files for external consistency!" \
+                    % (lc_list[0].name, lc.name))
                 return False
 
-        print '*** input files checked for consistency (OK) ***'
+        print('*** input files checked for consistency (OK) ***')
         return True
 
 
@@ -579,12 +579,12 @@ class LCCReaderInfoCADRxyz(LCCReader):
                                  'Auflagerreaktionen',
                                  f_name)
 
-        print '*** read state data from file: %s ***' % (file_name)
+        print('*** read state data from file: %s ***' % (file_name))
 
         input_arr = np.loadtxt(file_name)
 
-        node_no_idx, Rx_idx, Ry_idx, Rz_idx, Mx_idx, My_idx, Mz_idx = range(
-            0, 7)
+        node_no_idx, Rx_idx, Ry_idx, Rz_idx, Mx_idx, My_idx, Mz_idx = list(range(
+            0, 7))
 
         # node number:
         #
@@ -615,12 +615,12 @@ class LCCReaderInfoCADRxyz(LCCReader):
 
         geo_dir = os.path.join(self.data_dir, 'geo_data')
         node_file = os.path.join(geo_dir, 'Knotenkoordinaten.txt')
-        print '*** read support node file: %s ***' % (node_file)
+        print('*** read support node file: %s ***' % (node_file))
         node_arr = np.loadtxt(node_file)
 
         idx_spprt_nodes = [
             np.where(node_arr[:, 0] == node_no[i])[0] for i in range(node_no.shape[0])]
-        print 'idx_spprt_nodes', idx_spprt_nodes
+        print('idx_spprt_nodes', idx_spprt_nodes)
         X_spprt = node_arr[idx_spprt_nodes, 1]
         Y_spprt = node_arr[idx_spprt_nodes, 2]
         Z_spprt = node_arr[idx_spprt_nodes, 3]
@@ -644,7 +644,7 @@ if __name__ == '__main__':
     from mayavi import \
         mlab
 
-    from lcc_table import LCCTableULS, LC
+    from .lcc_table import LCCTableULS, LC
 
     # Access to the top level directory of the database
     #

@@ -4,7 +4,7 @@ Created on Jul 7, 2010
 @author: alexander
 '''
 
-from hp_shell import HPShell
+from .hp_shell import HPShell
 from ibvpy.mesh.fe_grid import FEGrid
 from ibvpy.fets.fets3D.fets3D8h import FETS3D8H
 from numpy import savetxt, array

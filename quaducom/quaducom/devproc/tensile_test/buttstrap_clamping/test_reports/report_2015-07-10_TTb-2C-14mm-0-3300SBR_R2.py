@@ -80,10 +80,10 @@ def get_sig_tex_max():
         sig_tex_max = e.sig_tex_asc[-1]
         sig_tex_max_list = sig_tex_max_list + [sig_tex_max]
     sig_tex_max_arr = np.array(sig_tex_max_list)
-    print 'sig_tex_max_list', sig_tex_max_list
-    print 'sig_tex_max_arr', sig_tex_max_arr
+    print('sig_tex_max_list', sig_tex_max_list)
+    print('sig_tex_max_arr', sig_tex_max_arr)
     sig_tex_max_average = np.average(sig_tex_max_arr)
-    print 'sig_tex_max_average', sig_tex_max_average
+    print('sig_tex_max_average', sig_tex_max_average)
 
 
 if __name__ == '__main__':

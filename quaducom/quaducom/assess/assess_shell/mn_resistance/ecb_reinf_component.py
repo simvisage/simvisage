@@ -21,16 +21,16 @@ from matplotlib.figure import \
 from etsproxy.traits.ui.api import \
     View, Item, Group, HSplit, VGroup, HGroup
 
-from ecb_law import \
+from .ecb_law import \
     ECBLBase, ECBLLinear, ECBLFBM, ECBLCubic, ECBLBilinear
 
-from constitutive_law import \
+from .constitutive_law import \
     ConstitutiveLawModelView
 
-from ecb_matrix_cross_section import \
+from .ecb_matrix_cross_section import \
     ECBMatrixCrossSection
 
-from ecb_cross_section_component import \
+from .ecb_cross_section_component import \
     ECBCrossSectionComponent, \
     ECB_COMPONENT_CHANGE, \
     ECB_COMPONENT_AND_EPS_CHANGE

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # changes concerning 'Rxyz': overload the default definitions of
     # 'LC' without changing the default class names
     # as those are used in the definition of LCCTable
-    from lcc_table_Rxyz import LCCTableULS, LC
+    from .lcc_table_Rxyz import LCCTableULS, LC
 
     # Access to the top level directory of the database
     #
