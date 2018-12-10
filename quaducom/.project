@@ -3,13 +3,9 @@
 	<name>quaducom</name>
 	<comment></comment>
 	<projects>
-		<project>aramis_cdt</project>
-		<project>ibvpy</project>
-		<project>mathkit</project>
 		<project>matresdev</project>
 		<project>spirrid</project>
 		<project>stats</project>
-		<project>util</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

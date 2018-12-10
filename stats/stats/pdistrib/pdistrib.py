@@ -1,23 +1,25 @@
 
-from distribution import Distribution
-from pyface.image_resource import ImageResource
-from etsproxy.traits.api import HasTraits, Float, Int, Event, Array, Interface, \
-    Tuple, Property, cached_property, Instance, Enum, on_trait_change, Dict
-from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from traitsui.menu import OKButton, CancelButton
-from math import sqrt
-from matplotlib.figure import Figure
-from numpy import linspace
-from scipy.stats import norm, uniform, weibull_min
-from stats.pdistrib.sin2x_distr import sin2x
-from stats.pdistrib.sinus_distribution import sin_distr
-
-import tempfile
-
 ''' a dictionary filled with distribution names (keys) and
     scipy.stats.distribution attributes having None
     or 1 shape parameters (values)'''
+
+from math import sqrt
+import tempfile
+
+from matplotlib.figure import Figure
+from numpy import linspace
+from pyface.image_resource import ImageResource
+from traits.api import HasTraits, Float, Int, Event, Array, Interface, \
+    Tuple, Property, cached_property, Instance, Enum, on_trait_change, Dict
+from traitsui.api import Item, View, Group, HSplit, VGroup, Tabbed
+from traitsui.api import ModelView
+from traitsui.menu import OKButton, CancelButton
+from util.traits.editors.mpl_figure_editor import MPLFigureEditor
+
+from distribution import Distribution
 import scipy.stats as stats
+
+
 distr_dict = {}
 distr_enum = []
 
@@ -31,6 +33,9 @@ for distr in stats.distributions.__all__:
         elif d.numargs == 1:
             distr_dict[distr] = d
             distr_enum.append(distr)
+    beta = stats._continuous_distns.beta
+    distr_dict['beta'] = beta
+    distr_enum.append('beta')
 
 
 class IPDistrib(Interface):
@@ -97,7 +102,8 @@ class PDistrib(HasTraits):
 
     @cached_property
     def _get_range(self):
-        return (self.distr_type.distr.ppf(self.quantile), self.distr_type.distr.ppf(1 - self.quantile))
+        return (self.distr_type.distr.ppf(self.quantile),
+                self.distr_type.distr.ppf(1 - self.quantile))
 
     n_segments = Int(500, auto_set=False, enter_set=True)
 
@@ -172,10 +178,6 @@ class PDistrib(HasTraits):
     # -------------------------------------------------------------------------
     def get_rvs_array(self, n_samples):
         return self.distr_type.distr.rvs(n_samples)
-
-
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from etsproxy.traits.ui.api import ModelView
 
 
 class PDistribView(ModelView):
@@ -288,6 +290,7 @@ class PDistribView(ModelView):
         resizable=True,
         width=600, height=400
     )
+
 
 if __name__ == '__main__':
     pdistrib = PDistrib()

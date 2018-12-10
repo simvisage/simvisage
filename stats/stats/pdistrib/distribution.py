@@ -6,18 +6,22 @@
     cdf). The pdf, cdf, mean and stdev are plotted in the module pdistrib.py'''
 
 from decimal import Decimal
-from etsproxy.traits.api import HasTraits, Float, Property, cached_property, \
-    Event, Array, Instance, Bool
-from etsproxy.traits.ui.api import Item, View, Group, VGroup, Label
+import decimal
+
 from numpy import array, arange, hstack, zeros, infty
 from scipy.optimize import fsolve
-from scipy.stats.distributions import rv_continuous
-import decimal
 import scipy.stats
+from scipy.stats.distributions import rv_continuous
+from traits.api import HasTraits, Float, Property, cached_property, \
+    Event, Array, Instance, Bool
+from traitsui.api import Item, View, Group, VGroup, Label
+
+import numpy as np
 
 
 class Distribution(HasTraits):
     ''' takes a scipy.stats distribution '''
+
     def __init__(self, distribution, **kw):
         super(Distribution, self).__init__(**kw)
         self.distribution = distribution
@@ -57,6 +61,7 @@ class Distribution(HasTraits):
     kurtosis = Float(0.0, auto_set=False, enter_set=True, moments=True)
 
     stdev = Property(depends_on='variance')
+
     def _get_stdev(self):
         return self.variance ** (0.5)
 
@@ -83,14 +88,14 @@ class Distribution(HasTraits):
 
         moments = self.distr.stats(specify)
 
-        moment_names = ['mean', 'variance', 'skewness', 'kurtosis' ]
+        moment_names = ['mean', 'variance', 'skewness', 'kurtosis']
         for idx, value in enumerate(moments):
             setattr(self, moment_names[idx][0], value)
 
-        dict = {'m' : self.get_mean,
-                'v' : self.get_variance,
-                's' : self.get_skewness,
-                'k' : self.get_kurtosis}
+        dict = {'m': self.get_mean,
+                'v': self.get_variance,
+                's': self.get_skewness,
+                'k': self.get_kurtosis}
 
         # chooses the methods to calculate the three moments which didn't
         # trigger this method
@@ -106,8 +111,12 @@ class Distribution(HasTraits):
         self.new_values = array([self.shape, self.loc, self.scale, self.mean,
                                  self.variance, self.skewness, self.kurtosis])
         # test which parameters or moments are significant
-        indexing = arange(8)[abs(self.old_values - self.new_values)
-                             != 0]
+        print self.old_values
+        print self.new_values
+        diff_old_new = abs(self.old_values - self.new_values)
+        indexing = np.where(diff_old_new != 0)[0]
+        print 'indexing', indexing
+        #indexing = arange(8)[ix]
         if len(indexing) > 0 and indexing[0] < 3:
             self.get_moments('mvsk')
         elif len(indexing) > 0 and indexing[0] > 2:
@@ -115,11 +124,12 @@ class Distribution(HasTraits):
         else:
             pass
         self.old_values = array([self.shape, self.loc, self.scale, self.mean,
-                            self.variance, self.skewness, self.kurtosis])
+                                 self.variance, self.skewness, self.kurtosis])
         self.add_listeners()
         self.changed = True
 
     param_methods = Property(Array, depends_on='distribution')
+
     @cached_property
     def _get_param_methods(self):
         methods = array([self.mean_change, self.variance_change_scale,
@@ -136,10 +146,10 @@ class Distribution(HasTraits):
     def shape_scale_mean_var_residuum(self, params):
         shape = params[0]
         scale = params[1]
-        res_mean = self.mean - self.distribution(shape, \
-            loc=self.loc, scale=scale).stats('m')
-        res_var = self.variance - self.distribution(shape, \
-            loc=self.loc, scale=scale).stats('v')
+        res_mean = self.mean - self.distribution(shape,
+                                                 loc=self.loc, scale=scale).stats('m')
+        res_var = self.variance - self.distribution(shape,
+                                                    loc=self.loc, scale=scale).stats('v')
         return [res_mean, res_var]
 
     def mean_change(self):
@@ -149,46 +159,57 @@ class Distribution(HasTraits):
             self.shape = float(Decimal(str(result[0].sum())) / 1)
             self.scale = float(Decimal(str(result[1].sum())) / 1)
         else:
-            self.loc += float(Decimal(str(self.mean - self.distr.stats('m'))) / 1)
+            self.loc += float(Decimal(str(self.mean -
+                                          self.distr.stats('m'))) / 1)
 
     def scale_variance_residuum(self, scale):
-        return self.variance - self.distribution(\
+        return self.variance - self.distribution(
             loc=self.loc, scale=scale).stats('v')
 
     def variance_change_scale(self):
-        self.scale = float(Decimal(str(fsolve(self.scale_variance_residuum, 1).sum())) / 1)
+        self.scale = float(
+            Decimal(str(fsolve(self.scale_variance_residuum, 1).sum())) / 1)
 
     def shape_variance_residuum(self, shape):
-        return self.variance - self.distribution(shape, \
-                loc=self.loc, scale=self.scale).stats('v')
+        return self.variance - self.distribution(shape,
+                                                 loc=self.loc, scale=self.scale).stats('v')
 
     def variance_change_shape(self):
-        self.shape = float(Decimal(str(fsolve(self.shape_variance_residuum, 1).sum())) / 1)
+        self.shape = float(
+            Decimal(str(fsolve(self.shape_variance_residuum, 1).sum())) / 1)
         self.get_moments('msk')
 
     def shape_skewness_residuum(self, shape):
-        return self.skewness - self.distribution(shape, \
-                loc=self.loc, scale=self.scale).stats('s')
+        return self.skewness - self.distribution(shape,
+                                                 loc=self.loc, scale=self.scale).stats('s')
 
     def skewness_change(self):
-        self.shape = float(Decimal(str(fsolve(self.shape_skewness_residuum, 1).sum())) / 1)
+        self.shape = float(
+            Decimal(str(fsolve(self.shape_skewness_residuum, 1).sum())) / 1)
         self.get_moments('mvk')
 
     def shape_kurtosis_residuum(self, shape):
-        return self.kurtosis - self.distribution(shape, \
-                loc=self.loc, scale=self.scale).stats('k')
+        return self.kurtosis - self.distribution(shape,
+                                                 loc=self.loc, scale=self.scale).stats('k')
 
     def kurtosis_change(self):
-        self.shape = float(Decimal(str(fsolve(self.shape_kurtosis_residuum, 1).sum())) / 1)
+        self.shape = float(
+            Decimal(str(fsolve(self.shape_kurtosis_residuum, 1).sum())) / 1)
         self.get_moments('mvs')
 
     distr = Property(depends_on='+params')
+
     @cached_property
     def _get_distr(self):
         if self.distribution.__dict__['numargs'] == 0:
             return self.distribution(self.loc, self.scale)
         elif self.distribution.__dict__['numargs'] == 1:
             return self.distribution(self.shape, self.loc, self.scale)
+        elif self.distribution.__dict__['numargs'] == 2:
+            return self.distribution(self.shape, self.kurtosis,
+                                     self.loc, self.scale)
+        else:
+            print 'Number of arguments', self.distribution.numargs
 
     def default_traits_view(self):
         '''checks the number of shape parameters of the distribution and adds them to
@@ -200,8 +221,8 @@ class Distribution(HasTraits):
                 moments = Item(label='No finite moments defined')
             else:
                 moments = Item('mean', label='mean'), \
-                            Item('variance', label='variance'), \
-                            Item('stdev', label='st. deviation', style='readonly')
+                    Item('variance', label='variance'), \
+                    Item('stdev', label='st. deviation', style='readonly')
 
         elif len(self.distribution.shapes) == 1:
             params = Item('shape', label='shape')
@@ -209,13 +230,17 @@ class Distribution(HasTraits):
                 moments = Item(label='No finite moments defined')
             else:
                 moments = Item('mean', label='mean'), \
-                            Item('variance', label='variance'), \
-                            Item('stdev', label='st. deviation', style='readonly'), \
-                            Item('skewness', label='skewness'), \
-                            Item('kurtosis', label='kurtosis'),
+                    Item('variance', label='variance'), \
+                    Item('stdev', label='st. deviation', style='readonly'), \
+                    Item('skewness', label='skewness'), \
+                    Item('kurtosis', label='kurtosis'),
         else:
-            params = Item()
-            moments = Item()
+            params = Item('shape', label='shape')
+            moments = Item('mean', label='mean'), \
+                Item('variance', label='variance'), \
+                Item('stdev', label='st. deviation', style='readonly'), \
+                Item('skewness', label='skewness'), \
+                Item('kurtosis', label='kurtosis'),
 
         view = View(VGroup(Label(label, emphasized=True),
                            Group(params,
@@ -225,20 +250,22 @@ class Distribution(HasTraits):
                                  show_border=True,
                                  label='parameters',
                                  id='pdistrib.distribution.params'
-                                ),
-                          Group(moments,
-                                id='pdistrib.distribution.moments',
-                                show_border=True,
-                                label='moments',
-                                ),
-                          id='pdistrib.distribution.vgroup'
-                          ),
+                                 ),
+                           Group(moments,
+                                 id='pdistrib.distribution.moments',
+                                 show_border=True,
+                                 label='moments',
+                                 ),
+                           id='pdistrib.distribution.vgroup'
+                           ),
                     kind='live',
                     resizable=True,
                     id='pdistrib.distribution.view'
                     )
         return view
 
+
 if __name__ == '__main__':
-    distr = Distribution(scipy.stats.norm)
+    #    distr = Distribution(scipy.stats.norm)
+    distr = Distribution(scipy.stats._continuous_distns.beta)
     distr.configure_traits()

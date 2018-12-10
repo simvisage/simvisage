@@ -3,11 +3,13 @@ Created on Jun 6, 2013
 @author: rostar
 '''
 
-from etsproxy.traits.api import HasTraits, Float
-import numpy as np
 from math import pi
-from scipy.integrate import cumtrapz
+
 from mathkit.mfn.mfn_line.mfn_line import MFnLineArray
+from scipy.integrate import cumtrapz
+from traits.api import HasTraits, Float
+
+import numpy as np
 
 
 def H(x):
