@@ -9,43 +9,46 @@ can be used by the composite crack bridge model.
 @author: Q
 '''
 
-import numpy as np
-from spirrid.rv import RV
+from bmcs.utils.extra_traits.either_type import EitherType
 from etsproxy.traits.api import HasTraits, cached_property, \
     Float, Property, Int, Str, on_trait_change, Enum
-from types import FloatType
-from util.traits.either_type import EitherType
+import numpy as np
+from spirrid.rv import RV
 from stats.pdistrib.weibull_fibers_composite_distr import WeibullFibers
 
 
 class Reinforcement(HasTraits):
     '''common class for all reinforcement types'''
     label = Str('reinforcement')
-    r = EitherType(klasses=[FloatType, RV])
+    r = EitherType(klasses=[float, RV])
     V_f = Float
     E_f = Float
-    xi = EitherType(klasses=[FloatType, RV, WeibullFibers])
-    tau = EitherType(klasses=[FloatType, RV])
+    xi = EitherType(klasses=[float, RV, WeibullFibers])
+    tau = EitherType(klasses=[float, RV])
     n_int = Int
 
     @on_trait_change('n_int')
     def check(self):
         if self.n_int < 50:
-            print('Warning: integration with', self.n_int, 'points might not be accurate enough')
+            print('Warning: integration with', self.n_int,
+                  'points might not be accurate enough')
             print('a minimum of 50 integration points is recommended')
 
 
 class ContinuousFibers(Reinforcement):
     '''implements continuous reinforcement'''
     results = Property(depends_on='r, V_f, E_f, xi, tau, n_int')
+
     @cached_property
     def _get_results(self):
         stat_weights = 1.0
         if isinstance(self.tau, RV):
-            p_arr = np.linspace(0.5/self.n_int, 1 - 0.5/self.n_int, self.n_int)
+            p_arr = np.linspace(0.5 / self.n_int, 1 -
+                                0.5 / self.n_int, self.n_int)
             tau = self.tau.ppf(p_arr)
             mu_tau = np.mean(tau)
-            tau += np.linspace(mu_tau/1e6, 2*mu_tau/1e6, len(tau)) # to eliminate zeros and equal numbers
+            # to eliminate zeros and equal numbers
+            tau += np.linspace(mu_tau / 1e6, 2 * mu_tau / 1e6, len(tau))
             nu_r_tau = np.ones_like(tau)
             stat_weights = np.ones_like(tau) / self.n_int
         else:
@@ -112,20 +115,21 @@ class ContinuousFibers(Reinforcement):
 
 class ShortFibers(Reinforcement):
     '''implements short fiber reinforcement'''
-    phi = EitherType(klasses=[FloatType, RV]) #inclination of short fibers to the crack plane normal
-    Lf = Float #length of short fibers
-    bond_law = Enum('plastic', 'elasto-plastic') 
-    tau_fr = Float # frictional bond at debonded interface
-    k_tau = Float #stiffness of the elastic adhesive bond
-    beta = Float #slip hardening coefficient
-    snub = Float # snubbing coefficient
-    
-    le=Property(depends_on='Lf')
+    phi = EitherType(
+        klasses=[float, RV])  # inclination of short fibers to the crack plane normal
+    Lf = Float  # length of short fibers
+    bond_law = Enum('plastic', 'elasto-plastic')
+    tau_fr = Float  # frictional bond at debonded interface
+    k_tau = Float  # stiffness of the elastic adhesive bond
+    beta = Float  # slip hardening coefficient
+    snub = Float  # snubbing coefficient
+
+    le = Property(depends_on='Lf')
+
     @cached_property
     def _get_le(self):
-        return RV('uniform', loc=0.0, scale=self.Lf/2.)
-    
+        return RV('uniform', loc=0.0, scale=self.Lf / 2.)
+
+
 if __name__ == '__main__':
     pass
-    
-    

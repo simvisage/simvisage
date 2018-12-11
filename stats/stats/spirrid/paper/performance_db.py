@@ -282,7 +282,7 @@ class RunTable( SimDBClass ):
                                  rand_idx_arr = rand_idx_arr )
                       for rand_idx_arr in self.rand_list
                       ]
-                     for config in self.config_dict.items()
+                     for config in list(self.config_dict.items())
                      ]
 
         return array( run_table )
@@ -434,7 +434,7 @@ def add_studies():
     ''' Run a study and save it to the file'''
 
     rand_list = [ arange( 0, i ) for i in range( 1, 11 ) ]
-    print rand_list
+    print(rand_list)
 
     memsize = 5e4 # 3e+7 maximum
 
@@ -531,6 +531,6 @@ if __name__ == '__main__':
     rf = RFFilament()
     rt = RunTable( name = 'filament-new', rf = rf, memsize = 5000, rand_list = rand_list,
                    config_list = ['I'] )
-    print RunTable.db.keys()
+    print(list(RunTable.db.keys()))
     RunTable.db['filament-new'] = rt
     rt.save()

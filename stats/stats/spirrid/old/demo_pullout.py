@@ -74,10 +74,10 @@ def run():
 
     for idx, run in enumerate(run_list):
         run_options, plot_options, legend_string = run
-        print 'run', idx,
+        print('run', idx, end=' ')
         s.set(**run_options)
         s.mean_curve.plot(plt, plot_options, linewidth = 2, label = legend_string % s.exec_time)
-        print 'execution time', s.exec_time
+        print('execution time', s.exec_time)
 
 #    def f():
 #        print 'exec_time', s.exec_time

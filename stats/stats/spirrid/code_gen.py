@@ -14,7 +14,7 @@
 
 from etsproxy.traits.api import HasStrictTraits, WeakRef, Bool, on_trait_change, \
     Event
-from rv import RV
+from .rv import RV
 import numpy as np # import numpy package
 
 
@@ -47,7 +47,7 @@ class CodeGen(HasStrictTraits):
 
 if __name__ == '__main__':
 
-    from spirrid import SPIRRID
+    from .spirrid import SPIRRID
     from spirrid_lab import Heaviside
 
     class fiber_tt_2p:
@@ -75,11 +75,11 @@ if __name__ == '__main__':
 
     s.codegen.implicit_var_eval = True
 
-    print 'var_names', s.var_names
-    print 'var_defaults', s.var_defaults
+    print('var_names', s.var_names)
+    print('var_defaults', s.var_defaults)
 
-    print s.mu_q_arr
-    print s.var_q_arr
+    print(s.mu_q_arr)
+    print(s.var_q_arr)
 
     #===========================================================================
     # Response  
@@ -137,15 +137,15 @@ if __name__ == '__main__':
     # Store the information
     view = m.view()
     roll = m.roll()
-    print 'view', view
-    print 'roll', roll
-    print n_mu_q_arr.shape[2]
+    print('view', view)
+    print('roll', roll)
+    print(n_mu_q_arr.shape[2])
 
     ms = s.mlab_source
     for i in range(1, n_mu_q_arr.shape[0]):
         ms.scalars = n_mu_q_arr[i, :, :]
         fname = 'x%02d.jpg' % i
-        print 'saving', fname
+        print('saving', fname)
         m.savefig(fname)
         sleep(0.1)
 #    m.surf( n_e_arr[0], n_e_arr[1], n_mu_q_arr + n_std_q_arr )

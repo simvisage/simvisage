@@ -8,7 +8,7 @@ from etsproxy.traits.api import HasTraits, Str, Instance, Event, Button, on_trai
 from etsproxy.traits.ui.api import View, Item, ModelView, HGroup, VGroup
 from matplotlib.figure import Figure
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from spirrid_view import SPIRRIDModelView
+from .spirrid_view import SPIRRIDModelView
 from numpy import repeat, array, sqrt
 
 class ResultView( HasTraits ):

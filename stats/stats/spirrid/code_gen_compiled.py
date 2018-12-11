@@ -12,10 +12,10 @@
 #
 # Created on Nov 8, 2011 by: rch
 
-from code_gen import CodeGen
+from .code_gen import CodeGen
 from etsproxy.traits.api import HasStrictTraits, Property, cached_property, \
     List, Str, Int, Trait, Bool, Interface, implements
-from rv import RV
+from .rv import RV
 import numpy as np # import numpy package
 import operator
 import os
@@ -24,6 +24,7 @@ import scipy.stats.distributions as distr # import distributions
 import util.weave as weave
 
 import time
+import imp
 if platform.system() == 'Linux':
     sysclock = time.time
 elif platform.system() == 'Windows':
@@ -132,14 +133,14 @@ class CodeGenCompiled(CodeGen):
     n_rand_vars = Property(depends_on = 'tvars, recalc')
     @cached_property
     def _get_n_rand_vars(self):
-        dt = map(type, self.spirrid.tvar_lst)
+        dt = list(map(type, self.spirrid.tvar_lst))
         return dt.count(RV)
 
     # get the indexes of the random variables within the parameter list
     rand_var_idx_list = Property(depends_on = 'tvars, recalc')
     @cached_property
     def _get_rand_var_idx_list(self):
-        dt = np.array(map(type, self.spirrid.tvar_lst))
+        dt = np.array(list(map(type, self.spirrid.tvar_lst)))
         return np.where(dt == RV)[0]
 
     # get the names of the random variables
@@ -154,7 +155,7 @@ class CodeGenCompiled(CodeGen):
     def _get_theta_arrs(self):
         rv_getter = operator.itemgetter(*self.rand_var_idx_list)
         theta = self.spirrid.sampling.theta
-        return map(lambda x: x.flatten(), rv_getter(theta))
+        return [x.flatten() for x in rv_getter(theta)]
 
     # get the randomization arrays
     dG_arrs = Property(List, depends_on = 'tvars, recalc')
@@ -162,7 +163,7 @@ class CodeGenCompiled(CodeGen):
     def _get_dG_arrs(self):
         dG_ogrid = self.spirrid.sampling.dG_ogrid
         rv_getter = operator.itemgetter(*self.rand_var_idx_list)
-        return map(lambda x: x.flatten(), rv_getter(dG_ogrid))
+        return [x.flatten() for x in rv_getter(dG_ogrid)]
 
     arg_names = Property(depends_on = 'rf_change, rand_change, +codegen_option, recalc')
     @cached_property
@@ -365,7 +366,7 @@ class CodeGenCompiled(CodeGen):
         cython_code = (cython_header + self.code).replace('\t', '    ')
         cython_file_name = 'spirrid_cython.pyx'
 
-        print 'checking for previous cython code'
+        print('checking for previous cython code')
         regenerate_code = True
         if os.path.exists(cython_file_name):
             f_in = open(cython_file_name, 'r').read()
@@ -376,15 +377,15 @@ class CodeGenCompiled(CodeGen):
             infile = open('spirrid_cython.pyx', 'w')
             infile.write(cython_code)
             infile.close()
-            print 'pyx file updated'
+            print('pyx file updated')
 
         import pyximport
         t = sysclock()
         pyximport.install(reload_support = True)
         import spirrid_cython
         if regenerate_code:
-            reload(spirrid_cython)
-        print '>>> pyximport', sysclock() - t
+            imp.reload(spirrid_cython)
+        print('>>> pyximport', sysclock() - t)
         mu_q = spirrid_cython.mu_q
 
         def mu_q_method(eps):
@@ -416,7 +417,7 @@ class CodeGenCompiled(CodeGen):
             self._set_compiler()
 
             compiler_args, linker_args = self.extra_args
-            print compiler_args
+            print(compiler_args)
 
             # prepare the array of the control variable discretization
             #
@@ -528,9 +529,9 @@ class CodeGenCompiled(CodeGen):
 
     def __str__(self):
         s = 'C( '
-        s += 'var_eval = %s, ' % `self.implicit_var_eval`
-        s += 'compiled_eps_loop = %s, ' % `self.compiled_eps_loop`
-        s += 'cached_dG = %s)' % `self.cached_dG`
+        s += 'var_eval = %s, ' % repr(self.implicit_var_eval)
+        s += 'compiled_eps_loop = %s, ' % repr(self.compiled_eps_loop)
+        s += 'cached_dG = %s)' % repr(self.cached_dG)
         return s
 
 #===============================================================================

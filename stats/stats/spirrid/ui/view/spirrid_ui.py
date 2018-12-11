@@ -4,10 +4,10 @@ from etsproxy.traits.ui.api import TreeEditor, TreeNode, View, Item, Group
 
 #from stats.spirrid.spirrid_tree_structure.model.spirrid import SPIRRID
 from stats.spirrid.old.spirrid import SPIRRID
-from rf_view import RFModelView
-from rv_view import RVModelView
-from result_view import ResultView
-from spirrid_view import SPIRRIDModelView
+from .rf_view import RFModelView
+from .rv_view import RVModelView
+from .result_view import ResultView
+from .spirrid_view import SPIRRIDModelView
 
 from quaducom.resp_func.brittle_filament import Filament
 

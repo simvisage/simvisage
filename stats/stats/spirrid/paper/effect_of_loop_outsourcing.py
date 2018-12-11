@@ -101,7 +101,7 @@ if __name__ == '__main__':
         legend = []
         exec_times = []
 
-        for idx, run in run_dict.items():
+        for idx, run in list(run_dict.items()):
             run_options, plot_options, legend_string = run
 
             s.set(**run_options)
@@ -111,14 +111,14 @@ if __name__ == '__main__':
 #            s.mean_curve.plot( plt, plot_options )
 
 
-            print '---- code %d ---' % idx
-            print 'cached', s.cached_dG
-            print 'compiled dG', s.compiled_QdG_loop
-            print 'compiled eps', s.compiled_eps_loop
+            print('---- code %d ---' % idx)
+            print('cached', s.cached_dG)
+            print('compiled dG', s.compiled_QdG_loop)
+            print('compiled eps', s.compiled_eps_loop)
 #                print s.C_code
 
             #print 'integral of the pdf theta', s.eval_i_dG_grid()
-            print 'execution time', s.exec_time
+            print('execution time', s.exec_time)
             legend.append(legend_string) # % s.exec_time )
             exec_times.append(s.exec_time)
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
         n_rv = idx + 1
 
         n_int = int(pow(memsize, 1 / float(n_rv)))
-        print 'n_int', n_int
+        print('n_int', n_int)
 
 
         s = SPIRRID(rf = rf,
@@ -205,7 +205,7 @@ if __name__ == '__main__':
         time_plot.append(run_study(s, run_dict, offset, width)[1])
 
     plt.figure(0)
-    plt.plot(range(1, len(rf.param_keys) + 1), time_plot, '-o', color = 'black', linewidth = 1)
+    plt.plot(list(range(1, len(rf.param_keys) + 1)), time_plot, '-o', color = 'black', linewidth = 1)
 
     plt.figure(1)
     plt.plot([1.0, 2.0 + width * n_params], [1.0, 1.0], '-o', color = 'black')

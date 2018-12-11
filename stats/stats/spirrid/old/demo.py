@@ -75,14 +75,14 @@ def run():
 
     for idx, run in enumerate( run_list ):
         run_options, plot_options, legend_string = run
-        print 'run', idx,
+        print('run', idx, end=' ')
         s.set( **run_options )
-        print 'xdata', s.mean_curve.xdata
-        print 'ydata', s.mean_curve.ydata
+        print('xdata', s.mean_curve.xdata)
+        print('ydata', s.mean_curve.ydata)
         s.mean_curve.plot( plt, plot_options )
 
-        print 'integral of the pdf theta', s.eval_i_dG_grid()
-        print 'execution time', s.exec_time
+        print('integral of the pdf theta', s.eval_i_dG_grid())
+        print('execution time', s.exec_time)
         legend.append( legend_string % s.exec_time )
 
     plt.xlabel( 'strain [-]' )

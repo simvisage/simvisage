@@ -3,21 +3,21 @@ Created on 03.07.2013
 
 @author: rostar
 '''
-import numpy as np
-from scipy.interpolate import interp1d
 import os
-from etsproxy.traits.api import HasTraits, Property, Array, \
-     cached_property, Float, Int, Instance, Event
-from etsproxy.traits.ui.api import Item, View, Group, HSplit, VGroup, Tabbed
-from etsproxy.traits.ui.menu import OKButton, CancelButton
-from matplotlib.figure import Figure
-from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
-from spirrid.spirrid import SPIRRID
-from spirrid.rv import RV
-from util.traits.editors.mpl_figure_editor import MPLFigureEditor
-from etsproxy.traits.ui.api import ModelView
-from etsproxy.util.home_directory import get_home_directory
 
+from matplotlib.figure import Figure
+from scipy.interpolate import interp1d
+from traits.api import HasTraits, Property, Array, \
+    cached_property, Float, Int, Instance, Event
+from traitsui.api import Item, View, Group, HSplit, VGroup, Tabbed
+from traitsui.api import ModelView
+from traitsui.menu import OKButton, CancelButton
+
+import numpy as np
+from quaducom.micro.resp_func.CB_clamped_rand_xi import CBClampedRandXi
+from spirrid.rv import RV
+from spirrid.spirrid import SPIRRID
+from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 
 
 class Model(HasTraits):
@@ -42,20 +42,24 @@ class Model(HasTraits):
     r = Float(3.5e-3, params=True)
 
     w = Property(Array)
+
     def _get_w(self):
         return np.linspace(self.w_min, self.w_max, self.w_pts)
 
     w2 = Property(Array)
+
     def _get_w2(self):
         return np.linspace(self.w2_min, self.w2_max, self.w2_pts)
 
     interpolate_experiment = Property(depends_on='test_xdata, test_ydata')
+
     @cached_property
     def _get_interpolate_experiment(self):
         return interp1d(self.test_xdata, self.test_ydata,
                         bounds_error=False, fill_value=0.0)
 
     model_rand = Property(Array)
+
     def _get_model_rand(self):
         cb = CBClampedRandXi(pullout=False)
         spirrid = SPIRRID(q=cb, sampling_type='LHS')
@@ -64,17 +68,20 @@ class Model(HasTraits):
         V_f = 1.0
         r = 3.5e-3
         m = self.m
-        tau = RV('gamma', shape=self.tau_shape, scale=tau_scale, loc=self.tau_loc)
+        tau = RV('gamma', shape=self.tau_shape,
+                 scale=tau_scale, loc=self.tau_loc)
         n_int = self.n_int
         w = self.w
         lm = 1000.
         spirrid.eps_vars = dict(w=w)
-        spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
+        spirrid.theta_vars = dict(
+            tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
         spirrid.n_int = n_int
         sigma_c = spirrid.mu_q_arr / self.r ** 2
         return sigma_c
 
     model_extrapolate = Property(Array)
+
     def _get_model_extrapolate(self):
         cb = CBClampedRandXi(pullout=False)
         spirrid = SPIRRID(q=cb, sampling_type='LHS')
@@ -82,15 +89,18 @@ class Model(HasTraits):
         V_f = 1.0
         r = 3.5e-3
         m = self.m
-        tau = RV('gamma', shape=self.tau_shape, scale=self.tau_scale, loc=self.tau_loc)
+        tau = RV('gamma', shape=self.tau_shape,
+                 scale=self.tau_scale, loc=self.tau_loc)
         n_int = self.n_int
         w = self.w2
         lm = self.lm
         spirrid.eps_vars = dict(w=w)
-        spirrid.theta_vars = dict(tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
+        spirrid.theta_vars = dict(
+            tau=tau, E_f=self.Ef, V_f=V_f, r=r, m=m, sV0=sV0, lm=lm)
         spirrid.n_int = n_int
         sigma_c = spirrid.mu_q_arr / self.r ** 2
         return sigma_c
+
 
 class CBView(ModelView):
 
@@ -102,11 +112,13 @@ class CBView(ModelView):
     model = Instance(Model)
 
     figure = Instance(Figure)
+
     def _figure_default(self):
         figure = Figure(facecolor='white')
         return figure
 
     figure2 = Instance(Figure)
+
     def _figure2_default(self):
         figure = Figure(facecolor='white')
         return figure
@@ -118,9 +130,9 @@ class CBView(ModelView):
         figure.clear()
         axes = figure.gca()
         # plot PDF
-        axes.plot(self.model.w, self.model.model_rand, lw=2.0, color='blue', \
+        axes.plot(self.model.w, self.model.model_rand, lw=2.0, color='blue',
                   label='model')
-        axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black', \
+        axes.plot(self.model.w, self.model.interpolate_experiment(self.model.w), lw=1.0, color='black',
                   label='experiment')
         axes.legend(loc='best')
 
@@ -151,60 +163,62 @@ class CBView(ModelView):
                                            Item('model.w2_pts'),
                                            Item('model.sigmamu'),
                                            ),
-                                      id='pdistrib.distr_type.pltctrls',
-                                      label='Distribution parameters',
-                                      scrollable=True,
-                                      ),
-                                Tabbed(Group(Item('figure',
-                                            editor=MPLFigureEditor(),
-                                            show_label=False,
-                                            resizable=True),
-                                            scrollable=True,
-                                            label='Plot',
-                                            ),
-                                        label='Plot',
-                                        id='pdistrib.figure.params',
-                                        dock='tab',
-                                       ),
+                                     id='pdistrib.distr_type.pltctrls',
+                                     label='Distribution parameters',
+                                     scrollable=True,
+                                     ),
+                              Tabbed(Group(Item('figure',
+                                                editor=MPLFigureEditor(),
+                                                show_label=False,
+                                                resizable=True),
+                                           scrollable=True,
+                                           label='Plot',
+                                           ),
+                                     label='Plot',
+                                     id='pdistrib.figure.params',
+                                     dock='tab',
+                                     ),
                               Tabbed(Group(Item('figure2',
-                                            editor=MPLFigureEditor(),
-                                            show_label=False,
-                                            resizable=True),
-                                            scrollable=True,
-                                            label='Plot',
-                                            ),
-                                        label='Plot',
-                                        id='pdistrib.figure2',
-                                        dock='tab',
-                                       ),
-                                dock='tab',
-                                id='pdistrib.figure.view'
-                                ),
-                                id='pdistrib.view',
-                                dock='tab',
-                                title='Statistical distribution',
-                                buttons=[OKButton, CancelButton],
-                                scrollable=True,
-                                resizable=True,
-                                width=600, height=400
-                        )
+                                                editor=MPLFigureEditor(),
+                                                show_label=False,
+                                                resizable=True),
+                                           scrollable=True,
+                                           label='Plot',
+                                           ),
+                                     label='Plot',
+                                     id='pdistrib.figure2',
+                                     dock='tab',
+                                     ),
+                              dock='tab',
+                              id='pdistrib.figure.view'
+                              ),
+                       id='pdistrib.view',
+                       dock='tab',
+                       title='Statistical distribution',
+                       buttons=[OKButton, CancelButton],
+                       scrollable=True,
+                       resizable=True,
+                       width=600, height=400
+                       )
+
 
 if __name__ == '__main__':
 
+    import os.path
     model = Model(w_min=0.0, w_max=3.0, w_pts=200,
                   w2_min=0.0, w2_max=0.5, w2_pts=200,
                   sV0=11.4e-3, m=8.6, tau_loc=0.0, Ef=181e3,
                   lm=20., n_int=100, tau_scale=1.53419049, tau_shape=0.0615, sigmamu=3.0)
 
-    w_arr = np.linspace(0.0,10.,500)
+    w_arr = np.linspace(0.0, 10., 500)
     avg = np.zeros_like(w_arr)
-    home_dir = get_home_directory()
+    home_dir = os.path.expanduser('~')
     for i in range(5):
         path = [home_dir, 'git',  # the path of the data file
-                    'rostar',
-                    'scratch',
-                    'diss_figs',
-                    'CB' + str(i+1) +'.txt']
+                'rostar',
+                'scratch',
+                'diss_figs',
+                'CB' + str(i + 1) + '.txt']
         filepath = os.path.join(*path)
         file1 = open(filepath, 'r')
         cb = np.loadtxt(file1, delimiter=';')

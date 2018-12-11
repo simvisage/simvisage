@@ -111,11 +111,11 @@ class Distribution(HasTraits):
         self.new_values = array([self.shape, self.loc, self.scale, self.mean,
                                  self.variance, self.skewness, self.kurtosis])
         # test which parameters or moments are significant
-        print self.old_values
-        print self.new_values
+        print(self.old_values)
+        print(self.new_values)
         diff_old_new = abs(self.old_values - self.new_values)
         indexing = np.where(diff_old_new != 0)[0]
-        print 'indexing', indexing
+        print('indexing', indexing)
         #indexing = arange(8)[ix]
         if len(indexing) > 0 and indexing[0] < 3:
             self.get_moments('mvsk')
@@ -141,7 +141,7 @@ class Distribution(HasTraits):
             if len(self.distribution.shapes) == 1:
                 return hstack((methods[0], methods[2:5]))
             else:
-                print 'more than 1 shape parameters'
+                print('more than 1 shape parameters')
 
     def shape_scale_mean_var_residuum(self, params):
         shape = params[0]
@@ -209,7 +209,7 @@ class Distribution(HasTraits):
             return self.distribution(self.shape, self.kurtosis,
                                      self.loc, self.scale)
         else:
-            print 'Number of arguments', self.distribution.numargs
+            print('Number of arguments', self.distribution.numargs)
 
     def default_traits_view(self):
         '''checks the number of shape parameters of the distribution and adds them to

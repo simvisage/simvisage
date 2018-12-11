@@ -52,6 +52,7 @@ from mathkit.mfn.mfn_line.mfn_line import \
     MFnLineArray
 
 from scipy import ndimage
+from functools import reduce
 
 def orthogonalize( arr_list, ctrl_var = 0, rand_var = 0 ):
     '''Orthogonalize a list of one-dimensional arrays.
@@ -156,14 +157,14 @@ class SPIRRID( HasTraits ):
         '''Declare a variable as random 
         '''
         if variable not in self.rf.param_keys:
-            raise AssertionError, 'parameter %s not defined by the response function' \
-                % variable
+            raise AssertionError('parameter %s not defined by the response function' \
+                % variable)
 
         params_with_distr = self.rf.traits( distr = lambda x: type( x ) == ListType
                                             and distribution in x )
         if variable not in params_with_distr:
-            raise AssertionError, 'distribution type %s not allowed for parameter %s' \
-                % ( distribution, variable )
+            raise AssertionError('distribution type %s not allowed for parameter %s' \
+                % ( distribution, variable ))
 
         # @todo - let the RV take care of PDistrib specification.
         # isolate the dirty two-step definition of the distrib from spirrid 
@@ -195,7 +196,7 @@ class SPIRRID( HasTraits ):
     rv_list = Property( List, depends_on = 'rv_dict' )
     @cached_property
     def _get_rv_list( self ):
-        return map( self.rv_dict.get, self.rv_keys )
+        return list(map( self.rv_dict.get, self.rv_keys ))
 
     #--------------------------------------------------------------------
     # Define which changes in the response function and in the 
@@ -273,8 +274,8 @@ class SPIRRID( HasTraits ):
     ctrl_list = List
     def add_ctrl_var( self, variable, min = 0, max = 1, np = 20 ):
         if variable in self.rv_keys:
-            raise AssertionError, 'variable %s is defined as a random variable' \
-                % ( variable )
+            raise AssertionError('variable %s is defined as a random variable' \
+                % ( variable ))
         else:
             self.ctrl_keys.append( variable )
             self.ctrl_list.append( linspace( min, max, np ) )
@@ -445,7 +446,7 @@ class SPIRRID( HasTraits ):
 
     def get_interp_indices( self, dict ):
         indices = []
-        values = map( dict.get, self.ctrl_keys )
+        values = list(map( dict.get, self.ctrl_keys ))
         for i, interp_obj in enumerate( self.ctrl_indices ):
             idx = interp_obj.get_value( values[i] )
             indices.append( idx )
@@ -480,8 +481,8 @@ class SPIRRID( HasTraits ):
             P = ndimage.map_coordinates( data, coords, order = order, mode = 'nearest' )
             return P
         else:
-            raise TypeError, 'mean_curve() takes {req} arguments ({given} given)'.format( req = \
-                len( self.ctrl_keys ), given = len( kw ) )
+            raise TypeError('mean_curve() takes {req} arguments ({given} given)'.format( req = \
+                len( self.ctrl_keys ), given = len( kw ) ))
 
     def force_residuum( self, w, order, P, kw ):
         kw['w'] = w

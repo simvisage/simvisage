@@ -70,12 +70,12 @@ class NIDOrderStats( HasTraits ):
                 # the constant actually tells how many redundances are present in the summation
                 constant = 1. / ( fct( k - 1 ) * fct( n - k ) )
                 summation = np.zeros( len( self.x_arr ) )
-                permutations = it.permutations( range( n ), n )
+                permutations = it.permutations( list(range( n)), n )
                 loop_run = True
                 t = time.clock()
                 while loop_run == True:
                     try:
-                        idx = list( permutations.next() )
+                        idx = list( next(permutations) )
                         if k == 1:
                             id_pdf = idx[k - 1]
                             pdf = self.pdf_arr[id_pdf]
@@ -104,13 +104,13 @@ class NIDOrderStats( HasTraits ):
                     except StopIteration:
                         loop_run = False
 
-                print 'NID', time.clock() - t, 's'
+                print('NID', time.clock() - t, 's')
                 return constant * summation
 
             else:
-                raise ValueError, 'n < k'
+                raise ValueError('n < k')
         else:
-            raise ValueError, '%i distributions required, %i given' % ( self.n, len( self.distr_list ) )
+            raise ValueError('%i distributions required, %i given' % ( self.n, len( self.distr_list ) ))
 
 if __name__ == '__main__':
 

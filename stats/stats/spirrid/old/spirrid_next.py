@@ -22,6 +22,7 @@
 #
 
 import platform
+from functools import reduce
 if platform.system() == 'Linux':
     from time import time as sysclock
 elif platform.system() == 'Windows':
@@ -101,8 +102,8 @@ class RandomVariable( HasTraits ):
 
         possible_distr = self.source_trait.distr
         if distribution and distribution not in possible_distr:
-            raise AssertionError, 'distribution type %s not allowed for parameter %s' \
-                % ( distribution, self.name )
+            raise AssertionError('distribution type %s not allowed for parameter %s' \
+                % ( distribution, self.name ))
 
         self.pd = PDistrib( distr_choice = distribution, n_segments = n_int )
         self.pd.distr_type.set( scale = scale, shape = shape, loc = loc )
@@ -222,7 +223,7 @@ class Randomization( HasTraits ):
     @cached_property
     def _get_rv_list( self ):
         rf = self.rf
-        param_tuple = zip( rf.param_keys, rf.param_values, rf.param_traits )
+        param_tuple = list(zip( rf.param_keys, rf.param_values, rf.param_traits ))
         return [ RandomVariable( spirrid = self, rf = self.rf,
                      name = nm, trait_value = tv, source_trait = st )
                  for nm, tv, st in param_tuple ]
@@ -250,7 +251,7 @@ class Randomization( HasTraits ):
 
     def unset_all_random( self ):
         '''Set all variables to detereministic'''
-        map( lambda rv: rv.unset_random, self.rv_list )
+        list(map( lambda rv: rv.unset_random, self.rv_list ))
 
     n_rv = Property( depends_on = 'rnd_change' )
     @cached_property
@@ -470,7 +471,7 @@ class SPIRRID( Randomization ):
 
         code_str += '#line 100\n'
         # create code for constant params
-        for name, rv in self.rv_dict.items():
+        for name, rv in list(self.rv_dict.items()):
             if not rv.random:
                 code_str += 'double %s = %g;\n' % ( name, rv.trait_value )
 
@@ -536,8 +537,7 @@ class SPIRRID( Randomization ):
         '''Evaluate the integral based on the configuration of algorithm.
         '''
         if self.cached_dG == False and self.compiled_QdG_loop == False:
-            raise NotImplementedError, \
-                'Configuration for pure Python integration is too slow and is not implemented'
+            raise NotImplementedError('Configuration for pure Python integration is too slow and is not implemented')
 
         self._set_compiler()
         # prepare the array of the control variable discretization
@@ -590,7 +590,7 @@ class SPIRRID( Randomization ):
             # C loop over eps, all inner loops must be compiled as well
             #
             if self.implicit_var_eval:
-                raise NotImplementedError, 'calculation of variance not available in the compiled version'
+                raise NotImplementedError('calculation of variance not available in the compiled version')
 
             inline( self.C_code, self.arg_list, local_dict = c_params,
                     type_converters = conv, compiler = self.compiler,
@@ -605,7 +605,7 @@ class SPIRRID( Randomization ):
                 if self.compiled_QdG_loop:
 
                     if self.implicit_var_eval:
-                        raise NotImplementedError, 'calculation of variance not available in the compiled version'
+                        raise NotImplementedError('calculation of variance not available in the compiled version')
 
                     # C loop over random dimensions
                     #
@@ -756,9 +756,9 @@ if __name__ == '__main__':
     s.set_random( 'theta', distribution = 'uniform', discr_type = 'T grid',
               loc = 0.0, scale = 0.01, n_int = 5 )
 
-    print map( lambda x: x.random, s.rv_list )
+    print([x.random for x in s.rv_list])
     for i in s.theta_ogrid:
-        print s.theta_ogrid
+        print(s.theta_ogrid)
 
     s.mean_curve.plot( plt, color = 'black' , linewidth = 2,
                        label = 'T grid grid' )

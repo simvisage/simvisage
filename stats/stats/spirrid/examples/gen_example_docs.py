@@ -105,7 +105,7 @@ Latin Hypercube Sampling
 
     def generate_html(self):
 
-        print 'generating documentation for', self.qname, '...'
+        print('generating documentation for', self.qname, '...')
 
         rst_text = '''
 ================================
@@ -151,7 +151,7 @@ Execution time evaluated for an increasing number of sampling points n_sim:
     :width: 100%%
 
             ''' % basename
-            print 'written file %s', basename
+            print('written file %s', basename)
 
         rst_text += '\n'
 
@@ -167,7 +167,7 @@ Execution time evaluated for an numpy, weave and cython code:
     :width: 100%%
 
             ''' % basename
-            print 'written file %s', basename
+            print('written file %s', basename)
 
         rst_text += '\n'
 

@@ -22,7 +22,7 @@ from numpy import  cos, sqrt, exp
 from stats.spirrid import IRF, RF
 
 class ConstantFrictionFiniteFiber(RF):
-    ur'''
+    r'''
 Fiber with constant friction
 ============================
 

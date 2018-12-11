@@ -14,11 +14,12 @@
 
 from etsproxy.traits.api import HasStrictTraits, Array, Property, Float, \
     cached_property, Callable, Str, Int, WeakRef, Dict, Event
-from rv import RV
+from .rv import RV
 import inspect
 import numpy as np
 import string
 import types
+from functools import reduce
 
 
 #===============================================================================
@@ -29,7 +30,7 @@ def make_ogrid(args):
     scalar values are left untouched.
     '''
     # count the number of arrays in the list
-    dt = map(type, args)
+    dt = list(map(type, args))
     n_arr = dt.count(np.ndarray)
 
     oargs = []
@@ -41,7 +42,7 @@ def make_ogrid(args):
             i += 1
             oarg = np.copy(arg).reshape(tuple(shape))
             oargs.append(oarg)
-        elif isinstance(arg, types.FloatType):
+        elif isinstance(arg, float):
             oargs.append(arg)
     return oargs
 
@@ -52,7 +53,7 @@ def make_ogrid_full(args):
     oargs = []
     n_args = len(args)
     for i, arg in enumerate(args):
-        if isinstance(arg, types.FloatType):
+        if isinstance(arg, float):
             arg = np.array([arg], dtype = 'd')
 
         shape = np.ones((n_args,), dtype = 'int')
@@ -123,7 +124,7 @@ class FunctionRandomization(HasStrictTraits):
     evar_names = Property(depends_on = 'evars')
     @cached_property
     def _get_evar_names(self):
-        evar_keys = self.evars.keys()
+        evar_keys = list(self.evars.keys())
         return [nm for nm in self.var_names if nm in evar_keys ]
 
     evar_str = Property()
@@ -156,7 +157,7 @@ class FunctionRandomization(HasStrictTraits):
     tvar_names = Property
     def _get_tvar_names(self):
         '''get the tvar names in the order given by the callable'''
-        tvar_keys = self.tvars.keys()
+        tvar_keys = list(self.tvars.keys())
         return np.array([nm for nm in self.var_names if nm in tvar_keys ], dtype = str)
 
     tvar_str = Property()
@@ -181,7 +182,7 @@ class RandomSampling(HasStrictTraits):
     # count the random variables
     n_rand_vars = Property
     def _get_n_rand_vars(self):
-        dt = map(type, self.randomization.tvar_lst)
+        dt = list(map(type, self.randomization.tvar_lst))
         return dt.count(RV)
 
     n_sim = Property
@@ -339,7 +340,7 @@ class MonteCarlo(IrregularSampling):
 
         theta_list = []
         for tvar in self.randomization.tvar_lst:
-            if isinstance(tvar, types.FloatType):
+            if isinstance(tvar, float):
                 theta_list.append(tvar)
             else:
                 theta_arr = tvar.rvs(self.n_sim)
@@ -391,11 +392,11 @@ if __name__ == '__main__':
                           'xi': RV('norm', 1.0, 0.1)}
                 )
 
-    print 'tvar_names', s.tvar_names
-    print 'tvars', s.tvar_lst
-    print 'evar_names', s.evar_names
-    print 'evars', s.evar_lst
-    print 'var_defaults', s.var_defaults
+    print('tvar_names', s.tvar_names)
+    print('tvars', s.tvar_lst)
+    print('evar_names', s.evar_names)
+    print('evars', s.evar_lst)
+    print('var_defaults', s.var_defaults)
 
     #print 'mu_q', s.mu_q_arr
 
@@ -406,11 +407,11 @@ if __name__ == '__main__':
 #                          'la': RV('norm', 10.0, 1.0)
                           })
 
-    print 'tvars', s.tvar_lst
-    print 'evars', s.evar_lst
+    print('tvars', s.tvar_lst)
+    print('evars', s.evar_lst)
 
-    print 'la:', s.tvars['xi']
+    print('la:', s.tvars['xi'])
     s.tvars['xi'] = 1.0
 
-    print 'mu_q', s.mu_q_arr
+    print('mu_q', s.mu_q_arr)
 

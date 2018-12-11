@@ -108,7 +108,7 @@ class RIDVariable( HasTraits ):
             #
             distr_params = {'scale' : trait.scale, 'loc' : trait.loc, 'shape' : trait.shape }
             dparams = {}
-            for key, val in distr_params.items():
+            for key, val in list(distr_params.items()):
                 if val:
                     dparams[key] = val
 

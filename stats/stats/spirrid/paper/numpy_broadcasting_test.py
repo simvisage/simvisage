@@ -35,7 +35,7 @@ if __name__ == '__main__':
     for e in range(n_e):
         R1 = (a[:, None] * a[:, None]) * b[None, :]
 
-    print 'exec time 1', time() - t
+    print('exec time 1', time() - t)
 
     t = time()
 
@@ -44,4 +44,4 @@ if __name__ == '__main__':
     for e in range(n_e):
         R2 = a[:, None] * (a[:, None] * b[None, :])
 
-    print 'exec time 2', time() - t
+    print('exec time 2', time() - t)

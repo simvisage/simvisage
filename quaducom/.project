@@ -3,6 +3,7 @@
 	<name>quaducom</name>
 	<comment></comment>
 	<projects>
+		<project>bmcs</project>
 		<project>matresdev</project>
 		<project>spirrid</project>
 		<project>stats</project>

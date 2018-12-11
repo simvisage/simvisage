@@ -57,6 +57,7 @@ import time
 
 from mathkit.mfn.mfn_line.mfn_line import \
     MFnLineArray
+from functools import reduce
 
 def orthogonalize( arr_list ):
     '''Orthogonalize a list of one-dimensional arrays.
@@ -161,14 +162,14 @@ class SPIRRID( HasTraits ):
         '''Declare a variable as random 
         '''
         if variable not in self.rf.param_keys:
-            raise AssertionError, 'parameter %s not defined by the response function' \
-                % variable
+            raise AssertionError('parameter %s not defined by the response function' \
+                % variable)
 
         params_with_distr = self.rf.traits( distr = lambda x: type( x ) == ListType
                                             and distribution in x )
         if variable not in params_with_distr:
-            raise AssertionError, 'distribution type %s not allowed for parameter %s' \
-                % ( distribution, variable )
+            raise AssertionError('distribution type %s not allowed for parameter %s' \
+                % ( distribution, variable ))
 
         # @todo - let the RV take care of PDistrib specification.
         # isolate the dirty two-step definition of the distrib from spirrid 
@@ -200,7 +201,7 @@ class SPIRRID( HasTraits ):
     rv_list = Property( List, depends_on = 'rv_dict' )
     @cached_property
     def _get_rv_list( self ):
-        return map( self.rv_dict.get, self.rv_keys )
+        return list(map( self.rv_dict.get, self.rv_keys ))
 
     #--------------------------------------------------------------------
     # Define which changes in the response function and in the 
@@ -427,7 +428,7 @@ class SPIRRID( HasTraits ):
 
         code_str += '#line 100\n'
         # create code for constant params
-        for name, value in self.const_param_dict.items():
+        for name, value in list(self.const_param_dict.items()):
             code_str += 'double %s = %g;\n' % ( name, value )
 
         # generate loops over random params
@@ -521,8 +522,7 @@ class SPIRRID( HasTraits ):
         '''
 
         if self.cached_dG == False and self.compiled_QdG_loop == False:
-            raise NotImplementedError, \
-                'Configuration for pure Python integration is too slow and is not implemented'
+            raise NotImplementedError('Configuration for pure Python integration is too slow and is not implemented')
 
         self._set_compiler()
         # prepare the array of the control variable discretization
@@ -745,17 +745,17 @@ if __name__ == '__main__':
                    ListenerNotifyWrapper
 
     dict = s.__dict__.get( TraitsListener )
-    print '----------'
-    for n, l in dict.items():
-        print n, ':',
+    print('----------')
+    for n, l in list(dict.items()):
+        print(n, ':', end=' ')
         for li in l:
-            print li.listener ,
-        print
-    print '----------'
+            print(li.listener, end=' ')
+        print()
+    print('----------')
 
     rf.xi = 0.175
 
-    print 'xi changed'
+    print('xi changed')
 
     s.add_rv( 'xi', distribution = 'weibull_min', scale = 0.02, shape = 10., n_int = 30 )
     s.add_rv( 'theta', distribution = 'uniform', loc = 0.0, scale = 0.01, n_int = 30 )
@@ -765,9 +765,9 @@ if __name__ == '__main__':
 
     s.mean_curve.plot( plt, color = 'b' , linewidth = 3 )
 
-    print s.eps_at_peak
-    print s.mu_q_peak
-    print s.stdev_mu_q_peak
+    print(s.eps_at_peak)
+    print(s.mu_q_peak)
+    print(s.stdev_mu_q_peak)
 
     plt.errorbar( s.eps_at_peak, s.mu_q_peak, s.stdev_mu_q_peak, color = 'r', linewidth = 2 )
 

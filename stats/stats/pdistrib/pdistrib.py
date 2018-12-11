@@ -16,7 +16,7 @@ from traitsui.api import ModelView
 from traitsui.menu import OKButton, CancelButton
 from util.traits.editors.mpl_figure_editor import MPLFigureEditor
 
-from distribution import Distribution
+from .distribution import Distribution
 import scipy.stats as stats
 
 

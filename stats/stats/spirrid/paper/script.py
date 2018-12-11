@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     start_time = sysclock()
     mu_q_arr = mu_q_loops(eps_arr)
-    print 'loop-based: elapsed time', sysclock() - start_time
+    print('loop-based: elapsed time', sysclock() - start_time)
 
 
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     mu_q_vct = np.vectorize(mu_q)
     start_time = sysclock()
     mu_q_arr = mu_q_vct(eps_arr)
-    print 'Regular grid of random variables: elapsed time', sysclock() - start_time
+    print('Regular grid of random variables: elapsed time', sysclock() - start_time)
 
     p.subplot(121)
     p.plot(eps_arr, mu_q_arr, color = 'blue', label = 'Tgrid')
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     start_time = sysclock()
     # estimate mean response
     mu_q_arr = mu_q(eps_arr)
-    print 'Grid of constant probabilities: elapsed time', sysclock() - start_time
+    print('Grid of constant probabilities: elapsed time', sysclock() - start_time)
 
     p.subplot(121)
     p.plot(eps_arr, mu_q_arr, color = 'cyan', label = 'Pgrid')
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     start_time = sysclock()
     # estimate mean response
     mu_q_arr = mu_q_e_rvs(eps_arr)
-    print 'Monte-Carlo: elapsed time', sysclock() - start_time
+    print('Monte-Carlo: elapsed time', sysclock() - start_time)
 
     p.subplot(121)
     p.plot(eps_arr, mu_q_arr, color = 'red', label = 'Monte-Carlo')
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     start_time = sysclock()
     # estimate mean response
     mu_q_arr = mu_q(eps_arr)
-    print 'Grid of constant probabilities: elapsed time', sysclock() - start_time
+    print('Grid of constant probabilities: elapsed time', sysclock() - start_time)
 
     p.subplot(121)
     p.plot(eps_arr, mu_q_arr, color = 'green', label = 'LHS')

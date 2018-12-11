@@ -55,6 +55,7 @@ import time
 
 from mathkit.mfn.mfn_line.mfn_line import \
     MFnLineArray
+from functools import reduce
 
 def orthogonalize( arr_list ):
     '''Orthogonalize a list of one-dimensional arrays.
@@ -185,14 +186,14 @@ class Randomization( HasTraits ):
         '''Declare a variable as random 
         '''
         if variable not in self.rf.param_keys:
-            raise AssertionError, 'parameter %s not defined by the response function' \
-                % variable
+            raise AssertionError('parameter %s not defined by the response function' \
+                % variable)
 
         params_with_distr = self.rf.traits( distr = lambda x: type( x ) == ListType
                                             and distribution in x )
         if variable not in params_with_distr:
-            raise AssertionError, 'distribution type %s not allowed for parameter %s' \
-                % ( distribution, variable )
+            raise AssertionError('distribution type %s not allowed for parameter %s' \
+                % ( distribution, variable ))
 
         # @todo - let the RV take care of PDistrib specification.
         # isolate the dirty two-step definition of the distrib from spirrid 
@@ -225,7 +226,7 @@ class Randomization( HasTraits ):
     rv_list = Property( List, depends_on = 'rv_dict' )
     @cached_property
     def _get_rv_list( self ):
-        return map( self.rv_dict.get, self.rv_keys )
+        return list(map( self.rv_dict.get, self.rv_keys ))
 
     #--------------------------------------------------------------------
     # Define which changes in the response function and in the 
@@ -460,7 +461,7 @@ class SPIRRID( Randomization ):
 
         code_str += '#line 100\n'
         # create code for constant params
-        for name, value in self.const_param_dict.items():
+        for name, value in list(self.const_param_dict.items()):
             code_str += 'double %s = %g;\n' % ( name, value )
 
         # generate loops over random params
@@ -521,8 +522,7 @@ class SPIRRID( Randomization ):
         '''Evaluate the integral based on the configuration of algorithm.
         '''
         if self.cached_dG == False and self.compiled_QdG_loop == False:
-            raise NotImplementedError, \
-                'Configuration for pure Python integration is too slow and is not implemented'
+            raise NotImplementedError('Configuration for pure Python integration is too slow and is not implemented')
 
         self._set_compiler()
         # prepare the array of the control variable discretization
@@ -575,7 +575,7 @@ class SPIRRID( Randomization ):
             # C loop over eps, all inner loops must be compiled as well
             #
             if self.implicit_var_eval:
-                raise NotImplementedError, 'calculation of variance not available in the compiled version'
+                raise NotImplementedError('calculation of variance not available in the compiled version')
 
             inline( self.C_code, self.arg_list, local_dict = c_params,
                     type_converters = conv, compiler = self.compiler,
@@ -590,7 +590,7 @@ class SPIRRID( Randomization ):
                 if self.compiled_QdG_loop:
 
                     if self.implicit_var_eval:
-                        raise NotImplementedError, 'calculation of variance not available in the compiled version'
+                        raise NotImplementedError('calculation of variance not available in the compiled version')
 
                     # C loop over random dimensions
                     #

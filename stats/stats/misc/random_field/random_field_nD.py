@@ -48,7 +48,7 @@ class RandomField(HasTraits):
         # evaluate the eigenvalues and eigenvectors of the autocorrelation matrices
         eigen_lst = []
         for i, C_i in enumerate(C_matrices):
-            print 'evaluating eigenvalues for dimension ' + str(i+1)
+            print('evaluating eigenvalues for dimension ' + str(i+1))
             lambda_i, Phi_i = eigh(C_i)
             # truncate the eigenvalues at 99% of tr(C)
             truncation_limit = 0.99 * np.trace(C_i)
@@ -56,7 +56,7 @@ class RandomField(HasTraits):
             cum_sum_lambda = np.cumsum(np.sort(lambda_i)[::-1])
             idx_trunc = int(np.sum(cum_sum_lambda < truncation_limit))
             eigen_lst.append([lambda_i[argsort[::-1]][:idx_trunc], Phi_i[:, argsort[::-1]][:,:idx_trunc]])
-        print 'complete'
+        print('complete')
         Lambda_C = 1.0
         Phi_C = 1.0
         for lambda_i, Phi_i in eigen_lst:

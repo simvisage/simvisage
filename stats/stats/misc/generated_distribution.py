@@ -25,9 +25,9 @@ class GenDistr( HasTraits ):
 
     def check( self ):
         if len( self.x_values ) == 0:
-            raise ValueError, 'x_values not defined'
+            raise ValueError('x_values not defined')
         if len( self.pdf_values ) == 0 and len( self.cdf_values ) == 0:
-            raise ValueError, 'either pdf_values or cdf_values have to be given'
+            raise ValueError('either pdf_values or cdf_values have to be given')
         else:
             pass
 

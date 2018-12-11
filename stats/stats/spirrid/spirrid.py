@@ -12,11 +12,11 @@
 #
 # Created on Sep 8, 2011 by: rch
 
-from code_gen_factory import CodeGenNumpyFactory, CodeGenCFactory, \
+from .code_gen_factory import CodeGenNumpyFactory, CodeGenCFactory, \
     CodeGenCythonFactory
 from etsproxy.traits.api import Property, cached_property, Callable, Trait, \
     on_trait_change, Event
-from sampling import FunctionRandomization, TGrid, PGrid, MonteCarlo, \
+from .sampling import FunctionRandomization, TGrid, PGrid, MonteCarlo, \
     LatinHypercubeSampling, make_ogrid
 import platform
 import string

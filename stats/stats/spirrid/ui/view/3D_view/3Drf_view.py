@@ -49,7 +49,7 @@ class RFView3D( ModelView ):
 
         connections = -ones_like( x_arrr )
         mesk = x_arrr.filled() > -1
-        connections[mesk] = range( 0, len( connections[mesk] ) )
+        connections[mesk] = list(range( 0, len( connections[mesk] )))
         connections = connections[self.start_fib:self.end_fib + 1, :].filled()
         connection = connections.astype( int ).copy()
         connection = connection.tolist()
@@ -63,7 +63,7 @@ class RFView3D( ModelView ):
                     pass
 
         if self.plot is None:
-            print 'plot 3d -- 1'
+            print('plot 3d -- 1')
             #self.scene.parallel_projection = False
             pts = self.scene.mlab.pipeline.scalar_scatter( array( x ), array( y ),
                                                         array( z ), array( scalar ) )
@@ -122,7 +122,7 @@ class RFView3D( ModelView ):
             axes.axes.y_label = 'y'
             axes.axes.z_label = 'z'
         else:
-            print 'plot 3d -- 2'
+            print('plot 3d -- 2')
             #self.plot.mlab_source.dataset.reset()
             #self.plot.mlab_source.set( x = x, y = y, z = z, scalars = scalar )
             #self.plot.mlab_source.dataset.points = array( [x, y, z] ).T

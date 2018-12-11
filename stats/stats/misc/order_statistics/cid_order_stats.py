@@ -36,7 +36,7 @@ class CIDOrderStats( HasTraits ):
     nid_indexes = Property( List, depends_on = 'distr_list' )
     @cached_property
     def _get_nid_indexes( self ):
-        return range( self.m )
+        return list(range( self.m))
 
     k = Int( 1, auto_set = False, enter_set = True,
             desc = 'kth order statistics to evaluate' )
@@ -85,7 +85,7 @@ class CIDOrderStats( HasTraits ):
 
         try:
             while True:
-                c = comb.next()
+                c = next(comb)
                 for i, idx in enumerate( nid_idx ):
                     count_arr[i] = c.count( idx )
                 if np.all( count_arr <= iid_list ):
@@ -111,7 +111,7 @@ class CIDOrderStats( HasTraits ):
                         sf_exp = self.iid_list[:]
                         sf_exp[i] -= 1
                         sf_exp = np.array( sf_exp )[:, np.newaxis]
-                        sf = self.sf_arr[range( m )] ** sf_exp
+                        sf = self.sf_arr[list(range( m))] ** sf_exp
                         summation += pdf * sf.prod( axis = 0 )
                 else:
                     # PDF taken from every NID
@@ -146,19 +146,19 @@ class CIDOrderStats( HasTraits ):
                             for index in cdf_comb:
                                 sf_exp[index] -= 1
                             sf_exp = np.array( sf_exp )[:, np.newaxis]
-                            sf = self.sf_arr[range( m )] ** sf_exp
+                            sf = self.sf_arr[list(range( m))] ** sf_exp
                             sf = sf.prod( axis = 0 )
                             cdf = self.cdf_arr[np.array( cdf_comb )].prod( axis = 0 )
                             # a summand is the product of the combination of CDFs, SFs, one PDF
                             # and the particular multiplier
                             summation += cdf * pdf * sf * multipl
-                print 'CID', time.clock() - t, 's', 'k = ', self.k
+                print('CID', time.clock() - t, 's', 'k = ', self.k)
                 self.performance.append( ( time.clock() - t, self.k ) )
                 return summation
             else:
-                raise ValueError, 'n < k'
+                raise ValueError('n < k')
         else:
-            raise ValueError, 'len(distr_list) != len(iid_list)'
+            raise ValueError('len(distr_list) != len(iid_list)')
 
     performance = List
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
 
     from matplotlib import pyplot as plt
     from scipy.stats import norm, weibull_min
-    from nid_order_stats import NIDOrderStats
+    from .nid_order_stats import NIDOrderStats
 
     distr1 = norm( 4, 1 )
     distr2 = norm( 5, 0.3 )

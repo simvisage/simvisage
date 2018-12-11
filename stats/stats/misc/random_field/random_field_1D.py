@@ -81,9 +81,9 @@ class RandomField(HasStrictTraits):
         R = self.acor(Rdist, self.lacor)
         # evaluate the eigenvalues and eigenvectors of the autocorrelation
         # matrix
-        print 'evaluating eigenvalues for random field...'
+        print('evaluating eigenvalues for random field...')
         eigenvalues = eig(R)
-        print 'complete'
+        print('complete')
         return eigenvalues
 
     random_field = Property(Array, depends_on='+modified, reevaluate')
@@ -120,7 +120,7 @@ class RandomField(HasStrictTraits):
         rf = reshape(scaled_ydata, len(self.xgrid))
         if self.non_negative_check == True:
             if (rf < 0).any():
-                raise ValueError, 'negative value(s) in random field'
+                raise ValueError('negative value(s) in random field')
         return rf
 
     view_traits = View(Item('lacor'),
